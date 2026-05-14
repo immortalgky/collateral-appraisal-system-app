@@ -19,6 +19,8 @@ import {
   type SetFinalValueResponseType,
   type UpdateFinalValueRequestType,
   type UpdateFinalValueResponseType,
+  type UpdateMethodRequestType,
+  type UpdateMethodResponseType,
 } from '../schemas';
 import { pricingAnalysisKeys } from './queryKeys';
 
@@ -1066,6 +1068,42 @@ export function useDeleteHypothesisUpload() {
           variables.pricingAnalysisId,
           variables.methodId,
         ),
+      });
+    },
+  });
+}
+
+// ==================== Cost Building Analysis Hook ====================
+
+/**
+ * Update method value
+ * PUT /pricing-analysis/{id}/methods/{methodId}
+ */
+export function useUpdateMethodValue() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      methodId,
+      request,
+    }: {
+      id: string;
+      methodId: string;
+      request: UpdateMethodRequestType;
+    }): Promise<UpdateMethodResponseType> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${id}/methods/${methodId}`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.pricingMethod(variables.methodId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.comparativeFactors(variables.id, variables.methodId),
       });
     },
   });
