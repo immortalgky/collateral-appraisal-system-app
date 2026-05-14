@@ -1,5 +1,7 @@
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
+import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
+
 import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -16,7 +18,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
-import { useBreadcrumbExtrasStore, useUIStore } from '@shared/store';
+import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useMenuStore } from '@features/menuManagement/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
 
@@ -159,7 +161,7 @@ function AppraisalLayout() {
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
   });
-  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
+  useSidebarCssVar();
 
   // /appraisals/:appraisalId/* is always read-only — editable work happens under /tasks/:taskId/*.
   // Persist returnPath in sessionStorage so internal sidebar navigation doesn't lose it.
@@ -328,7 +330,7 @@ function AppraisalLayout() {
         <div className="h-screen flex flex-col">
           <MobileAppraisalSidebar logo={Logo} loading />
           <AppraisalSidebar logo={Logo} loading />
-          <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
+          <div className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}>
             <Navbar userNavigation={userNavigation} />
             <main className="py-4 flex-1 flex flex-col min-h-0">
               <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
@@ -348,7 +350,7 @@ function AppraisalLayout() {
         <div className="h-screen flex flex-col">
           <MobileAppraisalSidebar logo={Logo} loading />
           <AppraisalSidebar logo={Logo} loading />
-          <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
+          <div className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}>
             <Navbar userNavigation={userNavigation} />
             <main className="py-4 flex-1 flex flex-col min-h-0">
               <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col items-center justify-center min-h-0">
@@ -377,7 +379,7 @@ function AppraisalLayout() {
         <MobileAppraisalSidebar logo={Logo} />
         <AppraisalSidebar logo={Logo} />
 
-        <div className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}>
+        <div className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}>
           <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0">
               <div className="flex items-center gap-2">
                 <Icon name="lock" style="solid" className="size-3.5 text-amber-600" />

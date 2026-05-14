@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type {
   AddressSource,
   AddressStore,
@@ -13,17 +14,47 @@ import type {
   StoredParameters,
   UIStore,
 } from './types';
+import {
+  SIDEBAR_MIN_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_DEFAULT_WIDTH,
+} from './components/sidebarConstants';
 import type { Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
-export const useUIStore = create<UIStore>(set => ({
-  sidebarOpen: false,
-  setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
-  sidebarCollapsed: false,
-  toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-  searchQuery: '',
-  setSearchQuery: (query: string) => set({ searchQuery: query }),
-}));
+export const useUIStore = create<UIStore>()(
+  persist(
+    set => ({
+      sidebarOpen: false,
+      setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
+      sidebarCollapsed: false,
+      toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      sidebarWidth: SIDEBAR_DEFAULT_WIDTH,
+      setSidebarWidth: (width: number) =>
+        set({ sidebarWidth: Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, width)) }),
+      resetSidebarWidth: () => set({ sidebarWidth: SIDEBAR_DEFAULT_WIDTH }),
+      searchQuery: '',
+      setSearchQuery: (query: string) => set({ searchQuery: query }),
+    }),
+    {
+      name: 'cas-ui-store',
+      partialize: state => ({
+        sidebarCollapsed: state.sidebarCollapsed,
+        sidebarWidth: state.sidebarWidth,
+      }),
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<{ sidebarWidth: unknown; sidebarCollapsed: unknown }>;
+        const rawW = p.sidebarWidth;
+        const w =
+          typeof rawW === 'number' && Number.isFinite(rawW)
+            ? Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, rawW))
+            : SIDEBAR_DEFAULT_WIDTH;
+        const collapsed = typeof p.sidebarCollapsed === 'boolean' ? p.sidebarCollapsed : false;
+        return { ...current, sidebarWidth: w, sidebarCollapsed: collapsed };
+      },
+    },
+  ),
+);
 
 export const useParameterStore = create<ParameterStore>(set => ({
   parameters: {},
