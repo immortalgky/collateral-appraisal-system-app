@@ -294,7 +294,8 @@ const MarketComparableForm = () => {
           factors.length > 0 && (
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
               {factors.map((fac: any, index: number) => {
-                const fields: FormField[] = [buildFormField(fac, index)];
+                console.log(`index ${index}, `, fac);
+                const fields: FormField[] = buildFormField(fac, index);
                 return (
                   <SectionRow
                     key={fac.factorCode}
@@ -320,62 +321,101 @@ const MarketComparableForm = () => {
   );
 };
 
-const buildFormField = (fac: any, index: number): FormField => {
+const buildFormField = (fac: any, index: number): FormField[] => {
   switch (fac.dataType) {
     case 'Dropdown':
-      return {
-        type: 'dropdown',
-        name: `factorData.[${index}].value`,
-        label: '',
-        wrapperClassName: 'col-span-12',
-        group: fac.parameterGroup,
-      };
+      return [
+        {
+          type: 'dropdown',
+          name: `factorData.[${index}].value`,
+          label: '',
+          wrapperClassName: 'col-span-12',
+          group: fac.parameterGroup,
+        },
+        {
+          type: 'text-input',
+          label: 'Other',
+          name: `factorData.[${index}].otherRemarks`,
+          wrapperClassName: 'col-span-12',
+          showWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
+          requiredWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
+          maxLength: 100,
+        },
+      ];
 
     case 'Radio':
-      return {
-        type: 'radio-group',
-        name: `factorData.[${index}].value`,
-        orientation: 'horizontal',
-        group: fac.parameterGroup,
-        wrapperClassName: 'col-span-12',
-      };
+      return [
+        {
+          type: 'radio-group',
+          name: `factorData.[${index}].value`,
+          orientation: 'horizontal',
+          group: fac.parameterGroup,
+          wrapperClassName: 'col-span-12',
+        },
+        {
+          type: 'text-input',
+          label: 'Other',
+          name: `factorData.[${index}].otherRemarks`,
+          wrapperClassName: 'col-span-12',
+          showWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
+          requiredWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
+          maxLength: 100,
+        },
+      ];
 
     case 'CheckboxGroup':
-      return {
-        type: 'checkbox-group',
-        name: `factorData.[${index}].value`,
-        orientation: 'horizontal',
-        group: fac.parameterGroup,
-        wrapperClassName: 'col-span-12',
-      };
+      return [
+        {
+          type: 'checkbox-group',
+          name: `factorData.[${index}].value`,
+          orientation: 'horizontal',
+          group: fac.parameterGroup,
+          wrapperClassName: 'col-span-12',
+        },
+        {
+          type: 'text-input',
+          label: 'Other',
+          name: `factorData.[${index}].otherRemarks`,
+          wrapperClassName: 'col-span-12',
+          showWhen: { field: `factorData.[${index}].value`, is: '99', operator: 'contains' },
+          requiredWhen: { field: `factorData.[${index}].value`, is: '99', operator: 'contains' },
+          maxLength: 100,
+        },
+      ];
 
     case 'Checkbox':
-      return {
-        type: 'checkbox',
-        name: `factorData.[${index}].value`,
-        //orientation: 'horizontal',
-        //group: fac.parameterGroup,
-        wrapperClassName: 'col-span-12',
-      };
+      return [
+        {
+          type: 'checkbox',
+          name: `factorData.[${index}].value`,
+          //orientation: 'horizontal',
+          //group: fac.parameterGroup,
+          wrapperClassName: 'col-span-12',
+        },
+      ];
 
     case 'Numeric':
-      return {
-        type: 'number-input',
-        name: `factorData.[${index}].value`,
-        label: '',
-        wrapperClassName: 'col-span-12',
-        ...(fac.fieldLength ? { maxIntegerDigits: fac.fieldLength } : {}),
-        ...(fac.fieldDecimal ? { decimalPlaces: fac.fieldDecimal } : {}),
-      };
+      return [
+        {
+          type: 'number-input',
+          name: `factorData.[${index}].value`,
+          label: '',
+          wrapperClassName: 'col-span-12',
+          ...(fac.fieldLength ? { maxIntegerDigits: fac.fieldLength } : {}),
+          ...(fac.fieldDecimal ? { decimalPlaces: fac.fieldDecimal } : {}),
+        },
+      ];
 
     default:
-      return {
-        type: 'text-input',
-        name: `factorData.[${index}].value`,
-        label: '',
-        wrapperClassName: 'col-span-12',
-        ...(fac.fieldLength ? { maxLength: fac.fieldLength } : {}),
-      };
+      return [
+        {
+          type: 'text-input',
+          name: `factorData.[${index}].value`,
+          label: '',
+          wrapperClassName: 'col-span-12',
+          ...(fac.fieldLength ? { maxLength: fac.fieldLength } : {}),
+        },
+      ];
   }
 };
 
