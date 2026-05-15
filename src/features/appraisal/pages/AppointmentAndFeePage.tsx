@@ -6,9 +6,10 @@ import { useAppraisalContext } from '../context/AppraisalContext';
 import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
 import RescheduleModal from '../components/RescheduleModal';
-import FeeInformationSection from '../components/FeeInformationSection';
+import FeeInformationSection, { BANK_ABSORB_FEE_TYPES } from '../components/FeeInformationSection';
 import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import {
   useCancelAppointment,
   useCreateAppointment,
@@ -64,6 +65,10 @@ export default function AppointmentAndFeePage() {
 
   // Get the first fee record
   const currentFee = fees.length > 0 ? fees[0] : null;
+
+  // Derive whether the current fee payment type is a bank-absorb type.
+  // Used to override payment display in PaymentInformationSection (frontend-only, not persisted).
+  const isBankAbsorb = BANK_ABSORB_FEE_TYPES.includes((currentFee as any)?.feePaymentType ?? '');
 
   const handleReschedule = async (data: {
     dateTime: string;
@@ -154,6 +159,8 @@ export default function AppointmentAndFeePage() {
       feeId: currentFee.id,
       ...data,
     });
+    const newItems = [...(currentFee.items ?? []), { feeAmount: data.feeAmount }];
+    handleUpdateFeePaymentType(currentFee.feePaymentType, computeTotalFee(newItems));
   };
 
   const handleUpdateFeeItem = async (
@@ -167,6 +174,10 @@ export default function AppointmentAndFeePage() {
       feeItemId,
       ...data,
     });
+    const newItems = (currentFee?.items ?? []).map(item =>
+      item.id === feeItemId ? { ...item, feeAmount: data.feeAmount } : item,
+    );
+    handleUpdateFeePaymentType(currentFee.feePaymentType, computeTotalFee(newItems));
   };
 
   const handleRemoveFeeItem = async (feeId: string, feeItemId: string) => {
@@ -175,6 +186,8 @@ export default function AppointmentAndFeePage() {
       feeId,
       feeItemId,
     });
+    const newItems = (currentFee?.items ?? []).filter(item => item.id !== feeItemId);
+    handleUpdateFeePaymentType(currentFee.feePaymentType, computeTotalFee(newItems));
   };
 
   const handleRecordPayment = async (data: {
@@ -233,13 +246,23 @@ export default function AppointmentAndFeePage() {
     }
   };
 
-  const handleUpdateFeePaymentType = async (value: string) => {
+  const computeTotalFee = (items: []) => {
+    const vatRate = currentFee?.vatRate ?? VAT_PERCENTAGE;
+    const subtotal = items.reduce((sum, item) => sum + (item.feeAmount || 0), 0);
+    return subtotal * (1 + vatRate / 100);
+  };
+
+  const handleUpdateFeePaymentType = async (value: string, overrideTotalFee?: number) => {
     if (!currentFee) return;
+    // Calculate totalFee to determine bankAbsorbAmount
+    const totalFee = overrideTotalFee ?? computeTotalFee(currentFee.items ?? []);
+    const isNewValueBankAbsorb = BANK_ABSORB_FEE_TYPES.includes(value);
     try {
       await updateAppraisalFee.mutateAsync({
         appraisalId,
         feeId: currentFee.id,
         feePaymentType: value,
+        bankAbsorbAmount: isNewValueBankAbsorb ? totalFee : 0,
       });
       toast.success('Fee type updated');
     } catch (error: any) {
@@ -300,6 +323,7 @@ export default function AppointmentAndFeePage() {
               onUpdatePayment={handleUpdatePayment}
               onRemovePayment={handleRemovePayment}
               requestedAt={appraisal?.requestedAt}
+              isBankAbsorb={isBankAbsorb}
               isPaymentPending={
                 recordPayment.isPending || updatePayment.isPending || removePayment.isPending
               }

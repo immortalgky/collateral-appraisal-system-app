@@ -494,8 +494,6 @@ export function BuildingCostTable({ buildingCost, onChange }: BuildingCostTableP
     rowIdx: number;
   } | null>(null);
 
-  if (!buildingCost?.length) return null;
-
   const canEdit = !isReadOnly && !!onChange;
 
   const updateDepreciationDetails = (bIdx: number, newDetails: any[]) => {

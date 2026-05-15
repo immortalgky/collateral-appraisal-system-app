@@ -178,6 +178,8 @@ export const useRecordPayment = () => {
     }: RecordPaymentRequestType & {
       appraisalId: string;
       feeId: string;
+      feePaymentType: string;
+      bankAbsorbAmount?: number;
     }): Promise<void> => {
       await axios.post(`/appraisals/${appraisalId}/fees/${feeId}/payments`, body);
     },

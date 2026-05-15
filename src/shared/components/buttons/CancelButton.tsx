@@ -2,20 +2,22 @@ import { useNavigate } from 'react-router-dom';
 import Button from '../Button';
 
 interface CancelButtonProps {
-  navigateTo?: string;
+  fallbackPath?: string;
 }
 
-const CancelButton = ({ navigateTo }: CancelButtonProps) => {
+const CancelButton = ({ fallbackPath }: CancelButtonProps) => {
   const navigate = useNavigate();
-  const handleClick = () => {
-    if (navigateTo) {
-      navigate(navigateTo);
+
+  const handleCancel = () => {
+    if (fallbackPath) {
+      navigate(fallbackPath);
     } else {
       navigate(-1);
     }
   };
+
   return (
-    <Button variant="ghost" type="button" onClick={handleClick}>
+    <Button variant="ghost" type="button" onClick={handleCancel}>
       Cancel
     </Button>
   );

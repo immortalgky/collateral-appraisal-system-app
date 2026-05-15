@@ -62,6 +62,7 @@ export type ResetPricingMethodResultType = z.infer<typeof schemas.ResetPricingMe
 
 // -- Update Method/Approach --
 export type UpdateMethodRequestType = z.infer<typeof schemas.UpdateMethodRequest>;
+export type UpdateMethodResponseType = z.infer<typeof schemas.UpdateMethodResponse>;
 export type UpdateApproachRequestType = z.infer<typeof schemas.UpdateApproachRequest>;
 
 // -- Complete Pricing Analysis --
