@@ -26,7 +26,8 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
-import { useBreadcrumbExtrasStore, useUIStore } from '@shared/store';
+import { useBreadcrumbExtrasStore } from '@shared/store';
+import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -174,7 +175,8 @@ function TaskLayout() {
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
   });
-  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
+  useSidebarCssVar();
+
   const currentUsername = useAuthStore(s => s.user?.username);
   const currentUser = useAuthStore(s => s.user);
 
@@ -403,7 +405,7 @@ function TaskLayout() {
         <MobileAppraisalSidebar logo={Logo} loading />
         <AppraisalSidebar logo={Logo} loading />
         <div
-          className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}
+          className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}
         >
           <Navbar userNavigation={userNavigation} />
           <main className="py-4 flex-1 flex flex-col min-h-0">
@@ -460,7 +462,7 @@ function TaskLayout() {
         <AppraisalSidebar logo={Logo} />
 
         <div
-          className={`${sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-[256px]'} flex-1 flex flex-col min-h-0 transition-all duration-300`}
+          className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}
         >
           <Navbar userNavigation={userNavigation} />
 

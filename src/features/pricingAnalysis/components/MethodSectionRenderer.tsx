@@ -137,6 +137,7 @@ export function MethodSectionRenderer({
       return (
         <LeaseholdPanel
           {...panelProps}
+          propertiesMap={serverData.propertiesMap}
           firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
           firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
         />

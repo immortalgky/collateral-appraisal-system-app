@@ -320,7 +320,6 @@ const ExtCompanySubmitQuotationPage = () => {
       quotationRequestId: id ?? '',
       companyId,
       quotationNumber: values.quotationNumber,
-      estimatedDays: Math.max(...values.items.map(i => i.estimatedDays ?? 1), 1),
       items: values.items.map((item, idx) => ({
         quotationRequestItemId: '00000000-0000-0000-0000-000000000000',
         appraisalId: item.appraisalId,
@@ -527,7 +526,6 @@ const ExtCompanySubmitQuotationPage = () => {
     submitQuotation(
       {
         quotationNumber: values.quotationNumber,
-        estimatedDays: Math.max(...values.items.map(i => i.estimatedDays), 1),
         items: values.items.map((item, idx) => ({
           quotationRequestItemId: '00000000-0000-0000-0000-000000000000',
           appraisalId: item.appraisalId,

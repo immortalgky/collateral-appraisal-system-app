@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
@@ -7,6 +7,9 @@ import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigationTypes';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
+import {
+  SIDEBAR_COLLAPSED_WIDTH,
+} from './sidebarConstants';
 
 const TASK_LIST_PATH = '/tasks';
 
@@ -69,12 +72,12 @@ function MenuItem({
       return (
         <li>
           <div
-            className="group flex items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50"
+            className="group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200 hover:bg-gray-50"
             title={item.name}
           >
             <div
               className={clsx(
-                'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
+                'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
                 getIconBgClass(item.iconColor),
                 'group-hover:scale-105',
               )}
@@ -82,7 +85,7 @@ function MenuItem({
               <Icon
                 name={item.icon}
                 style={iconStyle}
-                className={clsx('size-4', item.iconColor || 'text-gray-500')}
+                className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
               />
             </div>
           </div>
@@ -101,14 +104,14 @@ function MenuItem({
           type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
-            'group flex w-full items-center justify-between py-2.5 px-3 rounded-xl transition-all duration-200',
+            'group flex w-full items-center justify-between py-2 px-2.5 rounded-xl transition-all duration-200 text-left',
             isChildActive ? 'bg-primary/5' : 'hover:bg-gray-50',
           )}
         >
-          <span className="flex items-center gap-3">
+          <span className="flex items-center gap-2.5">
             <div
               className={clsx(
-                'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
+                'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
                 isChildActive ? 'bg-primary/10' : getIconBgClass(item.iconColor),
                 'group-hover:scale-105',
               )}
@@ -116,12 +119,12 @@ function MenuItem({
               <Icon
                 name={item.icon}
                 style={iconStyle}
-                className={clsx('size-4', item.iconColor || 'text-gray-500')}
+                className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
               />
             </div>
             <span
               className={clsx(
-                'text-sm font-medium',
+                'text-xs font-medium',
                 isChildActive ? 'text-primary' : 'text-gray-700',
               )}
             >
@@ -132,7 +135,7 @@ function MenuItem({
             name="chevron-down"
             style="solid"
             className={clsx(
-              'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
+              'size-2.5 text-gray-400 transition-transform duration-300 ease-in-out',
               isOpen ? 'rotate-180' : '',
             )}
           />
@@ -158,13 +161,13 @@ function MenuItem({
           to={item.href}
           title={item.name}
           className={clsx(
-            'group flex items-center justify-center py-2.5 px-3 rounded-xl transition-all duration-200',
+            'group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200',
             isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
           )}
         >
           <div
             className={clsx(
-              'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
+              'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
               getIconBgClass(item.iconColor),
               'group-hover:scale-105',
             )}
@@ -172,7 +175,7 @@ function MenuItem({
             <Icon
               name={item.icon}
               style={iconStyle}
-              className={clsx('size-4', item.iconColor || 'text-gray-500')}
+              className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
             />
           </div>
         </Link>
@@ -188,7 +191,7 @@ function MenuItem({
       <Link
         to={item.href}
         className={clsx(
-          'group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200',
+          'group flex items-center gap-2.5 py-2 px-2.5 rounded-xl transition-all duration-200',
           isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
           isChild && 'py-2',
         )}
@@ -196,7 +199,7 @@ function MenuItem({
         {!isChild && (
           <div
             className={clsx(
-              'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
+              'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
               getIconBgClass(item.iconColor),
               'group-hover:scale-105',
             )}
@@ -204,14 +207,14 @@ function MenuItem({
             <Icon
               name={item.icon}
               style={iconStyle}
-              className={clsx('size-4', item.iconColor || 'text-gray-500')}
+              className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
             />
           </div>
         )}
         {isChild && (
           <div className={clsx('w-2 h-2 rounded-full', isActive ? 'bg-primary' : 'bg-gray-300')} />
         )}
-        <span className={clsx('text-sm font-medium text-gray-700', isChild && 'text-sm')}>
+        <span className={clsx('text-xs font-medium text-gray-700')}>
           {item.name}
         </span>
         {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
@@ -321,22 +324,59 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
   const isSettingsActive = location.pathname === '/settings';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
+  const sidebarWidth = useUIStore(state => state.sidebarWidth);
+  const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ move: ((e: PointerEvent) => void) | null; up: (() => void) | null }>({
+    move: null,
+    up: null,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (dragRef.current.move) window.removeEventListener('pointermove', dragRef.current.move);
+      if (dragRef.current.up) window.removeEventListener('pointerup', dragRef.current.up);
+      document.body.style.userSelect = '';
+    };
+  }, []);
+
+  const handleResizePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    document.body.style.userSelect = 'none';
+    const startX = e.clientX;
+    const startW = useUIStore.getState().sidebarWidth;
+    const move = (ev: PointerEvent) =>
+      useUIStore.getState().setSidebarWidth(startW + (ev.clientX - startX));
+    const up = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+      if (dragRef.current.move) window.removeEventListener('pointermove', dragRef.current.move);
+      if (dragRef.current.up) window.removeEventListener('pointerup', dragRef.current.up);
+      dragRef.current = { move: null, up: null };
+    };
+    dragRef.current = { move, up };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
 
   return (
     <aside
-      className={clsx(
-        'hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300',
-        sidebarCollapsed ? 'lg:w-16' : 'lg:w-72',
-      )}
+      className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+      style={{
+        width: sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth,
+        transition: isDragging ? 'none' : 'width 300ms',
+      }}
     >
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
         <div
-          className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}
+          className={clsx('transition-all duration-300', sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4')}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
-              <img alt="LHBank" src={logo} className="h-7 w-auto" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
+              <img alt="LHBank" src={logo} className="h-6 w-auto" />
             </div>
             {!sidebarCollapsed && (
               <div className="flex flex-col">
@@ -361,13 +401,13 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
         {/* Navigation */}
         <nav
           className={clsx(
-            'flex flex-1 flex-col py-4 transition-all duration-300',
-            sidebarCollapsed ? 'px-1' : 'px-4',
+            'flex flex-1 flex-col py-3 transition-all duration-300',
+            sidebarCollapsed ? 'px-1' : 'px-3',
           )}
         >
           {!sidebarCollapsed && (
             <div className="px-3 mb-2">
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                 {t('sidebar.general')}
               </span>
             </div>
@@ -383,7 +423,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
           <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100')}>
             {!sidebarCollapsed && (
               <div className="px-3 mb-2">
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   {t('sidebar.system')}
                 </span>
               </div>
@@ -394,16 +434,16 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
                   to="/settings"
                   title={sidebarCollapsed ? t('sidebar.settings') : undefined}
                   className={clsx(
-                    'group flex items-center py-2.5 px-3 rounded-xl transition-all duration-200',
+                    'group flex items-center py-2 px-2.5 rounded-xl transition-all duration-200',
                     isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50',
-                    sidebarCollapsed ? 'justify-center' : 'gap-3',
+                    sidebarCollapsed ? 'justify-center' : 'gap-2.5',
                   )}
                 >
-                  <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
-                    <Icon name="gear" style="solid" className="size-4 text-gray-500" />
+                  <div className="w-7 h-7 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
+                    <Icon name="gear" style="solid" className="size-3.5 text-gray-500" />
                   </div>
                   {!sidebarCollapsed && (
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-xs font-medium text-gray-700">
                       {t('sidebar.settings')}
                     </span>
                   )}
@@ -421,12 +461,22 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
               <Icon
                 style="solid"
                 name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
-                className="size-4"
+                className="size-2.5"
               />
             </button>
           </div>
         </nav>
       </div>
+
+      {/* Resize handle — only when expanded */}
+      {!sidebarCollapsed && (
+        <div
+          className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors"
+          onPointerDown={handleResizePointerDown}
+          onDoubleClick={resetSidebarWidth}
+          aria-hidden="true"
+        />
+      )}
     </aside>
   );
 }

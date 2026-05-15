@@ -6,6 +6,9 @@ export type UIStore = {
   setSidebarOpen: (open: boolean) => void;
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
+  sidebarWidth: number;
+  setSidebarWidth: (width: number) => void;
+  resetSidebarWidth: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
 };

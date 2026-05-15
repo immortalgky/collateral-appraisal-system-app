@@ -453,7 +453,6 @@ export const useSubmitQuotation = (quotationId: string) => {
   return useMutation({
     mutationFn: async (payload: {
       quotationNumber: string;
-      estimatedDays: number;
       items: Array<{
         quotationRequestItemId: string;
         appraisalId: string;

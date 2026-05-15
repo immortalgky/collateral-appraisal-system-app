@@ -26,6 +26,7 @@ import RequestForm from '../forms/RequestForm';
 import AppointmentAndFeeForm from '../forms/AppointmentAndFeeForm';
 import TitleInformationForm from '../forms/TitleInformationForm';
 import AttachDocumentForm from '../forms/AttachDocumentForm';
+import type { CreateDraftRequestRequestType } from '../api';
 import {
   createUploadSession,
   useCreateDraftRequest,
@@ -40,7 +41,6 @@ import { mapCopyTemplateToForm, mapRequestResponseToForm } from '../utils/mapper
 import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
 import { AppraisalCopyProvider } from '../contexts/AppraisalCopyContext';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
-import type { CreateDraftRequestRequestType } from '../api';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -271,7 +271,8 @@ function RequestPage() {
       setCopyBannerNumber(appraisalNumber);
       setCopyBannerValue(appraisalValue ?? null);
 
-      const valueText = appraisalValue != null ? ` (value: ${appraisalValue.toLocaleString('th-TH')})` : '';
+      const valueText =
+        appraisalValue != null ? ` (value: ${appraisalValue.toLocaleString('th-TH')})` : '';
       toast.success(
         `Copied from appraisal ${appraisalNumber}${valueText}. Review & adjust before saving. Appointment and fee were not copied.`,
         { duration: 6000 },
@@ -585,7 +586,11 @@ function RequestPage() {
                       {!isEditMode && copyBannerNumber && (
                         <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
                           <div className="flex items-center gap-2">
-                            <Icon name="circle-info" style="solid" className="w-4 h-4 shrink-0 text-blue-500" />
+                            <Icon
+                              name="circle-info"
+                              style="solid"
+                              className="w-4 h-4 shrink-0 text-blue-500"
+                            />
                             <span>
                               Re-appraisal of <strong>{copyBannerNumber}</strong>
                               {copyBannerValue != null

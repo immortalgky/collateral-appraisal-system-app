@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
 import clsx from 'clsx';
 import type { NavItem } from '@shared/config/navigationTypes';
+import { SIDEBAR_COLLAPSED_WIDTH } from './sidebarConstants';
 import {
   useAppraisalNavigation,
   useNavigation,
@@ -135,7 +136,7 @@ function CompactMenuItem({
       )}
     >
       {iconWithBadge}
-      <span className={clsx('text-sm font-medium', isActive ? 'text-primary' : 'text-gray-700')}>
+      <span className={clsx('text-xs font-medium', isActive ? 'text-primary' : 'text-gray-700')}>
         {item.name}
       </span>
     </Link>
@@ -338,6 +339,45 @@ export default function AppraisalSidebar({
   const status = useAppraisalStatus();
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
+  const sidebarWidth = useUIStore(state => state.sidebarWidth);
+  const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragRef = useRef<{ move: ((e: PointerEvent) => void) | null; up: (() => void) | null }>({
+    move: null,
+    up: null,
+  });
+
+  useEffect(() => {
+    return () => {
+      if (dragRef.current.move) window.removeEventListener('pointermove', dragRef.current.move);
+      if (dragRef.current.up) window.removeEventListener('pointerup', dragRef.current.up);
+      document.body.style.userSelect = '';
+    };
+  }, []);
+
+  const handleResizePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      e.currentTarget.setPointerCapture(e.pointerId);
+      setIsDragging(true);
+      document.body.style.userSelect = 'none';
+      const startX = e.clientX;
+      const startW = useUIStore.getState().sidebarWidth;
+      const move = (ev: PointerEvent) =>
+        useUIStore.getState().setSidebarWidth(startW + (ev.clientX - startX));
+      const up = () => {
+        setIsDragging(false);
+        document.body.style.userSelect = '';
+        if (dragRef.current.move) window.removeEventListener('pointermove', dragRef.current.move);
+        if (dragRef.current.up) window.removeEventListener('pointerup', dragRef.current.up);
+        dragRef.current = { move: null, up: null };
+      };
+      dragRef.current = { move, up };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    },
+    [],
+  );
 
   const navContext = useMemo(
     () => ({ isPma, isBlock, blockProjectType, status, basePath, requestId }),
@@ -350,19 +390,20 @@ export default function AppraisalSidebar({
 
   return (
     <aside
-      className={clsx(
-        'hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300',
-        sidebarCollapsed ? 'lg:w-16' : 'lg:w-[256px]',
-      )}
+      className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+      style={{
+        width: sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth,
+        transition: isDragging ? 'none' : 'width 300ms',
+      }}
     >
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
         <div
-          className={clsx('py-5 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-5')}
+          className={clsx('transition-all duration-300', sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4')}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
-              <img alt="LHBank" src={logo} className="h-7 w-auto" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
+              <img alt="LHBank" src={logo} className="h-6 w-auto" />
             </div>
             {!sidebarCollapsed && (
               <div className="flex flex-col">
@@ -387,7 +428,7 @@ export default function AppraisalSidebar({
         {/* Navigation */}
         <nav
           className={clsx(
-            'flex flex-1 flex-col py-2 transition-all duration-300',
+            'flex flex-1 flex-col py-3 transition-all duration-300',
             sidebarCollapsed ? 'px-1' : 'px-3',
           )}
         >
@@ -418,7 +459,7 @@ export default function AppraisalSidebar({
           >
             {!sidebarCollapsed && (
               <div className="px-2.5 mb-1">
-                <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                   Application
                 </span>
               </div>
@@ -449,12 +490,22 @@ export default function AppraisalSidebar({
               <Icon
                 style="solid"
                 name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
-                className="size-4"
+                className="size-2.5"
               />
             </button>
           </div>
         </nav>
       </div>
+
+      {/* Resize handle — only when expanded */}
+      {!sidebarCollapsed && (
+        <div
+          className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors"
+          onPointerDown={handleResizePointerDown}
+          onDoubleClick={resetSidebarWidth}
+          aria-hidden="true"
+        />
+      )}
     </aside>
   );
 }

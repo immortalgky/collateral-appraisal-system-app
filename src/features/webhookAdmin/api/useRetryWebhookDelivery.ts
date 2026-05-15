@@ -8,7 +8,7 @@ export const useRetryWebhookDelivery = () => {
 
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
-      await axios.post(`/v1/webhook-deliveries/${id}/retry`);
+      await axios.post(`/webhook-deliveries/${id}/retry`);
     },
     onSuccess: (_data, id) => {
       toast.success('Webhook delivery queued for retry');

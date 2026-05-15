@@ -355,7 +355,6 @@ export const SaveDraftQuotationSchema = z.object({
   quotationRequestId: z.string().uuid(),
   companyId: z.string().uuid(),
   quotationNumber: z.string(),
-  estimatedDays: z.number().int(),
   items: z.array(SaveDraftQuotationItemSchema),
   validUntil: z.string().nullable().optional(),
   proposedStartDate: z.string().nullable().optional(),

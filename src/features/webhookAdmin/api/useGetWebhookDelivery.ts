@@ -7,7 +7,7 @@ export const useGetWebhookDelivery = (id: string | null) => {
   return useQuery({
     queryKey: webhookDeliveryKeys.detail(id ?? ''),
     queryFn: async (): Promise<WebhookDeliveryDetail> => {
-      const { data } = await axios.get<WebhookDeliveryDetail>(`/v1/webhook-deliveries/${id}`);
+      const { data } = await axios.get<WebhookDeliveryDetail>(`/webhook-deliveries/${id}`);
       return data;
     },
     enabled: !!id,
