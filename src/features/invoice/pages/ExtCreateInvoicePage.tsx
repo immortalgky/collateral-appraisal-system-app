@@ -209,7 +209,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
       return;
     }
     if (!invoiceNumber.trim()) {
-      setInvoiceNumberError(t('errors.duplicateNumber'));
+      setInvoiceNumberError(t('errors.invoiceNumberRequired'));
       return;
     }
     setInvoiceNumberError(null);
@@ -247,7 +247,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-bold text-primary tracking-[0.25em] uppercase">
-                Invoice
+                {t('draft.invoiceLabel')}
               </p>
               <p className="text-[10px] text-gray-400 mt-0.5">
                 {existingInvoice?.submittedAt
@@ -256,7 +256,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">Items</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">{t('draft.itemsLabel')}</p>
               <p className="text-sm font-semibold text-gray-900 tabular-nums">
                 {selectedAssignments.length}
               </p>

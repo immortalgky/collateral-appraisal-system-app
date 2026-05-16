@@ -1,4 +1,7 @@
 {
+  "common": {
+    "loading": "Loading"
+  },
   "status": {
     "Pending": "Pending",
     "Sent": "Sent",
@@ -87,6 +90,8 @@
   "draft": {
     "title": "Invoice Draft",
     "items": "Selected Items",
+    "invoiceLabel": "Invoice",
+    "itemsLabel": "Items",
     "noItemsHint": "Select appraisal assignments from the list",
     "noItems": "No items",
     "saving": "Saving...",
@@ -139,6 +144,7 @@
     "bulkFailed": "Failed to mark invoices as paid",
     "saveFailed": "Failed to save draft",
     "submitFailed": "Failed to submit invoice",
-    "duplicateNumber": "This invoice number is already in use"
+    "duplicateNumber": "This invoice number is already in use",
+    "invoiceNumberRequired": "Invoice number is required"
   }
 }

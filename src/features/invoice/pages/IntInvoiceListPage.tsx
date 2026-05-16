@@ -119,15 +119,14 @@ const IntInvoiceListPage = () => {
   const grandItemCount = data?.grandItemCount ?? 0;
   const grandTotalAmount = data?.grandTotalAmount ?? 0;
 
-  // Per-group subtotals (current page only). Keyed by the group identity used
-  // to render the group header — for company grouping that's `companyName`.
+  // Per-group subtotals (current page only). Keyed by `companyId` so two
+  // companies with the same display name (or a null name) don't merge.
   const groupSubtotals = useMemo(() => {
     const map = new Map<string, { count: number; total: number }>();
     if (!groupByCompany) return map;
     for (const item of items) {
-      const key = item.companyName ?? '—';
-      const prev = map.get(key) ?? { count: 0, total: 0 };
-      map.set(key, { count: prev.count + 1, total: prev.total + item.totalAmount });
+      const prev = map.get(item.companyId) ?? { count: 0, total: 0 };
+      map.set(item.companyId, { count: prev.count + 1, total: prev.total + item.totalAmount });
     }
     return map;
   }, [items, groupByCompany]);
@@ -195,18 +194,18 @@ const IntInvoiceListPage = () => {
   };
 
   // Pre-compute per-company id buckets for the visible items so group/header
-  // checkboxes can flip all of a company's rows in one click.
+  // checkboxes can flip all of a company's rows in one click. Keyed by
+  // `companyId` (display name can collide or be null).
   const companyBuckets = useMemo(() => {
     const map = new Map<string, { companyId: string; companyName: string | null; ids: string[] }>();
     for (const item of items) {
-      const key = item.companyName ?? '—';
-      const bucket = map.get(key) ?? {
+      const bucket = map.get(item.companyId) ?? {
         companyId: item.companyId,
         companyName: item.companyName,
         ids: [],
       };
       bucket.ids.push(item.id);
-      map.set(key, bucket);
+      map.set(item.companyId, bucket);
     }
     return map;
   }, [items]);
@@ -215,7 +214,7 @@ const IntInvoiceListPage = () => {
   // Honours the existing lock if set; otherwise picks the first visible group.
   const headerTarget =
     lockedCompanyId !== null
-      ? Array.from(companyBuckets.values()).find(b => b.companyId === lockedCompanyId)
+      ? companyBuckets.get(lockedCompanyId)
       : Array.from(companyBuckets.values())[0];
   const headerAllSelected =
     headerTarget !== undefined &&
@@ -474,20 +473,20 @@ const IntInvoiceListPage = () => {
                     item.companyId !== lockedCompanyId;
                   const isFirstInGroup =
                     groupByCompany &&
-                    (idx === 0 || items[idx - 1].companyName !== item.companyName);
+                    (idx === 0 || items[idx - 1].companyId !== item.companyId);
                   const isLastInGroup =
                     groupByCompany &&
                     (idx === items.length - 1 ||
-                      items[idx + 1].companyName !== item.companyName);
+                      items[idx + 1].companyId !== item.companyId);
                   const subtotal = isLastInGroup
-                    ? groupSubtotals.get(item.companyName ?? '—')
+                    ? groupSubtotals.get(item.companyId)
                     : undefined;
                   // Group header spans every column EXCEPT the checkbox column
                   // (which gets its own group select-all checkbox on Unpaid).
                   const headerNameColSpan =
                     (tab === 'paid' ? 1 : 0) + 6;
                   const groupBucket = isFirstInGroup
-                    ? companyBuckets.get(item.companyName ?? '—')
+                    ? companyBuckets.get(item.companyId)
                     : undefined;
                   const groupAllSelected =
                     !!groupBucket &&

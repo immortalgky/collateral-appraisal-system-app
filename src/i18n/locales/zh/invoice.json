@@ -1,4 +1,7 @@
 {
+  "common": {
+    "loading": "加载中"
+  },
   "status": {
     "Pending": "待处理",
     "Sent": "已发送",
@@ -87,6 +90,8 @@
   "draft": {
     "title": "发票草稿",
     "items": "已选项目",
+    "invoiceLabel": "发票",
+    "itemsLabel": "项目",
     "noItemsHint": "从列表中选择评估任务",
     "noItems": "无项目",
     "saving": "保存中...",
@@ -139,6 +144,7 @@
     "bulkFailed": "批量标记付款失败",
     "saveFailed": "保存草稿失败",
     "submitFailed": "提交发票失败",
-    "duplicateNumber": "此发票号已存在"
+    "duplicateNumber": "此发票号已存在",
+    "invoiceNumberRequired": "请填写发票编号"
   }
 }

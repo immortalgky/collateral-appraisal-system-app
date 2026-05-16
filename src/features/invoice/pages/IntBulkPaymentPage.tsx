@@ -195,7 +195,7 @@ const IntBulkPaymentPage = () => {
       {isLoadingAny && (
         <div className="flex items-center justify-center py-6 text-gray-400 text-sm">
           <Icon style="solid" name="spinner" className="size-4 animate-spin mr-2" />
-          {t('draft.saving').replace('...', '')}
+          {t('common.loading')}
         </div>
       )}
 

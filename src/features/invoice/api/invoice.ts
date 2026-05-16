@@ -20,8 +20,10 @@ export const invoiceKeys = {
   list: (params: Record<string, unknown>) => [...invoiceKeys.lists(), params] as const,
   details: () => [...invoiceKeys.all, 'detail'] as const,
   detail: (id: string) => [...invoiceKeys.details(), id] as const,
+  /** Prefix key — invalidate this to match every parameterized `eligible(params)` cache entry. */
+  eligibleBase: () => [...invoiceKeys.all, 'eligible'] as const,
   eligible: (params?: Record<string, unknown>) =>
-    [...invoiceKeys.all, 'eligible', params ?? {}] as const,
+    [...invoiceKeys.eligibleBase(), params ?? {}] as const,
 };
 
 // ─── Query Params Interface ───────────────────────────────────────────────────
@@ -141,7 +143,7 @@ export const useCreateInvoice = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligible() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligibleBase() });
     },
   });
 };
@@ -161,7 +163,7 @@ export const useUpdateInvoiceDraft = (id: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligible() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligibleBase() });
     },
   });
 };
@@ -200,7 +202,7 @@ export const useDeleteInvoice = () => {
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
       queryClient.removeQueries({ queryKey: invoiceKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligible() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligibleBase() });
     },
   });
 };
