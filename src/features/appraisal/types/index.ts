@@ -35,7 +35,7 @@ export interface PropertyItem {
   machineName?: string;
   brand?: string;
   model?: string;
-  registrationNo?: string;
+  registrationNumber?: string;
   dimension?: string;
 }
 

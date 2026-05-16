@@ -62,7 +62,7 @@ export function CostMachinePanel({
           appraisalPropertyId: String(d.propertyId ?? propertyId),
           quantity: d.quantity != null ? Number(d.quantity) : null,
           machineName: d.machineName != null ? String(d.machineName) : null,
-          registrationNo: d.registrationNo != null ? String(d.registrationNo) : null,
+          registrationNumber: d.registrationNumber != null ? String(d.registrationNumber) : null,
           manufacturer: d.manufacturer != null ? String(d.manufacturer) : null,
           conditionUse: d.conditionUse != null ? String(d.conditionUse) : null,
           yearOfManufacture: d.yearOfManufacture != null ? Number(d.yearOfManufacture) : null,

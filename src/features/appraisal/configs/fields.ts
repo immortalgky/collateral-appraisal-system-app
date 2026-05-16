@@ -2016,7 +2016,7 @@ export const machineInfoFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Registration No.',
-    name: 'registrationNo',
+    name: 'registrationNumber',
     wrapperClassName: 'col-span-5',
     maxLength: 50,
   },

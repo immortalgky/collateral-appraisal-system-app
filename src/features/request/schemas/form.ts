@@ -252,7 +252,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vin: '',
   licensePlateNumber: '',
   registrationStatus: false,
-  registrationNo: '',
+  registrationNumber: '',
   machineType: '',
   installationStatus: '',
   invoiceNumber: '',

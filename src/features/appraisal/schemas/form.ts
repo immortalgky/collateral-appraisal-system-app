@@ -638,7 +638,7 @@ export const createMachineryFormDefault: createMachineryFormType = {
   propertyName: null,
   isOwnerVerified: true,
   ownerName: null,
-  registrationNo: null,
+  registrationNumber: null,
   isOperational: true,
   machineName: null,
   brand: null,

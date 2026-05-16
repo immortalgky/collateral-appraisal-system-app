@@ -11,7 +11,7 @@ export interface MachineryItem {
   appraisalPropertyId: string;
   quantity: number | null;
   machineName: string | null;
-  registrationNo: string | null;
+  registrationNumber: string | null;
   manufacturer: string | null;
   conditionUse: string | null;
   yearOfManufacture: number | null;
@@ -138,7 +138,7 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
       <td className={clsx(tdBase)} title={machine.machineName ?? '-'}>
         {machine.machineName}
       </td>
-      <td className={clsx(tdBase)}>{machine.registrationNo}</td>
+      <td className={clsx(tdBase)}>{machine.registrationNumber}</td>
       <td className={clsx(tdBase)}>{machine.manufacturer}</td>
       <td className={clsx(tdBase, 'text-center')}>
         <span

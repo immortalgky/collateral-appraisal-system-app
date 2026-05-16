@@ -39,7 +39,7 @@ export function TitleLookupIntegration({ titleIndex }: TitleLookupIntegrationPro
   const province: string = useWatch({ name: `${prefix}.titleAddress.provinceName` }) ?? '';
 
   // Machine fields
-  const registrationNo: string = useWatch({ name: `${prefix}.registrationNo` }) ?? '';
+  const registrationNo: string = useWatch({ name: `${prefix}.registrationNumber` }) ?? '';
 
   // Debounced params
   const [lookupParams, setLookupParams] = useState<CollateralLookupParams | null>(null);
@@ -124,7 +124,7 @@ export function TitleLookupIntegration({ titleIndex }: TitleLookupIntegrationPro
     if (master.collateralType === 'Machine' && master.machineDetail) {
       const d = master.machineDetail;
       if (d.machineRegistrationNo) {
-        setValue(`${prefix}.registrationNo`, d.machineRegistrationNo, { shouldDirty: true });
+        setValue(`${prefix}.registrationNumber`, d.machineRegistrationNo, { shouldDirty: true });
       }
     }
 
