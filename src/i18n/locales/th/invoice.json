@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "กำลังโหลด"
+  },
+  "status": {
+    "Pending": "รอดำเนินการ",
+    "Sent": "ส่งแล้ว",
+    "Paid": "ชำระแล้ว"
+  },
+  "list": {
+    "title": "ใบแจ้งหนี้",
+    "subtitle": "จัดการและติดตามใบแจ้งหนี้ค่าธรรมเนียมการประเมิน",
+    "createInvoice": "สร้างใบแจ้งหนี้",
+    "tabs": {
+      "unpaid": "ยังไม่ชำระ",
+      "paid": "ชำระแล้ว"
+    },
+    "dateFrom": "จากวันที่",
+    "dateTo": "ถึงวันที่",
+    "clearFilters": "ล้างตัวกรอง",
+    "selectAll": "เลือกทั้งหมด",
+    "groupBy": "จัดกลุ่มตาม",
+    "groupByNone": "ไม่จัดกลุ่ม",
+    "groupByCompany": "บริษัท",
+    "empty": "ไม่พบใบแจ้งหนี้",
+    "emptyHint": "สร้างใบแจ้งหนี้ใหม่เพื่อเริ่มต้น",
+    "tryFilters": "ลองปรับตัวกรอง",
+    "grandTotal": "ยอดรวมทั้งหมด",
+    "subtotal": "ยอดรวมย่อย",
+    "col": {
+      "invoiceNumber": "เลขที่ใบแจ้งหนี้",
+      "companyName": "บริษัท",
+      "sentDate": "วันที่ส่ง",
+      "paidDate": "วันที่ชำระ",
+      "totalItems": "จำนวนรายการ",
+      "totalAmount": "ยอดรวม",
+      "status": "สถานะ"
+    },
+    "actions": {
+      "view": "ดูรายละเอียด",
+      "edit": "แก้ไข",
+      "delete": "ลบ"
+    },
+    "deleteConfirm": {
+      "title": "ลบใบแจ้งหนี้",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบใบแจ้งหนี้นี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ",
+      "cancel": "ยกเลิก"
+    }
+  },
+  "detail": {
+    "invoice": "ใบแจ้งหนี้",
+    "draftInvoice": "ใบแจ้งหนี้ฉบับร่าง",
+    "totalAmount": "ยอดรวมทั้งหมด",
+    "submittedAt": "ส่งเมื่อ",
+    "lineItems": "รายการ",
+    "notes": "หมายเหตุ",
+    "sentInfo": "ส่งใบแจ้งหนี้ของคุณแล้ว รอการชำระเงิน",
+    "paymentDetails": "รายละเอียดการชำระเงิน",
+    "approvedBy": "อนุมัติโดย",
+    "approvedAt": "อนุมัติเมื่อ"
+  },
+  "internal": {
+    "subtitle": "ตรวจสอบและดำเนินการใบแจ้งหนี้จากบริษัทภายนอก",
+    "bankInfo": "บัญชีธนาคาร",
+    "accountNo": "เลขที่บัญชี",
+    "accountName": "ชื่อบัญชี",
+    "markPaidTitle": "ทำเครื่องหมายว่าชำระแล้ว",
+    "paymentOrderNo": "เลขที่คำสั่งจ่าย",
+    "paidDate": "วันที่ชำระ",
+    "update": "อัปเดต",
+    "paidSuccess": "ทำเครื่องหมายใบแจ้งหนี้ว่าชำระแล้ว",
+    "selected": "รายการที่เลือก",
+    "markAsPaid": "ทำเครื่องหมายว่าชำระแล้ว",
+    "bulkSuccess": "ทำเครื่องหมายใบแจ้งหนี้ว่าชำระแล้ว",
+    "searchCompany": "ค้นหาบริษัท..."
+  },
+  "maintenance": {
+    "createTitle": "สร้างใบแจ้งหนี้",
+    "editTitle": "แก้ไขใบแจ้งหนี้",
+    "subtitle": "เลือกงานประเมินที่ต้องการรวมในใบแจ้งหนี้นี้",
+    "invoiceNumber": "เลขที่ใบแจ้งหนี้",
+    "invoiceNumberPlaceholder": "เช่น INV-2568-001",
+    "totalAmount": "ยอดรวม",
+    "saveAndSubmit": "บันทึกและส่ง",
+    "saveDraft": "บันทึกฉบับร่าง",
+    "cancel": "ยกเลิก",
+    "delete": "นำออก"
+  },
+  "draft": {
+    "title": "ร่างใบแจ้งหนี้",
+    "items": "รายการที่เลือก",
+    "invoiceLabel": "ใบแจ้งหนี้",
+    "itemsLabel": "รายการ",
+    "noItemsHint": "เลือกงานประเมินจากรายการ",
+    "noItems": "ไม่มีรายการ",
+    "saving": "กำลังบันทึก...",
+    "savedDraft": "บันทึกฉบับร่างแล้ว",
+    "submitted": "ส่งใบแจ้งหนี้สำเร็จ",
+    "selectFirst": "กรุณาเลือกอย่างน้อยหนึ่งงาน"
+  },
+  "book": {
+    "searchPlaceholder": "ค้นหาด้วยเลขที่รายงานประเมิน...",
+    "submittedFrom": "ส่งตั้งแต่",
+    "submittedTo": "ส่งถึง",
+    "empty": "ไม่พบงานที่มีสิทธิ์",
+    "col": {
+      "appraisalReportNo": "เลขที่รายงาน",
+      "customerName": "ชื่อลูกค้า",
+      "feePaymentMethod": "วิธีการชำระค่าธรรมเนียม",
+      "feeAmount": "ค่าธรรมเนียม (ก่อน VAT)",
+      "vat": "VAT",
+      "totalAmount": "ยอดรวม",
+      "payPartialAmount": "ชำระแล้ว",
+      "bankAbsorbAmount": "ธนาคารรับภาระ",
+      "remainingFee": "คงเหลือ",
+      "lastPaymentDate": "วันที่ชำระล่าสุด",
+      "submittedDate": "วันที่ส่ง"
+    }
+  },
+  "filter": {
+    "open": "กรอง",
+    "title": "กรอง",
+    "searchPlaceholder": "ค้นหาเลขใบแจ้งหนี้หรือชื่อลูกค้า",
+    "invoiceNo": "เลขที่ใบแจ้งหนี้",
+    "customerName": "ชื่อลูกค้า",
+    "companySearch": "ชื่อบริษัท",
+    "invoiceDateSection": "ช่วงวันที่ใบแจ้งหนี้",
+    "invoiceDateFrom": "วันที่ใบแจ้งหนี้ (เริ่มต้น)",
+    "invoiceDateTo": "วันที่ใบแจ้งหนี้ (สิ้นสุด)",
+    "paidDateSection": "ช่วงวันที่ชำระ",
+    "paidDateFrom": "วันที่ชำระ (เริ่มต้น)",
+    "paidDateTo": "วันที่ชำระ (สิ้นสุด)",
+    "status": "สถานะ",
+    "statusPlaceholder": "กรุณาเลือก",
+    "apply": "นำไปใช้",
+    "clear": "ล้าง",
+    "cancel": "ยกเลิก",
+    "activeBadge": "{{count}} ตัวกรอง"
+  },
+  "errors": {
+    "loadFailed": "โหลดใบแจ้งหนี้ไม่สำเร็จ",
+    "markPaidFailed": "ทำเครื่องหมายว่าชำระแล้วไม่สำเร็จ",
+    "bulkFailed": "ทำเครื่องหมายใบแจ้งหนี้ไม่สำเร็จ",
+    "saveFailed": "บันทึกฉบับร่างไม่สำเร็จ",
+    "submitFailed": "ส่งใบแจ้งหนี้ไม่สำเร็จ",
+    "duplicateNumber": "เลขที่ใบแจ้งหนี้นี้มีอยู่แล้ว",
+    "invoiceNumberRequired": "กรุณาระบุเลขที่ใบแจ้งหนี้"
+  }
+}

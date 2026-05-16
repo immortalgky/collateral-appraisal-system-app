@@ -1019,8 +1019,6 @@ const AdministrationPage = () => {
             requestId={requestId}
             workflowInstanceId={workflowInstanceId ?? undefined}
             bankingSegment={bankingSegment}
-            appraisalNumber={(requestData as any)?.appraisalNumber ?? ''}
-            propertyType={(requestData as any)?.detail?.propertyType ?? ''}
             assignmentType={assignmentType ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1) : null}
             assignmentMethod={assignmentMethod ? assignmentMethod.charAt(0).toUpperCase() + assignmentMethod.slice(1) : null}
             internalFollowupAssignmentMethod={followupStaffMethod ?? null}

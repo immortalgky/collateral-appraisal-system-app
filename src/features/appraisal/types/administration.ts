@@ -165,10 +165,6 @@ export interface StartQuotationFromTaskRequest {
   dueDate: string;
   bankingSegment: string;
   invitedCompanyIds: string[];
-  appraisalNumber: string;
-  propertyType: string;
-  propertyLocation?: string | null;
-  estimatedValue?: number | null;
   specialRequirements?: string | null;
   /**
    * Optional admin-set cap for the appraisal's duration (days). Per-appraisal, read-only

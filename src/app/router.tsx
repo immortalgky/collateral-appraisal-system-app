@@ -81,6 +81,7 @@ import ExtCreateInvoicePage from '@/features/invoice/pages/ExtCreateInvoicePage'
 import ExtInvoiceDetailPage from '@/features/invoice/pages/ExtInvoiceDetailPage';
 import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
+import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
 
 /**
@@ -348,6 +349,7 @@ export const router = createBrowserRouter([
           { index: true, element: <ExtInvoiceListPage /> },
           { path: 'new', element: <ExtCreateInvoicePage /> },
           { path: ':id', element: <ExtInvoiceDetailPage /> },
+          { path: ':id/edit', element: <ExtCreateInvoicePage /> },
         ],
       },
       // IntAdmin invoice management
@@ -356,6 +358,7 @@ export const router = createBrowserRouter([
         element: <RoleProtectedRoute allowedRoles={['IntAdmin', 'Admin']} />,
         children: [
           { index: true, element: <IntInvoiceListPage /> },
+          { path: 'bulk-payment', element: <IntBulkPaymentPage /> },
           { path: ':id', element: <IntInvoiceDetailPage /> },
         ],
       },

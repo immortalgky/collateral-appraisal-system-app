@@ -9,10 +9,8 @@ interface InvoiceItemsTableProps {
 const formatCurrency = (amount: number) =>
   `฿${amount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
-const formatPercent = (rate: number) => `${rate}%`;
-
 const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation('invoice');
 
   return (
     <div className="overflow-auto rounded-lg border border-gray-200">
@@ -21,33 +19,30 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
           <tr className="border-b-2 border-gray-300">
             <th className="text-center font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide w-10">#</th>
             <th className="text-left font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
-              Appraisal No.
+              {t('book.col.appraisalReportNo')}
             </th>
-            <th className="text-left font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide">Customer Name</th>
-            <th className="text-left font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide">Product Type</th>
-            <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
-              Fee (before VAT)
-            </th>
-            <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide">VAT %</th>
-            <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
-              VAT Amount
+            <th className="text-left font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide">
+              {t('book.col.customerName')}
             </th>
             <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
-              Total Fee (after VAT)
+              {t('book.col.feeAmount')}
+            </th>
+            <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide">
+              {t('book.col.vat')}
             </th>
             <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
-              Bank Absorb
+              {t('book.col.totalAmount')}
             </th>
             <th className="text-left font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
-              Received Date
+              {t('book.col.submittedDate')}
             </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {items.length === 0 ? (
             <tr>
-              <td colSpan={10} className="text-center py-10 text-gray-400 text-xs">
-                No items
+              <td colSpan={7} className="text-center py-10 text-gray-400 text-xs">
+                {t('draft.noItems')}
               </td>
             </tr>
           ) : (
@@ -60,24 +55,20 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
                   {item.appraisalNumber ?? '—'}
                 </td>
                 <td className="px-4 py-2.5 text-gray-700">{item.customerName ?? '—'}</td>
-                <td className="px-4 py-2.5 text-gray-600">{item.productType ?? '—'}</td>
                 <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
                   {formatCurrency(item.feeBeforeVAT)}
                 </td>
-                <td className="px-4 py-2.5 text-right text-gray-600 tabular-nums">
-                  {formatPercent(item.vatRate)}
-                </td>
                 <td className="px-4 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap">
-                  {formatCurrency(item.vatAmount)}
+                  {formatCurrency(item.vatAmount)}{' '}
+                  <span className="text-gray-400">({item.vatRate}%)</span>
                 </td>
                 <td className="px-4 py-2.5 text-right font-medium text-gray-900 tabular-nums whitespace-nowrap">
                   {formatCurrency(item.totalFeeAfterVAT)}
                 </td>
-                <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
-                  {formatCurrency(item.bankAbsorbAmount)}
-                </td>
                 <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
-                  {item.receivedDate ? formatLocaleDate(item.receivedDate, i18n.language) : '—'}
+                  {item.submittedDate
+                    ? formatLocaleDate(item.submittedDate, i18n.language)
+                    : '—'}
                 </td>
               </tr>
             ))
@@ -86,19 +77,13 @@ const InvoiceItemsTable = ({ items }: InvoiceItemsTableProps) => {
         {items.length > 0 && (
           <tfoot>
             <tr className="bg-gray-50 border-t-2 border-gray-300">
-              <td colSpan={4} className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                Total
+              <td colSpan={3} className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                {t('list.grandTotal')}
               </td>
               <td className="px-4 py-2.5 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap text-sm">
                 {formatCurrency(items.reduce((s, i) => s + i.feeBeforeVAT, 0))}
               </td>
               <td />
-              <td className="px-4 py-2.5 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap text-sm">
-                {formatCurrency(items.reduce((s, i) => s + i.vatAmount, 0))}
-              </td>
-              <td className="px-4 py-2.5 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap text-sm">
-                {formatCurrency(items.reduce((s, i) => s + i.totalFeeAfterVAT, 0))}
-              </td>
               <td className="px-4 py-2.5 text-right font-bold text-primary tabular-nums whitespace-nowrap text-sm">
                 {formatCurrency(items.reduce((s, i) => s + i.bankAbsorbAmount, 0))}
               </td>

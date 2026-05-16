@@ -1,4 +1,8 @@
-export type InvoiceStatus = 'Draft' | 'Submitted' | 'Approved';
+// ─── Status ───────────────────────────────────────────────────────────────────
+
+export type InvoiceStatus = 'Pending' | 'Sent' | 'Paid';
+
+// ─── List ─────────────────────────────────────────────────────────────────────
 
 export interface InvoiceListItem {
   id: string;
@@ -6,18 +10,24 @@ export interface InvoiceListItem {
   status: InvoiceStatus;
   totalAmount: number;
   itemCount: number;
-  periodStartDate: string | null;
-  periodEndDate: string | null;
-  submittedAt: string | null;
-  approvedAt: string | null;
-  approvedBy: string | null;
-  paymentReference: string | null;
-  paymentMethod: string | null;
-  paymentDate: string | null;
   companyId: string;
   companyName: string | null;
+  sentDate: string | null;
+  paidDate: string | null;
+  paymentOrderNo: string | null;
   createdAt: string;
 }
+
+export interface PaginatedInvoices {
+  items: InvoiceListItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  grandItemCount: number;
+  grandTotalAmount: number;
+}
+
+// ─── Detail ───────────────────────────────────────────────────────────────────
 
 export interface InvoiceItem {
   id: string;
@@ -30,7 +40,7 @@ export interface InvoiceItem {
   vatAmount: number;
   totalFeeAfterVAT: number;
   bankAbsorbAmount: number;
-  receivedDate: string | null;
+  submittedDate: string | null;
 }
 
 export interface InvoiceDetail {
@@ -40,15 +50,18 @@ export interface InvoiceDetail {
   totalAmount: number;
   companyName: string | null;
   companyId: string;
+  bankAccountNo: string | null;
+  bankAccountName: string | null;
   notes: string | null;
-  paymentReference: string | null;
-  paymentMethod: string | null;
-  paymentDate: string | null;
+  paymentOrderNo: string | null;
+  paidDate: string | null;
   approvedBy: string | null;
   approvedAt: string | null;
   submittedAt: string | null;
   items: InvoiceItem[];
 }
+
+// ─── Eligible Assignments ─────────────────────────────────────────────────────
 
 export interface EligibleAssignment {
   assignmentId: string;
@@ -56,29 +69,45 @@ export interface EligibleAssignment {
   appraisalNumber: string | null;
   customerName: string | null;
   productType: string | null;
+  feePaymentType: string | null;
   feeBeforeVAT: number;
   vatRate: number;
   vatAmount: number;
   totalFeeAfterVAT: number;
   bankAbsorbAmount: number;
-  receivedDate: string | null;
+  payPartialAmount: number;
+  remainingFee: number;
+  submittedDate: string | null;
+  lastPaymentDate: string | null;
 }
 
-export interface PaginatedInvoices {
-  items: InvoiceListItem[];
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-}
+// ─── Payloads ─────────────────────────────────────────────────────────────────
 
 export interface CreateInvoicePayload {
   assignmentIds: string[];
   notes?: string;
 }
 
-export interface ApproveInvoicePayload {
-  paymentReference?: string;
-  paymentMethod?: string;
-  paymentDate?: string;
+export interface UpdateInvoiceDraftPayload {
+  assignmentIds: string[];
+  notes?: string;
+}
+
+export interface UpdateInvoiceNumberPayload {
+  invoiceNumber: string;
+}
+
+export interface SubmitInvoicePayload {
+  invoiceNumber: string;
+}
+
+export interface MarkPaidPayload {
+  paymentOrderNo: string;
+  paidDate: string;
+}
+
+export interface BulkMarkPaidPayload {
+  invoiceIds: string[];
+  paymentOrderNo: string;
+  paidDate: string;
 }

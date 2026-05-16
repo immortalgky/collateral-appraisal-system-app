@@ -1,0 +1,150 @@
+{
+  "common": {
+    "loading": "Loading"
+  },
+  "status": {
+    "Pending": "Pending",
+    "Sent": "Sent",
+    "Paid": "Paid"
+  },
+  "list": {
+    "title": "Invoices",
+    "subtitle": "Manage and track your appraisal fee invoices",
+    "createInvoice": "New Invoice",
+    "tabs": {
+      "unpaid": "Unpaid",
+      "paid": "Paid"
+    },
+    "dateFrom": "From",
+    "dateTo": "To",
+    "clearFilters": "Clear",
+    "selectAll": "Select all",
+    "groupBy": "Group by",
+    "groupByNone": "None",
+    "groupByCompany": "Company",
+    "empty": "No invoices found",
+    "emptyHint": "Create a new invoice to get started",
+    "tryFilters": "Try adjusting your filters",
+    "grandTotal": "Grand Total",
+    "subtotal": "Subtotal",
+    "col": {
+      "invoiceNumber": "Invoice Number",
+      "companyName": "Company",
+      "sentDate": "Sent Date",
+      "paidDate": "Paid Date",
+      "totalItems": "Total Items",
+      "totalAmount": "Total Amount",
+      "status": "Status"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteConfirm": {
+      "title": "Delete Invoice",
+      "message": "Are you sure you want to delete this invoice? This action cannot be undone.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
+  },
+  "detail": {
+    "invoice": "Invoice",
+    "draftInvoice": "Draft Invoice",
+    "totalAmount": "Total Amount",
+    "submittedAt": "Submitted",
+    "lineItems": "Line Items",
+    "notes": "Notes",
+    "sentInfo": "Your invoice has been submitted and is awaiting payment.",
+    "paymentDetails": "Payment Details",
+    "approvedBy": "Approved By",
+    "approvedAt": "Approved At"
+  },
+  "internal": {
+    "subtitle": "Review and process external company invoices",
+    "bankInfo": "Bank Account",
+    "accountNo": "Account Number",
+    "accountName": "Account Name",
+    "markPaidTitle": "Mark as Paid",
+    "paymentOrderNo": "Payment Order Number",
+    "paidDate": "Paid Date",
+    "update": "Update",
+    "paidSuccess": "Invoice marked as paid",
+    "selected": "selected",
+    "markAsPaid": "Mark as Paid",
+    "bulkSuccess": "Invoices marked as paid",
+    "searchCompany": "Search company..."
+  },
+  "maintenance": {
+    "createTitle": "New Invoice",
+    "editTitle": "Edit Invoice",
+    "subtitle": "Select appraisal assignments to include in this invoice",
+    "invoiceNumber": "Invoice Number",
+    "invoiceNumberPlaceholder": "e.g. INV-2025-001",
+    "totalAmount": "Total Amount",
+    "saveAndSubmit": "Save & Submit",
+    "saveDraft": "Save Draft",
+    "cancel": "Cancel",
+    "delete": "Remove"
+  },
+  "draft": {
+    "title": "Invoice Draft",
+    "items": "Selected Items",
+    "invoiceLabel": "Invoice",
+    "itemsLabel": "Items",
+    "noItemsHint": "Select appraisal assignments from the list",
+    "noItems": "No items",
+    "saving": "Saving...",
+    "savedDraft": "Draft saved",
+    "submitted": "Invoice submitted successfully",
+    "selectFirst": "Please select at least one assignment"
+  },
+  "book": {
+    "searchPlaceholder": "Search by appraisal number...",
+    "submittedFrom": "Submitted From",
+    "submittedTo": "Submitted To",
+    "empty": "No eligible assignments found",
+    "col": {
+      "appraisalReportNo": "Appraisal Number",
+      "customerName": "Customer",
+      "feePaymentMethod": "Fee Payment Method",
+      "feeAmount": "Fee (excl. VAT)",
+      "vat": "VAT",
+      "totalAmount": "Total",
+      "payPartialAmount": "Paid",
+      "bankAbsorbAmount": "Bank Absorb",
+      "remainingFee": "Remaining",
+      "lastPaymentDate": "Last Payment",
+      "submittedDate": "Submitted Date"
+    }
+  },
+  "filter": {
+    "open": "Filter",
+    "title": "Filter",
+    "searchPlaceholder": "Search invoice number or customer name",
+    "invoiceNo": "Invoice Number",
+    "customerName": "Customer Name",
+    "companySearch": "Company Name",
+    "invoiceDateSection": "Invoice Date Range",
+    "invoiceDateFrom": "Invoice Date (From)",
+    "invoiceDateTo": "Invoice Date (To)",
+    "paidDateSection": "Paid Date Range",
+    "paidDateFrom": "Paid Date (From)",
+    "paidDateTo": "Paid Date (To)",
+    "status": "Status",
+    "statusPlaceholder": "Please select",
+    "apply": "Apply",
+    "clear": "Clear",
+    "cancel": "Cancel",
+    "activeBadge": "{{count}} active"
+  },
+  "errors": {
+    "loadFailed": "Failed to load invoice",
+    "markPaidFailed": "Failed to mark invoice as paid",
+    "bulkFailed": "Failed to mark invoices as paid",
+    "saveFailed": "Failed to save draft",
+    "submitFailed": "Failed to submit invoice",
+    "duplicateNumber": "This invoice number is already in use",
+    "invoiceNumberRequired": "Invoice number is required"
+  }
+}

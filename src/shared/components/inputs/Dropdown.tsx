@@ -195,7 +195,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
           <HeadlessListboxButton
             ref={ref}
             className={clsx(
-              'relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
+              'block relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
               'focus:outline-none focus:ring-2',
               disabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
