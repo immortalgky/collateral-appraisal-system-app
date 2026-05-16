@@ -65,7 +65,7 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
           machineName: item.machineName ?? undefined,
           brand: item.brand ?? undefined,
           model: item.model ?? undefined,
-          registrationNo: item.registrationNo ?? undefined,
+          registrationNumber: item.registrationNumber ?? undefined,
           dimension: item.dimension ?? undefined,
         }
       : {}),

@@ -769,7 +769,7 @@ export const titleMachineFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Registration No',
-    name: 'registrationNo',
+    name: 'registrationNumber',
     wrapperClassName: 'col-span-3',
     requiredWhen: {
       conditions: [

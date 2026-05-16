@@ -181,10 +181,10 @@ export function PropertyCardContent({
                         {[property.brand, property.model].filter(Boolean).join(' ')}
                       </span>
                     )}
-                    {property.registrationNo && (
+                    {property.registrationNumber && (
                       <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
                         <Icon name="hashtag" className="text-[9px] text-gray-400" style="solid" />
-                        {property.registrationNo}
+                        {property.registrationNumber}
                       </span>
                     )}
                     {property.dimension && (
@@ -240,10 +240,10 @@ export function PropertyCardContent({
                     <span>{[property.brand, property.model].filter(Boolean).join(' ')}</span>
                   </div>
                 )}
-                {property.registrationNo && (
+                {property.registrationNumber && (
                   <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
                     <Icon name="hashtag" className={cfg.iconSize} style="solid" />
-                    <span>{property.registrationNo}</span>
+                    <span>{property.registrationNumber}</span>
                   </div>
                 )}
               </>

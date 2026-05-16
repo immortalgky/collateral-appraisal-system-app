@@ -319,7 +319,7 @@ const MACHINERY_SECTIONS: SectionDef[] = [
       { key: 'countryOfManufacture', label: 'Country', parameterGroup: 'Country' },
       { key: 'engineNo', label: 'Engine No.' },
       { key: 'chassisNo', label: 'Chassis No.' },
-      { key: 'registrationNo', label: 'Registration No.' },
+      { key: 'registrationNumber', label: 'Registration No.' },
     ],
   },
   {

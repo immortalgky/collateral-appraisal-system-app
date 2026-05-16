@@ -99,7 +99,7 @@ const RequestTitleDto = z.object({
   hullIdentificationNumber: z.string().nullable(),
   vesselRegistrationNumber: z.string().nullable(),
   registrationStatus: z.boolean(),
-  registrationNo: z.string().nullable(),
+  registrationNumber: z.string().nullable(),
   machineType: z.string().nullable(),
   installationStatus: z.string().nullable(),
   invoiceNumber: z.string().nullable(),

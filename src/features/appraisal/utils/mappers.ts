@@ -449,7 +449,7 @@ export const mapMachineryPropertyResponseToForm = (
     propertyName: response.propertyName ?? null,
     isOwnerVerified: response.isOwnerVerified ?? true,
     ownerName: response.ownerName ?? null,
-    registrationNo: response.registrationNo ?? null,
+    registrationNumber: response.registrationNumber ?? null,
     isOperational: response.isOperational ?? true,
     machineName: response.machineName ?? null,
     brand: response.brand ?? null,

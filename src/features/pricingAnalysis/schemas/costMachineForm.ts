@@ -4,7 +4,7 @@ const MachineryItemSchema = z.object({
   appraisalPropertyId: z.string(),
   quantity: z.number().nullable(),
   machineName: z.string().nullable(),
-  registrationNo: z.string().nullable(),
+  registrationNumber: z.string().nullable(),
   manufacturer: z.string().nullable(),
   conditionUse: z.string().nullable(),
   yearOfManufacture: z.number().nullable(),
