@@ -18,8 +18,6 @@ interface QuotationEntryModalProps {
   requestId?: string;
   workflowInstanceId?: string;
   bankingSegment?: string;
-  appraisalNumber?: string;
-  propertyType?: string;
   onSuccess?: () => void;
   assignmentType?: string | null;
   assignmentMethod?: string | null;
@@ -38,8 +36,6 @@ const QuotationEntryModal = ({
   requestId,
   workflowInstanceId,
   bankingSegment,
-  appraisalNumber,
-  propertyType,
   onSuccess,
   assignmentType,
   assignmentMethod,
@@ -77,8 +73,6 @@ const QuotationEntryModal = ({
         dueDate: selectedDraft.dueDate ?? new Date(Date.now() + 86400000 * 7).toISOString(),
         bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: [],
-        appraisalNumber: appraisalNumber ?? '',
-        propertyType: propertyType ?? '',
         existingQuotationRequestId: selectedDraft.id,
       },
       {
@@ -198,8 +192,6 @@ const QuotationEntryModal = ({
           requestId={requestId}
           workflowInstanceId={workflowInstanceId}
           bankingSegment={bankingSegment}
-          appraisalNumber={appraisalNumber}
-          propertyType={propertyType}
           assignmentType={assignmentType}
           assignmentMethod={assignmentMethod}
           internalFollowupAssignmentMethod={internalFollowupAssignmentMethod}

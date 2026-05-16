@@ -16,8 +16,6 @@ interface CreateQuotationModalProps {
   requestId?: string;
   workflowInstanceId?: string;
   bankingSegment?: string;
-  appraisalNumber?: string;
-  propertyType?: string;
   onSuccess?: () => void;
   /** Optional slot rendered at the top of the modal body (used by QuotationEntryModal to inject the tab bar). */
   headerSlot?: ReactNode;
@@ -38,8 +36,6 @@ const CreateQuotationModal = ({
   requestId,
   workflowInstanceId,
   bankingSegment,
-  appraisalNumber,
-  propertyType,
   onSuccess,
   headerSlot,
   assignmentType,
@@ -117,8 +113,6 @@ const CreateQuotationModal = ({
         dueDate: cutOffDateTime,
         bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: selectedCompanies.map(c => c.id),
-        appraisalNumber: appraisalNumber ?? '',
-        propertyType: propertyType ?? '',
         specialRequirements: remarks || null,
         maxAppraisalDays: maxAppraisalDays ?? null,
         assignmentType: assignmentType ?? null,

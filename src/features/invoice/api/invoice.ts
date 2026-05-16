@@ -1,11 +1,15 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
-  ApproveInvoicePayload,
+  BulkMarkPaidPayload,
   CreateInvoicePayload,
   EligibleAssignment,
   InvoiceDetail,
+  MarkPaidPayload,
   PaginatedInvoices,
+  SubmitInvoicePayload,
+  UpdateInvoiceDraftPayload,
+  UpdateInvoiceNumberPayload,
 } from '../types/invoice';
 
 // ─── Query Key Factory ────────────────────────────────────────────────────────
@@ -16,7 +20,8 @@ export const invoiceKeys = {
   list: (params: Record<string, unknown>) => [...invoiceKeys.lists(), params] as const,
   details: () => [...invoiceKeys.all, 'detail'] as const,
   detail: (id: string) => [...invoiceKeys.details(), id] as const,
-  eligible: () => [...invoiceKeys.all, 'eligible'] as const,
+  eligible: (params?: Record<string, unknown>) =>
+    [...invoiceKeys.all, 'eligible', params ?? {}] as const,
 };
 
 // ─── Query Params Interface ───────────────────────────────────────────────────
@@ -24,10 +29,26 @@ export const invoiceKeys = {
 export interface GetInvoicesParams {
   pageNumber?: number;
   pageSize?: number;
+  /** Single status value (Pending | Sent | Paid). Omit when listing all statuses. */
   status?: string;
   companySearch?: string;
-  dateFrom?: string;
-  dateTo?: string;
+  /** Filter by a specific company id. Internal admins only — ext users are auto-scoped. */
+  companyId?: string;
+  sentDateFrom?: string;
+  sentDateTo?: string;
+  paidDateFrom?: string;
+  paidDateTo?: string;
+  /** Single search bar — matches invoice number OR any line-item customer name */
+  search?: string;
+  /** Group-by criterion. Supported: "company". Null/omit = newest-first. */
+  groupBy?: string;
+}
+
+export interface GetEligibleAssignmentsParams {
+  searchAppraisalNo?: string;
+  submittedDateFrom?: string;
+  submittedDateTo?: string;
+  currentInvoiceId?: string;
 }
 
 // ─── GET /invoices ────────────────────────────────────────────────────────────
@@ -37,36 +58,27 @@ export interface GetInvoicesParams {
  * Role-scoped by the backend: IntAdmin/Admin → all companies, ExtAdmin → own company only.
  */
 export const useGetInvoices = (params: GetInvoicesParams = {}) => {
-  const queryKey = invoiceKeys.list({
+  const queryParams = {
     pageNumber: params.pageNumber ?? 0,
     pageSize: params.pageSize ?? 10,
     ...(params.status && { status: params.status }),
     ...(params.companySearch && { companySearch: params.companySearch }),
-    ...(params.dateFrom && { dateFrom: params.dateFrom }),
-    ...(params.dateTo && { dateTo: params.dateTo }),
-  });
+    ...(params.companyId && { companyId: params.companyId }),
+    ...(params.groupBy && { groupBy: params.groupBy }),
+    ...(params.sentDateFrom && { sentDateFrom: params.sentDateFrom }),
+    ...(params.sentDateTo && { sentDateTo: params.sentDateTo }),
+    ...(params.paidDateFrom && { paidDateFrom: params.paidDateFrom }),
+    ...(params.paidDateTo && { paidDateTo: params.paidDateTo }),
+    ...(params.search && { search: params.search }),
+  };
 
   return useQuery({
-    queryKey,
+    queryKey: invoiceKeys.list(queryParams),
     queryFn: async (): Promise<PaginatedInvoices> => {
-      const { data } = await axios.get('/invoices', {
-        params: {
-          PageNumber: params.pageNumber ?? 0,
-          PageSize: params.pageSize ?? 10,
-          ...(params.status && { Status: params.status }),
-          ...(params.companySearch && { CompanySearch: params.companySearch }),
-          ...(params.dateFrom && { DateFrom: params.dateFrom }),
-          ...(params.dateTo && { DateTo: params.dateTo }),
-        },
+      const { data } = await axios.get<PaginatedInvoices>('/invoices', {
+        params: queryParams,
       });
-      const result = data.invoices ?? data;
-      return {
-        items: result.items ?? [],
-        totalCount: result.totalCount ?? result.count ?? 0,
-        pageNumber: result.pageNumber ?? params.pageNumber ?? 0,
-        pageSize: result.pageSize ?? params.pageSize ?? 10,
-        totalPages: result.totalPages ?? Math.ceil((result.totalCount ?? 0) / (params.pageSize ?? 10)),
-      };
+      return data;
     },
     placeholderData: keepPreviousData,
     staleTime: 30_000,
@@ -93,14 +105,21 @@ export const useGetInvoiceById = (id: string | null | undefined) => {
 // ─── GET /invoices/eligible-assignments ──────────────────────────────────────
 
 /**
- * Fetch assignments eligible to be invoiced (bank-absorb fee, not yet invoiced).
+ * Fetch assignments eligible to be invoiced.
  * Backend scopes to the caller's company_id claim.
  */
-export const useGetEligibleAssignments = () => {
+export const useGetEligibleAssignments = (params: GetEligibleAssignmentsParams = {}) => {
   return useQuery({
-    queryKey: invoiceKeys.eligible(),
+    queryKey: invoiceKeys.eligible(params as Record<string, unknown>),
     queryFn: async (): Promise<EligibleAssignment[]> => {
-      const { data } = await axios.get('/invoices/eligible-assignments');
+      const { data } = await axios.get('/invoices/eligible-assignments', {
+        params: {
+          ...(params.searchAppraisalNo && { searchAppraisalNo: params.searchAppraisalNo }),
+          ...(params.submittedDateFrom && { submittedDateFrom: params.submittedDateFrom }),
+          ...(params.submittedDateTo && { submittedDateTo: params.submittedDateTo }),
+          ...(params.currentInvoiceId && { currentInvoiceId: params.currentInvoiceId }),
+        },
+      });
       return data.assignments ?? data ?? [];
     },
     staleTime: 30_000,
@@ -110,13 +129,13 @@ export const useGetEligibleAssignments = () => {
 // ─── POST /invoices ───────────────────────────────────────────────────────────
 
 /**
- * Create a new Draft invoice with the selected assignments.
+ * Create a new Pending invoice with the selected assignments.
  */
 export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: CreateInvoicePayload): Promise<{ id: string }> => {
+    mutationFn: async (payload: CreateInvoicePayload): Promise<{ invoiceId: string }> => {
       const { data } = await axios.post('/invoices', payload);
       return data;
     },
@@ -130,14 +149,34 @@ export const useCreateInvoice = () => {
 // ─── PUT /invoices/{id} ───────────────────────────────────────────────────────
 
 /**
- * Update a Draft invoice (replace assignment list + notes).
+ * Update a Pending invoice (replace assignment list + notes).
  */
 export const useUpdateInvoiceDraft = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: CreateInvoicePayload): Promise<void> => {
+    mutationFn: async (payload: UpdateInvoiceDraftPayload): Promise<void> => {
       await axios.put(`/invoices/${id}`, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligible() });
+    },
+  });
+};
+
+// ─── PATCH /invoices/{id}/number ─────────────────────────────────────────────
+
+/**
+ * Update the invoice number on a Pending draft (Save Draft scenario).
+ */
+export const useUpdateInvoiceNumber = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: UpdateInvoiceNumberPayload): Promise<void> => {
+      await axios.patch(`/invoices/${id}/number`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
@@ -146,31 +185,57 @@ export const useUpdateInvoiceDraft = (id: string) => {
   });
 };
 
+// ─── DELETE /invoices/{id} ───────────────────────────────────────────────────
+
+/**
+ * Delete a Pending invoice draft.
+ */
+export const useDeleteInvoice = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await axios.delete(`/invoices/${id}`);
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      queryClient.removeQueries({ queryKey: invoiceKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.eligible() });
+    },
+  });
+};
+
 // ─── POST /invoices/{id}/submit ───────────────────────────────────────────────
 
 /**
- * Submit a Draft invoice to IntAdmin for review.
+ * Submit a Pending invoice (Pending → Sent). Requires an invoiceNumber in body.
  */
 export const useSubmitInvoice = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      await axios.post(`/invoices/${id}/submit`);
+    mutationFn: async ({
+      id,
+      invoiceNumber,
+    }: {
+      id: string;
+      invoiceNumber: string;
+    } & SubmitInvoicePayload): Promise<void> => {
+      await axios.post(`/invoices/${id}/submit`, { invoiceNumber });
     },
-    onSuccess: (_data, id) => {
+    onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
     },
   });
 };
 
-// ─── POST /invoices/{id}/approve ─────────────────────────────────────────────
+// ─── POST /invoices/{id}/mark-paid ───────────────────────────────────────────
 
 /**
- * Approve a Submitted invoice with payment details (IntAdmin only).
+ * Mark a Sent invoice as Paid with payment details (IntAdmin only).
  */
-export const useApproveInvoice = () => {
+export const useMarkInvoicePaid = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -179,13 +244,33 @@ export const useApproveInvoice = () => {
       payload,
     }: {
       id: string;
-      payload: ApproveInvoicePayload;
+      payload: MarkPaidPayload;
     }): Promise<void> => {
-      await axios.post(`/invoices/${id}/approve`, payload);
+      await axios.post(`/invoices/${id}/mark-paid`, payload);
     },
     onSuccess: (_data, { id }) => {
       queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
       queryClient.invalidateQueries({ queryKey: invoiceKeys.detail(id) });
+    },
+  });
+};
+
+// ─── POST /invoices/bulk-mark-paid ───────────────────────────────────────────
+
+/**
+ * Bulk mark multiple Sent invoices as Paid (IntAdmin only).
+ * All invoices must belong to the same company.
+ */
+export const useBulkMarkInvoicesPaid = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: BulkMarkPaidPayload): Promise<void> => {
+      await axios.post('/invoices/bulk-mark-paid', payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: invoiceKeys.details() });
     },
   });
 };

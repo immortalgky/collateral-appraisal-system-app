@@ -1,0 +1,144 @@
+{
+  "status": {
+    "Pending": "待处理",
+    "Sent": "已发送",
+    "Paid": "已付款"
+  },
+  "list": {
+    "title": "发票",
+    "subtitle": "管理和跟踪评估费用发票",
+    "createInvoice": "新建发票",
+    "tabs": {
+      "unpaid": "未付款",
+      "paid": "已付款"
+    },
+    "dateFrom": "开始日期",
+    "dateTo": "结束日期",
+    "clearFilters": "清除筛选",
+    "selectAll": "全选",
+    "groupBy": "分组方式",
+    "groupByNone": "不分组",
+    "groupByCompany": "公司",
+    "empty": "未找到发票",
+    "emptyHint": "创建新发票以开始",
+    "tryFilters": "请尝试调整筛选条件",
+    "grandTotal": "总计",
+    "subtotal": "小计",
+    "col": {
+      "invoiceNumber": "发票号",
+      "companyName": "公司",
+      "sentDate": "发送日期",
+      "paidDate": "付款日期",
+      "totalItems": "项目数",
+      "totalAmount": "总金额",
+      "status": "状态"
+    },
+    "actions": {
+      "view": "查看",
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "deleteConfirm": {
+      "title": "删除发票",
+      "message": "您确定要删除此发票吗？此操作无法撤销。",
+      "confirm": "删除",
+      "cancel": "取消"
+    }
+  },
+  "detail": {
+    "invoice": "发票",
+    "draftInvoice": "发票草稿",
+    "totalAmount": "总金额",
+    "submittedAt": "提交时间",
+    "lineItems": "明细项目",
+    "notes": "备注",
+    "sentInfo": "您的发票已提交，等待付款。",
+    "paymentDetails": "付款详情",
+    "approvedBy": "审批人",
+    "approvedAt": "审批时间"
+  },
+  "internal": {
+    "subtitle": "审核和处理外部公司发票",
+    "bankInfo": "银行账户",
+    "accountNo": "账号",
+    "accountName": "账户名称",
+    "markPaidTitle": "标记为已付款",
+    "paymentOrderNo": "付款单号",
+    "paidDate": "付款日期",
+    "update": "更新",
+    "paidSuccess": "发票已标记为付款",
+    "selected": "已选择",
+    "markAsPaid": "标记为已付款",
+    "bulkSuccess": "发票已批量标记为付款",
+    "searchCompany": "搜索公司..."
+  },
+  "maintenance": {
+    "createTitle": "新建发票",
+    "editTitle": "编辑发票",
+    "subtitle": "选择要包含在此发票中的评估任务",
+    "invoiceNumber": "发票号",
+    "invoiceNumberPlaceholder": "例如 INV-2025-001",
+    "totalAmount": "总金额",
+    "saveAndSubmit": "保存并提交",
+    "saveDraft": "保存草稿",
+    "cancel": "取消",
+    "delete": "移除"
+  },
+  "draft": {
+    "title": "发票草稿",
+    "items": "已选项目",
+    "noItemsHint": "从列表中选择评估任务",
+    "noItems": "无项目",
+    "saving": "保存中...",
+    "savedDraft": "草稿已保存",
+    "submitted": "发票提交成功",
+    "selectFirst": "请至少选择一个任务"
+  },
+  "book": {
+    "searchPlaceholder": "按评估编号搜索...",
+    "submittedFrom": "提交开始日期",
+    "submittedTo": "提交结束日期",
+    "empty": "未找到符合条件的任务",
+    "col": {
+      "appraisalReportNo": "评估编号",
+      "customerName": "客户名称",
+      "feePaymentMethod": "费用支付方式",
+      "feeAmount": "费用（不含增值税）",
+      "vat": "增值税",
+      "totalAmount": "合计",
+      "payPartialAmount": "已付",
+      "bankAbsorbAmount": "银行承担",
+      "remainingFee": "剩余",
+      "lastPaymentDate": "最后付款日期",
+      "submittedDate": "提交日期"
+    }
+  },
+  "filter": {
+    "open": "筛选",
+    "title": "筛选",
+    "searchPlaceholder": "搜索发票编号或客户名称",
+    "invoiceNo": "发票号",
+    "customerName": "客户名称",
+    "companySearch": "公司名称",
+    "invoiceDateSection": "发票日期范围",
+    "invoiceDateFrom": "发票日期（起）",
+    "invoiceDateTo": "发票日期（止）",
+    "paidDateSection": "付款日期范围",
+    "paidDateFrom": "付款日期（起）",
+    "paidDateTo": "付款日期（止）",
+    "status": "状态",
+    "statusPlaceholder": "请选择",
+    "apply": "应用",
+    "clear": "清除",
+    "cancel": "取消",
+    "activeBadge": "{{count}} 个筛选"
+  },
+  "errors": {
+    "loadFailed": "加载发票失败",
+    "markPaidFailed": "标记付款失败",
+    "bulkFailed": "批量标记付款失败",
+    "saveFailed": "保存草稿失败",
+    "submitFailed": "提交发票失败",
+    "duplicateNumber": "此发票号已存在"
+  }
+}
