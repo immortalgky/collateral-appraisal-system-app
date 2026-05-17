@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnectionState, HttpTransportType } from '@microsoft/signalr';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAccessToken } from '@shared/api/axiosInstance';
@@ -32,6 +32,9 @@ export function useNotificationHub() {
     const connection = new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
         accessTokenFactory: () => getAccessToken() ?? '',
+        skipNegotiation: true,
+        transport: HttpTransportType.WebSockets,
+        withCredentials: true,
       })
       .withAutomaticReconnect()
       .configureLogging(signalrLogger)
