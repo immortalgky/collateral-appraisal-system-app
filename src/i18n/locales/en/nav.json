@@ -28,5 +28,9 @@
       "documents": "Documents"
     }
   },
-  "notifications": "Notifications"
+  "notifications": "Notifications",
+  "taskMonitor": {
+    "title": "Task Monitor",
+    "description": "Reassign tasks held by users in your monitored groups"
+  }
 }

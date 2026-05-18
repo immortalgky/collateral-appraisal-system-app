@@ -1,5 +1,5 @@
-import { Outlet } from 'react-router-dom';
-import { useRef } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef } from 'react';
 import Navbar from '@shared/components/Navbar';
 import Sidebar, { MobileSidebar } from '@shared/components/Sidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -10,6 +10,7 @@ import { useParametersQuery } from '@shared/api/parameters';
 import { useAddressesQuery } from '@shared/api/addresses';
 import { useCompaniesQuery } from '@shared/api/companies';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
+import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import {
@@ -98,6 +99,7 @@ function CompanyLoader() {
 }
 
 function Layout() {
+  const location = useLocation();
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
@@ -107,6 +109,19 @@ function Layout() {
 
   // Get role-based navigation
   const navigation = useNavigation();
+
+  // Page-level dynamic crumbs (fetched record names) appended after the layout-built
+  // crumbs. Same pattern as AppraisalLayout / TaskLayout: clear extras whenever the
+  // pathname changes so stale crumbs don't leak across pages.
+  const breadcrumbExtras = useBreadcrumbExtrasStore(s => s.extras);
+  const setExtras = useBreadcrumbExtrasStore(s => s.setExtras);
+  useEffect(() => {
+    setExtras([]);
+  }, [location.pathname, setExtras]);
+  const breadcrumbItemsWithExtras = useMemo(() => {
+    const merged = [...breadcrumbItems, ...breadcrumbExtras];
+    return merged.filter((item, idx) => idx === 0 || item.label !== merged[idx - 1].label);
+  }, [breadcrumbItems, breadcrumbExtras]);
 
   return (
     <RightMenuPortalProvider
@@ -128,7 +143,7 @@ function Layout() {
             {/* Main Content */}
             <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0 pr-4">
               <div className="px-4 sm:px-6 lg:px-6 flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
-                <Breadcrumb items={breadcrumbItems} className="mb-4 shrink-0" />
+                <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
                 <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
                   <ErrorBoundary>
                     <Outlet />

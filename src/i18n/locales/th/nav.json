@@ -28,5 +28,9 @@
       "documents": "เอกสาร"
     }
   },
-  "notifications": "การแจ้งเตือน"
+  "notifications": "การแจ้งเตือน",
+  "taskMonitor": {
+    "title": "ตรวจสอบงาน",
+    "description": "มอบหมายงานใหม่ให้กับผู้ใช้ในกลุ่มที่คุณดูแล"
+  }
 }

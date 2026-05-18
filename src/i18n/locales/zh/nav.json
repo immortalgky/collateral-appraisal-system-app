@@ -28,5 +28,9 @@
       "documents": "文档"
     }
   },
-  "notifications": "通知"
+  "notifications": "通知",
+  "taskMonitor": {
+    "title": "任务监控",
+    "description": "重新分配您监管组中的任务"
+  }
 }

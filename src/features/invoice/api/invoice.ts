@@ -33,6 +33,8 @@ export interface GetInvoicesParams {
   pageSize?: number;
   /** Single status value (Pending | Sent | Paid). Omit when listing all statuses. */
   status?: string;
+  /** Status to exclude (e.g. "Paid" on the Ext Unpaid tab so drafts + sent show but paid don't). */
+  excludeStatus?: string;
   companySearch?: string;
   /** Filter by a specific company id. Internal admins only — ext users are auto-scoped. */
   companyId?: string;
@@ -44,6 +46,10 @@ export interface GetInvoicesParams {
   search?: string;
   /** Group-by criterion. Supported: "company". Null/omit = newest-first. */
   groupBy?: string;
+  /** Whitelisted sort column. Server falls back to default ordering when null/unknown. */
+  sortBy?: string;
+  /** "asc" | "desc". Defaults to descending server-side. */
+  sortDir?: 'asc' | 'desc';
 }
 
 export interface GetEligibleAssignmentsParams {
@@ -64,9 +70,12 @@ export const useGetInvoices = (params: GetInvoicesParams = {}) => {
     pageNumber: params.pageNumber ?? 0,
     pageSize: params.pageSize ?? 10,
     ...(params.status && { status: params.status }),
+    ...(params.excludeStatus && { excludeStatus: params.excludeStatus }),
     ...(params.companySearch && { companySearch: params.companySearch }),
     ...(params.companyId && { companyId: params.companyId }),
     ...(params.groupBy && { groupBy: params.groupBy }),
+    ...(params.sortBy && { sortBy: params.sortBy }),
+    ...(params.sortDir && { sortDir: params.sortDir }),
     ...(params.sentDateFrom && { sentDateFrom: params.sentDateFrom }),
     ...(params.sentDateTo && { sentDateTo: params.sentDateTo }),
     ...(params.paidDateFrom && { paidDateFrom: params.paidDateFrom }),

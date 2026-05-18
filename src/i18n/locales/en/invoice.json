@@ -107,6 +107,8 @@
     "col": {
       "appraisalReportNo": "Appraisal Number",
       "customerName": "Customer",
+      "costCenter": "Cost Center",
+      "notAvailable": "Not Available",
       "feePaymentMethod": "Fee Payment Method",
       "feeAmount": "Fee (excl. VAT)",
       "vat": "VAT",

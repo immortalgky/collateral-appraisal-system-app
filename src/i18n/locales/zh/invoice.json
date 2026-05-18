@@ -107,6 +107,8 @@
     "col": {
       "appraisalReportNo": "评估编号",
       "customerName": "客户名称",
+      "costCenter": "成本中心",
+      "notAvailable": "暂无",
       "feePaymentMethod": "费用支付方式",
       "feeAmount": "费用（不含增值税）",
       "vat": "增值税",
