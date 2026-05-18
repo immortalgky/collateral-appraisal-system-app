@@ -21,7 +21,7 @@ function TaskMonitorPage() {
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
   const [sortDir, setSortDir] = useState<SortDir | undefined>(undefined);
 
-  const handleSortChange = (key: string, dir: SortDir) => {
+  const handleSortChange = (key: string | undefined, dir: SortDir | undefined) => {
     setSortBy(key);
     setSortDir(dir);
     setPageNumber(0);

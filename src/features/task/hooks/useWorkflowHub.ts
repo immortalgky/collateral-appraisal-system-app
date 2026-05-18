@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { HubConnectionBuilder, HubConnectionState, HttpTransportType } from '@microsoft/signalr';
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 import { getAccessToken } from '@shared/api/axiosInstance';
 
@@ -43,8 +43,8 @@ export function useWorkflowHub({ poolGroups, onPoolTaskUpdate }: UseWorkflowHubO
     const connection = new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
         accessTokenFactory: () => getAccessToken() ?? '',
-        skipNegotiation: true,
-        transport: HttpTransportType.WebSockets,
+        // skipNegotiation: true,
+        // transport: HttpTransportType.WebSockets,
         withCredentials: true,
       })
       .withAutomaticReconnect()

@@ -10,7 +10,7 @@ interface PeopleMonitorTableProps {
   isLoading: boolean;
   sortBy?: string;
   sortDir?: SortDir;
-  onSortChange?: (sortKey: string, sortDir: SortDir) => void;
+  onSortChange?: (sortKey: string | undefined, sortDir: SortDir | undefined) => void;
 }
 
 const COLUMNS: { key: string; label: string; sortKey?: string; numeric?: boolean }[] = [

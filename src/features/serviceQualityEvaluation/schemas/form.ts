@@ -1,43 +1,37 @@
 import { z } from 'zod';
 
-const ratingSchema = z.number().int().min(1).max(4);
+const ratingSchema = z.number().int().min(1).max(5).nullable().optional();
 
 export const evaluationSchema = z.object({
   criteria1Rating: ratingSchema,
-  criteria1Description: z.string().nullable().optional(),
   criteria2Rating: ratingSchema,
-  criteria2IsAutoDetected: z.boolean(),
+  // Internal display flags — populated by the auto-detect effect, never user-edited.
+  // Marked .optional() so RHF can hold them as undefined without tripping Zod.
+  criteria2IsAutoDetected: z.boolean().optional(),
   criteria2DetectedDays: z.number().nullable().optional(),
-  criteria2Description: z.string().nullable().optional(),
+  criteria2AutoLocked: z.boolean().optional(),
   criteria3Rating: ratingSchema,
-  criteria3Description: z.string().nullable().optional(),
   criteria4Rating: ratingSchema,
-  criteria4Description: z.string().nullable().optional(),
   criteria5Rating: ratingSchema,
-  criteria5Description: z.string().nullable().optional(),
   additionalComments: z.string().nullable().optional(),
   note: z.string().nullable().optional(),
-  evaluationStatus: z.enum(['Draft', 'Completed']),
+  evaluationStatus: z.enum(['Pending', 'Completed']).optional(),
 });
 
 export type EvaluationFormValues = z.infer<typeof evaluationSchema>;
 
 export const defaultEvaluationValues: EvaluationFormValues = {
-  criteria1Rating: 1,
-  criteria1Description: null,
-  criteria2Rating: 1,
+  criteria1Rating: null,
+  criteria2Rating: null,
   criteria2IsAutoDetected: false,
   criteria2DetectedDays: null,
-  criteria2Description: null,
-  criteria3Rating: 1,
-  criteria3Description: null,
-  criteria4Rating: 1,
-  criteria4Description: null,
-  criteria5Rating: 1,
-  criteria5Description: null,
+  criteria2AutoLocked: false,
+  criteria3Rating: null,
+  criteria4Rating: null,
+  criteria5Rating: null,
   additionalComments: null,
   note: null,
-  evaluationStatus: 'Draft',
+  evaluationStatus: 'Pending',
 };
 
 /** Criteria weights — fixed per spec */

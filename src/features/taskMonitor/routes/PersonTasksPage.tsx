@@ -33,7 +33,7 @@ function PersonTasksPage() {
   const [selectedTask, setSelectedTask] = useState<MonitoredTask | null>(null);
   const [isReassignOpen, setIsReassignOpen] = useState(false);
 
-  const handleSortChange = (key: string, dir: SortDir) => {
+  const handleSortChange = (key: string | undefined, dir: SortDir | undefined) => {
     setSortBy(key);
     setSortDir(dir);
     setPageNumber(0);
