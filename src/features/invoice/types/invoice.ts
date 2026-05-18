@@ -40,6 +40,9 @@ export interface InvoiceItem {
   vatAmount: number;
   totalFeeAfterVAT: number;
   bankAbsorbAmount: number;
+  payPartialAmount: number;
+  remainingFee: number;
+  lastPaymentDate: string | null;
   submittedDate: string | null;
 }
 

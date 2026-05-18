@@ -107,6 +107,8 @@
     "col": {
       "appraisalReportNo": "เลขที่รายงาน",
       "customerName": "ชื่อลูกค้า",
+      "costCenter": "ศูนย์ต้นทุน",
+      "notAvailable": "ไม่มีข้อมูล",
       "feePaymentMethod": "วิธีการชำระค่าธรรมเนียม",
       "feeAmount": "ค่าธรรมเนียม (ก่อน VAT)",
       "vat": "VAT",

@@ -42,6 +42,50 @@ const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) :
 
 type Tab = 'unpaid' | 'paid';
 
+/**
+ * Sortable column header — matches the project-standard sort affordance from the
+ * task list (ActivityTaskTable). Click the whole <th>, primary-colored text + single
+ * chevron when active, dual-arrow ghost icon when inactive.
+ */
+const SortableTh = ({
+  field,
+  sortBy,
+  sortDir,
+  onSort,
+  align = 'left',
+  children,
+}: {
+  field: string;
+  sortBy: string | null;
+  sortDir: 'asc' | 'desc';
+  onSort: (f: string) => void;
+  align?: 'left' | 'center' | 'right';
+  children: React.ReactNode;
+}) => {
+  const isActive = sortBy === field;
+  const alignCls = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  const flexAlign =
+    align === 'right' ? 'flex-row-reverse' : align === 'center' ? 'justify-center' : '';
+  const iconName = isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
+  return (
+    <th
+      onClick={() => onSort(field)}
+      className={`font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
+        isActive ? 'text-primary' : 'text-gray-600'
+      }`}
+    >
+      <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
+        <span>{children}</span>
+        <Icon
+          style="solid"
+          name={iconName}
+          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300'}`}
+        />
+      </div>
+    </th>
+  );
+};
+
 /** Count non-empty filter values */
 const countActiveFilters = (f: InvoiceFilterValues): number =>
   [
@@ -75,6 +119,24 @@ const IntInvoiceListPage = () => {
   /** Group-by criterion. Add new keys here as new criteria are supported. */
   const [groupBy, setGroupBy] = useState<string | null>(null);
   const groupByCompany = groupBy === 'company';
+
+  /** Server-side sort. Whitelisted backend columns: invoiceNumber, companyName,
+   *  sentDate, paidDate, totalAmount, totalItems, status. Three-stage cycle:
+   *  unsorted → asc → desc → unsorted. */
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const toggleSort = (field: string) => {
+    if (sortBy !== field) {
+      setSortBy(field);
+      setSortDir('asc');
+    } else if (sortDir === 'asc') {
+      setSortDir('desc');
+    } else {
+      setSortBy(null);
+      setSortDir('asc');
+    }
+    setPageNumber(0);
+  };
 
   // Bulk selection state. PO + paid date inputs live on the bulk-payment screen.
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -111,6 +173,8 @@ const IntInvoiceListPage = () => {
     paidDateTo,
     search: debouncedSearch || undefined,
     groupBy: groupBy ?? undefined,
+    sortBy: sortBy ?? undefined,
+    sortDir: sortBy ? sortDir : undefined,
   });
 
   const items = data?.items ?? [];
@@ -277,9 +341,11 @@ const IntInvoiceListPage = () => {
         </div>
       </div>
 
-      {/* Filter bar + tabs on the right */}
-      <div className="shrink-0 flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-wrap items-end gap-2">
+      {/* Filter bar + tabs on the right.
+          Right pane (Group by + Tabs) is pinned top-right and never wraps below;
+          filters wrap to additional rows on the left when they can't fit on a single line. */}
+      <div className="shrink-0 flex items-start gap-4">
+        <div className="flex-1 min-w-0 flex flex-wrap items-end gap-2">
           <div className="w-72">
             <Input
               placeholder={t('filter.searchPlaceholder')}
@@ -352,7 +418,7 @@ const IntInvoiceListPage = () => {
             </Button>
           )}
         </div>
-        <div className="flex items-end gap-2">
+        <div className="shrink-0 flex items-end gap-2">
           <div className="w-40">
             <Dropdown
               label={t('list.groupBy')}
@@ -401,31 +467,31 @@ const IntInvoiceListPage = () => {
                     />
                   </th>
                 )}
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <SortableTh field="invoiceNumber" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.invoiceNumber')}
-                </th>
+                </SortableTh>
                 {!groupByCompany && (
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  <SortableTh field="companyName" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                     {t('list.col.companyName')}
-                  </th>
+                  </SortableTh>
                 )}
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <SortableTh field="sentDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.sentDate')}
-                </th>
+                </SortableTh>
                 {tab === 'paid' && (
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  <SortableTh field="paidDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                     {t('list.col.paidDate')}
-                  </th>
+                  </SortableTh>
                 )}
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <SortableTh field="totalItems" align="center" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.totalItems')}
-                </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                </SortableTh>
+                <SortableTh field="totalAmount" align="right" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.totalAmount')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                </SortableTh>
+                <SortableTh field="status" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.status')}
-                </th>
+                </SortableTh>
                 <th className="px-4 py-2.5" />
               </tr>
             </thead>

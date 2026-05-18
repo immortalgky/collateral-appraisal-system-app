@@ -46,6 +46,50 @@ const countActiveFilters = (f: InvoiceFilterValues): number =>
     Boolean,
   ).length;
 
+/**
+ * Sortable column header — matches the project-standard sort affordance from the
+ * task list (ActivityTaskTable). Click the whole <th>, primary-colored text + single
+ * chevron when active, dual-arrow ghost icon when inactive.
+ */
+const SortableTh = ({
+  field,
+  sortBy,
+  sortDir,
+  onSort,
+  align = 'left',
+  children,
+}: {
+  field: string;
+  sortBy: string | null;
+  sortDir: 'asc' | 'desc';
+  onSort: (f: string) => void;
+  align?: 'left' | 'center' | 'right';
+  children: React.ReactNode;
+}) => {
+  const isActive = sortBy === field;
+  const alignCls = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  const flexAlign =
+    align === 'right' ? 'flex-row-reverse' : align === 'center' ? 'justify-center' : '';
+  const iconName = isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
+  return (
+    <th
+      onClick={() => onSort(field)}
+      className={`font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
+        isActive ? 'text-primary' : 'text-gray-600'
+      }`}
+    >
+      <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
+        <span>{children}</span>
+        <Icon
+          style="solid"
+          name={iconName}
+          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300'}`}
+        />
+      </div>
+    </th>
+  );
+};
+
 const ExtInvoiceListPage = () => {
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('invoice');
@@ -64,6 +108,23 @@ const ExtInvoiceListPage = () => {
   const [pageSize, setPageSize] = useState(10);
   const [filters, setFilters] = useState<InvoiceFilterValues>({});
 
+  /** Server-side sort. Whitelisted: invoiceNumber, sentDate, paidDate, totalAmount,
+   *  totalItems, status. Three-stage cycle: unsorted → asc → desc → unsorted. */
+  const [sortBy, setSortBy] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const toggleSort = (field: string) => {
+    if (sortBy !== field) {
+      setSortBy(field);
+      setSortDir('asc');
+    } else if (sortDir === 'asc') {
+      setSortDir('desc');
+    } else {
+      setSortBy(null);
+      setSortDir('asc');
+    }
+    setPageNumber(0);
+  };
+
   // Delete confirm state
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -76,10 +137,15 @@ const ExtInvoiceListPage = () => {
   // Debounce the single search bar to avoid a request per keystroke
   const debouncedSearch = useDebounce(filters.search, 300);
 
-  // Tab drives status: Paid tab → status=Paid; Unpaid tab → no status filter
-  // (any non-Paid). The dropdown's explicit value overrides when set.
+  // Tab drives status: Paid tab → include status=Paid. Unpaid tab → exclude Paid (so
+  // Pending drafts AND Sent invoices both show up). The dropdown's explicit value overrides
+  // when set on the Unpaid tab.
   const tabStatus = tab === 'paid' ? 'Paid' : undefined;
   const statusParam = filters.status ?? tabStatus;
+  // Only apply the exclude when no explicit status is selected on the Unpaid tab — otherwise
+  // an explicit status filter could conflict with the exclude.
+  const excludeStatusParam =
+    tab === 'unpaid' && !filters.status ? 'Paid' : undefined;
 
   // Map filter date fields to API params (DateOnly = yyyy-MM-dd).
   // Invoice Date applies on both tabs; Paid Date is History-only.
@@ -92,11 +158,14 @@ const ExtInvoiceListPage = () => {
     pageNumber,
     pageSize,
     status: statusParam,
+    excludeStatus: excludeStatusParam,
     sentDateFrom,
     sentDateTo,
     paidDateFrom,
     paidDateTo,
     search: debouncedSearch || undefined,
+    sortBy: sortBy ?? undefined,
+    sortDir: sortBy ? sortDir : undefined,
   });
 
   const items = data?.items ?? [];
@@ -107,11 +176,15 @@ const ExtInvoiceListPage = () => {
 
   // Sidecar count query for the OPPOSITE tab. Respects search + date filters
   // so the badge reflects what the user would see if they switched tabs.
+  // - On Unpaid → count opposite (Paid) via status=Paid.
+  // - On Paid → count opposite (Unpaid) via excludeStatus=Paid (Pending + Sent).
   const otherTabStatus = tab === 'unpaid' ? 'Paid' : undefined;
+  const otherTabExcludeStatus = tab === 'paid' ? 'Paid' : undefined;
   const { data: otherTabData } = useGetInvoices({
     pageNumber: 0,
     pageSize: 1,
     status: otherTabStatus,
+    excludeStatus: otherTabExcludeStatus,
     sentDateFrom: toDateOnly(filters.invoiceDateFrom),
     sentDateTo: toDateOnly(filters.invoiceDateTo),
     paidDateFrom: tab === 'unpaid' ? toDateOnly(filters.paidDateFrom) : undefined,
@@ -260,26 +333,26 @@ const ExtInvoiceListPage = () => {
             </colgroup>
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <SortableTh field="invoiceNumber" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.invoiceNumber')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                </SortableTh>
+                <SortableTh field="sentDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.sentDate')}
-                </th>
+                </SortableTh>
                 {tab === 'paid' && (
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  <SortableTh field="paidDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                     {t('list.col.paidDate')}
-                  </th>
+                  </SortableTh>
                 )}
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <SortableTh field="totalItems" align="center" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.totalItems')}
-                </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                </SortableTh>
+                <SortableTh field="totalAmount" align="right" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.totalAmount')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                </SortableTh>
+                <SortableTh field="status" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.status')}
-                </th>
+                </SortableTh>
                 <th className="px-4 py-2.5" />
               </tr>
             </thead>

@@ -43,7 +43,10 @@ import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeas
 import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
 import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
 import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
-import { AppraisalReadOnlyWrapper, ReadOnlyPageWrapper, } from '@shared/contexts/PageReadOnlyContext';
+import {
+  AppraisalReadOnlyWrapper,
+  ReadOnlyPageWrapper,
+} from '@shared/contexts/PageReadOnlyContext';
 import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
 import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
@@ -83,6 +86,8 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
+import TaskMonitorPage from '@/features/taskMonitor/routes/TaskMonitorPage';
+import PersonTasksPage from '@/features/taskMonitor/routes/PersonTasksPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -191,6 +196,15 @@ export const router = createBrowserRouter([
       {
         path: 'tasks',
         children: [{ index: true, element: <TaskPageDispatcher /> }],
+      },
+      // Task Monitor — supervisor view for reassigning tasks across monitored groups
+      {
+        path: 'task-monitor',
+        element: <TaskMonitorPage />,
+      },
+      {
+        path: 'task-monitor/:username',
+        element: <PersonTasksPage />,
       },
       // Meeting Routes (tier-3 approval gate)
       {
