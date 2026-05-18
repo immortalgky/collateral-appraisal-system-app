@@ -21,7 +21,9 @@ const getHubUrl = () => {
 };
 
 export function useNotificationHub() {
-  const connectionRef = useRef<ReturnType<typeof HubConnectionBuilder.prototype.build> | null>(null);
+  const connectionRef = useRef<ReturnType<typeof HubConnectionBuilder.prototype.build> | null>(
+    null,
+  );
   const addNotification = useNotificationStore(s => s.addNotification);
   const queryClient = useQueryClient();
 
@@ -32,6 +34,9 @@ export function useNotificationHub() {
     const connection = new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
         accessTokenFactory: () => getAccessToken() ?? '',
+        // skipNegotiation: true,
+        // transport: HttpTransportType.WebSockets,
+        withCredentials: true,
       })
       .withAutomaticReconnect()
       .configureLogging(signalrLogger)
@@ -77,7 +82,8 @@ export function useNotificationHub() {
 
     let cancelled = false;
 
-    connection.start()
+    connection
+      .start()
       .then(() => {
         if (!cancelled) console.log('[NotificationHub] SignalR connected');
       })

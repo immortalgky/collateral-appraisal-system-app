@@ -183,7 +183,7 @@ export function CostBuildingPanel({
       toast.success('Saved!');
       reset(request);
     } catch {
-      toast.error('Failed to save comparative analysis');
+      toast.error('Failed to save building cost method value');
     }
   };
 

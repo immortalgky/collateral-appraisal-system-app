@@ -43,6 +43,9 @@ export function useWorkflowHub({ poolGroups, onPoolTaskUpdate }: UseWorkflowHubO
     const connection = new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
         accessTokenFactory: () => getAccessToken() ?? '',
+        // skipNegotiation: true,
+        // transport: HttpTransportType.WebSockets,
+        withCredentials: true,
       })
       .withAutomaticReconnect()
       .configureLogging(signalrLogger)
