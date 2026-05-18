@@ -115,7 +115,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
             </span>
             <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-50 border border-blue-200 text-blue-700">
               <Icon style="solid" name="lock" className="size-2.5" />
-              preserved
+              SLA preserved
             </span>
           </div>
         </div>

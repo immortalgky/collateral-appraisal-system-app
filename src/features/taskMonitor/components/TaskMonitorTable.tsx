@@ -81,7 +81,7 @@ interface TaskMonitorTableProps {
   onReassign: (task: MonitoredTask) => void;
   sortBy?: string;
   sortDir?: SortDir;
-  onSortChange?: (sortKey: string, sortDir: SortDir) => void;
+  onSortChange?: (sortKey: string | undefined, sortDir: SortDir | undefined) => void;
 }
 
 const COLUMNS: { key: string; label: string; sortKey?: string }[] = [

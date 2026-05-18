@@ -7,12 +7,13 @@ interface SortableThProps {
   sortKey?: string;
   activeSortKey?: string;
   activeSortDir?: SortDir;
-  onSortChange?: (sortKey: string, sortDir: SortDir) => void;
+  /** Called with `(undefined, undefined)` when the sort is cleared. */
+  onSortChange?: (sortKey: string | undefined, sortDir: SortDir | undefined) => void;
   className?: string;
 }
 
 /**
- * Table header cell with a click-to-sort affordance. Cycles between asc → desc.
+ * Table header cell with a click-to-sort affordance. Cycles asc → desc → none.
  * Non-sortable when `sortKey` is omitted (renders plain label).
  */
 function SortableTh({
@@ -28,8 +29,17 @@ function SortableTh({
 
   const handleClick = () => {
     if (!isSortable || !sortKey || !onSortChange) return;
-    const nextDir: SortDir = isActive && activeSortDir === 'asc' ? 'desc' : 'asc';
-    onSortChange(sortKey, nextDir);
+    // Three-stage cycle: unsorted → asc → desc → unsorted
+    if (!isActive) {
+      onSortChange(sortKey, 'asc');
+      return;
+    }
+    if (activeSortDir === 'asc') {
+      onSortChange(sortKey, 'desc');
+      return;
+    }
+    // currently 'desc' → clear
+    onSortChange(undefined, undefined);
   };
 
   const baseCls =
@@ -47,22 +57,18 @@ function SortableTh({
       <button
         type="button"
         onClick={handleClick}
-        className="inline-flex items-center gap-1 hover:text-gray-700 transition-colors group"
+        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors group ${
+          isActive ? 'text-primary' : ''
+        }`}
       >
         <span>{label}</span>
-        {isActive ? (
-          <Icon
-            style="solid"
-            name={activeSortDir === 'asc' ? 'arrow-up' : 'arrow-down'}
-            className="size-3 text-primary"
-          />
-        ) : (
-          <Icon
-            style="solid"
-            name="sort"
-            className="size-3 text-gray-300 group-hover:text-gray-500"
-          />
-        )}
+        <Icon
+          style="solid"
+          name={isActive ? (activeSortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
+          className={`size-2.5 ${
+            isActive ? 'text-primary' : 'text-gray-300 group-hover:text-gray-500'
+          }`}
+        />
       </button>
     </th>
   );
