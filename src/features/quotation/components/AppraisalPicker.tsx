@@ -13,6 +13,7 @@ import {
 import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
+import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,17 +27,6 @@ export interface SelectedAppraisal {
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
 export type DocSelections = Record<string, Record<string, SharedDocumentSelectionDto['level']>>;
-
-// ─── Hardcoded status options (mirrors vw_AppraisalList status values) ────────
-
-const APPRAISAL_STATUS_OPTIONS = [
-  { value: 'Pending', label: 'Pending' },
-  { value: 'Assigned', label: 'Assigned' },
-  { value: 'InProgress', label: 'In Progress' },
-  { value: 'UnderReview', label: 'Under Review' },
-  { value: 'Completed', label: 'Completed' },
-  { value: 'Cancelled', label: 'Cancelled' },
-];
 
 // ─── Filter state type ────────────────────────────────────────────────────────
 
