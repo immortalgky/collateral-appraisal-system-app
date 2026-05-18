@@ -3,70 +3,96 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Input from '@shared/components/Input';
+import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
+import Dropdown from '@shared/components/inputs/Dropdown';
+import { APPRAISAL_STATUS_OPTIONS } from '@shared/constants/appraisalStatus';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Badge from '@shared/components/Badge';
 import { formatLocaleDate } from '@shared/utils/dateUtils';
 import EvaluationStatusBadge from '../components/EvaluationStatusBadge';
+import StarRating from '../components/StarRating';
 import { useGetEvaluationList } from '../api';
 
-const EVALUATION_STATUS_OPTIONS = ['Pending', 'Draft', 'Completed'];
+type EvaluationView = 'active' | 'history';
+
+// Active tab = items still needing attention (no eval yet, or saved as Draft).
+// History tab = finalised evaluations.
+const VIEW_STATUSES: Record<EvaluationView, string> = {
+  active: 'Pending',
+  history: 'Completed',
+};
 
 function ServiceQualityEvaluationListPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation('serviceQualityEvaluation');
 
   // Pagination
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
+  // View tab (Active = Pending + Draft, History = Completed)
+  const [view, setView] = useState<EvaluationView>('active');
+
   // Filters
-  const [appraisalNumber, setAppraisalNumber] = useState('');
-  const [customerName, setCustomerName] = useState('');
-  const [appraiserName, setAppraiserName] = useState('');
+  const [search, setSearch] = useState('');
+  const [appraiserCompanyId, setAppraiserCompanyId] = useState('');
   const [appraisalStatus, setAppraisalStatus] = useState('');
-  const [evaluationStatus, setEvaluationStatus] = useState('');
 
-  // Debounced text filters
-  const [debouncedAppraisalNumber, setDebouncedAppraisalNumber] = useState('');
-  const [debouncedCustomerName, setDebouncedCustomerName] = useState('');
-  const [debouncedAppraiserName, setDebouncedAppraiserName] = useState('');
+  // Sort
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedAppraisalNumber(appraisalNumber), 500);
-    return () => clearTimeout(t);
-  }, [appraisalNumber]);
+  // Debounced text filter for the free-text search
+  const [debouncedSearch, setDebouncedSearch] = useState('');
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedCustomerName(customerName), 500);
+    const t = setTimeout(() => setDebouncedSearch(search), 500);
     return () => clearTimeout(t);
-  }, [customerName]);
+  }, [search]);
 
-  useEffect(() => {
-    const t = setTimeout(() => setDebouncedAppraiserName(appraiserName), 500);
-    return () => clearTimeout(t);
-  }, [appraiserName]);
-
-  // Reset to first page on filter change
+  // Reset to first page on filter, view, or sort change
   useEffect(() => {
     setPageNumber(0);
-  }, [
-    debouncedAppraisalNumber,
-    debouncedCustomerName,
-    debouncedAppraiserName,
-    appraisalStatus,
-    evaluationStatus,
-  ]);
+  }, [debouncedSearch, appraiserCompanyId, appraisalStatus, view, sortField, sortDirection]);
 
   const { data, isLoading, isFetching, isError, error } = useGetEvaluationList({
     pageNumber,
     pageSize,
-    appraisalNumber: debouncedAppraisalNumber || undefined,
-    customerName: debouncedCustomerName || undefined,
-    appraiserName: debouncedAppraiserName || undefined,
+    search: debouncedSearch || undefined,
+    appraiserCompanyId: appraiserCompanyId || undefined,
     appraisalStatus: appraisalStatus || undefined,
-    evaluationStatus: evaluationStatus || undefined,
+    evaluationStatus: VIEW_STATUSES[view],
+    sortBy: sortField ?? undefined,
+    sortDir: sortDirection,
   });
+
+  // Three-state cycle: unsorted -> asc -> desc -> unsorted
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field)
+      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+    return (
+      <Icon
+        style="solid"
+        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
+        className="size-2.5 text-primary"
+      />
+    );
+  };
 
   const items = data?.items ?? [];
   const totalCount = data?.count ?? 0;
@@ -75,22 +101,19 @@ function ServiceQualityEvaluationListPage() {
   const isFirstLoad = isLoading && items.length === 0;
   const isRefetching = isFetching && !isFirstLoad;
 
-  const hasFilters =
-    appraisalNumber || customerName || appraiserName || appraisalStatus || evaluationStatus;
+  const hasFilters = search || appraiserCompanyId || appraisalStatus;
 
   const handleClearFilters = () => {
-    setAppraisalNumber('');
-    setCustomerName('');
-    setAppraiserName('');
+    setSearch('');
+    setAppraiserCompanyId('');
     setAppraisalStatus('');
-    setEvaluationStatus('');
   };
 
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Failed to load evaluations</p>
+        <p className="text-gray-600">{t('list.error.title')}</p>
         <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
       </div>
     );
@@ -102,71 +125,67 @@ function ServiceQualityEvaluationListPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Service Quality Evaluation</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Evaluate external appraiser service quality
-          </p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('list.subtitle')}</p>
+        </div>
+      </div>
+
+      {/* View tabs */}
+      <div className="shrink-0 border-b border-gray-200">
+        <div className="flex gap-1">
+          {(['active', 'history'] as const).map(v => {
+            const isActive = view === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                  isActive
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {t(`list.tabs.${v}`)}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Filters Bar */}
       <div className="shrink-0 flex items-end gap-3 pb-1 flex-wrap">
-        <div className="w-44">
+        <div className="w-72">
           <Input
-            label="Appraisal Report No"
-            placeholder="e.g. AP-2025-001"
-            value={appraisalNumber}
-            onChange={e => setAppraisalNumber(e.target.value)}
+            label={t('list.filters.search')}
+            placeholder={t('list.filters.searchPlaceholder')}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
           />
         </div>
-        <div className="w-44">
-          <Input
-            label="Customer Name"
-            placeholder="Customer name"
-            value={customerName}
-            onChange={e => setCustomerName(e.target.value)}
+        <div className="w-56 flex flex-col gap-1">
+          <label className="block text-xs font-medium text-gray-700">
+            {t('list.filters.appraiserCompany')}
+          </label>
+          <CompanyAutocomplete
+            value={appraiserCompanyId}
+            onChange={setAppraiserCompanyId}
+            placeholder={t('list.filters.appraiserCompanyPlaceholder')}
           />
         </div>
-        <div className="w-44">
-          <Input
-            label="Appraiser Name"
-            placeholder="Appraiser name"
-            value={appraiserName}
-            onChange={e => setAppraiserName(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">Status</label>
-          <select
+        <div className="w-40">
+          <Dropdown
+            label={t('list.filters.status')}
+            placeholder={t('list.filters.statusAll')}
+            options={APPRAISAL_STATUS_OPTIONS}
             value={appraisalStatus}
-            onChange={e => setAppraisalStatus(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none bg-white min-w-32 hover:border-gray-300"
-          >
-            <option value="">All statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="InProgress">In Progress</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">Evaluation Status</label>
-          <select
-            value={evaluationStatus}
-            onChange={e => setEvaluationStatus(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none bg-white min-w-36 hover:border-gray-300"
-          >
-            <option value="">All</option>
-            {EVALUATION_STATUS_OPTIONS.map(s => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+            onChange={v => setAppraisalStatus(v ?? '')}
+            showValuePrefix={false}
+          />
         </div>
         {hasFilters && (
           <button
@@ -175,7 +194,7 @@ function ServiceQualityEvaluationListPage() {
             className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
           >
             <Icon style="solid" name="xmark" className="size-3" />
-            Clear all
+            {t('list.filters.clearAll')}
           </button>
         )}
       </div>
@@ -186,21 +205,33 @@ function ServiceQualityEvaluationListPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Appraisal Report No
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Appraiser</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Customer Name</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Report Received Date
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Status</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Evaluation Status
-                </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Appraisal Value
-                </th>
+                {[
+                  { key: 'AppraisalNumber', label: t('list.columns.appraisalNumber'), align: 'left' as const, nowrap: true },
+                  { key: 'AppraiserCompanyName', label: t('list.columns.appraiser'), align: 'left' as const, nowrap: false },
+                  { key: 'CustomerName', label: t('list.columns.customerName'), align: 'left' as const, nowrap: false },
+                  { key: 'ReportReceivedDate', label: t('list.columns.reportReceivedDate'), align: 'left' as const, nowrap: true },
+                  { key: 'AppraisalStatus', label: t('list.columns.status'), align: 'left' as const, nowrap: false },
+                  { key: 'EvaluationStatus', label: t('list.columns.evaluationStatus'), align: 'left' as const, nowrap: true },
+                  { key: 'TotalScore', label: t('list.columns.rating'), align: 'left' as const, nowrap: true },
+                  { key: 'AppraisalValue', label: t('list.columns.appraisalValue'), align: 'right' as const, nowrap: true },
+                ].map(col => {
+                  const isActive = sortField === col.key;
+                  const alignClass = col.align === 'right' ? 'text-right' : 'text-left';
+                  return (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className={`${alignClass} font-medium px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                        col.nowrap ? 'whitespace-nowrap' : ''
+                      } ${isActive ? 'text-primary' : 'text-gray-600'}`}
+                    >
+                      <div className={`inline-flex items-center gap-1 ${col.align === 'right' ? 'justify-end' : ''}`}>
+                        {col.label}
+                        <SortIcon field={col.key} />
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody
@@ -221,12 +252,12 @@ function ServiceQualityEvaluationListPage() {
                 />
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16">
+                  <td colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">No evaluations found</p>
+                      <p className="text-gray-500 font-medium">{t('list.empty.title')}</p>
                       <p className="text-xs text-gray-400">
-                        {hasFilters ? 'Try different filters' : 'No appraisals to evaluate yet'}
+                        {hasFilters ? t('list.empty.withFilters') : t('list.empty.noData')}
                       </p>
                     </div>
                   </td>
@@ -245,7 +276,7 @@ function ServiceQualityEvaluationListPage() {
                     <td className="px-4 py-2.5">
                       <span className="font-medium text-primary">{item.appraisalNumber}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-700">{item.externalAppraiserName || '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{item.appraiserCompanyName || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-700">{item.customerName || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                       {formatLocaleDate(item.reportReceivedDate, i18n.language)}
@@ -262,9 +293,19 @@ function ServiceQualityEvaluationListPage() {
                     <td className="px-4 py-2.5">
                       <EvaluationStatusBadge status={item.evaluationStatus} />
                     </td>
+                    <td className="px-4 py-2.5">
+                      {item.totalScore != null ? (
+                        <StarRating score={item.totalScore} />
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
                       {item.appraisalValue != null
-                        ? item.appraisalValue.toLocaleString()
+                        ? item.appraisalValue.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
                         : '—'}
                     </td>
                   </tr>

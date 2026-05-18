@@ -7,14 +7,17 @@ import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
 import enWebhookAdmin from './locales/en/webhookAdmin.json';
 import enInvoice from './locales/en/invoice.json';
+import enServiceQualityEvaluation from './locales/en/serviceQualityEvaluation.json';
 import thCommon from './locales/th/common.json';
 import thNav from './locales/th/nav.json';
 import thWebhookAdmin from './locales/th/webhookAdmin.json';
 import thInvoice from './locales/th/invoice.json';
+import thServiceQualityEvaluation from './locales/th/serviceQualityEvaluation.json';
 import zhCommon from './locales/zh/common.json';
 import zhNav from './locales/zh/nav.json';
 import zhWebhookAdmin from './locales/zh/webhookAdmin.json';
 import zhInvoice from './locales/zh/invoice.json';
+import zhServiceQualityEvaluation from './locales/zh/serviceQualityEvaluation.json';
 
 export const defaultNS = 'common' as const;
 
@@ -24,18 +27,21 @@ export const resources = {
     nav: enNav,
     webhookAdmin: enWebhookAdmin,
     invoice: enInvoice,
+    serviceQualityEvaluation: enServiceQualityEvaluation,
   },
   th: {
     common: thCommon,
     nav: thNav,
     webhookAdmin: thWebhookAdmin,
     invoice: thInvoice,
+    serviceQualityEvaluation: thServiceQualityEvaluation,
   },
   zh: {
     common: zhCommon,
     nav: zhNav,
     webhookAdmin: zhWebhookAdmin,
     invoice: zhInvoice,
+    serviceQualityEvaluation: zhServiceQualityEvaluation,
   },
 } as const;
 

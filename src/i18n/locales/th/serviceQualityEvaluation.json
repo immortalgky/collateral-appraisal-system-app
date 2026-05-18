@@ -1,0 +1,85 @@
+{
+  "list": {
+    "title": "การประเมินคุณภาพบริการ",
+    "subtitle": "ประเมินคุณภาพบริการของผู้ประเมินภายนอก",
+    "tabs": {
+      "active": "รอประเมิน",
+      "history": "ประเมินแล้ว"
+    },
+    "filters": {
+      "search": "ค้นหา",
+      "searchPlaceholder": "เลขที่รายงานประเมิน หรือ ชื่อลูกค้า",
+      "appraiserCompany": "บริษัทผู้ประเมิน",
+      "appraiserCompanyPlaceholder": "ค้นหาบริษัท...",
+      "status": "สถานะ",
+      "statusAll": "ทุกสถานะ",
+      "evaluationStatus": "สถานะการประเมิน",
+      "evaluationStatusAll": "ทั้งหมด",
+      "clearAll": "ล้างทั้งหมด"
+    },
+    "columns": {
+      "appraisalNumber": "เลขที่รายงานประเมิน",
+      "appraiser": "ผู้ประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "reportReceivedDate": "วันที่ได้รับรายงาน",
+      "status": "สถานะ",
+      "evaluationStatus": "สถานะการประเมิน",
+      "rating": "คะแนน",
+      "appraisalValue": "มูลค่าประเมิน"
+    },
+    "empty": {
+      "title": "ไม่พบรายการประเมิน",
+      "withFilters": "ลองเปลี่ยนตัวกรอง",
+      "noData": "ยังไม่มีรายงานที่ต้องประเมินคุณภาพ"
+    },
+    "error": {
+      "title": "ไม่สามารถโหลดข้อมูลการประเมินได้"
+    }
+  },
+  "detail": {
+    "infoTitle": "ข้อมูลรายงานประเมิน",
+    "info": {
+      "appraisalNumber": "เลขที่รายงานประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "appraiserCompany": "บริษัทผู้ประเมิน",
+      "appraisalDepartment": "ฝ่ายประเมิน",
+      "propertyType": "ประเภทหลักประกัน",
+      "appraisalDate": "วันที่ประเมิน",
+      "reportReceivedDate": "วันที่ได้รับรายงาน"
+    },
+    "comments": {
+      "additionalLabel": "ความคิดเห็นเพิ่มเติมจากผู้ประเมิน",
+      "additionalPlaceholder": "กรอกความคิดเห็นเพิ่มเติม...",
+      "notesLabel": "บันทึก",
+      "notesPlaceholder": "กรอกบันทึก..."
+    },
+    "actions": {
+      "saveDraft": "บันทึกฉบับร่าง",
+      "complete": "ดำเนินการเสร็จสิ้น"
+    },
+    "errors": {
+      "allRatingsRequired": "โปรดเลือกคะแนนสำหรับทุกเกณฑ์ก่อนยืนยันการประเมิน",
+      "saveFailed": "บันทึกการประเมินไม่สำเร็จ โปรดลองอีกครั้ง",
+      "completeFailed": "ยืนยันการประเมินไม่สำเร็จ โปรดลองอีกครั้ง"
+    },
+    "success": {
+      "draftSaved": "บันทึกฉบับร่างเรียบร้อย",
+      "completed": "ยืนยันการประเมินเรียบร้อย"
+    }
+  },
+  "evaluationStatus": {
+    "Pending": "รอดำเนินการ",
+    "Draft": "ฉบับร่าง",
+    "Completed": "เสร็จสิ้น"
+  },
+  "deliveryTime": {
+    "tooltip": "ระบบคำนวณอัตโนมัติจากเวลาที่ผู้ประเมินได้รับมอบหมาย → เวลาที่ส่งงาน (เฉพาะเวลาทำการ ไม่นับวันหยุดสุดสัปดาห์และวันหยุดนักขัตฤกษ์)",
+    "detectedDays": "({{days}} วัน)"
+  },
+  "ratingGuidelines": {
+    "title": "เกณฑ์การให้คะแนน",
+    "no": "ลำดับ",
+    "rating": "คะแนน {{value}}",
+    "detectedDays": "({{days}} วัน)"
+  }
+}

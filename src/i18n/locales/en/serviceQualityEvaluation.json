@@ -1,0 +1,85 @@
+{
+  "list": {
+    "title": "Service Quality Evaluation",
+    "subtitle": "Evaluate external appraiser service quality",
+    "tabs": {
+      "active": "To Evaluate",
+      "history": "Evaluated"
+    },
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Appraisal number or customer name",
+      "appraiserCompany": "Appraiser Company",
+      "appraiserCompanyPlaceholder": "Search company...",
+      "status": "Status",
+      "statusAll": "All statuses",
+      "evaluationStatus": "Evaluation Status",
+      "evaluationStatusAll": "All",
+      "clearAll": "Clear all"
+    },
+    "columns": {
+      "appraisalNumber": "Appraisal Number",
+      "appraiser": "Appraiser",
+      "customerName": "Customer Name",
+      "reportReceivedDate": "Report Received Date",
+      "status": "Status",
+      "evaluationStatus": "Evaluation Status",
+      "rating": "Rating",
+      "appraisalValue": "Appraisal Value"
+    },
+    "empty": {
+      "title": "No evaluations found",
+      "withFilters": "Try different filters",
+      "noData": "No appraisals to evaluate yet"
+    },
+    "error": {
+      "title": "Failed to load evaluations"
+    }
+  },
+  "detail": {
+    "infoTitle": "Appraisal Information",
+    "info": {
+      "appraisalNumber": "Appraisal Number",
+      "customerName": "Customer Name",
+      "appraiserCompany": "Appraiser Company",
+      "appraisalDepartment": "Appraisal Department",
+      "propertyType": "Property Type",
+      "appraisalDate": "Appraisal Date",
+      "reportReceivedDate": "Report Received Date"
+    },
+    "comments": {
+      "additionalLabel": "Additional Comments from the Evaluators",
+      "additionalPlaceholder": "Enter additional comments...",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Enter notes..."
+    },
+    "actions": {
+      "saveDraft": "Save draft",
+      "complete": "Complete"
+    },
+    "errors": {
+      "allRatingsRequired": "Please select a rating for every criterion before completing the evaluation.",
+      "saveFailed": "Failed to save the evaluation. Please try again.",
+      "completeFailed": "Failed to complete the evaluation. Please try again."
+    },
+    "success": {
+      "draftSaved": "Draft saved.",
+      "completed": "Evaluation completed."
+    }
+  },
+  "evaluationStatus": {
+    "Pending": "Pending",
+    "Draft": "Draft",
+    "Completed": "Completed"
+  },
+  "deliveryTime": {
+    "tooltip": "Auto-calculated by the system from the appraiser's assigned → submitted timestamps (business hours, excluding weekends and holidays).",
+    "detectedDays": "({{days}} days)"
+  },
+  "ratingGuidelines": {
+    "title": "Rating Guidelines",
+    "no": "No",
+    "rating": "Rating {{value}}",
+    "detectedDays": "({{days}} days)"
+  }
+}

@@ -6,10 +6,24 @@ export interface AppraisalEvaluationListItem {
   appraisalStatus: string;
   externalAppraiserName: string;
   assigneeCompanyId: string;
+  appraiserCompanyName: string | null;
   appraisalValue: number | null;
   evaluationId: string | null;
-  evaluationStatus: string; // "Pending" | "Draft" | "Completed"
+  evaluationStatus: string; // "Pending" | "Completed"
   totalScore: number | null;
+}
+
+export interface AppraisalEvaluationHeader {
+  appraisalId: string;
+  appraisalNumber: string | null;
+  appraisalStatus: string | null;
+  customerName: string | null;
+  reportReceivedDate: string | null;
+  appraiserCompanyName: string | null;
+  assigneeCompanyId: string | null;
+  collateralTypes: string | null;
+  inspectionDates: string | null;
+  departmentOfAppraisal: string | null;
 }
 
 export interface AppraisalEvaluationDetail {
@@ -19,18 +33,13 @@ export interface AppraisalEvaluationDetail {
   evaluationStatus: string;
   evaluatedBy: string | null;
   evaluatedAt: string | null;
-  criteria1Rating: number;
-  criteria1Description: string | null;
-  criteria2Rating: number;
+  criteria1Rating: number | null;
+  criteria2Rating: number | null;
   criteria2IsAutoDetected: boolean;
   criteria2DetectedDays: number | null;
-  criteria2Description: string | null;
-  criteria3Rating: number;
-  criteria3Description: string | null;
-  criteria4Rating: number;
-  criteria4Description: string | null;
-  criteria5Rating: number;
-  criteria5Description: string | null;
+  criteria3Rating: number | null;
+  criteria4Rating: number | null;
+  criteria5Rating: number | null;
   additionalComments: string | null;
   note: string | null;
 }
@@ -41,11 +50,12 @@ export interface DetectDeliveryTimeResponse {
 }
 
 export interface EvaluationListParams {
-  appraisalNumber?: string;
-  customerName?: string;
+  search?: string;
   appraisalStatus?: string;
-  appraiserName?: string;
+  appraiserCompanyId?: string;
   evaluationStatus?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
   pageNumber: number;
   pageSize: number;
 }
@@ -60,36 +70,26 @@ export interface PaginatedEvaluationList {
 export interface CreateEvaluationBody {
   appraisalId: string;
   evaluationStatus: string;
-  criteria1Rating: number;
-  criteria1Description: string | null;
-  criteria2Rating: number;
+  criteria1Rating: number | null;
+  criteria2Rating: number | null;
   criteria2IsAutoDetected: boolean;
   criteria2DetectedDays: number | null;
-  criteria2Description: string | null;
-  criteria3Rating: number;
-  criteria3Description: string | null;
-  criteria4Rating: number;
-  criteria4Description: string | null;
-  criteria5Rating: number;
-  criteria5Description: string | null;
+  criteria3Rating: number | null;
+  criteria4Rating: number | null;
+  criteria5Rating: number | null;
   additionalComments: string | null;
   note: string | null;
 }
 
 export interface UpdateEvaluationBody {
   evaluationStatus: string;
-  criteria1Rating: number;
-  criteria1Description: string | null;
-  criteria2Rating: number;
+  criteria1Rating: number | null;
+  criteria2Rating: number | null;
   criteria2IsAutoDetected: boolean;
   criteria2DetectedDays: number | null;
-  criteria2Description: string | null;
-  criteria3Rating: number;
-  criteria3Description: string | null;
-  criteria4Rating: number;
-  criteria4Description: string | null;
-  criteria5Rating: number;
-  criteria5Description: string | null;
+  criteria3Rating: number | null;
+  criteria4Rating: number | null;
+  criteria5Rating: number | null;
   additionalComments: string | null;
   note: string | null;
 }

@@ -1,0 +1,85 @@
+{
+  "list": {
+    "title": "服务质量评估",
+    "subtitle": "评估外部估价人员的服务质量",
+    "tabs": {
+      "active": "待评估",
+      "history": "已评估"
+    },
+    "filters": {
+      "search": "搜索",
+      "searchPlaceholder": "评估报告编号或客户名称",
+      "appraiserCompany": "估价公司",
+      "appraiserCompanyPlaceholder": "搜索公司...",
+      "status": "状态",
+      "statusAll": "所有状态",
+      "evaluationStatus": "评估状态",
+      "evaluationStatusAll": "全部",
+      "clearAll": "清除全部"
+    },
+    "columns": {
+      "appraisalNumber": "评估报告编号",
+      "appraiser": "估价人员",
+      "customerName": "客户名称",
+      "reportReceivedDate": "报告接收日期",
+      "status": "状态",
+      "evaluationStatus": "评估状态",
+      "rating": "评分",
+      "appraisalValue": "评估价值"
+    },
+    "empty": {
+      "title": "未找到评估记录",
+      "withFilters": "请尝试其他筛选条件",
+      "noData": "暂无待评估的报告"
+    },
+    "error": {
+      "title": "加载评估记录失败"
+    }
+  },
+  "detail": {
+    "infoTitle": "评估报告信息",
+    "info": {
+      "appraisalNumber": "评估报告编号",
+      "customerName": "客户名称",
+      "appraiserCompany": "估价公司",
+      "appraisalDepartment": "评估部门",
+      "propertyType": "抵押物类型",
+      "appraisalDate": "评估日期",
+      "reportReceivedDate": "报告接收日期"
+    },
+    "comments": {
+      "additionalLabel": "评估员补充意见",
+      "additionalPlaceholder": "请输入补充意见...",
+      "notesLabel": "备注",
+      "notesPlaceholder": "请输入备注..."
+    },
+    "actions": {
+      "saveDraft": "保存草稿",
+      "complete": "完成"
+    },
+    "errors": {
+      "allRatingsRequired": "请先为每个评估项选择评分，然后再完成评估。",
+      "saveFailed": "保存评估失败，请重试。",
+      "completeFailed": "完成评估失败，请重试。"
+    },
+    "success": {
+      "draftSaved": "草稿已保存。",
+      "completed": "评估已完成。"
+    }
+  },
+  "evaluationStatus": {
+    "Pending": "待处理",
+    "Draft": "草稿",
+    "Completed": "已完成"
+  },
+  "deliveryTime": {
+    "tooltip": "系统根据估价人员的分配时间 → 提交时间自动计算（仅计算工作时间，不含周末和节假日）。",
+    "detectedDays": "({{days}} 天)"
+  },
+  "ratingGuidelines": {
+    "title": "评分指南",
+    "no": "序号",
+    "rating": "评分 {{value}}",
+    "detectedDays": "({{days}} 天)"
+  }
+}
