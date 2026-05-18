@@ -1,7 +1,7 @@
 import type { FilterField } from './tabConfigs';
 import Icon from '@/shared/components/Icon';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
-import CompanyAutocomplete from './CompanyAutocomplete';
+import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete';
 
 interface SearchFilterBarProps {
   filters: FilterField[];

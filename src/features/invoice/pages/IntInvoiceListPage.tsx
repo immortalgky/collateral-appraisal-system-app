@@ -11,7 +11,7 @@ import { formatLocaleDate } from '@/shared/utils/dateUtils';
 import InvoiceStatusBadge from '../components/InvoiceStatusBadge';
 import InvoiceRowActionsMenu from '../components/InvoiceRowActionsMenu';
 import InvoiceListTabs from '../components/InvoiceListTabs';
-import CompanyAutocomplete from '@features/appraisal/components/search/CompanyAutocomplete';
+import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete';
 import { useGetInvoices } from '../api/invoice';
 
 interface InvoiceFilterValues {

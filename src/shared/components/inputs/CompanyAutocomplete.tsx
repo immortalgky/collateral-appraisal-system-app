@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useCompanyStore } from '@/shared/store';
-import { useGetCompanyById } from '../../api/administration';
+import { useGetCompanyByIdMinimal } from '@/shared/api/companies';
 import Autocomplete from '@/shared/components/inputs/Autocomplete';
 
 interface CompanyAutocompleteProps {
@@ -19,8 +19,8 @@ function CompanyAutocomplete({
   const isLoaded = useCompanyStore(s => s.isLoaded);
 
   // Fallback: if the store hasn't loaded yet and we have an external value,
-  // hydrate the display name from the API so the chip and input show a name.
-  const { data: hydratedCompany } = useGetCompanyById(!isLoaded && value ? value : null);
+  // hydrate the display name from the API so the input shows a name.
+  const { data: hydratedCompany } = useGetCompanyByIdMinimal(!isLoaded && value ? value : null);
 
   const items = useMemo(
     () => companies.map(c => ({ value: c.id, label: c.companyName })),
@@ -29,7 +29,6 @@ function CompanyAutocomplete({
 
   const displayText = useMemo(() => {
     if (!value) return undefined;
-    // Prefer store lookup once loaded
     const fromStore = companies.find(c => c.id === value)?.companyName;
     return fromStore ?? hydratedCompany?.companyName;
   }, [value, companies, hydratedCompany]);
@@ -43,9 +42,7 @@ function CompanyAutocomplete({
       placeholder={placeholder}
       ariaLabel={placeholder}
       showAllOnFocus
-      filterItems={(item, text) =>
-        item.label.toLowerCase().includes(text.toLowerCase())
-      }
+      filterItems={(item, text) => item.label.toLowerCase().includes(text.toLowerCase())}
     />
   );
 }
