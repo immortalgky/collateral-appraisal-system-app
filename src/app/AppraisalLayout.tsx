@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
 
 import Navbar from '@shared/components/Navbar';
@@ -275,15 +275,11 @@ function AppraisalLayout() {
 
   // Page-level dynamic crumbs (fetched record names) appended after layout-built crumbs.
   // Structural breadcrumb items are derived from the URL above — pages should only
-  // contribute the dynamic leaf (e.g. comparable number). To prevent stale extras
-  // from a previous page leaking into the next render (e.g. on browser back), we
-  // clear extras whenever the pathname changes; pages re-set them in their own
-  // useEffect on the next commit.
+  // contribute the dynamic leaf (e.g. comparable number). Each caller of
+  // useBreadcrumbExtras returns its own cleanup that resets the store on unmount,
+  // so a pathname-keyed clear here would only race against children's bottom-up
+  // effects and silently wipe a freshly-set leaf crumb.
   const breadcrumbExtras = useBreadcrumbExtrasStore(s => s.extras);
-  const setExtras = useBreadcrumbExtrasStore(s => s.setExtras);
-  useEffect(() => {
-    setExtras([]);
-  }, [location.pathname, setExtras]);
   const breadcrumbItemsWithExtras = useMemo(() => {
     const merged = [...breadcrumbItems, ...breadcrumbExtras];
     return merged.filter((item, idx) => idx === 0 || item.label !== merged[idx - 1].label);

@@ -1,5 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useMemo, useRef } from 'react';
+import { Outlet } from 'react-router-dom';
+import { useMemo, useRef } from 'react';
 import Navbar from '@shared/components/Navbar';
 import Sidebar, { MobileSidebar } from '@shared/components/Sidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -99,7 +99,6 @@ function CompanyLoader() {
 }
 
 function Layout() {
-  const location = useLocation();
   const { items: breadcrumbItems } = useBreadcrumb();
   const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
     defaultIsOpen: true,
@@ -111,13 +110,10 @@ function Layout() {
   const navigation = useNavigation();
 
   // Page-level dynamic crumbs (fetched record names) appended after the layout-built
-  // crumbs. Same pattern as AppraisalLayout / TaskLayout: clear extras whenever the
-  // pathname changes so stale crumbs don't leak across pages.
+  // crumbs. Each caller of useBreadcrumbExtras returns a cleanup that resets the
+  // store on unmount, so a pathname-keyed clear here would only race against
+  // children's bottom-up effects and silently wipe a freshly-set leaf crumb.
   const breadcrumbExtras = useBreadcrumbExtrasStore(s => s.extras);
-  const setExtras = useBreadcrumbExtrasStore(s => s.setExtras);
-  useEffect(() => {
-    setExtras([]);
-  }, [location.pathname, setExtras]);
   const breadcrumbItemsWithExtras = useMemo(() => {
     const merged = [...breadcrumbItems, ...breadcrumbExtras];
     return merged.filter((item, idx) => idx === 0 || item.label !== merged[idx - 1].label);
