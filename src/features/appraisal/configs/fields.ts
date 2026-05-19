@@ -866,7 +866,7 @@ export const buildingInfoField: FormField[] = [
     label: 'Appraisal',
     name: 'isAppraisable',
     required: true,
-    options: ['Not Appraised', 'Appraised'],
+    options: ['Not Appraised', 'Appraise'],
     wrapperClassName: 'col-span-12',
   },
   {
@@ -2428,7 +2428,7 @@ export const landtitlesFields: FormField[] = [
       match: 'all',
     },
     decimalPlaces: 2,
-    maxIntegerDigits: 3,
+    maxIntegerDigits: 2,
   },
   {
     name: 'totalSquareWa',
