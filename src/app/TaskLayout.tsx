@@ -251,7 +251,8 @@ function TaskLayout() {
 
   // Build breadcrumb
   const breadcrumbItems = useMemo(() => {
-    const appraisalNo = appraisalData?.appraisalNumber || appraisalId || taskId;
+    const appraisalNo =
+      appraisalData?.appraisalNumber || requestData?.requestNumber || appraisalId || taskId;
     const items = [
       { label: 'Task', href: '/tasks', icon: 'list-check' },
       { label: appraisalNo || '...', href: `/tasks/${taskId}`, icon: 'file-certificate' },
