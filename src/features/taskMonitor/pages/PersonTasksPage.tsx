@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Pagination from '@shared/components/Pagination';
 import Icon from '@shared/components/Icon';
@@ -16,6 +17,7 @@ import type { GetMonitoredTasksParams, MonitoredTask, SortDir } from '../types';
 function PersonTasksPage() {
   const { username = '' } = useParams<{ username: string }>();
   const location = useLocation();
+  const { t } = useTranslation('nav');
 
   // Initial display name preference: location.state (set by PeopleMonitorTable link),
   // falling back to the username from the URL. We then upgrade this when task rows
@@ -66,10 +68,16 @@ function PersonTasksPage() {
 
   const displayName = stableDisplayName;
 
-  // Append the person's name as the leaf breadcrumb crumb. "Task Monitor" already comes
-  // from the layout breadcrumb and links back to /task-monitor.
+  // Provide both the parent ("Task Monitor") and the leaf (person's name) crumbs
+  // ourselves. The layout's breadcrumb seeding walks the DB-driven menu for ancestors
+  // and `/task-monitor` is not always present there, so on a fresh load / refresh the
+  // parent crumb would otherwise be missing. Layout dedupes adjacent same-label crumbs,
+  // so soft-nav from `/task-monitor` doesn't double-render.
   useBreadcrumbExtras(
-    [{ label: displayName, href: location.pathname, icon: 'user' }],
+    [
+      { label: t('taskMonitor.title'), href: '/task-monitor', icon: 'people-arrows' },
+      { label: displayName, href: location.pathname, icon: 'user' },
+    ],
     [displayName, location.pathname],
   );
 

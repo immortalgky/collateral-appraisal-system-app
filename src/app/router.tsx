@@ -86,8 +86,8 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
-import TaskMonitorPage from '@/features/taskMonitor/routes/TaskMonitorPage';
-import PersonTasksPage from '@/features/taskMonitor/routes/PersonTasksPage';
+import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
+import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
