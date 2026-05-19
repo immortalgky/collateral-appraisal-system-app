@@ -2307,9 +2307,13 @@ const AssignAppraisalRequest = z
     assignmentType: z.string(),
     assigneeUserId: z.string().nullish().default(null),
     assigneeCompanyId: z.string().nullish().default(null),
+    assigneeCompanyName: z.string().nullable().optional(),
     assignmentMethod: z.string().nullish().default(null),
     internalAppraiserId: z.string().nullish().default(null),
+    internalFollowupAssignmentMethod: z.string().nullish().default(null),
     assignedBy: z.string().nullish().default(null),
+    workflowInstanceId: z.string().uuid(),
+    decisionTaken: z.enum(['EXT', 'INT']),
   })
   .passthrough();
 const AssignAppraisalResponse = z.object({ assignmentId: z.string().uuid() }).passthrough();
