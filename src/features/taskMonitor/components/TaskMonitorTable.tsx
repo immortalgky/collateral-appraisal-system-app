@@ -6,15 +6,21 @@ import type { MonitoredTask, SlaStatus, SortDir } from '../types';
 
 // ─── SLA badge ───────────────────────────────────────────────────────────────
 
-const SLA_BADGE: Record<SlaStatus, { label: string; className: string }> = {
+// Task-layer emits "OnTime" for newly-assigned tasks while the Appraisal layer uses
+// "OnTrack" for the same concept — accept both so we don't crash when either appears.
+const SLA_BADGE: Record<string, { label: string; className: string }> = {
   OnTrack: { label: 'On Track', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  OnTime: { label: 'On Time', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   AtRisk: { label: 'At Risk', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   Breached: { label: 'Breached', className: 'bg-red-50 text-red-700 border-red-200' },
 };
 
-function SlaBadge({ sla }: { sla: SlaStatus | null }) {
+function SlaBadge({ sla }: { sla: SlaStatus | string | null }) {
   if (!sla) return <span className="text-gray-400 text-xs">—</span>;
-  const cfg = SLA_BADGE[sla];
+  const cfg = SLA_BADGE[sla] ?? {
+    label: sla.replace(/([a-z])([A-Z])/g, '$1 $2'),
+    className: 'bg-gray-50 text-gray-700 border-gray-200',
+  };
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-full border ${cfg.className}`}
