@@ -380,8 +380,6 @@ function TaskSummaryWidget() {
               bgColor="bg-emerald-50"
               strokeColor="#10b981"
               percentage={total > 0 ? (completed / total) * 100 : 0}
-              onClick={() => goToTasks({})}
-              hint="Open the full task list"
             />
           </div>
         )}
