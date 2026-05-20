@@ -1,94 +1,73 @@
-import { useNavigate } from 'react-router-dom';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Icon } from '@/shared/components';
+import { collateralTypeOptions } from '../constants/parameters';
 
 interface SupportingDataTableRowProps {
-  supportingDataDetail: any;
-  onEdit: (property: PropertyItem, groupId: string) => void;
-  onDelete: (property: PropertyItem, groupId: string) => void;
-  hasClipboard: boolean;
+  index: number;
+  data: any;
+  isReadOnly: boolean;
+  onEdit: (index: number) => void;
+  onDelete: (index: number) => void;
 }
 
 export const SupportingDataTableRow = ({
-  supportingDataDetail,
+  index,
+  data,
+  isReadOnly,
   onEdit,
   onDelete,
-  hasClipboard,
 }: SupportingDataTableRowProps) => {
-  const navigate = useNavigate();
-  const appraisalId = useAppraisalId();
-  const layoutBasePath = useBasePath();
-  const propertyBasePath = usePropertyBasePath();
-
-  const handleClick = () => {
-    const routeSegment = getRouteSegment(property.type);
-    if (appraisalId) {
-      navigate(
-        `${layoutBasePath}/${propertyBasePath}/${routeSegment}/${property.id}?groupId=${groupId}`,
-      );
-    }
+  const getCollateralTypeLabel = (type: string | undefined) => {
+    const option = collateralTypeOptions.find(opt => opt.value === type);
+    return option?.label ?? '-';
   };
+
+  const handleRowClick = () => {
+    onEdit(index);
+  };
+
+  const address = [data?.houseNo, data?.subDistrictName, data?.districtName, data?.provinceName]
+    .filter(Boolean)
+    .join(', ');
+
+  const hasCoordinates =
+    data?.latitude != null &&
+    data?.longitude != null &&
+    !(data.latitude === 0 && data.longitude === 0);
 
   return (
     <tr
-      data-property-id={property.id}
-      className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group"
+      data-supporting-data-index={index}
+      className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group cursor-pointer"
     >
-      {/* Thumbnail */}
-      <td className="px-2 py-2" onClick={handleClick}>
-        <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden cursor-pointer">
-          {property.image ? (
-            <img
-              src={property.image}
-              alt={property.address}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Icon name="image" className="text-gray-400 text-xs" />
-            </div>
-          )}
-        </div>
+      {/* Property Name */}
+      <td className="px-2 py-2" onClick={handleRowClick}>
+        <p className="text-sm font-medium text-gray-900 truncate" title={data?.propertyName}>
+          {data?.propertyName || <span className="italic text-gray-400">Untitled</span>}
+        </p>
+      </td>
+
+      {/* Collateral Type */}
+      <td className="px-3 py-2" onClick={handleRowClick}>
+        <span className="text-xs text-gray-600">
+          {data?.collateralType ? getCollateralTypeLabel(data.collateralType) : '-'}
+        </span>
       </td>
 
       {/* Address */}
-      <td className="px-3 py-2 cursor-pointer max-w-0 w-2/5" onClick={handleClick}>
-        <div>
-          <p className="text-sm font-medium text-gray-900 truncate" title={property.address}>
-            {property.address}
-          </p>
-          <p className="text-xs text-gray-500 truncate">
-            {property.location && property.location !== '-' ? (
-              property.location
-            ) : (
-              <span className="italic text-gray-400">Not set</span>
-            )}
-          </p>
-        </div>
-      </td>
-
-      {/* Type Badge */}
-      <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
-        <Badge type="property" value={property.type} size="xs" dot={false}>
-          <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
-        </Badge>
-      </td>
-
-      {/* Area */}
-      <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
-        <div className="flex items-center gap-1 text-xs text-gray-600">
-          <Icon name="ruler-combined" className="text-gray-400 text-[10px]" style="solid" />
-          <span>{property.area}</span>
-        </div>
+      <td className="px-3 py-2 max-w-0 w-1/3" onClick={handleRowClick}>
+        <p className="text-xs text-gray-700 truncate" title={address}>
+          {address || <span className="italic text-gray-400">Not set</span>}
+        </p>
       </td>
 
       {/* Coordinates */}
-      <td className="px-3 py-2 cursor-pointer" onClick={handleClick}>
+      <td className="px-3 py-2" onClick={handleRowClick}>
         <div className="flex items-center gap-1 text-xs text-gray-600">
           <Icon name="map-pin" className="text-gray-400 text-[10px]" style="solid" />
-          {property.latitude != null &&
-          property.longitude != null &&
-          !(property.latitude === 0 && property.longitude === 0) ? (
+          {hasCoordinates ? (
             <span>
-              {property.latitude.toFixed(6)}, {property.longitude.toFixed(6)}
+              {Number(data.latitude).toFixed(6)}, {Number(data.longitude).toFixed(6)}
             </span>
           ) : (
             <span className="italic text-gray-400">Not set</span>
@@ -97,9 +76,12 @@ export const SupportingDataTableRow = ({
       </td>
 
       {/* Actions */}
-      <td className="px-2 py-2">
-        <Menu as="div" className="relative">
-          <MenuButton className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+      <td className="px-2 py-2 text-center">
+        <Menu as="div" className="relative inline-block">
+          <MenuButton
+            onClick={e => e.stopPropagation()}
+            className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+          >
             <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
           </MenuButton>
           <MenuItems className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
@@ -107,7 +89,11 @@ export const SupportingDataTableRow = ({
               <MenuItem>
                 {({ focus }) => (
                   <button
-                    onClick={() => onEdit(property, groupId)}
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      onEdit(index);
+                    }}
                     className={`${
                       focus ? 'bg-gray-50' : ''
                     } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
@@ -117,64 +103,28 @@ export const SupportingDataTableRow = ({
                   </button>
                 )}
               </MenuItem>
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onMoveTo(property, groupId)}
-                    className={`${
-                      focus ? 'bg-gray-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
-                  >
-                    <Icon name="arrow-right-arrow-left" className="text-xs text-gray-400" />
-                    Move to
-                  </button>
-                )}
-              </MenuItem>
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onCopy(property)}
-                    className={`${
-                      focus ? 'bg-gray-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
-                  >
-                    <Icon name="copy" className="text-xs text-gray-400" />
-                    Copy
-                  </button>
-                )}
-              </MenuItem>
-              <MenuItem disabled={!hasClipboard}>
-                {({ focus }) => (
-                  <button
-                    onClick={() => hasClipboard && onPaste(groupId)}
-                    disabled={!hasClipboard}
-                    className={`${
-                      !hasClipboard
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : focus
-                          ? 'bg-gray-50 text-gray-700'
-                          : 'text-gray-700'
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm`}
-                  >
-                    <Icon name="paste" className="text-xs text-gray-400" />
-                    Paste
-                  </button>
-                )}
-              </MenuItem>
-              <div className="border-t border-gray-100 my-1" />
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onDelete(property, groupId)}
-                    className={`${
-                      focus ? 'bg-red-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600`}
-                  >
-                    <Icon name="trash" className="text-xs" />
-                    Delete
-                  </button>
-                )}
-              </MenuItem>
+              {!isReadOnly && (
+                <>
+                  <div className="border-t border-gray-100 my-1" />
+                  <MenuItem>
+                    {({ focus }) => (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onDelete(index);
+                        }}
+                        className={`${
+                          focus ? 'bg-red-50' : ''
+                        } flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600`}
+                      >
+                        <Icon name="trash" className="text-xs" />
+                        Delete
+                      </button>
+                    )}
+                  </MenuItem>
+                </>
+              )}
             </div>
           </MenuItems>
         </Menu>
