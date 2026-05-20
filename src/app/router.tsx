@@ -86,8 +86,10 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
+import { SupportingDataMaintenanceDetailPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailPage';
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
+import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -384,6 +386,15 @@ export const router = createBrowserRouter([
       {
         path: 'standalone/service-quality-evaluation/:appraisalId',
         element: <ServiceQualityEvaluationDetailPage />,
+      },
+      // support data maintenance
+      {
+        path: 'standalone/supporting-data-maintenance',
+        element: <SupportingDataMaintenanceListPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/:supportingId',
+        element: <SupportingDataMaintenanceDetailPage />,
       },
       // Catch-all route for 404 pages
       {
