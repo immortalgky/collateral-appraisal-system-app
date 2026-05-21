@@ -1,6 +1,9 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { CreateSupportingDataBody } from './types';
+import { isAxiosError } from 'axios';
+import type { GetSupportingDataByIdType } from '../schemas/form';
+import { supportingDetails } from '../constants/mockData';
 
 export const supportingDataMaintenanceKeys = {
   all: ['supporting-data-maintenance'] as const,
@@ -16,11 +19,17 @@ export const useCreateSupportingData = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (body: CreateSupportingDataBody): Promise<{ id: string }> => {
-      const { data } = await axios.post('/supporting-data-maintenance', body);
+    mutationFn: async (params: {
+      supportingId: string;
+      data: CreateSupportingDataBody;
+    }): Promise<{ id: string }> => {
+      const { data } = await axios.post(
+        `/supporting-data-maintenance/${params.supportingId}`,
+        params.data,
+      );
       return data;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
     },
   });
@@ -30,11 +39,15 @@ export const useUpdateSupportingData = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
-      body: CreateSupportingDataBody,
-      supportingId: string,
-    ): Promise<{ id: string }> => {
-      const { data } = await axios.post(`/supporting-data-maintenance/${supportingId}`, body);
+    mutationFn: async (params: {
+      supportingId: string;
+      id: string;
+      data: CreateSupportingDataBody;
+    }): Promise<{ id: string }> => {
+      const { data } = await axios.post(
+        `/supporting-data-maintenance/${params.supportingId}/data/${params.id}`,
+        params.data,
+      );
       return data;
     },
     onSuccess: (_data, variables) => {
@@ -42,6 +55,24 @@ export const useUpdateSupportingData = () => {
       queryClient.invalidateQueries({
         queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
       });
+    },
+  });
+};
+
+export const useGetSupportingDataById = (supportingId: string, id: string) => {
+  return useQuery({
+    queryKey: ['supporting-data-maintenance', supportingId, 'supporting-data', id],
+    enabled: !!supportingId && !!id,
+    queryFn: async (): Promise<GetSupportingDataByIdType> => {
+      // const { data } = await axios.get(
+      //   `/standalone/supporting-data-maintenance/${supportingId}/data/${id}`,
+      // );
+      // return data;
+      return supportingDetails.filter(s => s.id == id)?.[0];
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
     },
   });
 };

@@ -65,6 +65,7 @@ export const propertyInformationFields: FormField[] = [
     name: 'buildingType',
     group: 'BuildingType',
     wrapperClassName: 'col-span-3',
+    required: true,
   },
   {
     type: 'text-input',
@@ -84,7 +85,7 @@ export const propertyInformationFields: FormField[] = [
     name: 'landArea',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
-    maxIntegerDigits: 2,
+    maxIntegerDigits: 16,
   },
   {
     type: 'number-input',
@@ -92,7 +93,7 @@ export const propertyInformationFields: FormField[] = [
     name: 'usableArea',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
-    maxIntegerDigits: 3,
+    maxIntegerDigits: 16,
   },
 ];
 
@@ -130,7 +131,6 @@ export const locationDetailFields: FormField[] = [
     subDistrictNameField: 'subDistrictName',
     addressSource: 'title',
     wrapperClassName: 'col-span-3',
-    required: true,
   },
   {
     type: 'text-input',
@@ -158,7 +158,6 @@ export const locationDetailFields: FormField[] = [
     label: 'Latitude',
     name: 'latitude',
     wrapperClassName: 'col-span-3',
-    required: true,
     decimalPlaces: 6,
     maxIntegerDigits: 3,
     allowNegative: true,
@@ -171,7 +170,6 @@ export const locationDetailFields: FormField[] = [
     label: 'Longitude',
     name: 'longitude',
     wrapperClassName: 'col-span-3',
-    required: true,
     decimalPlaces: 6,
     maxIntegerDigits: 3,
     allowNegative: true,

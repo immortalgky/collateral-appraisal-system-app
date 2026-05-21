@@ -90,7 +90,7 @@ import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDa
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
 import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
-import { SupportingDataMaintenanceDetailPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailPage';
+import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -398,8 +398,12 @@ export const router = createBrowserRouter([
         element: <SupportingDataMaintenanceDetailListPage />,
       },
       {
-        path: 'standalone/supporting-data-maintenance/:supportingId/:id',
-        element: <SupportingDataMaintenanceDetailPage />,
+        path: 'standalone/supporting-data-maintenance/:supportingId/data/new',
+        element: <CreateSupportingDataPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/:supportingId/data/:id',
+        element: <CreateSupportingDataPage />,
       },
       // Catch-all route for 404 pages
       {

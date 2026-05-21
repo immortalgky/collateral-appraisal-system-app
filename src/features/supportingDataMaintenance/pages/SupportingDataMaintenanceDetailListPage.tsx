@@ -91,15 +91,13 @@ export function SupportingDataMaintenanceDetailListPage() {
   // Handlers
   // ------------------------------------------------------------------
   const handleAddSupportingData = () => {
-    // const newIndex = fields.length;
-    // append({ ...defaultSupportingDataDetail });
-    // setEditIndex(newIndex);
+    navigate(`/standalone/supporting-data-maintenance/0/data/new`);
   };
 
   const handleSelectSupportingData = (index: number) => {
     // setEditIndex(index);
     if (index) {
-      navigate(`/standalone/supporting-data-maintenance/0/${index}`);
+      navigate(`/standalone/supporting-data-maintenance/0/data/${index}`);
     }
   };
 
