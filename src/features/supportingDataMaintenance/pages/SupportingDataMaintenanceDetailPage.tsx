@@ -28,13 +28,10 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { SupportingDataCard } from '../components/SupportingDataCard';
 import { SupportingDataTable } from '../components/SupportingDataTable';
+import { parseSupportingDataExcel, type InvalidRow } from '../utils/parseSupportingDataExcel';
+import { SupportingDataMaintenanceDetailForm } from '../components/SupportingDataMaintenanceDetailForm';
 
-// Local type for excel parse errors (kept local to avoid pulling in unstable
-// imports from the parser util while the schema is being reworked).
-interface ParseRowError {
-  row: number;
-  errors: string[];
-}
+type ParseRowError = InvalidRow;
 
 export function SupportingDataMaintenanceDetailPage() {
   const isReadOnly = useFormReadOnly();
@@ -45,7 +42,7 @@ export function SupportingDataMaintenanceDetailPage() {
   const [parseErrors, setParseErrors] = useState<ParseRowError[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File) => {
+  const handleFile = async (file: File) => {
     if (!file.name.endsWith('.xlsx')) {
       toast.error('Only .xlsx files are accepted');
       return;
@@ -55,8 +52,33 @@ export function SupportingDataMaintenanceDetailPage() {
       return;
     }
     setParseErrors(null);
-    // TODO: hook up parseSupportingDataExcel + append rows to fieldArray
-    console.log('upload file', file);
+
+    try {
+      const { valid, invalid } = await parseSupportingDataExcel(file);
+
+      if (valid.length > 0) {
+        // useFieldArray.append supports bulk append; rows arrive with the
+        // same shape as defaultSupportingDataDetail so RHF accepts them.
+        append(valid);
+      }
+
+      if (invalid.length > 0) {
+        setParseErrors(invalid);
+        toast.error(
+          `Imported ${valid.length} row(s); ${invalid.length} skipped due to validation errors.`,
+        );
+      } else if (valid.length > 0) {
+        toast.success(`Imported ${valid.length} row(s).`);
+      } else {
+        toast.error('No rows were imported.');
+      }
+    } catch (e) {
+      toast.error(
+        e instanceof Error
+          ? `Failed to parse Excel file: ${e.message}`
+          : 'Failed to parse Excel file.',
+      );
+    }
   };
 
   const handleOpenFilePicker = () => {
@@ -77,8 +99,7 @@ export function SupportingDataMaintenanceDetailPage() {
     control,
     name: 'supportingDataDetails',
   });
-  const supportingDataDetails =
-    useWatch({ name: 'supportingDataDetails', control }) ?? [];
+  const supportingDataDetails = useWatch({ name: 'supportingDataDetails', control }) ?? [];
 
   // ------------------------------------------------------------------
   // Local state — list vs. card mode + delete confirmation
@@ -136,8 +157,8 @@ export function SupportingDataMaintenanceDetailPage() {
   const isSupportingDataComplete = (index: number): boolean => {
     const row = supportingDataDetails[index];
     if (!row) return false;
-    const detailSchema = (createSupportingDataForm as any)?.shape
-      ?.supportingDataDetails?._def?.type;
+    const detailSchema = (createSupportingDataForm as any)?.shape?.supportingDataDetails?._def
+      ?.type;
     if (detailSchema?.safeParse) {
       return detailSchema.safeParse(row).success;
     }
@@ -274,9 +295,7 @@ export function SupportingDataMaintenanceDetailPage() {
                       Row {err.row}: {err.errors.join('; ')}
                     </li>
                   ))}
-                  {parseErrors.length > 5 && (
-                    <li>...and {parseErrors.length - 5} more</li>
-                  )}
+                  {parseErrors.length > 5 && <li>...and {parseErrors.length - 5} more</li>}
                 </ul>
               </div>
             )}
@@ -301,12 +320,8 @@ export function SupportingDataMaintenanceDetailPage() {
                             isCompleted={isComplete}
                             isReadOnly={isReadOnly}
                             data={supportingDataDetails[index] ?? data}
-                            onSelectSupportingData={() =>
-                              handleSelectSupportingData(index)
-                            }
-                            onDeleteSupportingData={() =>
-                              handleDeleteSupportingData(index)
-                            }
+                            onSelectSupportingData={() => handleSelectSupportingData(index)}
+                            onDeleteSupportingData={() => handleDeleteSupportingData(index)}
                           />
                         );
                       })}
@@ -388,85 +403,5 @@ export function SupportingDataMaintenanceDetailPage() {
         />
       </form>
     </FormProvider>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Detail form (right-hand panel when a row is selected)
-// ---------------------------------------------------------------------------
-function SupportingDataMaintenanceDetailForm({ editIndex }: { editIndex: number }) {
-  return (
-    <div key={`supporting-data-form-${editIndex}`} className="flex flex-col gap-6 pr-2">
-      <div className="flex gap-6">
-        <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">Property Information</h3>
-        </div>
-        <div className="flex-1 grid grid-cols-12 gap-4">
-          <FormFields
-            fields={propertyInformationFields}
-            namePrefix="supportingDataDetails"
-            index={editIndex}
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">Location Details</h3>
-        </div>
-        <div className="flex-1 grid grid-cols-12 gap-4">
-          <FormFields
-            fields={locationDetailFields}
-            namePrefix="supportingDataDetails"
-            index={editIndex}
-          />
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">Financial Details</h3>
-        </div>
-        <div className="flex-1 flex flex-col gap-6">
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields
-              fields={financialDetailsFields}
-              namePrefix="supportingDataDetails"
-              index={editIndex}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">Contact Information</h3>
-        </div>
-        <div className="flex-1 flex flex-col gap-6">
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields
-              fields={contactInformationFields}
-              namePrefix="supportingDataDetails"
-              index={editIndex}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-6">
-        <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">Source &amp; Reference Information</h3>
-        </div>
-        <div className="flex-1 flex flex-col gap-6">
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields
-              fields={sourceAndReferenceFields}
-              namePrefix="supportingDataDetails"
-              index={editIndex}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

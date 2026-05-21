@@ -40,6 +40,13 @@ export const SupportingDataTableRow = ({
       data-supporting-data-index={index}
       className="bg-white even:bg-gray-50/50 hover:bg-gray-100/50 transition-colors group cursor-pointer"
     >
+      {/* Sq. No */}
+      <td className="px-2 py-2" onClick={handleRowClick}>
+        <p className="text-sm font-medium text-gray-900 truncate">
+          {index + 1 || <span className="italic text-gray-400">Untitled</span>}
+        </p>
+      </td>
+
       {/* Property Name */}
       <td className="px-2 py-2" onClick={handleRowClick}>
         <p className="text-sm font-medium text-gray-900 truncate" title={data?.propertyName}>

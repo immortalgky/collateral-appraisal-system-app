@@ -1,4 +1,6 @@
+import Pagination from '@/shared/components/Pagination';
 import { SupportingDataTableRow } from './SupportingDataTableRow';
+import { useState } from 'react';
 
 interface SupportingDataTableProps {
   supportingDetails: any[];
@@ -13,6 +15,12 @@ export function SupportingDataTable({
   onSelectSupportingData,
   onDeleteSupportingData,
 }: SupportingDataTableProps) {
+  const [pageNumber, setPageNumber] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const totalCount = supportingDetails?.count ?? 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+  // const listSupportingData =
+
   if (!supportingDetails || supportingDetails.length === 0) {
     return (
       <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
@@ -26,6 +34,9 @@ export function SupportingDataTable({
       <table className="w-full text-sm">
         <thead className="sticky top-0 z-10">
           <tr className="bg-gray-50 border-b border-gray-200 shadow-sm">
+            <th className="w-22 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              No.
+            </th>
             <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Property Name
             </th>
@@ -56,6 +67,17 @@ export function SupportingDataTable({
           ))}
         </tbody>
       </table>
+      <Pagination
+        currentPage={pageNumber}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={setPageNumber}
+        onPageSizeChange={size => {
+          setPageSize(size);
+          setPageNumber(0);
+        }}
+      />
     </div>
   );
 }
