@@ -1,4 +1,4 @@
-import { type FieldArrayField, type FormField } from '@/shared/components/form';
+import { type FormField } from '@/shared/components/form';
 import { companies } from '../constants/parameters';
 
 export const supportingDataFields: FormField[] = [
@@ -256,26 +256,15 @@ export const sourceAndReferenceFields: FormField[] = [
   },
 ];
 
-export const supportingDataDetailFields: FieldArrayField = {
-  type: 'field-array',
-  name: 'supportingDataDetails',
-  required: true,
-  minItems: 1,
-  fields: [
-    // Property information
-    ...propertyInformationFields,
-    // Location detail
-    ...locationDetailFields,
-    // Financial details
-    ...financialDetailsFields,
-    // Contact information
-    ...contactInformationFields,
-    // Source & reference
-    ...sourceAndReferenceFields,
-  ],
-};
-
-export const allSupportingDataFields: FormField[] = [
-  ...supportingDataFields,
-  supportingDataDetailFields,
+export const supportingDataDetailFields: FormField[] = [
+  // Property information
+  ...propertyInformationFields,
+  // Location detail
+  ...locationDetailFields,
+  // Financial details
+  ...financialDetailsFields,
+  // Contact information
+  ...contactInformationFields,
+  // Source & reference
+  ...sourceAndReferenceFields,
 ];

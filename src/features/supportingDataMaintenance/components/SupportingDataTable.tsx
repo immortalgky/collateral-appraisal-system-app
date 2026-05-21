@@ -61,7 +61,7 @@ export function SupportingDataTable({
               index={index}
               data={data}
               isReadOnly={isReadOnly}
-              onEdit={onSelectSupportingData}
+              onEdit={() => onSelectSupportingData(index)}
               onDelete={onDeleteSupportingData}
             />
           ))}

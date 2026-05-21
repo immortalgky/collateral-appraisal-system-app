@@ -86,10 +86,11 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
-import { SupportingDataMaintenanceDetailPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailPage';
+import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
 import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
+import { SupportingDataMaintenanceDetailPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -394,6 +395,10 @@ export const router = createBrowserRouter([
       },
       {
         path: 'standalone/supporting-data-maintenance/:supportingId',
+        element: <SupportingDataMaintenanceDetailListPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/:supportingId/:id',
         element: <SupportingDataMaintenanceDetailPage />,
       },
       // Catch-all route for 404 pages
