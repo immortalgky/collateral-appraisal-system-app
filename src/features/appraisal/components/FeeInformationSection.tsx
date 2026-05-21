@@ -157,8 +157,12 @@ export default function FeeInformationSection({
       const newTotal = newSubtotal * (1 + vatRate / 100);
       if (totalPaid > newTotal) {
         toast.error(
-          `Cannot delete this fee item. The new total (${formatCurrency(newTotal)}) would be less than the amount already paid (${formatCurrency(totalPaid)}).`,
+          `Cannot delete this fee item. The total fee (${formatCurrency(newTotal)}) would be less than the amount already paid (${formatCurrency(totalPaid)}).`,
+          {
+            duration: 10000,
+          },
         );
+        setDeletingFeeIndex(null);
         return;
       }
     }
