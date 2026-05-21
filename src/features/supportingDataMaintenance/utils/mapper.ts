@@ -6,7 +6,6 @@ import type {
 export const mapSupportingDataResponseToForm = (
   response: GetSupportingDataByIdType,
 ): createSupportingDataDetailFormType => {
-  console.log(response);
   return {
     id: response.id,
     propertyName: response.propertyName ?? null,

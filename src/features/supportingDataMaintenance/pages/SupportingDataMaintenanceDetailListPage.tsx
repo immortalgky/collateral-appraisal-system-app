@@ -12,8 +12,7 @@ import { supportingDataFields } from '../configs/fields';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { SupportingDataTable } from '../components/SupportingDataTable';
-import { supportingDataDetailPreviewList } from '../constants/mockData';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface ParseRowError {
   row: number;
@@ -25,6 +24,7 @@ interface ParseRowError {
 export function SupportingDataMaintenanceDetailListPage() {
   const isReadOnly = useFormReadOnly();
   const navigate = useNavigate();
+  const { supportingId = '' } = useParams<{ supportingId: string }>();
 
   // ------------------------------------------------------------------
   // Form
@@ -152,12 +152,6 @@ export function SupportingDataMaintenanceDetailListPage() {
   };
 
   // ------------------------------------------------------------------
-  // Api
-  // ------------------------------------------------------------------
-  // 1. enrich suppoting data
-  const previewList = supportingDataDetailPreviewList;
-
-  // ------------------------------------------------------------------
   // Render
   // ------------------------------------------------------------------
   return (
@@ -245,7 +239,7 @@ export function SupportingDataMaintenanceDetailListPage() {
           >
             <div className="w-full">
               <SupportingDataTable
-                supportingDetails={previewList}
+                supportingId={supportingId}
                 isReadOnly={isReadOnly}
                 onSelectSupportingData={handleSelectSupportingData}
                 onDeleteSupportingData={handleDeleteSupportingData}
@@ -253,6 +247,16 @@ export function SupportingDataMaintenanceDetailListPage() {
             </div>
           </FormCard>
         </div>
+
+        <Section id="supporting-data-decision">
+          <FormCard title="Decision" subtitle="" icon="paper-plane" iconColor="blue">
+            <div className="flex-1 flex flex-col gap-6">
+              <div className="grid grid-cols-12 gap-4">
+                <FormFields fields={supportingDataFields} />
+              </div>
+            </div>
+          </FormCard>
+        </Section>
 
         {/* --------------------------------------------------------- */}
         {/* Section 3 — Action panel (Save Draft / Submit)             */}

@@ -31,3 +31,54 @@ export interface CreateSupportingDataBody {
     remark: string | null;
   }[];
 }
+
+export interface GetSupportingDataMaintenanceListParams {
+  pageNumber?: number;
+  pageSize?: number;
+  status?: string;
+  createdDate?: string;
+  supportingNumber?: string;
+}
+
+export interface SupportingDataMaintenance {
+  id?: string;
+  supportingNumber?: string;
+  createdDate?: string;
+  importChannel?: string;
+  status?: string;
+  lastModifiedDate: string;
+  lastModifiedBy: string;
+  sourceOfData: string;
+}
+
+export interface GetSupportingDataMaintenanceListResponse {
+  items: SupportingDataMaintenance[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface SupportingDataDetailItem {
+  id: string;
+  propertyName: string | null;
+  collateralType: string;
+  latitude: number;
+  longitude: number;
+  houseNo: string | null;
+  subDistrictName: string | null;
+  districtName: string | null;
+  provinceName: string | null;
+}
+
+export interface GetSupportingDataDetailListParams {
+  supportingId: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface GetSupportingDataDetailListResponse {
+  items: SupportingDataDetailItem[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
