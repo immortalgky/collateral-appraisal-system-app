@@ -1,7 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppraisalId, useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
-import { useWorkflowInstanceId, useActivityId, useIsTaskOwner } from '@/features/appraisal/context/AppraisalContext';
+import {
+  useAppraisalId,
+  useAppraisalRequestId,
+  useIsTaskOwner,
+  useWorkflowInstanceId,
+} from '@/features/appraisal/context/AppraisalContext';
 import { useGetRequestById } from '@/features/request/api';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,12 +17,17 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
-import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
-import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 
-import { useCreateAssignment, useGetAssignment, useGetCompanyById, useGetUserById, useGetEligibleStaff, useGetEligibleCompanies, useGetAppraisalQuotations } from '../api/administration';
+import {
+  useCreateAssignment,
+  useGetAppraisalQuotations,
+  useGetAssignment,
+  useGetCompanyById,
+  useGetEligibleCompanies,
+  useGetEligibleStaff,
+  useGetUserById,
+} from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import { useCompleteActivity } from '../api/workflow';
 import { assignmentFormDefaults, assignmentFormSchema, type AssignmentFormType, } from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
@@ -39,7 +48,9 @@ const AdministrationPage = () => {
 
   // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
   const { data: requestData } = useGetRequestById(requestId ?? '');
-  const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as string | undefined;
+  const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as
+    | string
+    | undefined;
   const facilityLimit = ((requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0) as number;
   const isInternalDisabled = facilityLimit > 50_000_000;
 
@@ -54,9 +65,11 @@ const AdministrationPage = () => {
 
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
-  const activityId = useActivityId();
   const isTaskOwner = useIsTaskOwner();
-  const { mutate: completeActivityMutate, isPending: isCompleting } = useCompleteActivity();
+  // Relay endpoint advances the appraisal-assignment workflow task, which only the task owner
+  // can complete. Gate the Assign button on both: missing workflow context (deep-linked outside
+  // a task) or non-owner can browse the page read-only, but cannot submit.
+  const canSubmitAssignment = isTaskOwner && !!workflowInstanceId;
 
   // Fetch assigned staff/company by ID for display
   const { data: assignedStaff } = useGetUserById(currentAssignment?.assigneeUserId ?? null);
@@ -76,7 +89,7 @@ const AdministrationPage = () => {
     resolver: zodResolver(assignmentFormSchema),
   });
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  //const { blocker } = useUnsavedChangesWarning(isDirty);
 
   // Watch form values for conditional rendering
   const assignmentType = watch('assignmentType');
@@ -102,10 +115,16 @@ const AdministrationPage = () => {
   const { data: appraisalQuotations = [] } = useGetAppraisalQuotations(appraisalId ?? null);
 
   // v2: compute lock state — assignment is locked when a non-terminal quotation owns this appraisal
-  const NON_TERMINAL_STATUSES = ['Draft', 'Sent', 'UnderAdminReview', 'PendingRmSelection', 'WinnerTentative', 'Negotiating'];
-  const activeNonTerminalQuotation = appraisalQuotations.find(
-    q => NON_TERMINAL_STATUSES.includes(q.status),
-  ) ?? null;
+  const NON_TERMINAL_STATUSES = [
+    'Draft',
+    'Sent',
+    'UnderAdminReview',
+    'PendingRmSelection',
+    'WinnerTentative',
+    'Negotiating',
+  ];
+  const activeNonTerminalQuotation =
+    appraisalQuotations.find(q => NON_TERMINAL_STATUSES.includes(q.status)) ?? null;
   const isLockedByQuotation = !!activeNonTerminalQuotation;
 
   // When quotation method is selected, fetch the linked quotation detail to derive winner for Route-External
@@ -116,9 +135,9 @@ const AdministrationPage = () => {
   const isQuotationFinalized = quotationDetail?.status === 'Finalized';
   const quotationWinner =
     isQuotationFinalized && quotationDetail
-      ? (quotationDetail.companyQuotations ?? []).find(
+      ? ((quotationDetail.companyQuotations ?? []).find(
           cq => cq.id === quotationDetail.tentativeWinnerQuotationId,
-        ) ?? null
+        ) ?? null)
       : null;
 
   // Modal states
@@ -218,6 +237,18 @@ const AdministrationPage = () => {
   const onSubmit = (data: AssignmentFormType) => {
     if (!appraisalId) return;
 
+    if (!workflowInstanceId) {
+      toast.error(
+        'Assignment requires an active workflow task. Open this page from the Tasks list to assign.',
+      );
+      return;
+    }
+
+    if (!isTaskOwner) {
+      toast.error('Only the task owner can assign this appraisal.');
+      return;
+    }
+
     // Guard: assignment is locked while an active quotation owns this appraisal
     if (isLockedByQuotation) {
       toast.error(
@@ -246,89 +277,32 @@ const AdministrationPage = () => {
         : data.companyId
       : null;
 
+    // Derive decisionTaken and assigneeCompanyName to send to the backend relay
+    const decisionTaken = isExternal ? ('EXT' as const) : ('INT' as const);
+    const resolvedAssigneeCompanyName = isExternal
+      ? isQuotationMethod && quotationWinner
+        ? quotationWinner.companyName
+        : (data.selectedCompany?.companyName ?? null)
+      : null;
+
     createAssignment(
       {
         appraisalId: appraisalId ?? '',
         assignmentType: isExternal ? 'External' : 'Internal',
         assigneeUserId: isExternal ? null : data.staffId,
         assigneeCompanyId: resolvedAssigneeCompanyId,
+        assigneeCompanyName: resolvedAssigneeCompanyName,
         assignmentMethod: data.assignmentMethod,
         internalAppraiserId: isExternal ? data.followupStaffId : null,
         internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
         assignedBy: currentUser?.username ?? null,
+        workflowInstanceId,
+        decisionTaken,
       },
       {
         onSuccess: () => {
           toast.success('Assignment created successfully');
-
-          // If task owner with workflow context, also complete the activity
-          if (isTaskOwner && workflowInstanceId && activityId) {
-            const decisionTaken = data.assignmentType === 'external' ? 'EXT' : 'INT';
-
-            // Build the input payload
-            const input: Record<string, unknown> = {
-              decisionTaken,
-              assignmentMethod: data.assignmentMethod,
-            };
-
-            // For quotation method with a finalized winner, inject the winner as the
-            // selected company. Keys must match `appraisal-assignment.inputMappings` in
-            // appraisal-workflow.json (`selectedCompanyId` / `selectedCompanyName`) — the
-            // engine filters anything not declared there out of the workflow variables,
-            // which would leave `company-selection` with no company to use.
-            if (data.assignmentMethod === 'quotation' && isQuotationFinalized && quotationWinner) {
-              input.assignmentMethod = 'Quotation';
-              input.selectedCompanyId = quotationWinner.companyId;
-              input.selectedCompanyName = quotationWinner.companyName;
-            }
-
-            // For external manual, include company selection data
-            if (data.assignmentType === 'external' && data.assignmentMethod === 'manual' && data.selectedCompany) {
-              input.selectedCompanyId = data.companyId;
-              input.selectedCompanyName = data.selectedCompany.companyName;
-            }
-
-            // For external assignments, include followup staff data
-            if (data.assignmentType === 'external') {
-              input.internalFollowupMethod = data.followupStaffMethod;
-              if (data.followupStaffMethod === 'manual' && data.followupStaffId) {
-                input.internalFollowupStaffId = data.followupStaffId;
-              }
-            }
-
-            // For internal manual, use NextAssignmentOverrides
-            let nextAssignmentOverrides: Record<string, { runtimeAssignee?: string; overrideReason?: string }> | undefined;
-            if (data.assignmentType === 'internal' && data.assignmentMethod === 'manual' && data.staffId) {
-              nextAssignmentOverrides = {
-                'int-appraisal-execution': {
-                  runtimeAssignee: data.staffId,
-                  overrideReason: 'Manual assignment by admin',
-                },
-              };
-            }
-
-            completeActivityMutate(
-              {
-                workflowInstanceId: workflowInstanceId!,
-                activityId: activityId!,
-                input,
-                nextAssignmentOverrides,
-              },
-              {
-                onSuccess: (result) => {
-                  if (result.validationErrors && result.validationErrors.length > 0) {
-                    result.validationErrors.forEach((err: string) => toast.error(err));
-                    return;
-                  }
-                  toast.success('Workflow advanced successfully');
-                  navigate('/tasks');
-                },
-                onError: (error: any) => {
-                  toast.error(error.apiError?.detail || 'Failed to advance workflow');
-                },
-              },
-            );
-          }
+          navigate('/tasks');
         },
         onError: (error: any) => {
           toast.error(error.apiError?.detail || 'Failed to create assignment. Please try again.');
@@ -364,8 +338,8 @@ const AdministrationPage = () => {
                   <p className="text-sm font-medium text-amber-800">Assignment locked</p>
                   <p className="text-xs text-amber-700 mt-0.5">
                     This appraisal is in Quotation{' '}
-                    <strong>#{activeNonTerminalQuotation.quotationNumber}</strong>{' '}
-                    ({activeNonTerminalQuotation.status}). Cancel the quotation or remove this
+                    <strong>#{activeNonTerminalQuotation.quotationNumber}</strong> (
+                    {activeNonTerminalQuotation.status}). Cancel the quotation or remove this
                     appraisal from it to change.
                   </p>
                 </div>
@@ -421,7 +395,9 @@ const AdministrationPage = () => {
                         className={({ checked, disabled }) =>
                           clsx(
                             'flex-1 rounded-xl border-2 p-4 transition-all',
-                            disabled ? 'pointer-events-none opacity-50 cursor-not-allowed' : 'cursor-pointer',
+                            disabled
+                              ? 'pointer-events-none opacity-50 cursor-not-allowed'
+                              : 'cursor-pointer',
                             checked
                               ? `border-${option.color}-500 bg-${option.color}-50`
                               : 'border-gray-200 hover:border-gray-300 bg-white',
@@ -477,7 +453,11 @@ const AdministrationPage = () => {
               )}
               {isInternalDisabled && (
                 <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-                  <Icon name="circle-info" style="solid" className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <Icon
+                    name="circle-info"
+                    style="solid"
+                    className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
+                  />
                   <p className="text-xs text-amber-700">
                     Internal assignment is not available for facility limits exceeding 50M
                   </p>
@@ -636,7 +616,8 @@ const AdministrationPage = () => {
                       }
                     />
                   ) : (
-                    !isReadOnly && !isLockedByQuotation && (
+                    !isReadOnly &&
+                    !isLockedByQuotation && (
                       <button
                         type="button"
                         onClick={openStaffModal}
@@ -678,7 +659,8 @@ const AdministrationPage = () => {
                       }
                     />
                   ) : (
-                    !isReadOnly && !isLockedByQuotation && (
+                    !isReadOnly &&
+                    !isLockedByQuotation && (
                       <button
                         type="button"
                         onClick={openCompanyModal}
@@ -746,7 +728,8 @@ const AdministrationPage = () => {
               {assignmentType === 'external' && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Internal Followup Staff {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
+                    Internal Followup Staff{' '}
+                    {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
                   </label>
 
                   {/* Followup method chooser */}
@@ -756,7 +739,9 @@ const AdministrationPage = () => {
                     render={({ field }) => (
                       <HeadlessRadioGroup
                         value={field.value}
-                        onChange={(value: 'manual' | 'roundrobin') => handleFollowupMethodChange(value)}
+                        onChange={(value: 'manual' | 'roundrobin') =>
+                          handleFollowupMethodChange(value)
+                        }
                         className="grid grid-cols-2 gap-3 mb-4"
                         disabled={isReadOnly || isLockedByQuotation}
                       >
@@ -842,7 +827,8 @@ const AdministrationPage = () => {
                             Round-robin Assignment
                           </p>
                           <p className="text-sm mt-1 text-purple-700">
-                            The system will automatically assign a followup staff member based on round-robin distribution.
+                            The system will automatically assign a followup staff member based on
+                            round-robin distribution.
                           </p>
                         </div>
                       </div>
@@ -866,7 +852,8 @@ const AdministrationPage = () => {
                           variant="purple"
                         />
                       ) : (
-                        !isReadOnly && !isLockedByQuotation && (
+                        !isReadOnly &&
+                        !isLockedByQuotation && (
                           <button
                             type="button"
                             onClick={openFollowupStaffModal}
@@ -970,11 +957,14 @@ const AdministrationPage = () => {
                 )}
               </div>
               <div className="flex gap-3">
-                <Button type="submit" disabled={isCreating || isCompleting || isLockedByQuotation}>
-                  {isCreating || isCompleting ? (
+                <Button
+                  type="submit"
+                  disabled={isCreating || isLockedByQuotation || !canSubmitAssignment}
+                >
+                  {isCreating ? (
                     <>
                       <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
-                      {isCompleting ? 'Advancing workflow...' : 'Assigning...'}
+                      Assigning...
                     </>
                   ) : (
                     <>
@@ -989,7 +979,7 @@ const AdministrationPage = () => {
         )}
       </form>
 
-      <UnsavedChangesDialog blocker={blocker} />
+      {/*<UnsavedChangesDialog blocker={blocker} />*/}
 
       {/* Modals */}
       {!isReadOnly && (
@@ -1019,8 +1009,16 @@ const AdministrationPage = () => {
             requestId={requestId}
             workflowInstanceId={workflowInstanceId ?? undefined}
             bankingSegment={bankingSegment}
-            assignmentType={assignmentType ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1) : null}
-            assignmentMethod={assignmentMethod ? assignmentMethod.charAt(0).toUpperCase() + assignmentMethod.slice(1) : null}
+            assignmentType={
+              assignmentType
+                ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1)
+                : null
+            }
+            assignmentMethod={
+              assignmentMethod
+                ? assignmentMethod.charAt(0).toUpperCase() + assignmentMethod.slice(1)
+                : null
+            }
             internalFollowupAssignmentMethod={followupStaffMethod ?? null}
           />
         </>
