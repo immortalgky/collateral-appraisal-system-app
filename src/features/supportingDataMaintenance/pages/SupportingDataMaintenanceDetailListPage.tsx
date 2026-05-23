@@ -59,12 +59,27 @@ export function SupportingDataMaintenanceDetailListPage() {
     return defaultSupportingData;
   }, [isEditMode, supportingData]);
 
+  /**
+   * Submit supporting detail - staff
+   * - change status to pending
+   * - staff
+   * If movement is forward and status is pending, view only.
+   * If movement is backward and status is pending, editable.
+   */
   const supportingMethods = useForm<createSupportingDataFormType>({
     resolver: zodResolver(createSupportingDataForm),
     defaultValues: formDefaults,
     mode: 'onSubmit',
   });
 
+  /**
+   * Submit supporting detail - checker staff
+   * - change status to completed, cancelled, rejected and route back depend on decision.
+   * - checker
+   * If status is completed, cancelled, rejected, view only.
+   * If movement is backward and status is pending, view only.
+   * - checker can edit only decision section.
+   */
   const decisionMethods = useForm<decisionFormType>({
     resolver: zodResolver(decisionForm),
     defaultValues: defaultDecision,
@@ -327,7 +342,7 @@ export function SupportingDataMaintenanceDetailListPage() {
           {/* Section 2 — Supporting Data Details (list + card)          */}
           <FormCard
             title="Supporting Data Details"
-            subtitle={''}
+            subtitle={supportingData?.remark ? `Remark: ${supportingData.remark}` : ''} // show remark when route back
             icon="file-certificate"
             iconColor="purple"
             required

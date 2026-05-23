@@ -94,6 +94,8 @@ export interface GetSupportingDataByIdType {
   sourceOfData: string;
   appraisalCompany: string;
   description: string;
+  movement?: string;
+  remark?: string;
 }
 
 export interface UpdateSupportingDataByIdType {

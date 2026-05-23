@@ -782,6 +782,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: 'c0dbff0c-ecc1-4670-af45-c8f040d0ccff',
@@ -793,6 +794,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: true,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '135c12d4-7996-42df-afde-4f27783d2a7c',
@@ -804,6 +806,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: '2ab14af6-5470-4145-be38-9dc37fc53658',
@@ -815,6 +818,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '155dfa85-709a-4442-b981-75159839e3b2',
@@ -826,6 +830,8 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: true,
     sourceOfData: '1',
     description: '',
+    movement: '02',
+    remark: 'Information not completed',
   },
   {
     id: '6ff36417-28c5-4f0d-a6b1-e92a0c225b30',
@@ -837,6 +843,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '724b7095-b97b-435c-a0a8-ec0def3f1a57',
@@ -848,6 +855,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: '71a6d6d5-2e65-453f-9070-aa9469f09ce1',
@@ -859,6 +867,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: true,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: 'e3c4b713-de30-4412-9af9-47012ccb7421',
@@ -870,6 +879,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: 'd8e5ea87-1abd-465d-b726-860e6e33a998',
@@ -881,6 +891,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '633a2233-c9d1-46d9-a4d7-dc11bac3f11f',
@@ -892,6 +903,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: '39c8e3ce-eb5c-439b-99ca-9dd49b84ca08',
@@ -903,6 +915,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '4d45dc6c-81c2-4858-b794-ca09daf2c837',
@@ -914,6 +927,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: '74634c47-7d7d-4dd0-8dbd-0606adb40fde',
@@ -925,6 +939,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '44919df3-12c6-4de5-bb23-4a366d671732',
@@ -936,6 +951,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: '036ebee3-3cca-4763-a6bb-76aa8a6e248e',
@@ -947,6 +963,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '442b7d72-5c42-48ff-8df4-ea9370f28993',
@@ -958,6 +975,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: '54c164ae-63fe-449c-a250-4da4b0ae6958',
@@ -969,6 +987,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
   {
     id: '54a8d12b-d6a7-4e0e-ba62-c1e92ef3ea90',
@@ -980,6 +999,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '1',
     description: '',
+    movement: '01',
   },
   {
     id: 'f944a8ac-c5b8-4208-8529-f8319f2d36ca',
@@ -991,6 +1011,7 @@ export const supportingDataRequestDetailList: GetSupportingDataByIdType[] = [
     hasAuthorityToDecision: false,
     sourceOfData: '2',
     description: '',
+    movement: '01',
   },
 ];
 
@@ -1045,7 +1066,7 @@ export const supportingDataRequestList: SupportingDataMaintenance[] = [
     importDate: '2026-04-27T09:25:00+07:00',
     importChannel: '01',
     status: '02',
-    movement: '01',
+    movement: '02',
     lastModifiedDate: '2026-04-28T10:50:00+07:00',
     lastModifiedBy: 'wichai.t',
     sourceOfData: '1',
