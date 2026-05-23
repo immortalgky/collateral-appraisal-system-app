@@ -204,11 +204,11 @@ export function SupportingDataMaintenanceDetailListPage() {
     }
   };
 
-  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = () => {
     if (hasAuthorityToDecision) {
-      void decisionMethods.handleSubmit(onSubmitDecision)(e);
+      void decisionMethods.handleSubmit(onSubmitDecision)();
     } else {
-      void supportingMethods.handleSubmit(onSubmitSupporting)(e);
+      void supportingMethods.handleSubmit(onSubmitSupporting)();
     }
   };
 
@@ -305,11 +305,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   }
 
   return (
-    <form
-      onSubmit={handleFormSubmit}
-      className="flex flex-col gap-4 justify-between min-h-full"
-      noValidate
-    >
+    <div className="flex flex-col gap-4 justify-between min-h-full">
       <FormProvider {...supportingMethods}>
         <div className="flex flex-col gap-4 pr-2">
           {/* Section 1 — Supporting Data Maintenance (general info)    */}
@@ -419,7 +415,11 @@ export function SupportingDataMaintenanceDetailListPage() {
               <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
               Save draft
             </Button>
-            <Button type="submit" leftIcon={<Icon name="check" style="solid" className="size-4" />}>
+            <Button
+              type="button"
+              onClick={() => handleFormSubmit()}
+              leftIcon={<Icon name="check" style="solid" className="size-4" />}
+            >
               Submit
             </Button>
           </ActionBar.Right>
@@ -437,6 +437,6 @@ export function SupportingDataMaintenanceDetailListPage() {
         cancelText="Cancel"
         variant="danger"
       />
-    </form>
+    </div>
   );
 }

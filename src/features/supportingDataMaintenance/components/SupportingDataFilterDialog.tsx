@@ -90,14 +90,14 @@ export function SupportingDataFilterDialog({
         <section className="grid grid-cols-2 gap-x-4 gap-y-4">
           <TextInput
             label="Supporting No."
-            placeholder="Enter supporitng no."
+            placeholder="Enter supporting no."
             value={values.supportingNumber ?? ''}
             onChange={e =>
               setValues(v => ({ ...v, supportingNumber: e.target.value || undefined }))
             }
           />
           <SelectField
-            label="Appraisal Request Status"
+            label="Supporting Data Status"
             options={SUPPORTING_DATA_STATUS_OPTIONS}
             value={values.status}
             onChange={status => setValues(v => ({ ...v, status }))}
