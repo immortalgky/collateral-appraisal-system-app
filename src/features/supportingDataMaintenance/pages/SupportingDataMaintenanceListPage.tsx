@@ -5,16 +5,31 @@ import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useGetSupportingDataMaintenanceList } from '../api';
 import type {
   GetSupportingDataMaintenanceListParams,
   SupportingDataMaintenance,
+  SupportingDataParams,
 } from '../api/types';
+import { SupportingDataFilterDialog } from '../components/SupportingDataFilterDialog';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import {
+  getImportChannelLabel,
+  getMovementLabel,
+  getSourceOfDataLabel,
+  getStatusLabel,
+} from '../utils/getLabel';
+import { ARCHIVED_STATUSES } from '../constants/parameters';
+
+interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  supportingId: string | null;
+}
 
 type ActiveTab = 'importing' | 'archived';
-
-const ARCHIVED_STATUSES = new Set(['cancelled', 'approved', 'rejected']);
 
 const readFiltersFromSearchParams = (
   _sp: URLSearchParams,
@@ -45,23 +60,29 @@ const columns: ColumnDef[] = [
     key: 'supportingNumber',
     label: 'Supporting No.',
     render: item => (
-      <span className="font-medium text-primary">{item.supportingNumber ?? '-'}</span>
+      <Link
+        to={`/standalone/supporting-data-maintenance/${item.id}`}
+        onClick={e => e.stopPropagation()}
+        className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+      >
+        {item.supportingNumber ?? '-'}
+      </Link>
     ),
   },
   {
     key: 'createdDate',
     label: 'Created Date',
-    render: item => formatDateTime(item.createdDate),
+    render: item => formatDateTime(item.importDate),
   },
   {
     key: 'importChannel',
     label: 'Import Channel',
-    render: item => item.importChannel ?? '-',
+    render: item => (item.importChannel ? getImportChannelLabel(item.importChannel) : '-'),
   },
   {
     key: 'sourceOfData',
     label: 'Source of Data',
-    render: item => item.sourceOfData ?? '-',
+    render: item => (item.sourceOfData ? getSourceOfDataLabel(item.sourceOfData) : '-'),
   },
   {
     key: 'lastModifiedBy',
@@ -74,14 +95,29 @@ const columns: ColumnDef[] = [
     render: item => formatDateTime(item.lastModifiedDate),
   },
   {
+    key: 'movement',
+    label: 'Movement',
+    tdClassName: 'px-4 py-3',
+    render: item => (item.movement ? getMovementLabel(item.movement) : '-'),
+  },
+  {
     key: 'status',
     label: 'Status',
     tdClassName: 'px-4 py-3',
-    render: item => <Badge type="status" value={item.status} size="sm" />,
+    render: item => (
+      <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
+    ),
   },
 ];
 
 const STICKY_COLUMN_KEY = 'supportingNumber';
+
+const FILTER_LABELS: Record<keyof SupportingDataParams, string> = {
+  supportingNumber: 'Supporting No.',
+  createdDate: 'Created Date',
+  status: 'Status',
+  importChannel: 'Import Channel',
+};
 
 export function SupportingDataMaintenanceListPage() {
   const navigate = useNavigate();
@@ -99,7 +135,49 @@ export function SupportingDataMaintenanceListPage() {
   const [searchTerm, setSearchTerm] = useState(initRef.current.search);
   const debouncedSearch = useDebounce(searchTerm, 400);
   const isSearchPending = searchTerm !== debouncedSearch;
-  const [filters] = useState<GetSupportingDataMaintenanceListParams>(initRef.current.filters);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [filters, setFilters] = useState<GetSupportingDataMaintenanceListParams>(
+    initRef.current.filters,
+  );
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    supportingId: null,
+  });
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setContextMenu(prev => ({ ...prev, visible: false }));
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
+
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    id: string | null;
+  }>({
+    isOpen: false,
+    id: null,
+  });
+
+  const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
+    keyof SupportingDataParams,
+    string,
+  ][];
+  const hasFilters = !!searchTerm || activeFilterChips.length > 0;
+
+  const removeFilter = (key: keyof GetSupportingDataMaintenanceListParams) => {
+    setFilters(prev => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
   // Reset to first page whenever the effective query changes
   useEffect(() => {
@@ -169,11 +247,20 @@ export function SupportingDataMaintenanceListPage() {
 
   const importingCount = importingItems.length;
   const archivedCount = archivedItems.length;
-  const hasFilters = !!searchTerm;
 
   const handleRowClick = (item: SupportingDataMaintenance) => {
     if (!item.id) return;
     navigate(`/standalone/supporting-data-maintenance/${item.id}`);
+  };
+
+  const handleRowRemove = (item: SupportingDataMaintenance) => {
+    if (!item.id) return;
+    setDeleteConfirm({ isOpen: true, id: item.id });
+  };
+
+  const confirmDelete = () => {
+    // Api to delete
+    setDeleteConfirm({ isOpen: false, id: null });
   };
 
   const handleCreate = () => {
@@ -209,20 +296,13 @@ export function SupportingDataMaintenanceListPage() {
           </div>
           <p className="text-xs text-gray-500 mt-0.5">Manage imported supporting data requests</p>
         </div>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
-        >
-          <Icon style="solid" name="plus" className="size-3.5" />
-          Create
-        </button>
       </div>
 
       {/* ── Toolbar: tabs + controls ── */}
       <div className="shrink-0 flex items-end gap-2 border-b border-gray-200 mb-3">
         <button
           onClick={() => setActiveTab('importing')}
-          className={`relative flex items-center gap-1 px-1 pb-2 text-xs font-medium transition-colors ${
+          className={`relative flex items-center gap-1 px-1 pb-2 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'importing' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -245,7 +325,7 @@ export function SupportingDataMaintenanceListPage() {
         </button>
         <button
           onClick={() => setActiveTab('archived')}
-          className={`relative flex items-center gap-1 px-1 pb-2 ml-3 text-xs font-medium transition-colors ${
+          className={`relative flex items-center gap-1 px-1 pb-2 ml-3 text-xs font-medium transition-colors cursor-pointer ${
             activeTab === 'archived' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
           }`}
         >
@@ -301,7 +381,64 @@ export function SupportingDataMaintenanceListPage() {
             </button>
           )}
         </div>
+
+        {/* Filter */}
+        <button
+          onClick={() => setFilterDialogOpen(true)}
+          title="Filters"
+          className={`mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all cursor-pointer ${
+            activeFilterChips.length > 0
+              ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
+              : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+          }`}
+        >
+          <Icon style="solid" name="sliders" className="size-3.5" />
+          Filters
+          {activeFilterChips.length > 0 && (
+            <span className="inline-flex items-center justify-center size-4 rounded-full bg-primary text-white text-[10px] font-semibold">
+              {activeFilterChips.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={handleCreate}
+          className="mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
+        >
+          <Icon style="solid" name="plus" className="size-3.5" />
+          Create
+        </button>
       </div>
+
+      <SupportingDataFilterDialog
+        open={filterDialogOpen}
+        initialValues={filters}
+        onApply={v => setFilters(v)}
+        onClose={() => setFilterDialogOpen(false)}
+      />
+
+      {/* Active filter chips */}
+      {activeFilterChips.length > 0 && (
+        <div className="shrink-0 flex items-center gap-1.5 flex-wrap mb-3">
+          {activeFilterChips.map(([key, value]) => (
+            <span
+              key={key}
+              className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+            >
+              <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+              <button onClick={() => removeFilter(key)} className="hover:text-primary/60 ml-0.5">
+                <Icon style="solid" name="xmark" className="size-2.5" />
+              </button>
+            </span>
+          ))}
+          <button
+            onClick={() => setFilters({})}
+            className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {/* ── Table ── */}
       <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
@@ -361,9 +498,18 @@ export function SupportingDataMaintenanceListPage() {
               ) : (
                 pageItems.map(item => (
                   <tr
-                    key={item.supportingNumber}
+                    key={item.id}
                     onDoubleClick={() => handleRowClick(item)}
                     className="group hover:bg-gray-50 cursor-default transition-colors"
+                    onContextMenu={e => {
+                      e.preventDefault();
+                      setContextMenu({
+                        visible: true,
+                        x: e.clientX,
+                        y: e.clientY,
+                        supportingId: item?.id ?? null,
+                      });
+                    }}
                   >
                     {columns.map(col => {
                       const isSticky = col.key === STICKY_COLUMN_KEY;
@@ -375,6 +521,7 @@ export function SupportingDataMaintenanceListPage() {
                               ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
                               : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')
                           }
+                          onClick={isSticky ? e => e.stopPropagation() : undefined}
                         >
                           {col.render(item)}
                         </td>
@@ -404,6 +551,56 @@ export function SupportingDataMaintenanceListPage() {
             setPageSize(size);
             setPageNumber(0);
           }}
+        />
+
+        {/* Context menu */}
+        {contextMenu.visible && (
+          <div
+            ref={contextMenuRef}
+            className="fixed bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 min-w-[160px]"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            <button
+              onClick={() => {
+                const item = allItems.find(t => t.id === contextMenu.supportingId);
+                if (item) handleRowClick(item);
+                setContextMenu(p => ({ ...p, visible: false }));
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+              style={{ width: 'calc(100% - 8px)' }}
+            >
+              <Icon
+                style="regular"
+                name="arrow-up-right-from-square"
+                className="size-3.5 text-gray-400"
+              />
+              Open
+            </button>
+            <button
+              onClick={() => {
+                const item = allItems.find(t => t.id === contextMenu.supportingId);
+                if (item?.id) handleRowRemove(item);
+                setContextMenu(p => ({ ...p, visible: false }));
+              }}
+              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+              style={{ width: 'calc(100% - 8px)' }}
+            >
+              <Icon style="regular" name="trash" className="size-3.5 text-gray-400" />
+              Delete
+            </button>
+          </div>
+        )}
+
+        {/* Delete confirmation */}
+        <ConfirmDialog
+          isOpen={deleteConfirm.isOpen}
+          onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
+          onConfirm={confirmDelete}
+          title="Delete Supporting Detail"
+          message="Are you sure you want to delete this item? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          variant="danger"
         />
       </div>
     </div>

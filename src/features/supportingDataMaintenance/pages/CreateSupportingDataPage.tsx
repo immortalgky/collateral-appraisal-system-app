@@ -13,9 +13,13 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCreateSupportingData, useGetSupportingDataById, useUpdateSupportingData } from '../api';
+import {
+  useCreateSupportingDetailData,
+  useGetSupportingDataDetailById,
+  useUpdateSupportingDetailData,
+} from '../api';
 import { useEffect, useMemo, useState } from 'react';
-import { mapSupportingDataResponseToForm } from '../utils/mapper';
+import { mapSupportingDataDetailResponseToForm } from '../utils/mapper';
 
 export function CreateSupportingDataPage() {
   const isReadOnly = usePageReadOnly();
@@ -23,15 +27,13 @@ export function CreateSupportingDataPage() {
 
   const { supportingId, id } = useParams<{ supportingId: string; id?: string }>();
 
-  console.log(supportingId, id);
-
   const isEditMode = Boolean(id);
 
-  const { data: supportingData, isLoading } = useGetSupportingDataById(supportingId, id);
+  const { data: supportingData, isLoading } = useGetSupportingDataDetailById(supportingId, id);
 
   const formDefaults = useMemo(() => {
     if (isEditMode && supportingData) {
-      return mapSupportingDataResponseToForm(supportingData);
+      return mapSupportingDataDetailResponseToForm(supportingData);
     }
     return defaultSupportingDataDetail;
   }, [isEditMode, supportingData]);
@@ -56,12 +58,12 @@ export function CreateSupportingDataPage() {
 
   useEffect(() => {
     if (isEditMode && supportingData) {
-      reset(mapSupportingDataResponseToForm(supportingData));
+      reset(mapSupportingDataDetailResponseToForm(supportingData));
     }
   }, [isEditMode, supportingData, reset]);
 
-  const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingData();
-  const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingData();
+  const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingDetailData();
+  const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingDetailData();
 
   const isPending = isCreating || isUpdating;
 

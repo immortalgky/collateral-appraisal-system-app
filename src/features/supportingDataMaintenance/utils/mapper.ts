@@ -1,10 +1,11 @@
+import type { CreateSupportingDataType, GetSupportingDataByIdType } from '../api/types';
 import type {
   createSupportingDataDetailFormType,
-  GetSupportingDataByIdType,
+  GetSupportingDataDetailByIdType,
 } from '../schemas/form';
 
-export const mapSupportingDataResponseToForm = (
-  response: GetSupportingDataByIdType,
+export const mapSupportingDataDetailResponseToForm = (
+  response: GetSupportingDataDetailByIdType,
 ): createSupportingDataDetailFormType => {
   return {
     id: response.id,
@@ -32,5 +33,17 @@ export const mapSupportingDataResponseToForm = (
     website: response.website ?? null,
     sourceUrl: response.sourceUrl ?? null,
     remark: response.remark ?? null,
+  };
+};
+
+export const mapSupportingDataResponseToForm = (
+  response: GetSupportingDataByIdType,
+): CreateSupportingDataType => {
+  return {
+    importChannel: response.importChannel ?? null,
+    importDate: response.importDate ?? null,
+    sourceOfData: response.sourceOfData ?? null,
+    appraisalCompany: response.appraisalCompany ?? null,
+    description: response.description ?? null,
   };
 };

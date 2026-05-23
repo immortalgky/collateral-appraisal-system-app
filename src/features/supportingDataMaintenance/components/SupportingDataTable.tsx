@@ -10,10 +10,10 @@ interface SupportingDataTableProps {
   /** Parent supporting-data request id. Drives the mock detail-list API. */
   supportingId: string;
   isReadOnly: boolean;
-  /** Receives the ABSOLUTE index across all pages so the parent stays page-agnostic. */
-  onSelectSupportingData: (index: number) => void;
-  /** Receives the ABSOLUTE index across all pages so the parent stays page-agnostic. */
-  onDeleteSupportingData: (index: number) => void;
+  /** Receives the supporting-data detail item id (UUID string). */
+  onSelectSupportingData: (id: string) => void;
+  /** Receives the supporting-data detail item id (UUID string). */
+  onDeleteSupportingData: (id: string) => void;
 }
 
 // ── Column config (local; mirrors SupportingDataMaintenanceListPage pattern) ──
@@ -119,8 +119,8 @@ export function SupportingDataTable({
                     index={absoluteIndex}
                     data={item}
                     isReadOnly={isReadOnly}
-                    onEdit={() => onSelectSupportingData(absoluteIndex)}
-                    onDelete={onDeleteSupportingData}
+                    onEdit={() => onSelectSupportingData(item.id)}
+                    onDelete={() => onDeleteSupportingData(item.id)}
                   />
                 );
               })

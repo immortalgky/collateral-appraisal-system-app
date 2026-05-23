@@ -1,6 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Icon } from '@/shared/components';
-import { collateralTypeOptions } from '../constants/parameters';
+import { getCollateralTypeLabel } from '../utils/getLabel';
 
 interface SupportingDataTableRowProps {
   index: number;
@@ -17,11 +17,6 @@ export const SupportingDataTableRow = ({
   onEdit,
   onDelete,
 }: SupportingDataTableRowProps) => {
-  const getCollateralTypeLabel = (type: string | undefined) => {
-    const option = collateralTypeOptions.find(opt => opt.value === type);
-    return option?.label ?? '-';
-  };
-
   const handleRowClick = () => {
     onEdit(index);
   };

@@ -1,13 +1,13 @@
 import type { ListBoxItem } from '@/shared/components';
 
-export const companies: ListBoxItem[] = [
+export const APPRAISAL_COMPANY_PARAMS: ListBoxItem[] = [
   { value: '01', label: 'Company A', id: '', isActive: true },
   { value: '02', label: 'Company B', id: '', isActive: true },
   { value: '03', label: 'Company C', id: '', isActive: true },
   { value: '04', label: 'Company D', id: '', isActive: true },
 ];
 
-export const collateralTypeOptions: { value: string; label: string }[] = [
+export const COLLATERAL_TYPE_PARAMS: { value: string; label: string }[] = [
   { value: '01', label: 'Land' },
   { value: '02', label: 'Land with buildings' },
   { value: '03', label: 'Land with buildings (blueprint)' },
@@ -41,4 +41,36 @@ export const collateralTypeOptions: { value: string; label: string }[] = [
   { value: '31', label: 'Lease rights for space within shopping center' },
   { value: '32', label: 'Land with buildings (BlockLand)' },
   { value: '33', label: 'Condominium (BlockCondo)' },
+];
+
+export const IMPORT_CHANNEL_PARAMS: { value: string; label: string }[] = [
+  { value: '01', label: 'External Data' },
+  { value: '02', label: 'Survey Data' },
+];
+
+export const SOURCE_OF_DATA_PARAMS: { value: string; label: string }[] = [
+  { value: '1', label: 'Bank' },
+  { value: '2', label: 'Appraisal Company' },
+];
+
+export const STATUS_PARAMS: { value: string; label: string }[] = [
+  { value: '01', label: 'Draft' },
+  { value: '02', label: 'Pending' },
+  { value: '03', label: 'Approved' },
+  { value: '04', label: 'Cancelled' },
+  { value: '05', label: 'Rejected' },
+];
+
+export const ARCHIVED_STATUSES = new Set(['03', '04', '05']);
+
+export const DECISION_PARAMS: { value: string; label: string }[] = [
+  { value: '01', label: 'Approve' },
+  { value: '02', label: 'Cancel' },
+  { value: '03', label: 'Reject' },
+  { value: '04', label: 'Route Back' },
+];
+
+export const MOVEMENT_PARAMS: { value: string; label: string }[] = [
+  { value: '01', label: 'Forward' },
+  { value: '02', label: 'Backward' },
 ];

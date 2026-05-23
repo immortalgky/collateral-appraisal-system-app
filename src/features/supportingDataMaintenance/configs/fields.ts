@@ -1,5 +1,5 @@
 import { type FormField } from '@/shared/components/form';
-import { companies } from '../constants/parameters';
+import { APPRAISAL_COMPANY_PARAMS, DECISION_PARAMS } from '../constants/parameters';
 
 export const supportingDataFields: FormField[] = [
   {
@@ -34,13 +34,31 @@ export const supportingDataFields: FormField[] = [
     group: '',
     wrapperClassName: 'col-span-2',
     required: true,
-    options: companies, // remove when group is ready
+    options: APPRAISAL_COMPANY_PARAMS, // remove when group is ready
   },
   {
     type: 'text-input',
     label: 'Description',
     name: 'description',
     wrapperClassName: 'col-span-4',
+  },
+];
+
+export const decisionFields: FormField[] = [
+  {
+    type: 'dropdown',
+    label: 'Decision',
+    name: 'decision',
+    options: DECISION_PARAMS,
+    wrapperClassName: 'col-span-2',
+    required: true,
+  },
+  {
+    type: 'textarea',
+    label: 'Remark',
+    name: 'remark',
+    wrapperClassName: 'col-span-12',
+    requiredWhen: { field: 'decision', is: ['02', '03'], operator: 'in' },
   },
 ];
 
@@ -199,9 +217,18 @@ export const locationDetailFields: FormField[] = [
 export const financialDetailsFields: FormField[] = [
   {
     type: 'number-input',
+    name: 'pricePerUnit',
+    label: 'Price per Unit',
+    maxIntegerDigits: 15,
+    decimalPlaces: 2,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'number-input',
     name: 'offeringPrice',
     label: 'Offering Price',
     maxIntegerDigits: 15,
+    decimalPlaces: 2,
     wrapperClassName: 'col-span-3',
   },
   {
@@ -209,6 +236,7 @@ export const financialDetailsFields: FormField[] = [
     name: 'sellingPrice',
     label: 'Selling Price',
     maxIntegerDigits: 15,
+    decimalPlaces: 2,
     wrapperClassName: 'col-span-3',
   },
 ];

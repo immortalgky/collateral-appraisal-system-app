@@ -394,6 +394,10 @@ export const router = createBrowserRouter([
         element: <SupportingDataMaintenanceListPage />,
       },
       {
+        path: 'standalone/supporting-data-maintenance/new',
+        element: <SupportingDataMaintenanceDetailListPage />,
+      },
+      {
         path: 'standalone/supporting-data-maintenance/:supportingId',
         element: <SupportingDataMaintenanceDetailListPage />,
       },

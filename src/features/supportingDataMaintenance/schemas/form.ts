@@ -1,11 +1,16 @@
 import { z } from 'zod';
 import { buildFormSchema } from '@/shared/components/form';
-import { supportingDataDetailFields, supportingDataFields } from '../configs/fields';
+import {
+  decisionFields,
+  supportingDataDetailFields,
+  supportingDataFields,
+} from '../configs/fields';
 
 // ============================== API ===============================
 
 const GetSupportingDataById = z.object({
   id: z.string(),
+  isEditable: z.boolean(), // to check authority to edit data of user
   propertyName: z.string().nullable(),
   developer: z.string().nullable(),
   modelName: z.string().nullable(),
@@ -32,12 +37,15 @@ const GetSupportingDataById = z.object({
   remark: z.string().nullable(),
 });
 
-export type GetSupportingDataByIdType = z.infer<typeof GetSupportingDataById>;
+export type GetSupportingDataDetailByIdType = z.infer<typeof GetSupportingDataById>;
 
 // =================================================================
 
 export const createSupportingDataDetailForm = buildFormSchema(supportingDataDetailFields);
 export type createSupportingDataDetailFormType = z.infer<typeof createSupportingDataDetailForm>;
+
+export const decisionForm = buildFormSchema(decisionFields);
+export type decisionFormType = z.infer<typeof decisionForm>;
 
 export const createSupportingDataForm = buildFormSchema(supportingDataFields);
 export type createSupportingDataFormType = z.infer<typeof createSupportingDataForm>;
@@ -48,6 +56,11 @@ export const defaultSupportingData: createSupportingDataFormType = {
   sourceOfData: null,
   appraisalCompany: null,
   description: null,
+};
+
+export const defaultDecision: decisionFormType = {
+  decision: '',
+  remark: null,
 };
 
 export const defaultSupportingDataDetail: createSupportingDataDetailFormType = {

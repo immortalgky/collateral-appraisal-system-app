@@ -1,35 +1,28 @@
-export interface CreateSupportingDataBody {
-  importChannel: string;
-  importDate: string;
-  sourceOfData: string;
-  appraisalCompany: null;
-  description: string;
-  supportingDataDetails: {
-    propertyName: string | null;
-    developer: string | null;
-    modelName: string | null;
-    collateralType: string;
-    buildingType: string;
-    landArea: number | null;
-    usableArea: number | null;
-    projectName: string | null;
-    roomFloor: string | null;
-    houseNo: string | null;
-    subDistrict: string | null;
-    district: string | null;
-    province: string | null;
-    latitude: number;
-    longitude: number;
-    plotLocationType: string;
-    pricePerUnit: string;
-    offeringPrice: number | null;
-    sellingPrice: number | null;
-    phoneNo: string | null;
-    informationDate: string;
-    website: string | null;
-    sourceUrl: string | null;
-    remark: string | null;
-  }[];
+export interface CreateSupportingDataDetailRequest {
+  propertyName: string | null;
+  developer: string | null;
+  modelName: string | null;
+  collateralType: string;
+  buildingType: string;
+  landArea: number | null;
+  usableArea: number | null;
+  projectName: string | null;
+  roomFloor: string | null;
+  houseNo: string | null;
+  subDistrict: string | null;
+  district: string | null;
+  province: string | null;
+  latitude: number;
+  longitude: number;
+  plotLocationType: string;
+  pricePerUnit: string;
+  offeringPrice: number | null;
+  sellingPrice: number | null;
+  phoneNo: string | null;
+  informationDate: string;
+  website: string | null;
+  sourceUrl: string | null;
+  remark: string | null;
 }
 
 export interface GetSupportingDataMaintenanceListParams {
@@ -43,8 +36,9 @@ export interface GetSupportingDataMaintenanceListParams {
 export interface SupportingDataMaintenance {
   id?: string;
   supportingNumber?: string;
-  createdDate?: string;
+  importDate?: string;
   importChannel?: string;
+  movement?: string;
   status?: string;
   lastModifiedDate: string;
   lastModifiedBy: string;
@@ -70,6 +64,13 @@ export interface SupportingDataDetailItem {
   provinceName: string | null;
 }
 
+export interface SupportingDataParams {
+  supportingNumber?: string;
+  createdDate?: string;
+  importChannel?: string;
+  status?: string;
+}
+
 export interface GetSupportingDataDetailListParams {
   supportingId: string;
   pageNumber?: number;
@@ -81,4 +82,35 @@ export interface GetSupportingDataDetailListResponse {
   count: number;
   pageNumber: number;
   pageSize: number;
+}
+
+export interface GetSupportingDataByIdType {
+  id?: string;
+  supportingNumber?: string;
+  hasAuthorityToDecision: boolean;
+  status: string;
+  importChannel: string;
+  importDate: string;
+  sourceOfData: string;
+  appraisalCompany: string;
+  description: string;
+}
+
+export interface UpdateSupportingDataByIdType {
+  id: string;
+  importChannel: string;
+  importDate: string;
+  sourceOfData: string;
+  appraisalCompany: null;
+  description: string;
+  decision?: string;
+  remark?: string;
+}
+
+export interface CreateSupportingDataType {
+  importChannel: string;
+  importDate: string;
+  sourceOfData: string;
+  appraisalCompany: null;
+  description: string;
 }
