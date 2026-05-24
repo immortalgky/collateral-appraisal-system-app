@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useGetMachineCostItems, useResetMethod, useSaveMachineCostItems } from '../api';
 import type { SaveMachineCostItemInput } from '../api';
 import { pricingAnalysisKeys } from '../api/queryKeys';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 interface CostMachinePanelProps {
   activeMethod?: {
@@ -49,7 +50,12 @@ export function CostMachinePanel({
   const saveMutation = useSaveMachineCostItems();
 
   // Fetch saved machine cost items from API
-  const { data: savedData, isPending: isLoadingCostItems } = useGetMachineCostItems(pricingAnalysisId, methodId);
+  const {
+    data: savedData,
+    isPending: isLoadingCostItems,
+    isError: isCostItemsError,
+    refetch: refetchCostItems,
+  } = useGetMachineCostItems(pricingAnalysisId, methodId);
 
   // Build machinery items from propertiesMap (all MAC-type properties in the group)
   const machineryItems: MachineryItem[] = useMemo(() => {
@@ -181,7 +187,15 @@ export function CostMachinePanel({
         </div>
 
         {/* Content */}
-        <CostMachineForm machineryItems={machineryItems} isLoading={isLoadingCostItems} />
+        {isCostItemsError ? (
+          <DataErrorState
+            title="Failed to load machine cost items"
+            onRetry={refetchCostItems}
+            variant="inline"
+          />
+        ) : (
+          <CostMachineForm machineryItems={machineryItems} isLoading={isLoadingCostItems} />
+        )}
 
         {/* Footer save/cancel */}
         <MethodFooterActions

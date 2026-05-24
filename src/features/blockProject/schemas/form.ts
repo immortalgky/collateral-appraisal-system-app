@@ -1,5 +1,6 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
+import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 import { isValidPartialDate } from '../utils/partialDate';
 import {
@@ -155,7 +156,7 @@ export const lbProjectInfoFormDefaults: LbProjectInfoFormType = {
  * Factory: returns the correct project-info schema based on projectType discriminator.
  */
 export function projectInfoForm(projectType: ProjectType) {
-  return projectType === 'Condo' ? condoProjectInfoForm : lbProjectInfoForm;
+  return isCondo(projectType) ? condoProjectInfoForm : lbProjectInfoForm;
 }
 
 // =============================================================================
@@ -353,7 +354,7 @@ export const lbModelFormDefaults = {
  * Factory: returns the correct model schema based on projectType.
  */
 export function projectModelForm(projectType: ProjectType) {
-  return projectType === 'Condo' ? condoModelForm : lbModelForm;
+  return isCondo(projectType) ? condoModelForm : lbModelForm;
 }
 
 // =============================================================================
@@ -457,5 +458,5 @@ export const lbPricingAssumptionFormDefaults: LbPricingAssumptionFormType = {
  * Factory: returns the correct pricing-assumption schema based on projectType.
  */
 export function projectPricingAssumptionForm(projectType: ProjectType) {
-  return projectType === 'Condo' ? condoPricingAssumptionForm : lbPricingAssumptionForm;
+  return isCondo(projectType) ? condoPricingAssumptionForm : lbPricingAssumptionForm;
 }

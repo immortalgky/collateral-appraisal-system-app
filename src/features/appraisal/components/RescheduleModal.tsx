@@ -21,6 +21,7 @@ interface RescheduleModalProps {
   /** Whether this is a new appointment (not a reschedule) */
   isNewAppointment?: boolean;
   isLoading?: boolean;
+  readOnly?: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ export default function RescheduleModal({
   defaultValues,
   isNewAppointment = false,
   isLoading = false,
+  readOnly = false,
 }: RescheduleModalProps) {
   const methods = useForm<RescheduleFormData>({
     resolver: zodResolver(RescheduleFormSchema),
@@ -89,6 +91,7 @@ export default function RescheduleModal({
             value={dateTime}
             onChange={value => setValue('dateTime', value || '')}
             error={errors.dateTime?.message}
+            disabled={readOnly}
           />
 
           {/* Location Input */}
@@ -99,6 +102,7 @@ export default function RescheduleModal({
             placeholder="Enter appointment location details"
             {...register('location')}
             error={errors.location?.message}
+            disabled={readOnly}
           />
 
           {/* Reason Input - only shown when rescheduling */}
@@ -109,6 +113,7 @@ export default function RescheduleModal({
               placeholder="Enter reason for rescheduling (optional)"
               {...register('reason')}
               error={errors.reason?.message}
+              disabled={readOnly}
             />
           )}
 
@@ -117,9 +122,11 @@ export default function RescheduleModal({
             <Button type="button" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="primary" isLoading={isLoading}>
-              {submitButtonText}
-            </Button>
+            {!readOnly && (
+              <Button type="submit" variant="primary" isLoading={isLoading}>
+                {submitButtonText}
+              </Button>
+            )}
           </div>
         </form>
       </FormProvider>

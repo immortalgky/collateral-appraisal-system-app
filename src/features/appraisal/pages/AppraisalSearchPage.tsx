@@ -8,6 +8,7 @@ import { tabConfigs } from '../components/search/tabConfigs';
 import SearchFilterBar from '../components/search/SearchFilterBar';
 import SearchResultsTable from '../components/search/SearchResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 // Keys that are not filters
 const NON_FILTER_KEYS = new Set(['tab', 'q', 'page', 'pageSize']);
@@ -85,7 +86,7 @@ function AppraisalSearchPage() {
   const currentTabConfig = tabConfigs.find(t => t.key === activeTab) ?? tabConfigs[0];
 
   // API query
-  const { data, isLoading } = useFullSearchQuery({
+  const { data, isLoading, isError, error, refetch } = useFullSearchQuery({
     q: debouncedSearch,
     filter: activeTab,
     pageNumber,
@@ -122,6 +123,16 @@ function AppraisalSearchPage() {
       setHasSearched(true);
     }
   };
+
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Failed to load search results"
+        message={(error as Error)?.message}
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">

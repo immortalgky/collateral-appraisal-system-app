@@ -54,5 +54,26 @@
     "english": "English",
     "thai": "ไทย",
     "chinese": "中文"
+  },
+  "favorites": {
+    "row": {
+      "sectionTitle": "快速访问",
+      "emptyHint": "固定页面",
+      "addMore": "添加"
+    },
+    "picker": {
+      "title": "管理收藏夹",
+      "searchPlaceholder": "搜索菜单项...",
+      "selected": "已选择"
+    },
+    "sidebar": {
+      "title": "收藏"
+    },
+    "header": {
+      "openLabel": "收藏",
+      "title": "我的收藏",
+      "empty": "固定项目以在此处查看",
+      "manage": "管理收藏"
+    }
   }
 }

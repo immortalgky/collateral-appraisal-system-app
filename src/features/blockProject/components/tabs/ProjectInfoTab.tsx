@@ -14,6 +14,7 @@ import CancelButton from '@/shared/components/buttons/CancelButton';
 import type { ApiError } from '@/shared/types/api';
 
 import { useGetProject, useSaveProject } from '../../api/project';
+import { isCondo } from '../../types';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
 import ChangeProjectTypeDialog, { type ChildCounts } from '../ChangeProjectTypeDialog';
@@ -50,7 +51,7 @@ export default function ProjectInfoTab({
 
   const schema = projectInfoForm(projectType);
   const defaults =
-    projectType === 'Condo' ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
+    isCondo(projectType) ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
 
   const { data: project, isLoading } = useGetProject(appraisalId ?? '', projectType);
   const { mutate: saveProject, isPending } = useSaveProject();
@@ -63,13 +64,14 @@ export default function ProjectInfoTab({
 
   const {
     handleSubmit,
+    getValues,
     reset,
     formState: { isDirty },
   } = methods;
 
   useEffect(() => {
     if (project) {
-      if (projectType === 'Condo') {
+      if (isCondo(projectType)) {
         reset({
           projectName: project.projectName ?? '',
           projectDescription: project.projectDescription ?? null,
@@ -80,7 +82,7 @@ export default function ProjectInfoTab({
           landAreaSquareWa: project.landAreaSquareWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
-          projectType: '', // stamped from route prop on submit
+          projectType: '', // placeholder; stamped from the route prop at submit (see line ~144)
           numberOfPhase: project.numberOfPhase ?? null,
           houseNumber: project.houseNumber ?? null,
           road: project.road ?? null,
@@ -109,7 +111,7 @@ export default function ProjectInfoTab({
           landAreaSquareWa: project.landAreaSquareWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
-          projectType: '',
+          projectType: '', // placeholder; stamped from the route prop at submit (see line ~144)
           numberOfPhase: project.numberOfPhase ?? null,
           houseNumber: project.houseNumber ?? null,
           road: project.road ?? null,
@@ -140,7 +142,7 @@ export default function ProjectInfoTab({
       return;
     }
     saveProject(
-      { appraisalId, data: { ...data, projectType } },
+      { appraisalId, data: { ...data, projectType }, isDraft },
       {
         onSuccess: () => {
           toast.success(isDraft ? 'Draft saved successfully' : 'Project information saved');
@@ -193,7 +195,7 @@ export default function ProjectInfoTab({
                 <Button
                   variant="ghost"
                   type="button"
-                  onClick={() => handleSubmit(data => onSubmit(data, true))()}
+                  onClick={() => onSubmit(getValues(), true)}
                   isLoading={isPending}
                   disabled={isPending}
                 >

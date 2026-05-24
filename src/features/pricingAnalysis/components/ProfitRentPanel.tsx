@@ -20,6 +20,7 @@ import { useGetLeaseAgreement, useGetRentalSchedule } from '@/features/appraisal
 import { typeToDetailEndpoint } from '@/features/appraisal/utils/propertyTypeConfig';
 import axios from '@shared/api/axiosInstance';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetAppointment } from '@/features/appraisal/api/appointment';
 import toast from 'react-hot-toast';
 import { LeaseholdRentalInfoModal } from './LeaseholdRentalInfoModal';
@@ -37,6 +38,7 @@ import {
 } from '../domain/calculateProfitRent';
 import { fmt, formatDateOnly, toNum } from '../domain/formatters';
 import { roundToThousand } from '../domain/calculation';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 interface ProfitRentPanelProps {
   activeMethod?: {
@@ -67,6 +69,7 @@ export function ProfitRentPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: ProfitRentPanelProps) {
+  const readOnly = usePageReadOnly();
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -79,10 +82,12 @@ export function ProfitRentPanel({
   const resetMutation = useResetMethod();
   const saveMutation = useSaveProfitRentAnalysis();
 
-  const { data: savedData, isPending: isLoading } = useGetProfitRentAnalysis(
-    pricingAnalysisId,
-    methodId,
-  );
+  const {
+    data: savedData,
+    isPending: isLoading,
+    isError: isSavedDataError,
+    refetch: refetchSavedData,
+  } = useGetProfitRentAnalysis(pricingAnalysisId, methodId);
 
   // Fetch property detail for land area
   const detailEndpoint = firstPropertyType ? typeToDetailEndpoint[firstPropertyType] : undefined;
@@ -312,7 +317,7 @@ export function ProfitRentPanel({
   );
 
   const handleOnSubmit = async () => {
-    if (!pricingAnalysisId || !methodId) return;
+    if (readOnly || !pricingAnalysisId || !methodId) return;
 
     const data = getValues();
     const request: SaveProfitRentAnalysisRequest = {
@@ -482,6 +487,12 @@ export function ProfitRentPanel({
     return <PanelSkeleton />;
   }
 
+  if (isSavedDataError) {
+    return (
+      <DataErrorState title="Failed to load profit rent analysis" onRetry={refetchSavedData} />
+    );
+  }
+
   return (
     <FormProvider methods={methods as any} schema={ProfitRentFormSchema as any}>
       <form
@@ -589,6 +600,7 @@ export function ProfitRentPanel({
                     decimalPlaces={2}
                     maxIntegerDigits={15}
                     required={true}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-[10px] text-gray-500">Baht/Sq.Wa/Mo</span>
@@ -623,6 +635,7 @@ export function ProfitRentPanel({
                   decimalPlaces={2}
                   maxIntegerDigits={3}
                   rightIcon={<span className="text-xs text-gray-400">%</span>}
+                  disabled={readOnly}
                 />
               </div>
             </div>
@@ -637,10 +650,12 @@ export function ProfitRentPanel({
               label="Market Rental Fee Increase"
               options={['Frequency', 'Period']}
               checked={growthRateType === 'Period'}
-              onChange={checked =>
-                setValue('growthRateType', checked ? 'Period' : 'Frequency', { shouldDirty: true })
-              }
+              onChange={checked => {
+                if (readOnly) return;
+                setValue('growthRateType', checked ? 'Period' : 'Frequency', { shouldDirty: true });
+              }}
               size="sm"
+              disabled={readOnly}
             />
 
             {growthRateType === 'Frequency' ? (
@@ -656,6 +671,7 @@ export function ProfitRentPanel({
                     decimalPlaces={2}
                     maxIntegerDigits={3}
                     rightIcon={<span className="text-xs text-gray-400">%</span>}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-sm text-gray-500 pb-2">Every</span>
@@ -670,6 +686,7 @@ export function ProfitRentPanel({
                     decimalPlaces={0}
                     maxIntegerDigits={3}
                     rightIcon={<span className="text-xs text-gray-400">Year</span>}
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -692,6 +709,7 @@ export function ProfitRentPanel({
                       }
                       maxIntegerDigits={3}
                       decimalPlaces={0}
+                      disabled={readOnly}
                     />
                     <NumberInput
                       value={watch(`growthPeriods.${index}.toYear` as any)}
@@ -702,6 +720,7 @@ export function ProfitRentPanel({
                       }
                       decimalPlaces={0}
                       maxIntegerDigits={3}
+                      disabled={readOnly}
                     />
                     <NumberInput
                       value={watch(`growthPeriods.${index}.growthRatePercent` as any)}
@@ -715,24 +734,30 @@ export function ProfitRentPanel({
                       maxIntegerDigits={3}
                       decimalPlaces={2}
                       rightIcon={<span className="text-xs text-gray-400">%</span>}
+                      disabled={readOnly}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removePeriod(index)}
-                      className="flex items-center justify-center text-red-400 hover:text-red-600 pb-1"
-                    >
-                      <Icon name="xmark" className="size-4" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => removePeriod(index)}
+                        className="flex items-center justify-center text-red-400 hover:text-red-600 pb-1"
+                      >
+                        <Icon name="xmark" className="size-4" />
+                      </button>
+                    )}
+                    {readOnly && <span />}
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => appendPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                >
-                  <Icon name="plus" className="size-3" />
-                  Add Periods
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => appendPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    <Icon name="plus" className="size-3" />
+                    Add Periods
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -804,7 +829,11 @@ export function ProfitRentPanel({
             options={['No', 'Yes']}
             size="sm"
             checked={isBuildingCostIncluded}
-            onChange={checked => setValue('includeBuildingCost', checked, { shouldDirty: true })}
+            onChange={checked => {
+              if (readOnly) return;
+              setValue('includeBuildingCost', checked, { shouldDirty: true });
+            }}
+            disabled={readOnly}
           />
 
           {isBuildingCostIncluded && (
@@ -878,6 +907,7 @@ export function ProfitRentPanel({
                         }
                         maxIntegerDigits={15}
                         decimalPlaces={2}
+                        disabled={readOnly}
                         className="!font-bold !text-right !text-sm !text-green-700"
                       />
                     </div>
@@ -927,6 +957,7 @@ export function ProfitRentPanel({
                     onChange={e => estimateField.onChange(e.target.value)}
                     onBlur={estimateField.onBlur}
                     decimalPlaces={2}
+                    disabled={readOnly}
                     className="!font-bold !text-right !text-sm !text-green-700"
                   />
                 </div>
@@ -936,7 +967,7 @@ export function ProfitRentPanel({
         )}
 
         {/* Notes & Assumptions */}
-        <RemarkSection setValue={setValue} watch={watch} />
+        <RemarkSection setValue={setValue} watch={watch} readOnly={readOnly} />
 
         {/* Footer — matches Leasehold */}
         <MethodFooterActions

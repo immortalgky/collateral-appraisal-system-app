@@ -3,13 +3,14 @@ import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessu
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
+import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigationTypes';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
-import {
-  SIDEBAR_COLLAPSED_WIDTH,
-} from './sidebarConstants';
+import { SIDEBAR_COLLAPSED_WIDTH } from './sidebarConstants';
+import { SidebarStarButton } from '@features/menuFavorites/components/SidebarStarButton';
+import { SidebarFavoritesSection } from '@features/menuFavorites/components/SidebarFavoritesSection';
 
 const TASK_LIST_PATH = '/tasks';
 
@@ -39,8 +40,7 @@ function MenuItem({
   const [isOpen, setIsOpen] = useState(false);
   const [hrefPath, hrefSearch = ''] = item.href.split('?');
   const isActive =
-    location.pathname === hrefPath &&
-    location.search === (hrefSearch ? `?${hrefSearch}` : '');
+    location.pathname === hrefPath && location.search === (hrefSearch ? `?${hrefSearch}` : '');
   const hasChildren = item.children && item.children.length > 0;
   const iconStyle = (item.iconStyle || 'solid') as
     | 'solid'
@@ -50,29 +50,13 @@ function MenuItem({
     | 'duotone'
     | 'brands';
 
-  // Get background color class based on icon color
-  const getIconBgClass = (iconColor: string | undefined) => {
-    if (!iconColor) return 'bg-gray-100';
-    const colorMap: Record<string, string> = {
-      'text-blue-500': 'bg-blue-50',
-      'text-purple-500': 'bg-purple-50',
-      'text-amber-500': 'bg-amber-50',
-      'text-cyan-500': 'bg-cyan-50',
-      'text-emerald-500': 'bg-emerald-50',
-      'text-teal-500': 'bg-teal-50',
-      'text-rose-500': 'bg-rose-50',
-      'text-orange-500': 'bg-orange-50',
-    };
-    return colorMap[iconColor] || 'bg-gray-100';
-  };
-
   if (hasChildren) {
     if (collapsed) {
       // When collapsed, show only the parent icon (no expandable children)
       return (
         <li>
           <div
-            className="group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200 hover:bg-gray-50"
+            className="group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-base-200"
             title={item.name}
           >
             <div
@@ -105,7 +89,7 @@ function MenuItem({
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
             'group flex w-full items-center justify-between py-2 px-2.5 rounded-xl transition-all duration-200 text-left',
-            isChildActive ? 'bg-primary/5' : 'hover:bg-gray-50',
+            isChildActive ? 'bg-primary/5' : 'hover:bg-gray-50 dark:hover:bg-base-200',
           )}
         >
           <span className="flex items-center gap-2.5">
@@ -125,7 +109,7 @@ function MenuItem({
             <span
               className={clsx(
                 'text-xs font-medium',
-                isChildActive ? 'text-primary' : 'text-gray-700',
+                isChildActive ? 'text-primary' : 'text-gray-700 dark:text-gray-200',
               )}
             >
               {item.name}
@@ -142,12 +126,14 @@ function MenuItem({
         </button>
         <div
           className={clsx(
-            'ml-6 pl-3 border-l-2 border-gray-100 grid transition-all duration-300 ease-in-out',
+            'ml-6 pl-3 border-l-2 border-gray-100 dark:border-base-300 grid transition-all duration-300 ease-in-out',
             isOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0',
           )}
         >
           <ul className="overflow-hidden flex flex-col gap-1">
-            {item.children?.map(child => <MenuItem key={child.href} item={child} isChild />)}
+            {item.children?.map(child => (
+              <MenuItem key={child.href} item={child} isChild />
+            ))}
           </ul>
         </div>
       </li>
@@ -162,7 +148,7 @@ function MenuItem({
           title={item.name}
           className={clsx(
             'group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200',
-            isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+            isActive ? 'bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-base-200',
           )}
         >
           <div
@@ -192,7 +178,7 @@ function MenuItem({
         to={item.href}
         className={clsx(
           'group flex items-center gap-2.5 py-2 px-2.5 rounded-xl transition-all duration-200',
-          isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+          isActive ? 'bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-base-200',
           isChild && 'py-2',
         )}
       >
@@ -214,10 +200,13 @@ function MenuItem({
         {isChild && (
           <div className={clsx('w-2 h-2 rounded-full', isActive ? 'bg-primary' : 'bg-gray-300')} />
         )}
-        <span className={clsx('text-xs font-medium text-gray-700')}>
-          {item.name}
-        </span>
+        <span className={clsx('text-xs font-medium text-gray-700 dark:text-gray-200')}>{item.name}</span>
         {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
+        {!collapsed && (
+          <span className="ml-auto">
+            <SidebarStarButton item={item} />
+          </span>
+        )}
       </Link>
     </li>
   );
@@ -249,11 +238,11 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
             </div>
           </TransitionChild>
 
-          <div className="flex grow flex-col overflow-y-auto bg-white">
+          <div className="flex grow flex-col overflow-y-auto bg-white dark:bg-base-100">
             {/* Logo Area */}
             <div className="px-5 py-5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-base-200 dark:to-base-100 border border-gray-100 dark:border-base-300 flex items-center justify-center shadow-sm">
                   <img alt="LHBank" src={logo} className="h-7 w-auto" />
                 </div>
                 <div className="flex flex-col">
@@ -288,9 +277,9 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                 ))}
               </ul>
 
-              <div className="mt-auto pt-4 border-t border-gray-100">
+              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-base-300">
                 <div className="px-3 mb-2">
-                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                     {t('sidebar.system')}
                   </span>
                 </div>
@@ -298,12 +287,12 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                   <li>
                     <Link
                       to="/settings"
-                      className="group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50"
+                      className="group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-base-200"
                     >
-                      <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
-                        <Icon name="gear" style="solid" className="size-4 text-gray-500" />
+                      <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
+                        <Icon name="gear" style="solid" className="size-4 text-gray-500 dark:text-gray-300" />
                       </div>
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         {t('sidebar.settings')}
                       </span>
                     </Link>
@@ -369,13 +358,16 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >
-      <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
+      <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 shadow-sm">
         {/* Logo Area */}
         <div
-          className={clsx('transition-all duration-300', sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4')}
+          className={clsx(
+            'transition-all duration-300',
+            sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4',
+          )}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-base-200 dark:to-base-100 border border-gray-100 dark:border-base-300 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-6 w-auto" />
             </div>
             {!sidebarCollapsed && (
@@ -405,9 +397,11 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
             sidebarCollapsed ? 'px-1' : 'px-3',
           )}
         >
+          <SidebarFavoritesSection collapsed={sidebarCollapsed} />
+
           {!sidebarCollapsed && (
             <div className="px-3 mb-2">
-              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                 {t('sidebar.general')}
               </span>
             </div>
@@ -420,10 +414,10 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
           </ul>
 
           {/* Bottom Section */}
-          <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100')}>
+          <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100 dark:border-base-300')}>
             {!sidebarCollapsed && (
               <div className="px-3 mb-2">
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
                   {t('sidebar.system')}
                 </span>
               </div>
@@ -435,15 +429,15 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
                   title={sidebarCollapsed ? t('sidebar.settings') : undefined}
                   className={clsx(
                     'group flex items-center py-2 px-2.5 rounded-xl transition-all duration-200',
-                    isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+                    isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-base-200',
                     sidebarCollapsed ? 'justify-center' : 'gap-2.5',
                   )}
                 >
-                  <div className="w-7 h-7 rounded-xl bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
-                    <Icon name="gear" style="solid" className="size-3.5 text-gray-500" />
+                  <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
+                    <Icon name="gear" style="solid" className="size-3.5 text-gray-500 dark:text-gray-300" />
                   </div>
                   {!sidebarCollapsed && (
-                    <span className="text-xs font-medium text-gray-700">
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
                       {t('sidebar.settings')}
                     </span>
                   )}
@@ -455,7 +449,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
             <button
               type="button"
               onClick={toggleSidebar}
-              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors"
               title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             >
               <Icon

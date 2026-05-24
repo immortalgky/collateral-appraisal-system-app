@@ -5,6 +5,9 @@ import type { Task } from '../types';
 import Badge from '@/shared/components/Badge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import Icon from '@/shared/components/Icon';
+import { SlaStatusBadge } from '@features/common/monitoring/components/SlaCells';
+import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
+import { DateCell } from '@features/common/monitoring/components/DateCell';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -57,24 +60,6 @@ function PersonCell({ name }: { name: string | null | undefined }) {
   );
 }
 
-function MovementCell({ value }: { value: string | null | undefined }) {
-  if (!value) return <>-</>;
-  const isForward = value.toLowerCase() === 'forward';
-  return (
-    <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-        isForward ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
-      }`}
-    >
-      <Icon
-        style="solid"
-        name={isForward ? 'arrow-right' : 'arrow-rotate-left'}
-        className="size-2.5"
-      />
-      {value}
-    </span>
-  );
-}
 
 function DueDateCell({ dateString }: { dateString: string | null | undefined }) {
   if (!dateString) return <>-</>;
@@ -171,7 +156,7 @@ export type ColumnDef = {
   label: string;
   /** Backend sort field name. Omit to make the column non-sortable. */
   sortField?: string;
-  /** td className override. Defaults to 'px-3 py-2.5 text-gray-600' when not set. */
+  /** td className override. Defaults to 'px-3 py-1.5 text-gray-600 text-xs' when not set. */
   tdClassName?: string;
   render: (task: Task) => ReactNode;
 };
@@ -234,7 +219,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   },
   status: {
     label: 'Status',
-    tdClassName: 'px-3 py-2.5',
+    tdClassName: 'px-3 py-1.5',
     render: task => <Badge type="status" value={task.status} size="sm" />,
   },
   appointmentDateTime: {
@@ -280,12 +265,12 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   assignedDate: {
     label: 'Assigned Date',
     sortField: 'assignedDate',
-    render: task => <AppointmentCell dateString={task.assignedDate} />,
+    render: task => <DateCell value={task.assignedDate} withTime withAgo />,
   },
   movement: {
     label: 'Movement',
     sortField: 'movement',
-    render: task => <MovementCell value={task.movement} />,
+    render: task => <MovementBadgeFromTaskDto value={task.movement} />,
   },
   dueAt: {
     label: 'SLA Due',
@@ -304,13 +289,14 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   },
   slaStatus: {
     label: 'SLA Status',
-    tdClassName: 'px-3 py-2.5',
-    render: task => <Badge type="status" value={task.slaStatus} size="sm" />,
+    sortField: 'slaStatus',
+    tdClassName: 'px-3 py-1.5',
+    render: task => <SlaStatusBadge sla={task.slaStatus} />,
   },
   priority: {
     label: 'Priority',
     sortField: 'priority',
-    tdClassName: 'px-3 py-2.5',
+    tdClassName: 'px-3 py-1.5',
     render: task => <Badge type="priority" value={task.priority} size="sm" />,
   },
 };

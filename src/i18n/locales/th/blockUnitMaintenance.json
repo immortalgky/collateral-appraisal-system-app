@@ -1,0 +1,97 @@
+{
+  "list": {
+    "title": "จัดการหน่วยโครงการ",
+    "subtitle": "อัปเดตสถานะการขายหน่วยสำหรับโครงการคอนโดและหมู่บ้าน",
+    "empty": "ไม่พบโครงการ",
+    "emptyHint": "ไม่มีโครงการที่ตรงกับเงื่อนไขการค้นหา",
+    "tryFilters": "ลองปรับเงื่อนไขการค้นหา",
+    "clearFilters": "ล้าง",
+    "col": {
+      "reportNo": "เลขที่ประเมิน",
+      "projectName": "ชื่อโครงการ",
+      "projectType": "ประเภทโครงการ",
+      "developer": "ผู้พัฒนา",
+      "customerName": "ลูกค้า",
+      "totalUnits": "ทั้งหมด",
+      "soldUnits": "ขายแล้ว",
+      "unsoldUnits": "เหลือ",
+      "salesProgress": "ความคืบหน้าการขาย",
+      "updatedOn": "อัปเดตล่าสุดเมื่อ",
+      "updatedBy": "อัปเดตล่าสุดโดย"
+    },
+    "projectType": {
+      "label": "ประเภทโครงการ",
+      "placeholder": "ทุกประเภท"
+    },
+    "filter": {
+      "searchPlaceholder": "ค้นหาเลขที่ประเมิน ชื่อโครงการ…",
+      "developerPlaceholder": "กรองตามผู้พัฒนา"
+    }
+  },
+  "detail": {
+    "title": "บำรุงรักษาข้อมูลหน่วยในบล็อก",
+    "subtitle": "ปรับปรุงสถานะการขาย วิธีการซื้อ และธนาคารผู้ให้สินเชื่อของแต่ละหน่วย",
+    "backToList": "กลับ",
+    "sold": "ขายแล้ว",
+    "available": "คงเหลือ",
+    "noSold": "ยังไม่มีหน่วยที่ขาย",
+    "noAvailable": "หน่วยทั้งหมดขายแล้ว",
+    "searchPlaceholder": "เลขที่บ้าน / แปลง / ห้อง / แบบ",
+    "dirty": "แก้ไขแล้ว",
+    "unsavedTitle": "ยังไม่ได้บันทึกการเปลี่ยนแปลง",
+    "unsavedConfirm": "หน้านี้มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก หากออกตอนนี้ข้อมูลจะหายไป",
+    "unsavedLeave": "ออกจากหน้านี้",
+    "unsavedStay": "อยู่ต่อ",
+    "dirtyCount_one": "แก้ไข {{count}} หน่วย",
+    "dirtyCount_other": "แก้ไข {{count}} หน่วย",
+    "filter": {
+      "all": "ทั้งหมด",
+      "sold": "ขายแล้ว",
+      "available": "คงเหลือ",
+      "soldLoan": "ขายแบบสินเชื่อ"
+    },
+    "bulk": {
+      "selectedCount_one": "เลือก {{count}} รายการ",
+      "selectedCount_other": "เลือก {{count}} รายการ",
+      "markCash": "ขายแล้ว (เงินสด)",
+      "markLoan": "ขายแล้ว (สินเชื่อ)",
+      "markAvailable": "ตั้งเป็นคงเหลือ",
+      "bankPlaceholder": "ธนาคารผู้ให้สินเชื่อ (ไม่บังคับ)",
+      "clear": "ยกเลิกการเลือก"
+    }
+  },
+  "units": {
+    "title": "หน่วย",
+    "empty": "ไม่พบหน่วยในโครงการนี้",
+    "saveChanges": "บันทึกการเปลี่ยนแปลง",
+    "saving": "กำลังบันทึก...",
+    "noChanges": "ไม่มีการเปลี่ยนแปลง",
+    "col": {
+      "seq": "#",
+      "modelType": "แบบ",
+      "location": "ตำแหน่ง",
+      "usableArea": "พื้นที่ (ตร.ม.)",
+      "sellingPrice": "ราคาขาย",
+      "isSold": "ขายแล้ว",
+      "purchaseBy": "วิธีซื้อ",
+      "loanBankName": "ธนาคารกู้"
+    },
+    "purchaseBy": {
+      "placeholder": "เลือก...",
+      "Cash": "เงินสด",
+      "Loan": "กู้สินเชื่อ"
+    }
+  },
+  "errors": {
+    "loadFailed": "โหลดข้อมูลโครงการไม่สำเร็จ",
+    "unitLoadFailed": "โหลดข้อมูลหน่วยไม่สำเร็จ",
+    "saveFailed": "บันทึกการเปลี่ยนแปลงไม่สำเร็จ",
+    "validation": {
+      "purchaseByRequired": "กรุณาเลือกวิธีการชำระเงินเมื่อหน่วยถูกขายแล้ว",
+      "loanBankRequired": "กรุณาระบุชื่อธนาคารเมื่อเลือกวิธีกู้สินเชื่อ"
+    }
+  },
+  "success": {
+    "saved": "อัปเดตสถานะการขายหน่วยสำเร็จ"
+  }
+}

@@ -335,7 +335,7 @@ export const AdminCompanyQuotationDetailContent = ({
               <span>·</span>
               <span>
                 <span className="font-medium text-gray-700">Cut-Off Date:</span>{' '}
-                {fmtDate(quotation.dueDate)}
+                {fmtDate(quotation.cutOffTime)}
               </span>
               <span>·</span>
               <span className="font-medium text-gray-700">{companyQuotation.companyName}</span>
@@ -356,7 +356,7 @@ export const AdminCompanyQuotationDetailContent = ({
           <span>·</span>
           <span>
             <span className="font-medium text-gray-700">Cut-Off Date:</span>{' '}
-            {fmtDate(quotation.dueDate)}
+            {fmtDate(quotation.cutOffTime)}
           </span>
           <span>·</span>
           <span className="font-medium text-gray-700">{companyQuotation.companyName}</span>

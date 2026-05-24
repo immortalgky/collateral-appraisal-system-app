@@ -1,3 +1,4 @@
+import { isCondo } from '../types';
 import type { ProjectUnitPrice, ProjectType } from '../types';
 
 /**
@@ -56,7 +57,7 @@ export const recomputeUnitPrice = (
   assumption: AssumptionInputs,
   projectType: ProjectType,
 ): ProjectUnitPrice =>
-  projectType === 'Condo' ? recomputeCondo(unit, assumption) : recomputeLB(unit, assumption);
+  isCondo(projectType) ? recomputeCondo(unit, assumption) : recomputeLB(unit, assumption);
 
 /**
  * Condo: ProjectUnitPrice.standardPrice is stored as the per-sq.m. rate

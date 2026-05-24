@@ -75,15 +75,15 @@ export interface GetQuotationsParams {
   pageSize?: number;
   status?: string;
   search?: string;
-  dueDateFrom?: string;
-  dueDateTo?: string;
+  cutOffTimeFrom?: string;
+  cutOffTimeTo?: string;
 }
 
 export interface QuotationListItem {
   id: string;
   quotationNumber: string;
   requestDate: string;
-  dueDate: string;
+  cutOffTime: string;
   status: string;
   requestedBy: string;
   totalAppraisals: number;
@@ -108,8 +108,8 @@ export const useGetQuotations = (params: GetQuotationsParams = {}) => {
     pageSize: params.pageSize ?? 10,
     ...(params.status && { status: params.status }),
     ...(params.search && { search: params.search }),
-    ...(params.dueDateFrom && { dueDateFrom: params.dueDateFrom }),
-    ...(params.dueDateTo && { dueDateTo: params.dueDateTo }),
+    ...(params.cutOffTimeFrom && { cutOffTimeFrom: params.cutOffTimeFrom }),
+    ...(params.cutOffTimeTo && { cutOffTimeTo: params.cutOffTimeTo }),
   });
 
   return useQuery({
@@ -121,8 +121,8 @@ export const useGetQuotations = (params: GetQuotationsParams = {}) => {
           PageSize: params.pageSize ?? 10,
           ...(params.status && { Status: params.status }),
           ...(params.search && { Search: params.search }),
-          ...(params.dueDateFrom && { DueDateFrom: params.dueDateFrom }),
-          ...(params.dueDateTo && { DueDateTo: params.dueDateTo }),
+          ...(params.cutOffTimeFrom && { CutOffTimeFrom: params.cutOffTimeFrom }),
+          ...(params.cutOffTimeTo && { CutOffTimeTo: params.cutOffTimeTo }),
         },
       });
       const result = data.quotations ?? data;
@@ -144,7 +144,7 @@ export interface MyInvitationDto {
   id: string;
   quotationNumber: string;
   requestDate: string;
-  dueDate: string;
+  cutOffTime: string;
   requestedBy: string;
   totalAppraisals: number;
   companyId: string;
@@ -168,8 +168,8 @@ export interface GetMyInvitationsParams {
   pageSize?: number;
   status?: string;
   search?: string;
-  dueDateFrom?: string;
-  dueDateTo?: string;
+  cutOffTimeFrom?: string;
+  cutOffTimeTo?: string;
 }
 
 /**
@@ -183,8 +183,8 @@ export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
     pageSize: params.pageSize ?? 10,
     ...(params.status && { status: params.status }),
     ...(params.search && { search: params.search }),
-    ...(params.dueDateFrom && { dueDateFrom: params.dueDateFrom }),
-    ...(params.dueDateTo && { dueDateTo: params.dueDateTo }),
+    ...(params.cutOffTimeFrom && { cutOffTimeFrom: params.cutOffTimeFrom }),
+    ...(params.cutOffTimeTo && { cutOffTimeTo: params.cutOffTimeTo }),
   });
 
   return useQuery({
@@ -196,8 +196,8 @@ export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
           PageSize: params.pageSize ?? 10,
           ...(params.status && { Status: params.status }),
           ...(params.search && { Search: params.search }),
-          ...(params.dueDateFrom && { DueDateFrom: params.dueDateFrom }),
-          ...(params.dueDateTo && { DueDateTo: params.dueDateTo }),
+          ...(params.cutOffTimeFrom && { CutOffTimeFrom: params.cutOffTimeFrom }),
+          ...(params.cutOffTimeTo && { CutOffTimeTo: params.cutOffTimeTo }),
         },
       });
       const result = data.invitations ?? data;
@@ -492,7 +492,7 @@ export interface CreateQuotationAppraisalInput {
 }
 
 export interface CreateQuotationBody {
-  dueDate: string; // ISO datetime string
+  cutOffTime: string; // ISO datetime string
   requestedBy: string;
   description?: string;
   specialRequirements?: string;

@@ -3,13 +3,11 @@ import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessu
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
+import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import type { NavItem } from '@shared/config/navigationTypes';
 import { SIDEBAR_COLLAPSED_WIDTH } from './sidebarConstants';
-import {
-  useAppraisalNavigation,
-  useNavigation,
-} from '@shared/hooks/useNavigation';
+import { useAppraisalNavigation, useNavigation } from '@shared/hooks/useNavigation';
 import {
   useAppraisalRequestId,
   useAppraisalIsPma,
@@ -25,24 +23,6 @@ type AppraisalSidebarProps = {
   loading?: boolean;
 };
 
-// Get background color class based on icon color
-const getIconBgClass = (iconColor: string | undefined) => {
-  if (!iconColor) return 'bg-gray-100';
-  const colorMap: Record<string, string> = {
-    'text-blue-500': 'bg-blue-50',
-    'text-purple-500': 'bg-purple-50',
-    'text-amber-500': 'bg-amber-50',
-    'text-cyan-500': 'bg-cyan-50',
-    'text-emerald-500': 'bg-emerald-50',
-    'text-teal-500': 'bg-teal-50',
-    'text-rose-500': 'bg-rose-50',
-    'text-orange-500': 'bg-orange-50',
-    'text-indigo-500': 'bg-indigo-50',
-    'text-sky-500': 'bg-sky-50',
-  };
-  return colorMap[iconColor] || 'bg-gray-100';
-};
-
 const SKELETON_LABEL_WIDTHS = ['w-28', 'w-20', 'w-32', 'w-24', 'w-16', 'w-28', 'w-20'];
 
 function SkeletonRow({ index, collapsed = false }: { index: number; collapsed?: boolean }) {
@@ -50,20 +30,14 @@ function SkeletonRow({ index, collapsed = false }: { index: number; collapsed?: 
   if (collapsed) {
     return (
       <div className="flex justify-center py-2 px-2.5">
-        <div
-          className="w-7 h-7 rounded-lg shimmer"
-          style={{ animationDelay: delay }}
-        />
+        <div className="w-7 h-7 rounded-lg shimmer" style={{ animationDelay: delay }} />
       </div>
     );
   }
   const labelWidth = SKELETON_LABEL_WIDTHS[index % SKELETON_LABEL_WIDTHS.length];
   return (
     <div className="flex items-center gap-2.5 py-2 px-2.5">
-      <div
-        className="w-7 h-7 rounded-lg shimmer shrink-0"
-        style={{ animationDelay: delay }}
-      />
+      <div className="w-7 h-7 rounded-lg shimmer shrink-0" style={{ animationDelay: delay }} />
       <div
         className={clsx('h-2.5 rounded-full shimmer', labelWidth)}
         style={{ animationDelay: delay }}
@@ -355,29 +329,26 @@ export default function AppraisalSidebar({
     };
   }, []);
 
-  const handleResizePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      e.currentTarget.setPointerCapture(e.pointerId);
-      setIsDragging(true);
-      document.body.style.userSelect = 'none';
-      const startX = e.clientX;
-      const startW = useUIStore.getState().sidebarWidth;
-      const move = (ev: PointerEvent) =>
-        useUIStore.getState().setSidebarWidth(startW + (ev.clientX - startX));
-      const up = () => {
-        setIsDragging(false);
-        document.body.style.userSelect = '';
-        if (dragRef.current.move) window.removeEventListener('pointermove', dragRef.current.move);
-        if (dragRef.current.up) window.removeEventListener('pointerup', dragRef.current.up);
-        dragRef.current = { move: null, up: null };
-      };
-      dragRef.current = { move, up };
-      window.addEventListener('pointermove', move);
-      window.addEventListener('pointerup', up);
-    },
-    [],
-  );
+  const handleResizePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    document.body.style.userSelect = 'none';
+    const startX = e.clientX;
+    const startW = useUIStore.getState().sidebarWidth;
+    const move = (ev: PointerEvent) =>
+      useUIStore.getState().setSidebarWidth(startW + (ev.clientX - startX));
+    const up = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+      if (dragRef.current.move) window.removeEventListener('pointermove', dragRef.current.move);
+      if (dragRef.current.up) window.removeEventListener('pointerup', dragRef.current.up);
+      dragRef.current = { move: null, up: null };
+    };
+    dragRef.current = { move, up };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }, []);
 
   const navContext = useMemo(
     () => ({ isPma, isBlock, blockProjectType, status, basePath, requestId }),
@@ -399,7 +370,10 @@ export default function AppraisalSidebar({
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
         <div
-          className={clsx('transition-all duration-300', sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4')}
+          className={clsx(
+            'transition-all duration-300',
+            sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4',
+          )}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
@@ -433,8 +407,8 @@ export default function AppraisalSidebar({
           )}
         >
           {/* GENERAL Section */}
-          {!hideGeneralNav && (
-            loading ? (
+          {!hideGeneralNav &&
+            (loading ? (
               <div className="mb-3 flex flex-col gap-0.5">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <SkeletonRow key={i} index={i} collapsed={sidebarCollapsed} />
@@ -447,8 +421,7 @@ export default function AppraisalSidebar({
                 initialVisibleCount={3}
                 collapsed={sidebarCollapsed}
               />
-            )
-          )}
+            ))}
 
           {/* APPLICATION Section */}
           <div

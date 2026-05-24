@@ -14,6 +14,7 @@ interface MarketSurveySelectionModalProps {
   comparativeSurveys: MarketComparableDetailType[];
   onSelect: (survey: MarketComparableDetailType[]) => void;
   onCancel: () => void;
+  readOnly?: boolean;
 }
 
 export const MarketSurveySelectionModal = ({
@@ -22,6 +23,7 @@ export const MarketSurveySelectionModal = ({
   comparativeSurveys,
   onSelect,
   onCancel,
+  readOnly,
 }: MarketSurveySelectionModalProps) => {
   const serverData = useContext(ServerDataCtx);
   const language = useLocaleStore(s => s.language);
@@ -116,8 +118,8 @@ export const MarketSurveySelectionModal = ({
             surveys={paginatedSurveys}
             factorColumns={factorColumns}
             selectedIds={selectedIds}
-            onToggle={handleToggle}
-            onToggleAll={handleToggleAll}
+            onToggle={readOnly ? () => {} : handleToggle}
+            onToggleAll={readOnly ? () => {} : handleToggleAll}
             allFactors={serverData?.allFactors ?? []}
             language={language}
           />
@@ -142,22 +144,26 @@ export const MarketSurveySelectionModal = ({
           <Button variant="ghost" type="button" onClick={handleCancel}>
             Cancel
           </Button>
-          <Button variant="ghost" type="button" onClick={handleClear}>
-            Clear
-          </Button>
+          {!readOnly && (
+            <Button variant="ghost" type="button" onClick={handleClear}>
+              Clear
+            </Button>
+          )}
         </div>
         <div className="flex gap-2 items-center">
-          {belowMinimumSelection && (
+          {!readOnly && belowMinimumSelection && (
             <span className="text-danger">Select at least {minimunSelection} surveys</span>
           )}
-          <Button
-            variant="primary"
-            type="button"
-            onClick={handleSave}
-            disabled={belowMinimumSelection}
-          >
-            Add ({selectedIds.size})
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="primary"
+              type="button"
+              onClick={handleSave}
+              disabled={belowMinimumSelection}
+            >
+              Add ({selectedIds.size})
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

@@ -52,8 +52,8 @@ const ExtCompanyInvitationListPage = () => {
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [dueDateFrom, setDueDateFrom] = useState<string | null>(null);
-  const [dueDateTo, setDueDateTo] = useState<string | null>(null);
+  const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
+  const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
 
   // Debounced search
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -67,15 +67,15 @@ const ExtCompanyInvitationListPage = () => {
 
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, statusFilter, dueDateFrom, dueDateTo]);
+  }, [debouncedSearch, statusFilter, cutOffTimeFrom, cutOffTimeTo]);
 
   const { data, isLoading, isFetching, isError, error } = useGetMyInvitations({
     pageNumber,
     pageSize,
     search: debouncedSearch || undefined,
     status: statusFilter || undefined,
-    dueDateFrom: toDateOnly(dueDateFrom),
-    dueDateTo: toDateOnly(dueDateTo),
+    cutOffTimeFrom: toDateOnly(cutOffTimeFrom),
+    cutOffTimeTo: toDateOnly(cutOffTimeTo),
   });
 
   const items = data?.items ?? [];
@@ -85,13 +85,13 @@ const ExtCompanyInvitationListPage = () => {
   const isFirstLoad = isLoading && items.length === 0;
   const isRefetching = isFetching && !isFirstLoad;
 
-  const hasFilters = searchTerm || statusFilter || dueDateFrom || dueDateTo;
+  const hasFilters = searchTerm || statusFilter || cutOffTimeFrom || cutOffTimeTo;
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
-    setDueDateFrom(null);
-    setDueDateTo(null);
+    setCutOffTimeFrom(null);
+    setCutOffTimeTo(null);
   };
 
   if (isError) {
@@ -151,8 +151,8 @@ const ExtCompanyInvitationListPage = () => {
         <div className="w-40">
           <DateInput
             label="Cut Off From"
-            value={dueDateFrom}
-            onChange={setDueDateFrom}
+            value={cutOffTimeFrom}
+            onChange={setCutOffTimeFrom}
             placeholder="dd/mm/yyyy"
           />
         </div>
@@ -161,8 +161,8 @@ const ExtCompanyInvitationListPage = () => {
         <div className="w-40">
           <DateInput
             label="Cut Off To"
-            value={dueDateTo}
-            onChange={setDueDateTo}
+            value={cutOffTimeTo}
+            onChange={setCutOffTimeTo}
             placeholder="dd/mm/yyyy"
           />
         </div>
@@ -257,7 +257,7 @@ const ExtCompanyInvitationListPage = () => {
                       {formatLocaleDateTime(item.receivedAt, i18n.language)}
                     </td>
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
-                      {formatLocaleDateTime(item.dueDate, i18n.language)}
+                      {formatLocaleDateTime(item.cutOffTime, i18n.language)}
                     </td>
                     <td className="px-4 py-2.5 text-gray-600">{item.quotedBy ?? '—'}</td>
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">

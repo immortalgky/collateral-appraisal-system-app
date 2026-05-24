@@ -12,6 +12,7 @@ import type {
   LocaleStore,
   ParameterStore,
   StoredParameters,
+  Theme,
   UIStore,
 } from './types';
 import {
@@ -35,22 +36,31 @@ export const useUIStore = create<UIStore>()(
       resetSidebarWidth: () => set({ sidebarWidth: SIDEBAR_DEFAULT_WIDTH }),
       searchQuery: '',
       setSearchQuery: (query: string) => set({ searchQuery: query }),
+      theme: 'light',
+      setTheme: (theme: Theme) => set({ theme }),
+      toggleTheme: () => set(state => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
     }),
     {
       name: 'cas-ui-store',
       partialize: state => ({
         sidebarCollapsed: state.sidebarCollapsed,
         sidebarWidth: state.sidebarWidth,
+        theme: state.theme,
       }),
       merge: (persisted, current) => {
-        const p = (persisted ?? {}) as Partial<{ sidebarWidth: unknown; sidebarCollapsed: unknown }>;
+        const p = (persisted ?? {}) as Partial<{
+          sidebarWidth: unknown;
+          sidebarCollapsed: unknown;
+          theme: unknown;
+        }>;
         const rawW = p.sidebarWidth;
         const w =
           typeof rawW === 'number' && Number.isFinite(rawW)
             ? Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, rawW))
             : SIDEBAR_DEFAULT_WIDTH;
         const collapsed = typeof p.sidebarCollapsed === 'boolean' ? p.sidebarCollapsed : false;
-        return { ...current, sidebarWidth: w, sidebarCollapsed: collapsed };
+        const theme: Theme = p.theme === 'light' || p.theme === 'dark' ? p.theme : 'light';
+        return { ...current, sidebarWidth: w, sidebarCollapsed: collapsed, theme };
       },
     },
   ),

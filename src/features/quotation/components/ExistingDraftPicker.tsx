@@ -77,7 +77,7 @@ const ExistingDraftPicker = ({
                 Companies
               </th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Due Date
+                Cut Off Time
               </th>
             </tr>
           </thead>
@@ -146,7 +146,7 @@ const ExistingDraftPicker = ({
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-sm text-gray-600">
-                      {draft.dueDate ? formatDate(draft.dueDate) : '—'}
+                      {draft.cutOffTime ? formatDate(draft.cutOffTime) : '—'}
                     </span>
                   </td>
                 </tr>

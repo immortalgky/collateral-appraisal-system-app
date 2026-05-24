@@ -1,0 +1,209 @@
+{
+  "nav": {
+    "title": "History Search"
+  },
+  "page": {
+    "title": "History Search (Pin)",
+    "description": "Search for nearby appraisals and market comparables on the map"
+  },
+  "searchPanel": {
+    "title": "Search Criteria",
+    "centerLat": "Latitude",
+    "centerLon": "Longitude",
+    "centerLatPlaceholder": "e.g. 13.7563",
+    "centerLonPlaceholder": "e.g. 100.5018",
+    "radiusKm": "Radius (km)",
+    "period": "Period",
+    "periodOptions": {
+      "Past3y": "Past 3 Years",
+      "Past2y": "Past 2 Years",
+      "Past1y": "Past 1 Year",
+      "Current": "Current Year"
+    },
+    "filters": "Additional Filters",
+    "collateralOnlyFilters": "Collateral Filters",
+    "addressFilters": "Address Filters",
+    "bothPinFilters": "All Filters",
+    "appraisalReportNo": "Appraisal Report No.",
+    "titleDeedNo": "Title Deed No.",
+    "collateralType": "Collateral Type",
+    "collateralTypeOptions": {
+      "all": "All",
+      "land": "Land",
+      "landAndBuilding": "Land and Building",
+      "condo": "Condo",
+      "leasehold": "Leasehold",
+      "machine": "Machine"
+    },
+    "buildingType": "Building Type",
+    "buildingTypePlaceholder": "All Types",
+    "customerName": "Customer Name",
+    "landAreaFromSqWa": "Land Area From (Sq.Wa)",
+    "landAreaToSqWa": "Land Area To (Sq.Wa)",
+    "subDistrict": "Sub-district",
+    "district": "District",
+    "province": "Province",
+    "valueFrom": "Value From",
+    "valueTo": "Value To",
+    "dateFrom": "Date From",
+    "dateTo": "Date To",
+    "search": "Search",
+    "clear": "Clear",
+    "clickMapHint": "Click on the map to set the center point",
+    "groupAppraisalId": "Appraisal Request & Identification",
+    "groupAppraisalDate": "Appraisal Date & Time",
+    "groupLocation": "Location Information",
+    "oldAppraisalReportNo": "Old Appraisal Report No.",
+    "oldAppraisalReportNoPlaceholder": "Not yet supported",
+    "oldAppraisalReportNoComingSoon": "Coming soon"
+  },
+  "pinFilter": {
+    "title": "Map Pin",
+    "collateralExisting": "Collateral (existing)",
+    "mcExisting": "Market Comparable (existing)",
+    "collateralAppraising": "Collateral (appraising)",
+    "mcAppraising": "Market Comparable (appraising)",
+    "supportingData": "Supporting Data",
+    "comingSoon": "Coming soon"
+  },
+  "resultsList": {
+    "title": "Results",
+    "close": "Close results",
+    "tabs": {
+      "collateral": "Collateral",
+      "marketComparable": "Market Comparable"
+    },
+    "totalCount": "{{count}} result(s)",
+    "distanceKm": "{{distance}} km",
+    "empty": "No results in this area. Try a wider radius or different filters.",
+    "loadError": "Failed to load results.",
+    "retry": "Retry",
+    "pagination": "Page {{page}} of {{total}}",
+    "columns": {
+      "appraisalReportNo": "Appraisal Report No.",
+      "appraisalDate": "Appraisal Date",
+      "latitude": "Latitude",
+      "longitude": "Longitude"
+    }
+  },
+  "pinDetail": {
+    "title": "Pin Detail",
+    "close": "Close",
+    "collateral": {
+      "title": "Collateral Detail",
+      "collateralType": "Collateral Type",
+      "propertyType": "Property Type",
+      "engagementCount": "Appraisal Count",
+      "lastAppraisedDate": "Last Appraised",
+      "lastAppraisedValue": "Last Value (THB)",
+      "location": "Location",
+      "distance": "Distance"
+    },
+    "marketComparable": {
+      "title": "Market Comparable Detail",
+      "surveyName": "Survey Name",
+      "propertyType": "Property Type",
+      "infoDateTime": "Survey Date",
+      "offerPrice": "Offer Price (THB)",
+      "salePrice": "Sale Price (THB)",
+      "distance": "Distance",
+      "viewComparison": "Comparison Table",
+      "factors": "Survey Factors"
+    }
+  },
+  "comparisonTable": {
+    "title": "Comparison Table",
+    "close": "Close",
+    "surveyName": "Survey Name",
+    "propertyType": "Property Type",
+    "infoDateTime": "Survey Date",
+    "offerPrice": "Offer Price",
+    "salePrice": "Sale Price",
+    "distanceKm": "Distance (km)",
+    "todoMultiSelect": "Multi-select comparison coming in a future release."
+  },
+  "map": {
+    "noApiKey": "Google Maps API key is not configured.",
+    "loading": "Loading map..."
+  },
+  "locationPicker": {
+    "title": "Pick Location",
+    "searchPlaceholder": "Search for a place...",
+    "clickHint": "Click on the map or search to select a location.",
+    "selected": "Selected: {{lat}}, {{lon}}",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "buttonLabel": "Pick on map"
+  },
+  "engagementList": {
+    "title": "Appraisal History",
+    "appraisalCount": "{{count}} appraisal(s)",
+    "totalCount": "{{count}} record(s)",
+    "empty": "No appraisal records found for this collateral.",
+    "columns": {
+      "appraisalNumber": "Appraisal Report No.",
+      "appraisalDate": "Appraisal Date",
+      "customerName": "Customer Name",
+      "collateralType": "Collateral Type",
+      "buildingType": "Building Type",
+      "appraisalValue": "Appraisal Value (THB)"
+    }
+  },
+  "collateralDetail": {
+    "drawerTitle": "Collateral Detail",
+    "backToSearch": "Back to Search Result",
+    "totalRounds": "Total assessment round : {{count}}",
+    "selectRoundLabel": "Select Assessment",
+    "roundOptionSuffix": "Assessment",
+    "linkToReport": "Link to appraisal report",
+    "tabSummary": "Summary",
+    "tabProperties": "Properties",
+    "collateralType": "Collateral Type",
+    "identity": {
+      "landOfficeCode": "Land Office Code",
+      "titleType": "Title Type",
+      "titleNumber": "Title Number",
+      "parcelNumber": "Parcel No.",
+      "surveyNumber": "Survey No.",
+      "subDistrict": "Sub-District",
+      "district": "District",
+      "province": "Province",
+      "landArea": "Land Area (Sq.Wa)",
+      "street": "Street",
+      "village": "Village",
+      "otherTitles": "Other Titles",
+      "condoRegistrationNumber": "Condo Registration No.",
+      "building": "Building",
+      "floor": "Floor",
+      "unit": "Unit",
+      "condoName": "Condo Name",
+      "usableArea": "Usable Area (Sq.m.)",
+      "model": "Model",
+      "leaseRegistrationNo": "Lease Registration No.",
+      "lessor": "Lessor",
+      "lessee": "Lessee",
+      "leaseTermStart": "Lease Term Start",
+      "leaseTermEnd": "Lease Term End",
+      "underlyingMaster": "Underlying Collateral",
+      "machineRegistrationNo": "Registration No.",
+      "serialNo": "Serial No.",
+      "brand": "Brand",
+      "manufacturer": "Manufacturer"
+    }
+  },
+  "propertyListing": {
+    "empty": "No properties found for this collateral.",
+    "groupHeading": "Group {{number}}: {{count}} item(s)",
+    "groupEmpty": "No properties in this group.",
+    "columns": {
+      "name": "Property Name",
+      "collateralType": "Collateral Type",
+      "area": "Area",
+      "latLon": "Lat, Lon"
+    }
+  },
+  "common": {
+    "na": "N/A",
+    "unknown": "Unknown"
+  }
+}

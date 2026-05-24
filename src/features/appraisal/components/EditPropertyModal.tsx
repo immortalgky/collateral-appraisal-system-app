@@ -22,6 +22,7 @@ interface EditPropertyModalProps {
   onClose: () => void;
   onSubmit: (data: EditPropertyFormData) => void;
   property: PropertyItem | null;
+  readOnly?: boolean;
 }
 
 export const EditPropertyModal = ({
@@ -29,6 +30,7 @@ export const EditPropertyModal = ({
   onClose,
   onSubmit,
   property,
+  readOnly = false,
 }: EditPropertyModalProps) => {
   const [imagePreview, setImagePreview] = useState<string>('');
 
@@ -81,7 +83,8 @@ export const EditPropertyModal = ({
           </label>
           <select
             {...register('type')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={readOnly}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
           >
             {Object.entries(PropertyType).map(([key, value]) => (
               <option key={key} value={value}>
@@ -102,7 +105,8 @@ export const EditPropertyModal = ({
           <input
             type="text"
             {...register('address')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={readOnly}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             placeholder="Enter property address"
           />
           {errors.address && (
@@ -118,7 +122,8 @@ export const EditPropertyModal = ({
           <input
             type="text"
             {...register('area')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={readOnly}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             placeholder="e.g., 2-1-56 Rai"
           />
           {errors.area && (
@@ -134,7 +139,8 @@ export const EditPropertyModal = ({
           <input
             type="text"
             {...register('priceRange')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={readOnly}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             placeholder="e.g., 38.0525 - 97.7786"
           />
           {errors.priceRange && (
@@ -150,7 +156,8 @@ export const EditPropertyModal = ({
           <input
             type="text"
             {...register('location')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={readOnly}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
             placeholder="e.g., Nongbon, Prawet, Bangkok 10250"
           />
           {errors.location && (
@@ -167,7 +174,8 @@ export const EditPropertyModal = ({
             type="file"
             accept="image/*"
             onChange={handleImageChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={readOnly}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           />
           {imagePreview && (
             <div className="mt-2">
@@ -185,9 +193,11 @@ export const EditPropertyModal = ({
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary">
-            Save Changes
-          </Button>
+          {!readOnly && (
+            <Button type="submit" variant="primary">
+              Save Changes
+            </Button>
+          )}
         </div>
       </form>
     </Modal>

@@ -6,14 +6,9 @@ import Icon from '@/shared/components/Icon';
 import { TextInput, DateInput } from '@/shared/components/inputs';
 import type { TaskDateType, TaskFilterParams } from '../types';
 import { ACTIVITY_IDS, getActivityConfig } from '../config/activityConfig';
+import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 
-const REQUEST_STATUS_OPTIONS = [
-  { value: 'Pending', label: 'Pending' },
-  { value: 'InProgress', label: 'In Progress' },
-  { value: 'UnderReview', label: 'Under Review' },
-  { value: 'Completed', label: 'Completed' },
-  { value: 'Cancelled', label: 'Cancelled' },
-];
+const REQUEST_STATUS_OPTIONS = APPRAISAL_STATUS_FILTER_OPTIONS;
 
 const TASK_TYPE_OPTIONS = ACTIVITY_IDS.map(id => ({
   value: id,

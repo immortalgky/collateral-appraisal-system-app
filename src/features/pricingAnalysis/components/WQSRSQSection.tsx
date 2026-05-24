@@ -18,9 +18,10 @@ import type { MarketComparableDetailType } from '../schemas';
 
 interface WQSRSQSectionProps {
   comparativeSurveys: MarketComparableDetailType[];
+  readOnly?: boolean;
 }
 
-export function WQSRSQSection({ comparativeSurveys }: WQSRSQSectionProps) {
+export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly }: WQSRSQSectionProps) {
   const [isOpen, setIsOpen] = useState(true);
   const { control } = useFormContext();
 

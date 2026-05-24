@@ -88,6 +88,10 @@ import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
+import MonitoringPage from '@/features/common/monitoring/pages/MonitoringPage';
+import HistorySearchPage from '@/features/common/historySearch/pages/HistorySearchPage';
+import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage';
+import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -205,6 +209,16 @@ export const router = createBrowserRouter([
       {
         path: 'task-monitor/:username',
         element: <PersonTasksPage />,
+      },
+      // Monitoring — FSD §2.6.8 tabbed overview (single route, tab driven by ?tab= query param)
+      {
+        path: 'monitoring',
+        element: <MonitoringPage />,
+      },
+      // History Search (Pin) — FSD §2.6.7 geo-filtered appraisal + MC map view
+      {
+        path: 'standalone/history-search',
+        element: <HistorySearchPage />,
       },
       // Meeting Routes (tier-3 approval gate)
       {
@@ -375,6 +389,15 @@ export const router = createBrowserRouter([
           { path: 'bulk-payment', element: <IntBulkPaymentPage /> },
           { path: ':id', element: <IntInvoiceDetailPage /> },
         ],
+      },
+      // ─── Block Unit Maintenance ─────────────────────────────────────────────
+      {
+        path: 'standalone/block-unit-maintenance',
+        element: <BlockUnitMaintenancePage />,
+      },
+      {
+        path: 'standalone/block-unit-maintenance/:projectId',
+        element: <BlockUnitMaintenanceDetailPage />,
       },
       // ─── Service Quality Evaluation Routes ──────────────────────────────────
       {
@@ -667,7 +690,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockProjectPage projectType="Condo" />
+                <BlockProjectPage projectType="U" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -675,7 +698,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="Condo" />
+                <ModelDetailPage projectType="U" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -683,7 +706,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="Condo" />
+                <ModelDetailPage projectType="U" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -760,7 +783,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockProjectPage projectType="LandAndBuilding" />
+                <BlockProjectPage projectType="LB" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -768,7 +791,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="LandAndBuilding" />
+                <ModelDetailPage projectType="LB" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -776,7 +799,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="LandAndBuilding" />
+                <ModelDetailPage projectType="LB" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1153,7 +1176,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockProjectPage projectType="Condo" />
+                <BlockProjectPage projectType="U" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1161,7 +1184,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="Condo" />
+                <ModelDetailPage projectType="U" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1169,7 +1192,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="Condo" />
+                <ModelDetailPage projectType="U" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1246,7 +1269,7 @@ export const router = createBrowserRouter([
             index: true,
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <BlockProjectPage projectType="LandAndBuilding" />
+                <BlockProjectPage projectType="LB" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1254,7 +1277,7 @@ export const router = createBrowserRouter([
             path: 'model/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="LandAndBuilding" />
+                <ModelDetailPage projectType="LB" />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1262,7 +1285,7 @@ export const router = createBrowserRouter([
             path: 'model/:modelId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <ModelDetailPage projectType="LandAndBuilding" />
+                <ModelDetailPage projectType="LB" />
               </AppraisalReadOnlyWrapper>
             ),
           },

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import Button from '@shared/components/Button';
 import { CancelButton } from '@shared/components/buttons';
+import DataErrorState from '@shared/components/DataErrorState';
 import ActionBar from '@shared/components/ActionBar';
 import Icon from '@shared/components/Icon';
 import { Textarea } from '@shared/components/inputs';
@@ -84,9 +85,9 @@ function ServiceQualityEvaluationDetailPage() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const { i18n, t } = useTranslation('serviceQualityEvaluation');
 
-  const { data: appraisal, isLoading: appraisalLoading } = useGetAppraisalById(appraisalId);
-  const { data: header, isLoading: headerLoading } = useGetEvaluationHeader(appraisalId ?? '');
-  const { data: evaluation, isLoading: evalLoading } = useGetEvaluationByAppraisal(
+  const { data: appraisal, isLoading: appraisalLoading, isError: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
+  const { data: header, isLoading: headerLoading, isError: headerError, refetch: refetchHeader } = useGetEvaluationHeader(appraisalId ?? '');
+  const { data: evaluation, isLoading: evalLoading, isError: evalError, refetch: refetchEval } = useGetEvaluationByAppraisal(
     appraisalId ?? '',
   );
 
@@ -246,6 +247,15 @@ function ServiceQualityEvaluationDetailPage() {
         <Icon style="solid" name="spinner" className="size-8 text-primary animate-spin" />
       </div>
     );
+  }
+
+  if (appraisalError || headerError || evalError) {
+    const handleRetry = () => {
+      if (appraisalError) refetchAppraisal();
+      if (headerError) refetchHeader();
+      if (evalError) refetchEval();
+    };
+    return <DataErrorState title="Failed to load evaluation" onRetry={handleRetry} />;
   }
 
   const appraisalNumber = evaluation?.appraisalNumber ?? appraisal?.appraisalNumber ?? appraisalId;

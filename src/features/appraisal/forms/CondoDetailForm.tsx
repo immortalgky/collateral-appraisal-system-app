@@ -1,7 +1,9 @@
-import { FormFields } from '@/shared/components/form';
+import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
 import CondoAreaDetailForm from './CondoAreaDetailForm';
+import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import {
   condoFields,
   condoLocationFields,
@@ -56,15 +58,55 @@ const Card = ({ children }: { children: ReactNode }) => (
 );
 
 function CondoDetailForm() {
+  const { setValue, watch } = useFormContext();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const lat = watch('latitude');
+  const lon = watch('longitude');
+  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
+  const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
+
+  const pickerButton = useMemo(
+    () => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />,
+    [],
+  );
+
+  const fields = useMemo<FormField[]>(
+    () =>
+      condoFields.map(field =>
+        (field.name === 'latitude' || field.name === 'longitude') && field.type === 'number-input'
+          ? { ...field, rightIcon: pickerButton }
+          : field,
+      ),
+    [pickerButton],
+  );
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
       <SectionRow title="Condominium Information" icon="building">
-        <FormFields fields={condoFields} />
+        {/* FormFields must remain a DIRECT child of the SectionRow grid so each
+            field's wrapperClassName (col-span-3, col-span-6, etc.) resolves
+            against the section's 12-col grid. The Latitude field's rightIcon
+            opens the MapLocationPicker — no separate button needed. */}
+        <FormFields fields={fields} />
       </SectionRow>
 
       <SectionRow title="Condominium Location" icon="map-location-dot">
         <FormFields fields={condoLocationFields} />
       </SectionRow>
+
+      <MapLocationPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(newLat, newLon) => {
+          setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+          setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+        }}
+        initialLat={initialLat}
+        initialLon={initialLon}
+      />
 
       <SectionRow title="Decoration & Structure" icon="paint-roller">
         <Card>

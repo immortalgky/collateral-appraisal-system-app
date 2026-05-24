@@ -421,16 +421,16 @@ function TaskLayout() {
     const is403 = status === 403;
 
     body = (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-base-200">
         <Icon
           style="solid"
           name={is403 ? 'lock' : 'circle-exclamation'}
           className={`size-16 ${is403 ? 'text-amber-500' : 'text-red-500'}`}
         />
-        <h2 className="mt-4 text-xl font-semibold text-gray-900">
+        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-base-content">
           {is403 ? 'Access Denied' : 'Task Not Found'}
         </h2>
-        <p className="mt-2 text-gray-500 text-center max-w-md">
+        <p className="mt-2 text-gray-500 dark:text-gray-400 text-center max-w-md">
           {is403
             ? 'This task is not assigned to you. You do not have permission to view or work on this task.'
             : 'The task you are looking for does not exist or has already been completed.'}
@@ -443,10 +443,10 @@ function TaskLayout() {
     );
   } else if (appraisalId && isAppraisalError) {
     body = (
-      <div className="h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-base-200">
         <Icon style="solid" name="triangle-exclamation" className="size-16 text-red-500" />
-        <h2 className="mt-4 text-xl font-semibold text-gray-900">Failed to load appraisal</h2>
-        <p className="mt-2 text-gray-500">
+        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-base-content">Failed to load appraisal</h2>
+        <p className="mt-2 text-gray-500 dark:text-gray-400">
           {(appraisalError as Error)?.message || 'Unknown error'}
         </p>
         <Button className="mt-4" onClick={() => window.location.reload()}>
@@ -527,17 +527,17 @@ function TaskLayout() {
 
             {isRightMenuOpen ? (
               <aside
-                className="hidden lg:flex w-72 shrink-0 border-l border-gray-100 bg-white flex-col overflow-hidden"
+                className="hidden lg:flex w-72 shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden"
                 style={{ height: '100%' }}
               >
                 <AppraisalRightMenu onClose={toggleRightMenu} />
               </aside>
             ) : (
-              <div className="hidden lg:flex shrink-0 border-l border-gray-100 bg-white">
+              <div className="hidden lg:flex shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
                 <button
                   type="button"
                   onClick={toggleRightMenu}
-                  className="w-10 h-full flex items-start justify-center pt-4 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                  className="w-10 h-full flex items-start justify-center pt-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors"
                   title="Show application details"
                 >
                   <Icon style="solid" name="chevron-left" className="size-4" />

@@ -1,13 +1,19 @@
 @import "tailwindcss";
 @import "./styles/theme.css" layer(theme);
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 @plugin "daisyui" {
-    themes: main --default;
+    themes: main --default, dark;
 }
 @plugin "daisyui/theme" {
     name: "main";
     default: true;
     prefersdark: false;
     color-scheme: light;
+}
+@plugin "daisyui/theme" {
+    name: "dark";
+    prefersdark: false;
+    color-scheme: dark;
 }
 
 /* Workflow edge dash animation */
@@ -25,9 +31,9 @@
 .shimmer {
     background: linear-gradient(
         90deg,
-        rgb(243 244 246) 0%,
-        rgb(229 231 235) 50%,
-        rgb(243 244 246) 100%
+        var(--color-base-200, rgb(243 244 246)) 0%,
+        var(--color-base-300, rgb(229 231 235)) 50%,
+        var(--color-base-200, rgb(243 244 246)) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 1.6s ease-in-out infinite;
@@ -107,17 +113,4 @@ button:focus-visible {
     transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-@media (prefers-color-scheme: light) {
-    :root {
-        color: #213547;
-        background-color: #ffffff;
-    }
-
-    a:hover {
-        color: #747bff;
-    }
-
-    /*button {
-        background-color: #f9f9f9;
-    }*/
-}
+/* Color driven by data-theme, not OS preference — OS media query removed */

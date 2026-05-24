@@ -74,10 +74,12 @@ export const useChangeProjectType = () => {
 
 /**
  * Save (upsert) the project for an appraisal.
- * PUT /appraisals/{appraisalId}/project
  *
- * Invalidates everything under ['appraisal', appraisalId, 'project'] so that
- * towers, models, units etc. are re-fetched if the project type changed.
+ * - Final save:  PUT /appraisals/{appraisalId}/project        (strict validation)
+ * - Draft save:  PUT /appraisals/{appraisalId}/project/draft  (lenient validation)
+ *
+ * Pass `isDraft: true` to target the draft endpoint.
+ * Invalidates everything under ['appraisal', appraisalId, 'project'] on success.
  */
 export const useSaveProject = () => {
   const queryClient = useQueryClient();
@@ -86,11 +88,12 @@ export const useSaveProject = () => {
     mutationFn: async (params: {
       appraisalId: string;
       data: SaveProjectRequest;
+      isDraft?: boolean;
     }): Promise<{ id: string }> => {
-      const { data } = await axios.put(
-        `/appraisals/${params.appraisalId}/project`,
-        params.data,
-      );
+      const url = params.isDraft
+        ? `/appraisals/${params.appraisalId}/project/draft`
+        : `/appraisals/${params.appraisalId}/project`;
+      const { data } = await axios.put(url, params.data);
       return data;
     },
     onSuccess: (_, variables) => {

@@ -561,7 +561,7 @@ const ExtCompanySubmitQuotationPage = () => {
   // ─── Derived flags ────────────────────────────────────────────────────────
   const isDeclined = mySubmission?.status === 'Declined';
   const isSubmitted = mySubmission?.status === 'Submitted';
-  const isPastDue = quotation ? new Date(quotation.dueDate) < new Date() : false;
+  const isPastDue = quotation ? new Date(quotation.cutOffTime) < new Date() : false;
 
   // canEdit is now the single source of truth supplied by the backend.
   // The BE sets it true only when this user holds the currently-pending workflow
@@ -679,7 +679,7 @@ const ExtCompanySubmitQuotationPage = () => {
             <span>·</span>
             <span>
               <span className="font-medium text-gray-700">Cut-Off Date:</span>{' '}
-              {formatCutoff(quotation.dueDate)}
+              {formatCutoff(quotation.cutOffTime)}
             </span>
           </div>
         </div>

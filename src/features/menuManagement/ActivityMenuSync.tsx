@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { fetchMyMenu } from './api/menus';
 import { useMenuStore } from './store';
 
@@ -29,9 +30,9 @@ export function ActivityMenuSync({ activityId }: { activityId: string | undefine
       .then(({ appraisal }) => {
         if (!cancelled) setAppraisalTree(appraisal, next);
       })
-      .catch(() => {
-        // Silent: keep the previous tree. MenuInitializer's toast handles the
-        // broader "can't load menu" case; here we just skip the activity overlay.
+      .catch((err) => {
+        toast.error('Failed to sync menu');
+        console.error('ActivityMenuSync error:', err);
       });
 
     return () => {

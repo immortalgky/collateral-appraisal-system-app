@@ -35,9 +35,10 @@ const BOUNDARY_ROWS: BoundaryRowConfig[] = [
 
 interface AdjacentAreaCellProps {
   name: string;
+  readOnly?: boolean;
 }
 
-const AdjacentAreaCell = ({ name }: AdjacentAreaCellProps) => {
+const AdjacentAreaCell = ({ name, readOnly }: AdjacentAreaCellProps) => {
   const { control } = useFormContext();
   const {
     field,
@@ -50,15 +51,17 @@ const AdjacentAreaCell = ({ name }: AdjacentAreaCellProps) => {
       value={field.value ?? ''}
       maxLength={200}
       error={error?.message}
+      disabled={readOnly}
     />
   );
 };
 
 interface BoundaryLengthCellProps {
   name: string;
+  readOnly?: boolean;
 }
 
-const BoundaryLengthCell = ({ name }: BoundaryLengthCellProps) => {
+const BoundaryLengthCell = ({ name, readOnly }: BoundaryLengthCellProps) => {
   const { control } = useFormContext();
   const {
     field,
@@ -74,19 +77,23 @@ const BoundaryLengthCell = ({ name }: BoundaryLengthCellProps) => {
       error={error?.message}
       maxIntegerDigits={5}
       decimalPlaces={2}
+      disabled={readOnly}
     />
   );
 };
+
+interface BoundaryFieldsProps {
+  readOnly?: boolean;
+}
 
 /**
  * BoundaryFields renders a compact table-style card for North/South/East/West
  * boundary data — adjacent area (text) and boundary length (number) per direction.
  *
  * Must be rendered inside a react-hook-form <FormProvider>.
- * Reads readOnly state from FormReadOnlyContext.
- * Takes no props.
+ * Pass readOnly={true} to disable all inputs (used outside the appraisal route tree).
  */
-const BoundaryFields = () => {
+const BoundaryFields = ({ readOnly }: BoundaryFieldsProps) => {
   return (
     <div className="col-span-12">
       <div className="rounded-lg border border-gray-200 overflow-hidden">
@@ -115,10 +122,10 @@ const BoundaryFields = () => {
               {direction}
             </div>
             <div className="px-2 py-2">
-              <AdjacentAreaCell name={adjacentAreaField} />
+              <AdjacentAreaCell name={adjacentAreaField} readOnly={readOnly} />
             </div>
             <div className="px-2 py-2">
-              <BoundaryLengthCell name={boundaryLengthField} />
+              <BoundaryLengthCell name={boundaryLengthField} readOnly={readOnly} />
             </div>
           </div>
         ))}

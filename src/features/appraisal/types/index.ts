@@ -4,6 +4,7 @@ export const PropertyType = {
   LAND_AND_BUILDING: 'Land and building',
   LANDS: 'Lands',
   LEASE_AGREEMENT_BUILDING: 'Lease Agreement Building',
+  LEASE_AGREEMENT_CONDO: 'Lease Agreement Condo',
   LEASE_AGREEMENT_LAND_AND_BUILDING: 'Lease Agreement Land and building',
   LEASE_AGREEMENT_LANDS: 'Lease Agreement Lands',
   MACHINE: 'Machine',

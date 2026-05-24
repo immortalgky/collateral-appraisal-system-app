@@ -48,7 +48,7 @@ type DocSelections = Record<string, Record<string, SharedDocumentSelectionDto['l
  * Enhancement #5: removals of existing rows are marked (not deleted) until Save.
  */
 const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotationModalProps) => {
-  const [dueDate, setDueDate] = useState<string | null>(null);
+  const [cutOffTime, setCutOffTime] = useState<string | null>(null);
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [docSelections, setDocSelections] = useState<DocSelections>({});
@@ -107,7 +107,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!isOpen) return;
-    setDueDate(quotation.dueDate ?? null);
+    setCutOffTime(quotation.cutOffTime ?? null);
     setSelectedCompanies(
       (quotation.invitedCompanies ?? []).map(c => ({
         id: c.companyId,
@@ -233,8 +233,8 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
   };
 
   const handleSave = async () => {
-    if (!dueDate) {
-      toast.error('Due date is required');
+    if (!cutOffTime) {
+      toast.error('Cut off time is required');
       return;
     }
     if (selectedCompanies.length === 0) {
@@ -287,7 +287,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
     try {
       await editDraftAsync({
-        dueDate,
+        cutOffTime,
         companyIds: selectedCompanies.map(c => c.id),
         appraisals: appraisalEntries,
       });
@@ -308,14 +308,14 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
     <>
     <Modal isOpen={isOpen} onClose={onClose} title="Edit Draft Quotation" size="3xl">
       <div className="flex flex-col gap-5">
-        {/* Due Date */}
+        {/* Cut Off Time */}
         <DateTimePickerInput
-          label="Cutoff (Due Date)"
+          label="Cut Off Time"
           required
           helperText="Deadline for companies to submit their quotation responses"
           disablePastDates
-          value={dueDate}
-          onChange={v => setDueDate(v)}
+          value={cutOffTime}
+          onChange={v => setCutOffTime(v)}
         />
 
         {/* Compact appraisal summary + lazy picker */}
@@ -492,7 +492,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
           </Button>
           <Button
             onClick={handleSave}
-            disabled={isPending || !dueDate || selectedCompanies.length === 0 || activeAppraisalCount === 0}
+            disabled={isPending || !cutOffTime || selectedCompanies.length === 0 || activeAppraisalCount === 0}
             isLoading={isPending}
           >
             {!isPending && <Icon name="floppy-disk" style="solid" className="size-4 mr-1.5" />}

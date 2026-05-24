@@ -17,6 +17,7 @@ import { createUploadSession, useUploadDocument } from '@features/request/api/do
 import { toGalleryImage } from '../types/gallery';
 import type { GalleryImage } from '../types/gallery';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export interface EntityPhotoSectionRef {
   linkImagesToEntity: (entityId: string) => Promise<void>;
@@ -88,6 +89,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
     },
     ref,
   ) => {
+    const readOnly = usePageReadOnly();
     const isCreateMode = !entityId;
     const hasThumbnailSupport = Boolean(useSetThumbnail && useUnsetThumbnail);
 
@@ -203,6 +205,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
 
     const handleUpload = useCallback(
       async (file: File) => {
+        if (readOnly) return;
         const tempId = `uploading-${Date.now()}`;
         const previewUrl = URL.createObjectURL(file);
         const placeholder: Photo = {
@@ -278,6 +281,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
 
     const handleUploadFromDevice = useCallback(
       async (files: FileList) => {
+        if (readOnly) return;
         const imageFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
         for (const file of imageFiles) {
           await handleUpload(file);
@@ -288,6 +292,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
 
     const handleGallerySelect = useCallback(
       async (selectedImages: GalleryImage[]) => {
+        if (readOnly) return;
         for (const image of selectedImages) {
           if (isCreateMode) {
             setPendingPhotoIds(prev => [...prev, image.id]);
@@ -316,6 +321,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
 
     const handleDeleteRequest = useCallback(
       (photoId: string) => {
+        if (readOnly) return;
         if (isCreateMode) {
           setPendingPhotoIds(prev => prev.filter(id => id !== photoId));
           toast.success('Photo removed');
@@ -414,7 +420,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
     // Set / unset thumbnail — only functional in edit mode with thumbnail hooks provided
     const handleSetThumbnail = useCallback(
       (galleryPhotoId: string) => {
-        if (isCreateMode || !entityId || !hasThumbnailSupport) return;
+        if (readOnly || isCreateMode || !entityId || !hasThumbnailSupport) return;
 
         const imageId = galleryPhotoToImageId.get(galleryPhotoId);
         if (!imageId) return;
@@ -471,11 +477,12 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
       <>
         <PhotoGallery
           photos={photos}
-          onAddClick={() => setShowPhotoSourceModal(true)}
+          onAddClick={() => !readOnly && setShowPhotoSourceModal(true)}
           onDelete={handleDeleteRequest}
           onSetThumbnail={hasThumbnailSupport ? handleSetThumbnail : () => {}}
           onPreview={handlePreview}
           thumbnailId={thumbnailGalleryPhotoId}
+          disabled={readOnly}
         />
 
         <PhotoSourceModal
@@ -508,12 +515,16 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             onClose={() => setPreviewPhoto(null)}
             onNavigate={setPreviewPhoto}
             onSetThumbnail={
-              hasThumbnailSupport && !isCreateMode ? handlePreviewSetThumbnail : undefined
+              !readOnly && hasThumbnailSupport && !isCreateMode ? handlePreviewSetThumbnail : undefined
             }
-            onDelete={() => {
-              handleDeleteRequest(previewPhoto.id);
-              setPreviewPhoto(null);
-            }}
+            onDelete={
+              readOnly
+                ? undefined
+                : () => {
+                    handleDeleteRequest(previewPhoto.id);
+                    setPreviewPhoto(null);
+                  }
+            }
             onSaveDescription={async (caption: string) => {
               try {
                 const dto = galleryPhotoMap.get(previewPhoto.id);

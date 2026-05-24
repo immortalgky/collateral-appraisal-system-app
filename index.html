@@ -1,10 +1,22 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-white">
+<html lang="en" data-theme="light" class="h-full bg-white">
 <head>
     <meta charset="UTF-8"/>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Collateral Appraisal System</title>
+    <script>
+        try {
+            var raw = localStorage.getItem('cas-ui-store');
+            if (raw) {
+                var parsed = JSON.parse(raw);
+                var theme = parsed && parsed.state && parsed.state.theme;
+                if (theme === 'dark' || theme === 'light') {
+                    document.documentElement.setAttribute('data-theme', theme);
+                }
+            }
+        } catch (e) { /* fall back to default data-theme="light" */ }
+    </script>
 </head>
 <body class="h-full">
 <div id="root"></div>
