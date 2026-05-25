@@ -37,6 +37,7 @@ import { SensitivityStrip } from '../SensitivityStrip';
 import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
 import toast from 'react-hot-toast';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 interface DiscountedCashFlowPanelProps {
   activeMethod?: {
@@ -77,8 +78,16 @@ export function DiscountedCashFlowPanel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showAssumptionSummary, setShowAssumptionSummary] = useState(false);
 
-  const { data: pricingTemplates = [] } = useGetPricingTemplates(true);
-  const { data: templateDto } = useGetPricingTemplateByCode(selectedTemplateCode || undefined);
+  const {
+    data: pricingTemplates = [],
+    isError: isPricingTemplatesError,
+    refetch: refetchPricingTemplates,
+  } = useGetPricingTemplates(true);
+  const {
+    data: templateDto,
+    isError: isTemplateDtoError,
+    refetch: refetchTemplateDto,
+  } = useGetPricingTemplateByCode(selectedTemplateCode || undefined);
 
   const appraisalId = useAppraisalId() ?? '';
   const propertyId =
@@ -328,6 +337,14 @@ export function DiscountedCashFlowPanel({
       toast.error(`Failed to save: ${message}`);
     }
   });
+
+  if (isPricingTemplatesError || isTemplateDtoError) {
+    const handleRetry = () => {
+      if (isPricingTemplatesError) refetchPricingTemplates();
+      if (isTemplateDtoError) refetchTemplateDto();
+    };
+    return <DataErrorState title="Failed to load DCF templates" onRetry={handleRetry} />;
+  }
 
   return (
     <FormProvider methods={methods} schema={DCFForm}>

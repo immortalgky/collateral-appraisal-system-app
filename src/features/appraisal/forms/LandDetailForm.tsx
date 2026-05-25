@@ -1,6 +1,7 @@
 import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import BoundaryFields from '../components/BoundaryFields';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import {
   allocationField,
   anticipationProsperityField,
@@ -57,6 +58,7 @@ const Card = ({ children }: { children: React.ReactNode }) => (
 );
 
 const LandDetailForm = () => {
+  const readOnly = usePageReadOnly();
   return (
     <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Land Detail</h2>
@@ -129,7 +131,7 @@ const LandDetailForm = () => {
         </SectionRow>
 
         <SectionRow title="Size and Boundary" icon="ruler-combined">
-          <BoundaryFields />
+          <BoundaryFields readOnly={readOnly} />
         </SectionRow>
 
         <SectionRow title="Other Information" icon="circle-info">

@@ -10,6 +10,7 @@ import {
 } from '@/features/request/api/documents';
 import { getDocumentCategory } from '@/features/request/types/document';
 import type { FollowupLineItem } from '../types/followup';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 /**
  * The staged attachment the dialog returns to its parent. Nothing is sent to the backend
@@ -42,8 +43,8 @@ export function UploadLineItemDialog({
   lineItem,
   onStaged,
 }: UploadLineItemDialogProps) {
-  const { data: documentTypes = [] } = useGetDocumentTypes();
-  const { data: request, isLoading: titlesLoading } = useGetRequestById(
+  const { data: documentTypes = [], isError: isDocTypesError, refetch: refetchDocTypes } = useGetDocumentTypes();
+  const { data: request, isLoading: titlesLoading, isError: isRequestError, refetch: refetchRequest } = useGetRequestById(
     isOpen ? requestId : undefined,
   );
   const titles = request?.titles ?? [];
@@ -144,6 +145,17 @@ export function UploadLineItemDialog({
             <Icon name="xmark" style="solid" className="size-4" />
           </button>
         </div>
+
+        {(isDocTypesError || isRequestError) && (
+          <DataErrorState
+            variant="inline"
+            title="Failed to load upload form"
+            onRetry={() => {
+              if (isDocTypesError) refetchDocTypes();
+              if (isRequestError) refetchRequest();
+            }}
+          />
+        )}
 
         {/* Target picker */}
         <div className="mb-4">

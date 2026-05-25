@@ -6,6 +6,8 @@ export { default as DateInput } from './DateInput';
 export { default as DateTimeInput } from './DateTimeInput';
 export { default as Dropdown } from './Dropdown';
 export type { ListBoxItem } from './Dropdown';
+export { default as MultiSelectDropdown } from './MultiSelectDropdown';
+export type { MultiSelectDropdownProps } from './MultiSelectDropdown';
 export { default as FileInput } from './FileInput';
 export { default as NumberInput } from './NumberInput';
 export { default as RadioGroup, Radio } from './RadioGroup';

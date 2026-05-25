@@ -1,0 +1,97 @@
+{
+  "list": {
+    "title": "Block Unit Maintenance",
+    "subtitle": "Update unit sale status for block and village projects",
+    "empty": "No projects found",
+    "emptyHint": "No block projects match your current filters",
+    "tryFilters": "Try adjusting your filters",
+    "clearFilters": "Clear",
+    "col": {
+      "reportNo": "Appraisal Number",
+      "projectName": "Project Name",
+      "projectType": "Project Type",
+      "developer": "Developer",
+      "customerName": "Customer",
+      "totalUnits": "Total",
+      "soldUnits": "Sold",
+      "unsoldUnits": "Unsold",
+      "salesProgress": "Sales Progress",
+      "updatedOn": "Last Updated At",
+      "updatedBy": "Last Updated By"
+    },
+    "projectType": {
+      "label": "Project Type",
+      "placeholder": "All types"
+    },
+    "filter": {
+      "searchPlaceholder": "Search appraisal number, project name…",
+      "developerPlaceholder": "Filter by developer"
+    }
+  },
+  "detail": {
+    "title": "Block Unit Maintenance",
+    "subtitle": "Update sale status, purchase method, and financing bank for each unit",
+    "backToList": "Back",
+    "sold": "Sold",
+    "available": "Available",
+    "noSold": "No units sold yet",
+    "noAvailable": "All units sold",
+    "searchPlaceholder": "House Number / Plot / Room / Model",
+    "dirty": "Modified",
+    "unsavedTitle": "Unsaved changes",
+    "unsavedConfirm": "You have unsaved changes on this page. If you leave now they will be lost.",
+    "unsavedLeave": "Leave page",
+    "unsavedStay": "Stay",
+    "dirtyCount_one": "{{count}} unit modified",
+    "dirtyCount_other": "{{count}} units modified",
+    "filter": {
+      "all": "All",
+      "sold": "Sold",
+      "available": "Available",
+      "soldLoan": "Sold via Loan"
+    },
+    "bulk": {
+      "selectedCount_one": "{{count}} selected",
+      "selectedCount_other": "{{count}} selected",
+      "markCash": "Mark Sold (Cash)",
+      "markLoan": "Mark Sold (Loan)",
+      "markAvailable": "Mark Available",
+      "bankPlaceholder": "Loan bank (optional)",
+      "clear": "Clear selection"
+    }
+  },
+  "units": {
+    "title": "Units",
+    "empty": "No units found for this project",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "noChanges": "No changes to save",
+    "col": {
+      "seq": "#",
+      "modelType": "Model",
+      "location": "Location",
+      "usableArea": "Area (sqm)",
+      "sellingPrice": "Selling Price",
+      "isSold": "Sold",
+      "purchaseBy": "Purchase By",
+      "loanBankName": "Loan Bank"
+    },
+    "purchaseBy": {
+      "placeholder": "Select...",
+      "Cash": "Cash",
+      "Loan": "Loan"
+    }
+  },
+  "errors": {
+    "loadFailed": "Failed to load projects",
+    "unitLoadFailed": "Failed to load units",
+    "saveFailed": "Failed to save changes",
+    "validation": {
+      "purchaseByRequired": "Purchase method is required when unit is sold",
+      "loanBankRequired": "Loan bank name is required when purchase method is Loan"
+    }
+  },
+  "success": {
+    "saved": "Unit sale status updated"
+  }
+}

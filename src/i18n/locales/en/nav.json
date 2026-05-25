@@ -32,5 +32,9 @@
   "taskMonitor": {
     "title": "Task Monitor",
     "description": "Reassign tasks held by users in your monitored groups"
+  },
+  "themeToggle": {
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
   }
 }

@@ -16,6 +16,7 @@ import PricingAnalysisSection from '../components/360/PricingAnalysisSection';
 import FooterSection from '../components/360/FooterSection';
 import PropertyDetailSlideOver from '../components/360/PropertyDetailSlideOver';
 import PricingBreakdownSlideOver from '../components/360/PricingBreakdownSlideOver';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 // ==================== Slide-Over State ====================
 
@@ -31,10 +32,10 @@ const Appraisal360Page = () => {
   const [slideOver, setSlideOver] = useState<SlideOverState>({ type: 'closed' });
 
   // Data hooks
-  const { data: appraisal, isLoading: isLoadingAppraisal } = useGetAppraisalById(appraisalId);
-  const { data: request } = useGetRequestById(appraisal?.requestId);
+  const { data: appraisal, isLoading: isLoadingAppraisal, isError: isAppraisalError, error: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
+  const { data: request, isError: isRequestError, error: requestError, refetch: refetchRequest } = useGetRequestById(appraisal?.requestId);
   const { groups, isLoading: isLoadingGroups } = useEnrichedPropertyGroups(appraisalId);
-  const { data: decisionSummary, isLoading: isLoadingDecision } = useGetDecisionSummary(appraisalId);
+  const { data: decisionSummary, isLoading: isLoadingDecision, isError: isDecisionError, error: decisionError, refetch: refetchDecision } = useGetDecisionSummary(appraisalId);
 
 
   const isPageLoading = isLoadingAppraisal;
@@ -60,6 +61,16 @@ const Appraisal360Page = () => {
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (isAppraisalError) {
+    return (
+      <DataErrorState
+        title="Failed to load appraisal"
+        message={(appraisalError as Error)?.message}
+        onRetry={refetchAppraisal}
+      />
     );
   }
 
@@ -97,7 +108,16 @@ const Appraisal360Page = () => {
           </div>
 
           {/* Request Information */}
-          <RequestInfoSection appraisal={appraisal} request={request} />
+          {isRequestError ? (
+            <DataErrorState
+              variant="inline"
+              title="Failed to load request info"
+              message={(requestError as Error)?.message}
+              onRetry={refetchRequest}
+            />
+          ) : (
+            <RequestInfoSection appraisal={appraisal} request={request} />
+          )}
 
           {/* Property Groups */}
           <PropertyGroupsSection
@@ -107,11 +127,20 @@ const Appraisal360Page = () => {
           />
 
           {/* Pricing Analysis */}
-          <PricingAnalysisSection
-            decisionSummary={decisionSummary}
-            isLoading={isLoadingDecision}
-            onGroupClick={handleGoToPricingAnalysis}
-          />
+          {isDecisionError ? (
+            <DataErrorState
+              variant="inline"
+              title="Failed to load pricing analysis"
+              message={(decisionError as Error)?.message}
+              onRetry={refetchDecision}
+            />
+          ) : (
+            <PricingAnalysisSection
+              decisionSummary={decisionSummary}
+              isLoading={isLoadingDecision}
+              onGroupClick={handleGoToPricingAnalysis}
+            />
+          )}
 
           {/* Footer */}
           <FooterSection appraisal={appraisal} />

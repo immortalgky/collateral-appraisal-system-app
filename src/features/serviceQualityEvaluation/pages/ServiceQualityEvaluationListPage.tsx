@@ -5,7 +5,7 @@ import Icon from '@shared/components/Icon';
 import Input from '@shared/components/Input';
 import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
 import Dropdown from '@shared/components/inputs/Dropdown';
-import { APPRAISAL_STATUS_OPTIONS } from '@shared/constants/appraisalStatus';
+import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Badge from '@shared/components/Badge';
@@ -181,7 +181,7 @@ function ServiceQualityEvaluationListPage() {
           <Dropdown
             label={t('list.filters.status')}
             placeholder={t('list.filters.statusAll')}
-            options={APPRAISAL_STATUS_OPTIONS}
+            options={APPRAISAL_STATUS_FILTER_OPTIONS}
             value={appraisalStatus}
             onChange={v => setAppraisalStatus(v ?? '')}
             showValuePrefix={false}
@@ -295,7 +295,10 @@ function ServiceQualityEvaluationListPage() {
                     </td>
                     <td className="px-4 py-2.5">
                       {item.totalScore != null ? (
-                        <StarRating score={item.totalScore} />
+                        <span className="inline-flex items-center gap-1">
+                          <StarRating score={item.totalScore} />
+                          <span className="text-[10px] tabular-nums text-gray-500">({item.totalScore.toFixed(2)})</span>
+                        </span>
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}

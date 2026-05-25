@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
@@ -385,10 +386,10 @@ const EditDraftForm = ({
         </div>
       </div>
 
-      {/* Due Date — editable */}
+      {/* Cut Off Time — editable */}
       <div>
         <DateTimePickerInput
-          label="Due Date"
+          label="Cut Off Time"
           required
           placeholder="dd/mm/yyyy hh:mm"
           value={editDueDate}
@@ -412,6 +413,7 @@ interface QuotationSectionProps {
 type SendStep = 'confirm' | 'share-docs';
 
 const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
+  const readOnly = usePageReadOnly();
   const { i18n } = useTranslation();
   const currentUser = useAuthStore(s => s.user);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
@@ -494,18 +496,18 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotationDetail?.appraisals ?? [];
-    const dueDate = quotationDetail?.dueDate ? new Date(quotationDetail.dueDate) : null;
+    const cutOffTime = quotationDetail?.cutOffTime ? new Date(quotationDetail.cutOffTime) : null;
 
     const distinctCustomerNames = [
       ...new Set(appraisals.map((a) => a.customerName).filter(Boolean)),
     ].join(', ');
     const appraisalNumbers = appraisals.map((a) => a.appraisalNumber ?? '').filter(Boolean).join(',');
 
-    const targetTime = dueDate
-      ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
+    const targetTime = cutOffTime
+      ? cutOffTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
       : '';
-    const targetDate = dueDate
-      ? dueDate.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' })
+    const targetDate = cutOffTime
+      ? cutOffTime.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' })
       : '';
 
     const appraisalList = appraisals
@@ -635,10 +637,12 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               Start a quotation to invite external companies to bid
             </p>
           </div>
-          <Button onClick={onCreateNew} size="sm">
-            <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-            Request Quotation
-          </Button>
+          {!readOnly && (
+            <Button onClick={onCreateNew} size="sm">
+              <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
+              Request Quotation
+            </Button>
+          )}
         </div>
       </div>
     );
@@ -655,17 +659,19 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   };
   const renderCancelFooter = () => (
     <>
-      <div className="flex justify-end pt-1">
-        <button
-          type="button"
-          onClick={() => setShowCancelConfirm(true)}
-          disabled={isCancelling}
-          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Icon name="ban" style="solid" className="size-3" />
-          Cancel Quotation
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end pt-1">
+          <button
+            type="button"
+            onClick={() => setShowCancelConfirm(true)}
+            disabled={isCancelling}
+            className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Icon name="ban" style="solid" className="size-3" />
+            Cancel Quotation
+          </button>
+        </div>
+      )}
       <Modal
         isOpen={showCancelConfirm}
         onClose={closeCancelModal}
@@ -724,9 +730,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   // ── Sent — countdown + company status ────────────────────────────────────
   if (status === 'Sent') {
-    const dueDate = new Date(activeQuotation.dueDate);
+    const cutOffTimeDate = new Date(activeQuotation.cutOffTime);
     const now = new Date();
-    const hoursLeft = Math.max(0, Math.floor((dueDate.getTime() - now.getTime()) / 36e5));
+    const hoursLeft = Math.max(0, Math.floor((cutOffTimeDate.getTime() - now.getTime()) / 36e5));
     const sentCompanyQuotations = quotationDetail?.companyQuotations ?? [];
 
     const fmtCurrency = (v?: number | null) =>
@@ -759,7 +765,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           <div className="text-right">
             <div className="text-xs text-gray-500">Closes</div>
             <div className={clsx('text-sm font-medium', hoursLeft < 24 ? 'text-red-600' : 'text-gray-800')}>
-              {formatDateTime(activeQuotation.dueDate)}
+              {formatDateTime(activeQuotation.cutOffTime)}
             </div>
             {hoursLeft < 48 && (
               <div className="text-xs text-amber-600">{hoursLeft}h remaining</div>
@@ -864,7 +870,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const draftDetail = quotationDetail;
     const appraisalCount = draftDetail?.totalAppraisals ?? activeQuotation.totalAppraisals ?? 0;
     const companyCount = draftDetail?.totalCompaniesInvited ?? activeQuotation.totalCompaniesInvited ?? 0;
-    const hasDueDate = !!activeQuotation.dueDate;
+    const hasDueDate = !!activeQuotation.cutOffTime;
     const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
     const draftAppraisals = draftDetail?.appraisals ?? [];
 
@@ -945,7 +951,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       });
       setEditCompanyIds(initialIds);
       setEditCompanyNames(initialNames);
-      setEditDueDate(activeQuotation.dueDate ?? null);
+      setEditDueDate(activeQuotation.cutOffTime ?? null);
       setEditSearchQuery('');
       setIsEditing(true);
     };
@@ -962,11 +968,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     /** Save the edit. */
     const handleSaveEdit = () => {
       if (!editDueDate) {
-        toast.error('Due date is required');
+        toast.error('Cut off time is required');
         return;
       }
       editDraftQuotation(
-        { dueDate: editDueDate, companyIds: Array.from(editCompanyIds) },
+        { cutOffTime: editDueDate, companyIds: Array.from(editCompanyIds) },
         {
           onSuccess: () => {
             toast.success('Draft quotation updated');
@@ -1004,7 +1010,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
-            {isEditing ? (
+            {!readOnly && (isEditing ? (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -1059,7 +1065,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   Send Quotation
                 </Button>
               </div>
-            )}
+            ))}
           </div>
 
           {/* Hint banner — visible in both read and edit mode */}
@@ -1107,10 +1113,10 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Due Date</div>
+                  <div className="text-xs text-gray-500">Cut Off Time</div>
                   <div className={clsx('font-medium', !hasDueDate ? 'text-amber-600' : 'text-gray-900')}>
                     {hasDueDate
-                      ? formatDateTime(activeQuotation.dueDate)
+                      ? formatDateTime(activeQuotation.cutOffTime)
                       : 'Not set'}
                   </div>
                 </div>
@@ -1120,17 +1126,19 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         </div>
 
         {/* Remove this appraisal from the draft quotation */}
-        <div className="flex justify-end px-4 py-2 border-t border-gray-100 bg-gray-50">
-          <button
-            type="button"
-            onClick={() => setShowRemoveConfirm(true)}
-            disabled={isBusy || isRemoving}
-            className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Icon name="trash" style="solid" className="size-3" />
-            Remove this appraisal from quotation
-          </button>
-        </div>
+        {!readOnly && (
+          <div className="flex justify-end px-4 py-2 border-t border-gray-100 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setShowRemoveConfirm(true)}
+              disabled={isBusy || isRemoving}
+              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Icon name="trash" style="solid" className="size-3" />
+              Remove this appraisal from quotation
+            </button>
+          </div>
+        )}
 
         <ConfirmDialog
           isOpen={showRemoveConfirm}
@@ -1287,7 +1295,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               <span className="text-sm font-semibold text-gray-700">{activeQuotation.quotationNumber}</span>
               <QuotationStatusBadge status={status} />
             </div>
-            {winner && (
+            {winner && !readOnly && (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -1439,10 +1447,12 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
-          <Button size="sm" onClick={onCreateNew}>
-            <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-            New Quotation
-          </Button>
+          {!readOnly && (
+            <Button size="sm" onClick={onCreateNew}>
+              <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
+              New Quotation
+            </Button>
+          )}
         </div>
         <div className="px-4 py-3 text-sm text-gray-500">
           This quotation was cancelled. Create a new quotation for this appraisal.
@@ -1461,10 +1471,12 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           </div>
           <span className="text-sm font-semibold text-gray-900">Quotation</span>
         </div>
-        <Button size="sm" onClick={onCreateNew}>
-          <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-          New Quotation
-        </Button>
+        {!readOnly && (
+          <Button size="sm" onClick={onCreateNew}>
+            <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
+            New Quotation
+          </Button>
+        )}
       </div>
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { ListBoxItem, OptionFilter } from '../inputs/Dropdown';
 import type { FormStringToggleOption } from '../inputs/FormStringToggle';
 import type { RadioOption } from '../inputs/RadioGroup';
@@ -142,6 +143,10 @@ export interface TextInputField extends BaseFormField {
   minLength?: number;
   /** Show character count */
   showCharCount?: boolean;
+  /** Icon rendered inside the input on the left */
+  leftIcon?: ReactNode;
+  /** Icon rendered inside the input on the right (e.g. an action button) */
+  rightIcon?: ReactNode;
 }
 
 export interface TextareaField extends BaseFormField {
@@ -176,6 +181,10 @@ export interface NumberInputField extends BaseFormField {
   allowZero?: boolean;
   /** Non-interactive unit suffix shown inside the input on the right (e.g. "m", "years", "%"). Visual-only — does not affect the value. */
   suffix?: string;
+  /** Icon rendered inside the input on the left */
+  leftIcon?: ReactNode;
+  /** Icon rendered inside the input on the right (e.g. an action button) */
+  rightIcon?: ReactNode;
 }
 
 // =============================================================================

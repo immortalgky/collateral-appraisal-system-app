@@ -24,6 +24,7 @@ import {
 import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 const LAYOUT_OPTIONS = [
   { value: 1 as const, label: '1', icon: 'square' },
@@ -228,14 +229,14 @@ export const PhotosTab = () => {
   const appraisalId = useAppraisalId();
 
   // API hooks for topics
-  const { data: topicsData, isLoading: isLoadingTopics } = useGetPhotoTopics(appraisalId);
+  const { data: topicsData, isLoading: isLoadingTopics, isError: isTopicsError, error: topicsError, refetch: refetchTopics } = useGetPhotoTopics(appraisalId);
   const { mutate: createTopic } = useCreatePhotoTopic();
   const { mutate: updateTopic } = useUpdatePhotoTopic();
   const { mutate: deleteTopic, isPending: isDeletingTopic } = useDeletePhotoTopic();
   const { mutateAsync: assignPhotoToTopic, isPending: isAssigningPhoto } = useAssignPhotoToTopic();
 
   // API hooks for gallery (upload flow)
-  const { data: galleryData } = useGetGalleryPhotos(appraisalId);
+  const { data: galleryData, isError: isGalleryError, error: galleryError, refetch: refetchGallery } = useGetGalleryPhotos(appraisalId);
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } = useUpdateGalleryPhoto();
@@ -556,6 +557,17 @@ export const PhotosTab = () => {
     );
   }
 
+  if (isTopicsError && isGalleryError) {
+    return (
+      <DataErrorState
+        variant="inline"
+        title="Failed to load photos"
+        message={(topicsError as Error)?.message}
+        onRetry={() => { void refetchTopics(); void refetchGallery(); }}
+      />
+    );
+  }
+
   return (
     <div className="flex gap-6 min-h-[600px]">
       {/* Left Panel - Topics List */}
@@ -626,6 +638,14 @@ export const PhotosTab = () => {
 
         {/* Topics List */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {isTopicsError && !isGalleryError && (
+            <DataErrorState
+              variant="inline"
+              title="Failed to load topics"
+              message={(topicsError as Error)?.message}
+              onRetry={refetchTopics}
+            />
+          )}
           {topics.map(topic => (
             <TopicItem
               key={topic.id}
@@ -721,7 +741,14 @@ export const PhotosTab = () => {
 
         {/* Photo Grid */}
         <div className="flex-1 overflow-y-auto">
-          {!selectedTopicId ? (
+          {isGalleryError && !isTopicsError ? (
+            <DataErrorState
+              variant="inline"
+              title="Failed to load gallery photos"
+              message={(galleryError as Error)?.message}
+              onRetry={refetchGallery}
+            />
+          ) : !selectedTopicId ? (
             <div className="flex flex-col items-center justify-center h-full py-16">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center mb-4">
                 <Icon name="hand-pointer" className="text-3xl text-gray-300" />

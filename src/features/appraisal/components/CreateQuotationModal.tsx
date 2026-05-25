@@ -110,7 +110,7 @@ const CreateQuotationModal = ({
         requestId,
         workflowInstanceId,
         taskExecutionId: null,
-        dueDate: cutOffDateTime,
+        cutOffTime: cutOffDateTime,
         bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: selectedCompanies.map(c => c.id),
         specialRequirements: remarks || null,

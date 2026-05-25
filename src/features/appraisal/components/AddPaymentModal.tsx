@@ -18,6 +18,7 @@ interface AddPaymentModalProps {
   isEditing?: boolean;
   maxAmount?: number;
   requestedAt?: string | null;
+  readOnly?: boolean;
 }
 
 /**
@@ -31,6 +32,7 @@ export default function AddPaymentModal({
   isEditing = false,
   maxAmount,
   requestedAt,
+  readOnly = false,
 }: AddPaymentModalProps) {
   const {
     handleSubmit,
@@ -87,6 +89,7 @@ export default function AddPaymentModal({
           onChange={value => setValue('paymentDate', value || '')}
           minDate={requestedAt}
           error={errors.paymentDate?.message}
+          disabled={readOnly}
         />
 
         {/* Amount */}
@@ -99,6 +102,7 @@ export default function AddPaymentModal({
           value={watch('amount')}
           onChange={e => setValue('amount', e.target.value ?? 0)}
           error={errors.amount?.message}
+          disabled={readOnly}
         />
 
         {/* Action Buttons */}
@@ -106,9 +110,11 @@ export default function AddPaymentModal({
           <Button type="button" variant="ghost" onClick={handleClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" isLoading={isSubmitting}>
-            {isEditing ? 'Save' : 'Add Payment'}
-          </Button>
+          {!readOnly && (
+            <Button type="submit" variant="primary" isLoading={isSubmitting}>
+              {isEditing ? 'Save' : 'Add Payment'}
+            </Button>
+          )}
         </div>
       </form>
     </Modal>

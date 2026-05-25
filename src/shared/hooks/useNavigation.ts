@@ -5,7 +5,9 @@ import { resolveLabel } from '@features/menuManagement/utils/label';
 import { appraisalMenuConditions } from '@shared/config/appraisalMenuConditions';
 import { isTerminalStatus } from '@shared/config/navigationTypes';
 import type { NavItem, NavItemWithAccess, NavContext } from '@shared/config/navigationTypes';
+import { isCondo, type ProjectType } from '@features/blockProject/types';
 import type { MenuTreeNode } from '@features/menuManagement/types';
+import { isPinnable } from '@features/menuFavorites/useFavorites';
 
 /** Interpolate :basePath and :requestId placeholders in a path string */
 function interpolatePath(path: string | null, basePath: string, requestId?: string): string {
@@ -17,6 +19,7 @@ function interpolatePath(path: string | null, basePath: string, requestId?: stri
 /** Recursively convert a MenuTreeNode tree into NavItem[] */
 function toNavItems(nodes: MenuTreeNode[], lang: string): NavItem[] {
   return nodes.map(node => ({
+    id: node.id,
     itemKey: node.itemKey,
     name: resolveLabel(node.labels, lang),
     href: node.path ?? '#',
@@ -25,6 +28,7 @@ function toNavItems(nodes: MenuTreeNode[], lang: string): NavItem[] {
     iconColor: node.iconColor ?? undefined,
     canView: true, // backend already filtered for visibility
     canEdit: node.canEdit,
+    pinnable: isPinnable(node),
     children: node.children.length > 0 ? toNavItems(node.children, lang) : undefined,
   }));
 }
@@ -64,20 +68,25 @@ export function useAppraisalNavigation(
       const condition = appraisalMenuConditions[node.itemKey];
 
       // Apply showWhen predicate
-      if (condition?.showWhen && !condition.showWhen({ isPma, isBlock, blockProjectType, status })) {
+      if (
+        condition?.showWhen &&
+        !condition.showWhen({ isPma, isBlock, blockProjectType, status })
+      ) {
         return null;
       }
 
       // Determine canEdit — terminal status or per-item forceReadOnly override backend value
-      const forceRO = condition?.forceReadOnly?.({ isPma, isBlock, blockProjectType, status }) ?? false;
+      const forceRO =
+        condition?.forceReadOnly?.({ isPma, isBlock, blockProjectType, status }) ?? false;
       const canEdit = !terminalStatus && !forceRO && node.canEdit;
 
       // For block appraisals, override "Property Information" href to the correct block page
       let href = interpolatePath(node.path, basePath, requestId);
       if (isBlock && node.itemKey === 'appraisal.property') {
-        href = blockProjectType === 'Condo'
-          ? `${basePath}/block-condo`
-          : `${basePath}/block-village`;
+        href =
+          blockProjectType && isCondo(blockProjectType as ProjectType)
+            ? `${basePath}/block-condo`
+            : `${basePath}/block-village`;
       }
 
       const children = node.children
@@ -85,6 +94,7 @@ export function useAppraisalNavigation(
         .filter((c): c is NavItemWithAccess => c !== null);
 
       return {
+        id: node.id,
         itemKey: node.itemKey,
         name: resolveLabel(node.labels, lang),
         href,
@@ -93,10 +103,21 @@ export function useAppraisalNavigation(
         iconColor: node.iconColor ?? undefined,
         canView: true,
         canEdit,
+        pinnable: isPinnable(node),
         children: children.length > 0 ? children : undefined,
       };
     };
 
     return appraisal.map(processNode).filter((n): n is NavItemWithAccess => n !== null);
-  }, [appraisal, lang, basePath, requestId, isPma, isBlock, blockProjectType, status, terminalStatus]);
+  }, [
+    appraisal,
+    lang,
+    basePath,
+    requestId,
+    isPma,
+    isBlock,
+    blockProjectType,
+    status,
+    terminalStatus,
+  ]);
 }

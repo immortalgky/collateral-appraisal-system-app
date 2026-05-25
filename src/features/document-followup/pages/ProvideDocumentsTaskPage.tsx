@@ -8,6 +8,7 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useGetDocumentTypes, getDocumentTypeName } from '@/features/request/api/documentTypes';
+import DataErrorState from '@/shared/components/DataErrorState';
 import {
   useWorkflowInstanceId,
   useIsTaskOwner,
@@ -222,7 +223,7 @@ function ProvideDocumentsTaskPage() {
   const isTaskOwner = useIsTaskOwner();
 
   const { data: followup, isLoading, isError } = useGetFollowupByWorkflowInstance(workflowInstanceId);
-  const { data: documentTypes = [] } = useGetDocumentTypes();
+  const { data: documentTypes = [], isError: isDocTypesError, refetch: refetchDocTypes } = useGetDocumentTypes();
   const submitFollowup = useSubmitDocumentFollowup();
 
   const [decliningItem, setDecliningItem] = useState<FollowupLineItem | null>(null);
@@ -307,6 +308,10 @@ function ProvideDocumentsTaskPage() {
         </p>
       </div>
     );
+  }
+
+  if (isDocTypesError) {
+    return <DataErrorState title="Failed to load document types" onRetry={refetchDocTypes} />;
   }
 
   const pendingItems = followup.lineItems.filter(i => i.status === 'Pending');

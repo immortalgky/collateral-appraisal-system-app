@@ -152,8 +152,8 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
 
   // ─── Sent ─────────────────────────────────────────────────────────────────
   if (status === 'Sent') {
-    const dueDate = new Date(quotation.dueDate);
-    const hoursLeft = Math.max(0, Math.floor((dueDate.getTime() - Date.now()) / 36e5));
+    const cutOffTime = new Date(quotation.cutOffTime);
+    const hoursLeft = Math.max(0, Math.floor((cutOffTime.getTime() - Date.now()) / 36e5));
     const companyQuotations = quotation.companyQuotations ?? [];
     const invitedCompanies = quotation.invitedCompanies ?? [];
 
@@ -174,7 +174,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
             <div className="text-right">
               <div className="text-xs text-gray-500">Closes</div>
               <div className={clsx('text-sm font-medium', hoursLeft < 24 ? 'text-red-600' : 'text-gray-800')}>
-                {fmtDateTime(quotation.dueDate)}
+                {fmtDateTime(quotation.cutOffTime)}
               </div>
               {hoursLeft < 48 && (
                 <div className="text-xs text-amber-600">{hoursLeft}h remaining</div>

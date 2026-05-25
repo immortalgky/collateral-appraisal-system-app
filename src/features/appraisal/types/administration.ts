@@ -119,7 +119,7 @@ export interface Quotation {
   id: string;
   quotationNumber: string;
   requestDate: string;
-  dueDate: string;
+  cutOffTime: string;
   status: string;
   requestedByName: string;
   totalAppraisals: number;
@@ -140,7 +140,7 @@ export interface Quotation {
  */
 export interface CreateQuotationRequest {
   quotationNumber: string;
-  dueDate: string;
+  cutOffTime: string;
   requestedBy: string;
   requestedByName: string;
   description?: string | null;
@@ -162,7 +162,7 @@ export interface StartQuotationFromTaskRequest {
    * manually), so the frontend doesn't have a stable value to send.
    */
   taskExecutionId?: string | null;
-  dueDate: string;
+  cutOffTime: string;
   bankingSegment: string;
   invitedCompanyIds: string[];
   specialRequirements?: string | null;

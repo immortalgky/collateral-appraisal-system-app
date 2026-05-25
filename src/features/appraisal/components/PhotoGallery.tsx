@@ -86,6 +86,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   const handleContextMenu = useCallback((e: React.MouseEvent, photoId: string) => {
     e.preventDefault();
     e.stopPropagation();
+    // Always open the context menu; destructive items are hidden inside when disabled
     setContextMenu({
       isOpen: true,
       x: e.clientX,
@@ -250,26 +251,30 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               <Icon name="eye" style="regular" className="w-4 h-4" />
               View
             </button>
-            <button
-              type="button"
-              className={clsx(
-                'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2',
-                thumbnailId === contextMenu.photoId ? 'text-amber-600' : 'text-gray-700',
-              )}
-              onClick={() => handleContextMenuAction('thumbnail')}
-            >
-              <Icon name="image" style="regular" className="w-4 h-4" />
-              {thumbnailId === contextMenu.photoId ? 'Remove as cover' : 'Set as cover'}
-            </button>
-            <div className="border-t border-gray-100 my-1" />
-            <button
-              type="button"
-              className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-              onClick={() => handleContextMenuAction('delete')}
-            >
-              <Icon name="trash" style="regular" className="w-4 h-4" />
-              Delete
-            </button>
+            {!disabled && (
+              <>
+                <button
+                  type="button"
+                  className={clsx(
+                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2',
+                    thumbnailId === contextMenu.photoId ? 'text-amber-600' : 'text-gray-700',
+                  )}
+                  onClick={() => handleContextMenuAction('thumbnail')}
+                >
+                  <Icon name="image" style="regular" className="w-4 h-4" />
+                  {thumbnailId === contextMenu.photoId ? 'Remove as cover' : 'Set as cover'}
+                </button>
+                <div className="border-t border-gray-100 my-1" />
+                <button
+                  type="button"
+                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  onClick={() => handleContextMenuAction('delete')}
+                >
+                  <Icon name="trash" style="regular" className="w-4 h-4" />
+                  Delete
+                </button>
+              </>
+            )}
           </div>
         </>
       )}

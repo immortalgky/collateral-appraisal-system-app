@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import Button from '@/shared/components/Button';
 import Badge from '@/shared/components/Badge';
+import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
@@ -501,7 +502,7 @@ export function AppraisalPicker({
     ...(excludeQuotationRequestId && { excludeQuotationRequestId }),
   };
 
-  const { data, isFetching } = useEligibleAppraisalsForQuotation(queryParams);
+  const { data, isFetching, isError: appraisalsError, refetch: refetchAppraisals } = useEligibleAppraisalsForQuotation(queryParams);
 
   const purposeOptions = useParameterOptions('AppraisalPurpose');
   const channelOptions = useParameterOptions('Channel');
@@ -887,6 +888,12 @@ export function AppraisalPicker({
                     </div>
                   </td>
                 </tr>
+              ) : appraisalsError ? (
+                <tr>
+                  <td colSpan={9}>
+                    <DataErrorState variant="inline" onRetry={() => refetchAppraisals()} />
+                  </td>
+                </tr>
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-3 py-8 text-center">
@@ -996,7 +1003,7 @@ export function AppraisalDocPicker({
   apSelection,
   onToggle,
 }: AppraisalDocPickerProps) {
-  const { data, isLoading } = useGetRequestDocuments(requestId ?? undefined);
+  const { data, isLoading, isError, refetch } = useGetRequestDocuments(requestId ?? undefined);
   const sections = data?.sections ?? [];
 
   if (isLoading) {
@@ -1006,6 +1013,10 @@ export function AppraisalDocPicker({
         Loading documents...
       </div>
     );
+  }
+
+  if (isError) {
+    return <DataErrorState variant="inline" onRetry={() => refetch()} />;
   }
 
   if (!requestId) {

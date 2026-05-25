@@ -1,4 +1,5 @@
 import Button from '@/shared/components/Button';
+import DataErrorState from '@/shared/components/DataErrorState';
 import Modal from '@/shared/components/Modal';
 import { useCallback, useEffect, useMemo } from 'react';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
@@ -47,7 +48,11 @@ export function DiscountedCashFlowMethodModal({
 
   const { handleSubmit, reset, getValues, control, register, setValue } = methods;
 
-  const { data: pricingParams } = useGetPricingParameters();
+  const {
+    data: pricingParams,
+    isError: isPricingParamsError,
+    refetch: refetchPricingParams,
+  } = useGetPricingParameters();
   const assumptionTypeCatalog = pricingParams?.assumptionTypes ?? [];
   const assumptionMethodMatrix = pricingParams?.assumptionMethodMatrix ?? [];
 
@@ -173,6 +178,13 @@ export function DiscountedCashFlowMethodModal({
       title={`Edit Assumption: ${initialData.displayName}`}
       size={size ?? 'xl'}
     >
+      {isPricingParamsError ? (
+        <DataErrorState
+          title="Failed to load pricing parameters"
+          onRetry={refetchPricingParams}
+          variant="inline"
+        />
+      ) : (
       <FormProvider {...methods}>
         <form
           onSubmit={e => {
@@ -259,6 +271,7 @@ export function DiscountedCashFlowMethodModal({
           </div>
         </form>
       </FormProvider>
+      )}
     </Modal>
   );
 }

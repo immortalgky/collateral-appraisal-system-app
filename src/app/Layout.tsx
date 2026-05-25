@@ -41,11 +41,11 @@ function RightMenuToggle() {
   }
 
   return (
-    <div className="hidden lg:flex shrink-0 border-l border-gray-100 bg-white">
+    <div className="hidden lg:flex shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
       <button
         type="button"
         onClick={portalContext.onToggle}
-        className="w-10 h-full flex items-start justify-center pt-4 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+        className="w-10 h-full flex items-start justify-center pt-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors"
         title="Show details panel"
       >
         <Icon style="solid" name="chevron-left" className="size-4" />
@@ -64,7 +64,7 @@ function RightMenuContainer({ portalRef }: { portalRef: React.RefObject<HTMLDivE
 
   return (
     <aside
-      className={`${showSidebar ? 'lg:flex' : 'hidden'} hidden w-72 shrink-0 border-l border-gray-100 bg-white flex-col overflow-hidden`}
+      className={`${showSidebar ? 'lg:flex' : 'hidden'} hidden w-72 shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden`}
       style={{ height: '100%' }}
     >
       <div ref={portalRef} className="flex flex-col flex-1 min-h-0 overflow-hidden" />

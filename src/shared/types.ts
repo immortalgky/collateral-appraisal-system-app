@@ -1,6 +1,8 @@
 import type { Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
+export type Theme = 'light' | 'dark';
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -11,6 +13,9 @@ export type UIStore = {
   resetSidebarWidth: () => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 };
 
 export type ParameterStore = {

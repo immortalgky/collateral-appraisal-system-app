@@ -489,6 +489,7 @@ export function useResetMethod() {
 export interface MachineCostItemResponse {
   id: string;
   appraisalPropertyId: string;
+  propertyName: string | null;
   displaySequence: number;
   rcnReplacementCost: number | null;
   lifeSpanYears: number | null;

@@ -19,7 +19,7 @@ function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode
         <li className="flex items-center">
           <Link
             to="/"
-            className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-base-200 transition-all"
           >
             <Icon name="house" style="solid" className="size-4 shrink-0" />
             <span className="sr-only">Home</span>
@@ -34,7 +34,7 @@ function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode
               <Icon
                 name="chevron-right"
                 style="solid"
-                className="size-3 shrink-0 text-gray-300 mx-1"
+                className="size-3 shrink-0 text-gray-300 dark:text-gray-600 mx-1"
                 aria-hidden="true"
               />
               {isLast ? (
@@ -53,7 +53,7 @@ function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode
                   to={item.href}
                   className={clsx(
                     'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg',
-                    'text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-all',
+                    'text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-base-200 transition-all',
                   )}
                 >
                   {item.icon && <Icon name={item.icon} style="regular" className="size-3.5" />}

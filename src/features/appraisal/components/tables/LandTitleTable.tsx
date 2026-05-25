@@ -224,6 +224,7 @@ const LandTitleTable = ({
       )}
       {modalState && (
         <LandTitleInputModal
+          readOnly={readOnly}
           fields={fields}
           defaultValues={modalState.type === 'edit' ? values[modalState.index] : undefined}
           onCancel={() => setModalState(null)}

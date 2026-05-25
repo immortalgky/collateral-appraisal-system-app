@@ -38,10 +38,12 @@ import { useGetRentalSchedule, useGetLeaseAgreement } from '@/features/appraisal
 import { typeToDetailEndpoint } from '@/features/appraisal/utils/propertyTypeConfig';
 import axios from '@shared/api/axiosInstance';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetAppointment } from '@/features/appraisal/api/appointment';
 import toast from 'react-hot-toast';
 import { formatDateOnly } from '../domain/formatters';
 import clsx from 'clsx';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 interface LeaseholdPanelProps {
   activeMethod?: {
@@ -72,6 +74,7 @@ export function LeaseholdPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: LeaseholdPanelProps) {
+  const readOnly = usePageReadOnly();
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -85,15 +88,21 @@ export function LeaseholdPanel({
   const resetMutation = useResetMethod();
   const saveMutation = useSaveLeaseholdAnalysis();
 
-  const { data: savedData, isPending: isLoading } = useGetLeaseholdAnalysis(
-    pricingAnalysisId,
-    methodId,
-  );
+  const {
+    data: savedData,
+    isPending: isLoading,
+    isError: isSavedDataError,
+    refetch: refetchSavedData,
+  } = useGetLeaseholdAnalysis(pricingAnalysisId, methodId);
 
   // Fetch property detail directly to get totalLandAreaInSqWa and building depreciation
   const detailEndpoint = firstPropertyType ? typeToDetailEndpoint[firstPropertyType] : undefined;
 
-  const { data: propertyDetail } = useQuery({
+  const {
+    data: propertyDetail,
+    isError: isPropertyDetailError,
+    refetch: refetchPropertyDetail,
+  } = useQuery({
     queryKey: ['appraisal', appraisalId, 'property', firstPropertyId, 'detail-lh'],
     queryFn: async () => {
       const { data } = await axios.get(
@@ -145,8 +154,16 @@ export function LeaseholdPanel({
   }, [propertyDetail, propertiesMap, firstPropertyId]);
 
   // Fetch rental schedule and lease agreement for rental income data and lease dates
-  const { data: rentalScheduleData } = useGetRentalSchedule(appraisalId ?? '', firstPropertyId);
-  const { data: leaseAgreement } = useGetLeaseAgreement(appraisalId ?? '', firstPropertyId);
+  const {
+    data: rentalScheduleData,
+    isError: isRentalScheduleError,
+    refetch: refetchRentalSchedule,
+  } = useGetRentalSchedule(appraisalId ?? '', firstPropertyId);
+  const {
+    data: leaseAgreement,
+    isError: isLeaseAgreementError,
+    refetch: refetchLeaseAgreement,
+  } = useGetLeaseAgreement(appraisalId ?? '', firstPropertyId);
 
   const methods = useForm<LeaseholdFormType>({
     mode: 'onSubmit',
@@ -377,7 +394,7 @@ export function LeaseholdPanel({
   );
 
   const handleOnSubmit = async () => {
-    if (!pricingAnalysisId || !methodId) return;
+    if (readOnly || !pricingAnalysisId || !methodId) return;
 
     const data = getValues();
     const request: SaveLeaseholdAnalysisRequest = {
@@ -526,6 +543,16 @@ export function LeaseholdPanel({
     return <PanelSkeleton />;
   }
 
+  if (isSavedDataError || isPropertyDetailError || isRentalScheduleError || isLeaseAgreementError) {
+    const handleRetry = () => {
+      if (isSavedDataError) refetchSavedData();
+      if (isPropertyDetailError) refetchPropertyDetail();
+      if (isRentalScheduleError) refetchRentalSchedule();
+      if (isLeaseAgreementError) refetchLeaseAgreement();
+    };
+    return <DataErrorState title="Failed to load leasehold analysis" onRetry={handleRetry} />;
+  }
+
   return (
     <FormProvider methods={methods} schema={LeaseholdFormSchema}>
       <form
@@ -633,6 +660,7 @@ export function LeaseholdPanel({
                   size="sm"
                   checked={isPartialUsage}
                   onChange={checked => {
+                    if (readOnly) return;
                     setValue('isPartialUsage', checked, { shouldDirty: true });
                     if (!checked) {
                       setValue('partialRai', null, { shouldDirty: true });
@@ -640,6 +668,7 @@ export function LeaseholdPanel({
                       setValue('partialWa', null, { shouldDirty: true });
                     }
                   }}
+                  disabled={readOnly}
                 />
               </div>
             </div>
@@ -661,6 +690,7 @@ export function LeaseholdPanel({
                         value={raiCtrl.field.value}
                         onChange={e => raiCtrl.field.onChange(e.target.value ?? 0)}
                         decimalPlaces={0}
+                        disabled={readOnly}
                       />
                     </div>
                     <span className="text-xs text-gray-500">Rai</span>
@@ -670,6 +700,7 @@ export function LeaseholdPanel({
                         value={nganCtrl.field.value}
                         onChange={e => nganCtrl.field.onChange(e.target.value ?? 0)}
                         decimalPlaces={0}
+                        disabled={readOnly}
                       />
                     </div>
                     <span className="text-xs text-gray-500">Ngan</span>
@@ -679,6 +710,7 @@ export function LeaseholdPanel({
                         value={waCtrl.field.value}
                         onChange={e => waCtrl.field.onChange(e.target.value ?? 0)}
                         decimalPlaces={2}
+                        disabled={readOnly}
                       />
                     </div>
                     <span className="text-xs text-gray-500">Sq.Wa</span>
@@ -732,6 +764,7 @@ export function LeaseholdPanel({
                     onChange={e => landValueField.onChange(e.target.value)}
                     onBlur={landValueField.onBlur}
                     decimalPlaces={2}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-xs text-gray-500">Baht/Sq.Wa</span>
@@ -768,12 +801,14 @@ export function LeaseholdPanel({
               label="Land Value Growth Rate"
               options={['Frequency', 'Period']}
               checked={landGrowthRateType === 'Period'}
-              onChange={checked =>
+              onChange={checked => {
+                if (readOnly) return;
                 setValue('landGrowthRateType', checked ? 'Period' : 'Frequency', {
                   shouldDirty: true,
-                })
-              }
+                });
+              }}
               size="sm"
+              disabled={readOnly}
             />
 
             {landGrowthRateType === 'Frequency' ? (
@@ -788,6 +823,7 @@ export function LeaseholdPanel({
                     onBlur={landGrowthPercentField.onBlur}
                     decimalPlaces={2}
                     rightIcon={<span className="text-xs text-gray-400">%</span>}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-sm text-gray-500 pb-2">Every</span>
@@ -801,6 +837,7 @@ export function LeaseholdPanel({
                     onBlur={landIntervalField.onBlur}
                     decimalPlaces={0}
                     rightIcon={<span className="text-xs text-gray-400">Year</span>}
+                    disabled={readOnly}
                   />
                 </div>
               </div>
@@ -824,6 +861,7 @@ export function LeaseholdPanel({
                         )
                       }
                       decimalPlaces={0}
+                      disabled={readOnly}
                     />
                     <NumberInput
                       value={watch(`landGrowthPeriods.${index}.toYear` as any) as number}
@@ -833,6 +871,7 @@ export function LeaseholdPanel({
                         })
                       }
                       decimalPlaces={0}
+                      disabled={readOnly}
                     />
                     <NumberInput
                       value={watch(`landGrowthPeriods.${index}.growthRatePercent` as any) as number}
@@ -845,24 +884,30 @@ export function LeaseholdPanel({
                       }
                       decimalPlaces={2}
                       rightIcon={<span className="text-xs text-gray-400">%</span>}
+                      disabled={readOnly}
                     />
-                    <button
-                      type="button"
-                      onClick={() => removeLandPeriod(index)}
-                      className="flex items-center justify-center text-red-400 hover:text-red-600 pb-1"
-                    >
-                      <Icon name="xmark" className="size-4" />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => removeLandPeriod(index)}
+                        className="flex items-center justify-center text-red-400 hover:text-red-600 pb-1"
+                      >
+                        <Icon name="xmark" className="size-4" />
+                      </button>
+                    )}
+                    {readOnly && <span />}
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={() => appendLandPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                >
-                  <Icon name="plus" className="size-3" />
-                  Add Periods
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => appendLandPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    <Icon name="plus" className="size-3" />
+                    Add Periods
+                  </button>
+                )}
               </div>
             )}
           </div>
@@ -881,6 +926,7 @@ export function LeaseholdPanel({
                     fieldName="constructionCostIndex"
                     inputType="number"
                     number={{ decimalPlaces: 2 }}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-[10px] text-gray-400">%</span>
@@ -896,6 +942,7 @@ export function LeaseholdPanel({
                     fieldName="buildingCalcStartYear"
                     inputType="number"
                     number={{ decimalPlaces: 0 }}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-[10px] text-gray-400">year(s)</span>
@@ -911,6 +958,7 @@ export function LeaseholdPanel({
                     fieldName="depreciationRate"
                     inputType="number"
                     number={{ decimalPlaces: 2 }}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-[10px] text-gray-400">% every</span>
@@ -919,6 +967,7 @@ export function LeaseholdPanel({
                     fieldName="depreciationIntervalYears"
                     inputType="number"
                     number={{ decimalPlaces: 0 }}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-[10px] text-gray-400">yr</span>
@@ -934,6 +983,7 @@ export function LeaseholdPanel({
                     fieldName="discountRate"
                     inputType="number"
                     number={{ decimalPlaces: 2 }}
+                    disabled={readOnly}
                   />
                 </div>
                 <span className="text-[10px] text-gray-400">%</span>
@@ -1073,6 +1123,7 @@ export function LeaseholdPanel({
                   }}
                   onBlur={estimateField.onBlur}
                   decimalPlaces={2}
+                  disabled={readOnly}
                   className="!font-bold !text-right !text-sm !text-green-700"
                 />
               </div>
@@ -1081,7 +1132,7 @@ export function LeaseholdPanel({
         </div>
 
         {/* Notes & Assumptions */}
-        <RemarkSection setValue={setValue} watch={watch} />
+        <RemarkSection setValue={setValue} watch={watch} readOnly={readOnly} />
 
         {/* Footer */}
         <MethodFooterActions

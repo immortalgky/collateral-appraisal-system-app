@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useGetPoolTasks, useGetTasks, useGetTasksForKanban } from '../api';
+import {
+  bucketForSlaStatus,
+  getRowVariantClasses,
+} from '@features/common/monitoring/components/SlaCells';
 import type {
   GroupByField,
   Task,
@@ -18,6 +23,7 @@ import { columnDefs, DEFAULT_CONFIG } from '../config/columnDefs';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { FavoritesRow } from '@features/menuFavorites';
 
 interface ContextMenuState {
   visible: boolean;
@@ -83,6 +89,7 @@ const readFiltersFromSearchParams = (sp: URLSearchParams): TaskFilterParams => {
 function TaskListingPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t } = useTranslation('common');
 
   // Hydrate from URL on mount
   const initRef = useRef({
@@ -200,7 +207,7 @@ function TaskListingPage() {
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  const { data: poolTotalData } = useGetPoolTasks({
+  const { data: poolTotalData, isError: poolTotalCountIsError } = useGetPoolTasks({
     pageNumber: 0,
     pageSize: 1,
     activityId: filters.activityId,
@@ -272,24 +279,36 @@ function TaskListingPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
-      {/* ── Page header ── */}
-      <div className="shrink-0 mb-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-gray-900">All Tasks</h2>
-          {activeTab === 'personal' && !isListLoading && totalCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
-              {totalCount}
-            </span>
-          )}
-          {activeTab === 'pool' && poolTotalCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
-              {poolTotalCount}
-            </span>
-          )}
+      {/* ── Page header + quick access (single row to save vertical space) ── */}
+      <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
+        <div className="shrink-0">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-semibold text-gray-900">All Tasks</h2>
+            {activeTab === 'personal' && !isListLoading && totalCount > 0 && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
+                {totalCount}
+              </span>
+            )}
+            {activeTab === 'pool' && (poolTotalCount > 0 || poolTotalCountIsError) && (
+              <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
+                {poolTotalCountIsError ? <span title="Failed to load count">!</span> : poolTotalCount}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Manage and track your assigned appraisal tasks
+          </p>
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">
-          Manage and track your assigned appraisal tasks
-        </p>
+
+        {/* Quick access — right aligned, label on top, horizontally scrollable */}
+        <div className="flex flex-col min-w-0">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 text-right">
+            {t('favorites.row.sectionTitle')}
+          </p>
+          <div className="min-w-0">
+            <FavoritesRow />
+          </div>
+        </div>
       </div>
 
       {/* ── Toolbar: tabs + controls ── */}
@@ -326,15 +345,13 @@ function TaskListingPage() {
         >
           <Icon style="solid" name="users" className="size-3" />
           Pool
-          {poolTotalCount > 0 && (
+          {(poolTotalCount > 0 || poolTotalCountIsError) && (
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
-                activeTab === 'pool'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-gray-100 text-gray-500'
+                activeTab === 'pool' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
               }`}
             >
-              {poolTotalCount}
+              {poolTotalCountIsError ? <span title="Failed to load count">!</span> : poolTotalCount}
             </span>
           )}
           {activeTab === 'pool' && (
@@ -676,7 +693,7 @@ function TaskListingPage() {
                               taskId: task.id,
                             });
                           }}
-                          className="group hover:bg-gray-50 cursor-default transition-colors"
+                          className={`group cursor-default transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
@@ -686,8 +703,8 @@ function TaskListingPage() {
                                 key={key}
                                 className={
                                   isSticky
-                                    ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                                    : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')
+                                    ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
+                                    : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs')
                                 }
                                 onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >
@@ -695,7 +712,7 @@ function TaskListingPage() {
                               </td>
                             );
                           })}
-                          <td className="px-4 py-3 w-8">
+                          <td className="px-3 py-1.5 w-8">
                             <Icon
                               style="solid"
                               name="arrow-right"

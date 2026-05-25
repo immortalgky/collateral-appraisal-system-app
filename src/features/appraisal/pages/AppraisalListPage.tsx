@@ -20,6 +20,7 @@ import SmartViewBar from '../components/search/SmartViewBar';
 import SavedSearchesDropdown from '../components/search/SavedSearchesDropdown';
 import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 const NON_FILTER_KEYS = new Set(['search', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
 const VALID_FILTER_KEYS = new Set(appraisalFilters.map(f => f.key));
@@ -82,7 +83,7 @@ function AppraisalListPage() {
   }, [debouncedSearch, pageNumber, pageSize, sortBy, sortDir, filters, activeViewKey, setSearchParams]);
 
   // Data hooks
-  const { data, isLoading } = useAppraisalSearch({
+  const { data, isLoading, isError, error, refetch } = useAppraisalSearch({
     search: debouncedSearch || undefined,
     pageNumber,
     pageSize,
@@ -166,6 +167,16 @@ function AppraisalListPage() {
   const handleExport = (format: 'xlsx' | 'csv') => {
     exportAppraisals({ search: debouncedSearch || undefined, sortBy, sortDir, ...filters }, format);
   };
+
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Failed to load appraisals"
+        message={(error as Error)?.message}
+        onRetry={refetch}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">

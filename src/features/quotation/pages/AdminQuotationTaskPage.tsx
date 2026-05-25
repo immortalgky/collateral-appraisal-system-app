@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import QuotationSection from '@/features/appraisal/components/QuotationSection';
 import QuotationEntryModal from '@/features/appraisal/components/QuotationEntryModal';
@@ -17,7 +18,7 @@ import { useGetTaskById } from '@features/appraisal/api/workflow';
  */
 const AdminQuotationTaskPage = () => {
   const { taskId } = useParams<{ taskId: string }>();
-  const { data: taskData, isLoading } = useGetTaskById(taskId);
+  const { data: taskData, isLoading, isError, refetch } = useGetTaskById(taskId);
 
   const appraisalId = taskData?.appraisalId ?? null;
 
@@ -29,6 +30,10 @@ const AdminQuotationTaskPage = () => {
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (isError) {
+    return <DataErrorState title="Failed to load task" onRetry={() => refetch()} />;
   }
 
   if (!appraisalId) {

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { FormFields } from '@/shared/components/form';
 import Dropdown, { type ListBoxItem } from '@/shared/components/inputs/Dropdown';
+import { isCondo } from '../types';
 import type { ProjectTower, ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import CondoAreaDetailForm from '@/features/appraisal/forms/CondoAreaDetailForm';
@@ -100,7 +101,7 @@ const Card = ({ children }: { children: React.ReactNode }) => (
  * inapplicable fields (no runtime toggle).
  */
 const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => {
-  if (projectType === 'Condo') {
+  if (isCondo(projectType)) {
     // BV-specific fields (not part of property condo screen) stay together in
     // Model Information. Room Layout + Floor sections reuse the parameter-store
     // driven configs from the appraisal CondoDetailForm.

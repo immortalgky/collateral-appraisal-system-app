@@ -8,14 +8,20 @@ interface StarRatingProps {
 }
 
 /**
- * 5-star visualisation of a 0–5 score.
+ * 5-star visualisation of a 0–5 score. Never rounds UP to a full star — a fully-lit
+ * star always reflects an integer value at that rank.
+ *   frac < 0.25 → no half star (e.g. 4.1 → 4)
+ *   frac ≥ 0.25 → half star    (e.g. 4.4 → 4.5, 4.99 → 4.5)
+ *   frac == 0   → full star    (e.g. 5.0 → 5)
+ *
  * - Full star: amber-400 solid
  * - Half star: amber-400 solid (star-half-stroke)
  * - Empty star: gray-300 regular
  */
 function StarRating({ score, size = 'size-3.5' }: StarRatingProps) {
   const full = Math.floor(score);
-  const hasHalf = score - full >= 0.5;
+  const frac = score - full;
+  const hasHalf = frac >= 0.25;
   return (
     <span className="inline-flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map(i => {

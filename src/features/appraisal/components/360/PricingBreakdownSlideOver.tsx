@@ -4,6 +4,12 @@ import axios from '@shared/api/axiosInstance';
 import Icon from '@/shared/components/Icon';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { pricingAnalysisKeys } from '@features/pricingAnalysis/api/queryKeys';
+import MachineryCostBreakdown360 from './method-breakdowns/MachineryCostBreakdown360';
+import BuildingCostBreakdown360 from './method-breakdowns/BuildingCostBreakdown360';
+import IncomeBreakdown360 from './method-breakdowns/IncomeBreakdown360';
+import LeaseholdBreakdown360 from './method-breakdowns/LeaseholdBreakdown360';
+import ProfitRentBreakdown360 from './method-breakdowns/ProfitRentBreakdown360';
+import HypothesisBreakdown360 from './method-breakdowns/HypothesisBreakdown360';
 
 interface PricingBreakdownSlideOverProps {
   appraisalId: string;
@@ -49,6 +55,8 @@ interface ComparativeFactorsData {
   factorScores: FactorScore[];
   calculations: Calculation[];
   rsqResult?: RsqResult;
+  /** Populated for comparative methods (WQS, SaleGrid, DirectComparison). */
+  finalValue?: FinalValueBlock | null;
 }
 
 interface LinkedComparable {
@@ -127,6 +135,28 @@ interface RsqResult {
   highestEstimate: number | null;
 }
 
+/**
+ * FinalValueDto from GetComparativeFactorsResult.cs.
+ * The auto-generated v1 schema only captures `finalValueAdjusted` at the top
+ * level; the full block is sent by the backend but not yet in the generated
+ * schema, so we define it here and rely on .passthrough() to carry the data.
+ */
+interface FinalValueBlock {
+  id: string;
+  finalValue: number;
+  finalValueRounded: number;
+  finalValueAdjusted: number | null;
+  includeLandArea: boolean;
+  landArea: number | null;
+  landValue: number | null;
+  buildingCost: number | null;
+  appraisalPrice: number | null;
+  hasBuildingCost: boolean;
+}
+
+/** Method types that use the /comparative-factors endpoint. */
+const COMPARATIVE_METHOD_TYPES = new Set(['WQS', 'SaleGrid', 'DirectComparison']);
+
 const APPROACH_LABELS: Record<string, string> = {
   Market: 'Market Comparison Approach',
   Cost: 'Cost Approach',
@@ -139,6 +169,7 @@ const METHOD_LABELS: Record<string, string> = {
   SAG_MARKET: 'Sale Adjustment Grid (SAG)',
   WQS_MARKET: 'Weighted Quality Score (WQS)',
   DirectComparison: 'Direct Comparison',
+  SaleGrid: 'Sale Adjustment Grid',
   SaleAdjustmentGrid: 'Sale Adjustment Grid',
   WQS: 'Weighted Quality Score',
   CostApproach: 'Cost Approach',
@@ -146,6 +177,12 @@ const METHOD_LABELS: Record<string, string> = {
   DCF: 'Discounted Cash Flow',
   ResidualMethod: 'Residual Method',
   MC_COST: 'Cost Machine',
+  MachineryCost: 'Machinery Cost',
+  BuildingCost: 'Building Cost',
+  Income: 'Income',
+  Leasehold: 'Leasehold',
+  ProfitRent: 'Profit Rent',
+  Hypothesis: 'Hypothesis',
 };
 
 const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideOverProps) => {
@@ -162,10 +199,14 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
     staleTime: Infinity,
   });
 
-  // Step 2: Fetch comparative factors for all methods
+  // Step 2: Fetch comparative factors only for methods that use the comparative endpoint.
+  // Non-comparative methods (Machinery, Building, Income, Leasehold, ProfitRent, Hypothesis)
+  // each use their own dedicated endpoints fetched inside their breakdown components.
   const allMethods = data?.approaches?.flatMap(a => a.methods) ?? [];
+  const comparativeMethods = allMethods.filter(m => COMPARATIVE_METHOD_TYPES.has(m.methodType));
+
   const methodFactorQueries = useQueries({
-    queries: allMethods.map(method => ({
+    queries: comparativeMethods.map(method => ({
       queryKey: pricingAnalysisKeys.comparativeFactors(pricingAnalysisId, method.id),
       queryFn: async (): Promise<ComparativeFactorsData> => {
         const { data } = await axios.get(
@@ -180,7 +221,7 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
   });
 
   const methodFactorsMap = new Map<string, ComparativeFactorsData>();
-  allMethods.forEach((method, idx) => {
+  comparativeMethods.forEach((method, idx) => {
     const factorData = methodFactorQueries[idx]?.data;
     if (factorData) {
       methodFactorsMap.set(method.id, factorData);
@@ -249,7 +290,8 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
                 expandedMethodId={expandedMethodId}
                 onToggleMethod={setExpandedMethodId}
                 methodFactorsMap={methodFactorsMap}
-                isLoadingFactors={methodFactorQueries.some(q => q.isLoading)}
+                isLoadingComparativeFactors={methodFactorQueries.some(q => q.isLoading)}
+                pricingAnalysisId={pricingAnalysisId}
               />
             ))}
           </div>
@@ -268,7 +310,8 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
                 expandedMethodId={expandedMethodId}
                 onToggleMethod={setExpandedMethodId}
                 methodFactorsMap={methodFactorsMap}
-                isLoadingFactors={methodFactorQueries.some(q => q.isLoading)}
+                isLoadingComparativeFactors={methodFactorQueries.some(q => q.isLoading)}
+                pricingAnalysisId={pricingAnalysisId}
               />
             ))}
           </div>
@@ -327,14 +370,16 @@ const ApproachCard = ({
   expandedMethodId,
   onToggleMethod,
   methodFactorsMap,
-  isLoadingFactors,
+  isLoadingComparativeFactors,
+  pricingAnalysisId,
 }: {
   approach: ApproachDto;
   selected?: boolean;
   expandedMethodId: string | null;
   onToggleMethod: (id: string | null) => void;
   methodFactorsMap: Map<string, ComparativeFactorsData>;
-  isLoadingFactors: boolean;
+  isLoadingComparativeFactors: boolean;
+  pricingAnalysisId: string;
 }) => {
   const selectedMethods = approach.methods.filter(m => m.isSelected);
   const otherMethods = approach.methods.filter(m => !m.isSelected);
@@ -369,7 +414,8 @@ const ApproachCard = ({
               isExpanded={expandedMethodId === method.id}
               onToggle={() => onToggleMethod(expandedMethodId === method.id ? null : method.id)}
               factorsData={methodFactorsMap.get(method.id)}
-              isLoadingFactors={isLoadingFactors}
+              isLoadingComparativeFactors={isLoadingComparativeFactors}
+              pricingAnalysisId={pricingAnalysisId}
             />
           ))}
           {otherMethods.map(method => (
@@ -379,7 +425,8 @@ const ApproachCard = ({
               isExpanded={expandedMethodId === method.id}
               onToggle={() => onToggleMethod(expandedMethodId === method.id ? null : method.id)}
               factorsData={methodFactorsMap.get(method.id)}
-              isLoadingFactors={isLoadingFactors}
+              isLoadingComparativeFactors={isLoadingComparativeFactors}
+              pricingAnalysisId={pricingAnalysisId}
             />
           ))}
         </div>
@@ -394,14 +441,16 @@ const MethodSection = ({
   isExpanded,
   onToggle,
   factorsData,
-  isLoadingFactors,
+  isLoadingComparativeFactors,
+  pricingAnalysisId,
 }: {
   method: MethodDto;
   selected?: boolean;
   isExpanded: boolean;
   onToggle: () => void;
   factorsData: ComparativeFactorsData | undefined;
-  isLoadingFactors: boolean;
+  isLoadingComparativeFactors: boolean;
+  pricingAnalysisId: string;
 }) => (
   <div className="border-b border-gray-50 last:border-b-0">
     {/* Method header — clickable to expand */}
@@ -430,15 +479,51 @@ const MethodSection = ({
       </div>
     </button>
 
-    {/* Expanded detail */}
+    {/* Expanded detail — dispatch by methodType */}
     {isExpanded && (
       <div className="px-4 pb-4 pt-1">
-        {isLoadingFactors && !factorsData ? (
-          <div className="flex items-center justify-center py-4">
-            <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin text-gray-400" />
-          </div>
-        ) : factorsData ? (
-          <MethodDetail data={factorsData} />
+        {COMPARATIVE_METHOD_TYPES.has(method.methodType) ? (
+          isLoadingComparativeFactors && !factorsData ? (
+            <div className="flex items-center justify-center py-4">
+              <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin text-gray-400" />
+            </div>
+          ) : factorsData ? (
+            <MethodDetail data={factorsData} />
+          ) : (
+            <p className="text-xs text-gray-400 py-2">No calculation details available.</p>
+          )
+        ) : method.methodType === 'MachineryCost' ? (
+          <MachineryCostBreakdown360
+            pricingAnalysisId={pricingAnalysisId}
+            methodId={method.id}
+            isExpanded={isExpanded}
+          />
+        ) : method.methodType === 'BuildingCost' ? (
+          <BuildingCostBreakdown360 methodValue={method.methodValue} />
+        ) : method.methodType === 'Income' ? (
+          <IncomeBreakdown360
+            pricingAnalysisId={pricingAnalysisId}
+            methodId={method.id}
+            isExpanded={isExpanded}
+          />
+        ) : method.methodType === 'Leasehold' ? (
+          <LeaseholdBreakdown360
+            pricingAnalysisId={pricingAnalysisId}
+            methodId={method.id}
+            isExpanded={isExpanded}
+          />
+        ) : method.methodType === 'ProfitRent' ? (
+          <ProfitRentBreakdown360
+            pricingAnalysisId={pricingAnalysisId}
+            methodId={method.id}
+            isExpanded={isExpanded}
+          />
+        ) : method.methodType === 'Hypothesis' ? (
+          <HypothesisBreakdown360
+            pricingAnalysisId={pricingAnalysisId}
+            methodId={method.id}
+            isExpanded={isExpanded}
+          />
         ) : (
           <p className="text-xs text-gray-400 py-2">No calculation details available.</p>
         )}
@@ -600,6 +685,73 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
                   : '-'}
               </span>
             </div>
+          )}
+        </div>
+      )}
+
+      {/* Final Value block */}
+      {data.finalValue && (
+        <div className="space-y-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Final Value</p>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">Final Value</span>
+            <span className="text-xs font-medium text-gray-800">
+              {formatNumber(data.finalValue.finalValue, 2)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-500">Final Value Rounded</span>
+            <span className="text-xs font-medium text-gray-800">
+              {formatNumber(data.finalValue.finalValueRounded, 2)}
+            </span>
+          </div>
+          {data.finalValue.finalValueAdjusted != null && (
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">Adjusted</span>
+              <span className="text-sm font-bold text-teal-700">
+                {formatNumber(data.finalValue.finalValueAdjusted, 2)}
+              </span>
+            </div>
+          )}
+          {data.finalValue.includeLandArea && (
+            <>
+              {data.finalValue.landArea != null && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Land Area (Sq.Wa)</span>
+                  <span className="text-xs font-medium text-gray-800">
+                    {formatNumber(data.finalValue.landArea, 2)}
+                  </span>
+                </div>
+              )}
+              {data.finalValue.landValue != null && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Land Value</span>
+                  <span className="text-xs font-medium text-gray-800">
+                    {formatNumber(data.finalValue.landValue, 2)}
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+          {data.finalValue.hasBuildingCost && (
+            <>
+              {data.finalValue.buildingCost != null && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Building Cost</span>
+                  <span className="text-xs font-medium text-gray-800">
+                    {formatNumber(data.finalValue.buildingCost, 2)}
+                  </span>
+                </div>
+              )}
+              {data.finalValue.appraisalPrice != null && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Appraisal Price (Final)</span>
+                  <span className="text-xs font-medium text-gray-800">
+                    {formatNumber(data.finalValue.appraisalPrice, 2)}
+                  </span>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

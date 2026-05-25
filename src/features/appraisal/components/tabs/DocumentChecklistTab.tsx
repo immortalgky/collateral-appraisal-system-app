@@ -30,6 +30,7 @@ import type {
 } from '../../types/documentChecklist';
 import type { AnnotationResult } from '@shared/components/ImageAnnotationEditor';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 const ImageAnnotationEditor = lazy(
   () => import('@shared/components/ImageAnnotationEditor/ImageAnnotationEditor'),
@@ -244,10 +245,10 @@ export const DocumentChecklistTab = () => {
   const requestId = appraisal?.requestId;
 
   // Queries
-  const { data: requestDocsData, isLoading: isLoadingRequestDocs } =
+  const { data: requestDocsData, isLoading: isLoadingRequestDocs, isError: isRequestDocsError, error: requestDocsError, refetch: refetchRequestDocs } =
     useGetRequestDocuments(requestId);
-  const { data: appendicesData, isLoading: isLoadingAppendices } = useGetAppendices(appraisalId);
-  const { data: galleryData } = useGetGalleryPhotos(appraisalId);
+  const { data: appendicesData, isLoading: isLoadingAppendices, isError: isAppendicesError, error: appendicesError, refetch: refetchAppendices } = useGetAppendices(appraisalId);
+  const { data: galleryData, isError: isGalleryError, error: galleryError, refetch: refetchGallery } = useGetGalleryPhotos(appraisalId);
 
   // Mutations
   const addAppendixDocument = useAddAppendixDocument();
@@ -685,8 +686,27 @@ export const DocumentChecklistTab = () => {
     );
   }
 
+  if (isRequestDocsError) {
+    return (
+      <DataErrorState
+        variant="inline"
+        title="Failed to load documents"
+        message={(requestDocsError as Error)?.message}
+        onRetry={refetchRequestDocs}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col gap-8 pb-8">
+      {isGalleryError && (
+        <DataErrorState
+          variant="inline"
+          title="Failed to load gallery"
+          message={(galleryError as Error)?.message}
+          onRetry={refetchGallery}
+        />
+      )}
       {/* Page Header */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900">Document Checklist</h3>
@@ -872,7 +892,14 @@ export const DocumentChecklistTab = () => {
 
         {/* Appendix Sections */}
         <div className="divide-y divide-gray-100">
-          {appendices.map(appendix => {
+          {isAppendicesError ? (
+            <DataErrorState
+              variant="inline"
+              title="Failed to load appendices"
+              message={(appendicesError as Error)?.message}
+              onRetry={refetchAppendices}
+            />
+          ) : appendices.map(appendix => {
             const isExpanded = expandedSections.has(appendix.id);
             const isDragOver = dragOverSection === appendix.id;
             const sortedDocs = [...appendix.documents].sort(

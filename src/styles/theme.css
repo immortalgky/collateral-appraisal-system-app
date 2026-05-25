@@ -115,3 +115,20 @@
         background-color: transparent;
     }
 }
+
+/* ========================================
+   Dark Theme Token Overrides
+   Activated by <html data-theme="dark">
+   ======================================== */
+[data-theme=dark] {
+    --color-base-100: oklch(18% 0.005 265);
+    --color-base-200: oklch(22% 0.005 265);
+    --color-base-300: oklch(27% 0.006 265);
+    --color-base-content: #e5e7eb;
+
+    --color-neutral: #e5e7eb;
+    --color-neutral-content: #111827;
+
+    --color-secondary: #94a3b8;
+    --color-secondary-content: #0f172a;
+}

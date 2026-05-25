@@ -11,6 +11,7 @@ interface MoveToGroupModalProps {
   groups: PropertyGroup[];
   currentGroupId: string;
   isLoading?: boolean;
+  readOnly?: boolean;
 }
 
 export const MoveToGroupModal = ({
@@ -20,6 +21,7 @@ export const MoveToGroupModal = ({
   groups,
   currentGroupId,
   isLoading = false,
+  readOnly = false,
 }: MoveToGroupModalProps) => {
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
@@ -84,14 +86,16 @@ export const MoveToGroupModal = ({
           <Button type="button" variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleSubmit}
-            disabled={!selectedGroupId || isLoading}
-          >
-            {isLoading ? 'Moving...' : 'Move Property'}
-          </Button>
+          {!readOnly && (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={!selectedGroupId || isLoading}
+            >
+              {isLoading ? 'Moving...' : 'Move Property'}
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

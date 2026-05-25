@@ -11,11 +11,12 @@ interface LandTitleModalProps {
   defaultValues?: Record<string, any>;
   onCancel: () => void;
   onSave: (data: Record<string, any>) => void;
+  readOnly?: boolean;
 }
 
 const createLandTitleForm = buildFormSchema(landtitlesFields);
 
-const LandTitleModal = ({ fields, defaultValues, onCancel, onSave }: LandTitleModalProps) => {
+const LandTitleModal = ({ fields, defaultValues, onCancel, onSave, readOnly = false }: LandTitleModalProps) => {
   const form = useForm({
     resolver: zodResolver(createLandTitleForm),
     defaultValues: defaultValues ?? {},
@@ -59,9 +60,11 @@ const LandTitleModal = ({ fields, defaultValues, onCancel, onSave }: LandTitleMo
             <Button variant="ghost" type="button" onClick={onCancel}>
               Cancel
             </Button>
-            <Button variant="primary" type="button" onClick={handleSave}>
-              Save
-            </Button>
+            {!readOnly && (
+              <Button variant="primary" type="button" onClick={handleSave}>
+                Save
+              </Button>
+            )}
           </div>
         </div>
       </div>

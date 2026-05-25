@@ -24,6 +24,7 @@ function buildRouteMap(
         iconColor: node.iconColor ?? undefined,
         canView: true,
         canEdit: node.canEdit,
+        pinnable: false,
       });
     }
     if (node.children?.length) {

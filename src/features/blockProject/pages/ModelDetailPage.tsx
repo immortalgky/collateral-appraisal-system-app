@@ -40,6 +40,7 @@ import {
   type CondoModelFormType,
   type LbModelFormType,
 } from '../schemas/form';
+import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 
 type AppError = AxiosError & { apiError?: ApiError };
@@ -61,7 +62,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   const { modelId } = useParams<{ modelId?: string }>();
 
   const isEditMode = Boolean(modelId);
-  const routeSegment = projectType === 'Condo' ? 'block-condo' : 'block-village';
+  const routeSegment = isCondo(projectType) ? 'block-condo' : 'block-village';
   const schema = projectModelForm(projectType);
   const location = useLocation();
 
@@ -78,7 +79,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   );
   // Condo: fetch towers for the tower selector on the model form
   const { data: towersData } = useGetProjectTowers(appraisalId ?? '');
-  const towers = projectType === 'Condo' ? (towersData ?? []) : [];
+  const towers = isCondo(projectType) ? (towersData ?? []) : [];
 
   const { mutate: createModel, isPending: isCreating } = useCreateProjectModel();
   const { mutate: updateModel, isPending: isUpdating } = useUpdateProjectModel();
@@ -91,7 +92,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
 
   const formDefaults = useMemo(() => {
     if (isEditMode && modelData) {
-      if (projectType === 'Condo') {
+      if (isCondo(projectType)) {
         return {
           modelName: modelData.modelName ?? '',
           modelDescription: modelData.modelDescription ?? null,
@@ -168,7 +169,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         depreciationDetails: modelData.depreciationDetails ?? [],
       } satisfies Partial<LbModelFormType>;
     }
-    return projectType === 'Condo' ? condoModelFormDefaults : lbModelFormDefaults;
+    return isCondo(projectType) ? condoModelFormDefaults : lbModelFormDefaults;
   }, [isEditMode, modelData, projectType]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

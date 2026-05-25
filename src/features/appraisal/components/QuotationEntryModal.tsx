@@ -8,6 +8,7 @@ import CreateQuotationModal from './CreateQuotationModal';
 import ExistingDraftPicker from '@/features/quotation/components/ExistingDraftPicker';
 import { useGetMyDraftsForAssembly, useStartQuotationFromTask } from '@/features/quotation/api/quotation';
 import type { QuotationDraftSummaryDto } from '@/features/quotation/schemas/quotation';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 type Tab = 'new' | 'existing';
 
@@ -41,6 +42,7 @@ const QuotationEntryModal = ({
   assignmentMethod,
   internalFollowupAssignmentMethod,
 }: QuotationEntryModalProps) => {
+  const readOnly = usePageReadOnly();
   const [activeTab, setActiveTab] = useState<Tab>('new');
   const [selectedDraft, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
 
@@ -70,7 +72,7 @@ const QuotationEntryModal = ({
         requestId,
         workflowInstanceId,
         taskExecutionId: null,
-        dueDate: selectedDraft.dueDate ?? new Date(Date.now() + 86400000 * 7).toISOString(),
+        cutOffTime: selectedDraft.cutOffTime ?? new Date(Date.now() + 86400000 * 7).toISOString(),
         bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: [],
         existingQuotationRequestId: selectedDraft.id,
@@ -140,7 +142,7 @@ const QuotationEntryModal = ({
                 drafts={drafts}
                 isLoading={isDraftsLoading}
                 selectedId={selectedDraft?.id ?? null}
-                onSelect={setSelectedDraft}
+                onSelect={readOnly ? () => {} : setSelectedDraft}
               />
             </div>
 
@@ -151,8 +153,8 @@ const QuotationEntryModal = ({
                 <p className="text-sm text-purple-700">
                   Appraisal will be added to{' '}
                   <strong>{selectedDraft.quotationNumber}</strong>{' '}
-                  ({selectedDraft.appraisalCount} existing appraisal
-                  {selectedDraft.appraisalCount !== 1 ? 's' : ''})
+                  ({selectedDraft.totalAppraisals} existing appraisal
+                  {selectedDraft.totalAppraisals !== 1 ? 's' : ''})
                 </p>
               </div>
             )}
@@ -164,7 +166,7 @@ const QuotationEntryModal = ({
               </Button>
               <Button
                 onClick={handleAddToExisting}
-                disabled={!selectedDraft || isAdding || !requestId || !workflowInstanceId}
+                disabled={readOnly || !selectedDraft || isAdding || !requestId || !workflowInstanceId}
               >
                 {isAdding ? (
                   <>

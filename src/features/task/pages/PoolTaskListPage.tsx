@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useClaimTask, useGetPoolTasks, useLockTask } from '../api';
+import {
+  bucketForSlaStatus,
+  getRowVariantClasses,
+} from '@features/common/monitoring/components/SlaCells';
 import type { PoolTask, TaskFilterParams } from '../types';
 import { useAuthStore } from '@features/auth/store';
 import type { PoolTaskUpdateEvent } from '../hooks/useWorkflowHub';
@@ -23,7 +27,10 @@ const POOL_COLUMNS = [
   'purpose',
   'propertyType',
   'status',
+  'assignedDate',
   'dueAt',
+  'slaStatus',
+  'movement',
   'priority',
 ] as const;
 
@@ -467,14 +474,20 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                   return (
                     <tr
                       key={task.id}
-                      className={`group transition-colors ${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'hover:bg-gray-50'}`}
+                      className={`group transition-colors ${
+                        isLockedBySelf
+                          ? 'bg-blue-50'
+                          : isLockedByOther
+                            ? 'bg-amber-50'
+                            : `hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
+                      }`}
                     >
                       {POOL_COLUMNS.map(key => {
                         const col = columnDefs[key];
                         const isSticky = key === 'appraisalNumber';
                         const tdClass = isSticky
-                          ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                          : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm');
+                          ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                          : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs');
                         return (
                           <td key={key} className={tdClass}>
                             {key === 'appraisalNumber' ? (
@@ -513,7 +526,7 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                       })}
 
                       {/* Actions — ellipsis dropdown */}
-                      <td className="px-4 py-3">
+                      <td className="px-3 py-1.5">
                         <div className="relative">
                           <button
                             disabled={isActing}

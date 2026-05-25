@@ -368,6 +368,7 @@ export default function PaymentInformationSection({
 
       {/* Add / Edit Payment Modal */}
       <AddPaymentModal
+        readOnly={readOnly}
         isOpen={isAddPaymentModalOpen || editingPaymentId !== null}
         onClose={() => {
           setIsAddPaymentModalOpen(false);

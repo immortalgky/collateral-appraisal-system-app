@@ -4,6 +4,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from '@shared/components/Icon';
 import clsx from 'clsx';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export const PROPERTY_TYPES = [
   {
@@ -102,12 +103,14 @@ export const PropertyTypeDropdown = ({
   disableDefaultNavigation = false,
   align = 'left',
 }: PropertyTypeDropdownProps) => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
   const layoutBasePath = useBasePath();
   const propertyBasePath = usePropertyBasePath();
 
   const handleSelect = (propertyType: (typeof PROPERTY_TYPES)[number]) => {
+    if (readOnly) return;
     if (onSelectType) {
       onSelectType(propertyType.type, groupId, propertyType.code);
     }
@@ -124,8 +127,10 @@ export const PropertyTypeDropdown = ({
   return (
     <Menu as="div" className="relative inline-block text-left">
       <MenuButton
+        disabled={readOnly}
         className={clsx(
           'flex items-center gap-2 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors',
+          readOnly && 'opacity-50 cursor-not-allowed',
           buttonClassName,
         )}
       >

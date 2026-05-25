@@ -6,6 +6,7 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 
 import Button from '@/shared/components/Button';
+import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Modal from '@/shared/components/Modal';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
@@ -25,7 +26,7 @@ import type { SelectedAppraisal, DocSelections } from '../components/AppraisalPi
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
 const newQuotationSchema = z.object({
-  dueDate: z.string().min(1, 'Due date is required'),
+  cutOffTime: z.string().min(1, 'Cut off time is required'),
   appraisalIds: z.array(z.string()).min(1, 'Select at least one appraisal'),
   invitedCompanyIds: z.array(z.string()).min(1, 'Invite at least one company'),
 });
@@ -55,7 +56,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
   // Appeal exclusion: hide the most-recent prior company so the user can't reselect it
   const excludedCompanyId = useAppealExclusionStore(s => s.excludedCompanyId);
 
-  const { data: rawCompanies, isLoading } = useGetLoanTypeMatchedCompanies(undefined, true);
+  const { data: rawCompanies, isLoading, isError, refetch } = useGetLoanTypeMatchedCompanies(undefined, true);
 
   const companies: SelectedCompany[] = useMemo(
     () => (rawCompanies ?? [])
@@ -69,6 +70,16 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
     const q = query.toLowerCase();
     return companies.filter(c => c.companyName.toLowerCase().includes(q));
   }, [companies, query]);
+
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Failed to load companies"
+        message="Company list could not be retrieved. The form cannot be submitted without it."
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -224,7 +235,7 @@ function NewQuotationPage() {
   } = useForm<NewQuotationFormValues>({
     resolver: zodResolver(newQuotationSchema),
     defaultValues: {
-      dueDate: '',
+      cutOffTime: '',
       appraisalIds: [],
       invitedCompanyIds: [],
     },
@@ -308,7 +319,7 @@ function NewQuotationPage() {
   const onSubmit = async (values: NewQuotationFormValues) => {
     try {
       const { id } = await createQuotationAsync({
-        dueDate: values.dueDate,
+        cutOffTime: values.cutOffTime,
         requestedBy: currentUser?.username ?? '',
         appraisals: selectedAppraisals.map(a => ({
           appraisalId: a.id,
@@ -428,14 +439,14 @@ function NewQuotationPage() {
           />
         </div>
 
-        {/* Due Date */}
+        {/* Cut Off Time */}
         <div className="bg-white rounded-xl border border-gray-200 p-4">
           <Controller
-            name="dueDate"
+            name="cutOffTime"
             control={control}
             render={({ field }) => (
               <DateTimePickerInput
-                label="Cutoff (Due Date)"
+                label="Cut Off Time"
                 required
                 helperText="Deadline for companies to submit their quotation responses"
                 placeholder="dd/mm/yyyy hh:mm"
@@ -443,7 +454,7 @@ function NewQuotationPage() {
                 value={field.value || null}
                 onChange={v => field.onChange(v ?? '')}
                 onBlur={field.onBlur}
-                error={errors.dueDate?.message}
+                error={errors.cutOffTime?.message}
               />
             )}
           />

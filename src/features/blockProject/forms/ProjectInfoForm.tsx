@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 
 import { FormFields } from '@/shared/components/form';
+import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import ProjectTypePill from '../components/ProjectTypePill';
@@ -40,7 +41,7 @@ const ProjectInfoForm = ({
 }: ProjectInfoFormProps) => {
   const { control } = useFormContext();
   const typeSpecificInfoFields =
-    projectType === 'Condo' ? condoProjectInfoFields : lbProjectInfoFields;
+    isCondo(projectType) ? condoProjectInfoFields : lbProjectInfoFields;
 
   // Two custom inputs sit inside `projectInformationFields` and need bespoke
   // rendering: ProjectType (dropdown that opens a confirmation dialog, placed
