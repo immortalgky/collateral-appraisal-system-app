@@ -7,9 +7,7 @@ import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigationTypes';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
-import {
-  SIDEBAR_COLLAPSED_WIDTH,
-} from './sidebarConstants';
+import { SIDEBAR_COLLAPSED_WIDTH } from './sidebarConstants';
 
 const TASK_LIST_PATH = '/tasks';
 
@@ -39,8 +37,7 @@ function MenuItem({
   const [isOpen, setIsOpen] = useState(false);
   const [hrefPath, hrefSearch = ''] = item.href.split('?');
   const isActive =
-    location.pathname === hrefPath &&
-    location.search === (hrefSearch ? `?${hrefSearch}` : '');
+    location.pathname === hrefPath && location.search === (hrefSearch ? `?${hrefSearch}` : '');
   const hasChildren = item.children && item.children.length > 0;
   const iconStyle = (item.iconStyle || 'solid') as
     | 'solid'
@@ -214,9 +211,7 @@ function MenuItem({
         {isChild && (
           <div className={clsx('w-2 h-2 rounded-full', isActive ? 'bg-primary' : 'bg-gray-300')} />
         )}
-        <span className={clsx('text-xs font-medium text-gray-700')}>
-          {item.name}
-        </span>
+        <span className={clsx('text-xs font-medium text-gray-700')}>{item.name}</span>
         {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
       </Link>
     </li>
@@ -372,7 +367,10 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
         <div
-          className={clsx('transition-all duration-300', sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4')}
+          className={clsx(
+            'transition-all duration-300',
+            sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4',
+          )}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
             <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
