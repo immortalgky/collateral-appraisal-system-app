@@ -29,7 +29,14 @@ interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>,
   value: string | undefined;
 }
 
-function SelectField({ label, options, placeholder = 'Please select', value, onChange, ...rest }: SelectFieldProps) {
+function SelectField({
+  label,
+  options,
+  placeholder = 'Please select',
+  value,
+  onChange,
+  ...rest
+}: SelectFieldProps) {
   return (
     <div className="w-full">
       <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
@@ -92,17 +99,13 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
             label="Appraisal Report No."
             placeholder="Enter report no."
             value={values.appraisalNumber ?? ''}
-            onChange={e =>
-              setValues(v => ({ ...v, appraisalNumber: e.target.value || undefined }))
-            }
+            onChange={e => setValues(v => ({ ...v, appraisalNumber: e.target.value || undefined }))}
           />
           <TextInput
             label="Customer Name"
             placeholder="Enter customer name"
             value={values.customerName ?? ''}
-            onChange={e =>
-              setValues(v => ({ ...v, customerName: e.target.value || undefined }))
-            }
+            onChange={e => setValues(v => ({ ...v, customerName: e.target.value || undefined }))}
           />
           <SelectField
             label="Appraisal Request Status"

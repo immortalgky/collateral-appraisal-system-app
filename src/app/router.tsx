@@ -86,12 +86,15 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
+import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
 import MonitoringPage from '@/features/common/monitoring/pages/MonitoringPage';
 import HistorySearchPage from '@/features/common/historySearch/pages/HistorySearchPage';
 import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage';
 import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
+import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
+import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -407,6 +410,27 @@ export const router = createBrowserRouter([
       {
         path: 'standalone/service-quality-evaluation/:appraisalId',
         element: <ServiceQualityEvaluationDetailPage />,
+      },
+      // support data maintenance
+      {
+        path: 'standalone/supporting-data-maintenance',
+        element: <SupportingDataMaintenanceListPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/new',
+        element: <SupportingDataMaintenanceDetailListPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/:supportingId',
+        element: <SupportingDataMaintenanceDetailListPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/:supportingId/data/new',
+        element: <CreateSupportingDataPage />,
+      },
+      {
+        path: 'standalone/supporting-data-maintenance/:supportingId/data/:id',
+        element: <CreateSupportingDataPage />,
       },
       // Catch-all route for 404 pages
       {
