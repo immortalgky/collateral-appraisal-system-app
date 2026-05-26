@@ -1,8 +1,6 @@
-import { useMemo, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { z } from 'zod';
-import { usePreferences } from '@shared/hooks/usePreferences';
-import { PREFERENCE_KEYS } from '@features/menuFavorites/preferenceKeys';
 import type { ActivityColumnConfig, ColumnKey } from '../config/columnDefs';
 
 // ── Zod schema ────────────────────────────────────────────────────────────────
@@ -33,31 +31,63 @@ function normalizeState(
       (config.columns as string[]).includes(k) && !alwaysVisible.has(k as ColumnKey),
   );
 
-  // Restore order: saved order filtered to valid keys, then append new columns
-  const savedOrder = raw.order.filter((k): k is ColumnKey =>
-    (config.columns as string[]).includes(k),
-  );
+  // Restore order: saved order filtered to valid, unique keys, then append new columns.
+  // Deduping guards against a corrupt/hand-edited stored value producing duplicate cells.
+  const savedOrder = [
+    ...new Set(
+      raw.order.filter((k): k is ColumnKey => (config.columns as string[]).includes(k)),
+    ),
+  ];
   const missing = config.columns.filter(k => !savedOrder.includes(k));
   const order = [...savedOrder, ...missing];
 
-  return { hidden: new Set(validHidden), order };
+  // The sticky column must always render first — force it to index 0 so a stale
+  // saved order (or a user dragging another column ahead of it) can't unpin it.
+  const sticky = config.stickyColumn;
+  const ordered = [sticky, ...order.filter(k => k !== sticky)];
+
+  return { hidden: new Set(validHidden), order: ordered };
 }
 
 function defaultPersistedState(config: ActivityColumnConfig): PersistedState {
   return { hidden: [], order: config.columns };
 }
 
+function readStored(storageKey: string, config: ActivityColumnConfig): PersistedState {
+  try {
+    const item = localStorage.getItem(storageKey);
+    if (!item) return defaultPersistedState(config);
+    const parsed = taskColumnsSchema.safeParse(JSON.parse(item));
+    return parsed.success ? parsed.data : defaultPersistedState(config);
+  } catch {
+    return defaultPersistedState(config);
+  }
+}
+
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useColumnVisibility(_storageKey: string, config: ActivityColumnConfig) {
-  // _storageKey is kept in the signature for API compatibility but unused —
-  // storage has moved to the backend under PREFERENCE_KEYS.taskColumns.
-  const defaultValue = useMemo(() => defaultPersistedState(config), [config]);
+export function useColumnVisibility(storageKey: string, config: ActivityColumnConfig) {
+  // Column layout is persisted per-screen in localStorage under the caller's storageKey.
+  // Each screen (All Tasks, each activity view) owns its own key, so the views no longer
+  // clobber each other — and the layout survives a page refresh.
+  const [raw, setRawState] = useState<PersistedState>(() => readStored(storageKey, config));
 
-  const { value: raw, setValue: setRaw } = usePreferences(
-    PREFERENCE_KEYS.taskColumns,
-    defaultValue,
-    taskColumnsSchema,
+  // Re-read when the screen changes: the activity table swaps activityId via the URL query
+  // without remounting, so storageKey/config can change while the hook stays mounted.
+  useEffect(() => {
+    setRawState(readStored(storageKey, config));
+  }, [storageKey, config]);
+
+  const setRaw = useCallback(
+    (next: PersistedState) => {
+      setRawState(next);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        // ignore quota / unavailable-storage errors — in-memory state still updates
+      }
+    },
+    [storageKey],
   );
 
   const { hidden, order } = useMemo(() => normalizeState(raw, config), [raw, config]);
