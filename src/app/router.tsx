@@ -95,6 +95,8 @@ import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/Bloc
 import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
 import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
 import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
+import ParameterDetailPage from '@/features/parameterMaintenance/pages/ParameterDetailPage';
+import ParameterMaintenancePage from '@/features/parameterMaintenance/pages/ParameterMaintenancePage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -242,6 +244,14 @@ export const router = createBrowserRouter([
       {
         path: 'notifications',
         element: <NotificationPage />,
+      },
+      // Parameter Maintenance Routes
+      {
+        path: 'parameter',
+        children: [
+          { index: true, element: <ParameterMaintenancePage /> },
+          { path: ':group', element: <ParameterDetailPage /> },
+        ],
       },
       // Market Comparable Routes
       {
