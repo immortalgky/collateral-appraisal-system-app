@@ -198,9 +198,11 @@ const AdministrationPage = () => {
   useEffect(() => {
     if (currentAssignment) {
       const formValues = mapAssignmentResponseToForm(currentAssignment);
+      const clearInternal = isInternalDisabled && formValues.assignmentType === 'internal';
       reset({
         ...formValues,
-        selectedStaff: assignedStaff ?? null,
+        assignmentType: clearInternal ? ('' as any) : formValues.assignmentType,
+        staffId: clearInternal ? null : formValues.staffId,
         selectedCompany: assignedCompany ?? null,
         selectedFollowupStaff: followupStaff ?? null,
       });
@@ -212,6 +214,7 @@ const AdministrationPage = () => {
     assignedStaff,
     assignedCompany,
     followupStaff,
+    isInternalDisabled,
   ]);
 
   // Handle form submission
@@ -283,7 +286,11 @@ const AdministrationPage = () => {
             }
 
             // For external manual, include company selection data
-            if (data.assignmentType === 'external' && data.assignmentMethod === 'manual' && data.selectedCompany) {
+            if (
+              data.assignmentType === 'external' &&
+              data.assignmentMethod === 'manual' &&
+              data.selectedCompany
+            ) {
               input.selectedCompanyId = data.companyId;
               input.selectedCompanyName = data.selectedCompany.companyName;
             }
@@ -297,8 +304,14 @@ const AdministrationPage = () => {
             }
 
             // For internal manual, use NextAssignmentOverrides
-            let nextAssignmentOverrides: Record<string, { runtimeAssignee?: string; overrideReason?: string }> | undefined;
-            if (data.assignmentType === 'internal' && data.assignmentMethod === 'manual' && data.staffId) {
+            let nextAssignmentOverrides:
+              | Record<string, { runtimeAssignee?: string; overrideReason?: string }>
+              | undefined;
+            if (
+              data.assignmentType === 'internal' &&
+              data.assignmentMethod === 'manual' &&
+              data.staffId
+            ) {
               nextAssignmentOverrides = {
                 'int-appraisal-execution': {
                   runtimeAssignee: data.staffId,
@@ -315,7 +328,7 @@ const AdministrationPage = () => {
                 nextAssignmentOverrides,
               },
               {
-                onSuccess: (result) => {
+                onSuccess: result => {
                   if (result.validationErrors && result.validationErrors.length > 0) {
                     result.validationErrors.forEach((err: string) => toast.error(err));
                     return;
@@ -364,8 +377,8 @@ const AdministrationPage = () => {
                   <p className="text-sm font-medium text-amber-800">Assignment locked</p>
                   <p className="text-xs text-amber-700 mt-0.5">
                     This appraisal is in Quotation{' '}
-                    <strong>#{activeNonTerminalQuotation.quotationNumber}</strong>{' '}
-                    ({activeNonTerminalQuotation.status}). Cancel the quotation or remove this
+                    <strong>#{activeNonTerminalQuotation.quotationNumber}</strong> (
+                    {activeNonTerminalQuotation.status}). Cancel the quotation or remove this
                     appraisal from it to change.
                   </p>
                 </div>
@@ -421,7 +434,9 @@ const AdministrationPage = () => {
                         className={({ checked, disabled }) =>
                           clsx(
                             'flex-1 rounded-xl border-2 p-4 transition-all',
-                            disabled ? 'pointer-events-none opacity-50 cursor-not-allowed' : 'cursor-pointer',
+                            disabled
+                              ? 'pointer-events-none opacity-50 cursor-not-allowed'
+                              : 'cursor-pointer',
                             checked
                               ? `border-${option.color}-500 bg-${option.color}-50`
                               : 'border-gray-200 hover:border-gray-300 bg-white',
@@ -477,7 +492,11 @@ const AdministrationPage = () => {
               )}
               {isInternalDisabled && (
                 <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
-                  <Icon name="circle-info" style="solid" className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                  <Icon
+                    name="circle-info"
+                    style="solid"
+                    className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
+                  />
                   <p className="text-xs text-amber-700">
                     Internal assignment is not available for facility limits exceeding 50M
                   </p>
@@ -636,7 +655,8 @@ const AdministrationPage = () => {
                       }
                     />
                   ) : (
-                    !isReadOnly && !isLockedByQuotation && (
+                    !isReadOnly &&
+                    !isLockedByQuotation && (
                       <button
                         type="button"
                         onClick={openStaffModal}
@@ -678,7 +698,8 @@ const AdministrationPage = () => {
                       }
                     />
                   ) : (
-                    !isReadOnly && !isLockedByQuotation && (
+                    !isReadOnly &&
+                    !isLockedByQuotation && (
                       <button
                         type="button"
                         onClick={openCompanyModal}
@@ -746,7 +767,8 @@ const AdministrationPage = () => {
               {assignmentType === 'external' && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Internal Followup Staff {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
+                    Internal Followup Staff{' '}
+                    {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
                   </label>
 
                   {/* Followup method chooser */}
@@ -756,7 +778,9 @@ const AdministrationPage = () => {
                     render={({ field }) => (
                       <HeadlessRadioGroup
                         value={field.value}
-                        onChange={(value: 'manual' | 'roundrobin') => handleFollowupMethodChange(value)}
+                        onChange={(value: 'manual' | 'roundrobin') =>
+                          handleFollowupMethodChange(value)
+                        }
                         className="grid grid-cols-2 gap-3 mb-4"
                         disabled={isReadOnly || isLockedByQuotation}
                       >
@@ -842,7 +866,8 @@ const AdministrationPage = () => {
                             Round-robin Assignment
                           </p>
                           <p className="text-sm mt-1 text-purple-700">
-                            The system will automatically assign a followup staff member based on round-robin distribution.
+                            The system will automatically assign a followup staff member based on
+                            round-robin distribution.
                           </p>
                         </div>
                       </div>
@@ -866,7 +891,8 @@ const AdministrationPage = () => {
                           variant="purple"
                         />
                       ) : (
-                        !isReadOnly && !isLockedByQuotation && (
+                        !isReadOnly &&
+                        !isLockedByQuotation && (
                           <button
                             type="button"
                             onClick={openFollowupStaffModal}
@@ -1021,8 +1047,16 @@ const AdministrationPage = () => {
             bankingSegment={bankingSegment}
             appraisalNumber={(requestData as any)?.appraisalNumber ?? ''}
             propertyType={(requestData as any)?.detail?.propertyType ?? ''}
-            assignmentType={assignmentType ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1) : null}
-            assignmentMethod={assignmentMethod ? assignmentMethod.charAt(0).toUpperCase() + assignmentMethod.slice(1) : null}
+            assignmentType={
+              assignmentType
+                ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1)
+                : null
+            }
+            assignmentMethod={
+              assignmentMethod
+                ? assignmentMethod.charAt(0).toUpperCase() + assignmentMethod.slice(1)
+                : null
+            }
             internalFollowupAssignmentMethod={followupStaffMethod ?? null}
           />
         </>
