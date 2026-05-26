@@ -1615,6 +1615,7 @@ export const constructionMaterialsFormFields: FormField[] = [
 export const condoRoomLayoutFormFields: FormField[] = [
   {
     type: 'radio-group',
+    label: 'Room Layout',
     name: 'roomLayoutType',
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
