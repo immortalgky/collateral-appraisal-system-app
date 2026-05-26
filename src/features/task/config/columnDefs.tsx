@@ -180,20 +180,14 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     sortField: 'appraisalNumber',
     width: 130,
     render: task => {
-      const display = task.appraisalNumber ?? task.requestNumber;
-      const isReq = !task.appraisalNumber && !!task.requestNumber;
+      const display = task.appraisalNumber;
       return (
         <Link
           to={`/tasks/${task.id}/opening`}
           onClick={e => e.stopPropagation()}
-          className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+          className="font-medium text-primary hover:underline"
         >
           {display ?? '-'}
-          {isReq && (
-            <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
-              REQ
-            </span>
-          )}
         </Link>
       );
     },
@@ -206,9 +200,12 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
       <Link
         to={`/tasks/${task.id}/opening`}
         onClick={e => e.stopPropagation()}
-        className="font-medium text-primary hover:underline"
+        className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
       >
         {task.requestNumber ?? '-'}
+        <span className="text-[10px] font-semibold px-1 py-0.5 rounded bg-gray-100 text-gray-500 border border-gray-200">
+          REQ
+        </span>
       </Link>
     ),
   },
@@ -348,6 +345,7 @@ export type ActivityColumnConfig = {
 
 const DEFAULT_COLUMNS: ColumnKey[] = [
   'appraisalNumber',
+  'requestNumber',
   'customerName',
   'taskType',
   'purpose',
@@ -375,7 +373,7 @@ const DEFAULT_CONFIG: ActivityColumnConfig = {
 };
 
 const INITIATION_CONFIG: ActivityColumnConfig = {
-  columns: ['requestNumber', ...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],
+  columns: [...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],
   stickyColumn: 'requestNumber',
 };
 
