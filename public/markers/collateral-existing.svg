@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
   <defs>
     <filter id="ds" x="-30%" y="-15%" width="160%" height="130%">
-      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#78350f" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#14532d" flood-opacity="0.4"/>
     </filter>
   </defs>
-  <!-- Pin teardrop — FSD "Collateral" colour (orange) -->
+  <!-- Pin teardrop — collateral (existing) colour (green) -->
   <path d="M 24 4 C 12 4 4 13 4 24 c 0 14 20 36 20 36 s 20 -22 20 -36 c 0 -11 -8 -20 -20 -20 z"
-        fill="#f59e0b" stroke="#b45309" stroke-width="1" stroke-opacity="0.4" filter="url(#ds)"/>
+        fill="#22c55e" stroke="#15803d" stroke-width="1" stroke-opacity="0.4" filter="url(#ds)"/>
   <!-- Inner white circle -->
   <circle cx="24" cy="22" r="8" fill="#ffffff"/>
 </svg>

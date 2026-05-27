@@ -11,6 +11,7 @@ import enServiceQualityEvaluation from './locales/en/serviceQualityEvaluation.js
 import enMonitoring from './locales/en/monitoring.json';
 import enHistorySearch from './locales/en/historySearch.json';
 import enBlockUnitMaintenance from './locales/en/blockUnitMaintenance.json';
+import enLogAdmin from './locales/en/logAdmin.json';
 import thCommon from './locales/th/common.json';
 import thNav from './locales/th/nav.json';
 import thWebhookAdmin from './locales/th/webhookAdmin.json';
@@ -19,11 +20,13 @@ import thServiceQualityEvaluation from './locales/th/serviceQualityEvaluation.js
 import thMonitoring from './locales/th/monitoring.json';
 import thHistorySearch from './locales/th/historySearch.json';
 import thBlockUnitMaintenance from './locales/th/blockUnitMaintenance.json';
+import thLogAdmin from './locales/th/logAdmin.json';
 import zhCommon from './locales/zh/common.json';
 import zhNav from './locales/zh/nav.json';
 import zhWebhookAdmin from './locales/zh/webhookAdmin.json';
 import zhInvoice from './locales/zh/invoice.json';
 import zhServiceQualityEvaluation from './locales/zh/serviceQualityEvaluation.json';
+import zhLogAdmin from './locales/zh/logAdmin.json';
 
 export const defaultNS = 'common' as const;
 
@@ -37,6 +40,7 @@ export const resources = {
     monitoring: enMonitoring,
     historySearch: enHistorySearch,
     blockUnitMaintenance: enBlockUnitMaintenance,
+    logAdmin: enLogAdmin,
   },
   th: {
     common: thCommon,
@@ -47,6 +51,7 @@ export const resources = {
     monitoring: thMonitoring,
     historySearch: thHistorySearch,
     blockUnitMaintenance: thBlockUnitMaintenance,
+    logAdmin: thLogAdmin,
   },
   zh: {
     common: zhCommon,
@@ -59,6 +64,7 @@ export const resources = {
     monitoring: enMonitoring,
     historySearch: enHistorySearch,
     blockUnitMaintenance: enBlockUnitMaintenance,
+    logAdmin: zhLogAdmin,
   },
 } as const;
 

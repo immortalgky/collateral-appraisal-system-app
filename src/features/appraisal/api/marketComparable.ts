@@ -14,7 +14,36 @@ import type {
 
 export const marketComparableKeys = {
   detail: (id?: string) => ['market-comparables', 'detail', id] as const,
+  appraisalMapPins: (appraisalId?: string) => ['appraisals', appraisalId, 'map-pins'] as const,
 };
+
+// ─── Appraisal map-pins response types ────────────────────────────────────────
+
+export interface AppraisalMapPinCollateral {
+  appraisalPropertyId: string;
+  lat: number;
+  lon: number;
+  propertyType: string | null;
+  province: string | null;
+  district: string | null;
+  subDistrict: string | null;
+}
+
+export interface AppraisalMapPinMc {
+  marketComparableId: string;
+  lat: number;
+  lon: number;
+  propertyType: string;
+  surveyName: string;
+  infoDateTime: string | null;
+  offerPrice: number | null;
+  salePrice: number | null;
+}
+
+export interface AppraisalMapPinsResponse {
+  collateral: AppraisalMapPinCollateral[];
+  marketComparables: AppraisalMapPinMc[];
+}
 
 /**
  * Create a new market comparable
@@ -194,6 +223,26 @@ export const useLinkAppraisalComparable = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisals', variables.appraisalId, 'comparables'],
       });
+      // Also invalidate the 360-page map-pins so newly linked MCs appear without
+      // a manual refresh.
+      queryClient.invalidateQueries({
+        queryKey: marketComparableKeys.appraisalMapPins(variables.appraisalId),
+      });
+    },
+  });
+};
+
+/**
+ * Get collateral + MC map pins for an appraisal (Feature 2 — 360 page map).
+ * GET /appraisals/{appraisalId}/map-pins
+ */
+export const useGetAppraisalMapPins = (appraisalId: string | undefined) => {
+  return useQuery({
+    queryKey: marketComparableKeys.appraisalMapPins(appraisalId),
+    enabled: !!appraisalId,
+    queryFn: async (): Promise<AppraisalMapPinsResponse> => {
+      const { data } = await axios.get(`/appraisals/${appraisalId}/map-pins`);
+      return data;
     },
   });
 };

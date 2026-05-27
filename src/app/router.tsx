@@ -86,6 +86,7 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
+import LogViewerPage from '@features/common/logViewer/pages/LogViewerPage';
 import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
@@ -309,6 +310,12 @@ export const router = createBrowserRouter([
               { path: 'new', element: <MenuEditPage /> },
               { path: ':menuId', element: <MenuEditPage /> },
             ],
+          },
+          // Log viewer — gated by LOGS_VIEW permission
+          {
+            path: 'logs',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="LOGS_VIEW" />,
+            children: [{ index: true, element: <LogViewerPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {

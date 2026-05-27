@@ -238,6 +238,8 @@ export const createMarketComparableForm = z
     salePrice: z.coerce.number().nullable().optional(),
     salePriceUnit: z.string().nullable().optional(),
     saleDate: z.string().datetime({ local: true, offset: true }).nullable().optional(),
+    latitude: z.coerce.number().nullable().optional(),
+    longitude: z.coerce.number().nullable().optional(),
   })
   .passthrough();
 
@@ -724,6 +726,8 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   salePrice: null,
   salePriceUnit: null,
   saleDate: null,
+  latitude: null,
+  longitude: null,
 };
 
 // =============================================================================
