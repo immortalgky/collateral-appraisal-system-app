@@ -110,7 +110,7 @@ export const useGetMarketComparables = () => {
  */
 export const useGetMarketComparableById = (marketId?: string) => {
   return useQuery({
-    queryKey: ['market-comparables', 'detail', marketId],
+    queryKey: marketComparableKeys.detail(marketId),
     enabled: !!marketId,
     queryFn: async () => {
       const { data } = await axios.get(`/market-comparables/${marketId}`);
