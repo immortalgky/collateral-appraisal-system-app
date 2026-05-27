@@ -1781,6 +1781,8 @@ const UpdateMarketComparableRequest = z
     saleDate: z.string().datetime({ offset: true }).nullish().default(null),
     offerPriceUnit: z.string().nullish().default(null),
     salePriceUnit: z.string().nullish().default(null),
+    latitude: z.number().nullish().default(null),
+    longitude: z.number().nullish().default(null),
   })
   .passthrough();
 const UpdateMarketComparableResponse = z.object({ success: z.boolean() }).passthrough();
@@ -1826,6 +1828,8 @@ const MarketComparableDetailDto = z
     saleDate: z.string().datetime({ offset: true }).nullable(),
     offerPriceUnit: z.string().nullable(),
     salePriceUnit: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     notes: z.string().nullable(),
     templateId: z.string().uuid().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
@@ -1897,6 +1901,8 @@ const CreateMarketComparableRequest = z
     saleDate: z.string().datetime({ offset: true }).nullish().default(null),
     offerPriceUnit: z.string().nullish().default(null),
     salePriceUnit: z.string().nullish().default(null),
+    latitude: z.number().nullish().default(null),
+    longitude: z.number().nullish().default(null),
   })
   .passthrough();
 const CreateMarketComparableResponse = z.object({ id: z.string().uuid() }).passthrough();
@@ -2505,6 +2511,8 @@ const PropertyGroupItemDto = z
     registrationNumber: z.string().nullable(),
     dimension: z.string().nullable(),
     location: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
     photos: z.array(PropertyPhotoDto).nullable(),
   })
   .partial()

@@ -67,11 +67,16 @@ const CreateMarketComparablePage = () => {
   const marketId = marketComparableId || searchParams.get('id');
   const isEditMode = !!marketId;
 
+  // Copy mode: prefill the form from an existing survey (?copyFrom=) but still
+  // CREATE a brand-new comparable on save (so the user doesn't re-key everything).
+  const copyFromId = searchParams.get('copyFrom');
+  const sourceId = marketId ?? copyFromId ?? undefined;
+
   const { data: marketComparable, isLoading: isLoadingComparable } = useGetMarketComparableById(
-    isEditMode ? marketId : undefined,
+    sourceId,
   );
   const { data: template, isLoading: isLoadingTemplate } = useGetMarketComparableTemplateById(
-    isEditMode ? marketComparable?.marketComparable.templateId : undefined,
+    marketComparable?.marketComparable.templateId,
   );
 
   // The "Property Information → Market Comparable" structural parents are derived
@@ -100,7 +105,8 @@ const CreateMarketComparablePage = () => {
   const isPending = isCreating || isUpdating;
 
   const mapComparableToForm = useMemo(() => {
-    if (!isEditMode || !marketComparable || !template) return null;
+    // Prefill from the loaded source in BOTH edit mode and copy mode.
+    if (!marketComparable || !template) return null;
 
     const factorDataValue = template.template.factors
       .map((factor: any) => {
@@ -139,6 +145,8 @@ const CreateMarketComparablePage = () => {
       salePrice: marketComparable.marketComparable.salePrice ?? null,
       salePriceUnit: marketComparable.marketComparable.salePriceUnit ?? null,
       saleDate: marketComparable.marketComparable.saleDate ?? null,
+      latitude: marketComparable.marketComparable.latitude ?? null,
+      longitude: marketComparable.marketComparable.longitude ?? null,
       factorData: factorDataValue,
     };
   }, [isEditMode, marketComparable, template]);
@@ -158,10 +166,11 @@ const CreateMarketComparablePage = () => {
   const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   useEffect(() => {
-    if (isEditMode && mapComparableToForm) {
+    // Reset the form once the source data is mapped (edit OR copy prefill).
+    if (mapComparableToForm) {
       methods.reset(mapComparableToForm);
     }
-  }, [isEditMode, mapComparableToForm]);
+  }, [mapComparableToForm]);
 
   const onSubmit: SubmitHandler<createMarketComparableFormType> = data => {
     // Convert factorData values to string
@@ -192,6 +201,9 @@ const CreateMarketComparablePage = () => {
           salePrice: data.salePrice ?? null,
           salePriceUnit: data.salePriceUnit ?? null,
           saleDate: data.saleDate || null,
+          // Falsy (0 / empty) → null so an unset coordinate doesn't pin at 0,0.
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
           factorData,
         };
 
@@ -229,6 +241,9 @@ const CreateMarketComparablePage = () => {
         salePrice: data.salePrice ?? null,
         salePriceUnit: data.salePriceUnit ?? null,
         saleDate: data.saleDate || null,
+        // Falsy (0 / empty) → null so an unset coordinate doesn't pin at 0,0.
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
         factorData,
       };
 
@@ -241,6 +256,9 @@ const CreateMarketComparablePage = () => {
                 marketComparableId: response.id,
                 sequenceNumber: 0,
                 originalPricePerUnit: 0,
+                weight: null,
+                selectionReason: null,
+                notes: null,
               });
             } catch (error: any) {
               toast.error(
@@ -271,9 +289,10 @@ const CreateMarketComparablePage = () => {
 
   const { isOpen, onToggle } = useDisclosure();
 
-  // Loading state — block render until both data sources are available in edit mode
+  // Loading state — block render until the source data is available when prefilling
+  // (edit OR copy), so the form mounts already populated rather than flashing empty.
   const isLoading =
-    isEditMode && (isLoadingComparable || isLoadingTemplate || !marketComparable || !template);
+    !!sourceId && (isLoadingComparable || isLoadingTemplate || !marketComparable || !template);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">

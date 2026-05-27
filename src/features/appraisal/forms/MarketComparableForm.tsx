@@ -1,7 +1,8 @@
 import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import {
   useGetMarketComparableTemplate,
   useGetMarketComparableTemplateById,
@@ -99,6 +100,17 @@ const MarketComparableForm = () => {
     name: 'factorData',
   });
   const isEditMode = !!factorData?.length;
+
+  // Location picker (lat/lon) — same pattern as the Land/Condo property forms.
+  // Coordinates drive the History Search / 360 map pins for this comparable.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const latitude = useWatch({ name: 'latitude' });
+  const longitude = useWatch({ name: 'longitude' });
+  const initialLat =
+    latitude != null && latitude !== '' && !Number.isNaN(Number(latitude)) ? Number(latitude) : null;
+  const initialLon =
+    longitude != null && longitude !== '' && !Number.isNaN(Number(longitude)) ? Number(longitude) : null;
+  const pickerButton = useMemo(() => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />, []);
 
   // Initialize market comparable template code
   useEffect(() => {
@@ -226,6 +238,20 @@ const MarketComparableForm = () => {
       disabledValue: null,
       disableFutureDates: true,
     },
+    {
+      type: 'text-input',
+      name: 'latitude',
+      label: 'Latitude',
+      wrapperClassName: 'col-span-6',
+      rightIcon: pickerButton,
+    },
+    {
+      type: 'text-input',
+      name: 'longitude',
+      label: 'Longitude',
+      wrapperClassName: 'col-span-6',
+      rightIcon: pickerButton,
+    },
   ];
 
   const formStaticSections = [
@@ -269,6 +295,11 @@ const MarketComparableForm = () => {
       icon: 'calendar',
       fields: staticFields.filter(f => f.name === 'saleDate'),
     },
+    {
+      label: 'Location',
+      icon: 'location-dot',
+      fields: staticFields.filter(f => f.name === 'latitude' || f.name === 'longitude'),
+    },
   ];
 
   const remark: FormField[] = [
@@ -294,7 +325,6 @@ const MarketComparableForm = () => {
           factors.length > 0 && (
             <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
               {factors.map((fac: any, index: number) => {
-                console.log(`index ${index}, `, fac);
                 const fields: FormField[] = buildFormField(fac, index);
                 return (
                   <SectionRow
@@ -317,6 +347,17 @@ const MarketComparableForm = () => {
           <FormFields fields={remark} />
         </SectionRow>
       </div>
+
+      <MapLocationPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(newLat, newLon) => {
+          setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+          setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+        }}
+        initialLat={initialLat}
+        initialLon={initialLon}
+      />
     </div>
   );
 };
