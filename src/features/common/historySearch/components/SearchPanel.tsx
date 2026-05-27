@@ -1,8 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import type { HistorySearchFormValues, HistorySearchPeriod } from '../types';
 import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
+import ProvinceAutocomplete from '@shared/components/inputs/ProvinceAutocomplete';
+import Autocomplete from '@shared/components/inputs/Autocomplete';
+import { useAddressStore } from '@/shared/store';
+import TextInput from '@shared/components/inputs/TextInput';
+import NumberInput from '@shared/components/inputs/NumberInput';
+import Dropdown from '@shared/components/inputs/Dropdown';
+import type { ListBoxItem } from '@shared/components/inputs/Dropdown';
+import DatePickerInput from '@shared/components/inputs/DatePickerInput';
 
 interface SearchPanelProps {
   defaultValues?: Partial<HistorySearchFormValues>;
@@ -19,7 +27,7 @@ const PERIOD_OPTIONS: { value: HistorySearchPeriod; labelKey: string }[] = [
   { value: 'Current', labelKey: 'Current' },
 ];
 
-// FSD §2.6.7 — soft defaults: Collateral Type = "LB", Period = "Past3y", Radius = 1 km.
+// FSD §2.6.7 — soft defaults: Collateral Type = All (empty), Period = "Past3y", Radius = 1 km.
 const FORM_DEFAULTS: HistorySearchFormValues = {
   centerLat: '',
   centerLon: '',
@@ -27,7 +35,7 @@ const FORM_DEFAULTS: HistorySearchFormValues = {
   period: 'Past3y',
   appraisalReportNo: '',
   titleDeedNo: '',
-  collateralType: 'LB',
+  collateralType: '', // default "All" — collateral type is an optional filter
   customerName: '',
   landAreaFromSqWa: '',
   landAreaToSqWa: '',
@@ -35,6 +43,10 @@ const FORM_DEFAULTS: HistorySearchFormValues = {
   subDistrict: '',
   district: '',
   province: '',
+  subDistrictName: '',
+  districtName: '',
+  provinceName: '',
+  postcode: '',
   valueFrom: '',
   valueTo: '',
   dateFrom: '',
@@ -44,8 +56,9 @@ const FORM_DEFAULTS: HistorySearchFormValues = {
 // FSD §2.6.7 — Collateral Type dropdown options.
 // Values are the backend collateral-type codes (renamed in migration AddEngagementSearchFields):
 // L=bare land, LB=land+building, U=condo, LSL=bare leasehold, MAC=machinery.
+// "All" is represented by the Dropdown's built-in placeholder row (value → empty
+// string via the Controller bridge), so it is NOT listed as an explicit option here.
 const COLLATERAL_TYPE_OPTIONS = [
-  { value: '', labelKey: 'all' },
   { value: 'L', labelKey: 'land' },
   { value: 'LB', labelKey: 'landAndBuilding' },
   { value: 'U', labelKey: 'condo' },
@@ -53,10 +66,7 @@ const COLLATERAL_TYPE_OPTIONS = [
   { value: 'MAC', labelKey: 'machine' },
 ] as const;
 
-// Shared label/input classnames to keep fields consistent
-const LABEL_CLS = 'block text-xs font-medium text-gray-700 mb-1';
-const INPUT_CLS =
-  'w-full border border-gray-300 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500';
+// INPUT_DISABLED_CLS is still used by the coming-soon field
 const INPUT_DISABLED_CLS =
   'w-full border border-gray-200 rounded-md px-2 py-1.5 text-sm bg-gray-50 text-gray-400 cursor-not-allowed';
 
@@ -64,12 +74,71 @@ const INPUT_DISABLED_CLS =
 const GROUP_HEADING_CLS =
   'text-[10px] font-semibold text-blue-700 uppercase tracking-wider border-b border-blue-100 pb-1 mb-3';
 
+// Shared label style — still used for the coming-soon field label and the
+// building-type / province / district / sub-district labels whose components
+// don't accept a `label` prop.
+const LABEL_CLS = 'block text-xs font-medium text-gray-700 mb-1';
+
 export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPending = false }: SearchPanelProps) {
   const { t } = useTranslation('historySearch');
 
-  const { register, handleSubmit, reset, getValues, control } = useForm<HistorySearchFormValues>({
-    defaultValues: { ...FORM_DEFAULTS, ...defaultValues },
-  });
+  const { handleSubmit, reset, getValues, control, watch, setValue } =
+    useForm<HistorySearchFormValues>({
+      defaultValues: { ...FORM_DEFAULTS, ...defaultValues },
+    });
+
+  // Title-address dataset powers the cascading province → district → sub-district selects.
+  const titleAddresses = useAddressStore(s => s.titleAddresses);
+  const selectedProvince = watch('province');
+  const selectedDistrict = watch('district');
+
+  const districtItems = useMemo(() => {
+    if (!selectedProvince) return [];
+    const seen = new Map<string, string>();
+    for (const a of titleAddresses) {
+      if (a.provinceCode === selectedProvince && !seen.has(a.districtCode)) {
+        seen.set(a.districtCode, a.districtName);
+      }
+    }
+    return Array.from(seen, ([value, label]) => ({ value, label })).sort((a, b) =>
+      a.label.localeCompare(b.label, 'th'),
+    );
+  }, [titleAddresses, selectedProvince]);
+
+  const subDistrictItems = useMemo(() => {
+    if (!selectedDistrict) return [];
+    const seen = new Map<string, string>();
+    for (const a of titleAddresses) {
+      if (a.districtCode === selectedDistrict && !seen.has(a.subDistrictCode)) {
+        seen.set(a.subDistrictCode, a.subDistrictName);
+      }
+    }
+    return Array.from(seen, ([value, label]) => ({ value, label })).sort((a, b) =>
+      a.label.localeCompare(b.label, 'th'),
+    );
+  }, [titleAddresses, selectedDistrict]);
+
+  const handleProvinceChange = (code: string) => {
+    setValue('province', code);
+    setValue('provinceName', titleAddresses.find(a => a.provinceCode === code)?.provinceName ?? '');
+    // Reset the more-specific levels
+    setValue('district', '');
+    setValue('districtName', '');
+    setValue('subDistrict', '');
+    setValue('subDistrictName', '');
+  };
+
+  const handleDistrictChange = (code: string) => {
+    setValue('district', code);
+    setValue('districtName', districtItems.find(d => d.value === code)?.label ?? '');
+    setValue('subDistrict', '');
+    setValue('subDistrictName', '');
+  };
+
+  const handleSubDistrictChange = (code: string) => {
+    setValue('subDistrict', code);
+    setValue('subDistrictName', subDistrictItems.find(s => s.value === code)?.label ?? '');
+  };
 
   // Embedded mode: fire search on mount once defaults are set
   useEffect(() => {
@@ -98,6 +167,25 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
     reset(FORM_DEFAULTS);
   };
 
+  // Build typed option arrays for Dropdown (value must be string for field compatibility)
+  const collateralTypeDropdownOptions = useMemo<ListBoxItem[]>(
+    () =>
+      COLLATERAL_TYPE_OPTIONS.map(opt => ({
+        value: opt.value,
+        label: t(`searchPanel.collateralTypeOptions.${opt.labelKey}` as any),
+      })),
+    [t],
+  );
+
+  const periodDropdownOptions = useMemo<ListBoxItem[]>(
+    () =>
+      PERIOD_OPTIONS.map(opt => ({
+        value: opt.value,
+        label: t(`searchPanel.periodOptions.${opt.labelKey}` as any),
+      })),
+    [t],
+  );
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -113,10 +201,19 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
             <p className={GROUP_HEADING_CLS}>{t('searchPanel.groupAppraisalId')}</p>
 
             {/* Appraisal Report No. */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.appraisalReportNo')}</label>
-              <input type="text" className={INPUT_CLS} {...register('appraisalReportNo')} />
-            </div>
+            <Controller
+              name="appraisalReportNo"
+              control={control}
+              render={({ field }) => (
+                <TextInput
+                  label={t('searchPanel.appraisalReportNo')}
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
 
             {/* Old Appraisal Report No. — coming soon, disabled */}
             <div>
@@ -136,22 +233,37 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
             </div>
 
             {/* Title Deed No. */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.titleDeedNo')}</label>
-              <input type="text" className={INPUT_CLS} {...register('titleDeedNo')} />
-            </div>
+            <Controller
+              name="titleDeedNo"
+              control={control}
+              render={({ field }) => (
+                <TextInput
+                  label={t('searchPanel.titleDeedNo')}
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
 
             {/* Collateral Type */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.collateralType')}</label>
-              <select className={`${INPUT_CLS} bg-white`} {...register('collateralType')}>
-                {COLLATERAL_TYPE_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(`searchPanel.collateralTypeOptions.${opt.labelKey}` as any)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Controller
+              name="collateralType"
+              control={control}
+              render={({ field }) => (
+                <Dropdown
+                  label={t('searchPanel.collateralType')}
+                  options={collateralTypeDropdownOptions}
+                  // Empty string finds no option → placeholder ("All") shows.
+                  value={field.value}
+                  // Placeholder ("All") maps back to the empty-string filter value.
+                  onChange={(v) => field.onChange(v ?? '')}
+                  placeholder={t('searchPanel.collateralTypeOptions.all')}
+                  showValuePrefix={false}
+                />
+              )}
+            />
 
             {/* Building Type */}
             <div>
@@ -175,45 +287,86 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
             </div>
 
             {/* Customer Name */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.customerName')}</label>
-              <input type="text" className={INPUT_CLS} {...register('customerName')} />
-            </div>
+            <Controller
+              name="customerName"
+              control={control}
+              render={({ field }) => (
+                <TextInput
+                  label={t('searchPanel.customerName')}
+                  name={field.name}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
 
             {/* Appraisal Value Range (From / To) */}
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className={LABEL_CLS}>{t('searchPanel.valueFrom')}</label>
-                <input type="number" min="0" className={INPUT_CLS} {...register('valueFrom')} />
-              </div>
-              <div>
-                <label className={LABEL_CLS}>{t('searchPanel.valueTo')}</label>
-                <input type="number" min="0" className={INPUT_CLS} {...register('valueTo')} />
-              </div>
+              <Controller
+                name="valueFrom"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label={t('searchPanel.valueFrom')}
+                    value={field.value === '' || field.value == null ? null : Number(field.value)}
+                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onBlur={field.onBlur}
+                    decimalPlaces={2}
+                    thousandSeparator
+                    allowNegative={false}
+                  />
+                )}
+              />
+              <Controller
+                name="valueTo"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label={t('searchPanel.valueTo')}
+                    value={field.value === '' || field.value == null ? null : Number(field.value)}
+                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onBlur={field.onBlur}
+                    decimalPlaces={2}
+                    thousandSeparator
+                    allowNegative={false}
+                  />
+                )}
+              />
             </div>
 
             {/* Land Area Sq.Wa (From / To) */}
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className={LABEL_CLS}>{t('searchPanel.landAreaFromSqWa')}</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={INPUT_CLS}
-                  {...register('landAreaFromSqWa')}
-                />
-              </div>
-              <div>
-                <label className={LABEL_CLS}>{t('searchPanel.landAreaToSqWa')}</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={INPUT_CLS}
-                  {...register('landAreaToSqWa')}
-                />
-              </div>
+              <Controller
+                name="landAreaFromSqWa"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label={t('searchPanel.landAreaFromSqWa')}
+                    value={field.value === '' || field.value == null ? null : Number(field.value)}
+                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onBlur={field.onBlur}
+                    decimalPlaces={2}
+                    thousandSeparator
+                    allowNegative={false}
+                  />
+                )}
+              />
+              <Controller
+                name="landAreaToSqWa"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label={t('searchPanel.landAreaToSqWa')}
+                    value={field.value === '' || field.value == null ? null : Number(field.value)}
+                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onBlur={field.onBlur}
+                    decimalPlaces={2}
+                    thousandSeparator
+                    allowNegative={false}
+                  />
+                )}
+              />
             </div>
           </div>
 
@@ -223,91 +376,161 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
             <p className={GROUP_HEADING_CLS}>{t('searchPanel.groupAppraisalDate')}</p>
 
             {/* Appraisal Date From / To */}
+            {/* DatePickerInput.onChange emits formatISO() which produces a full
+                ISO datetime string (e.g. "2024-01-15T00:00:00+07:00").
+                Slice to [0,10] to keep the wire format as YYYY-MM-DD. */}
             <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className={LABEL_CLS}>{t('searchPanel.dateFrom')}</label>
-                <input type="date" className={INPUT_CLS} {...register('dateFrom')} />
-              </div>
-              <div>
-                <label className={LABEL_CLS}>{t('searchPanel.dateTo')}</label>
-                <input type="date" className={INPUT_CLS} {...register('dateTo')} />
-              </div>
+              <Controller
+                name="dateFrom"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label={t('searchPanel.dateFrom')}
+                    value={field.value || null}
+                    onChange={v => field.onChange(v ? v.slice(0, 10) : '')}
+                    onBlur={field.onBlur}
+                  />
+                )}
+              />
+              <Controller
+                name="dateTo"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label={t('searchPanel.dateTo')}
+                    value={field.value || null}
+                    onChange={v => field.onChange(v ? v.slice(0, 10) : '')}
+                    onBlur={field.onBlur}
+                  />
+                )}
+              />
             </div>
 
             {/* Appraisal Period */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.period')}</label>
-              <select
-                className={`${INPUT_CLS} bg-white`}
-                {...register('period')}
-              >
-                {PERIOD_OPTIONS.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {t(`searchPanel.periodOptions.${opt.labelKey}` as any)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Controller
+              name="period"
+              control={control}
+              render={({ field }) => (
+                <Dropdown
+                  label={t('searchPanel.period')}
+                  options={periodDropdownOptions}
+                  value={field.value}
+                  // Period is required — ignore the placeholder row (null) so the
+                  // value can never be cleared to an invalid state.
+                  onChange={(v) => field.onChange(v ?? field.value)}
+                  placeholder=""
+                  showValuePrefix={false}
+                />
+              )}
+            />
 
             {/* ── Location Information ───────────────────────────────────── */}
             <p className={`${GROUP_HEADING_CLS} mt-2`}>{t('searchPanel.groupLocation')}</p>
 
-            {/* Latitude */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.centerLat')}</label>
-              <input
-                type="number"
-                step="any"
-                placeholder={t('searchPanel.centerLatPlaceholder')}
-                className={INPUT_CLS}
-                {...register('centerLat')}
-              />
-            </div>
+            {/* Latitude — NumberInput accepts string values via its value prop (parses internally).
+                Map clicks call reset() with string coords like "13.736717"; this works because
+                NumberInput.value accepts number | string | null and parses strings. */}
+            <Controller
+              name="centerLat"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={t('searchPanel.centerLat')}
+                  value={field.value === '' || field.value == null ? null : field.value}
+                  onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                  onBlur={field.onBlur}
+                  thousandSeparator={false}
+                  allowNegative
+                  decimalPlaces={6}
+                  placeholder={t('searchPanel.centerLatPlaceholder')}
+                />
+              )}
+            />
 
             {/* Longitude */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.centerLon')}</label>
-              <input
-                type="number"
-                step="any"
-                placeholder={t('searchPanel.centerLonPlaceholder')}
-                className={INPUT_CLS}
-                {...register('centerLon')}
-              />
-            </div>
+            <Controller
+              name="centerLon"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={t('searchPanel.centerLon')}
+                  value={field.value === '' || field.value == null ? null : field.value}
+                  onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                  onBlur={field.onBlur}
+                  thousandSeparator={false}
+                  allowNegative
+                  decimalPlaces={6}
+                  placeholder={t('searchPanel.centerLonPlaceholder')}
+                />
+              )}
+            />
 
-            {/* Radius from interest (km) */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.radiusKm')}</label>
-              <input
-                type="number"
-                min="0.1"
-                max="50"
-                step="0.1"
-                className={INPUT_CLS}
-                {...register('radiusKm')}
-              />
-            </div>
+            {/* Radius from interest (km) — max 50 km */}
+            <Controller
+              name="radiusKm"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label={t('searchPanel.radiusKm')}
+                  value={field.value === '' || field.value == null ? null : Number(field.value)}
+                  onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                  onBlur={field.onBlur}
+                  thousandSeparator={false}
+                  decimalPlaces={1}
+                  allowNegative={false}
+                  // No `min` here: NumberInput rejects per-keystroke values below min,
+                  // which would block typing "0.5" (the leading "0" < 0.1). The floor is
+                  // clamped on submit in HistorySearchMap instead. Cap stays at 50.
+                  max={50}
+                  suffix="km"
+                />
+              )}
+            />
 
             {/* Click-on-map hint */}
             <p className="text-[10px] text-gray-400 -mt-1">{t('searchPanel.clickMapHint')}</p>
 
-            {/* Sub-district */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.subDistrict')}</label>
-              <input type="text" className={INPUT_CLS} {...register('subDistrict')} />
-            </div>
-
-            {/* District */}
-            <div>
-              <label className={LABEL_CLS}>{t('searchPanel.district')}</label>
-              <input type="text" className={INPUT_CLS} {...register('district')} />
-            </div>
-
-            {/* Province */}
+            {/* Province → District → Sub-district cascade. Each level is optional,
+                so users can filter by province only, province+district, or all three. */}
             <div>
               <label className={LABEL_CLS}>{t('searchPanel.province')}</label>
-              <input type="text" className={INPUT_CLS} {...register('province')} />
+              <ProvinceAutocomplete
+                value={selectedProvince}
+                onChange={handleProvinceChange}
+                placeholder={t('searchPanel.provincePlaceholder')}
+              />
+            </div>
+
+            <div>
+              <label className={LABEL_CLS}>{t('searchPanel.district')}</label>
+              <Autocomplete
+                items={districtItems}
+                value={selectedDistrict}
+                onChange={handleDistrictChange}
+                displayText={districtItems.find(d => d.value === selectedDistrict)?.label}
+                placeholder={t('searchPanel.districtPlaceholder')}
+                ariaLabel={t('searchPanel.district')}
+                showAllOnFocus
+                filterItems={(item, text) =>
+                  item.label.toLocaleLowerCase('th').includes(text.toLocaleLowerCase('th'))
+                }
+              />
+            </div>
+
+            <div>
+              <label className={LABEL_CLS}>{t('searchPanel.subDistrict')}</label>
+              <Autocomplete
+                items={subDistrictItems}
+                value={watch('subDistrict')}
+                onChange={handleSubDistrictChange}
+                displayText={subDistrictItems.find(s => s.value === watch('subDistrict'))?.label}
+                placeholder={t('searchPanel.subDistrictPlaceholder')}
+                ariaLabel={t('searchPanel.subDistrict')}
+                showAllOnFocus
+                filterItems={(item, text) =>
+                  item.label.toLocaleLowerCase('th').includes(text.toLocaleLowerCase('th'))
+                }
+              />
             </div>
           </div>
         </div>

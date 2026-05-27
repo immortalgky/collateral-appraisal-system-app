@@ -94,6 +94,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
+    const [align, setAlign] = useState<'left' | 'right'>('left');
     const [constraintError, setConstraintError] = useState<string | null>(null);
 
     const disabledMatcher = useMemo(
@@ -160,6 +161,17 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
           setPosition('top');
         } else {
           setPosition('bottom');
+        }
+
+        // Horizontal flip: a left-aligned calendar overflows to the right and can be
+        // clipped by a scrollable/narrow container (e.g. a search panel). When there
+        // isn't room on the right, anchor to the input's right edge so it expands left.
+        const calendarWidth = 300; // approximate width of calendar
+        const spaceRight = window.innerWidth - rect.left;
+        if (spaceRight < calendarWidth && rect.right > calendarWidth) {
+          setAlign('right');
+        } else {
+          setAlign('left');
         }
       }
     }, [isOpen]);
@@ -334,6 +346,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             className={clsx(
               'absolute z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200',
               position === 'bottom' ? 'mt-1' : 'bottom-full mb-1',
+              align === 'right' ? 'right-0' : 'left-0',
             )}
             style={
               {

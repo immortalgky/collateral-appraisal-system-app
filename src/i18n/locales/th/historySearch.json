@@ -55,11 +55,15 @@
     "groupLocation": "ข้อมูลตำแหน่งที่ตั้ง",
     "oldAppraisalReportNo": "หมายเลขเล่มประเมินเดิม",
     "oldAppraisalReportNoPlaceholder": "ยังไม่รองรับ",
-    "oldAppraisalReportNoComingSoon": "เร็วๆ นี้"
+    "oldAppraisalReportNoComingSoon": "เร็วๆ นี้",
+    "provincePlaceholder": "ทุกจังหวัด",
+    "districtPlaceholder": "เลือกจังหวัดก่อน",
+    "subDistrictPlaceholder": "เลือกอำเภอก่อน",
+    "center": "จุดศูนย์กลาง"
   },
   "pinFilter": {
     "title": "Map Pin",
-    "collateralExisting": "หลักประกัน (มีอยู่)",
+    "appraisalExisting": "การประเมิน (มีอยู่)",
     "mcExisting": "ราคาตลาดเปรียบเทียบ (มีอยู่)",
     "collateralAppraising": "หลักประกัน (กำลังประเมิน)",
     "mcAppraising": "ราคาตลาดเปรียบเทียบ (กำลังประเมิน)",
@@ -70,7 +74,7 @@
     "title": "ผลลัพธ์",
     "close": "ปิดผลลัพธ์",
     "tabs": {
-      "collateral": "หลักประกัน",
+      "appraisal": "การประเมิน",
       "marketComparable": "ราคาตลาดเปรียบเทียบ"
     },
     "totalCount": "{{count}} รายการ",
@@ -80,24 +84,44 @@
     "retry": "ลองใหม่",
     "pagination": "หน้า {{page}} จาก {{total}}",
     "columns": {
-      "appraisalReportNo": "หมายเลขเล่มประเมิน",
+      "appraisalReportNo": "หมายเลขประเมิน",
       "appraisalDate": "วันที่ประเมิน",
       "latitude": "ละติจูด",
-      "longitude": "ลองจิจูด"
+      "longitude": "ลองจิจูด",
+      "customerName": "ชื่อลูกค้า",
+      "collateralType": "ประเภทหลักประกัน",
+      "buildingType": "ประเภทสิ่งปลูกสร้าง",
+      "appraisalValue": "ราคาประเมิน",
+      "sellingPrice": "ราคาขาย",
+      "offeringPrice": "ราคาเสนอขาย",
+      "distance": "ระยะทาง"
+    },
+    "exportCsv": "ส่งออก CSV",
+    "activeFilters": {
+      "clearAll": "ล้างทั้งหมด"
     }
   },
   "pinDetail": {
     "title": "รายละเอียด Pin",
     "close": "ปิด",
-    "collateral": {
-      "title": "รายละเอียดหลักประกัน",
-      "collateralType": "ประเภทหลักประกัน",
+    "appraisal": {
+      "title": "รายละเอียดการประเมิน",
+      "appraisalNumber": "หมายเลขเล่มประเมิน",
+      "customerName": "ชื่อลูกค้า",
       "propertyType": "ประเภทอสังหาริมทรัพย์",
-      "engagementCount": "จำนวนการประเมิน",
-      "lastAppraisedDate": "ประเมินล่าสุด",
-      "lastAppraisedValue": "มูลค่าล่าสุด (บาท)",
+      "appraisedDate": "วันที่ประเมิน",
       "location": "ที่ตั้ง",
-      "distance": "ระยะห่าง"
+      "openReport": "เปิดรายงานประเมิน",
+      "prices": "ราคาประเมิน (บาท)",
+      "appraisalPrice": "ราคาประเมิน",
+      "forceSellingPrice": "ราคาขายบังคับ",
+      "buildingInsurance": "มูลค่าประกันอาคาร",
+      "propertyGroups": "กลุ่มทรัพย์สิน",
+      "coordinatesNotSet": "ไม่ได้ระบุ",
+      "property": "รายการ",
+      "properties": "รายการ",
+      "titleNo": "เลขที่โฉนด",
+      "landTitleInfo": "ข้อมูลโฉนดที่ดิน"
     },
     "marketComparable": {
       "title": "รายละเอียดราคาตลาด",
@@ -106,9 +130,26 @@
       "infoDateTime": "วันที่สำรวจ",
       "offerPrice": "ราคาเสนอขาย (บาท)",
       "salePrice": "ราคาขาย (บาท)",
-      "distance": "ระยะห่าง",
       "viewComparison": "ตารางเปรียบเทียบ",
       "factors": "ปัจจัยการสำรวจ"
+    },
+    "landTitle": {
+      "titleType": "ประเภทเอกสารสิทธิ์",
+      "titleNumber": "เลขที่โฉนด",
+      "bookNumber": "เล่มที่",
+      "pageNumber": "หน้าที่",
+      "landParcelNumber": "เลขที่ดิน",
+      "surveyNumber": "เลขที่สำรวจ",
+      "mapSheetNumber": "ระวาง/แผ่นที่",
+      "rawang": "ระวาง",
+      "aerialMapName": "ชื่อระวางรูปถ่ายทางอากาศ",
+      "aerialMapNumber": "หมายเลขรูปถ่ายทางอากาศ",
+      "area": "เนื้อที่ (ไร่-งาน-ตร.ว.)",
+      "boundaryMarkerType": "หลักเขต",
+      "documentValidationResultType": "ผลตรวจสอบเอกสาร",
+      "governmentPricePerSqWa": "ราคาประเมินราชการ/ตร.ว.",
+      "governmentPrice": "ราคาประเมินราชการ",
+      "remark": "หมายเหตุ"
     }
   },
   "comparisonTable": {
@@ -124,7 +165,8 @@
   },
   "map": {
     "noApiKey": "ยังไม่ได้กำหนด Google Maps API key",
-    "loading": "กำลังโหลดแผนที่..."
+    "loading": "กำลังโหลดแผนที่...",
+    "searchThisArea": "ค้นหาบริเวณนี้"
   },
   "locationPicker": {
     "title": "เลือกพิกัด",
@@ -205,5 +247,8 @@
   "common": {
     "na": "ไม่มีข้อมูล",
     "unknown": "ไม่ทราบ"
+  },
+  "chooser": {
+    "title": "รายการ ณ ตำแหน่งนี้"
   }
 }

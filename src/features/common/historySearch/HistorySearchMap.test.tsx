@@ -53,24 +53,26 @@ const mockMcPin = {
   salePrice: 2800000,
   distanceKm: 1.2,
   appraisalNumber: 'RPT-2024-009',
+  customerName: 'Mube Yamashita',
+  appraisalDate: '2024-04-20T00:00:00Z',
 };
 
 const mockResult: HistorySearchResult = {
-  collateral: {
+  appraisals: {
     items: [{
-      collateralMasterId: 'cm-001',
+      appraisalId: 'ap-001',
+      appraisalNumber: 'RPT-2024-001',
       lat: 13.75,
       lon: 100.5,
-      collateralType: 'Land',
-      propertyType: 'Residential',
-      engagementCount: 3,
-      lastAppraisedDate: '2024-01-15T00:00:00Z',
-      lastAppraisedValue: 5000000,
+      propertyType: 'LB',
+      buildingType: 'Single House',
+      appraisedValue: 5000000,
+      appraisedDate: '2024-01-15T00:00:00Z',
       distanceKm: 0.5,
       province: 'Bangkok',
       district: 'Pathum Wan',
       subDistrict: 'Lumphini',
-      lastAppraisalNumber: 'RPT-2024-001',
+      customerName: 'John Doe',
     }],
     count: 1,
     pageNumber: 0,
