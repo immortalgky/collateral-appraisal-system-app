@@ -96,8 +96,10 @@ const PAGE_SIZE = 50;
  * The public shell of the History Search (Pin) feature.
  *
  * Modes:
- * - standalone: Search panel visible, user must click Search. No auto-fire.
- * - embedded: Prefilled with appraisal coordinates, fires search on mount.
+ * - standalone: Search panel open by default; user clicks Search to run it.
+ * - embedded: Prefilled with appraisal coordinates; the search panel starts
+ *   collapsed and auto-fires (autoSearch) when the user opens it — it does NOT
+ *   fire on mount.
  *
  * Layout:
  * [SearchPanel 220px | MapView flex-1 | ResultsList 280px]
@@ -151,9 +153,9 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
   // "Search this area" — set when the user moves the map after a search
   const [movedCenter, setMovedCenter] = useState<{ lat: number; lon: number } | null>(null);
 
-  // Popover visibility — Search open by default in standalone, closed in embedded
-  // (because embedded auto-fires the search on mount, so the panel is redundant
-  // unless the user wants to change the criteria).
+  // Popover visibility — Search open by default in standalone, closed in embedded.
+  // In embedded mode the SearchPanel's autoSearch runs when the panel is opened
+  // (the panel isn't mounted until then), so embedded does not search on mount.
   const [searchOpen, setSearchOpen] = useState(mode === 'standalone');
   const [pinLayersOpen, setPinLayersOpen] = useState(false);
   // Results overlay visibility — open by default whenever results arrive
