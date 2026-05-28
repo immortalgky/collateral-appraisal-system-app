@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalContext } from '../context/AppraisalContext';
 import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
@@ -35,6 +36,7 @@ import {
  * Allows users to manage appointment scheduling, fee breakdown, and payment tracking
  */
 export default function AppointmentAndFeePage() {
+  const readOnly = usePageReadOnly();
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [isCancelAppointmentModalOpen, setIsCancelAppointmentModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -287,8 +289,8 @@ export default function AppointmentAndFeePage() {
           {/* Appointment Information Section */}
           <AppointmentInfoCard
             appointment={appointment}
-            onReschedule={() => setIsRescheduleModalOpen(true)}
-            onCancel={() => setIsCancelAppointmentModalOpen(true)}
+            onReschedule={() => !readOnly && setIsRescheduleModalOpen(true)}
+            onCancel={() => !readOnly && setIsCancelAppointmentModalOpen(true)}
           />
 
           {/* Divider */}
@@ -352,6 +354,7 @@ export default function AppointmentAndFeePage() {
         }}
         isNewAppointment={isNewAppointment}
         isLoading={createAppointment.isPending || rescheduleAppointment.isPending}
+        readOnly={readOnly}
       />
 
       {/* Cancel Appointment Confirmation Dialog */}

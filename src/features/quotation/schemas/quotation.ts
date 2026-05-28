@@ -128,7 +128,7 @@ export const QuotationDraftSummarySchema = z.object({
   id: z.string().uuid(),
   quotationNumber: z.string(),
   requestDate: z.string(),
-  dueDate: z.string().nullable().optional(),
+  cutOffTime: z.string().nullable().optional(),
   bankingSegment: z.string().nullable().optional(),
   totalAppraisals: z.number().int(),
   appraisalNumberPreview: z.array(z.string()).default([]),
@@ -178,7 +178,7 @@ export const QuotationRequestDetailSchema = z.object({
   id: z.string().uuid(),
   quotationNumber: z.string(),
   requestDate: z.string(),
-  dueDate: z.string(),
+  cutOffTime: z.string(),
   status: QuotationStatusSchema,
   requestedBy: z.string(),
   description: z.string().nullable().optional(),
@@ -398,7 +398,7 @@ export type QuotationActivityLogRow = z.infer<typeof QuotationActivityLogRowSche
 // ─── Edit Draft Quotation (Admin) ─────────────────────────────────────────────
 
 export const EditDraftQuotationSchema = z.object({
-  dueDate: z.string().min(1, 'Due date is required'),
+  cutOffTime: z.string().min(1, 'Cut off time is required'),
   companyIds: z.array(z.string().uuid()).min(0),
 });
 
@@ -410,7 +410,7 @@ export type EditDraftAppraisalEntry = {
 };
 
 export type EditDraftQuotationBody = {
-  dueDate: string;
+  cutOffTime: string;
   companyIds: string[];
   appraisals?: EditDraftAppraisalEntry[];
 };

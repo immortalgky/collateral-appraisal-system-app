@@ -7,6 +7,7 @@ import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../utils/propertyTypeConfig';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
@@ -31,6 +32,7 @@ export const PropertyTableRow = ({
   onDelete,
   hasClipboard,
 }: PropertyTableRowProps) => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
   const layoutBasePath = useBasePath();
@@ -116,86 +118,88 @@ export const PropertyTableRow = ({
 
       {/* Actions */}
       <td className="px-2 py-2">
-        <Menu as="div" className="relative">
-          <MenuButton className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
-            <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
-          </MenuButton>
-          <MenuItems className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-            <div className="py-1">
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onEdit(property, groupId)}
-                    className={`${
-                      focus ? 'bg-gray-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
-                  >
-                    <Icon name="pen-to-square" className="text-xs text-gray-400" />
-                    Edit
-                  </button>
-                )}
-              </MenuItem>
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onMoveTo(property, groupId)}
-                    className={`${
-                      focus ? 'bg-gray-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
-                  >
-                    <Icon name="arrow-right-arrow-left" className="text-xs text-gray-400" />
-                    Move to
-                  </button>
-                )}
-              </MenuItem>
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onCopy(property)}
-                    className={`${
-                      focus ? 'bg-gray-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
-                  >
-                    <Icon name="copy" className="text-xs text-gray-400" />
-                    Copy
-                  </button>
-                )}
-              </MenuItem>
-              <MenuItem disabled={!hasClipboard}>
-                {({ focus }) => (
-                  <button
-                    onClick={() => hasClipboard && onPaste(groupId)}
-                    disabled={!hasClipboard}
-                    className={`${
-                      !hasClipboard
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : focus
-                          ? 'bg-gray-50 text-gray-700'
-                          : 'text-gray-700'
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm`}
-                  >
-                    <Icon name="paste" className="text-xs text-gray-400" />
-                    Paste
-                  </button>
-                )}
-              </MenuItem>
-              <div className="border-t border-gray-100 my-1" />
-              <MenuItem>
-                {({ focus }) => (
-                  <button
-                    onClick={() => onDelete(property, groupId)}
-                    className={`${
-                      focus ? 'bg-red-50' : ''
-                    } flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600`}
-                  >
-                    <Icon name="trash" className="text-xs" />
-                    Delete
-                  </button>
-                )}
-              </MenuItem>
-            </div>
-          </MenuItems>
-        </Menu>
+        {!readOnly && (
+          <Menu as="div" className="relative">
+            <MenuButton className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+              <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
+            </MenuButton>
+            <MenuItems className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
+              <div className="py-1">
+                <MenuItem>
+                  {({ focus }) => (
+                    <button
+                      onClick={() => onEdit(property, groupId)}
+                      className={`${
+                        focus ? 'bg-gray-50' : ''
+                      } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
+                    >
+                      <Icon name="pen-to-square" className="text-xs text-gray-400" />
+                      Edit
+                    </button>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ focus }) => (
+                    <button
+                      onClick={() => onMoveTo(property, groupId)}
+                      className={`${
+                        focus ? 'bg-gray-50' : ''
+                      } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
+                    >
+                      <Icon name="arrow-right-arrow-left" className="text-xs text-gray-400" />
+                      Move to
+                    </button>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ focus }) => (
+                    <button
+                      onClick={() => onCopy(property)}
+                      className={`${
+                        focus ? 'bg-gray-50' : ''
+                      } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
+                    >
+                      <Icon name="copy" className="text-xs text-gray-400" />
+                      Copy
+                    </button>
+                  )}
+                </MenuItem>
+                <MenuItem disabled={!hasClipboard}>
+                  {({ focus }) => (
+                    <button
+                      onClick={() => hasClipboard && onPaste(groupId)}
+                      disabled={!hasClipboard}
+                      className={`${
+                        !hasClipboard
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : focus
+                            ? 'bg-gray-50 text-gray-700'
+                            : 'text-gray-700'
+                      } flex w-full items-center gap-2 px-3 py-2 text-sm`}
+                    >
+                      <Icon name="paste" className="text-xs text-gray-400" />
+                      Paste
+                    </button>
+                  )}
+                </MenuItem>
+                <div className="border-t border-gray-100 my-1" />
+                <MenuItem>
+                  {({ focus }) => (
+                    <button
+                      onClick={() => onDelete(property, groupId)}
+                      className={`${
+                        focus ? 'bg-red-50' : ''
+                      } flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600`}
+                    >
+                      <Icon name="trash" className="text-xs" />
+                      Delete
+                    </button>
+                  )}
+                </MenuItem>
+              </div>
+            </MenuItems>
+          </Menu>
+        )}
       </td>
     </tr>
   );

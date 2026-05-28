@@ -9,6 +9,7 @@
     "close": "Close",
     "back": "Back",
     "next": "Next",
+    "retry": "Retry",
     "search": "Search",
     "submit": "Submit",
     "reset": "Reset",
@@ -27,6 +28,8 @@
     "saving": "Saving...",
     "noData": "No data available",
     "error": "Something went wrong",
+    "errorOccurred": "Something went wrong while loading. Please try again.",
+    "failedToLoad": "Failed to load data",
     "success": "Success",
     "active": "Active",
     "inactive": "Inactive",
@@ -52,5 +55,26 @@
     "th": "TH",
     "english": "English",
     "thai": "Thai"
+  },
+  "favorites": {
+    "row": {
+      "sectionTitle": "Quick Access",
+      "emptyHint": "Pin pages",
+      "addMore": "Add"
+    },
+    "picker": {
+      "title": "Manage Favorites",
+      "searchPlaceholder": "Search menu items...",
+      "selected": "selected"
+    },
+    "sidebar": {
+      "title": "Favorites"
+    },
+    "header": {
+      "openLabel": "Favorites",
+      "title": "Your favorites",
+      "empty": "Pin items to see them here",
+      "manage": "Manage favorites"
+    }
   }
 }

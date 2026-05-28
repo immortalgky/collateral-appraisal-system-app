@@ -7,9 +7,10 @@ interface RemarkSectionProps {
   setValue: UseFormSetValue<any>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   watch: UseFormWatch<any>;
+  readOnly?: boolean;
 }
 
-export function RemarkSection({ setValue, watch }: RemarkSectionProps) {
+export function RemarkSection({ setValue, watch, readOnly }: RemarkSectionProps) {
   const remark = watch('remark') ?? '';
   const hasContent = remark.trim().length > 0;
   const [expanded, setExpanded] = useState(hasContent);
@@ -41,8 +42,9 @@ export function RemarkSection({ setValue, watch }: RemarkSectionProps) {
             value={remark}
             onChange={(e) => setValue('remark', e.target.value || null, { shouldDirty: true })}
             placeholder="Document your assumptions, rationale for growth rates, discount rate justification, or any adjustments made..."
-            className="w-full text-xs text-gray-700 bg-transparent border border-gray-200 rounded-md px-3 py-2 resize-y min-h-[80px] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400"
+            className="w-full text-xs text-gray-700 bg-transparent border border-gray-200 rounded-md px-3 py-2 resize-y min-h-[80px] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
             rows={3}
+            disabled={readOnly}
           />
         </div>
       )}

@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetProjectModels, useDeleteProjectModel } from '../../api/projectModel';
 import { useCreateProjectModelPricingAnalysis } from '../../api/projectPricingAnalysis';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -12,6 +13,7 @@ import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
 import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
+import { isCondo } from '../../types';
 import type { ProjectModel, ProjectType } from '../../types';
 import type { ApiError } from '@/shared/types/api';
 import Icon from '@shared/components/Icon';
@@ -71,6 +73,7 @@ interface ModelCardProps {
   projectType: ProjectType;
   viewMode: ViewMode;
   thumbnailSrc?: string;
+  readOnly: boolean;
   onClick: () => void;
   onPricingAnalysis: () => void;
   isPricingAnalysisPending: boolean;
@@ -127,12 +130,13 @@ function ModelCard({
   projectType,
   viewMode,
   thumbnailSrc,
+  readOnly,
   onClick,
   onPricingAnalysis,
   isPricingAnalysisPending,
   onDelete,
 }: ModelCardProps) {
-  const icon = projectType === 'Condo' ? 'layer-group' : 'house';
+  const icon = isCondo(projectType) ? 'layer-group' : 'house';
   const hasAnalysis = Boolean(model.pricingAnalysisId);
   const standardPrice = formatStandardPrice(model.finalAppraisedValue);
   const roomTypeDescription = useParameterDescription('RoomLayout', model.roomLayoutType);
@@ -171,7 +175,7 @@ function ModelCard({
         <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
           {formatAreaRange(model.usableAreaMin, model.usableAreaMax)}
         </td>
-        {projectType === 'Condo' ? (
+        {isCondo(projectType) ? (
           <>
             <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
               {formatPriceRangeFull(model.startingPriceMin, model.startingPriceMax)}
@@ -195,20 +199,24 @@ function ModelCard({
         </td>
         <td className="px-2 py-2">
           <div className="flex items-center justify-end gap-1">
-            <PricingAnalysisAction
-              hasAnalysis={hasAnalysis}
-              isPending={isPricingAnalysisPending}
-              onClick={onPricingAnalysis}
-              size="xs"
-            />
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-              title="Delete model"
-            >
-              <Icon name="trash-can" style="regular" className="size-3.5" />
-            </button>
+            {(!readOnly || hasAnalysis) && (
+              <PricingAnalysisAction
+                hasAnalysis={hasAnalysis}
+                isPending={isPricingAnalysisPending}
+                onClick={onPricingAnalysis}
+                size="xs"
+              />
+            )}
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                title="Delete model"
+              >
+                <Icon name="trash-can" style="regular" className="size-3.5" />
+              </button>
+            )}
             <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4" />
           </div>
         </td>
@@ -236,14 +244,16 @@ function ModelCard({
             className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
           />
         )}
-        <button
-          type="button"
-          onClick={onDelete}
-          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-          title="Delete model"
-        >
-          <Icon name="trash-can" style="regular" className="size-3.5" />
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+            title="Delete model"
+          >
+            <Icon name="trash-can" style="regular" className="size-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="p-4">
@@ -251,11 +261,13 @@ function ModelCard({
           <p className="text-sm font-semibold text-gray-900 truncate">
             {model.modelName ?? 'Unnamed Model'}
           </p>
-          <PricingAnalysisAction
-            hasAnalysis={hasAnalysis}
-            isPending={isPricingAnalysisPending}
-            onClick={onPricingAnalysis}
-          />
+          {(!readOnly || hasAnalysis) && (
+            <PricingAnalysisAction
+              hasAnalysis={hasAnalysis}
+              isPending={isPricingAnalysisPending}
+              onClick={onPricingAnalysis}
+            />
+          )}
         </div>
 
         {/* #7 — 2-col stat grid */}
@@ -265,7 +277,7 @@ function ModelCard({
             <p className="text-xs font-medium text-gray-700">{formatAreaRange(model.usableAreaMin, model.usableAreaMax)}</p>
           </div>
 
-          {projectType === 'Condo' ? (
+          {isCondo(projectType) ? (
             <>
               <div>
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide">Starting Price</p>
@@ -319,6 +331,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
   const appraisalId = useAppraisalId();
   const basePath = useBasePath();
   const navigate = useNavigate();
+  const readOnly = usePageReadOnly();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
@@ -345,7 +358,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
     return map;
   }, [galleryData, models]);
 
-  const routeSegment = projectType === 'Condo' ? 'block-condo' : 'block-village';
+  const routeSegment = isCondo(projectType) ? 'block-condo' : 'block-village';
 
   const { mutate: createPricingAnalysis, isPending: isCreatingPricingAnalysis, variables: pricingMutationVars } =
     useCreateProjectModelPricingAnalysis();
@@ -359,7 +372,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
   };
 
   const handleDeleteConfirm = () => {
-    if (!appraisalId || !deleteTarget) return;
+    if (readOnly || !appraisalId || !deleteTarget) return;
     deleteModel(
       { appraisalId, modelId: deleteTarget.id },
       {
@@ -383,7 +396,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
       );
       return;
     }
-    if (!appraisalId) return;
+    if (readOnly || !appraisalId) return;
     createPricingAnalysis(
       { appraisalId, modelId: model.id },
       {
@@ -463,17 +476,19 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
           </button>
         </div>
 
-        <Button variant="primary" onClick={handleAddModel} className="flex items-center gap-2">
-          <Icon name="plus" />
-          Add Model
-        </Button>
+        {!readOnly && (
+          <Button variant="primary" onClick={handleAddModel} className="flex items-center gap-2">
+            <Icon name="plus" />
+            Add Model
+          </Button>
+        )}
       </div>
 
       {/* Model List */}
       {models.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <Icon
-            name={projectType === 'Condo' ? 'layer-group' : 'house'}
+            name={isCondo(projectType) ? 'layer-group' : 'house'}
             className="text-4xl mb-3"
           />
           <p className="text-sm font-medium text-gray-500">No models yet</p>
@@ -488,6 +503,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               projectType={projectType}
               thumbnailSrc={thumbnailByModelId.get(model.id)}
               viewMode="grid"
+              readOnly={readOnly}
               onClick={() => handleModelClick(model.id)}
               onPricingAnalysis={() => handlePricingAnalysis(model)}
               isPricingAnalysisPending={
@@ -505,7 +521,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
                 <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model Name</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usable Area</th>
-                {projectType === 'Condo' ? (
+                {isCondo(projectType) ? (
                   <>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Starting Price</th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Type</th>
@@ -528,6 +544,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
                   projectType={projectType}
                   thumbnailSrc={thumbnailByModelId.get(model.id)}
                   viewMode="list"
+                  readOnly={readOnly}
                   onClick={() => handleModelClick(model.id)}
                   onPricingAnalysis={() => handlePricingAnalysis(model)}
                   isPricingAnalysisPending={

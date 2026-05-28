@@ -8,6 +8,7 @@ import Icon from '@shared/components/Icon';
 import { PropertyCardContent } from './PropertyCardContent';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../utils/propertyTypeConfig';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
@@ -18,6 +19,7 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: PropertyCardProps) => {
+  const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
   const layoutBasePath = useBasePath();
@@ -61,17 +63,17 @@ export const PropertyCard = React.memo(({ property, groupId, onContextMenu }: Pr
       ref={setNodeRef}
       style={style}
       data-property-id={property.id}
-      onContextMenu={e => onContextMenu(e, property, groupId)}
+      onContextMenu={readOnly ? undefined : e => onContextMenu(e, property, groupId)}
       className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-150 flex"
     >
       {/* Drag Handle */}
       <div
         ref={setActivatorNodeRef}
-        {...attributes}
-        {...listeners}
-        className="flex items-center justify-center w-8 bg-gray-50 hover:bg-gray-100 cursor-grab active:cursor-grabbing border-r border-gray-200 flex-shrink-0"
+        {...(!readOnly ? attributes : {})}
+        {...(!readOnly ? listeners : {})}
+        className={`flex items-center justify-center w-8 bg-gray-50 hover:bg-gray-100 border-r border-gray-200 flex-shrink-0 ${readOnly ? 'cursor-default opacity-40' : 'cursor-grab active:cursor-grabbing'}`}
         style={{ touchAction: 'none' }}
-        title="Drag to reorder within group, or drop on another group to move"
+        title={readOnly ? undefined : 'Drag to reorder within group, or drop on another group to move'}
       >
         <Icon name="grip-vertical" className="text-gray-400 text-sm" />
       </div>

@@ -1,6 +1,6 @@
-import Dropdown, { type ListBoxItem } from '@/shared/components/inputs/Dropdown';
+import Dropdown from '@/shared/components/inputs/Dropdown';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { PROJECT_TYPE_LABEL } from '../data/options';
+import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import type { ProjectType } from '../types';
 
 interface ProjectTypeSelectorProps {
@@ -11,11 +11,6 @@ interface ProjectTypeSelectorProps {
   /** Called when the user picks from the dropdown. null means revert to current type. */
   onPendingTypeChange: (newType: ProjectType | null) => void;
 }
-
-const TYPE_OPTIONS: ListBoxItem[] = [
-  { id: 'Condo', value: 'Condo', label: PROJECT_TYPE_LABEL.Condo },
-  { id: 'LandAndBuilding', value: 'LandAndBuilding', label: PROJECT_TYPE_LABEL.LandAndBuilding },
-];
 
 /**
  * Project Type selector — sits inline next to the Project Name field.
@@ -31,6 +26,7 @@ export default function ProjectTypePill({
   hasExistingProject,
   onPendingTypeChange,
 }: ProjectTypeSelectorProps) {
+  const typeOptions = useParameterOptions('ProjectType');
   const isReadOnly = usePageReadOnly();
   const canChange = !isReadOnly && hasExistingProject;
 
@@ -43,7 +39,7 @@ export default function ProjectTypePill({
   return (
     <Dropdown
       label="Project Type"
-      options={TYPE_OPTIONS}
+      options={typeOptions}
       value={pendingType ?? projectType}
       onChange={handleChange}
       disabled={!canChange}

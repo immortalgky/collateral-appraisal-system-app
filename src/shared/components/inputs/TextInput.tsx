@@ -9,6 +9,10 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   showCharCount?: boolean;
   /** Input mask pattern (9=digit, a=letter, *=any). Literals auto-inserted. */
   inputMask?: string;
+  /** Icon node rendered inside the input on the left. Flows through to the base Input. */
+  leftIcon?: React.ReactNode;
+  /** Icon node rendered inside the input on the right. Useful for click-to-open helpers. */
+  rightIcon?: React.ReactNode;
 }
 
 /**

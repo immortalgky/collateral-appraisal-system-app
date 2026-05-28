@@ -627,6 +627,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         groups={groups}
         currentGroupId={moveModalState.fromGroupId || ''}
         isLoading={moveMutation.isPending}
+        readOnly={readOnly}
       />
 
       <DeleteConfirmationModal

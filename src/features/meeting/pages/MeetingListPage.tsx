@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Button from '@/shared/components/Button';
+import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -225,7 +226,7 @@ const MeetingListPage = () => {
     setPageNumber(0);
   }, [debouncedSearch, fromDate, toDate, statusFilter, tab]);
 
-  const { data, isLoading } = useGetMeetings({
+  const { data, isLoading, isError, refetch } = useGetMeetings({
     status: statusFilter || undefined,
     isHistory: tab === 'history',
     search: debouncedSearch || undefined,
@@ -411,6 +412,12 @@ const MeetingListPage = () => {
                       style="solid"
                       className="w-5 h-5 animate-spin inline-block"
                     />
+                  </td>
+                </tr>
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8}>
+                    <DataErrorState variant="inline" title="Failed to load meetings" onRetry={() => refetch()} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (

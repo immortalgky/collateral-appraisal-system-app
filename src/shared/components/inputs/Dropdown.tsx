@@ -221,14 +221,14 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             </div>
           </HeadlessListboxButton>
           <HeadlessListboxOptions
-            anchor="bottom"
+            anchor="bottom start"
             // Headless UI 2's `anchor` system writes an inline
             //   max-height: min(var(--anchor-max-height, 100vh), <available-px>)
             // which defeats any Tailwind class or React `style.maxHeight` we set.
             // Override by clamping the CSS variable itself — the lib's own min()
             // then evaluates to our cap.
             style={{ '--anchor-max-height': '20rem' } as React.CSSProperties}
-            className="w-(--button-width) mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 overflow-y-auto"
+            className="min-w-(--button-width) max-w-[min(28rem,calc(100vw-2rem))] mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 overflow-y-auto"
           >
             {children}
           </HeadlessListboxOptions>

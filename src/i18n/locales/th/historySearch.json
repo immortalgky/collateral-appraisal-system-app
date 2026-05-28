@@ -1,0 +1,254 @@
+{
+  "nav": {
+    "title": "ค้นหาประวัติ"
+  },
+  "page": {
+    "title": "ค้นหาประวัติ (Pin)",
+    "description": "ค้นหาประวัติการประเมินและตัวเปรียบเทียบตลาดบนแผนที่"
+  },
+  "searchPanel": {
+    "title": "เงื่อนไขการค้นหา",
+    "centerLat": "ละติจูด",
+    "centerLon": "ลองจิจูด",
+    "centerLatPlaceholder": "เช่น 13.7563",
+    "centerLonPlaceholder": "เช่น 100.5018",
+    "radiusKm": "รัศมี (กม.)",
+    "period": "ช่วงเวลา",
+    "periodOptions": {
+      "Past3y": "3 ปีที่ผ่านมา",
+      "Past2y": "2 ปีที่ผ่านมา",
+      "Past1y": "1 ปีที่ผ่านมา",
+      "Current": "ปีปัจจุบัน"
+    },
+    "filters": "ตัวกรองเพิ่มเติม",
+    "collateralOnlyFilters": "ตัวกรองหลักประกัน",
+    "addressFilters": "ตัวกรองที่อยู่",
+    "bothPinFilters": "ตัวกรองทั้งหมด",
+    "appraisalReportNo": "หมายเลขเล่มประเมิน",
+    "titleDeedNo": "เลขที่โฉนด",
+    "collateralType": "ประเภทหลักประกัน",
+    "collateralTypeOptions": {
+      "all": "ทั้งหมด",
+      "land": "ที่ดิน",
+      "landAndBuilding": "ที่ดินพร้อมสิ่งปลูกสร้าง",
+      "condo": "คอนโด",
+      "leasehold": "สิทธิการเช่า",
+      "machine": "เครื่องจักร"
+    },
+    "buildingType": "ประเภทอาคาร",
+    "buildingTypePlaceholder": "ทุกประเภท",
+    "customerName": "ชื่อลูกค้า",
+    "landAreaFromSqWa": "เนื้อที่ดินตั้งแต่ (ตร.วา)",
+    "landAreaToSqWa": "เนื้อที่ดินถึง (ตร.วา)",
+    "subDistrict": "ตำบล/แขวง",
+    "district": "อำเภอ/เขต",
+    "province": "จังหวัด",
+    "valueFrom": "มูลค่าจาก",
+    "valueTo": "มูลค่าถึง",
+    "dateFrom": "วันที่จาก",
+    "dateTo": "วันที่ถึง",
+    "search": "ค้นหา",
+    "clear": "ล้าง",
+    "clickMapHint": "คลิกบนแผนที่เพื่อกำหนดจุดศูนย์กลาง",
+    "groupAppraisalId": "คำขอประเมินและข้อมูลระบุตัวตน",
+    "groupAppraisalDate": "วันและเวลาการประเมิน",
+    "groupLocation": "ข้อมูลตำแหน่งที่ตั้ง",
+    "oldAppraisalReportNo": "หมายเลขเล่มประเมินเดิม",
+    "oldAppraisalReportNoPlaceholder": "ยังไม่รองรับ",
+    "oldAppraisalReportNoComingSoon": "เร็วๆ นี้",
+    "provincePlaceholder": "ทุกจังหวัด",
+    "districtPlaceholder": "เลือกจังหวัดก่อน",
+    "subDistrictPlaceholder": "เลือกอำเภอก่อน",
+    "center": "จุดศูนย์กลาง"
+  },
+  "pinFilter": {
+    "title": "Map Pin",
+    "appraisalExisting": "การประเมิน (มีอยู่)",
+    "mcExisting": "ราคาตลาดเปรียบเทียบ (มีอยู่)",
+    "collateralAppraising": "หลักประกัน (กำลังประเมิน)",
+    "mcAppraising": "ราคาตลาดเปรียบเทียบ (กำลังประเมิน)",
+    "supportingData": "ข้อมูลสนับสนุน",
+    "comingSoon": "เร็วๆ นี้"
+  },
+  "resultsList": {
+    "title": "ผลลัพธ์",
+    "close": "ปิดผลลัพธ์",
+    "tabs": {
+      "appraisal": "การประเมิน",
+      "marketComparable": "ราคาตลาดเปรียบเทียบ"
+    },
+    "totalCount": "{{count}} รายการ",
+    "distanceKm": "{{distance}} กม.",
+    "empty": "ไม่พบข้อมูลในบริเวณนี้ ลองขยายรัศมีหรือเปลี่ยนเงื่อนไข",
+    "loadError": "โหลดข้อมูลไม่สำเร็จ",
+    "retry": "ลองใหม่",
+    "pagination": "หน้า {{page}} จาก {{total}}",
+    "columns": {
+      "appraisalReportNo": "หมายเลขประเมิน",
+      "appraisalDate": "วันที่ประเมิน",
+      "latitude": "ละติจูด",
+      "longitude": "ลองจิจูด",
+      "customerName": "ชื่อลูกค้า",
+      "collateralType": "ประเภทหลักประกัน",
+      "buildingType": "ประเภทสิ่งปลูกสร้าง",
+      "appraisalValue": "ราคาประเมิน",
+      "sellingPrice": "ราคาขาย",
+      "offeringPrice": "ราคาเสนอขาย",
+      "distance": "ระยะทาง"
+    },
+    "exportCsv": "ส่งออก CSV",
+    "activeFilters": {
+      "clearAll": "ล้างทั้งหมด"
+    }
+  },
+  "pinDetail": {
+    "title": "รายละเอียด Pin",
+    "close": "ปิด",
+    "appraisal": {
+      "title": "รายละเอียดการประเมิน",
+      "appraisalNumber": "หมายเลขเล่มประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "propertyType": "ประเภทอสังหาริมทรัพย์",
+      "appraisedDate": "วันที่ประเมิน",
+      "location": "ที่ตั้ง",
+      "openReport": "เปิดรายงานประเมิน",
+      "prices": "ราคาประเมิน (บาท)",
+      "appraisalPrice": "ราคาประเมิน",
+      "forceSellingPrice": "ราคาขายบังคับ",
+      "buildingInsurance": "มูลค่าประกันอาคาร",
+      "propertyGroups": "กลุ่มทรัพย์สิน",
+      "coordinatesNotSet": "ไม่ได้ระบุ",
+      "property": "รายการ",
+      "properties": "รายการ",
+      "titleNo": "เลขที่โฉนด",
+      "landTitleInfo": "ข้อมูลโฉนดที่ดิน"
+    },
+    "marketComparable": {
+      "title": "รายละเอียดราคาตลาด",
+      "surveyName": "ชื่อการสำรวจ",
+      "propertyType": "ประเภทอสังหาริมทรัพย์",
+      "infoDateTime": "วันที่สำรวจ",
+      "offerPrice": "ราคาเสนอขาย (บาท)",
+      "salePrice": "ราคาขาย (บาท)",
+      "viewComparison": "ตารางเปรียบเทียบ",
+      "factors": "ปัจจัยการสำรวจ"
+    },
+    "landTitle": {
+      "titleType": "ประเภทเอกสารสิทธิ์",
+      "titleNumber": "เลขที่โฉนด",
+      "bookNumber": "เล่มที่",
+      "pageNumber": "หน้าที่",
+      "landParcelNumber": "เลขที่ดิน",
+      "surveyNumber": "เลขที่สำรวจ",
+      "mapSheetNumber": "ระวาง/แผ่นที่",
+      "rawang": "ระวาง",
+      "aerialMapName": "ชื่อระวางรูปถ่ายทางอากาศ",
+      "aerialMapNumber": "หมายเลขรูปถ่ายทางอากาศ",
+      "area": "เนื้อที่ (ไร่-งาน-ตร.ว.)",
+      "boundaryMarkerType": "หลักเขต",
+      "documentValidationResultType": "ผลตรวจสอบเอกสาร",
+      "governmentPricePerSqWa": "ราคาประเมินราชการ/ตร.ว.",
+      "governmentPrice": "ราคาประเมินราชการ",
+      "remark": "หมายเหตุ"
+    }
+  },
+  "comparisonTable": {
+    "title": "ตารางเปรียบเทียบ",
+    "close": "ปิด",
+    "surveyName": "ชื่อการสำรวจ",
+    "propertyType": "ประเภทอสังหาริมทรัพย์",
+    "infoDateTime": "วันที่สำรวจ",
+    "offerPrice": "ราคาเสนอขาย",
+    "salePrice": "ราคาขาย",
+    "distanceKm": "ระยะห่าง (กม.)",
+    "todoMultiSelect": "การเลือกหลายรายการเพื่อเปรียบเทียบจะมีในเวอร์ชันถัดไป"
+  },
+  "map": {
+    "noApiKey": "ยังไม่ได้กำหนด Google Maps API key",
+    "loading": "กำลังโหลดแผนที่...",
+    "searchThisArea": "ค้นหาบริเวณนี้"
+  },
+  "locationPicker": {
+    "title": "เลือกพิกัด",
+    "searchPlaceholder": "ค้นหาสถานที่...",
+    "clickHint": "คลิกบนแผนที่หรือค้นหาสถานที่เพื่อเลือกพิกัด",
+    "selected": "เลือกแล้ว: {{lat}}, {{lon}}",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "buttonLabel": "เลือกบนแผนที่"
+  },
+  "engagementList": {
+    "title": "ประวัติการประเมิน",
+    "appraisalCount": "{{count}} รายการประเมิน",
+    "totalCount": "{{count}} รายการ",
+    "empty": "ไม่พบประวัติการประเมินสำหรับหลักประกันนี้",
+    "columns": {
+      "appraisalNumber": "หมายเลขเล่มประเมิน",
+      "appraisalDate": "วันที่ประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "collateralType": "ประเภทหลักประกัน",
+      "buildingType": "ประเภทอาคาร",
+      "appraisalValue": "มูลค่าประเมิน (บาท)"
+    }
+  },
+  "collateralDetail": {
+    "drawerTitle": "รายละเอียดหลักประกัน",
+    "backToSearch": "กลับไปยังผลการค้นหา",
+    "totalRounds": "รอบการประเมินทั้งหมด : {{count}} รอบ",
+    "selectRoundLabel": "เลือกรอบการประเมิน",
+    "roundOptionSuffix": "การประเมิน",
+    "linkToReport": "ลิงก์ไปยังรายงานประเมิน",
+    "tabSummary": "สรุป",
+    "tabProperties": "ทรัพย์สิน",
+    "collateralType": "ประเภทหลักประกัน",
+    "identity": {
+      "landOfficeCode": "สำนักงานที่ดิน",
+      "titleType": "ประเภทโฉนด",
+      "titleNumber": "เลขที่โฉนด",
+      "parcelNumber": "เลขที่ดิน",
+      "surveyNumber": "หน้าสำรวจ",
+      "subDistrict": "ตำบล/แขวง",
+      "district": "อำเภอ/เขต",
+      "province": "จังหวัด",
+      "landArea": "เนื้อที่ดิน (ตร.วา)",
+      "street": "ถนน",
+      "village": "หมู่บ้าน",
+      "otherTitles": "โฉนดอื่น",
+      "condoRegistrationNumber": "เลขทะเบียนอาคารชุด",
+      "building": "ตึก / อาคาร",
+      "floor": "ชั้น",
+      "unit": "ห้อง",
+      "condoName": "ชื่อโครงการ",
+      "usableArea": "พื้นที่ใช้สอย (ตร.ม.)",
+      "model": "รุ่น / โมเดล",
+      "leaseRegistrationNo": "เลขทะเบียนสิทธิการเช่า",
+      "lessor": "ผู้ให้เช่า",
+      "lessee": "ผู้เช่า",
+      "leaseTermStart": "วันเริ่มต้นสัญญาเช่า",
+      "leaseTermEnd": "วันสิ้นสุดสัญญาเช่า",
+      "underlyingMaster": "หลักประกันต้นแบบ",
+      "machineRegistrationNo": "เลขทะเบียน",
+      "serialNo": "หมายเลขเครื่อง",
+      "brand": "ยี่ห้อ",
+      "manufacturer": "ผู้ผลิต"
+    }
+  },
+  "propertyListing": {
+    "empty": "ไม่พบทรัพย์สินสำหรับหลักประกันนี้",
+    "groupHeading": "กลุ่มที่ {{number}}: {{count}} รายการ",
+    "groupEmpty": "ไม่มีทรัพย์สินในกลุ่มนี้",
+    "columns": {
+      "name": "ชื่อทรัพย์สิน",
+      "collateralType": "ประเภทหลักประกัน",
+      "area": "พื้นที่",
+      "latLon": "ละติจูด, ลองจิจูด"
+    }
+  },
+  "common": {
+    "na": "ไม่มีข้อมูล",
+    "unknown": "ไม่ทราบ"
+  },
+  "chooser": {
+    "title": "รายการ ณ ตำแหน่งนี้"
+  }
+}

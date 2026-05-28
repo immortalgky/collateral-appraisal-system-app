@@ -20,7 +20,7 @@ export default function LanguageSwitcher(): React.ReactNode {
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200/60 text-xs font-semibold text-gray-700 transition-all cursor-pointer">
+      <MenuButton className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-base-200 hover:bg-gray-100 dark:hover:bg-base-300 border border-gray-200/60 dark:border-base-300 text-xs font-semibold text-gray-700 dark:text-base-content transition-all cursor-pointer">
         <img
           src={current.flag}
           alt={current.code}
@@ -32,7 +32,7 @@ export default function LanguageSwitcher(): React.ReactNode {
 
       <MenuItems
         anchor="bottom end"
-        className="z-50 mt-1.5 w-40 origin-top-right rounded-xl bg-white p-1 shadow-lg ring-1 ring-black/8 transition duration-150 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+        className="z-50 mt-1.5 w-40 origin-top-right rounded-xl bg-white dark:bg-base-200 p-1 shadow-lg ring-1 ring-black/8 dark:ring-base-300 transition duration-150 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
       >
         {languages.map(lang => (
           <MenuItem key={lang.code}>
@@ -42,8 +42,8 @@ export default function LanguageSwitcher(): React.ReactNode {
               className={clsx(
                 'group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
                 current.code === lang.code
-                  ? 'bg-gray-50 text-gray-900 font-medium'
-                  : 'text-gray-600 data-[focus]:bg-gray-50 data-[focus]:text-gray-900',
+                  ? 'bg-gray-50 dark:bg-base-300 text-gray-900 dark:text-base-content font-medium'
+                  : 'text-gray-600 dark:text-gray-300 data-[focus]:bg-gray-50 dark:data-[focus]:bg-base-300 data-[focus]:text-gray-900 dark:data-[focus]:text-base-content',
               )}
             >
               <img

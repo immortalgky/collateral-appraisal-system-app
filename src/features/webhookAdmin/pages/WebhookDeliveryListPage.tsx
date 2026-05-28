@@ -6,6 +6,7 @@ import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Pagination from '@shared/components/Pagination';
 import { useGetWebhookDeliveries } from '../api/useGetWebhookDeliveries';
+import DataErrorState from '@shared/components/DataErrorState';
 import { useRetryWebhookDelivery } from '../api/useRetryWebhookDelivery';
 import WebhookDeliveryDetailDrawer from '../components/WebhookDeliveryDetailDrawer';
 import type { WebhookDeliveryListItem, WebhookDeliveryStatus } from '../types';
@@ -67,7 +68,7 @@ const WebhookDeliveryListPage = () => {
     setPageIndex(0);
   }, [status, fromDate, toDate]);
 
-  const { data, isLoading } = useGetWebhookDeliveries({
+  const { data, isLoading, isError, refetch } = useGetWebhookDeliveries({
     pageNumber: pageIndex + 1,
     pageSize: PAGE_SIZE,
     status: status || undefined,
@@ -203,6 +204,12 @@ const WebhookDeliveryListPage = () => {
             <tbody>
               {isLoading ? (
                 <TableRowSkeleton columns={TABLE_SKELETON_COLUMNS} rows={5} />
+              ) : isError ? (
+                <tr>
+                  <td colSpan={8} className="py-4">
+                    <DataErrorState variant="inline" title="Failed to load webhook deliveries" onRetry={refetch} />
+                  </td>
+                </tr>
               ) : deliveries.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12 text-gray-400 text-sm">

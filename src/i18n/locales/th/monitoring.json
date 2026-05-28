@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "title": "การติดตาม"
+  },
+  "jumpTo": "ไปที่:",
+  "overview": {
+    "totalPending": "รายการค้างทั้งหมด",
+    "totalBreached": "เกิน SLA ทั้งหมด",
+    "slaHealth": "สุขภาพ SLA"
+  },
+  "topBreaches": {
+    "title": "วิกฤตสูงสุด",
+    "hoursLate": "ช้า {{hours}} ชม."
+  },
+  "tabs": {
+    "pendingQuotation": "ใบเสนอราคาค้างดำเนินการ",
+    "pendingInternal": "งานภายในค้างดำเนินการ",
+    "pendingExternal": "งานภายนอกค้างดำเนินการ",
+    "pendingFollowup": "ติดตามเอกสารค้างดำเนินการ",
+    "pendingEvaluation": "การประเมินค้างดำเนินการ",
+    "meetingFollowup": "ติดตามการประชุม"
+  },
+  "common": {
+    "search": "ค้นหา...",
+    "filter": "กรอง",
+    "clearAll": "ล้างทั้งหมด",
+    "view": "ดู",
+    "noRecords": "ไม่พบข้อมูล",
+    "noRecordsDesc": "ไม่มีรายการที่ตรงกับตัวกรองที่เลือก",
+    "loadError": "โหลดข้อมูลไม่สำเร็จ",
+    "appraisalNo": "เลขที่เล่มประเมิน",
+    "customerName": "ชื่อลูกค้า",
+    "status": "สถานะ",
+    "assignedDate": "วันที่รับงาน",
+    "pic": "ผู้รับผิดชอบ",
+    "movement": "ความเคลื่อนไหว",
+    "ola": "OLA (เป้า/จริง/ต่าง)",
+    "priority": "ความสำคัญ",
+    "purpose": "วัตถุประสงค์",
+    "propertyType": "ประเภทอสังหา",
+    "taskType": "ประเภทงาน",
+    "appraisalCompany": "บริษัทประเมิน",
+    "appraisalStatus": "สถานะการประเมิน",
+    "slaLabel": "SLA",
+    "requestedDate": "วันที่ขอ",
+    "updatedAgo": "อัปเดต {{value}}",
+    "refresh": "รีเฟรช",
+    "sla": {
+      "breached": "เกินกำหนด",
+      "atRisk": "เสี่ยงเกินกำหนด",
+      "healthy": "ปกติ"
+    },
+    "kpi": {
+      "total": "ทั้งหมด",
+      "breached": "เกินกำหนด",
+      "atRisk": "เสี่ยง",
+      "healthy": "ปกติ",
+      "percentBreached": "ของงานเกินกำหนด SLA"
+    },
+    "crisis": {
+      "headline": "{{breached}} จาก {{total}} งานเกินกำหนด SLA",
+      "context": "เฉลี่ยล่าช้า {{hours}} ชั่วโมง"
+    },
+    "unassigned": "ไม่มีผู้รับผิดชอบ",
+    "groupBy": {
+      "label": "จัดกลุ่มตาม",
+      "none": "ไม่จัดกลุ่ม",
+      "pic": "ผู้รับผิดชอบ",
+      "company": "บริษัท",
+      "activity": "กิจกรรม"
+    }
+  },
+  "pendingQuotation": {
+    "title": "ใบเสนอราคาค้างดำเนินการ",
+    "description": "ติดตามคำขอใบเสนอราคาที่รออนุมัติหรือคัดเลือก",
+    "search": "ค้นหาเลขที่ใบเสนอราคา...",
+    "filterStatus": "สถานะ",
+    "filterDueDateFrom": "วันครบกำหนดจาก",
+    "filterDueDateTo": "วันครบกำหนดถึง"
+  },
+  "pendingInternal": {
+    "title": "งานภายในค้างดำเนินการ",
+    "description": "งานประเมินภายในที่รอดำเนินการ",
+    "search": "ค้นหาเลขที่เล่มประเมินหรือชื่อลูกค้า...",
+    "filterSlaStatus": "สถานะ SLA",
+    "filterActivityId": "กิจกรรม"
+  },
+  "pendingExternal": {
+    "title": "งานภายนอกค้างดำเนินการ",
+    "description": "งานบริษัทประเมินภายนอกที่รอดำเนินการ",
+    "search": "ค้นหาเลขที่เล่มประเมินหรือชื่อลูกค้า...",
+    "filterSlaStatus": "สถานะ SLA",
+    "filterActivityId": "กิจกรรม"
+  },
+  "pendingFollowup": {
+    "title": "ติดตามเอกสารค้างดำเนินการ",
+    "description": "คำขอติดตามเอกสารที่ยังค้างอยู่",
+    "search": "ค้นหาเลขที่เล่มประเมินหรือชื่อลูกค้า..."
+  },
+  "pendingEvaluation": {
+    "title": "การประเมินค้างดำเนินการ",
+    "description": "การประเมินบริษัทประเมินที่รอดำเนินการ",
+    "search": "ค้นหาเลขที่เล่มประเมินหรือชื่อลูกค้า...",
+    "filterEvaluationStatus": "สถานะการประเมิน"
+  },
+  "meetingFollowup": {
+    "title": "ติดตามการประชุม",
+    "description": "งานรออนุมัติคณะกรรมการทุกระดับชั้น",
+    "search": "ค้นหาเลขที่ประเมินหรือชื่อลูกค้า",
+    "meetingNo": "เลขที่การประชุม",
+    "meetingDate": "วันที่นัด",
+    "groupType": "ประเภทกลุ่ม",
+    "memberCount": "จำนวนกรรมการ",
+    "pendingItems": "รายการค้าง",
+    "pendingTotal": "ค้าง / ทั้งหมด",
+    "tier": {
+      "label": "ระดับ",
+      "1": "อนุกรรมการ",
+      "2": "คณะกรรมการ",
+      "3": "คณะกรรมการ (พร้อมประชุม)"
+    }
+  }
+}

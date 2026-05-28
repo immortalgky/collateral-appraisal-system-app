@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { FavoritesRow } from '@features/menuFavorites';
+import {
+  bucketForSlaStatus,
+  getRowVariantClasses,
+} from '@features/common/monitoring/components/SlaCells';
 import PoolTaskListPage from '../pages/PoolTaskListPage';
 import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -60,11 +66,12 @@ const plainThBase =
 
 // bg-white (solid) at rest, bg-gray-50 (solid) on hover — never transparent
 const stickyTdClass =
-  'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200';
-const defaultTdClass = 'px-4 py-3 text-gray-600 text-sm';
+  'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200';
+const defaultTdClass = 'px-3 py-1.5 text-gray-600 text-xs';
 
 export function ActivityTaskTable({ activityId, title, description }: ActivityTaskTableProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
   const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
   const [poolSearch, setPoolSearch] = useState('');
   const debouncedPoolSearch = useDebounce(poolSearch, 400);
@@ -214,10 +221,22 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
-      {/* Header */}
-      <div className="shrink-0 mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+      {/* Header + quick access (single row to save vertical space) */}
+      <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
+        <div className="shrink-0">
+          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+        </div>
+
+        {/* Quick access — right aligned, label on top, horizontally scrollable */}
+        <div className="flex flex-col min-w-0">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 text-right">
+            {t('favorites.row.sectionTitle')}
+          </p>
+          <div className="min-w-0">
+            <FavoritesRow />
+          </div>
+        </div>
       </div>
 
       {/* Toolbar: tabs on left, controls on right */}
@@ -602,7 +621,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                               taskId: task.id,
                             });
                           }}
-                          className="group hover:bg-gray-50 cursor-default transition-colors"
+                          className={`group cursor-default transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
@@ -619,7 +638,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                               </td>
                             );
                           })}
-                          <td className="px-4 py-3 w-8">
+                          <td className="px-3 py-1.5 w-8">
                             <Icon
                               style="solid"
                               name="arrow-right"

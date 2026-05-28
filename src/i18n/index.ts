@@ -8,16 +8,25 @@ import enNav from './locales/en/nav.json';
 import enWebhookAdmin from './locales/en/webhookAdmin.json';
 import enInvoice from './locales/en/invoice.json';
 import enServiceQualityEvaluation from './locales/en/serviceQualityEvaluation.json';
+import enMonitoring from './locales/en/monitoring.json';
+import enHistorySearch from './locales/en/historySearch.json';
+import enBlockUnitMaintenance from './locales/en/blockUnitMaintenance.json';
+import enLogAdmin from './locales/en/logAdmin.json';
 import thCommon from './locales/th/common.json';
 import thNav from './locales/th/nav.json';
 import thWebhookAdmin from './locales/th/webhookAdmin.json';
 import thInvoice from './locales/th/invoice.json';
 import thServiceQualityEvaluation from './locales/th/serviceQualityEvaluation.json';
+import thMonitoring from './locales/th/monitoring.json';
+import thHistorySearch from './locales/th/historySearch.json';
+import thBlockUnitMaintenance from './locales/th/blockUnitMaintenance.json';
+import thLogAdmin from './locales/th/logAdmin.json';
 import zhCommon from './locales/zh/common.json';
 import zhNav from './locales/zh/nav.json';
 import zhWebhookAdmin from './locales/zh/webhookAdmin.json';
 import zhInvoice from './locales/zh/invoice.json';
 import zhServiceQualityEvaluation from './locales/zh/serviceQualityEvaluation.json';
+import zhLogAdmin from './locales/zh/logAdmin.json';
 
 export const defaultNS = 'common' as const;
 
@@ -28,6 +37,10 @@ export const resources = {
     webhookAdmin: enWebhookAdmin,
     invoice: enInvoice,
     serviceQualityEvaluation: enServiceQualityEvaluation,
+    monitoring: enMonitoring,
+    historySearch: enHistorySearch,
+    blockUnitMaintenance: enBlockUnitMaintenance,
+    logAdmin: enLogAdmin,
   },
   th: {
     common: thCommon,
@@ -35,6 +48,10 @@ export const resources = {
     webhookAdmin: thWebhookAdmin,
     invoice: thInvoice,
     serviceQualityEvaluation: thServiceQualityEvaluation,
+    monitoring: thMonitoring,
+    historySearch: thHistorySearch,
+    blockUnitMaintenance: thBlockUnitMaintenance,
+    logAdmin: thLogAdmin,
   },
   zh: {
     common: zhCommon,
@@ -42,6 +59,12 @@ export const resources = {
     webhookAdmin: zhWebhookAdmin,
     invoice: zhInvoice,
     serviceQualityEvaluation: zhServiceQualityEvaluation,
+    // monitoring + historySearch + blockUnitMaintenance fall back to English for zh
+    // users until real Chinese translations are provided.
+    monitoring: enMonitoring,
+    historySearch: enHistorySearch,
+    blockUnitMaintenance: enBlockUnitMaintenance,
+    logAdmin: zhLogAdmin,
   },
 } as const;
 

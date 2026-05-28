@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 const MarketComparableListingPage = () => {
   const _baseReadOnly = usePageReadOnly();
@@ -18,7 +19,7 @@ const MarketComparableListingPage = () => {
   const isReadOnly = _baseReadOnly || isCiAppraisal;
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market comparable data (general pool, no appraisalId needed)
-  const { data: marketComparables, isLoading } = useGetMarketComparables();
+  const { data: marketComparables, isLoading, isError, error, refetch } = useGetMarketComparables();
 
   const parameterValues = useParametersByGroup('PropertyType');
   const collateralItems = useMemo(
@@ -83,6 +84,16 @@ const MarketComparableListingPage = () => {
       <div className="w-full flex justify-center col-span-4">
         <span className="loading loading-spinner text-primary"></span>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DataErrorState
+        title="Failed to load market comparables"
+        message={(error as Error)?.message}
+        onRetry={refetch}
+      />
     );
   }
 

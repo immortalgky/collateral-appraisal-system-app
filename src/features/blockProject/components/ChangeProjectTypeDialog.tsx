@@ -4,7 +4,9 @@ import toast from 'react-hot-toast';
 import Modal from '@/shared/components/Modal';
 import Icon from '@/shared/components/Icon';
 import { useChangeProjectType } from '../api/project';
-import { PROJECT_TYPE_LABEL } from '../data/options';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -30,7 +32,7 @@ interface ChangeProjectTypeDialogProps {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const ALL_TYPES: ProjectType[] = ['Condo', 'LandAndBuilding'];
+const ALL_TYPES: ProjectType[] = ['U', 'LB', 'L'];
 
 function buildWarningLines(
   from: ProjectType,
@@ -43,14 +45,14 @@ function buildWarningLines(
     lines.push(`${counts.models} Model${counts.models !== 1 ? 's' : ''} will be deleted`);
   }
   // Towers only exist on Condo projects
-  if (from === 'Condo' && to === 'LandAndBuilding' && counts.towers > 0) {
+  if (isCondo(from) && !isCondo(to) && counts.towers > 0) {
     lines.push(`${counts.towers} Tower${counts.towers !== 1 ? 's' : ''} will be deleted`);
   }
   if (counts.units > 0) {
     lines.push(`${counts.units} Unit${counts.units !== 1 ? 's' : ''} will be deleted`);
   }
-  // Land only exists on LandAndBuilding projects
-  if (from === 'LandAndBuilding' && to === 'Condo' && counts.hasLand) {
+  // Land only exists on LandAndBuilding-like projects
+  if (!isCondo(from) && isCondo(to) && counts.hasLand) {
     lines.push('Project Land details will be deleted');
   }
   if (counts.hasPricing) {
@@ -60,7 +62,7 @@ function buildWarningLines(
 }
 
 function targetRoute(basePath: string, newType: ProjectType): string {
-  const segment = newType === 'Condo' ? 'block-condo' : 'block-village';
+  const segment = isCondo(newType) ? 'block-condo' : 'block-village';
   return `${basePath}/${segment}`;
 }
 
@@ -75,16 +77,18 @@ export default function ChangeProjectTypeDialog({
   childCounts,
 }: ChangeProjectTypeDialogProps) {
   const navigate = useNavigate();
+  const readOnly = usePageReadOnly();
   const [selected, setSelected] = useState<ProjectType>(
-    currentProjectType === 'Condo' ? 'LandAndBuilding' : 'Condo',
+    isCondo(currentProjectType) ? 'LB' : 'U',
   );
 
   const { mutate: changeType, isPending } = useChangeProjectType();
+  const projectTypeParams = useParametersByGroup('ProjectType');
 
   // Reset selection to the non-current type whenever the dialog opens
   useEffect(() => {
     if (isOpen) {
-      setSelected(currentProjectType === 'Condo' ? 'LandAndBuilding' : 'Condo');
+      setSelected(isCondo(currentProjectType) ? 'LB' : 'U');
     }
   }, [isOpen, currentProjectType]);
 
@@ -92,6 +96,7 @@ export default function ChangeProjectTypeDialog({
   const canConfirm = selected !== currentProjectType;
 
   const handleConfirm = () => {
+    if (readOnly) return;
     changeType(
       { appraisalId, newProjectType: selected },
       {
@@ -148,12 +153,12 @@ export default function ChangeProjectTypeDialog({
                     name="projectType"
                     value={type}
                     checked={isChecked}
-                    disabled={isCurrent || isPending}
+                    disabled={isCurrent || isPending || readOnly}
                     onChange={() => setSelected(type)}
                     className="accent-blue-600"
                   />
                   <span className="text-sm font-medium text-gray-800">
-                    {PROJECT_TYPE_LABEL[type]}
+                    {projectTypeParams.find(p => p.code === type)?.description ?? type}
                   </span>
                   {isCurrent && (
                     <span className="ml-auto text-xs text-gray-400 font-normal">Current</span>
@@ -203,7 +208,7 @@ export default function ChangeProjectTypeDialog({
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!canConfirm || isPending}
+            disabled={!canConfirm || isPending || readOnly}
             className="flex-1 px-4 py-2.5 bg-danger hover:bg-danger/80 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isPending ? (

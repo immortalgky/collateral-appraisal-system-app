@@ -11,6 +11,7 @@ import {
 } from '@/features/appraisal/components/tabs';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 
+import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 import ProjectInfoTab from '../components/tabs/ProjectInfoTab';
 import UnitListingTab from '../components/tabs/UnitListingTab';
@@ -24,6 +25,7 @@ import { useGetProjectTowers } from '../api/projectTower';
 import { useGetProjectUnits } from '../api/projectUnit';
 import { useGetProjectPricingAssumptions } from '../api/projectPricingAssumption';
 import { useGetProjectLand } from '../api/projectLand';
+import DataErrorState from '@shared/components/DataErrorState';
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 
@@ -82,7 +84,7 @@ const LB_TABS: TabDef[] = [
 ];
 
 function getTabs(projectType: ProjectType): TabDef[] {
-  return projectType === 'Condo' ? CONDO_TABS : LB_TABS;
+  return isCondo(projectType) ? CONDO_TABS : LB_TABS;
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -125,12 +127,12 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   // ── Child count queries for the type-change dialog ────────────────────────
   // TanStack Query deduplicates these with the same keys used inside tab
   // subcomponents, so no extra network requests are made.
-  const { data: project } = useGetProject(appraisalId, projectType);
-  const { data: modelsData } = useGetProjectModels(appraisalId);
-  const { data: towersData } = useGetProjectTowers(appraisalId);
-  const { data: unitsData } = useGetProjectUnits(appraisalId);
-  const { data: pricingData } = useGetProjectPricingAssumptions(appraisalId);
-  const { data: landData } = useGetProjectLand(appraisalId);
+  const { data: project, isError: isProjectError, refetch: refetchProject } = useGetProject(appraisalId, projectType);
+  const { data: modelsData, isError: isModelsError, refetch: refetchModels } = useGetProjectModels(appraisalId);
+  const { data: towersData, isError: isTowersError, refetch: refetchTowers } = useGetProjectTowers(appraisalId);
+  const { data: unitsData, isError: isUnitsError, refetch: refetchUnits } = useGetProjectUnits(appraisalId);
+  const { data: pricingData, isError: isPricingError, refetch: refetchPricing } = useGetProjectPricingAssumptions(appraisalId);
+  const { data: landData, isError: isLandError, refetch: refetchLand } = useGetProjectLand(appraisalId);
 
   // Latch: once the project is confirmed to exist, keep this true so transient
   // background refetches (triggered by invalidateQueries after save) don't
@@ -153,6 +155,10 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     hasPricing: pricingData != null,
   };
 
+  if (isProjectError) {
+    return <DataErrorState title="Failed to load project" onRetry={refetchProject} />;
+  }
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'project-info':
@@ -164,17 +170,35 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
           />
         );
       case 'unit-listing':
-        return <UnitListingTab projectType={projectType} />;
+        return isUnitsError ? (
+          <DataErrorState variant="inline" onRetry={refetchUnits} />
+        ) : (
+          <UnitListingTab projectType={projectType} />
+        );
       case 'project-land':
-        // LandAndBuilding only — safe because the tab only appears in LB_TABS
-        return <ProjectLandTab />;
+        return isLandError ? (
+          <DataErrorState variant="inline" onRetry={refetchLand} />
+        ) : (
+          <ProjectLandTab />
+        );
       case 'models':
-        return <ModelListingTab projectType={projectType} />;
+        return isModelsError ? (
+          <DataErrorState variant="inline" onRetry={refetchModels} />
+        ) : (
+          <ModelListingTab projectType={projectType} />
+        );
       case 'towers':
-        // Condo only — safe because the tab only appears in CONDO_TABS
-        return <TowerListingTab />;
+        return isTowersError ? (
+          <DataErrorState variant="inline" onRetry={refetchTowers} />
+        ) : (
+          <TowerListingTab />
+        );
       case 'unit-price':
-        return <UnitPriceTab projectType={projectType} />;
+        return isPricingError ? (
+          <DataErrorState variant="inline" onRetry={refetchPricing} />
+        ) : (
+          <UnitPriceTab projectType={projectType} />
+        );
       case 'markets':
         return <MarketsTab />;
       case 'gallery':

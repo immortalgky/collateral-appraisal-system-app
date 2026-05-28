@@ -1,6 +1,7 @@
 import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import BoundaryFields from '@/features/appraisal/components/BoundaryFields';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import {
   allocationField,
   anticipationProsperityField,
@@ -66,7 +67,9 @@ const Card = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const BlockLandDetailForm = () => (
+const BlockLandDetailForm = () => {
+  const readOnly = usePageReadOnly();
+  return (
   <div className="w-full max-w-full overflow-hidden">
     <h2 className="text-lg font-semibold text-gray-900 mb-6">Land Detail</h2>
     <div className="grid grid-cols-5 gap-x-6 gap-y-4">
@@ -138,7 +141,7 @@ const BlockLandDetailForm = () => (
       </SectionRow>
 
       <SectionRow title="Size and Boundary" icon="ruler-combined">
-        <BoundaryFields />
+        <BoundaryFields readOnly={readOnly} />
       </SectionRow>
 
       <SectionRow title="Other Information" icon="circle-info">
@@ -150,6 +153,7 @@ const BlockLandDetailForm = () => (
       </SectionRow>
     </div>
   </div>
-);
+  );
+};
 
 export default BlockLandDetailForm;

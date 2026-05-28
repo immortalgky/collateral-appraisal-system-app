@@ -22,6 +22,7 @@ import {
   useCalculateProjectUnitPrices,
   useSaveProjectUnitPrices,
 } from '../../api/projectUnitPrice';
+import { isCondo, isLandAndBuildingLike } from '../../types';
 import type {
   ProjectModelAssumption,
   ProjectUnitPrice,
@@ -87,7 +88,7 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
               Usable Area (sq.m.)
             </th>
-            {projectType === 'LandAndBuilding' && (
+            {isLandAndBuildingLike(projectType) && (
               <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                 Standard Land (Sq.Wa)
               </th>
@@ -115,7 +116,7 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
                     ? `${m.usableAreaFrom.toLocaleString()} - ${m.usableAreaTo.toLocaleString()}`
                     : (m.usableAreaFrom ?? m.usableAreaTo)?.toLocaleString() ?? '-'}
               </td>
-              {projectType === 'LandAndBuilding' && (
+              {isLandAndBuildingLike(projectType) && (
                 <td className="py-2 px-3 text-right text-gray-800">
                   {m.standardLandPrice?.toLocaleString() ?? '-'}
                 </td>
@@ -128,7 +129,7 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
               </td>
               <td className="py-2 px-3 text-gray-600">
                 {m.fireInsuranceCondition
-                  ? (projectType === 'Condo'
+                  ? (isCondo(projectType)
                       ? CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE[m.fireInsuranceCondition]
                       : LB_FIRE_INSURANCE_LABEL_BY_VALUE[m.fireInsuranceCondition]) ??
                     m.fireInsuranceCondition
@@ -263,7 +264,7 @@ function UnitPriceResultTable({
         <thead className="bg-gray-50">
           <tr>
             <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Seq No</th>
-            {projectType === 'Condo' && (
+            {isCondo(projectType) && (
               <>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium">Floor</th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Tower Name</th>
@@ -271,7 +272,7 @@ function UnitPriceResultTable({
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Room No.</th>
               </>
             )}
-            {projectType === 'LandAndBuilding' && (
+            {isLandAndBuildingLike(projectType) && (
               <>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Plot No</th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">House No</th>
@@ -280,13 +281,13 @@ function UnitPriceResultTable({
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (Sq.Wa)</th>
               </>
             )}
-            {projectType === 'Condo' && (
+            {isCondo(projectType) && (
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model</th>
             )}
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m)</th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price</th>
             {/* Common flags */}
-            {projectType === 'Condo' ? (
+            {isCondo(projectType) ? (
               <>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Corner</th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Edge</th>
@@ -319,7 +320,7 @@ function UnitPriceResultTable({
           {unitPrices.map(up => (
             <tr key={up.projectUnitId} className="border-b border-gray-100 hover:bg-gray-50">
               <td className="py-2 px-3 text-center text-gray-700">{up.sequenceNumber}</td>
-              {projectType === 'Condo' && (
+              {isCondo(projectType) && (
                 <>
                   <td className="py-2 px-3 text-right text-gray-700">{up.floor ?? '-'}</td>
                   <td className="py-2 px-3 text-gray-700">{up.towerName ?? '-'}</td>
@@ -327,7 +328,7 @@ function UnitPriceResultTable({
                   <td className="py-2 px-3 text-gray-700">{up.roomNumber ?? '-'}</td>
                 </>
               )}
-              {projectType === 'LandAndBuilding' && (
+              {isLandAndBuildingLike(projectType) && (
                 <>
                   <td className="py-2 px-3 text-gray-700">{up.plotNumber ?? '-'}</td>
                   <td className="py-2 px-3 text-gray-700">{up.houseNumber ?? '-'}</td>
@@ -336,12 +337,12 @@ function UnitPriceResultTable({
                   <td className="py-2 px-3 text-right text-gray-700">{fmt(up.landArea)}</td>
                 </>
               )}
-              {projectType === 'Condo' && (
+              {isCondo(projectType) && (
                 <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
               )}
               <td className="py-2 px-3 text-right text-gray-700">{fmt(up.usableArea)}</td>
               <td className="py-2 px-3 text-right text-gray-700">{fmt(up.sellingPrice)}</td>
-              {projectType === 'Condo' ? (
+              {isCondo(projectType) ? (
                 <>
                   <FlagCell
                     checked={up.isCorner}
@@ -435,7 +436,7 @@ function UnitPriceResultTable({
         {unitPrices.length > 0 && (
           <tfoot>
             <tr className="bg-primary/5 border-t-2 border-primary/20">
-              {projectType === 'Condo' ? (
+              {isCondo(projectType) ? (
                 <td colSpan={6} className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap">
                   Total — {totals.unitCount.toLocaleString()} units
                 </td>
@@ -444,7 +445,7 @@ function UnitPriceResultTable({
                   Total — {totals.unitCount.toLocaleString()} units
                 </td>
               )}
-              {projectType === 'LandAndBuilding' && (
+              {isLandAndBuildingLike(projectType) && (
                 <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.landArea)}</td>
               )}
               <td className="py-2.5 px-3" />
@@ -460,7 +461,7 @@ function UnitPriceResultTable({
                   ? <>{totals.edgeCount} · {fmt(totals.edgeAmount)}</>
                   : <span className="text-gray-400">-</span>}
               </td>
-              {projectType === 'Condo' ? (
+              {isCondo(projectType) ? (
                 <>
                   <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
                     {totals.poolViewCount > 0
@@ -485,7 +486,7 @@ function UnitPriceResultTable({
                   ? <>{totals.otherCount} · {fmt(totals.otherAmount)}</>
                   : <span className="text-gray-400">-</span>}
               </td>
-              {projectType === 'LandAndBuilding' && (
+              {isLandAndBuildingLike(projectType) && (
                 <>
                   <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">{fmt(totals.landAreaDifference)}</td>
                   <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">{fmt(totals.landIncreaseDecreaseAmount)}</td>
@@ -494,7 +495,7 @@ function UnitPriceResultTable({
               <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.adjustPriceLocation)}</td>
               {/* Standard Price — skip (per-sqm rate, not summable) */}
               <td className="py-2.5 px-3" />
-              {projectType === 'Condo' && (
+              {isCondo(projectType) && (
                 /* Price Increment/Floor — not summable */
                 <td className="py-2.5 px-3" />
               )}
@@ -522,7 +523,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
   const schema = projectPricingAssumptionForm(projectType);
   const defaults =
-    projectType === 'Condo' ? condoPricingAssumptionFormDefaults : lbPricingAssumptionFormDefaults;
+    isCondo(projectType) ? condoPricingAssumptionFormDefaults : lbPricingAssumptionFormDefaults;
 
   const { data: pricingAssumption, isLoading: assumptionLoading } =
     useGetProjectPricingAssumptions(appraisalId ?? '');
@@ -564,7 +565,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
   useEffect(() => {
     if (pricingAssumption) {
-      if (projectType === 'Condo') {
+      if (isCondo(projectType)) {
         reset({
           locationMethod: pricingAssumption.locationMethod ?? 'AdjustPriceSqm',
           cornerAdjustment: pricingAssumption.cornerAdjustment ?? null,
@@ -669,7 +670,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
       // For LB: compute land area diff and land +/- live from model standard land area.
       // Always recompute so it responds to rate / assumption changes in the form.
       const landAreaDifference =
-        projectType === 'LandAndBuilding' &&
+        isLandAndBuildingLike(projectType) &&
         up.landArea != null &&
         lookup?.standardLandArea != null
           ? up.landArea - lookup.standardLandArea

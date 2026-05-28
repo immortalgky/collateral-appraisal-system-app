@@ -32,6 +32,26 @@ export const findAddressBySubDistrictCode = (
   );
 };
 
+/**
+ * Find a province NAME by its 2-digit province code, scanning the address store.
+ * Used when only a province code is available (e.g. condo identity has no sub-district).
+ */
+export const findProvinceNameByCode = (
+  provinceCode: string,
+  source?: AddressSource,
+): string | undefined => {
+  const store = useAddressStore.getState();
+  const lists =
+    source === 'title' ? [store.titleAddresses]
+    : source === 'dopa' ? [store.dopaAddresses]
+    : [store.titleAddresses, store.dopaAddresses];
+  for (const list of lists) {
+    const hit = list.find(a => a.provinceCode === provinceCode);
+    if (hit) return hit.provinceName;
+  }
+  return undefined;
+};
+
 export const mockThaiAddresses: ThaiAddress[] = [
   // กรุงเทพมหานคร - พระนคร
   {

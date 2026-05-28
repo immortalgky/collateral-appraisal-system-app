@@ -1,15 +1,8 @@
 import type { ListBoxItem } from '@/shared/components/inputs/Dropdown';
-import type { ProjectType } from '../types';
-
-// ─── Project Type Discriminator Labels ───────────────────────────────────────
-
-export const PROJECT_TYPE_LABEL: Record<ProjectType, string> = {
-  Condo: 'Condo',
-  LandAndBuilding: 'Land & Building',
-};
 
 // =============================================================================
 // Shared options (no matching parameter group on the BE — keep local)
+// NOTE: ProjectType labels are now sourced from useParameterDescription('ProjectType', code).
 // =============================================================================
 
 export const LOCATION_METHOD_OPTIONS = [

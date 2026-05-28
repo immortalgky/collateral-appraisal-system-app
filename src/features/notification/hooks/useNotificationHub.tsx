@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,6 +25,7 @@ export function useNotificationHub() {
   const connectionRef = useRef<ReturnType<typeof HubConnectionBuilder.prototype.build> | null>(
     null,
   );
+  const hasShownConnectErrorToast = useRef(false);
   const addNotification = useNotificationStore(s => s.addNotification);
   const queryClient = useQueryClient();
 
@@ -88,7 +90,13 @@ export function useNotificationHub() {
         if (!cancelled) console.log('[NotificationHub] SignalR connected');
       })
       .catch(err => {
-        if (!cancelled) console.error('[NotificationHub] SignalR connection failed:', err);
+        if (!cancelled) {
+          console.error('[NotificationHub] SignalR connection failed:', err);
+          if (!hasShownConnectErrorToast.current) {
+            toast.error('Real-time notifications unavailable');
+            hasShownConnectErrorToast.current = true;
+          }
+        }
       });
 
     return () => {

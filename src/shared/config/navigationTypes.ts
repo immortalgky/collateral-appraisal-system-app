@@ -12,6 +12,8 @@ export type NavContext = {
 };
 
 export type NavItem = {
+  /** Backend UUID — populated when converted from MenuTreeNode. Used for favorites. */
+  id?: string;
   itemKey: string;
   name: string;
   href: string;
@@ -21,6 +23,8 @@ export type NavItem = {
   children?: NavItem[];
   canView: boolean;
   canEdit: boolean;
+  /** True when the item is a leaf with a real path and can be pinned as a favorite. */
+  pinnable: boolean;
 };
 
 /**

@@ -455,6 +455,7 @@ export default function FeeInformationSection({
 
       {/* Add/Edit Fee Modal */}
       <AddFeeModal
+        readOnly={readOnly}
         isOpen={isAddModalOpen || editingFee !== null}
         onClose={() => {
           setIsAddModalOpen(false);

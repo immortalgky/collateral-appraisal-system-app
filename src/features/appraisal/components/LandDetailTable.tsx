@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 import Icon from '@shared/components/Icon';
 import type { LandDetailFormType, LandDetailItem } from '../types/landDetail';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const tableHeaders = [
   { key: 'titleDeedNo', label: 'Title Deed No.', width: 'w-24' },
@@ -40,6 +41,7 @@ const emptyLandDetail: Omit<LandDetailItem, 'id'> = {
 };
 
 export default function LandDetailTable() {
+  const readOnly = usePageReadOnly();
   const { control, getValues, register } = useFormContext<LandDetailFormType>();
   const { fields, append, remove } = useFieldArray({
     control,
@@ -73,9 +75,11 @@ export default function LandDetailTable() {
       {/* Section Header */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Land Detail</span>
-        <button type="button" onClick={handleAddRow} className="btn btn-circle btn-xs btn-success">
-          <Icon name="plus" style="solid" className="text-xs" />
-        </button>
+        {!readOnly && (
+          <button type="button" onClick={handleAddRow} className="btn btn-circle btn-xs btn-success">
+            <Icon name="plus" style="solid" className="text-xs" />
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -103,7 +107,7 @@ export default function LandDetailTable() {
                 <tr key={field.id}>
                   {tableHeaders.map(header => (
                     <td key={header.key}>
-                      {editIndex === index ? (
+                      {editIndex === index && !readOnly ? (
                         <input
                           type="text"
                           {...register(
@@ -117,32 +121,34 @@ export default function LandDetailTable() {
                     </td>
                   ))}
                   <td>
-                    <div className="flex gap-1">
-                      {editIndex === index ? (
+                    {!readOnly && (
+                      <div className="flex gap-1">
+                        {editIndex === index ? (
+                          <button
+                            type="button"
+                            onClick={() => setEditIndex(null)}
+                            className="btn btn-circle btn-xs btn-success"
+                          >
+                            <Icon name="check" style="solid" />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setEditIndex(index)}
+                            className="btn btn-circle btn-xs btn-ghost text-primary"
+                          >
+                            <Icon name="pen" style="solid" />
+                          </button>
+                        )}
                         <button
                           type="button"
-                          onClick={() => setEditIndex(null)}
-                          className="btn btn-circle btn-xs btn-success"
+                          onClick={() => handleDeleteRow(index)}
+                          className="btn btn-circle btn-xs btn-ghost text-error"
                         >
-                          <Icon name="check" style="solid" />
+                          <Icon name="trash" style="solid" />
                         </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setEditIndex(index)}
-                          className="btn btn-circle btn-xs btn-ghost text-primary"
-                        >
-                          <Icon name="pen" style="solid" />
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteRow(index)}
-                        className="btn btn-circle btn-xs btn-ghost text-error"
-                      >
-                        <Icon name="trash" style="solid" />
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))

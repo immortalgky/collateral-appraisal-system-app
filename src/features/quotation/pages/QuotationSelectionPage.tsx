@@ -152,7 +152,7 @@ const QuotationSelectionPage = () => {
 
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotation?.appraisals ?? [];
-    const dueDate = quotation?.dueDate ? new Date(quotation.dueDate) : null;
+    const dueDate = quotation?.cutOffTime ? new Date(quotation.cutOffTime) : null;
 
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
@@ -237,7 +237,6 @@ const QuotationSelectionPage = () => {
   const showWinnerActions = status === 'WinnerTentative';
   const showFinalizedSummary = status === 'Finalized';
   const showCancelledSummary = status === 'Cancelled';
-  const showCloseOnly = showFinalizedSummary || showCancelledSummary;
   // Standalone Cancel button — shown for every in-flight admin/RM state. Lives in the
   // page header (top-right) so the placement matches the appraisal/project pages.
   // Draft has its own dedicated action bar.
@@ -256,8 +255,8 @@ const QuotationSelectionPage = () => {
   // After Sent the bidding window has closed (admin review / pick winner / etc.),
   // so a "hours remaining" countdown would be misleading.
   const hoursLeft =
-    showSentPanel && quotation.dueDate
-      ? Math.max(0, Math.floor((new Date(quotation.dueDate).getTime() - Date.now()) / 36e5))
+    showSentPanel && quotation.cutOffTime
+      ? Math.max(0, Math.floor((new Date(quotation.cutOffTime).getTime() - Date.now()) / 36e5))
       : null;
 
   const formatDateTimeShort = (iso: string | null | undefined) => {
@@ -310,9 +309,9 @@ const QuotationSelectionPage = () => {
 
   // Cut-off date — read-only for now.
   // TODO: wire PATCH endpoint when backend exposes /quotations/{id}/due-date or similar.
-  const cutOffDateDisplay = quotation.dueDate
+  const cutOffTimeDisplay = quotation.cutOffTime
     ? (() => {
-        const d = new Date(quotation.dueDate);
+        const d = new Date(quotation.cutOffTime);
         const pad = (n: number) => String(n).padStart(2, '0');
         return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
       })()
@@ -331,7 +330,7 @@ const QuotationSelectionPage = () => {
             <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
               <Icon name="clock" style="solid" className="size-2.5 text-gray-400" />
               <span>Cut-off</span>
-              <span className="font-medium text-gray-700">{cutOffDateDisplay}</span>
+              <span className="font-medium text-gray-700">{cutOffTimeDisplay}</span>
             </span>
             {hoursLeft !== null && (
               <span

@@ -1,121 +1,137 @@
-import { useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
+import { z } from 'zod';
 import type { ActivityColumnConfig, ColumnKey } from '../config/columnDefs';
 
-interface PersistedState {
-  hidden: ColumnKey[];
-  order: ColumnKey[];
-}
+// ── Zod schema ────────────────────────────────────────────────────────────────
 
-function loadState(
-  storageKey: string,
+/**
+ * The persisted shape for task column config.
+ * We use z.string() for individual column keys since the exact union is
+ * runtime-dynamic — invalid keys are filtered out during normalization.
+ */
+const taskColumnsSchema = z.object({
+  hidden: z.array(z.string()),
+  order: z.array(z.string()),
+});
+
+type PersistedState = z.infer<typeof taskColumnsSchema>;
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function normalizeState(
+  raw: PersistedState,
   config: ActivityColumnConfig,
 ): { hidden: Set<ColumnKey>; order: ColumnKey[] } {
-  const alwaysVisible = new Set<ColumnKey>([
-    config.stickyColumn,
-    ...(config.alwaysVisible ?? []),
-  ]);
+  const alwaysVisible = new Set<ColumnKey>([config.stickyColumn, ...(config.alwaysVisible ?? [])]);
+
+  // Filter hidden to only valid, non-always-visible column keys
+  const validHidden = raw.hidden.filter(
+    (k): k is ColumnKey =>
+      (config.columns as string[]).includes(k) && !alwaysVisible.has(k as ColumnKey),
+  );
+
+  // Restore order: saved order filtered to valid, unique keys, then append new columns.
+  // Deduping guards against a corrupt/hand-edited stored value producing duplicate cells.
+  const savedOrder = [
+    ...new Set(
+      raw.order.filter((k): k is ColumnKey => (config.columns as string[]).includes(k)),
+    ),
+  ];
+  const missing = config.columns.filter(k => !savedOrder.includes(k));
+  const order = [...savedOrder, ...missing];
+
+  // The sticky column must always render first — force it to index 0 so a stale
+  // saved order (or a user dragging another column ahead of it) can't unpin it.
+  const sticky = config.stickyColumn;
+  const ordered = [sticky, ...order.filter(k => k !== sticky)];
+
+  return { hidden: new Set(validHidden), order: ordered };
+}
+
+function defaultPersistedState(config: ActivityColumnConfig): PersistedState {
+  return { hidden: [], order: config.columns };
+}
+
+function readStored(storageKey: string, config: ActivityColumnConfig): PersistedState {
   try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return { hidden: new Set(), order: config.columns };
-    const parsed: unknown = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-      return { hidden: new Set(), order: config.columns };
-    }
-    const p = parsed as Partial<PersistedState>;
-
-    // Restore hidden set — only keep valid, non-always-visible keys
-    const validHidden = (p.hidden ?? []).filter(
-      (k): k is ColumnKey =>
-        (config.columns as string[]).includes(k) && !alwaysVisible.has(k),
-    );
-
-    // Restore order — start from saved order, then append any new columns added since save
-    const savedOrder = (p.order ?? []).filter((k): k is ColumnKey =>
-      (config.columns as string[]).includes(k),
-    );
-    const missing = config.columns.filter(k => !savedOrder.includes(k));
-    const order = [...savedOrder, ...missing];
-
-    return { hidden: new Set(validHidden), order };
+    const item = localStorage.getItem(storageKey);
+    if (!item) return defaultPersistedState(config);
+    const parsed = taskColumnsSchema.safeParse(JSON.parse(item));
+    return parsed.success ? parsed.data : defaultPersistedState(config);
   } catch {
-    return { hidden: new Set(), order: config.columns };
+    return defaultPersistedState(config);
   }
 }
 
-function saveState(storageKey: string, hidden: Set<ColumnKey>, order: ColumnKey[]): void {
-  try {
-    const state: PersistedState = { hidden: [...hidden], order };
-    localStorage.setItem(storageKey, JSON.stringify(state));
-  } catch {
-    // ignore write errors (e.g. private browsing quota)
-  }
-}
+// ── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useColumnVisibility(storageKey: string, config: ActivityColumnConfig) {
-  const [hidden, setHidden] = useState<Set<ColumnKey>>(() => loadState(storageKey, config).hidden);
-  const [order, setOrder] = useState<ColumnKey[]>(() => loadState(storageKey, config).order);
+  // Column layout is persisted per-screen in localStorage under the caller's storageKey.
+  // Each screen (All Tasks, each activity view) owns its own key, so the views no longer
+  // clobber each other — and the layout survives a page refresh.
+  const [raw, setRawState] = useState<PersistedState>(() => readStored(storageKey, config));
 
-  const alwaysVisible = new Set<ColumnKey>([
-    config.stickyColumn,
-    ...(config.alwaysVisible ?? []),
-  ]);
+  // Re-read when the screen changes: the activity table swaps activityId via the URL query
+  // without remounting, so storageKey/config can change while the hook stays mounted.
+  useEffect(() => {
+    setRawState(readStored(storageKey, config));
+  }, [storageKey, config]);
 
-  // All columns in user-defined order (for the dropdown list)
-  const orderedColumns = order;
+  const setRaw = useCallback(
+    (next: PersistedState) => {
+      setRawState(next);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+        // ignore quota / unavailable-storage errors — in-memory state still updates
+      }
+    },
+    [storageKey],
+  );
 
-  // Columns that are visible, in user-defined order (for the table)
-  const visibleColumns = order.filter(k => !hidden.has(k));
+  const { hidden, order } = useMemo(() => normalizeState(raw, config), [raw, config]);
+
+  const alwaysVisible = useMemo(
+    () => new Set<ColumnKey>([config.stickyColumn, ...(config.alwaysVisible ?? [])]),
+    [config.stickyColumn, config.alwaysVisible],
+  );
+
+  const visibleColumns = useMemo(() => order.filter(k => !hidden.has(k)), [order, hidden]);
 
   const toggleColumn = useCallback(
     (key: ColumnKey) => {
-      const av = new Set<ColumnKey>([
-        config.stickyColumn,
-        ...(config.alwaysVisible ?? []),
-      ]);
-      if (av.has(key)) return;
-      setHidden(prev => {
-        const next = new Set(prev);
-        if (next.has(key)) {
-          next.delete(key);
-        } else {
-          next.add(key);
-        }
-        saveState(storageKey, next, order);
-        return next;
-      });
+      if (alwaysVisible.has(key)) return;
+      const nextHidden = new Set(hidden);
+      if (nextHidden.has(key)) {
+        nextHidden.delete(key);
+      } else {
+        nextHidden.add(key);
+      }
+      setRaw({ hidden: [...nextHidden], order });
     },
-    [storageKey, order, config.stickyColumn, config.alwaysVisible],
+    [alwaysVisible, hidden, order, setRaw],
   );
 
   const reorderColumns = useCallback(
     (activeId: ColumnKey, overId: ColumnKey) => {
       if (activeId === overId) return;
-      setOrder(prev => {
-        const oldIndex = prev.indexOf(activeId);
-        const newIndex = prev.indexOf(overId);
-        if (oldIndex === -1 || newIndex === -1) return prev;
-        const next = arrayMove(prev, oldIndex, newIndex);
-        saveState(storageKey, hidden, next);
-        return next;
-      });
+      const oldIndex = order.indexOf(activeId);
+      const newIndex = order.indexOf(overId);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const nextOrder = arrayMove(order, oldIndex, newIndex);
+      setRaw({ hidden: [...hidden], order: nextOrder });
     },
-    [storageKey, hidden],
+    [hidden, order, setRaw],
   );
 
   const resetToDefault = useCallback(() => {
-    setHidden(new Set());
-    setOrder(config.columns);
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      // ignore
-    }
-  }, [storageKey, config.columns]);
+    setRaw(defaultPersistedState(config));
+  }, [config, setRaw]);
 
   return {
     visibleColumns,
-    orderedColumns,
+    orderedColumns: order,
     hidden,
     alwaysVisible,
     toggleColumn,

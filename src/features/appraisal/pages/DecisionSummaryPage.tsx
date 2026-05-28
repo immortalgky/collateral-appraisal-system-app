@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppraisalId, useWorkflowInstanceId, useActivityId, useIsTaskOwner, useAppraisalIsPma, useAppraisalFacilityLimit, useAppraisalHasAppraisalBook, useAppraisalContext, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import { HistorySearchMapDrawer } from '@/features/common/historySearch/HistorySearchMapDrawer';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -224,6 +225,7 @@ const DecisionSummaryPage = () => {
   const [comments, setComments] = useState('');
   const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
 
   // Routing variables from context (for appraisal-initiation refresh)
   const isPma = useAppraisalIsPma();
@@ -697,6 +699,17 @@ const DecisionSummaryPage = () => {
                     Cancel
                   </Button>
                   <div className="h-6 w-px bg-gray-200" />
+                  {/* History Search map icon — opens nearby appraisal/MC map */}
+                  <button
+                    type="button"
+                    onClick={() => setIsHistorySearchOpen(true)}
+                    title="History Search (nearby appraisals & market comparables)"
+                    className="flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs"
+                  >
+                    <Icon name="map-location-dot" style="solid" className="w-4 h-4" />
+                    <span className="hidden sm:inline">History Search</span>
+                  </button>
+                  <div className="h-6 w-px bg-gray-200" />
                   {isDirty && (
                     <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -731,6 +744,12 @@ const DecisionSummaryPage = () => {
           )}
         </form>
       </FormProvider>
+
+      {/* History Search map drawer */}
+      <HistorySearchMapDrawer
+        isOpen={isHistorySearchOpen}
+        onClose={() => setIsHistorySearchOpen(false)}
+      />
 
       <UnsavedChangesDialog blocker={blocker} />
       <ConfirmDialog

@@ -17,6 +17,7 @@ interface AddFeeModalProps {
   onSubmit: (data: Omit<FeeItem, 'id'>) => void;
   defaultValues?: FeeItem;
   isEditing?: boolean;
+  readOnly?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export default function AddFeeModal({
   onSubmit,
   defaultValues,
   isEditing = false,
+  readOnly = false,
 }: AddFeeModalProps) {
   const {
     register,
@@ -84,6 +86,7 @@ export default function AddFeeModal({
           placeholder="Enter fee description"
           {...register('description')}
           error={errors.description?.message}
+          disabled={readOnly}
         />
 
         {/* Amount */}
@@ -96,6 +99,7 @@ export default function AddFeeModal({
           value={watch('amount')}
           onChange={e => setValue('amount', e.target.value ?? 0)}
           error={errors.amount?.message}
+          disabled={readOnly}
         />
 
         {/* Action Buttons */}
@@ -103,9 +107,11 @@ export default function AddFeeModal({
           <Button type="button" variant="ghost" onClick={handleClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" isLoading={isSubmitting}>
-            {isEditing ? 'Update' : 'Add'}
-          </Button>
+          {!readOnly && (
+            <Button type="submit" variant="primary" isLoading={isSubmitting}>
+              {isEditing ? 'Update' : 'Add'}
+            </Button>
+          )}
         </div>
       </form>
     </Modal>

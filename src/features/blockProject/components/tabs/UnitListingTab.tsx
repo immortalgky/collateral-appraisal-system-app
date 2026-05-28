@@ -2,12 +2,14 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import UploadArea from '@/shared/components/inputs/UploadArea';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 import { useGetProjectUnits, useGetProjectUnitUploads, useUploadProjectUnits, useDeleteProjectUnitUpload } from '../../api/projectUnit';
+import { isCondo } from '../../types';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
 import type { AxiosError } from 'axios';
 import type { ApiError } from '@/shared/types/api';
@@ -31,11 +33,13 @@ function validateFile(file: File): string | null {
 function UploadHistoryTable({
   uploads,
   isLoading,
+  readOnly,
   onDelete,
   deletingId,
 }: {
   uploads: ProjectUnitUpload[];
   isLoading: boolean;
+  readOnly: boolean;
   onDelete: (upload: ProjectUnitUpload) => void;
   deletingId: string | null;
 }) {
@@ -72,15 +76,17 @@ function UploadHistoryTable({
                 )}
               </td>
               <td className="py-2 px-3 text-right">
-                <button
-                  type="button"
-                  onClick={() => onDelete(upload)}
-                  disabled={deletingId === upload.id}
-                  className="text-gray-400 hover:text-danger transition-colors disabled:opacity-50"
-                  title="Delete upload"
-                >
-                  <Icon style="regular" name="trash" className="size-3.5" />
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete(upload)}
+                    disabled={deletingId === upload.id}
+                    className="text-gray-400 hover:text-danger transition-colors disabled:opacity-50"
+                    title="Delete upload"
+                  >
+                    <Icon style="regular" name="trash" className="size-3.5" />
+                  </button>
+                )}
               </td>
             </tr>
           ))}
@@ -112,7 +118,7 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
     );
   }
 
-  if (projectType === 'Condo') {
+  if (isCondo(projectType)) {
     return (
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
@@ -190,7 +196,7 @@ function SummaryFooter({ units, totalCount, projectType }: { units: ProjectUnit[
 
   return (
     <div className="flex items-center gap-6 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200 text-sm">
-      {projectType === 'Condo' && (
+      {isCondo(projectType) && (
         <>
           <div className="flex items-center gap-2">
             <span className="text-gray-500">Towers:</span>
@@ -228,6 +234,7 @@ interface UnitListingTabProps {
  */
 export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const appraisalId = useAppraisalId();
+  const readOnly = usePageReadOnly();
 
   const { data: unitsData, isLoading: unitsLoading } = useGetProjectUnits(appraisalId ?? '');
   const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(appraisalId ?? '');
@@ -257,7 +264,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !appraisalId) return;
+    if (readOnly || !file || !appraisalId) return;
 
     const validationError = validateFile(file);
     if (validationError) {
@@ -278,7 +285,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   };
 
   const handleConfirmDelete = () => {
-    if (!pendingDeleteUpload || !appraisalId) return;
+    if (readOnly || !pendingDeleteUpload || !appraisalId) return;
     deleteUpload(
       { appraisalId, uploadId: pendingDeleteUpload.id },
       {
@@ -298,6 +305,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
             onChange={handleFileChange}
             accept=".xlsx,.xls,.csv"
             isLoading={isUploading}
+            disabled={readOnly}
             supportedText=".xlsx, .xls, .csv (max 10MB)"
           />
         </div>
@@ -307,6 +315,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           <UploadHistoryTable
             uploads={uploads}
             isLoading={uploadsLoading}
+            readOnly={readOnly}
             onDelete={setPendingDeleteUpload}
             deletingId={isDeleting ? (pendingDeleteUpload?.id ?? null) : null}
           />

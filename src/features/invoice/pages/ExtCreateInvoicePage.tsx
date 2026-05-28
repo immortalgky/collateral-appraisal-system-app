@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { AxiosError } from 'axios';
 import axios from '@/shared/api/axiosInstance';
+import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Input from '@/shared/components/Input';
@@ -50,7 +51,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
   useBreadcrumb(editId ? t('maintenance.editTitle') : t('maintenance.createTitle'));
 
   // ─── Edit mode: hydrate from existing invoice ─────────────────────────────
-  const { data: existingInvoice } = useGetInvoiceById(editId ?? null);
+  const { data: existingInvoice, isError: invoiceError, refetch: refetchInvoice } = useGetInvoiceById(editId ?? null);
 
   // ─── Invoice id for this session ─────────────────────────────────────────
   // null = brand-new unsaved, string = created (either editId or newly created)
@@ -63,7 +64,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
 
   const debouncedSearch = useDebounce(searchAppraisalNo, 300);
 
-  const { data: assignments = [], isLoading: isLoadingAssignments } = useGetEligibleAssignments({
+  const { data: assignments = [], isLoading: isLoadingAssignments, isError: assignmentsError, refetch: refetchAssignments } = useGetEligibleAssignments({
     searchAppraisalNo: debouncedSearch || undefined,
     submittedDateFrom: toDateOnly(submittedDateFrom),
     submittedDateTo: toDateOnly(submittedDateTo),
@@ -233,6 +234,10 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
     if (!code) return '—';
     return feePaymentMethods.find(p => p.code === code)?.description ?? code;
   };
+
+  if (editId && invoiceError) {
+    return <DataErrorState title="Failed to load invoice" onRetry={() => refetchInvoice()} />;
+  }
 
   // ─── Right pane — styled as an invoice paper ─────────────────────────────
   const rightPane = (
@@ -521,6 +526,12 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                     ]}
                     rows={5}
                   />
+                ) : assignmentsError ? (
+                  <tr>
+                    <td colSpan={12}>
+                      <DataErrorState variant="inline" onRetry={() => refetchAssignments()} />
+                    </td>
+                  </tr>
                 ) : assignments.length === 0 ? (
                   <tr>
                     <td colSpan={12} className="text-center py-12">

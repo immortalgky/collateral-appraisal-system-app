@@ -378,7 +378,9 @@ const PROPERTY_TYPE_TO_QUERY_KEY: Record<string, string> = {
   'Lease Agreement Lands': 'land',
   'Lease Agreement Building': 'building',
   'Lease Agreement Land and building': 'land-building',
+  'Lease Agreement Condo': 'condo',
   Machine: 'machinery',
+  Machinery: 'machinery',
   Vehicle: 'machinery',
   Vessel: 'machinery',
   L: 'land',
@@ -386,6 +388,13 @@ const PROPERTY_TYPE_TO_QUERY_KEY: Record<string, string> = {
   U: 'condo',
   LB: 'land-building',
   M: 'machinery',
+  MAC: 'machinery',
+  VEH: 'machinery',
+  VES: 'machinery',
+  LSL: 'land',
+  LSB: 'building',
+  LS: 'land-building',
+  LSU: 'condo',
 };
 
 export function getSectionsForType(propertyType: string): SectionDef[] {

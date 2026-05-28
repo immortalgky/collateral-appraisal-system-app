@@ -32,5 +32,9 @@
   "taskMonitor": {
     "title": "任务监控",
     "description": "重新分配您监管组中的任务"
+  },
+  "themeToggle": {
+    "toDark": "切换到深色模式",
+    "toLight": "切换到浅色模式"
   }
 }

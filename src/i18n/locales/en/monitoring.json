@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "title": "Monitoring"
+  },
+  "jumpTo": "Jump to:",
+  "overview": {
+    "totalPending": "Total pending",
+    "totalBreached": "Total breached",
+    "slaHealth": "SLA health"
+  },
+  "topBreaches": {
+    "title": "Top critical",
+    "hoursLate": "{{hours}}h late"
+  },
+  "tabs": {
+    "pendingQuotation": "Pending Quotation",
+    "pendingInternal": "Pending Internal",
+    "pendingExternal": "Pending External",
+    "pendingFollowup": "Pending Follow-up",
+    "pendingEvaluation": "Pending Evaluation",
+    "meetingFollowup": "Meeting Follow-up"
+  },
+  "common": {
+    "search": "Search...",
+    "filter": "Filter",
+    "clearAll": "Clear all",
+    "view": "View",
+    "noRecords": "No records",
+    "noRecordsDesc": "No items match the current filters.",
+    "loadError": "Failed to load data",
+    "appraisalNo": "Appraisal No.",
+    "customerName": "Customer Name",
+    "status": "Status",
+    "assignedDate": "Assigned Date",
+    "pic": "PIC",
+    "movement": "Movement",
+    "ola": "OLA (T/A/V)",
+    "priority": "Priority",
+    "purpose": "Purpose",
+    "propertyType": "Property Type",
+    "taskType": "Task Type",
+    "appraisalCompany": "Appraisal Company",
+    "appraisalStatus": "Appraisal status",
+    "slaLabel": "SLA",
+    "requestedDate": "Requested Date",
+    "updatedAgo": "Updated {{value}}",
+    "refresh": "Refresh",
+    "sla": {
+      "breached": "Breached",
+      "atRisk": "At Risk",
+      "healthy": "Healthy"
+    },
+    "kpi": {
+      "total": "Total",
+      "breached": "Breached",
+      "atRisk": "At Risk",
+      "healthy": "Healthy",
+      "percentBreached": "of tasks have breached SLA"
+    },
+    "crisis": {
+      "headline": "{{breached}} of {{total}} tasks have breached SLA",
+      "context": "Avg {{hours}}h overdue"
+    },
+    "unassigned": "Unassigned",
+    "groupBy": {
+      "label": "Group by",
+      "none": "None",
+      "pic": "PIC",
+      "company": "Company",
+      "activity": "Activity"
+    }
+  },
+  "pendingQuotation": {
+    "title": "Pending Quotation",
+    "description": "Track quotation requests pending approval or selection",
+    "search": "Search quotation number...",
+    "filterStatus": "Status",
+    "filterDueDateFrom": "Due Date From",
+    "filterDueDateTo": "Due Date To"
+  },
+  "pendingInternal": {
+    "title": "Pending Internal",
+    "description": "Open internal appraisal tasks awaiting action",
+    "search": "Search appraisal number or customer name...",
+    "filterSlaStatus": "SLA Status",
+    "filterActivityId": "Activity"
+  },
+  "pendingExternal": {
+    "title": "Pending External",
+    "description": "Open external appraisal company tasks awaiting action",
+    "search": "Search appraisal number or customer name...",
+    "filterSlaStatus": "SLA Status",
+    "filterActivityId": "Activity"
+  },
+  "pendingFollowup": {
+    "title": "Pending Follow-up",
+    "description": "Open document follow-up requests",
+    "search": "Search appraisal number or customer name..."
+  },
+  "pendingEvaluation": {
+    "title": "Pending Evaluation",
+    "description": "Appraisal company evaluations pending completion",
+    "search": "Search appraisal number or customer name...",
+    "filterEvaluationStatus": "Evaluation Status"
+  },
+  "meetingFollowup": {
+    "title": "Meeting Follow-up",
+    "description": "Pending committee-approval tasks across all approval tiers",
+    "search": "Search appraisal number or customer name",
+    "meetingNo": "Meeting No.",
+    "meetingDate": "Meeting Date",
+    "groupType": "Group Type",
+    "memberCount": "Members",
+    "pendingItems": "Pending Items",
+    "pendingTotal": "Pending / Total",
+    "tier": {
+      "label": "Tier",
+      "1": "SUB-COMMITTEE",
+      "2": "COMMITTEE",
+      "3": "COMMITTEE WITH MEETING"
+    }
+  }
+}

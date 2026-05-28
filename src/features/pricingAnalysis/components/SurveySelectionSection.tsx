@@ -58,6 +58,7 @@ export function SurveySelectionSection({
           comparativeSurveys={comparativeMarketSurveys}
           onSelect={onSelectComparativeMarketSurvey}
           onCancel={() => handleOnClickAddComparativeSurvey(false)}
+          readOnly={isReadOnly}
         />
       </div>
     </div>

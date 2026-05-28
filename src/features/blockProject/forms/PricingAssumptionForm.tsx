@@ -5,6 +5,7 @@ import Icon from '@/shared/components/Icon';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 
+import { isCondo, isLandAndBuildingLike } from '../types';
 import type { ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
 import {
@@ -54,7 +55,7 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
 // ── Location Assumptions Table ────────────────────────────────────────────────
 
 const buildLocationMethodOptions = (projectType: ProjectType) => {
-  const areaUnit = projectType === 'Condo' ? 'Sq.M' : 'Sq.Wa';
+  const areaUnit = isCondo(projectType) ? 'Sq.M' : 'Sq.Wa';
   return [
     { value: 'AdjustPriceSqm', label: `01 - Adjust Price/${areaUnit}` },
     { value: 'Lumpsum', label: '02 - Lumpsum' },
@@ -91,7 +92,7 @@ interface LocationAssumptionsTableProps {
 
 const LocationAssumptionsTable = ({ projectType }: LocationAssumptionsTableProps) => {
   const { control } = useFormContext();
-  const rows = projectType === 'Condo' ? CONDO_LOCATION_ROWS : LB_LOCATION_ROWS;
+  const rows = isCondo(projectType) ? CONDO_LOCATION_ROWS : LB_LOCATION_ROWS;
   const methodOptions = buildLocationMethodOptions(projectType);
 
   return (
@@ -179,7 +180,7 @@ const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
 
     {/* Floor / Land + Force Sale — two-column SectionRow layout */}
     <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-      {projectType === 'Condo' && (
+      {isCondo(projectType) && (
         <SectionRow title="Floor Assumptions" icon="stairs">
           <SectionSubtitle>
             Price increment applied for every N floors above the base floor.
@@ -188,7 +189,7 @@ const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
         </SectionRow>
       )}
 
-      {projectType === 'LandAndBuilding' && (
+      {isLandAndBuildingLike(projectType) && (
         <SectionRow title="Land Assumption" icon="mountain-city">
           <SectionSubtitle>
             Land price adjustment applied to each unit based on land area.

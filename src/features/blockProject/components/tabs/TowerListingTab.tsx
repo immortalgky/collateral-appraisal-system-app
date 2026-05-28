@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetProjectTowers, useDeleteProjectTower } from '../../api/projectTower';
 import { useGetGalleryPhotos } from '@/features/appraisal/api/gallery';
 import { toGalleryImage } from '@/features/appraisal/types/gallery';
@@ -25,11 +26,12 @@ interface TowerCardProps {
   tower: ProjectTower;
   viewMode: ViewMode;
   thumbnailSrc?: string;
+  readOnly: boolean;
   onClick: () => void;
   onDelete: (e: React.MouseEvent) => void;
 }
 
-function TowerCard({ tower, viewMode, thumbnailSrc, onClick, onDelete }: TowerCardProps) {
+function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete }: TowerCardProps) {
   const cardProps = {
     role: 'button' as const,
     tabIndex: 0,
@@ -65,14 +67,16 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick, onDelete }: TowerCa
         </td>
         <td className="px-2 py-2">
           <div className="flex items-center justify-end gap-1">
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-              title="Delete tower"
-            >
-              <Icon name="trash-can" style="regular" className="size-3.5" />
-            </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                title="Delete tower"
+              >
+                <Icon name="trash-can" style="regular" className="size-3.5" />
+              </button>
+            )}
             <Icon name="chevron-right" style="solid" className="text-gray-400 w-4 h-4" />
           </div>
         </td>
@@ -99,14 +103,16 @@ function TowerCard({ tower, viewMode, thumbnailSrc, onClick, onDelete }: TowerCa
             className="text-gray-300 w-10 h-10 group-hover:text-gray-400 transition-colors"
           />
         )}
-        <button
-          type="button"
-          onClick={onDelete}
-          className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-          title="Delete tower"
-        >
-          <Icon name="trash-can" style="regular" className="size-3.5" />
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={onDelete}
+            className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+            title="Delete tower"
+          >
+            <Icon name="trash-can" style="regular" className="size-3.5" />
+          </button>
+        )}
       </div>
 
       <div className="p-4">
@@ -141,6 +147,7 @@ export default function TowerListingTab() {
   const appraisalId = useAppraisalId();
   const basePath = useBasePath();
   const navigate = useNavigate();
+  const readOnly = usePageReadOnly();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
@@ -176,7 +183,7 @@ export default function TowerListingTab() {
   };
 
   const handleDeleteConfirm = () => {
-    if (!appraisalId || !deleteTarget) return;
+    if (readOnly || !appraisalId || !deleteTarget) return;
     deleteTower(
       { appraisalId, towerId: deleteTarget.id },
       {
@@ -252,10 +259,12 @@ export default function TowerListingTab() {
           </button>
         </div>
 
-        <Button variant="primary" onClick={handleAddTower} className="flex items-center gap-2">
-          <Icon name="plus" />
-          Add Tower
-        </Button>
+        {!readOnly && (
+          <Button variant="primary" onClick={handleAddTower} className="flex items-center gap-2">
+            <Icon name="plus" />
+            Add Tower
+          </Button>
+        )}
       </div>
 
       {/* Tower List */}
@@ -273,6 +282,7 @@ export default function TowerListingTab() {
               tower={tower}
               thumbnailSrc={thumbnailByTowerId.get(tower.id)}
               viewMode="grid"
+              readOnly={readOnly}
               onClick={() => handleTowerClick(tower.id)}
               onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
             />
@@ -297,6 +307,7 @@ export default function TowerListingTab() {
                   tower={tower}
                   thumbnailSrc={thumbnailByTowerId.get(tower.id)}
                   viewMode="list"
+                  readOnly={readOnly}
                   onClick={() => handleTowerClick(tower.id)}
                   onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
                 />

@@ -1,6 +1,17 @@
 // ─── Project Discriminator ────────────────────────────────────────────────────
 
-export type ProjectType = 'Condo' | 'LandAndBuilding';
+export type ProjectType = 'U' | 'LB' | 'L';
+
+/** True when the project is a Condominium (U). */
+export const isCondo = (t: ProjectType): boolean => t === 'U';
+
+/**
+ * True when the project is Land and Building (LB) or Land and Building
+ * (Construction) (L). Both share the same domain logic in v1.
+ * // TODO(Land): revisit each call site if Land-specific branches are needed.
+ */
+export const isLandAndBuildingLike = (t: ProjectType): boolean =>
+  t === 'LB' || t === 'L';
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 

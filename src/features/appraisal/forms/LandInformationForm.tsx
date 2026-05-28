@@ -1,7 +1,11 @@
+import { useMemo, useState } from 'react';
 import { FormFields, type FormField } from '@/shared/components/form';
 import RadioGroup from '@shared/components/inputs/RadioGroup';
 import { useFormContext } from 'react-hook-form';
+import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 
+// Base field config — Latitude's `rightIcon` is injected from the form
+// component below so it can wire to the picker's `setPickerOpen` state.
 const landInformationFields: FormField[] = [
   {
     type: 'text-input',
@@ -77,8 +81,31 @@ const isObligationOptions = [
 ];
 
 export default function LandInformationForm() {
-  const { register, watch } = useFormContext();
+  const { register, watch, setValue } = useFormContext();
   const checkOwner = watch('checkOwner');
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const lat = watch('latitude');
+  const lon = watch('longitude');
+  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
+  const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
+
+  const pickerButton = useMemo(
+    () => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />,
+    [],
+  );
+
+  const fields = useMemo<FormField[]>(
+    () =>
+      landInformationFields.map(field =>
+        (field.name === 'latitude' || field.name === 'longitude') && field.type === 'text-input'
+          ? { ...field, rightIcon: pickerButton }
+          : field,
+      ),
+    [pickerButton],
+  );
 
   return (
     <div className="flex gap-6">
@@ -91,8 +118,19 @@ export default function LandInformationForm() {
       <div className="flex-1 flex flex-col gap-6">
         {/* Main Fields */}
         <div className="grid grid-cols-6 gap-4">
-          <FormFields fields={landInformationFields} />
+          <FormFields fields={fields} />
         </div>
+
+        <MapLocationPicker
+          isOpen={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onConfirm={(newLat, newLon) => {
+            setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+            setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+          }}
+          initialLat={initialLat}
+          initialLon={initialLon}
+        />
 
         {/* Land Description */}
         <div className="form-control w-full">

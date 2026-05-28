@@ -24,7 +24,7 @@ export interface AppraisalData {
   /** Whether this appraisal has a block project (Projects table row exists) */
   isBlock?: boolean;
 
-  /** Project type for block appraisals: 'Condo' | 'LandAndBuilding' | undefined */
+  /** Project type for block appraisals: 'U' | 'LB' | 'L' | undefined */
   blockProjectType?: string;
 
   /** Facility limit from the request's loan detail */
@@ -124,7 +124,7 @@ export function useAppraisalIsBlock(): boolean {
 }
 
 /**
- * Hook to get the block project type ('Condo' or 'LandAndBuilding').
+ * Hook to get the block project type ('U', 'LB', or 'L').
  * Returns undefined for non-block appraisals.
  */
 export function useAppraisalBlockProjectType(): string | undefined {

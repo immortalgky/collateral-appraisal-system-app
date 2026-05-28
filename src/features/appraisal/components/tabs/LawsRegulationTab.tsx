@@ -10,6 +10,7 @@ import { useGetLawAndRegulations, useSaveLawAndRegulations } from '@features/app
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import type { LawAndRegulationDtoType } from '@shared/schemas/v1';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import DataErrorState from '@/shared/components/DataErrorState';
 
 const LAW_HEADER_GROUP = 'LAW_HEADER';
 
@@ -82,7 +83,7 @@ export const LawsRegulationTab = () => {
   const parentSegment =
     (PARENT_SEGMENTS as readonly string[]).find(s => s === segments[0]) ?? 'property';
 
-  const { data, isLoading } = useGetLawAndRegulations(appraisalId);
+  const { data, isLoading, isError, error, refetch } = useGetLawAndRegulations(appraisalId);
   const saveMutation = useSaveLawAndRegulations();
 
   const items = data?.items ?? [];
@@ -135,6 +136,17 @@ export const LawsRegulationTab = () => {
       <div className="flex items-center justify-center h-40">
         <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <DataErrorState
+        variant="inline"
+        title="Failed to load laws and regulations"
+        message={(error as Error)?.message}
+        onRetry={refetch}
+      />
     );
   }
 
