@@ -28,15 +28,6 @@ export const supportingDataFields: FormField[] = [
     required: true,
   },
   {
-    type: 'dropdown',
-    label: 'Appraisal Company',
-    name: 'appraisalCompany',
-    group: '',
-    wrapperClassName: 'col-span-2',
-    required: true,
-    options: APPRAISAL_COMPANY_PARAMS, // remove when group is ready
-  },
-  {
     type: 'text-input',
     label: 'Description',
     name: 'description',
@@ -58,7 +49,11 @@ export const decisionFields: FormField[] = [
     label: 'Remark',
     name: 'remark',
     wrapperClassName: 'col-span-12',
-    requiredWhen: { field: 'decision', is: ['02', '03'], operator: 'in' },
+    requiredWhen: {
+      field: 'decision',
+      is: ['Cancelled', 'Rejected', 'RoutedBack'],
+      operator: 'in',
+    },
   },
 ];
 
@@ -73,7 +68,7 @@ export const propertyInformationFields: FormField[] = [
     type: 'dropdown',
     label: 'Collateral Type',
     name: 'collateralType',
-    group: 'CollateralType',
+    group: 'PropertyType',
     wrapperClassName: 'col-span-3',
     required: true,
   },

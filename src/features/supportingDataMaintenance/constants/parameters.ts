@@ -54,23 +54,26 @@ export const SOURCE_OF_DATA_PARAMS: { value: string; label: string }[] = [
 ];
 
 export const STATUS_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Draft' },
-  { value: '02', label: 'Pending' },
-  { value: '03', label: 'Approved' },
-  { value: '04', label: 'Cancelled' },
-  { value: '05', label: 'Rejected' },
+  { value: 'Draft', label: 'Draft' },
+  { value: 'Pending', label: 'Pending' },
+  { value: 'Approved', label: 'Approved' },
+  { value: 'Cancelled', label: 'Cancelled' },
+  { value: 'Rejected', label: 'Rejected' },
+  { value: 'RoutedBack', label: 'Routed Back' },
 ];
 
-export const ARCHIVED_STATUSES = new Set(['03', '04', '05']);
+export const ARCHIVED_STATUSES = new Set(['Approved', 'Cancelled', 'Rejected']);
+
+export const REMOVABLE_STATUSES = new Set(['Approved', 'Rejected', 'Cancelled', 'Draft']);
 
 export const DECISION_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Approve' },
-  { value: '02', label: 'Cancel' },
-  { value: '03', label: 'Reject' },
-  { value: '04', label: 'Route Back' },
+  { value: 'Approved', label: 'Approve' },
+  { value: 'Cancelled', label: 'Cancel' },
+  { value: 'Rejected', label: 'Reject' },
+  { value: 'RoutedBack', label: 'Route Back' },
 ];
 
-export const MOVEMENT_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Forward' },
-  { value: '02', label: 'Backward' },
+export const DATE_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'createdDate', label: 'Created Date' },
+  { value: 'lastModifiedDate', label: 'Last Modified Date' },
 ];

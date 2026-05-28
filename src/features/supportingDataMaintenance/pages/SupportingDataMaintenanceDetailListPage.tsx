@@ -19,18 +19,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCreateDraftSupportingData,
   useCreateSupportingData,
+  useDeleteSupportingDetailData,
   useGetSupportingDataById,
-  useUpdateSupportingData,
+  useSubmitSupportingData,
+  useUpdateDraftSupportingData,
+  useBulkUploadSupportingDetails,
 } from '../api';
+import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
 import { ARCHIVED_STATUSES } from '../constants/parameters';
-
-interface ParseRowError {
-  row: number;
-  field: string;
-  value: string;
-  reason: string;
-}
 
 export function SupportingDataMaintenanceDetailListPage() {
   const navigate = useNavigate();
@@ -47,7 +44,8 @@ export function SupportingDataMaintenanceDetailListPage() {
   const status = supportingData?.status ?? '';
   const isReadOnly = ARCHIVED_STATUSES.has(status);
 
-  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // check by user's role
+  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false; // Status to check user has authority to edit detail header info (general info secton).
+  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // Status to check user has authority to make decision (decision section);
 
   // Form
   const isEditMode = Boolean(supportingId);
@@ -94,19 +92,27 @@ export function SupportingDataMaintenanceDetailListPage() {
     }
   }, [isEditMode, supportingData, resetSupporting]);
 
-  const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingData();
+  const { mutateAsync: createSupportingData, isPending: isCreating } = useCreateSupportingData();
   const { mutateAsync: createDraftSupportingData, isPending: isCreatingDraft } =
     useCreateDraftSupportingData();
-  const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingData();
+  const { mutate: updateDraftSupportingData, isPending: isUpdating } =
+    useUpdateDraftSupportingData();
+  const { mutate: deleteSupportingData, isPending: isDeleting } = useDeleteSupportingDetailData();
+  const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
-  const isPending = isCreating || isUpdating || isCreatingDraft || isUpdating;
+  const isPending =
+    isCreating || isUpdating || isCreatingDraft || isUpdating || isSubmitting || isDeleting;
 
-  // File management (Excel upload of supporting data)
-  const [parseErrors, setParseErrors] = useState<ParseRowError[] | null>(null);
+  // File management (Excel bulk upload of supporting details)
+  const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { mutateAsync: bulkUpload, isPending: isUploading } = useBulkUploadSupportingDetails();
+
   const handleFile = async (file: File) => {
+    // Client-side guards (mirrors the server-side checks)
     if (!file.name.endsWith('.xlsx')) {
       toast.error('Only .xlsx files are accepted');
       return;
@@ -115,7 +121,26 @@ export function SupportingDataMaintenanceDetailListPage() {
       toast.error('File must be ≤ 5 MB');
       return;
     }
-    setParseErrors(null);
+
+    if (!supportingId) {
+      toast.error('Please save the form first before uploading.');
+      return;
+    }
+
+    try {
+      setParseErrors(null);
+      const result = await bulkUpload({ supportingId, file });
+      toast.success(`${result.insertedCount} row(s) imported successfully`);
+    } catch (err: any) {
+      // The server returns row-level errors in ProblemDetails.extensions.rowErrors
+      const rowErrors: RowParseError[] | undefined = err?.response?.data?.rowErrors;
+      if (rowErrors && rowErrors.length > 0) {
+        setParseErrors(rowErrors);
+        setShowErrorDialog(true);
+      } else {
+        toast.error(err?.response?.data?.detail ?? 'Upload failed. Please try again.');
+      }
+    }
   };
 
   const handleOpenFilePicker = () => {
@@ -137,39 +162,41 @@ export function SupportingDataMaintenanceDetailListPage() {
   const listContainerRef = useRef<HTMLDivElement>(null);
 
   // Handlers
-  const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = data => {
+  const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = async data => {
     setSaveAction('submit');
     // Submit goes through react-hook-form so Zod validation runs first.
     console.log('Submit (supporting):', data);
     if (isEditMode) {
-      updateSupportingData(
+      submitSupportingData(
         { supportingId: supportingId!, data: data as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success('Supporting data submitted successfully');
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
             );
             setSaveAction(null);
           },
         },
       );
     } else {
-      createSupportingData(
-        { data: data as any },
+      const { supportingId: newId } = await createSupportingData({ data });
+      console.log('Created supporting data with ID:', newId);
+      submitSupportingData(
+        { supportingId: newId!, data: data as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data created successfully');
+            toast.success('Supporting data submitted successfully');
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
             );
             setSaveAction(null);
           },
@@ -183,34 +210,17 @@ export function SupportingDataMaintenanceDetailListPage() {
     // Submit goes through react-hook-form so Zod validation runs first.
     console.log('Submit (decision):', data);
     if (isEditMode) {
-      updateSupportingData(
+      submitSupportingData(
         { supportingId: supportingId!, data: data as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success('Supporting data submitted successfully');
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
-        },
-      );
-    } else {
-      createSupportingData(
-        { data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
             );
             setSaveAction(null);
           },
@@ -264,32 +274,33 @@ export function SupportingDataMaintenanceDetailListPage() {
     const decisionData = hasAuthorityToDecision ? decisionMethods.getValues() : null;
     console.log('Save draft:', { supportingData, decisionData });
     if (isEditMode) {
-      updateSupportingData(
-        { supportingId: supportingId!, data: data as any },
+      updateDraftSupportingData(
+        { supportingId: supportingId!, data: supportingData as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success('Draft supporting data updated successfully');
             setSaveAction(null);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to update draft supporting data. Please try again.',
             );
             setSaveAction(null);
           },
         },
       );
     } else {
-      createSupportingData(
-        { data: data as any },
+      createDraftSupportingData(
+        { data: supportingData as any },
         {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
+          onSuccess: data => {
+            toast.success('Draft supporting data created successfully');
             setSaveAction(null);
+            navigate(`/standalone/supporting-data-maintenance/${data.supportingId}`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to create draft supporting data. Please try again.',
             );
             setSaveAction(null);
           },
@@ -305,8 +316,22 @@ export function SupportingDataMaintenanceDetailListPage() {
   const confirmDelete = () => {
     if (deleteConfirm.id !== null) {
       const id = deleteConfirm.id;
-      // delete API — TODO: call delete with id
-      void id;
+
+      deleteSupportingData(
+        { supportingId: supportingId!, id: id },
+        {
+          onSuccess: () => {
+            toast.success('Supporting data detail deleted successfully');
+          },
+          onError: (error: any) => {
+            toast.error(
+              error.apiError?.detail ||
+                'Failed to delete supporting data detail. Please try again.',
+            );
+            setSaveAction(null);
+          },
+        },
+      );
     }
     setDeleteConfirm({ isOpen: false, id: null });
   };
@@ -349,27 +374,31 @@ export function SupportingDataMaintenanceDetailListPage() {
             rightIcon={
               <div className="flex items-center gap-2">
                 {/* Hidden file input + visible trigger button */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFile(f);
-                    e.target.value = '';
-                  }}
-                />
-
-                {!isReadOnly && !isEditing && (
+                {!isReadOnly && !isEditing && !hasAuthorityToDecision && (
                   <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx"
+                      className="hidden"
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFile(f);
+                        e.target.value = '';
+                      }}
+                    />
                     <button
                       type="button"
                       onClick={handleOpenFilePicker}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                      disabled={isUploading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      <Icon style="solid" name="file-arrow-up" className="size-4" />
-                      Import Excel
+                      <Icon
+                        style="solid"
+                        name={isUploading ? 'spinner' : 'file-arrow-up'}
+                        className={`size-4 ${isUploading ? 'animate-spin' : ''}`}
+                      />
+                      {isUploading ? 'Uploading…' : 'Import Excel'}
                     </button>
                     <button
                       type="button"
@@ -433,6 +462,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             <Button
               type="button"
               onClick={() => handleFormSubmit()}
+              isLoading={isPending && saveAction === 'submit'}
               leftIcon={<Icon name="check" style="solid" className="size-4" />}
             >
               Submit
@@ -452,6 +482,15 @@ export function SupportingDataMaintenanceDetailListPage() {
         cancelText="Cancel"
         variant="danger"
       />
+
+      {/* Bulk upload row-error dialog */}
+      {parseErrors && (
+        <BulkUploadDialog
+          isOpen={showErrorDialog}
+          onClose={() => setShowErrorDialog(false)}
+          errors={parseErrors}
+        />
+      )}
     </div>
   );
 }

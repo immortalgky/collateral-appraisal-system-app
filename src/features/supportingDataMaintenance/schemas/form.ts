@@ -51,15 +51,15 @@ export const createSupportingDataForm = buildFormSchema(supportingDataFields);
 export type createSupportingDataFormType = z.infer<typeof createSupportingDataForm>;
 
 export const defaultSupportingData: createSupportingDataFormType = {
-  importChannel: '',
-  importDate: '',
+  importChannel: null,
+  importDate: null,
   sourceOfData: null,
   appraisalCompany: null,
   description: null,
 };
 
 export const defaultDecision: decisionFormType = {
-  decision: '',
+  decision: null,
   remark: null,
 };
 
@@ -67,8 +67,8 @@ export const defaultSupportingDataDetail: createSupportingDataDetailFormType = {
   propertyName: null,
   developer: null,
   modelName: null,
-  collateralType: '',
-  buildingType: '',
+  collateralType: null,
+  buildingType: null,
   landArea: null,
   usableArea: null,
   projectName: null,
@@ -84,7 +84,7 @@ export const defaultSupportingDataDetail: createSupportingDataDetailFormType = {
   offeringPrice: null,
   sellingPrice: null,
   phoneNo: null,
-  informationDate: '',
+  informationDate: null,
   website: null,
   sourceUrl: null,
   remark: null,

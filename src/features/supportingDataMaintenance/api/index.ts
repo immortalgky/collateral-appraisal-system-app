@@ -8,16 +8,28 @@ import type {
   GetSupportingDataDetailListResponse,
   GetSupportingDataMaintenanceListParams,
   GetSupportingDataMaintenanceListResponse,
-  SupportingDataDetailItem,
+  SupportingDataDateType,
 } from './types';
 import { isAxiosError } from 'axios';
 import type { GetSupportingDataDetailByIdType } from '../schemas/form';
-import {
-  supportingDataDetailPreviewList,
-  supportingDataRequestDetailList,
-  supportingDataRequestList,
-  supportingDetails,
-} from '../constants/mockData';
+
+/** Maps a (dateType, dateFrom, dateTo) tuple onto the backend's Pascal-cased query params. */
+function toDateQueryParams(
+  dateType: SupportingDataDateType | undefined,
+  from?: string,
+  to?: string,
+) {
+  if (!from && !to) return {};
+  const pairs: Record<SupportingDataDateType, [string, string]> = {
+    createdDate: ['DateFrom', 'DateTo'],
+    lastModifiedDate: ['LastModifiedDateFrom', 'LastModifiedDateTo'],
+  };
+  const [fromKey, toKey] = pairs[dateType ?? 'createdDate'];
+  return {
+    ...(from && { [fromKey]: from }),
+    ...(to && { [toKey]: to }),
+  };
+}
 
 export const supportingDataMaintenanceKeys = {
   all: ['supporting-data-maintenance'] as const,
@@ -52,10 +64,9 @@ export const useCreateSupportingDetailData = () => {
       supportingId: string;
       data: CreateSupportingDataDetailRequest;
     }): Promise<{ id: string }> => {
-      const { data } = await axios.post(
-        `/supporting-data-maintenance/${params.supportingId}/data`,
-        params.data,
-      );
+      const { data } = await axios.post(`/supporting-data/${params.supportingId}/details`, {
+        detail: params.data,
+      });
       return data;
     },
     onSuccess: (_, variables) => {
@@ -79,8 +90,8 @@ export const useUpdateSupportingDetailData = () => {
       data: CreateSupportingDataDetailRequest;
     }): Promise<{ id: string }> => {
       const { data } = await axios.patch(
-        `/supporting-data-maintenance/${params.supportingId}/data/${params.id}`,
-        params.data,
+        `/supporting-data/${params.supportingId}/details/${params.id}`,
+        { detail: params.data },
       );
       return data;
     },
@@ -98,6 +109,50 @@ export const useUpdateSupportingDetailData = () => {
   });
 };
 
+export const useDeleteSupportingDetailData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      id: string;
+    }): Promise<{ isSuccessful: boolean }> => {
+      const { data } = await axios.delete(
+        `/supporting-data/${params.supportingId}/details/${params.id}`,
+      );
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataLists(variables.supportingId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+      });
+    },
+  });
+};
+
+export const useDeleteSupportingData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { supportingId: string }): Promise<{ isSuccessful: boolean }> => {
+      const { data } = await axios.delete(`/supporting-data/${params.supportingId}`);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataLists(variables.supportingId),
+      });
+      queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
+    },
+  });
+};
+
 export const useCreateSupportingData = () => {
   const queryClient = useQueryClient();
 
@@ -105,7 +160,26 @@ export const useCreateSupportingData = () => {
     mutationFn: async (params: {
       data: CreateSupportingDataType;
     }): Promise<{ supportingId: string }> => {
-      const { data } = await axios.post(`/supporting-data-maintenance/`, params.data);
+      const { data } = await axios.post(`/supporting-data/`, { header: params.data });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
+    },
+  });
+};
+
+export const useSubmitSupportingData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      data: CreateSupportingDataType;
+    }): Promise<{ supportingId: string }> => {
+      const { data } = await axios.post(`/supporting-data/submit/${params.supportingId}`, {
+        header: params.data,
+      });
       return data;
     },
     onSuccess: () => {
@@ -119,11 +193,10 @@ export const useCreateDraftSupportingData = () => {
 
   return useMutation({
     mutationFn: async (params: {
-      data?: CreateSupportingDataType;
+      data: CreateSupportingDataType;
     }): Promise<{ supportingId: string }> => {
-      // const { data } = await axios.post(`/supporting-data-maintenance/draft`, params.data);
-      // return data;
-      return { supportingId: crypto.randomUUID().toString() };
+      const { data } = await axios.post(`/supporting-data/draft`, { header: params.data });
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
@@ -139,10 +212,31 @@ export const useUpdateSupportingData = () => {
       supportingId: string;
       data: CreateSupportingDataType;
     }): Promise<{ supportingId: string }> => {
-      const { data } = await axios.patch(
-        `/supporting-data-maintenance/${params.supportingId}`,
-        params.data,
-      );
+      const { data } = await axios.patch(`/supporting-data/${params.supportingId}`, {
+        header: params.data,
+      });
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+      });
+    },
+  });
+};
+
+export const useUpdateDraftSupportingData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      data: CreateSupportingDataType;
+    }): Promise<{ supportingId: string }> => {
+      const { data } = await axios.patch(`/supporting-data/draft/${params.supportingId}`, {
+        header: params.data,
+      });
       return data;
     },
     onSuccess: (_data, variables) => {
@@ -159,11 +253,8 @@ export const useGetSupportingDataById = (supportingId?: string) => {
     queryKey: supportingDataMaintenanceKeys.detail(supportingId ?? ''),
     enabled: !!supportingId,
     queryFn: async (): Promise<GetSupportingDataByIdType> => {
-      // const { data } = await axios.get(
-      //   `/standalone/supporting-data-maintenance/${supportingId}`,
-      // );
-      // return data;
-      return supportingDataRequestDetailList.filter(s => s.id == supportingId)?.[0];
+      const { data } = await axios.get(`/supporting-data/${supportingId}`);
+      return data;
     },
     retry: (failureCount, error) => {
       if (isAxiosError(error) && error.response?.status === 404) return false;
@@ -177,11 +268,8 @@ export const useGetSupportingDataDetailById = (supportingId: string, id: string)
     queryKey: supportingDataMaintenanceKeys.dataDetail(supportingId ?? '', id ?? ''),
     enabled: !!supportingId && !!id,
     queryFn: async (): Promise<GetSupportingDataDetailByIdType> => {
-      // const { data } = await axios.get(
-      //   `/standalone/supporting-data-maintenance/${supportingId}/data/${id}`,
-      // );
-      // return data;
-      return supportingDetails.filter(s => s.id == id)?.[0];
+      const { data } = await axios.get(`/supporting-data/${supportingId}/details/${id}`);
+      return data;
     },
     retry: (failureCount, error) => {
       if (isAxiosError(error) && error.response?.status === 404) return false;
@@ -193,37 +281,46 @@ export const useGetSupportingDataDetailById = (supportingId: string, id: string)
 export const useGetSupportingDataMaintenanceList = (
   params: GetSupportingDataMaintenanceListParams,
 ) => {
-  const { pageNumber = 0, pageSize = 10, status, createdDate, supportingNumber } = params;
+  const {
+    pageNumber = 0,
+    pageSize = 10,
+    status,
+    supportingNumber,
+    dateType,
+    dateFrom,
+    dateTo,
+  } = params;
 
   const queryKey = supportingDataMaintenanceKeys.list({
     pageNumber,
     pageSize,
     ...(status && { status }),
-    ...(createdDate && { createdDate }),
     ...(supportingNumber && { supportingNumber }),
+    ...(dateType && { dateType }),
+    ...(dateFrom && { dateFrom }),
+    ...(dateTo && { dateTo }),
   });
 
   return useQuery({
     queryKey,
     queryFn: async (): Promise<GetSupportingDataMaintenanceListResponse> => {
-      // const { data } = await axios.get('/standalone/supporting-data-maintenance', {
-      //   params: {
-      //     PageNumber: pageNumber,
-      //     PageSize: pageSize,
-      //     ...(status && { Status: status }),
-      //     ...(createdDate && { CreatedDate: createdDate }),
-      //     ...(supportingNumber && { SupportingNumber: supportingNumber }),
-      //   },
-      // });
-
-      // API returns { result: { items, count, pageNumber, pageSize } }
-      // return data.result ?? data;
+      const { data } = await axios.get('/supporting-data', {
+        params: {
+          PageNumber: pageNumber,
+          PageSize: pageSize,
+          ...(status && { Status: status }),
+          ...(supportingNumber && { SupportingNumber: supportingNumber }),
+          ...toDateQueryParams(dateType, dateFrom, dateTo),
+        },
+      });
 
       return {
-        items: supportingDataRequestList,
-        count: supportingDataRequestList.length,
-        pageNumber,
-        pageSize,
+        items: data.supportingDataList,
+        hasAuthorityToRemove: data.hasAuthorityToRemove,
+        hasAuthorityToEdit: data.hasAuthorityToEdit,
+        count: data.totalCount,
+        pageNumber: data.pageNumber,
+        pageSize: data.pageSize,
       };
     },
     staleTime: 30 * 1000,
@@ -237,23 +334,56 @@ export const useGetSupportingDataDetailList = (params: GetSupportingDataDetailLi
     queryKey: supportingDataMaintenanceKeys.dataList(supportingId, { pageNumber, pageSize }),
     enabled: !!supportingId,
     queryFn: async (): Promise<GetSupportingDataDetailListResponse> => {
-      // const { data } = await axios.get(
-      //   `/standalone/supporting-data-maintenance/${supportingId}/data`,
-      //   { params: { PageNumber: pageNumber, PageSize: pageSize } },
-      // );
-      // return data.result ?? data;
-
-      // Mock: paginate the preview list locally.
-      const all = supportingDataDetailPreviewList as SupportingDataDetailItem[];
-      const start = pageNumber * pageSize;
-      const items = all.slice(start, start + pageSize);
+      const { data } = await axios.get(`/supporting-data/${supportingId}/details`, {
+        params: { PageNumber: pageNumber, PageSize: pageSize },
+      });
       return {
-        items,
-        count: all.length,
-        pageNumber,
-        pageSize,
+        items: data.items,
+        count: data.totalCount,
+        pageNumber: data.pageNumber,
+        pageSize: data.pageSize,
       };
     },
     staleTime: 30 * 1000,
+  });
+};
+
+export interface BulkUploadSupportingDetailsResponse {
+  insertedCount: number;
+}
+
+/**
+ * Sends an Excel file (.xlsx) to the bulk-upload endpoint.
+ * On success, invalidates the detail-list cache so the table refreshes automatically.
+ * On a 400 with row errors, the error object will have `response.data.rowErrors` — an array
+ * of { rowNumber, column, message } objects ready to display in the UI.
+ */
+export const useBulkUploadSupportingDetails = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      file: File;
+    }): Promise<BulkUploadSupportingDetailsResponse> => {
+      const formData = new FormData();
+      formData.append('file', params.file);
+
+      const { data } = await axios.post<BulkUploadSupportingDetailsResponse>(
+        `/supporting-data/${params.supportingId}/details/bulk-upload`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      // Refresh the detail list and the supporting-data header (record count changes)
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataLists(variables.supportingId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+      });
+    },
   });
 };

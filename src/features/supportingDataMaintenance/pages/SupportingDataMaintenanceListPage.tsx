@@ -6,36 +6,39 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useGetSupportingDataMaintenanceList } from '../api';
+import { useDeleteSupportingData, useGetSupportingDataMaintenanceList } from '../api';
 import type {
   GetSupportingDataMaintenanceListParams,
+  SupportingDataDateType,
   SupportingDataMaintenance,
   SupportingDataParams,
 } from '../api/types';
 import { SupportingDataFilterDialog } from '../components/SupportingDataFilterDialog';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import {
-  getImportChannelLabel,
-  getMovementLabel,
-  getSourceOfDataLabel,
-  getStatusLabel,
-} from '../utils/getLabel';
-import { ARCHIVED_STATUSES } from '../constants/parameters';
+import { getImportChannelLabel, getSourceOfDataLabel, getStatusLabel } from '../utils/getLabel';
+import { ARCHIVED_STATUSES, REMOVABLE_STATUSES } from '../constants/parameters';
+import toast from 'react-hot-toast';
 
 interface ContextMenuState {
   visible: boolean;
   x: number;
   y: number;
   supportingId: string | null;
+  status: string | null;
 }
 
 type ActiveTab = 'importing' | 'archived';
 
 const readFiltersFromSearchParams = (
-  _sp: URLSearchParams,
+  sp: URLSearchParams,
 ): GetSupportingDataMaintenanceListParams => {
-  // Filters are not wired yet; placeholder for future URL hydration.
-  return {};
+  return {
+    ...(sp.get('status') && { status: sp.get('status')! }),
+    ...(sp.get('supportingNumber') && { supportingNumber: sp.get('supportingNumber')! }),
+    ...(sp.get('dateType') && { dateType: sp.get('dateType') as SupportingDataDateType }),
+    ...(sp.get('dateFrom') && { dateFrom: sp.get('dateFrom')! }),
+    ...(sp.get('dateTo') && { dateTo: sp.get('dateTo')! }),
+  };
 };
 
 const formatDateTime = (dateString?: string | null): string => {
@@ -72,7 +75,7 @@ const columns: ColumnDef[] = [
   {
     key: 'createdDate',
     label: 'Created Date',
-    render: item => formatDateTime(item.importDate),
+    render: item => formatDateTime(item.createdDate),
   },
   {
     key: 'importChannel',
@@ -95,12 +98,6 @@ const columns: ColumnDef[] = [
     render: item => formatDateTime(item.lastModifiedDate),
   },
   {
-    key: 'movement',
-    label: 'Movement',
-    tdClassName: 'px-4 py-3',
-    render: item => (item.movement ? getMovementLabel(item.movement) : '-'),
-  },
-  {
     key: 'status',
     label: 'Status',
     tdClassName: 'px-4 py-3',
@@ -114,9 +111,22 @@ const STICKY_COLUMN_KEY = 'supportingNumber';
 
 const FILTER_LABELS: Record<keyof SupportingDataParams, string> = {
   supportingNumber: 'Supporting No.',
-  createdDate: 'Created Date',
+  dateType: 'Date Type',
+  dateFrom: 'Date From',
+  dateTo: 'Date To',
   status: 'Status',
   importChannel: 'Import Channel',
+};
+
+const formatChipValue = (key: keyof SupportingDataParams, value: string): string => {
+  if (key === 'dateFrom' || key === 'dateTo') {
+    try {
+      return format(new Date(value), 'dd/MM/yyyy');
+    } catch {
+      return value;
+    }
+  }
+  return value;
 };
 
 export function SupportingDataMaintenanceListPage() {
@@ -144,6 +154,7 @@ export function SupportingDataMaintenanceListPage() {
     x: 0,
     y: 0,
     supportingId: null,
+    status: null,
   });
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
@@ -188,10 +199,16 @@ export function SupportingDataMaintenanceListPage() {
   useEffect(() => {
     const next = new URLSearchParams();
     if (debouncedSearch) next.set('search', debouncedSearch);
+    if (filters.status) next.set('status', filters.status);
+    if (filters.dateFrom) next.set('dateFrom', filters.dateFrom);
+    if (filters.dateTo) next.set('dateTo', filters.dateTo);
+    if (filters.dateType) next.set('dateType', filters.dateType);
+    if (filters.supportingNumber) next.set('supportingNumber', filters.supportingNumber);
+    // if (filters.importChannel) next.set('importChannel', filters.importChannel);
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
-  }, [debouncedSearch, searchParams, setSearchParams]);
+  }, [debouncedSearch, filters, searchParams, setSearchParams]);
 
   const requestListParams = {
     pageNumber,
@@ -205,6 +222,13 @@ export function SupportingDataMaintenanceListPage() {
     isError: isListError,
     error: listError,
   } = useGetSupportingDataMaintenanceList(requestListParams);
+
+  const { mutate: deleteSupportingData, isPending: isDeleting } = useDeleteSupportingData();
+
+  const hasAuthorityToEdit = listData?.hasAuthorityToEdit ?? false;
+  const hasAuthorityToRemove = listData?.hasAuthorityToRemove ?? false;
+
+  const isLoading = isListLoading || isDeleting;
 
   const allItems = useMemo<SupportingDataMaintenance[]>(() => listData?.items ?? [], [listData]);
 
@@ -238,12 +262,9 @@ export function SupportingDataMaintenanceListPage() {
   }, [tabItems, debouncedSearch]);
 
   // Client-side pagination over the filtered set (server returns all rows in mock)
-  const totalCount = filteredItems.length;
+  const totalCount = listData?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const pageItems = useMemo(
-    () => filteredItems.slice(pageNumber * pageSize, pageNumber * pageSize + pageSize),
-    [filteredItems, pageNumber, pageSize],
-  );
+  const pageItems = filteredItems;
 
   const importingCount = importingItems.length;
   const archivedCount = archivedItems.length;
@@ -260,7 +281,23 @@ export function SupportingDataMaintenanceListPage() {
 
   const confirmDelete = () => {
     // Api to delete
-    setDeleteConfirm({ isOpen: false, id: null });
+    if (!deleteConfirm.id) return;
+
+    deleteSupportingData(
+      { supportingId: deleteConfirm.id },
+      {
+        onSuccess: () => {
+          setDeleteConfirm({ isOpen: false, id: null });
+          toast.success('Supporting data deleted successfully');
+        },
+        onError: (error: any) => {
+          setDeleteConfirm({ isOpen: false, id: null });
+          toast.error(
+            error.apiError?.detail || 'Failed to delete supporting data. Please try again.',
+          );
+        },
+      },
+    );
   };
 
   const handleCreate = () => {
@@ -401,13 +438,15 @@ export function SupportingDataMaintenanceListPage() {
           )}
         </button>
 
-        <button
-          onClick={handleCreate}
-          className="mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
-        >
-          <Icon style="solid" name="plus" className="size-3.5" />
-          Create
-        </button>
+        {hasAuthorityToEdit && (
+          <button
+            onClick={handleCreate}
+            className="mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
+          >
+            <Icon style="solid" name="plus" className="size-3.5" />
+            Create
+          </button>
+        )}
       </div>
 
       <SupportingDataFilterDialog
@@ -425,7 +464,8 @@ export function SupportingDataMaintenanceListPage() {
               key={key}
               className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
             >
-              <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+              <span className="text-primary/60">{FILTER_LABELS[key]}:</span>{' '}
+              {formatChipValue(key, value)}
               <button onClick={() => removeFilter(key)} className="hover:text-primary/60 ml-0.5">
                 <Icon style="solid" name="xmark" className="size-2.5" />
               </button>
@@ -463,7 +503,7 @@ export function SupportingDataMaintenanceListPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {isListLoading ? (
+              {isLoading ? (
                 <TableRowSkeleton columns={columns.map(() => ({ width: 'w-24' }))} rows={8} />
               ) : pageItems.length === 0 ? (
                 <tr>
@@ -508,6 +548,7 @@ export function SupportingDataMaintenanceListPage() {
                         x: e.clientX,
                         y: e.clientY,
                         supportingId: item?.id ?? null,
+                        status: item?.status ?? null,
                       });
                     }}
                   >
@@ -576,18 +617,20 @@ export function SupportingDataMaintenanceListPage() {
               />
               Open
             </button>
-            <button
-              onClick={() => {
-                const item = allItems.find(t => t.id === contextMenu.supportingId);
-                if (item?.id) handleRowRemove(item);
-                setContextMenu(p => ({ ...p, visible: false }));
-              }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
-              style={{ width: 'calc(100% - 8px)' }}
-            >
-              <Icon style="regular" name="trash" className="size-3.5 text-gray-400" />
-              Delete
-            </button>
+            {hasAuthorityToRemove && REMOVABLE_STATUSES.has(contextMenu.status ?? '') && (
+              <button
+                onClick={() => {
+                  const item = allItems.find(t => t.id === contextMenu.supportingId);
+                  if (item?.id) handleRowRemove(item);
+                  setContextMenu(p => ({ ...p, visible: false }));
+                }}
+                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+                style={{ width: 'calc(100% - 8px)' }}
+              >
+                <Icon style="regular" name="trash" className="size-3.5 text-gray-400" />
+                Delete
+              </button>
+            )}
           </div>
         )}
 

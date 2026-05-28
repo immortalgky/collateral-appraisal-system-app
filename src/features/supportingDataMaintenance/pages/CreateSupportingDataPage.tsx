@@ -246,7 +246,9 @@ export function CreateSupportingDataPage() {
           {/* Sticky Action Buttons */}
           <ActionBar>
             <ActionBar.Left>
-              <CancelButton />
+              <CancelButton
+                fallbackPath={`/standalone/supporting-data-maintenance/${supportingId}`}
+              />
               {!isReadOnly && (
                 <>
                   <ActionBar.Divider />
@@ -257,19 +259,9 @@ export function CreateSupportingDataPage() {
             {!isReadOnly && (
               <ActionBar.Right>
                 <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  // isLoading={isPending && saveAction === 'draft'}
-                  // disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
-                </Button>
-                <Button
                   type="submit"
-                  // isLoading={isPending && saveAction === 'submit'}
-                  // disabled={isPending}
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
                   Save
