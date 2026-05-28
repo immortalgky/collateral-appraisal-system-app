@@ -91,7 +91,7 @@ export const SupportingDataTableRow = ({
             className="right-0 z-50 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none [--anchor-gap:4px]"
           >
             <div className="py-1">
-              gg<MenuItem>
+              <MenuItem>
                 {({ focus }) => (
                   <button
                     type="button"

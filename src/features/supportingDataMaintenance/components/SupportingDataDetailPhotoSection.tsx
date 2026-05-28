@@ -231,8 +231,6 @@ const SupportingDataDetailPhotoSection = forwardRef<
   // handles cleanup separately. We just show the unlink action.
   const handleDeletePermanently = handleUnlink;
 
-  // ── Preview ────────────────────────────────────────────────────────────────
-
   const buildPreviewable = useCallback((photo: Photo): PreviewablePhoto | null => {
     if (photo.isUploading || !photo.url) return null;
     return {
@@ -260,8 +258,6 @@ const SupportingDataDetailPhotoSection = forwardRef<
     [photos, buildPreviewable],
   );
 
-  // ── Imperative handle — flushing pending photos in create mode ─────────────
-
   useImperativeHandle(ref, () => ({
     linkImagesToDetail: async (newSupportingId: string, newDetailId: string) => {
       for (let i = 0; i < pendingImages.length; i++) {
@@ -281,8 +277,6 @@ const SupportingDataDetailPhotoSection = forwardRef<
       setPendingImages([]);
     },
   }));
-
-  // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
     <>

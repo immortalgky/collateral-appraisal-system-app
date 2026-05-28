@@ -1,4 +1,4 @@
-import { useForm, FormProvider, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import {
   createSupportingDataForm,
   decisionForm,
@@ -8,7 +8,15 @@ import {
   type decisionFormType,
 } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ActionBar, Button, CancelButton, FormCard, Icon, Section } from '@/shared/components';
+import {
+  ActionBar,
+  Alert,
+  Button,
+  CancelButton,
+  FormCard,
+  Icon,
+  Section,
+} from '@/shared/components';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { FormFields } from '@/shared/components/form';
 import { decisionFields, supportingDataFields } from '../configs/fields';
@@ -18,7 +26,6 @@ import { SupportingDataTable } from '../components/SupportingDataTable';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCreateDraftSupportingData,
-  useCreateSupportingData,
   useDeleteSupportingDetailData,
   useGetSupportingDataById,
   useSubmitSupportingData,
@@ -178,7 +185,6 @@ export function SupportingDataMaintenanceDetailListPage() {
     }
   }, [isEditMode, supportingData, resetSupporting]);
 
-  const { mutateAsync: createSupportingData, isPending: isCreating } = useCreateSupportingData();
   const { mutateAsync: createDraftSupportingData, isPending: isCreatingDraft } =
     useCreateDraftSupportingData();
   const { mutate: updateDraftSupportingData, isPending: isUpdating } =
@@ -187,8 +193,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
-  const isPending =
-    isCreating || isUpdating || isCreatingDraft || isUpdating || isSubmitting || isDeleting;
+  const isPending = isUpdating || isCreatingDraft || isUpdating || isSubmitting || isDeleting;
 
   // File management (Excel bulk upload of supporting details)
   const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
@@ -245,50 +250,25 @@ export function SupportingDataMaintenanceDetailListPage() {
     id: null,
   });
 
-  const listContainerRef = useRef<HTMLDivElement>(null);
-
   // Handlers
   const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = async data => {
     setSaveAction('submit');
-    // Submit goes through react-hook-form so Zod validation runs first.
-    console.log('Submit (supporting):', data);
-    if (isEditMode) {
-      submitSupportingData(
-        { supportingId: supportingId!, data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data submitted successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
+    submitSupportingData(
+      { supportingId: supportingId, data: data as any },
+      {
+        onSuccess: () => {
+          toast.success('Supporting data submitted successfully');
+          setSaveAction(null);
+          navigate(`/standalone/supporting-data-maintenance`);
         },
-      );
-    } else {
-      const { supportingId: newId } = await createSupportingData({ data });
-      console.log('Created supporting data with ID:', newId);
-      submitSupportingData(
-        { supportingId: newId!, data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data submitted successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
+        onError: (error: any) => {
+          toast.error(
+            error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
+          );
+          setSaveAction(null);
         },
-      );
-    }
+      },
+    );
   };
 
   const onSubmitDecision: SubmitHandler<decisionFormType> = data => {
@@ -434,7 +414,7 @@ export function SupportingDataMaintenanceDetailListPage() {
     <div className="flex flex-col gap-4 justify-between min-h-full">
       <FormProvider {...supportingMethods}>
         <div className="flex flex-col gap-4 pr-2">
-          {/* Section 1 — Supporting Data Maintenance (general info)    */}
+          {/* Supporting Data Maintenance (general info) */}
           <Section id="supporting-data">
             <FormCard
               title="Supporting Data Maintenance"
@@ -450,7 +430,16 @@ export function SupportingDataMaintenanceDetailListPage() {
             </FormCard>
           </Section>
 
-          {/* Section 2 — Supporting Data Details (list + card)          */}
+          {/* Remark from routedback */}
+          {supportingData?.remark && (
+            <Alert variant="danger" title={`Remark`} className="mb-4" dismissible>
+              <ul className="list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto text-xs">
+                {`${supportingData?.remark}`}
+              </ul>
+            </Alert>
+          )}
+
+          {/* Supporting Data Details (list + card) */}
           <FormCard
             title="Supporting Data Details"
             subtitle={supportingData?.remark ? `Remark: ${supportingData.remark}` : ''} // show remark when route back
@@ -511,7 +500,7 @@ export function SupportingDataMaintenanceDetailListPage() {
         </div>
       </FormProvider>
 
-      {/* Section 3 - Decision Detail */}
+      {/* Decision Detail */}
       {hasAuthorityToDecision && !ARCHIVED_STATUSES.has(status) && (
         <FormProvider {...decisionMethods}>
           <div className="flex flex-col gap-4 pr-2">

@@ -153,32 +153,33 @@ export const useDeleteSupportingData = () => {
   });
 };
 
-export const useCreateSupportingData = () => {
-  const queryClient = useQueryClient();
+// export const useCreateSupportingData = () => {
+//   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (params: {
-      data: CreateSupportingDataType;
-    }): Promise<{ supportingId: string }> => {
-      const { data } = await axios.post(`/supporting-data/`, { header: params.data });
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
-    },
-  });
-};
+//   return useMutation({
+//     mutationFn: async (params: {
+//       data: CreateSupportingDataType;
+//     }): Promise<{ supportingId: string }> => {
+//       const { data } = await axios.post(`/supporting-data/`, { header: params.data });
+//       return data;
+//     },
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
+//     },
+//   });
+// };
 
 export const useSubmitSupportingData = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (params: {
-      supportingId: string;
+      supportingId: string | undefined;
       data: CreateSupportingDataType;
     }): Promise<{ supportingId: string }> => {
-      const { data } = await axios.post(`/supporting-data/submit/${params.supportingId}`, {
-        header: params.data,
+      const { data } = await axios.post(`/supporting-data/submit/`, {
+        supportingId: params.supportingId ?? null,
+        header: { ...params.data },
       });
       return data;
     },
@@ -378,7 +379,10 @@ export const useAddSupportingDetailImage = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.detailId),
+        queryKey: supportingDataMaintenanceKeys.dataDetail(
+          variables.supportingId,
+          variables.detailId,
+        ),
       });
     },
   });
@@ -403,7 +407,10 @@ export const useRemoveSupportingDetailImage = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.detailId),
+        queryKey: supportingDataMaintenanceKeys.dataDetail(
+          variables.supportingId,
+          variables.detailId,
+        ),
       });
     },
   });
