@@ -8,6 +8,18 @@ import {
 
 // ============================== API ===============================
 
+const SupportingDetailImageSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  storageUrl: z.string(),
+  fileName: z.string().nullable(),
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  displaySequence: z.number(),
+});
+
+export type SupportingDetailImageType = z.infer<typeof SupportingDetailImageSchema>;
+
 const GetSupportingDataById = z.object({
   id: z.string(),
   isEditable: z.boolean(), // to check authority to edit data of user
@@ -35,6 +47,7 @@ const GetSupportingDataById = z.object({
   website: z.string().nullable(),
   sourceUrl: z.string().nullable(),
   remark: z.string().nullable(),
+  images: z.array(SupportingDetailImageSchema).default([]),
 });
 
 export type GetSupportingDataDetailByIdType = z.infer<typeof GetSupportingDataById>;

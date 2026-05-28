@@ -29,6 +29,92 @@ import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDi
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
 import { ARCHIVED_STATUSES } from '../constants/parameters';
 
+function SupportingDataMaintenanceDetailListPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 justify-between min-h-full">
+      <div className="flex flex-col gap-4 pr-2">
+        {/* Section 1 skeleton — Supporting Data Maintenance (blue) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+          {/* Card header */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="size-9 rounded-lg bg-blue-100" />
+            <div className="flex flex-col gap-2">
+              <div className="h-4 bg-gray-200 rounded w-52" />
+              <div className="h-3 bg-gray-100 rounded w-72" />
+            </div>
+          </div>
+          {/* Form fields — matches 2 + 2 + 2 + 4 col layout */}
+          <div className="p-5 grid grid-cols-12 gap-4">
+            {[
+              { label: 'w-24', input: 'col-span-2' },
+              { label: 'w-20', input: 'col-span-2' },
+              { label: 'w-24', input: 'col-span-2' },
+              { label: 'w-20', input: 'col-span-4' },
+            ].map((field, i) => (
+              <div key={i} className={`${field.input} flex flex-col gap-1.5`}>
+                <div className={`h-3.5 bg-gray-200 rounded ${field.label}`} />
+                <div className="h-9 bg-gray-100 rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 2 skeleton — Supporting Data Details (purple) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+          {/* Card header */}
+          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-lg bg-purple-100" />
+              <div className="h-4 bg-gray-200 rounded w-44" />
+            </div>
+            {/* Placeholder for Import Excel + Add Item buttons */}
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-100 rounded-lg w-28" />
+              <div className="h-8 bg-gray-200 rounded-lg w-24" />
+            </div>
+          </div>
+          {/* Table skeleton */}
+          <div className="p-5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, i) => (
+                    <th key={i} className="px-4 py-2.5 text-left">
+                      <div className={`h-4 bg-gray-200 rounded ${w}`} />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {Array.from({ length: 4 }).map((_, rowIdx) => (
+                  <tr key={rowIdx}>
+                    {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, colIdx) => (
+                      <td key={colIdx} className="px-4 py-3">
+                        <div className={`h-4 bg-gray-100 rounded ${w}`} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Action bar skeleton */}
+      <div className="shrink-0 sticky bottom-0 z-40 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="h-9 bg-gray-200 rounded-lg w-20" />
+          <div className="flex items-center gap-3">
+            <div className="h-9 bg-gray-100 rounded-lg w-28" />
+            <div className="h-9 bg-gray-200 rounded-lg w-24" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SupportingDataMaintenanceDetailListPage() {
   const navigate = useNavigate();
   const { supportingId } = useParams<{ supportingId: string }>();
@@ -341,7 +427,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   // ------------------------------------------------------------------
 
   if (isLoading) {
-    return <>Loading...</>; // improve with skeleton UI
+    return <SupportingDataMaintenanceDetailListPageSkeleton />;
   }
 
   return (

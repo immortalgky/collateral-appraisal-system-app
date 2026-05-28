@@ -18,8 +18,11 @@ import {
   useGetSupportingDataDetailById,
   useUpdateSupportingDetailData,
 } from '../api';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { mapSupportingDataDetailResponseToForm } from '../utils/mapper';
+import SupportingDataDetailPhotoSection, {
+  type SupportingDataDetailPhotoSectionRef,
+} from '../components/SupportingDataDetailPhotoSection';
 
 export function CreateSupportingDataPage() {
   const isReadOnly = usePageReadOnly();
@@ -62,6 +65,8 @@ export function CreateSupportingDataPage() {
     }
   }, [isEditMode, supportingData, reset]);
 
+  const photoSectionRef = useRef<SupportingDataDetailPhotoSectionRef>(null);
+
   const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingDetailData();
   const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingDetailData();
 
@@ -99,7 +104,10 @@ export function CreateSupportingDataPage() {
         },
         {
           onSuccess: async (response: any) => {
-            // await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
+            await photoSectionRef.current?.linkImagesToDetail(
+              response.supportingId ?? supportingId!,
+              response.id,
+            );
             toast.success('Supporting data created successfully');
             setSaveAction(null);
             skipWarning();
@@ -147,15 +155,16 @@ export function CreateSupportingDataPage() {
         },
         {
           onSuccess: async (response: any) => {
-            // await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
+            await photoSectionRef.current?.linkImagesToDetail(
+              response.supportingId ?? supportingId!,
+              response.id,
+            );
             toast.success('Draft saved successfully');
             setSaveAction(null);
-            if (response.propertyId) {
-              skipWarning();
-              navigate(
-                `/standalone/supporting-data-maintenance/${response.supportingId}/data/${response.id}`,
-              );
-            }
+            skipWarning();
+            navigate(
+              `/standalone/supporting-data-maintenance/${response.supportingId}/data/${response.id}`,
+            );
           },
           onError: (error: any) => {
             toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
@@ -212,13 +221,12 @@ export function CreateSupportingDataPage() {
                   <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
                 </div>
                 <div className="h-px bg-gray-200 mb-4" />
-                {/* {appraisalId && (
-              <PropertyPhotoSection
-                ref={photoSectionRef}
-                appraisalId={appraisalId}
-                propertyId={propertyId}
-              />
-            )} */}
+                <SupportingDataDetailPhotoSection
+                  ref={photoSectionRef}
+                  supportingId={supportingId!}
+                  detailId={id}
+                  images={supportingData?.images}
+                />
               </Section>
 
               {/* Supporting Data Detail Header */}

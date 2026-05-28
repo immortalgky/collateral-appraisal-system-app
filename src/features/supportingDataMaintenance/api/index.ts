@@ -348,6 +348,67 @@ export const useGetSupportingDataDetailList = (params: GetSupportingDataDetailLi
   });
 };
 
+// ========================
+// Supporting Detail Images
+// ========================
+
+/**
+ * Add an image to a supporting detail
+ * POST /supporting-data/{supportingId}/details/{detailId}/images
+ */
+export const useAddSupportingDetailImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      detailId: string;
+      documentId: string;
+      storageUrl: string;
+      fileName?: string | null;
+      title?: string | null;
+      description?: string | null;
+    }): Promise<{ imageId: string }> => {
+      const { supportingId, detailId, ...body } = params;
+      const { data } = await axios.post(
+        `/supporting-data/${supportingId}/details/${detailId}/images`,
+        body,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.detailId),
+      });
+    },
+  });
+};
+
+/**
+ * Remove an image from a supporting detail
+ * DELETE /supporting-data/{supportingId}/details/{detailId}/images/{imageId}
+ */
+export const useRemoveSupportingDetailImage = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      detailId: string;
+      imageId: string;
+    }): Promise<void> => {
+      await axios.delete(
+        `/supporting-data/${params.supportingId}/details/${params.detailId}/images/${params.imageId}`,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.detailId),
+      });
+    },
+  });
+};
+
 export interface BulkUploadSupportingDetailsResponse {
   insertedCount: number;
 }
