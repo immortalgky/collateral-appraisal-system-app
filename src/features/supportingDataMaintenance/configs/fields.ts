@@ -32,6 +32,7 @@ export const supportingDataFields: FormField[] = [
     label: 'Description',
     name: 'description',
     wrapperClassName: 'col-span-4',
+    maxLength: 100,
   },
 ];
 
@@ -54,6 +55,7 @@ export const decisionFields: FormField[] = [
       is: ['Cancelled', 'Rejected', 'RoutedBack'],
       operator: 'in',
     },
+    maxLength: 4000,
   },
 ];
 
@@ -63,6 +65,7 @@ export const propertyInformationFields: FormField[] = [
     label: 'Property Name',
     name: 'propertyName',
     wrapperClassName: 'col-span-3',
+    maxLength: 100,
   },
   {
     type: 'dropdown',
@@ -85,12 +88,14 @@ export const propertyInformationFields: FormField[] = [
     label: 'Developer',
     name: 'developer',
     wrapperClassName: 'col-span-3',
+    maxLength: 50,
   },
   {
     type: 'text-input',
     label: 'Model',
     name: 'modelName',
     wrapperClassName: 'col-span-3',
+    maxLength: 50,
   },
   {
     type: 'number-input',
@@ -98,7 +103,7 @@ export const propertyInformationFields: FormField[] = [
     name: 'landArea',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
-    maxIntegerDigits: 16,
+    maxIntegerDigits: 15,
   },
   {
     type: 'number-input',
@@ -106,7 +111,7 @@ export const propertyInformationFields: FormField[] = [
     name: 'usableArea',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
-    maxIntegerDigits: 16,
+    maxIntegerDigits: 15,
   },
 ];
 
@@ -123,14 +128,14 @@ export const locationDetailFields: FormField[] = [
     label: 'Room Floor',
     name: 'roomFloor',
     wrapperClassName: 'col-span-3',
-    maxLength: 100,
+    maxLength: 3,
   },
   {
     type: 'text-input',
     label: 'House Number',
     name: 'houseNo',
     wrapperClassName: 'col-span-3',
-    maxLength: 100,
+    maxLength: 30100,
   },
   {
     type: 'location-selector',
@@ -205,7 +210,7 @@ export const locationDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
-    maxLength: 100,
+    maxLength: 1000,
   },
 ];
 
@@ -261,19 +266,21 @@ export const sourceAndReferenceFields: FormField[] = [
     label: 'Website',
     name: 'website',
     wrapperClassName: 'col-span-3',
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Source URL',
     name: 'sourceUrl',
     wrapperClassName: 'col-span-3',
+    maxLength: 1000,
   },
   {
     type: 'textarea',
     label: 'Remark',
     name: 'remark',
     wrapperClassName: 'col-span-12',
-    maxLength: 100,
+    maxLength: 4000,
   },
 ];
 
