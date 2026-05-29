@@ -154,22 +154,6 @@ export const useDeleteSupportingData = () => {
   });
 };
 
-// export const useCreateSupportingData = () => {
-//   const queryClient = useQueryClient();
-
-//   return useMutation({
-//     mutationFn: async (params: {
-//       data: CreateSupportingDataType;
-//     }): Promise<{ supportingId: string }> => {
-//       const { data } = await axios.post(`/supporting-data/`, { header: params.data });
-//       return data;
-//     },
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
-//     },
-//   });
-// };
-
 export const useSubmitSupportingData = () => {
   const queryClient = useQueryClient();
 
@@ -202,28 +186,6 @@ export const useCreateDraftSupportingData = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
-    },
-  });
-};
-
-export const useUpdateSupportingData = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      supportingId: string;
-      data: CreateSupportingDataType;
-    }): Promise<{ supportingId: string }> => {
-      const { data } = await axios.patch(`/supporting-data/${params.supportingId}`, {
-        header: params.data,
-      });
-      return data;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
-      queryClient.invalidateQueries({
-        queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
-      });
     },
   });
 };
