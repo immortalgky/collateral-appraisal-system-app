@@ -2123,7 +2123,7 @@ export const machineInfoFields: FormField[] = [
     label: 'Machinery Age ',
     name: 'machineAge',
     wrapperClassName: 'col-span-3',
-    decimalPlaces: 1,
+    decimalPlaces: 0,
     maxIntegerDigits: 3,
   },
   {
