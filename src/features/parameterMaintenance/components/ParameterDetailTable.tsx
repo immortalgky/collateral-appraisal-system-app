@@ -8,13 +8,69 @@ import type { ParameterItem } from './ParameterGroupTable';
 import ParameterDetailModal from './ParameterDetailModal';
 import type { ParameterFormValues } from './ParameterDetailModal';
 
+interface ParameterPairRow {
+  code: string;
+  descriptionTh: string;
+  descriptionEn: string;
+  country: string;
+  seqNo: number;
+  isActive: boolean;
+  parIdTh: number;
+  parIdEn: number;
+}
+
 interface ParameterDetailTableProps {
   group: string;
   parameters: ParameterItem[];
   isLoading?: boolean;
-  onUpdate?: (id: number, data: Partial<Omit<ParameterItem, 'parId' | 'group'>>) => Promise<void>;
-  onDelete?: (id: number) => Promise<void>;
+  onUpdate?: (params: {
+    parIdTh: number;
+    parIdEn: number;
+    code: string;
+    descriptionTh: string;
+    descriptionEn: string;
+    country: string;
+    seqNo: number;
+    isActive: boolean;
+  }) => Promise<void>;
+  onDelete?: (params: { parIdTh: number; parIdEn: number }) => Promise<void>;
 }
+
+function pairParameters(parameters: ParameterItem[]): ParameterPairRow[] {
+  const map = new Map<string, { th?: ParameterItem; en?: ParameterItem }>();
+
+  for (const p of parameters) {
+    const existing = map.get(p.code) ?? {};
+    if (p.language === 'TH') {
+      map.set(p.code, { ...existing, th: p });
+    } else if (p.language === 'EN') {
+      map.set(p.code, { ...existing, en: p });
+    } else {
+      if (!existing.th) map.set(p.code, { ...existing, th: p });
+    }
+  }
+
+  const rows: ParameterPairRow[] = [];
+  for (const [code, pair] of map.entries()) {
+    const base = pair.th ?? pair.en!;
+    rows.push({
+      code,
+      descriptionTh: pair.th?.description ?? '',
+      descriptionEn: pair.en?.description ?? '',
+      country: base.country,
+      seqNo: base.seqNo,
+      isActive: base.isActive,
+      parIdTh: pair.th?.parId ?? 0,
+      parIdEn: pair.en?.parId ?? 0,
+    });
+  }
+
+  return rows.sort((a, b) => a.seqNo - b.seqNo || a.code.localeCompare(b.code));
+}
+
+// =============================================================================
+// Component
+// =============================================================================
 
 const ParameterDetailTable = ({
   group,
@@ -26,40 +82,53 @@ const ParameterDetailTable = ({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [isSaving, setIsSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deletingPair, setDeletingPair] = useState<ParameterPairRow | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingParam, setEditingParam] = useState<ParameterItem | null>(null);
+  const [editingPair, setEditingPair] = useState<ParameterPairRow | null>(null);
+
+  const pairs = useMemo(() => pairParameters(parameters), [parameters]);
 
   const filtered = useMemo(() => {
-    return parameters.filter(p => {
+    return pairs.filter(p => {
       if (statusFilter === 'active' && !p.isActive) return false;
       if (statusFilter === 'inactive' && p.isActive) return false;
       if (!search.trim()) return true;
       const q = search.toLowerCase();
-      return p.code.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+      return (
+        p.code.toLowerCase().includes(q) ||
+        p.descriptionTh.toLowerCase().includes(q) ||
+        p.descriptionEn.toLowerCase().includes(q)
+      );
     });
-  }, [parameters, search, statusFilter]);
+  }, [pairs, search, statusFilter]);
 
-  const openEdit = (param: ParameterItem) => {
-    setEditingParam(param);
+  const openEdit = (pair: ParameterPairRow) => {
+    setEditingPair(pair);
     setModalOpen(true);
   };
 
   const closeModal = () => {
     setModalOpen(false);
-    setEditingParam(null);
+    setEditingPair(null);
   };
 
   const handleSubmit = async (data: ParameterFormValues) => {
+    if (!editingPair) return;
     setIsSaving(true);
     try {
-      if (editingParam) {
-        await onUpdate?.(editingParam.parId, data);
-        toast.success('Parameter updated');
-      }
+      await onUpdate?.({
+        parIdTh: editingPair.parIdTh,
+        parIdEn: editingPair.parIdEn,
+        code: data.code,
+        descriptionTh: data.descriptionTh,
+        descriptionEn: data.descriptionEn,
+        country: data.country,
+        seqNo: data.seqNo,
+        isActive: data.isActive,
+      });
+      toast.success('Parameter updated');
       closeModal();
     } catch (error: any) {
       toast.error(error?.apiError?.detail || 'Failed to save parameter.');
@@ -69,20 +138,18 @@ const ParameterDetailTable = ({
   };
 
   const handleDelete = async () => {
-    if (!deletingId) return;
+    if (!deletingPair) return;
     setIsDeleting(true);
     try {
-      await onDelete?.(deletingId);
+      await onDelete?.({ parIdTh: deletingPair.parIdTh, parIdEn: deletingPair.parIdEn });
       toast.success('Parameter deleted');
     } catch (error: any) {
       toast.error(error?.apiError?.detail || 'Failed to delete parameter.');
     } finally {
       setIsDeleting(false);
-      setDeletingId(null);
+      setDeletingPair(null);
     }
   };
-
-  const deletingParam = parameters.find(p => p.parId === deletingId);
 
   if (isLoading) {
     return (
@@ -129,10 +196,10 @@ const ParameterDetailTable = ({
         </div>
       </div>
 
-      {filtered.length !== parameters.length && (
+      {filtered.length !== pairs.length && (
         <div className="px-4 pb-2">
           <span className="text-xs text-gray-400">
-            Showing {filtered.length} of {parameters.length} parameter(s)
+            Showing {filtered.length} of {pairs.length} parameter(s)
           </span>
         </div>
       )}
@@ -141,18 +208,18 @@ const ParameterDetailTable = ({
         <table className="table w-full">
           <thead>
             <tr className="bg-primary/10">
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-24">
+              <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-16">
                 Seq
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-36">Code</th>
+              <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-28">Code</th>
               <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
-                Description
+                TH Description
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-24">
+              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+                EN Description
+              </th>
+              <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">
                 Country
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-24">
-                Language
               </th>
               <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">
                 Status
@@ -175,32 +242,34 @@ const ParameterDetailTable = ({
                 </td>
               </tr>
             ) : (
-              filtered.map(param => (
+              filtered.map(pair => (
                 <tr
-                  key={param.parId}
+                  key={pair.code}
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   <td className="py-3 px-4">
-                    <span className="text-sm text-gray-500">{param.seqNo}</span>
+                    <span className="text-sm text-gray-500">{pair.seqNo}</span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="text-sm font-mono font-medium text-gray-800">
-                      {param.code}
-                    </span>
+                    <span className="text-sm font-mono font-medium text-gray-800">{pair.code}</span>
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-700">{param.description}</td>
-                  <td className="py-3 px-4 text-sm text-gray-500 text-center">{param.country}</td>
-                  <td className="py-3 px-4 text-sm text-gray-500 text-center">{param.language}</td>
+                  <td className="py-3 px-4 text-sm text-gray-700">
+                    {pair.descriptionTh || <span className="text-gray-300 italic text-xs">—</span>}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-700">
+                    {pair.descriptionEn || <span className="text-gray-300 italic text-xs">—</span>}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-gray-500 text-center">{pair.country}</td>
                   <td className="py-3 px-4 text-center">
                     <span
                       className={clsx(
                         'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                        param.isActive
+                        pair.isActive
                           ? 'bg-emerald-50 text-emerald-700'
                           : 'bg-gray-100 text-gray-500',
                       )}
                     >
-                      {param.isActive ? 'Active' : 'Inactive'}
+                      {pair.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -208,7 +277,7 @@ const ParameterDetailTable = ({
                       <Button
                         variant="ghost"
                         size="xs"
-                        onClick={() => openEdit(param)}
+                        onClick={() => openEdit(pair)}
                         leftIcon={
                           <Icon name="pen-to-square" style="regular" className="size-3.5" />
                         }
@@ -219,7 +288,7 @@ const ParameterDetailTable = ({
                         variant="ghost"
                         size="xs"
                         disabled={isDeleting}
-                        onClick={() => setDeletingId(param.parId)}
+                        onClick={() => setDeletingPair(pair)}
                         leftIcon={
                           <Icon name="trash-can" style="regular" className="size-3.5 text-danger" />
                         }
@@ -233,11 +302,23 @@ const ParameterDetailTable = ({
         </table>
       </div>
 
-      {/* Create / Edit Modal */}
+      {/* Edit Modal */}
       <ParameterDetailModal
         isOpen={modalOpen}
-        isEditing={editingParam !== null}
-        defaultValues={editingParam}
+        isEditing={editingPair !== null}
+        defaultValues={
+          editingPair
+            ? {
+                group,
+                code: editingPair.code,
+                descriptionTh: editingPair.descriptionTh,
+                descriptionEn: editingPair.descriptionEn,
+                country: editingPair.country,
+                seqNo: editingPair.seqNo,
+                isActive: editingPair.isActive,
+              }
+            : null
+        }
         onClose={closeModal}
         onSubmit={handleSubmit}
         isSaving={isSaving}
@@ -246,11 +327,11 @@ const ParameterDetailTable = ({
 
       {/* Delete Confirmation */}
       <ConfirmDialog
-        isOpen={deletingId !== null}
-        onClose={() => setDeletingId(null)}
+        isOpen={deletingPair !== null}
+        onClose={() => setDeletingPair(null)}
         onConfirm={handleDelete}
         title="Delete Parameter"
-        message={`Are you sure you want to delete "${deletingParam?.description ?? ''}" (${deletingParam?.code ?? ''})? This action cannot be undone.`}
+        message={`Are you sure you want to delete "${deletingPair?.descriptionTh || deletingPair?.descriptionEn || ''}" (${deletingPair?.code ?? ''})? This will remove both TH and EN records. This action cannot be undone.`}
         confirmText="Delete"
         variant="danger"
         isLoading={isDeleting}

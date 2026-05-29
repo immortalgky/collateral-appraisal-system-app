@@ -6,17 +6,29 @@ import { PARAMETERS_QUERY_KEY } from '@/shared/api/parameters';
 export const useUpdateParameter = () => {
   return useMutation({
     mutationFn: async (params: {
-      parId: number;
+      parIdTh: number;
+      parIdEn: number;
       code?: string;
-      description?: string;
+      descriptionTh?: string;
+      descriptionEn?: string;
       country?: string;
-      language?: string;
       seqNo?: number;
       isActive?: boolean;
     }): Promise<any> => {
-      const { parId, ...body } = params;
-      const { data } = await axios.put(`/parameter/${parId}`, body);
-      return data;
+      const { parIdTh, parIdEn, descriptionTh, descriptionEn, ...body } = params;
+
+      await Promise.all([
+        axios.put(`/parameter/${parIdTh}`, {
+          ...body,
+          language: 'TH',
+          description: descriptionTh,
+        }),
+        axios.put(`/parameter/${parIdEn}`, {
+          ...body,
+          language: 'EN',
+          description: descriptionEn,
+        }),
+      ]);
     },
     onSuccess: async () => {
       await queryClient.resetQueries({ queryKey: PARAMETERS_QUERY_KEY });
@@ -28,15 +40,19 @@ export const useCreateParameter = () => {
   return useMutation({
     mutationFn: async (params: {
       group: string;
-      code?: string;
-      description?: string;
-      country?: string;
-      language?: string;
-      seqNo?: number;
-      isActive?: boolean;
+      code: string;
+      descriptionTh: string;
+      descriptionEn: string;
+      country: string;
+      seqNo: number;
+      isActive: boolean;
     }): Promise<any> => {
-      const { data } = await axios.post(`/parameter`, params);
-      return data;
+      const { descriptionTh, descriptionEn, ...body } = params;
+
+      await Promise.all([
+        axios.post(`/parameter`, { ...body, language: 'TH', description: descriptionTh }),
+        axios.post(`/parameter`, { ...body, language: 'EN', description: descriptionEn }),
+      ]);
     },
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: PARAMETERS_QUERY_KEY });
@@ -46,9 +62,11 @@ export const useCreateParameter = () => {
 
 export const useDeleteParameter = () => {
   return useMutation({
-    mutationFn: async (parId: number) => {
-      const { data } = await axios.delete(`/parameter/${parId}`);
-      return data;
+    mutationFn: async (params: { parIdTh: number; parIdEn: number }) => {
+      await Promise.all([
+        axios.delete(`/parameter/${params.parIdTh}`),
+        axios.delete(`/parameter/${params.parIdEn}`),
+      ]);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PARAMETERS_QUERY_KEY });

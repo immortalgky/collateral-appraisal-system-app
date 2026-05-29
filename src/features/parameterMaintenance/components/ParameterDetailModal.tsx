@@ -6,33 +6,32 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
-import type { ParameterItem } from './ParameterGroupTable';
-
-// =============================================================================
-// Schema
-// =============================================================================
 
 const ParameterFormSchema = z.object({
   group: z.string(),
   code: z.string(),
-  description: z.string(),
+  descriptionTh: z.string(),
+  descriptionEn: z.string(),
   country: z.string(),
-  language: z.string(),
   seqNo: z.coerce.number(),
   isActive: z.boolean(),
 });
 
 export type ParameterFormValues = z.infer<typeof ParameterFormSchema>;
-
-// =============================================================================
-// Props
-// =============================================================================
-
+export interface ParameterPairDefaults {
+  group?: string;
+  code?: string;
+  descriptionTh?: string;
+  descriptionEn?: string;
+  country?: string;
+  seqNo?: number;
+  isActive?: boolean;
+}
 interface ParameterDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ParameterFormValues) => Promise<void>;
-  defaultValues?: Partial<ParameterItem> | null;
+  defaultValues?: ParameterPairDefaults | null;
   isEditing?: boolean;
   isSaving?: boolean;
   group?: string;
@@ -63,11 +62,11 @@ export default function ParameterDetailModal({
   } = useForm<ParameterFormValues>({
     resolver: zodResolver(ParameterFormSchema),
     defaultValues: {
-      group: defaultValues?.group ?? group,
+      group: defaultValues?.group ?? group ?? '',
       code: defaultValues?.code ?? '',
-      description: defaultValues?.description ?? '',
+      descriptionTh: defaultValues?.descriptionTh ?? '',
+      descriptionEn: defaultValues?.descriptionEn ?? '',
       country: defaultValues?.country ?? 'TH',
-      language: defaultValues?.language ?? 'TH',
       seqNo: defaultValues?.seqNo ?? 1,
       isActive: defaultValues?.isActive ?? true,
     },
@@ -76,11 +75,11 @@ export default function ParameterDetailModal({
   useEffect(() => {
     if (isOpen) {
       reset({
-        group: defaultValues?.group ?? group,
+        group: defaultValues?.group ?? group ?? '',
         code: defaultValues?.code ?? '',
-        description: defaultValues?.description ?? '',
+        descriptionTh: defaultValues?.descriptionTh ?? '',
+        descriptionEn: defaultValues?.descriptionEn ?? '',
         country: defaultValues?.country ?? 'TH',
-        language: defaultValues?.language ?? 'TH',
         seqNo: defaultValues?.seqNo ?? 1,
         isActive: defaultValues?.isActive ?? true,
       });
@@ -92,10 +91,6 @@ export default function ParameterDetailModal({
     onClose();
   };
 
-  const handleFormSubmit = async (data: ParameterFormValues) => {
-    await onSubmit(data);
-  };
-
   return (
     <Modal
       isOpen={isOpen}
@@ -103,8 +98,8 @@ export default function ParameterDetailModal({
       title={isEditing ? 'Edit Parameter' : 'Add Parameter'}
       size="md"
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
-        {/* Code */}
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {/* Group / Code */}
         <div className="grid grid-cols-2 gap-4">
           <TextInput
             label="Group"
@@ -112,7 +107,7 @@ export default function ParameterDetailModal({
             disabled={!groupEditable}
             placeholder="e.g. AppraisalPurpose"
             {...register('group')}
-            error={errors.code?.message}
+            error={errors.group?.message}
           />
           <TextInput
             label="Code"
@@ -123,32 +118,30 @@ export default function ParameterDetailModal({
           />
         </div>
 
-        {/* Description */}
+        {/* Descriptions */}
         <TextInput
-          label="Description"
+          label="TH Description"
           required
-          placeholder="Enter description"
-          {...register('description')}
-          error={errors.description?.message}
+          placeholder="กรอกคำอธิบายภาษาไทย"
+          {...register('descriptionTh')}
+          error={errors.descriptionTh?.message}
+        />
+        <TextInput
+          label="EN Description"
+          required
+          placeholder="Enter English description"
+          {...register('descriptionEn')}
+          error={errors.descriptionEn?.message}
         />
 
-        {/* Country / Language row */}
-        <div className="grid grid-cols-2 gap-4">
-          <TextInput
-            label="Country"
-            required
-            placeholder="e.g. TH"
-            {...register('country')}
-            error={errors.country?.message}
-          />
-          <TextInput
-            label="Language"
-            required
-            placeholder="e.g. TH"
-            {...register('language')}
-            error={errors.language?.message}
-          />
-        </div>
+        {/* Country */}
+        <TextInput
+          label="Country"
+          required
+          placeholder="e.g. TH"
+          {...register('country')}
+          error={errors.country?.message}
+        />
 
         {/* Seq No */}
         <NumberInput

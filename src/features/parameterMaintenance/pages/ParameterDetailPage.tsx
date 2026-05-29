@@ -5,6 +5,7 @@ import { useParametersQuery } from '@/shared/api/parameters';
 import { useCreateParameter, useDeleteParameter, useUpdateParameter } from '../api/parameter';
 import useBreadcrumb from '@/shared/hooks/useBreadcrumb';
 import ParameterDetailModal from '../components/ParameterDetailModal';
+import type { ParameterFormValues } from '../components/ParameterDetailModal';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -21,18 +22,18 @@ const ParameterDetailPage = () => {
   const createParameter = useCreateParameter();
   useBreadcrumb(decodedGroup, 'layer-group');
 
-  const handleCreate = async (data: {
-    group: string;
-    code: string;
-    description: string;
-    country: string;
-    language: string;
-    seqNo: number;
-    isActive: boolean;
-  }) => {
+  const handleCreate = async (data: ParameterFormValues) => {
     setIsSaving(true);
     try {
-      await createParameter.mutateAsync(data);
+      await createParameter.mutateAsync({
+        group: data.group,
+        code: data.code,
+        descriptionTh: data.descriptionTh,
+        descriptionEn: data.descriptionEn,
+        country: data.country,
+        seqNo: data.seqNo,
+        isActive: data.isActive,
+      });
       toast.success('Parameter created');
       setModalOpen(false);
     } catch (error: any) {
@@ -42,22 +43,21 @@ const ParameterDetailPage = () => {
     }
   };
 
-  const handleUpdate = async (
-    parId: number,
-    data: {
-      code?: string;
-      description?: string;
-      country?: string;
-      language?: string;
-      seqNo?: number;
-      isActive?: boolean;
-    },
-  ) => {
-    await updateParameter.mutateAsync({ parId, ...data });
+  const handleUpdate = async (params: {
+    parIdTh: number;
+    parIdEn: number;
+    code: string;
+    descriptionTh: string;
+    descriptionEn: string;
+    country: string;
+    seqNo: number;
+    isActive: boolean;
+  }) => {
+    await updateParameter.mutateAsync(params);
   };
 
-  const handleDelete = async (parId: number) => {
-    await deleteParameter.mutateAsync(parId);
+  const handleDelete = async (params: { parIdTh: number; parIdEn: number }) => {
+    await deleteParameter.mutateAsync(params);
   };
 
   return (
@@ -87,7 +87,8 @@ const ParameterDetailPage = () => {
           onUpdate={handleUpdate}
         />
       </div>
-      {/* Create / Edit Modal */}
+
+      {/* Create Modal */}
       <ParameterDetailModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
