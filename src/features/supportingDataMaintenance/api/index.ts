@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
+  CreateDecisionDataType,
   CreateSupportingDataDetailRequest,
   CreateSupportingDataType,
   GetSupportingDataByIdType,
@@ -175,7 +176,7 @@ export const useSubmitSupportingData = () => {
   return useMutation({
     mutationFn: async (params: {
       supportingId: string | undefined;
-      data: CreateSupportingDataType;
+      data: CreateSupportingDataType | CreateDecisionDataType;
     }): Promise<{ supportingId: string }> => {
       const { data } = await axios.post(`/supporting-data/submit/`, {
         supportingId: params.supportingId ?? null,

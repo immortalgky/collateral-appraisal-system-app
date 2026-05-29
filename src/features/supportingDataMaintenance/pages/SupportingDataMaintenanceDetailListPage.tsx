@@ -193,7 +193,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
-  const isPending = isUpdating || isCreatingDraft || isUpdating || isSubmitting || isDeleting;
+  const isPending = isCreatingDraft || isUpdating || isSubmitting || isDeleting;
 
   // File management (Excel bulk upload of supporting details)
   const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
@@ -402,9 +402,7 @@ export function SupportingDataMaintenanceDetailListPage() {
     setDeleteConfirm({ isOpen: false, id: null });
   };
 
-  // ------------------------------------------------------------------
   // Render
-  // ------------------------------------------------------------------
 
   if (isLoading) {
     return <SupportingDataMaintenanceDetailListPageSkeleton />;
@@ -432,10 +430,10 @@ export function SupportingDataMaintenanceDetailListPage() {
 
           {/* Remark from routedback */}
           {supportingData?.remark && (
-            <Alert variant="danger" title={`Remark`} className="mb-4" dismissible>
-              <ul className="list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto text-xs">
-                {`${supportingData?.remark}`}
-              </ul>
+            <Alert variant="danger" title={`Remark`} className="mb-4" dismissible={false}>
+              <p className="max-h-24 overflow-y-auto text-xs whitespace-pre-wrap">
+                {supportingData.remark}
+              </p>
             </Alert>
           )}
 

@@ -193,6 +193,10 @@ const SupportingDataDetailPhotoSection = forwardRef<
 
   const handleDeleteRequest = useCallback(
     (photoId: string) => {
+      if (uploadingPhotos.some(p => p.id === photoId)) {
+        toast.error('Upload in progress. Please wait.');
+        return;
+      }
       if (isCreateMode) {
         // In create mode photoId === documentId
         setPendingImages(prev => prev.filter(img => img.documentId !== photoId));
@@ -201,7 +205,7 @@ const SupportingDataDetailPhotoSection = forwardRef<
       }
       setDeleteTargetId(photoId);
     },
-    [isCreateMode],
+    [isCreateMode, uploadingPhotos],
   );
 
   // "Unlink" = remove from this detail (our only remove action)

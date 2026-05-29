@@ -9,6 +9,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDeleteSupportingData, useGetSupportingDataMaintenanceList } from '../api';
 import type {
   GetSupportingDataMaintenanceListParams,
+  GetSupportingDataMaintenanceListResponse,
   SupportingDataDateType,
   SupportingDataMaintenance,
   SupportingDataParams,
@@ -29,16 +30,31 @@ interface ContextMenuState {
 
 type ActiveTab = 'importing' | 'archived';
 
+const FILTER_KEYS: (keyof GetSupportingDataMaintenanceListParams)[] = [
+  'status',
+  'supportingNumber',
+  'dateType',
+  'dateFrom',
+  'dateTo',
+];
+
 const readFiltersFromSearchParams = (
   sp: URLSearchParams,
 ): GetSupportingDataMaintenanceListParams => {
-  return {
-    ...(sp.get('status') && { status: sp.get('status')! }),
-    ...(sp.get('supportingNumber') && { supportingNumber: sp.get('supportingNumber')! }),
-    ...(sp.get('dateType') && { dateType: sp.get('dateType') as SupportingDataDateType }),
-    ...(sp.get('dateFrom') && { dateFrom: sp.get('dateFrom')! }),
-    ...(sp.get('dateTo') && { dateTo: sp.get('dateTo')! }),
-  };
+  const out: GetSupportingDataMaintenanceListParams = {};
+  for (const key of FILTER_KEYS) {
+    const v = sp.get(key);
+    if (v) {
+      if (key === 'dateType') {
+        if (v === 'createdDate' || v === 'lastModifiedDate') {
+          out.dateType = v as SupportingDataDateType;
+        }
+      } else {
+        (out as Record<string, string>)[key] = v;
+      }
+    }
+  }
+  return out;
 };
 
 const formatDateTime = (dateString?: string | null): string => {
@@ -244,27 +260,9 @@ export function SupportingDataMaintenanceListPage() {
 
   const tabItems = activeTab === 'importing' ? importingItems : archivedItems;
 
-  // Client-side search across the textual fields we display
-  const filteredItems = useMemo(() => {
-    const q = debouncedSearch.trim().toLowerCase();
-    if (!q) return tabItems;
-    return tabItems.filter(item =>
-      [
-        item.supportingNumber,
-        item.importChannel,
-        item.sourceOfData,
-        item.lastModifiedBy,
-        item.status,
-      ]
-        .filter(Boolean)
-        .some(v => (v as string).toLowerCase().includes(q)),
-    );
-  }, [tabItems, debouncedSearch]);
-
   // Client-side pagination over the filtered set (server returns all rows in mock)
   const totalCount = listData?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const pageItems = filteredItems;
 
   const importingCount = importingItems.length;
   const archivedCount = archivedItems.length;
@@ -505,7 +503,7 @@ export function SupportingDataMaintenanceListPage() {
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
                 <TableRowSkeleton columns={columns.map(() => ({ width: 'w-24' }))} rows={8} />
-              ) : pageItems.length === 0 ? (
+              ) : tabItems.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length + 1} className="py-24">
                     <div className="flex flex-col items-center gap-4">
@@ -536,7 +534,7 @@ export function SupportingDataMaintenanceListPage() {
                   </td>
                 </tr>
               ) : (
-                pageItems.map(item => (
+                tabItems.map(item => (
                   <tr
                     key={item.id}
                     onDoubleClick={() => handleRowClick(item)}

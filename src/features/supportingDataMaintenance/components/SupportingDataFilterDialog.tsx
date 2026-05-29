@@ -11,7 +11,7 @@ const SUPPORTING_DATA_STATUS_OPTIONS = [
   { value: 'Pending', label: 'Pending' },
   { value: 'Approved', label: 'Approved' },
   { value: 'Cancelled', label: 'Cancelled' },
-  { value: 'Reject', label: 'Reject' },
+  { value: 'Rejected', label: 'Rejected' },
   { value: 'RoutedBack', label: 'Routed Back' },
 ];
 

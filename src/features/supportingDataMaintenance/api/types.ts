@@ -125,3 +125,8 @@ export interface CreateSupportingDataType {
   sourceOfData: string;
   description: string;
 }
+
+export interface CreateDecisionDataType {
+  decision: string;
+  remark?: string;
+}
