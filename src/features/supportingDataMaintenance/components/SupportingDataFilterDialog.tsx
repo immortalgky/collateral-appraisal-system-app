@@ -1,15 +1,18 @@
 import { useEffect, useState, type SelectHTMLAttributes } from 'react';
-import type { SupportingDataParams } from '../api/types';
+import { format } from 'date-fns';
+import type { SupportingDataDateType, SupportingDataParams } from '../api/types';
 import Modal from '@/shared/components/Modal';
 import { Button, DateInput, Icon, TextInput } from '@/shared/components';
 import clsx from 'clsx';
+import { DATE_TYPE_OPTIONS } from '../constants/parameters';
 
 const SUPPORTING_DATA_STATUS_OPTIONS = [
   { value: 'Draft', label: 'Draft' },
   { value: 'Pending', label: 'Pending' },
   { value: 'Approved', label: 'Approved' },
   { value: 'Cancelled', label: 'Cancelled' },
-  { value: 'Reject', label: 'Reject' },
+  { value: 'Rejected', label: 'Rejected' },
+  { value: 'RoutedBack', label: 'Routed Back' },
 ];
 
 interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
@@ -72,17 +75,38 @@ export function SupportingDataFilterDialog({
   onClose,
 }: SupportingDataFilterProps) {
   const [values, setValues] = useState<SupportingDataParams>(initialValues);
+  const [dateRangeError, setDateRangeError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open) setValues(initialValues);
+    if (open) {
+      setValues(initialValues);
+      setDateRangeError(null);
+    }
   }, [open, initialValues]);
 
-  const handleClear = () => setValues({});
+  const handleClear = () => {
+    setValues({});
+    setDateRangeError(null);
+  };
 
   const handleApply = () => {
-    onApply(values);
+    if (values.dateFrom && values.dateTo && new Date(values.dateFrom) > new Date(values.dateTo)) {
+      setDateRangeError('"From" date cannot be after "To" date.');
+      return;
+    }
+    setDateRangeError(null);
+
+    const toApply = { ...values };
+    if (toApply.dateType && !toApply.dateFrom && !toApply.dateTo) {
+      delete toApply.dateType;
+    }
+
+    onApply(toApply);
     onClose();
   };
+
+  const hasDateRange = !!values.dateFrom || !!values.dateTo || !!values.dateType;
+  const selectedDateTypeLabel = DATE_TYPE_OPTIONS.find(o => o.value === values.dateType)?.label;
 
   return (
     <Modal isOpen={open} onClose={onClose} title="Filter" size="lg">
@@ -102,10 +126,79 @@ export function SupportingDataFilterDialog({
             value={values.status}
             onChange={status => setValues(v => ({ ...v, status }))}
           />
-          <DateInput
-            value={values.createdDate ?? null}
-            onChange={val => setValues(v => ({ ...v, createdDate: val ?? undefined }))}
-          />
+        </section>
+
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              Date Range
+              {selectedDateTypeLabel && (
+                <span className="ml-2 normal-case tracking-normal text-gray-400 font-normal">
+                  · {selectedDateTypeLabel}
+                </span>
+              )}
+            </h3>
+            {hasDateRange && (
+              <button
+                type="button"
+                onClick={() =>
+                  setValues(v => ({
+                    ...v,
+                    dateType: undefined,
+                    dateFrom: undefined,
+                    dateTo: undefined,
+                  }))
+                }
+                className="text-xs text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
+              >
+                <Icon style="regular" name="xmark" className="size-3" />
+                Clear dates
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-3 gap-x-4 gap-y-4">
+            <SelectField
+              label="Date Type"
+              options={DATE_TYPE_OPTIONS}
+              value={values.dateType}
+              onChange={dateType =>
+                setValues(v => ({ ...v, dateType: dateType as SupportingDataDateType | undefined }))
+              }
+            />
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+              <DateInput
+                value={values.dateFrom ?? null}
+                onChange={val => {
+                  setDateRangeError(null);
+                  setValues(v => ({
+                    ...v,
+                    dateFrom: val ? format(new Date(val), 'yyyy-MM-dd') : undefined,
+                  }));
+                }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+              <DateInput
+                value={values.dateTo ?? null}
+                onChange={val => {
+                  setDateRangeError(null);
+                  setValues(v => ({
+                    ...v,
+                    dateTo: val ? format(new Date(val), 'yyyy-MM-dd') : undefined,
+                  }));
+                }}
+              />
+            </div>
+          </div>
+
+          {dateRangeError && (
+            <p className="mt-1 text-xs text-red-500 flex items-center gap-1">
+              <Icon style="solid" name="circle-exclamation" className="size-3" />
+              {dateRangeError}
+            </p>
+          )}
         </section>
 
         <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">

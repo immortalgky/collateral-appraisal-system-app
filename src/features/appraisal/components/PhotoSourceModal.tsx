@@ -5,7 +5,8 @@ interface PhotoSourceModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUploadFromDevice: (files: FileList) => void;
-  onChooseFromGallery: () => void;
+  /** Optional — when omitted the "Choose from Gallery" button is hidden. */
+  onChooseFromGallery?: () => void;
   title?: string;
   accept?: string;
 }
@@ -39,7 +40,7 @@ export const PhotoSourceModal = ({
   };
 
   const handleGalleryClick = () => {
-    onChooseFromGallery();
+    onChooseFromGallery?.();
     onClose();
   };
 
@@ -87,24 +88,28 @@ export const PhotoSourceModal = ({
             />
           </button>
 
-          {/* Choose from Gallery */}
-          <button
-            type="button"
-            onClick={handleGalleryClick}
-            className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-primary/50 transition-all group"
-          >
-            <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-              <Icon name="images" className="text-xl text-purple-600" />
-            </div>
-            <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">Choose from Gallery</p>
-              <p className="text-xs text-gray-500 mt-0.5">Select from previously uploaded photos</p>
-            </div>
-            <Icon
-              name="chevron-right"
-              className="ml-auto text-gray-400 group-hover:text-primary transition-colors"
-            />
-          </button>
+          {/* Choose from Gallery — only rendered when a gallery handler is provided */}
+          {onChooseFromGallery && (
+            <button
+              type="button"
+              onClick={handleGalleryClick}
+              className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-primary/50 transition-all group"
+            >
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                <Icon name="images" className="text-xl text-purple-600" />
+              </div>
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-900">Choose from Gallery</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Select from previously uploaded photos
+                </p>
+              </div>
+              <Icon
+                name="chevron-right"
+                className="ml-auto text-gray-400 group-hover:text-primary transition-colors"
+              />
+            </button>
+          )}
         </div>
 
         {/* Hidden file input */}

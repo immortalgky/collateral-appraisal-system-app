@@ -1,4 +1,4 @@
-import { useForm, FormProvider, type SubmitHandler } from 'react-hook-form';
+import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
 import {
   createSupportingDataForm,
   decisionForm,
@@ -8,7 +8,15 @@ import {
   type decisionFormType,
 } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ActionBar, Button, CancelButton, FormCard, Icon, Section } from '@/shared/components';
+import {
+  ActionBar,
+  Alert,
+  Button,
+  CancelButton,
+  FormCard,
+  Icon,
+  Section,
+} from '@/shared/components';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { FormFields } from '@/shared/components/form';
 import { decisionFields, supportingDataFields } from '../configs/fields';
@@ -18,18 +26,100 @@ import { SupportingDataTable } from '../components/SupportingDataTable';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCreateDraftSupportingData,
-  useCreateSupportingData,
+  useDeleteSupportingDetailData,
   useGetSupportingDataById,
-  useUpdateSupportingData,
+  useSubmitSupportingData,
+  useUpdateDraftSupportingData,
+  useBulkUploadSupportingDetails,
 } from '../api';
+import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
 import { ARCHIVED_STATUSES } from '../constants/parameters';
 
-interface ParseRowError {
-  row: number;
-  field: string;
-  value: string;
-  reason: string;
+function SupportingDataMaintenanceDetailListPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 justify-between min-h-full">
+      <div className="flex flex-col gap-4 pr-2">
+        {/* Section 1 skeleton — Supporting Data Maintenance (blue) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+          {/* Card header */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="size-9 rounded-lg bg-blue-100" />
+            <div className="flex flex-col gap-2">
+              <div className="h-4 bg-gray-200 rounded w-52" />
+              <div className="h-3 bg-gray-100 rounded w-72" />
+            </div>
+          </div>
+          {/* Form fields — matches 2 + 2 + 2 + 4 col layout */}
+          <div className="p-5 grid grid-cols-12 gap-4">
+            {[
+              { label: 'w-24', input: 'col-span-2' },
+              { label: 'w-20', input: 'col-span-2' },
+              { label: 'w-24', input: 'col-span-2' },
+              { label: 'w-20', input: 'col-span-4' },
+            ].map((field, i) => (
+              <div key={i} className={`${field.input} flex flex-col gap-1.5`}>
+                <div className={`h-3.5 bg-gray-200 rounded ${field.label}`} />
+                <div className="h-9 bg-gray-100 rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 2 skeleton — Supporting Data Details (purple) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+          {/* Card header */}
+          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-lg bg-purple-100" />
+              <div className="h-4 bg-gray-200 rounded w-44" />
+            </div>
+            {/* Placeholder for Import Excel + Add Item buttons */}
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-100 rounded-lg w-28" />
+              <div className="h-8 bg-gray-200 rounded-lg w-24" />
+            </div>
+          </div>
+          {/* Table skeleton */}
+          <div className="p-5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, i) => (
+                    <th key={i} className="px-4 py-2.5 text-left">
+                      <div className={`h-4 bg-gray-200 rounded ${w}`} />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {Array.from({ length: 4 }).map((_, rowIdx) => (
+                  <tr key={rowIdx}>
+                    {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, colIdx) => (
+                      <td key={colIdx} className="px-4 py-3">
+                        <div className={`h-4 bg-gray-100 rounded ${w}`} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Action bar skeleton */}
+      <div className="shrink-0 sticky bottom-0 z-40 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="h-9 bg-gray-200 rounded-lg w-20" />
+          <div className="flex items-center gap-3">
+            <div className="h-9 bg-gray-100 rounded-lg w-28" />
+            <div className="h-9 bg-gray-200 rounded-lg w-24" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SupportingDataMaintenanceDetailListPage() {
@@ -47,7 +137,8 @@ export function SupportingDataMaintenanceDetailListPage() {
   const status = supportingData?.status ?? '';
   const isReadOnly = ARCHIVED_STATUSES.has(status);
 
-  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // check by user's role
+  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false; // Status to check user has authority to edit detail header info (general info secton).
+  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // Status to check user has authority to make decision (decision section);
 
   // Form
   const isEditMode = Boolean(supportingId);
@@ -94,19 +185,25 @@ export function SupportingDataMaintenanceDetailListPage() {
     }
   }, [isEditMode, supportingData, resetSupporting]);
 
-  const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingData();
   const { mutateAsync: createDraftSupportingData, isPending: isCreatingDraft } =
     useCreateDraftSupportingData();
-  const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingData();
+  const { mutate: updateDraftSupportingData, isPending: isUpdating } =
+    useUpdateDraftSupportingData();
+  const { mutate: deleteSupportingData, isPending: isDeleting } = useDeleteSupportingDetailData();
+  const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
-  const isPending = isCreating || isUpdating || isCreatingDraft || isUpdating;
+  const isPending = isCreatingDraft || isUpdating || isSubmitting || isDeleting;
 
-  // File management (Excel upload of supporting data)
-  const [parseErrors, setParseErrors] = useState<ParseRowError[] | null>(null);
+  // File management (Excel bulk upload of supporting details)
+  const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { mutateAsync: bulkUpload, isPending: isUploading } = useBulkUploadSupportingDetails();
+
   const handleFile = async (file: File) => {
+    // Client-side guards (mirrors the server-side checks)
     if (!file.name.endsWith('.xlsx')) {
       toast.error('Only .xlsx files are accepted');
       return;
@@ -115,7 +212,26 @@ export function SupportingDataMaintenanceDetailListPage() {
       toast.error('File must be ≤ 5 MB');
       return;
     }
-    setParseErrors(null);
+
+    if (!supportingId) {
+      toast.error('Please save the form first before uploading.');
+      return;
+    }
+
+    try {
+      setParseErrors(null);
+      const result = await bulkUpload({ supportingId, file });
+      toast.success(`${result.insertedCount} row(s) imported successfully`);
+    } catch (err: any) {
+      // The server returns row-level errors in ProblemDetails.extensions.rowErrors
+      const rowErrors: RowParseError[] | undefined = err?.response?.data?.rowErrors;
+      if (rowErrors && rowErrors.length > 0) {
+        setParseErrors(rowErrors);
+        setShowErrorDialog(true);
+      } else {
+        toast.error(err?.response?.data?.detail ?? 'Upload failed. Please try again.');
+      }
+    }
   };
 
   const handleOpenFilePicker = () => {
@@ -134,48 +250,25 @@ export function SupportingDataMaintenanceDetailListPage() {
     id: null,
   });
 
-  const listContainerRef = useRef<HTMLDivElement>(null);
-
   // Handlers
-  const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = data => {
+  const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = async data => {
     setSaveAction('submit');
-    // Submit goes through react-hook-form so Zod validation runs first.
-    console.log('Submit (supporting):', data);
-    if (isEditMode) {
-      updateSupportingData(
-        { supportingId: supportingId!, data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data updated successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
+    submitSupportingData(
+      { supportingId: supportingId, data: data as any },
+      {
+        onSuccess: () => {
+          toast.success('Supporting data submitted successfully');
+          setSaveAction(null);
+          navigate(`/standalone/supporting-data-maintenance`);
         },
-      );
-    } else {
-      createSupportingData(
-        { data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
+        onError: (error: any) => {
+          toast.error(
+            error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
+          );
+          setSaveAction(null);
         },
-      );
-    }
+      },
+    );
   };
 
   const onSubmitDecision: SubmitHandler<decisionFormType> = data => {
@@ -183,34 +276,17 @@ export function SupportingDataMaintenanceDetailListPage() {
     // Submit goes through react-hook-form so Zod validation runs first.
     console.log('Submit (decision):', data);
     if (isEditMode) {
-      updateSupportingData(
+      submitSupportingData(
         { supportingId: supportingId!, data: data as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success('Supporting data submitted successfully');
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
-        },
-      );
-    } else {
-      createSupportingData(
-        { data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
             );
             setSaveAction(null);
           },
@@ -264,32 +340,33 @@ export function SupportingDataMaintenanceDetailListPage() {
     const decisionData = hasAuthorityToDecision ? decisionMethods.getValues() : null;
     console.log('Save draft:', { supportingData, decisionData });
     if (isEditMode) {
-      updateSupportingData(
-        { supportingId: supportingId!, data: data as any },
+      updateDraftSupportingData(
+        { supportingId: supportingId!, data: supportingData as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success('Draft supporting data updated successfully');
             setSaveAction(null);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to update draft supporting data. Please try again.',
             );
             setSaveAction(null);
           },
         },
       );
     } else {
-      createSupportingData(
-        { data: data as any },
+      createDraftSupportingData(
+        { data: supportingData as any },
         {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
+          onSuccess: data => {
+            toast.success('Draft supporting data created successfully');
             setSaveAction(null);
+            navigate(`/standalone/supporting-data-maintenance/${data.supportingId}`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
+              error.apiError?.detail || 'Failed to create draft supporting data. Please try again.',
             );
             setSaveAction(null);
           },
@@ -305,25 +382,37 @@ export function SupportingDataMaintenanceDetailListPage() {
   const confirmDelete = () => {
     if (deleteConfirm.id !== null) {
       const id = deleteConfirm.id;
-      // delete API — TODO: call delete with id
-      void id;
+
+      deleteSupportingData(
+        { supportingId: supportingId!, id: id },
+        {
+          onSuccess: () => {
+            toast.success('Supporting data detail deleted successfully');
+          },
+          onError: (error: any) => {
+            toast.error(
+              error.apiError?.detail ||
+                'Failed to delete supporting data detail. Please try again.',
+            );
+            setSaveAction(null);
+          },
+        },
+      );
     }
     setDeleteConfirm({ isOpen: false, id: null });
   };
 
-  // ------------------------------------------------------------------
   // Render
-  // ------------------------------------------------------------------
 
   if (isLoading) {
-    return <>Loading...</>; // improve with skeleton UI
+    return <SupportingDataMaintenanceDetailListPageSkeleton />;
   }
 
   return (
     <div className="flex flex-col gap-4 justify-between min-h-full">
       <FormProvider {...supportingMethods}>
         <div className="flex flex-col gap-4 pr-2">
-          {/* Section 1 — Supporting Data Maintenance (general info)    */}
+          {/* Supporting Data Maintenance (general info) */}
           <Section id="supporting-data">
             <FormCard
               title="Supporting Data Maintenance"
@@ -339,7 +428,16 @@ export function SupportingDataMaintenanceDetailListPage() {
             </FormCard>
           </Section>
 
-          {/* Section 2 — Supporting Data Details (list + card)          */}
+          {/* Remark from routedback */}
+          {supportingData?.remark && (
+            <Alert variant="danger" title={`Remark`} className="mb-4" dismissible={false}>
+              <p className="max-h-24 overflow-y-auto text-xs whitespace-pre-wrap">
+                {supportingData.remark}
+              </p>
+            </Alert>
+          )}
+
+          {/* Supporting Data Details (list + card) */}
           <FormCard
             title="Supporting Data Details"
             subtitle={supportingData?.remark ? `Remark: ${supportingData.remark}` : ''} // show remark when route back
@@ -349,27 +447,31 @@ export function SupportingDataMaintenanceDetailListPage() {
             rightIcon={
               <div className="flex items-center gap-2">
                 {/* Hidden file input + visible trigger button */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFile(f);
-                    e.target.value = '';
-                  }}
-                />
-
-                {!isReadOnly && !isEditing && (
+                {!isReadOnly && !isEditing && !hasAuthorityToDecision && (
                   <>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx"
+                      className="hidden"
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFile(f);
+                        e.target.value = '';
+                      }}
+                    />
                     <button
                       type="button"
                       onClick={handleOpenFilePicker}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
+                      disabled={isUploading}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      <Icon style="solid" name="file-arrow-up" className="size-4" />
-                      Import Excel
+                      <Icon
+                        style="solid"
+                        name={isUploading ? 'spinner' : 'file-arrow-up'}
+                        className={`size-4 ${isUploading ? 'animate-spin' : ''}`}
+                      />
+                      {isUploading ? 'Uploading…' : 'Import Excel'}
                     </button>
                     <button
                       type="button"
@@ -396,7 +498,7 @@ export function SupportingDataMaintenanceDetailListPage() {
         </div>
       </FormProvider>
 
-      {/* Section 3 - Decision Detail */}
+      {/* Decision Detail */}
       {hasAuthorityToDecision && !ARCHIVED_STATUSES.has(status) && (
         <FormProvider {...decisionMethods}>
           <div className="flex flex-col gap-4 pr-2">
@@ -433,6 +535,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             <Button
               type="button"
               onClick={() => handleFormSubmit()}
+              isLoading={isPending && saveAction === 'submit'}
               leftIcon={<Icon name="check" style="solid" className="size-4" />}
             >
               Submit
@@ -452,6 +555,15 @@ export function SupportingDataMaintenanceDetailListPage() {
         cancelText="Cancel"
         variant="danger"
       />
+
+      {/* Bulk upload row-error dialog */}
+      {parseErrors && (
+        <BulkUploadDialog
+          isOpen={showErrorDialog}
+          onClose={() => setShowErrorDialog(false)}
+          errors={parseErrors}
+        />
+      )}
     </div>
   );
 }
