@@ -2,11 +2,13 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import { memberFormSchema, type MemberFormValues } from '../schemas/meeting';
+import { type MemberFormValues, useMemberFormSchema } from '../schemas/meeting';
 import { useAddMeetingMember, useGetMeetingDetail } from '../api/meetings';
+import type { CommitteeMemberPosition } from '../api/types';
 import { POSITION_OPTIONS } from '../constants';
 import { useGetUsers } from '@features/userManagement/api/users';
 
@@ -23,7 +25,9 @@ const sharedInputClass =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) => {
+  const { t } = useTranslation('meeting');
   const addMember = useAddMeetingMember();
+  const schema = useMemberFormSchema();
 
   // Fetch all users with the AppraisalCommittee role. pageSize: 100 is sufficient
   // since committee membership is naturally bounded. No search-as-you-type needed.
@@ -35,9 +39,7 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
   // Existing members of this meeting — used to filter the dropdown so a user
   // already on the roster can't be added twice.
   const { data: meetingDetail } = useGetMeetingDetail(meetingId);
-  const existingMemberUserIds = new Set(
-    (meetingDetail?.members ?? []).map(m => m.userId),
-  );
+  const existingMemberUserIds = new Set((meetingDetail?.members ?? []).map(m => m.userId));
 
   const committeeUsers = (usersData?.items ?? []).filter(
     u => !existingMemberUserIds.has(u.username),
@@ -50,7 +52,7 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
     setValue,
     formState: { errors },
   } = useForm<MemberFormValues>({
-    resolver: zodResolver(memberFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: { userId: '', memberName: '', position: 'Member' },
   });
 
@@ -94,19 +96,19 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
       },
       {
         onSuccess: () => {
-          toast.success('Member added');
+          toast.success(t('toasts.memberAdded'));
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to add member');
+          toast.error(detail || t('toasts.memberAddFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Member" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.addMember')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* User selector — populated from GET /auth/users?role=AppraisalCommittee */}
         <div>
@@ -114,7 +116,7 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
             htmlFor="member-user-select"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            User <span className="text-red-500">*</span>
+            {t('fields.user')} <span className="text-red-500">*</span>
           </label>
           <select
             id="member-user-select"
@@ -125,10 +127,10 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
           >
             <option value="" disabled>
               {isLoadingUsers
-                ? 'Loading users...'
+                ? t('addMemberDialog.loadingUsers')
                 : committeeUsers.length === 0
-                  ? 'No users with AppraisalCommittee role'
-                  : 'Select a user'}
+                  ? t('addMemberDialog.noUsers')
+                  : t('addMemberDialog.selectUser')}
             </option>
             {committeeUsers.map(user => (
               <option key={user.id} value={user.username}>
@@ -150,12 +152,12 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
         {/* Position */}
         <div>
           <label htmlFor="member-position" className="block text-sm font-medium text-gray-700 mb-1">
-            Position <span className="text-red-500">*</span>
+            {t('columns.position')} <span className="text-red-500">*</span>
           </label>
           <select id="member-position" {...register('position')} className={sharedInputClass}>
             {POSITION_OPTIONS.map(pos => (
               <option key={pos} value={pos}>
-                {pos}
+                {t(`position.${pos}` as `position.${CommitteeMemberPosition}`)}
               </option>
             ))}
           </select>
@@ -171,10 +173,10 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
             onClick={handleClose}
             disabled={addMember.isPending}
           >
-            Cancel
+            {t('buttons.cancelMemberAdd')}
           </Button>
           <Button type="submit" disabled={addMember.isPending}>
-            {addMember.isPending ? 'Adding...' : 'Add Member'}
+            {addMember.isPending ? t('addMemberDialog.adding') : t('buttons.addMemberSubmit')}
           </Button>
         </div>
       </form>

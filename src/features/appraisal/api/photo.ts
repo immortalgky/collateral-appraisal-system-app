@@ -61,7 +61,9 @@ export const useCreatePhotoTopic = () => {
     mutationFn: async ({
       appraisalId,
       ...body
-    }: CreatePhotoTopicRequestType & { appraisalId: string }): Promise<CreatePhotoTopicResultType> => {
+    }: CreatePhotoTopicRequestType & {
+      appraisalId: string;
+    }): Promise<CreatePhotoTopicResultType> => {
       const { data } = await axios.post(`/appraisals/${appraisalId}/photo-topics`, body);
       return data;
     },
@@ -89,10 +91,7 @@ export const useUpdatePhotoTopic = () => {
       appraisalId: string;
       topicId: string;
     }): Promise<UpdatePhotoTopicResultType> => {
-      const { data } = await axios.put(
-        `/appraisals/${appraisalId}/photo-topics/${topicId}`,
-        body
-      );
+      const { data } = await axios.put(`/appraisals/${appraisalId}/photo-topics/${topicId}`, body);
       return data;
     },
     onSuccess: (_, variables) => {
@@ -146,7 +145,7 @@ export const useAssignPhotoToTopic = () => {
     }): Promise<AssignPhotoToTopicResultType> => {
       const { data } = await axios.put(
         `/appraisals/${appraisalId}/gallery/${photoId}/assign-topic`,
-        body
+        body,
       );
       return data;
     },
@@ -169,7 +168,7 @@ export const useAssignPhotoToTopic = () => {
  */
 export const useGetCollateralPhotoTopics = (
   collateralId: string | undefined,
-  collateralType: CollateralType | undefined
+  collateralType: CollateralType | undefined,
 ) => {
   return useQuery({
     queryKey: ['collateral-photo-topics', collateralId],
@@ -208,7 +207,7 @@ export const useCreateCollateralPhotoTopic = () => {
 
   return useMutation({
     mutationFn: async (
-      request: CreateCollateralPhotoTopicRequest
+      request: CreateCollateralPhotoTopicRequest,
     ): Promise<CreateCollateralPhotoTopicResponse> => {
       // TODO: Replace with actual API call
       // const { data } = await axios.post(`/collaterals/${request.collateralId}/photo-topics`, request);
@@ -239,7 +238,7 @@ export const useCreateCollateralPhotoTopic = () => {
           return {
             topics: [...oldData.topics, data.topic],
           };
-        }
+        },
       );
     },
   });
@@ -254,7 +253,7 @@ export const useUpdateCollateralPhotoTopic = () => {
 
   return useMutation({
     mutationFn: async (
-      request: UpdateCollateralPhotoTopicRequest & { collateralId: string }
+      request: UpdateCollateralPhotoTopicRequest & { collateralId: string },
     ): Promise<UpdateCollateralPhotoTopicResponse> => {
       // TODO: Replace with actual API call
       // const { data } = await axios.put(`/collateral-photo-topics/${request.topicId}`, request);
@@ -283,12 +282,10 @@ export const useUpdateCollateralPhotoTopic = () => {
           if (!oldData) return { topics: [data.topic] };
           return {
             topics: oldData.topics.map(topic =>
-              topic.id === variables.topicId
-                ? { ...topic, ...data.topic }
-                : topic
+              topic.id === variables.topicId ? { ...topic, ...data.topic } : topic,
             ),
           };
-        }
+        },
       );
     },
   });
@@ -322,7 +319,7 @@ export const useDeleteCollateralPhotoTopic = () => {
           return {
             topics: oldData.topics.filter(topic => topic.id !== variables.topicId),
           };
-        }
+        },
       );
       // Also clear any photos that were in this topic
       queryClient.setQueryData<GetCollateralPhotosResponse>(
@@ -332,7 +329,7 @@ export const useDeleteCollateralPhotoTopic = () => {
           return {
             photos: oldData.photos.filter(photo => photo.topicId !== variables.topicId),
           };
-        }
+        },
       );
     },
   });
@@ -342,10 +339,7 @@ export const useDeleteCollateralPhotoTopic = () => {
  * Hook for fetching collateral photos
  * GET /collaterals/{collateralId}/photos
  */
-export const useGetCollateralPhotos = (
-  collateralId: string | undefined,
-  topicId?: string
-) => {
+export const useGetCollateralPhotos = (collateralId: string | undefined, topicId?: string) => {
   return useQuery({
     queryKey: ['collateral-photos', collateralId, topicId],
     queryFn: async (): Promise<GetCollateralPhotosResponse> => {
@@ -374,7 +368,7 @@ export const useAddPhotoToCollateral = () => {
 
   return useMutation({
     mutationFn: async (
-      request: AddPhotoToCollateralRequest
+      request: AddPhotoToCollateralRequest,
     ): Promise<AddPhotoToCollateralResponse> => {
       // TODO: Replace with actual API call
       // const { data } = await axios.post(`/collaterals/${request.collateralId}/photos`, request);
@@ -440,7 +434,7 @@ export const useReorderCollateralPhotos = () => {
 
   return useMutation({
     mutationFn: async (
-      _request: ReorderCollateralPhotosRequest
+      _request: ReorderCollateralPhotosRequest,
     ): Promise<ReorderCollateralPhotosResponse> => {
       // TODO: Replace with actual API call
       // const { data } = await axios.put(

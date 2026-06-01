@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/components';
 import { BuildingCostTable } from './BuildingCostTable';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -49,6 +50,7 @@ export function CostBuildingPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: CostBuldingPanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { methodId, methodType } = activeMethod ?? {};
 
   const COLLATERAL_TYPES_WITH_BUILDING = ['B', 'LSB'];
@@ -151,16 +153,16 @@ export function CostBuildingPanel({
         methodId,
       });
       reset({ appraisalPriceRounded: totalBuildingValueRounded });
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
   /** Form handler — skips full Zod validation so we can save factors/scores independently */
   const handleOnSubmit = async () => {
     if (!activeMethod?.pricingAnalysisId || !methodId) {
-      toast.error('Pricing analysis ID or method ID not found!');
+      toast.error(t('toasts.missingIds'));
       return;
     }
 
@@ -180,10 +182,10 @@ export function CostBuildingPanel({
           appraisalValue: request.appraisalPriceRounded,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
       reset(request);
     } catch {
-      toast.error('Failed to save building cost method value');
+      toast.error(t('toasts.saveFailed'));
     }
   };
 

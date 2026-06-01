@@ -58,6 +58,22 @@
       "markAvailable": "Mark Available",
       "bankPlaceholder": "Loan bank (optional)",
       "clear": "Clear selection"
+    },
+    "donutSoldLabel": "Sold Unit",
+    "unitSuffix": "Unit",
+    "cols": {
+      "floor": "Floor",
+      "towerName": "Tower Name",
+      "regNumber": "Reg. Number",
+      "roomNo": "Room No",
+      "modelType": "Model Type",
+      "usableAreaSqm": "Usable Area (sq.m.)",
+      "sellingPriceBaht": "Selling Price (Baht)",
+      "plotNo": "Plot No",
+      "houseNo": "House No",
+      "modelName": "Model Name",
+      "numFloors": "No. of Floors",
+      "landAreaSqWa": "Land Area (Sq.Wa)"
     }
   },
   "units": {
@@ -80,7 +96,10 @@
       "placeholder": "Select...",
       "Cash": "Cash",
       "Loan": "Loan"
-    }
+    },
+    "selectAll": "Select all",
+    "selectUnit": "Select unit",
+    "bankNamePlaceholder": "Bank name…"
   },
   "errors": {
     "loadFailed": "Failed to load projects",

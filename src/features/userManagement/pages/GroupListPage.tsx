@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
@@ -14,6 +15,7 @@ import type { GroupScope } from '../types';
 type ScopeTab = 'Bank' | 'Company';
 
 const GroupListPage = () => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [activeTab, setActiveTab] = useState<ScopeTab>('Bank');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -51,18 +53,22 @@ const GroupListPage = () => {
 
   const handleCreate = () => {
     if (!createForm.name) {
-      toast.error('Name is required');
+      toast.error(t('validation.nameRequired'));
       return;
     }
     createGroup.mutate(
-      { name: createForm.name, description: createForm.description, scope: activeTab as GroupScope },
+      {
+        name: createForm.name,
+        description: createForm.description,
+        scope: activeTab as GroupScope,
+      },
       {
         onSuccess: (data: any) => {
-          toast.success('Group created');
+          toast.success(t('toasts.groupCreated'));
           setShowCreateModal(false);
           if (data?.id) setSelectedGroupId(data.id);
         },
-        onError: () => toast.error('Failed to create group'),
+        onError: () => toast.error(t('toasts.groupCreateFailed')),
       },
     );
   };
@@ -70,8 +76,8 @@ const GroupListPage = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
       <SectionHeader
-        title="Groups"
-        subtitle="Manage user groups and their monitoring relationships"
+        title={t('page.groups.title')}
+        subtitle={t('page.groups.subtitle')}
         icon="users-rectangle"
         iconColor="amber"
       />
@@ -93,7 +99,7 @@ const GroupListPage = () => {
                     : 'text-gray-500 hover:text-gray-700',
                 )}
               >
-                {tab}
+                {tab === 'Bank' ? t('tabs.bank') : t('tabs.company')}
               </button>
             ))}
           </div>
@@ -110,14 +116,15 @@ const GroupListPage = () => {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search groups..."
+                placeholder={t('placeholders.searchGroups')}
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
             <button
               type="button"
               onClick={handleOpenCreate}
-              title="Add group"
+              title={t('aria.addGroup')}
+              aria-label={t('aria.addGroup')}
               className="shrink-0 size-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/80 transition-colors"
             >
               <Icon name="plus" style="solid" className="size-3.5" />
@@ -135,7 +142,7 @@ const GroupListPage = () => {
             ) : groups.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-xs gap-1">
                 <Icon name="users-rectangle" style="regular" className="size-7 opacity-40" />
-                <span>No groups found</span>
+                <span>{t('empty.noGroupsFound')}</span>
               </div>
             ) : (
               groups.map(group => (
@@ -171,7 +178,7 @@ const GroupListPage = () => {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
               <Icon name="users-rectangle" style="regular" className="size-12 opacity-30" />
-              <p className="text-sm">Select a group to view details</p>
+              <p className="text-sm">{t('empty.selectGroup')}</p>
             </div>
           )}
         </div>
@@ -181,36 +188,41 @@ const GroupListPage = () => {
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create Group"
+        title={t('dialogs.createGroup.title')}
         size="sm"
       >
         <div className="grid grid-cols-1 gap-4 p-6">
           <TextInput
-            label="Name"
+            label={t('fields.name')}
             value={createForm.name}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, name: value }));
             }}
             required
-            placeholder="Group name"
+            placeholder={t('placeholders.groupName')}
           />
           <TextInput
-            label="Description"
+            label={t('fields.description')}
             value={createForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, description: value }));
             }}
-            placeholder="Brief description of this group"
+            placeholder={t('placeholders.groupDescription')}
           />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
-          <Button variant="primary" size="sm" isLoading={createGroup.isPending} onClick={handleCreate}>
-            Create
+          <Button
+            variant="primary"
+            size="sm"
+            isLoading={createGroup.isPending}
+            onClick={handleCreate}
+          >
+            {t('buttons.create')}
           </Button>
         </div>
       </Modal>

@@ -2,6 +2,7 @@ import { Icon } from '@/shared/components';
 import Badge from '@/shared/components/Badge';
 import clsx from 'clsx';
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PricingAnalysisApproachMethodSelector } from './PricingAnalysisApproachMethodSelector';
 import { PropertyCardContent } from '@features/appraisal/components/PropertyCardContent';
 import { ModelCardContent } from './ModelCardContent';
@@ -93,6 +94,8 @@ export const PricingAnalysisAccordion = ({
   deleteConfirm,
   onManualValueChange,
 }: PricingAnalysisAccordionProps) => {
+  const { t } = useTranslation('pricingAnalysis');
+
   /** Map group properties to PropertyItem for rendering */
   const propertyItems = useMemo(
     () =>
@@ -143,18 +146,14 @@ export const PricingAnalysisAccordion = ({
             </span>
           ) : (
             <>
-              <span className="font-semibold">{`Group: ${group?.number ?? ''} ${group?.name ?? ''}`}</span>
-              <span className="text-sm text-gray-400">{`${group?.properties?.length ?? 0} item(s)`}</span>
+              <span className="font-semibold">{`${t('accordion.group')} ${group?.number ?? ''} ${group?.name ?? ''}`}</span>
+              <span className="text-sm text-gray-400">
+                {t('accordion.items', { count: group?.properties?.length ?? 0 })}
+              </span>
             </>
           )}
           {selectedApproach && (
-            <Badge
-              size="xs"
-              badgeStyle="soft"
-              type="status"
-              value="inprogress"
-              dot={false}
-            >
+            <Badge size="xs" badgeStyle="soft" type="status" value="inprogress" dot={false}>
               {selectedApproach.label}
             </Badge>
           )}
@@ -222,7 +221,7 @@ export const PricingAnalysisAccordion = ({
                 ) : (
                   <div className="flex flex-col items-center justify-center py-8 text-gray-400">
                     <Icon name="layer-group" className="text-2xl mb-2" />
-                    <p className="text-xs">Loading model data...</p>
+                    <p className="text-xs">{t('accordion.loadingModel')}</p>
                   </div>
                 )
               ) : propertyItems.length > 0 ? (
@@ -237,7 +236,7 @@ export const PricingAnalysisAccordion = ({
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 text-gray-400">
                   <Icon name="folder-open" className="text-2xl mb-2" />
-                  <p className="text-xs">No properties in this group</p>
+                  <p className="text-xs">{t('accordion.noProperties')}</p>
                 </div>
               )}
             </div>
@@ -270,7 +269,7 @@ export const PricingAnalysisAccordion = ({
         isOpen={isConfirmDeselectedMethodOpen}
         onClose={onCancelDeselectMethod}
         onConfirm={onConfirmDeselectMethod}
-        message={`Are you sure? If you confirm the appraisal value of this method will be removed.`}
+        message={t('confirm.deselectMethod')}
       />
     </div>
   );

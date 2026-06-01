@@ -8,16 +8,16 @@ interface MigrationStoreState {
   reset: () => void;
 }
 
-export const useMigrationStore = create<MigrationStoreState>((set) => ({
+export const useMigrationStore = create<MigrationStoreState>(set => ({
   actions: {},
 
   setAction: (instanceId, action) =>
-    set((state) => ({
+    set(state => ({
       actions: { ...state.actions, [instanceId]: action },
     })),
 
   bulkSet: (ids, action) =>
-    set((state) => {
+    set(state => {
       const next = { ...state.actions };
       for (const id of ids) {
         next[id] = action;

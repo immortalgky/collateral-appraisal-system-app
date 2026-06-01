@@ -7,17 +7,20 @@ interface Props {
   rows: ConstructionSummaryRow[];
 }
 
-const ROW_CONFIG: Record<string, {
-  bg: string;
-  border: string;
-  labelClass: string;
-  barColor: string;
-  valueClass: string;
-  iconName: string;
-  iconClass: string;
-  isDelta: boolean;
-}> = {
-  'Previous': {
+const ROW_CONFIG: Record<
+  string,
+  {
+    bg: string;
+    border: string;
+    labelClass: string;
+    barColor: string;
+    valueClass: string;
+    iconName: string;
+    iconClass: string;
+    isDelta: boolean;
+  }
+> = {
+  Previous: {
     bg: 'bg-blue-50',
     border: 'border-b border-blue-100',
     labelClass: 'text-blue-700',
@@ -37,7 +40,7 @@ const ROW_CONFIG: Record<string, {
     iconClass: 'text-amber-500',
     isDelta: true,
   },
-  'Current': {
+  Current: {
     bg: 'bg-teal-50',
     border: 'border-b-2 border-teal-300',
     labelClass: 'text-teal-800 font-semibold',
@@ -130,27 +133,23 @@ const ConstructionSummaryTable = ({ rows }: Props) => {
                 <tr key={row.label} className={`${rowBg} ${borderClass}`}>
                   <td className={`px-4 py-4 ${cfg.labelClass}`}>
                     <span className="inline-flex items-center gap-2.5">
-                      <span className={`inline-flex size-7 items-center justify-center rounded-full ${cfg.iconClass.replace('text-', 'bg-').replace('-500', '-100').replace('-600', '-100')}`}>
-                        <Icon name={cfg.iconName} style="solid" className={`size-3.5 ${cfg.iconClass}`} />
+                      <span
+                        className={`inline-flex size-7 items-center justify-center rounded-full ${cfg.iconClass.replace('text-', 'bg-').replace('-500', '-100').replace('-600', '-100')}`}
+                      >
+                        <Icon
+                          name={cfg.iconName}
+                          style="solid"
+                          className={`size-3.5 ${cfg.iconClass}`}
+                        />
                       </span>
                       {row.label}
                     </span>
                   </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.totalAppraisalValue, 2)}
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.totalLandValue, 2)}
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.constructionProgressPct, 2)} %
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.buildingValueConstructing, 2)}
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(preInspection, 2)}
-                  </td>
+                  <td className={numericClass}>{formatNumber(row.totalAppraisalValue, 2)}</td>
+                  <td className={numericClass}>{formatNumber(row.totalLandValue, 2)}</td>
+                  <td className={numericClass}>{formatNumber(row.constructionProgressPct, 2)} %</td>
+                  <td className={numericClass}>{formatNumber(row.buildingValueConstructing, 2)}</td>
+                  <td className={numericClass}>{formatNumber(preInspection, 2)}</td>
                 </tr>
               );
             })}

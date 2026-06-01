@@ -10,19 +10,15 @@ export function RoutingNode({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as ActivityNodeData;
   const props = nodeData.properties as RoutingProperties;
   const conditions = Object.keys(props?.routingConditions ?? {});
-  const allOutputs = props?.defaultDecision
-    ? [...conditions, props.defaultDecision]
-    : conditions;
+  const allOutputs = props?.defaultDecision ? [...conditions, props.defaultDecision] : conditions;
 
-  const outputs =
-    allOutputs.length > 0
-      ? allOutputs.map((k) => ({ id: k, label: k }))
-      : undefined;
+  const outputs = allOutputs.length > 0 ? allOutputs.map(k => ({ id: k, label: k })) : undefined;
 
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Routing'}
       subtitle={

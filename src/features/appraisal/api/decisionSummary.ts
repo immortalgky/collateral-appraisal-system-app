@@ -117,6 +117,8 @@ export const decisionSummaryKeys = {
   detail: (appraisalId: string) => ['appraisal', appraisalId, 'decision-summary'] as const,
   approvalList: (workflowInstanceId: string, activityId: string) =>
     ['workflow', workflowInstanceId, 'activity', activityId, 'approval-list'] as const,
+  approvalHistory: (appraisalId: string, activityId: string) =>
+    ['appraisal', appraisalId, 'approval-history', activityId] as const,
 };
 
 // ==================== Queries ====================
@@ -192,5 +194,31 @@ export const useGetApprovalList = (
       const decided = (data.quorumMet && data.majorityMet) || routedBack;
       return decided ? false : 10_000;
     },
+  });
+};
+
+/**
+ * Fetch immutable approval vote history for a completed appraisal.
+ * GET /api/appraisals/{appraisalId}/approval-history?activityId={activityId}
+ *
+ * Returns 404 when no votes exist (e.g. workflow cancelled before approval).
+ * No polling — history never changes after the workflow ends.
+ */
+export const useGetApprovalHistory = (
+  appraisalId: string | undefined,
+  activityId: string | undefined,
+) => {
+  return useQuery({
+    queryKey: decisionSummaryKeys.approvalHistory(appraisalId!, activityId!),
+    queryFn: async (): Promise<GetApprovalListResponse> => {
+      const { data } = await axios.get(`/api/appraisals/${appraisalId}/approval-history`, {
+        params: { activityId },
+      });
+      return data;
+    },
+    enabled: !!appraisalId && !!activityId,
+    // History is immutable and a 404 (no votes / cancelled appraisal) is an
+    // expected outcome that hides the card — don't retry it.
+    retry: false,
   });
 };

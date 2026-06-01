@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  endOfMonth,
-  endOfWeek,
-  formatDistanceToNow,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import { endOfMonth, endOfWeek, formatDistanceToNow, startOfMonth, startOfWeek } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
 import DatePickerInput from '@shared/components/inputs/DatePickerInput';
@@ -30,13 +25,6 @@ type TaskSummarySettings = {
 const EMPTY_SETTINGS: TaskSummarySettings = Object.freeze({}) as TaskSummarySettings;
 
 const ALL_TIME_START = new Date(2000, 0, 1);
-
-const PRESET_BUTTONS: Array<{ key: Exclude<TaskPeriod, 'CUSTOM'>; label: string; title: string }> = [
-  { key: 'D', label: 'D', title: 'Daily (today)' },
-  { key: 'W', label: 'W', title: 'Weekly (this week)' },
-  { key: 'M', label: 'M', title: 'Monthly (this month)' },
-  { key: 'ALL', label: 'All', title: 'All time' },
-];
 
 function rangeFor(period: TaskPeriod, today: Date, custom?: { from: Date; to: Date }) {
   switch (period) {
@@ -64,6 +52,7 @@ type CustomPopoverProps = {
 };
 
 function CustomRangePopover({ initialFrom, initialTo, onApply, onClose }: CustomPopoverProps) {
+  const { t } = useTranslation('dashboard');
   const [fromStr, setFromStr] = useState(initialFrom ?? '');
   const [toStr, setToStr] = useState(initialTo ?? '');
   const ref = useRef<HTMLDivElement>(null);
@@ -92,14 +81,18 @@ function CustomRangePopover({ initialFrom, initialTo, onApply, onClose }: Custom
       className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-gray-200 bg-white shadow-xl p-4 flex flex-col gap-3"
     >
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          {t('period.customFrom')}
+        </label>
         <DatePickerInput
           value={fromDate ?? null}
           onChange={iso => setFromStr(iso ? toIsoDate(new Date(iso)) : '')}
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          {t('period.customTo')}
+        </label>
         <DatePickerInput
           value={toDate ?? null}
           onChange={iso => setToStr(iso ? toIsoDate(new Date(iso)) : '')}
@@ -111,7 +104,7 @@ function CustomRangePopover({ initialFrom, initialTo, onApply, onClose }: Custom
         onClick={() => fromDate && toDate && onApply(fromDate, toDate)}
         className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
       >
-        Apply
+        {t('period.apply')}
       </button>
     </div>
   );
@@ -127,6 +120,8 @@ type TaskGaugeProps = {
   percentage: number;
   onClick?: () => void;
   hint?: string;
+  tasksLabel: string;
+  openListLabel: string;
 };
 
 function TaskGauge({
@@ -139,6 +134,8 @@ function TaskGauge({
   percentage,
   onClick,
   hint,
+  tasksLabel,
+  openListLabel,
 }: TaskGaugeProps) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
@@ -183,12 +180,12 @@ function TaskGauge({
             <Icon name={icon} style="solid" className={`size-5 ${iconColor}`} />
           </div>
           <span className="text-3xl font-semibold text-gray-800 tabular-nums">{count}</span>
-          <span className="text-xs text-gray-400">Tasks</span>
+          <span className="text-xs text-gray-400">{tasksLabel}</span>
         </div>
       </div>
       {clickable && (
         <span className="text-[11px] text-blue-600 inline-flex items-center gap-0.5">
-          Open list
+          {openListLabel}
           <Icon name="arrow-right" style="solid" className="size-2.5" />
         </span>
       )}
@@ -207,6 +204,7 @@ function GaugeSkeleton() {
 }
 
 function TaskSummaryWidget() {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
 
   const settings = useDashboardStore(
@@ -244,6 +242,18 @@ function TaskSummaryWidget() {
   const completed = data?.completed ?? 0;
   const total = notStarted + inProgress + overdue + completed;
 
+  // Built inside component so t() is in scope
+  const PRESET_BUTTONS: Array<{
+    key: Exclude<TaskPeriod, 'CUSTOM'>;
+    label: string;
+    title: string;
+  }> = [
+    { key: 'D', label: t('taskSummary.periodDay'), title: t('taskSummary.periodDayTitle') },
+    { key: 'W', label: t('taskSummary.periodWeek'), title: t('taskSummary.periodWeekTitle') },
+    { key: 'M', label: t('taskSummary.periodMonth'), title: t('taskSummary.periodMonthTitle') },
+    { key: 'ALL', label: t('taskSummary.periodAll'), title: t('taskSummary.periodAllTitle') },
+  ];
+
   const handlePresetClick = (key: Exclude<TaskPeriod, 'CUSTOM'>) => {
     setCustomOpen(false);
     updateSettings(WIDGET_ID, {
@@ -276,7 +286,7 @@ function TaskSummaryWidget() {
       <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
         <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
           <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold text-gray-800">Task Summary</h3>
+            <h3 className="text-lg font-semibold text-gray-800">{t('taskSummary.title')}</h3>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div className="flex flex-col items-end gap-1.5">
@@ -302,7 +312,7 @@ function TaskSummaryWidget() {
               <div className="relative">
                 <button
                   type="button"
-                  title="Custom date range"
+                  title={t('taskSummary.customRange')}
                   onClick={() => setCustomOpen(o => !o)}
                   className={`px-2.5 py-1 text-xs font-medium rounded-md border inline-flex items-center gap-1.5 transition-all ${
                     period === 'CUSTOM'
@@ -311,7 +321,7 @@ function TaskSummaryWidget() {
                   }`}
                 >
                   <Icon name="calendar" style="regular" className="size-3" />
-                  Custom
+                  {t('period.CUSTOM')}
                 </button>
                 {customOpen && (
                   <CustomRangePopover
@@ -324,13 +334,13 @@ function TaskSummaryWidget() {
               </div>
             </div>
             {updatedLabel && (
-              <span className="text-xs text-gray-400">Updated {updatedLabel} ago</span>
+              <span className="text-xs text-gray-400">{t('updatedAgo', { n: updatedLabel })}</span>
             )}
           </div>
         </div>
 
         {isError ? (
-          <WidgetError message="Unable to load task summary" onRetry={() => refetch()} />
+          <WidgetError message={t('taskSummary.error')} onRetry={() => refetch()} />
         ) : isLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {Array.from({ length: 4 }).map((_, i) => (
@@ -340,7 +350,7 @@ function TaskSummaryWidget() {
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <TaskGauge
-              label="Not Started"
+              label={t('taskSummary.notStarted')}
               count={notStarted}
               icon="loader"
               iconColor="text-blue-500"
@@ -348,10 +358,12 @@ function TaskSummaryWidget() {
               strokeColor="#3b82f6"
               percentage={total > 0 ? (notStarted / total) * 100 : 0}
               onClick={() => goToTasks({ pendingTaskStatus: 'Assigned' })}
-              hint="Filter task list by Assigned"
+              hint={t('taskSummary.hintAssigned')}
+              tasksLabel={t('taskSummary.tasks')}
+              openListLabel={t('taskSummary.openList')}
             />
             <TaskGauge
-              label="In Progress"
+              label={t('taskSummary.inProgress')}
               count={inProgress}
               icon="hourglass-start"
               iconColor="text-amber-500"
@@ -359,10 +371,12 @@ function TaskSummaryWidget() {
               strokeColor="#f59e0b"
               percentage={total > 0 ? (inProgress / total) * 100 : 0}
               onClick={() => goToTasks({ pendingTaskStatus: 'InProgress' })}
-              hint="Filter task list by In Progress"
+              hint={t('taskSummary.hintInProgress')}
+              tasksLabel={t('taskSummary.tasks')}
+              openListLabel={t('taskSummary.openList')}
             />
             <TaskGauge
-              label="Overdue"
+              label={t('taskSummary.overdue')}
               count={overdue}
               icon="bell"
               iconColor="text-red-500"
@@ -370,16 +384,20 @@ function TaskSummaryWidget() {
               strokeColor="#ef4444"
               percentage={total > 0 ? (overdue / total) * 100 : 0}
               onClick={() => goToTasks({ slaStatus: 'Breached' })}
-              hint="Filter task list by SLA Breached"
+              hint={t('taskSummary.hintBreached')}
+              tasksLabel={t('taskSummary.tasks')}
+              openListLabel={t('taskSummary.openList')}
             />
             <TaskGauge
-              label="Completed"
+              label={t('taskSummary.completed')}
               count={completed}
               icon="circle-check"
               iconColor="text-emerald-500"
               bgColor="bg-emerald-50"
               strokeColor="#10b981"
               percentage={total > 0 ? (completed / total) * 100 : 0}
+              tasksLabel={t('taskSummary.tasks')}
+              openListLabel={t('taskSummary.openList')}
             />
           </div>
         )}

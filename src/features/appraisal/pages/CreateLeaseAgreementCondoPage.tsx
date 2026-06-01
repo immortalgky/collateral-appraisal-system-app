@@ -14,6 +14,7 @@ import {
 } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import Icon from '@/shared/components/Icon';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -85,6 +86,7 @@ const useUpdateLeaseAgreementCondoProperty = () => {
 // ─── Page Component ───────────────────────────────────────────────
 
 const CreateLeaseAgreementCondoPage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -153,7 +155,7 @@ const CreateLeaseAgreementCondoPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Lease agreement condo updated successfully');
+            toast.success(t('toasts.leaseAgreementCondoUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -169,7 +171,7 @@ const CreateLeaseAgreementCondoPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            toast.success('Lease agreement condo created successfully');
+            toast.success(t('toasts.leaseAgreementCondoCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/lease-condo/${response.propertyId}`);
@@ -195,7 +197,7 @@ const CreateLeaseAgreementCondoPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -211,7 +213,7 @@ const CreateLeaseAgreementCondoPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();

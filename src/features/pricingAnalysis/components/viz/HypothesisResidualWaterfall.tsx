@@ -21,7 +21,11 @@ export function HypothesisResidualWaterfall(props: Props) {
   return (
     <WaterfallChart
       steps={steps}
-      title={props.variant === 'LandBuilding' ? 'Residual Value Breakdown' : 'Residual Value Breakdown (GDV → Final)'}
+      title={
+        props.variant === 'LandBuilding'
+          ? 'Residual Value Breakdown'
+          : 'Residual Value Breakdown (GDV → Final)'
+      }
     />
   );
 }
@@ -36,7 +40,7 @@ function buildSteps(props: Props): WaterfallStep[] | null {
     const projCost = s?.totalProjectCost ?? 0;
     const govTax = s?.totalGovTax ?? 0;
     const risk = s?.riskPremiumAmount ?? 0;
-    const current = s?.currentPropertyValue ?? (revenue - devCost - projCost - govTax - risk);
+    const current = s?.currentPropertyValue ?? revenue - devCost - projCost - govTax - risk;
     const final = s?.finalPropertyValue ?? current;
     const discountDrag = Math.max(0, current - final);
 
@@ -60,7 +64,7 @@ function buildSteps(props: Props): WaterfallStep[] | null {
   const soft = s?.totalSoftCost ?? 0;
   const govTax = s?.totalGovTax ?? 0;
   const risk = s?.riskProfitTotal ?? 0;
-  const remaining = s?.totalRemainingValue ?? (revenue - hard - soft - govTax - risk);
+  const remaining = s?.totalRemainingValue ?? revenue - hard - soft - govTax - risk;
   const finalRemaining = s?.finalRemainingValue ?? remaining;
   const discountDrag = Math.max(0, remaining - finalRemaining);
 
@@ -72,6 +76,11 @@ function buildSteps(props: Props): WaterfallStep[] | null {
     { label: 'Risk & Profit', value: risk, type: 'subtract', targetId: 'hyp-section-risk' },
     { label: 'Remaining', value: remaining, type: 'total', targetId: 'hyp-section-total-dev' },
     { label: 'Discount', value: discountDrag, type: 'subtract', targetId: 'hyp-section-final' },
-    { label: 'Final Remaining', value: finalRemaining, type: 'total', targetId: 'hyp-section-final' },
+    {
+      label: 'Final Remaining',
+      value: finalRemaining,
+      type: 'total',
+      targetId: 'hyp-section-final',
+    },
   ];
 }

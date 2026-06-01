@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { startFormSchema, type StartFormValues } from '../../schemas';
+import { makeStartFormSchema, type StartFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 
 interface StartFormProps {
@@ -10,14 +11,20 @@ interface StartFormProps {
 }
 
 export function StartForm({ nodeId }: StartFormProps) {
-  const nodes = useWorkflowStore((s) => s.nodes);
-  const updateActivityData = useWorkflowStore((s) => s.updateActivityData);
+  const { t } = useTranslation('workflowBuilder');
+  const nodes = useWorkflowStore(s => s.nodes);
+  const updateActivityData = useWorkflowStore(s => s.updateActivityData);
 
-  const node = nodes.find((n) => n.id === nodeId);
+  const node = nodes.find(n => n.id === nodeId);
   const data = node?.data as ActivityNodeData | undefined;
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<StartFormValues>({
-    resolver: zodResolver(startFormSchema),
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<StartFormValues>({
+    resolver: zodResolver(makeStartFormSchema(t)),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -44,16 +51,16 @@ export function StartForm({ nodeId }: StartFormProps) {
 
   return (
     <form onChange={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="badge badge-success gap-1 text-xs">Start Activity</div>
+      <div className="badge badge-success gap-1 text-xs">{t('forms.badges.startActivity')}</div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Name</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.name')}</span>
         </label>
         <input
           {...register('name')}
           className="input input-bordered input-sm w-full"
-          placeholder="Workflow Start"
+          placeholder={t('forms.placeholders.workflowStart')}
         />
         {errors.name && (
           <label className="label">
@@ -64,13 +71,13 @@ export function StartForm({ nodeId }: StartFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Description</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.description')}</span>
         </label>
         <textarea
           {...register('description')}
           className="textarea textarea-bordered textarea-sm w-full"
           rows={2}
-          placeholder="Describe this start point..."
+          placeholder={t('forms.placeholders.describeStartPoint')}
         />
       </div>
     </form>

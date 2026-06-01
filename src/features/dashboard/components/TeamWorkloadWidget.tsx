@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -40,26 +41,19 @@ const EMPTY_SETTINGS: TeamWorkloadSettings = Object.freeze({}) as TeamWorkloadSe
 
 type Row = {
   username: string;
-  // Display label embeds the overdue badge into the Y-axis tick text indirectly via lookup.
   notStarted: number;
   inProgress: number;
   completed: number;
   overdue: number;
-  // total excludes overdue on purpose — overdue is an overlapping flag, not a distinct bucket.
   total: number;
 };
 
 type StackedKey = 'notStarted' | 'inProgress' | 'completed';
 
-const LEGEND: Array<{ key: StackedKey; label: string; color: string }> = [
-  { key: 'notStarted', label: 'Not Started', color: '#3b82f6' },
-  { key: 'inProgress', label: 'In Progress', color: '#f59e0b' },
-  { key: 'completed', label: 'Completed', color: '#10b981' },
-];
-
 const OVERDUE_COLOR = '#ef4444';
 
 function TeamWorkloadWidget() {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const settings = useDashboardStore(
@@ -103,6 +97,13 @@ function TeamWorkloadWidget() {
     ? formatDistanceToNow(dataUpdatedAt, { addSuffix: false })
     : null;
 
+  // Built inside component so t() is in scope
+  const LEGEND: Array<{ key: StackedKey; label: string; color: string }> = [
+    { key: 'notStarted', label: t('teamWorkload.legend.notStarted'), color: '#3b82f6' },
+    { key: 'inProgress', label: t('teamWorkload.legend.inProgress'), color: '#f59e0b' },
+    { key: 'completed', label: t('teamWorkload.legend.completed'), color: '#10b981' },
+  ];
+
   const rows: Row[] = useMemo(() => {
     return (data?.items ?? [])
       .map(m => ({
@@ -111,8 +112,6 @@ function TeamWorkloadWidget() {
         inProgress: m.inProgress ?? 0,
         completed: m.completed ?? 0,
         overdue: m.overdue ?? 0,
-        // Overdue is an overlapping flag on active tasks (see vw_UserTaskSummary) —
-        // exclude it from the stacked total so the bar widths aren't inflated.
         total: (m.notStarted ?? 0) + (m.inProgress ?? 0) + (m.completed ?? 0),
       }))
       .sort((a, b) => b.total - a.total);
@@ -162,7 +161,7 @@ function TeamWorkloadWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800">Team Workload</h3>
+              <h3 className="font-semibold text-gray-800">{t('teamWorkload.title')}</h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
@@ -171,7 +170,7 @@ function TeamWorkloadWidget() {
             <button
               type="button"
               onClick={() => setMenuOpen(o => !o)}
-              aria-label="Widget menu"
+              aria-label={t('teamWorkload.aria.menu')}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
             >
               <Icon name="ellipsis-vertical" style="solid" className="size-4" />
@@ -180,7 +179,7 @@ function TeamWorkloadWidget() {
               <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
                 {updatedLabel && (
                   <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
-                    Updated {updatedLabel} ago
+                    {t('updatedAgo', { n: updatedLabel })}
                   </p>
                 )}
                 <button
@@ -189,7 +188,7 @@ function TeamWorkloadWidget() {
                   className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                 >
                   <Icon name="arrow-rotate-right" style="solid" className="size-3 text-gray-400" />
-                  Refresh
+                  {t('teamWorkload.menu.refresh')}
                 </button>
                 <button
                   type="button"
@@ -197,7 +196,7 @@ function TeamWorkloadWidget() {
                   className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                 >
                   <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
-                  Reset
+                  {t('teamWorkload.menu.reset')}
                 </button>
               </div>
             )}
@@ -214,13 +213,13 @@ function TeamWorkloadWidget() {
             ))}
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: OVERDUE_COLOR }} />
-              <span className="text-xs text-gray-500">Overdue (overlap)</span>
+              <span className="text-xs text-gray-500">{t('teamWorkload.legend.overdue')}</span>
             </div>
-            <span className="text-xs text-gray-400 ml-auto">Click a row to view tasks</span>
+            <span className="text-xs text-gray-400 ml-auto">{t('teamWorkload.clickRowHint')}</span>
           </div>
 
           {isError ? (
-            <WidgetError message="Unable to load team workload" onRetry={() => refetch()} />
+            <WidgetError message={t('teamWorkload.error')} onRetry={() => refetch()} />
           ) : isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -233,7 +232,7 @@ function TeamWorkloadWidget() {
             </div>
           ) : rows.length === 0 ? (
             <div className="py-12 text-center text-sm text-gray-400">
-              No team workload data for this period
+              {t('teamWorkload.noData')}
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={chartHeight}>
@@ -272,7 +271,7 @@ function TeamWorkloadWidget() {
                           <g
                             transform={`translate(${-8 - 8 * String(payload.value).length - 22},-9)`}
                           >
-                            <title>{`${overdue} overdue`}</title>
+                            <title>{t('teamWorkload.overdueCount', { n: overdue })}</title>
                             <rect
                               width={22}
                               height={18}
@@ -304,7 +303,6 @@ function TeamWorkloadWidget() {
                     fontSize: 12,
                   }}
                 />
-                {/* onClick on each Bar — Recharts v3's BarChart.onClick misses direct bar clicks. */}
                 {LEGEND.map(l => (
                   <Bar
                     key={l.key}
@@ -322,8 +320,6 @@ function TeamWorkloadWidget() {
                     ))}
                   </Bar>
                 ))}
-                {/* Overdue is NOT stacked — it overlaps the other buckets. Rendered as a
-                    separate badge on the Y-axis tick + included in the tooltip payload. */}
               </BarChart>
             </ResponsiveContainer>
           )}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   closestCenter,
   DndContext,
@@ -63,9 +64,7 @@ function DroppableArea({
         <div
           className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${isOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200'}`}
         >
-          <p className={`text-sm ${isOver ? 'text-blue-500' : 'text-gray-400'}`}>
-            {isOver ? 'Drop here' : label}
-          </p>
+          <p className={`text-sm ${isOver ? 'text-blue-500' : 'text-gray-400'}`}>{label}</p>
         </div>
       )}
     </div>
@@ -73,6 +72,7 @@ function DroppableArea({
 }
 
 function HomePage() {
+  const { t } = useTranslation('dashboard');
   const user = useAuthStore(state => state.user);
   const { widgets, isEditMode, setEditMode, reorderWidgets, moveWidget } = useDashboardStore();
   const [showAddModal, setShowAddModal] = useState(false);
@@ -203,7 +203,7 @@ function HomePage() {
           </div>
           <div>
             <h1 className="text-2xl font-semibold text-gray-800">
-              Welcome back
+              {t('page.welcome')}
               {user?.name ? `, ${user.username.toLowerCase() == 'p5229' ? '💙️' : user?.name}` : ''}
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">{formattedDate}</p>
@@ -230,7 +230,7 @@ function HomePage() {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {isEditMode ? 'Done' : 'Edit'}
+            {isEditMode ? t('page.editDone') : t('page.editStart')}
           </button>
         </div>
       </div>
@@ -250,7 +250,7 @@ function HomePage() {
               className="flex-1 min-w-0"
               isEditMode={isEditMode}
               isEmpty={!hasMainWidgets}
-              label="Drag widgets here for main panel"
+              label={t('empty.dropMain')}
             >
               {hasMainWidgets && (
                 <SortableContext items={mainWidgets.map(w => w.id)} strategy={rectSortingStrategy}>
@@ -271,7 +271,7 @@ function HomePage() {
               className="w-80 shrink-0"
               isEditMode={isEditMode}
               isEmpty={!hasSidebarWidgets}
-              label="Small widgets only"
+              label={t('empty.dropSidebarSmallOnly')}
             >
               {hasSidebarWidgets && (
                 <SortableContext
@@ -312,8 +312,8 @@ function HomePage() {
           <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
             <Icon name="grid-2" style="regular" className="size-7 text-gray-400" />
           </div>
-          <p className="text-gray-500 font-medium">No widgets on your dashboard</p>
-          <p className="text-gray-400 text-sm mt-1">Click Edit to add widgets</p>
+          <p className="text-gray-500 font-medium">{t('empty.noWidgets')}</p>
+          <p className="text-gray-400 text-sm mt-1">{t('empty.noWidgetsHint')}</p>
         </div>
       )}
 
@@ -321,9 +321,7 @@ function HomePage() {
       {isEditMode && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 z-40">
           <Icon name="arrows-up-down-left-right" style="solid" className="size-4 text-gray-400" />
-          <span className="text-sm">
-            Drag widgets between panels • Small widgets can go in sidebar
-          </span>
+          <span className="text-sm">{t('page.dragHint')}</span>
         </div>
       )}
 

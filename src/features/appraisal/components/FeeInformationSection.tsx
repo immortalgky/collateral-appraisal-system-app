@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import NumberInput from '@shared/components/inputs/NumberInput';
@@ -63,6 +64,7 @@ export default function FeeInformationSection({
   isConstructionInspectionFeeUpdating,
   totalFeePaid,
 }: FeeInformationSectionProps) {
+  const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
@@ -78,9 +80,9 @@ export default function FeeInformationSection({
     if (ciFeeDraft === constructionInspectionFeeAmount) return;
     try {
       await onUpdateConstructionInspectionFee(ciFeeDraft);
-      toast.success('Construction inspection fee saved');
+      toast.success(t('fee.toasts.ciFeesSaved'));
     } catch (error: any) {
-      toast.error(error?.apiError?.detail || 'Failed to save construction inspection fee.');
+      toast.error(error?.apiError?.detail || t('fee.toasts.ciFeesFailed'));
       setCiFeeDraft(constructionInspectionFeeAmount); // rollback
     }
   };
@@ -92,11 +94,11 @@ export default function FeeInformationSection({
   const total = subtotal + vat;
 
   // Resolve fee code to label
-  const getFeeTypeLabel = (code: string) =>
-    FEE_ITEM_TYPE_OPTIONS.find(opt => opt.value === code)?.label ?? code;
+  const getFeeTypeLabel = (code: string | undefined) =>
+    FEE_ITEM_TYPE_OPTIONS.find(opt => opt.value === code)?.label ?? code ?? '';
 
   // Badge color by fee type code
-  const getBadgeClass = (code: string) => {
+  const getBadgeClass = (code: string | undefined) => {
     switch (code) {
       case '01':
         return 'bg-emerald-100 text-emerald-700';
@@ -108,8 +110,8 @@ export default function FeeInformationSection({
   };
 
   // Format currency
-  const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('en-US', {
+  const formatCurrency = (amount: number | undefined) => {
+    return (amount ?? 0).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -124,9 +126,9 @@ export default function FeeInformationSection({
         feeAmount: data.amount,
       });
       setIsAddModalOpen(false);
-      toast.success('Fee added successfully');
+      toast.success(t('fee.toasts.feeAdded'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to add fee item.');
+      toast.error(error.apiError?.detail || t('fee.toasts.feeAddFailed'));
     }
   };
 
@@ -140,9 +142,9 @@ export default function FeeInformationSection({
         feeAmount: data.amount,
       });
       setEditingFee(null);
-      toast.success('Fee updated successfully');
+      toast.success(t('fee.toasts.feeUpdated'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to update fee item.');
+      toast.error(error.apiError?.detail || t('fee.toasts.feeUpdateFailed'));
     }
   };
 
@@ -157,7 +159,10 @@ export default function FeeInformationSection({
       const newTotal = newSubtotal * (1 + vatRate / 100);
       if (totalPaid > newTotal) {
         toast.error(
-          `Cannot delete this fee item. The total fee (${formatCurrency(newTotal)}) would be less than the amount already paid (${formatCurrency(totalPaid)}).`,
+          t('fee.cannotDeleteFee', {
+            newTotal: formatCurrency(newTotal),
+            totalPaid: formatCurrency(totalPaid),
+          }),
           {
             duration: 10000,
           },
@@ -169,9 +174,9 @@ export default function FeeInformationSection({
 
     try {
       await onRemoveFeeItem(item.appraisalFeeId, item.id);
-      toast.success('Fee deleted successfully');
+      toast.success(t('fee.toasts.feeDeleted'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to delete fee item.');
+      toast.error(error.apiError?.detail || t('fee.toasts.feeDeleteFailed'));
     } finally {
       setDeletingFeeIndex(null);
     }
@@ -208,7 +213,9 @@ export default function FeeInformationSection({
         ? 'bg-success/10 text-success'
         : status === 'rejected'
           ? 'bg-danger/10 text-danger'
-          : 'bg-warning/10 text-warning';
+          : status === 'pendingapproval'
+            ? 'bg-amber-100 text-amber-700'
+            : 'bg-warning/10 text-warning';
     return { label: item.approvalStatus || 'Pending', colorClass };
   };
 
@@ -219,13 +226,13 @@ export default function FeeInformationSection({
         <div className="size-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
           <Icon name="file-invoice-dollar" style="solid" className="size-4 text-white" />
         </div>
-        <h3 className="text-base font-semibold text-gray-800">Fee Information</h3>
+        <h3 className="text-base font-semibold text-gray-800">{t('fee.sectionTitle')}</h3>
       </div>
 
       {/* Fee Type Dropdown */}
       <Dropdown
         name="feePaymentType"
-        label="Fee Payment Type"
+        label={t('fee.feePaymentTypeLabel')}
         required
         group="FeePaymentMethod"
         value={feePaymentType || ''}
@@ -237,10 +244,10 @@ export default function FeeInformationSection({
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         {/* Table Header - Hidden on mobile */}
         <div className="hidden md:grid bg-white border-b border-gray-200 grid-cols-[120px_1fr_100px_60px] gap-2 px-4 py-3">
-          <span className="text-xs text-gray-500">Type</span>
-          <span className="text-xs text-gray-500">Description</span>
-          <span className="text-xs text-gray-500 text-right">Amount</span>
-          <span className="text-xs text-gray-500 text-center">Actions</span>
+          <span className="text-xs text-gray-500">{t('fee.columns.type')}</span>
+          <span className="text-xs text-gray-500">{t('fee.columns.description')}</span>
+          <span className="text-xs text-gray-500 text-right">{t('fee.columns.amount')}</span>
+          <span className="text-xs text-gray-500 text-center">{t('fee.columns.actions')}</span>
         </div>
 
         {/* Empty State */}
@@ -255,8 +262,8 @@ export default function FeeInformationSection({
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">No fees added yet</p>
-            <p className="text-xs text-gray-400">Add your first fee to get started</p>
+            <p className="text-sm text-gray-600 mb-1">{t('fee.empty')}</p>
+            <p className="text-xs text-gray-400">{t('fee.emptyHint')}</p>
           </div>
         )}
 
@@ -297,8 +304,8 @@ export default function FeeInformationSection({
                         type="button"
                         onClick={() => openEditModal(index)}
                         className="text-gray-400 hover:text-secondary transition-colors p-1"
-                        aria-label={`Edit fee: ${item.feeDescription}`}
-                        title="Edit fee"
+                        aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
+                        title={t('fee.aria.editFeeTitle')}
                       >
                         <Icon name="pen" style="regular" className="w-4 h-4" />
                       </button>
@@ -306,8 +313,8 @@ export default function FeeInformationSection({
                         type="button"
                         onClick={() => setDeletingFeeIndex(index)}
                         className="text-gray-400 hover:text-danger transition-colors p-1"
-                        aria-label={`Delete fee: ${item.feeDescription}`}
-                        title="Delete fee"
+                        aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
+                        title={t('fee.aria.deleteFeeTitle')}
                       >
                         <Icon name="trash" style="regular" className="w-4 h-4" />
                       </button>
@@ -319,9 +326,11 @@ export default function FeeInformationSection({
                           {onApproveFeeItem && (
                             <button
                               type="button"
-                              onClick={() => onApproveFeeItem(item.appraisalFeeId, item.id)}
+                              onClick={() =>
+                                onApproveFeeItem(item.appraisalFeeId ?? '', item.id ?? '')
+                              }
                               className="text-success hover:text-success/80 transition-colors p-1"
-                              title="Approve"
+                              title={t('fee.aria.approveFee')}
                             >
                               <Icon name="check" style="solid" className="w-4 h-4" />
                             </button>
@@ -329,9 +338,11 @@ export default function FeeInformationSection({
                           {onRejectFeeItem && (
                             <button
                               type="button"
-                              onClick={() => onRejectFeeItem(item.appraisalFeeId, item.id, '')}
+                              onClick={() =>
+                                onRejectFeeItem(item.appraisalFeeId ?? '', item.id ?? '', '')
+                              }
                               className="text-danger hover:text-danger/80 transition-colors p-1"
-                              title="Reject"
+                              title={t('fee.aria.rejectFee')}
                             >
                               <Icon name="xmark" style="solid" className="w-4 h-4" />
                             </button>
@@ -365,7 +376,7 @@ export default function FeeInformationSection({
                           type="button"
                           onClick={() => openEditModal(index)}
                           className="text-gray-400 hover:text-secondary transition-colors p-1"
-                          aria-label={`Edit fee: ${item.feeDescription}`}
+                          aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                         >
                           <Icon name="pen" style="regular" className="w-4 h-4" />
                         </button>
@@ -373,7 +384,7 @@ export default function FeeInformationSection({
                           type="button"
                           onClick={() => setDeletingFeeIndex(index)}
                           className="text-gray-400 hover:text-danger transition-colors p-1"
-                          aria-label={`Delete fee: ${item.feeDescription}`}
+                          aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                         >
                           <Icon name="trash" style="regular" className="w-4 h-4" />
                         </button>
@@ -399,24 +410,21 @@ export default function FeeInformationSection({
               className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
             >
               <Icon name="circle-plus" style="solid" className="w-5 h-5" />
-              <span className="text-sm font-medium">Add additional fee</span>
+              <span className="text-sm font-medium">{t('fee.addFee')}</span>
             </button>
           </div>
         )}
 
         {/* Summary Rows */}
         <div className="bg-gray-100 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">
-          <span className="text-sm font-medium text-gray-800">Subtotal</span>
+          <span className="text-sm font-medium text-gray-800">{t('fee.subtotal')}</span>
           <span className="text-sm text-gray-600 text-right">{formatCurrency(subtotal)}</span>
           <span className="hidden md:block" />
         </div>
         <div className="bg-gray-100 border-b border-gray-200 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">
           <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
-            VAT ({vatRate}%)
-            <span
-              className="text-gray-400 cursor-help"
-              title="Value Added Tax calculated on subtotal"
-            >
+            {t('fee.vat', { rate: vatRate })}
+            <span className="text-gray-400 cursor-help" title={t('fee.vatTooltip')}>
               <Icon name="circle-info" style="regular" className="w-3.5 h-3.5" />
             </span>
           </span>
@@ -424,7 +432,7 @@ export default function FeeInformationSection({
           <span className="hidden md:block" />
         </div>
         <div className="bg-emerald-50 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-3 items-center">
-          <span className="text-sm font-semibold text-emerald-800">Total</span>
+          <span className="text-sm font-semibold text-emerald-800">{t('fee.total')}</span>
           <span className="text-base font-bold text-emerald-700 text-right">
             {formatCurrency(total)}
           </span>
@@ -437,7 +445,7 @@ export default function FeeInformationSection({
         <div className="border border-amber-200 bg-amber-50/40 rounded-lg p-4">
           <NumberInput
             name="constructionInspectionFee"
-            label="Construction Inspection Fee"
+            label={t('fee.constructionInspectionFee')}
             decimalPlaces={2}
             min={0}
             value={ciFeeDraft}
@@ -446,10 +454,7 @@ export default function FeeInformationSection({
             disabled={readOnly || isConstructionInspectionFeeUpdating}
             placeholder="0.00"
           />
-          <p className="mt-2 text-xs text-gray-500">
-            This fee is reused as the appraisal fee on the next Construction Inspection application
-            for this collateral.
-          </p>
+          <p className="mt-2 text-xs text-gray-500">{t('fee.constructionInspectionFeeHint')}</p>
         </div>
       )}
 
@@ -471,9 +476,9 @@ export default function FeeInformationSection({
         isOpen={deletingFeeIndex !== null}
         onClose={() => setDeletingFeeIndex(null)}
         onConfirm={handleDeleteFee}
-        title="Delete Fee"
-        message={`Are you sure you want to delete ${getDeletingFeeDescription()}? This action cannot be undone.`}
-        confirmText="Delete"
+        title={t('fee.deleteFeeDialog.title')}
+        message={t('fee.deleteFeeDialog.message', { description: getDeletingFeeDescription() })}
+        confirmText={t('fee.deleteFeeDialog.confirm')}
         variant="danger"
       />
     </div>

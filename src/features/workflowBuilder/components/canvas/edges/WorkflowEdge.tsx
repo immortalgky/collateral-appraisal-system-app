@@ -1,10 +1,5 @@
 import { useState } from 'react';
-import {
-  getBezierPath,
-  EdgeLabelRenderer,
-  useReactFlow,
-  type EdgeProps,
-} from '@xyflow/react';
+import { getBezierPath, EdgeLabelRenderer, useReactFlow, type EdgeProps } from '@xyflow/react';
 import type { TransitionType } from '../../../types';
 
 interface WorkflowEdgeData {
@@ -58,7 +53,7 @@ export function WorkflowEdge({
   const isActive = hovered || selected;
 
   const handleDelete = () => {
-    setEdges((eds) => eds.filter((e) => e.id !== id));
+    setEdges(eds => eds.filter(e => e.id !== id));
   };
 
   return (
@@ -100,9 +95,7 @@ export function WorkflowEdge({
         markerEnd={markerEnd as string}
         style={{
           transition: 'stroke-width 150ms ease-out',
-          ...(style.animated
-            ? { animation: 'dashdraw 0.6s linear infinite' }
-            : {}),
+          ...(style.animated ? { animation: 'dashdraw 0.6s linear infinite' } : {}),
         }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}

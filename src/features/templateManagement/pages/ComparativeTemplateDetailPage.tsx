@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import SectionHeader from '@shared/components/sections/SectionHeader';
@@ -17,10 +18,14 @@ import {
 } from '../api/comparativeTemplate';
 import { templateMgmtKeys } from '../api/queryKeys';
 import { useGetFactors } from '../api/marketComparableFactor';
-import type { TemplateDtoType, GetComparativeAnalysisTemplateByIdResponseType } from '@/shared/schemas/v1';
+import type {
+  TemplateDtoType,
+  GetComparativeAnalysisTemplateByIdResponseType,
+} from '@/shared/schemas/v1';
 import axios from '@shared/api/axiosInstance';
 
 const ComparativeTemplateDetailPage = () => {
+  const { t } = useTranslation(['templateManagement', 'common']);
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -54,7 +59,7 @@ const ComparativeTemplateDetailPage = () => {
 
   const handleSave = () => {
     if (!form.templateCode || !form.templateName || !form.propertyType) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('templateForm.validation.requiredFields'));
       return;
     }
 
@@ -67,31 +72,33 @@ const ComparativeTemplateDetailPage = () => {
           isActive: null,
         },
         {
-          onSuccess: () => toast.success('Template updated successfully'),
-          onError: () => toast.error('Failed to update template'),
+          onSuccess: () => toast.success(t('toasts.templateUpdated')),
+          onError: () => toast.error(t('toasts.templateUpdateFailed')),
         },
       );
     } else {
       createMutation.mutate(form, {
         onSuccess: async data => {
-          toast.success('Template created successfully');
+          toast.success(t('toasts.templateCreated'));
           const id = data.templateId;
           const isEmptyGuid = !id || id === '00000000-0000-0000-0000-000000000000';
           if (isEmptyGuid) {
             const { data: listData } = await axios.get('/comparative-analysis-templates');
             const templates: TemplateDtoType[] = listData.templates ?? [];
-            const match = templates.find(t => t.templateCode === form.templateCode);
+            const match = templates.find(tpl => tpl.templateCode === form.templateCode);
             navigate(`/comparative-templates/${match?.id ?? ''}`, { replace: true });
           } else {
             navigate(`/comparative-templates/${id}`, { replace: true });
           }
         },
-        onError: () => toast.error('Failed to create template'),
+        onError: () => toast.error(t('toasts.templateCreateFailed')),
       });
     }
   };
 
-  const handleAddFactors = (selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[]) => {
+  const handleAddFactors = (
+    selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[],
+  ) => {
     if (!templateId) return;
     const baseSequence = (templateDetail?.comparativeFactors?.length ?? 0) + 1;
     let completed = 0;
@@ -110,9 +117,9 @@ const ComparativeTemplateDetailPage = () => {
         {
           onSuccess: () => {
             completed++;
-            if (completed === total) toast.success(`${total} factor(s) added`);
+            if (completed === total) toast.success(t('toasts.factorsAdded', { n: total }));
           },
-          onError: () => toast.error('Failed to add factor'),
+          onError: () => toast.error(t('toasts.factorAddFailed')),
         },
       );
     });
@@ -137,12 +144,12 @@ const ComparativeTemplateDetailPage = () => {
               defaultIntensity: existing.defaultIntensity ?? null,
             },
             {
-              onSuccess: () => toast.success('Mandatory updated'),
-              onError: () => toast.error('Failed to update mandatory'),
+              onSuccess: () => toast.success(t('toasts.mandatoryUpdated')),
+              onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
             },
           );
         },
-        onError: () => toast.error('Failed to update mandatory'),
+        onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
       },
     );
   };
@@ -166,17 +173,21 @@ const ComparativeTemplateDetailPage = () => {
               defaultIntensity: existing.defaultIntensity ?? null,
             },
             {
-              onSuccess: () => toast.success('Calculation factor updated'),
-              onError: () => toast.error('Failed to update calculation factor'),
+              onSuccess: () => toast.success(t('toasts.calculationUpdated')),
+              onError: () => toast.error(t('toasts.calculationUpdateFailed')),
             },
           );
         },
-        onError: () => toast.error('Failed to update calculation factor'),
+        onError: () => toast.error(t('toasts.calculationUpdateFailed')),
       },
     );
   };
 
-  const handleUpdateDefaults = (factorId: string, defaultWeight: number | null, defaultIntensity: number | null) => {
+  const handleUpdateDefaults = (
+    factorId: string,
+    defaultWeight: number | null,
+    defaultIntensity: number | null,
+  ) => {
     if (!templateId) return;
     const existing = templateDetail?.comparativeFactors?.find(f => f.factorId === factorId);
     if (!existing) return;
@@ -195,12 +206,12 @@ const ComparativeTemplateDetailPage = () => {
               defaultIntensity,
             },
             {
-              onSuccess: () => toast.success('Default values updated'),
-              onError: () => toast.error('Failed to update default values'),
+              onSuccess: () => toast.success(t('toasts.defaultValuesUpdated')),
+              onError: () => toast.error(t('toasts.defaultValuesUpdateFailed')),
             },
           );
         },
-        onError: () => toast.error('Failed to update default values'),
+        onError: () => toast.error(t('toasts.defaultValuesUpdateFailed')),
       },
     );
   };
@@ -209,12 +220,12 @@ const ComparativeTemplateDetailPage = () => {
     if (!templateId) return;
     queryClient.setQueryData<GetComparativeAnalysisTemplateByIdResponseType>(
       templateMgmtKeys.compTemplateDetail(templateId),
-      (old) => {
+      old => {
         if (!old) return old;
         return {
           ...old,
-          comparativeFactors: reorderedFactors.map((f) => {
-            const original = old.comparativeFactors.find((o) => o.factorId === f.factorId);
+          comparativeFactors: reorderedFactors.map(f => {
+            const original = old.comparativeFactors.find(o => o.factorId === f.factorId);
             return original ? { ...original, displaySequence: f.displaySequence } : original!;
           }),
         };
@@ -227,8 +238,8 @@ const ComparativeTemplateDetailPage = () => {
     removeFactorMutation.mutate(
       { templateId, factorId },
       {
-        onSuccess: () => toast.success('Factor removed'),
-        onError: () => toast.error('Failed to remove factor'),
+        onSuccess: () => toast.success(t('toasts.factorRemoved')),
+        onError: () => toast.error(t('toasts.factorRemoveFailed')),
       },
     );
   };
@@ -248,17 +259,16 @@ const ComparativeTemplateDetailPage = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/comparative-templates')}
+          aria-label={t('common:actions.back')}
           className="text-gray-400 hover:text-gray-600 transition-colors"
         >
           <Icon name="chevron-left" style="solid" className="size-5" />
         </button>
         <SectionHeader
           title={
-            isEditMode
-              ? 'Edit Comparative Analysis Template'
-              : 'Create Comparative Analysis Template'
+            isEditMode ? t('templateDetail.compEditTitle') : t('templateDetail.compCreateTitle')
           }
-          subtitle={isEditMode ? templateDetail?.templateCode : 'Fill in the template details'}
+          subtitle={isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
           icon="chart-mixed"
           iconColor="orange"
           className="mb-0"
@@ -270,10 +280,10 @@ const ComparativeTemplateDetailPage = () => {
 
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="ghost" size="sm" onClick={() => navigate('/comparative-templates')}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSave}>
-            {isEditMode ? 'Update' : 'Create'}
+            {isEditMode ? t('common:actions.save') : t('common:actions.create')}
           </Button>
         </div>
       </div>

@@ -3,8 +3,12 @@
  *
  * These validate user input on the client. The corresponding wire types
  * (e.g. `CreateMeetingRequest`) live in `../api/types.ts`.
+ *
+ * All message strings are resolved through a `TFunction` factory so the
+ * validation messages honour the active locale.
  */
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 
 // ==================== Shared sub-schemas ====================
 
@@ -19,125 +23,220 @@ const POSITION_VALUES = [
   'Member',
 ] as const;
 
-const titleField = z
-  .string()
-  .trim()
-  .min(1, 'Title is required')
-  .max(200, 'Title must be 200 characters or fewer');
+// ==================== Schema factories ====================
 
-const locationField = z
-  .string()
-  .trim()
-  .max(200, 'Location must be 200 characters or fewer')
-  .optional()
-  .or(z.literal(''));
+import type { TFunction } from 'i18next';
 
-const buildFromToField = () =>
-  z.string().trim().max(200, 'Must be 200 characters or fewer').optional().or(z.literal(''));
+export const makeMeetingSchemas = (t: TFunction<'meeting'>) => {
+  const titleField = z
+    .string()
+    .trim()
+    .min(1, t('validation.titleRequired'))
+    .max(200, t('validation.titleMax'));
 
-const startAtField = z
-  .string()
-  .datetime({ local: true, offset: true, message: 'Start date is required' });
-const endAtField = z
-  .string()
-  .datetime({ local: true, offset: true, message: 'End date is required' });
+  const locationField = z
+    .string()
+    .trim()
+    .max(200, t('validation.locationMax'))
+    .optional()
+    .or(z.literal(''));
 
-// ==================== Meeting form schemas (split create vs update) ====================
+  const buildFromToField = () =>
+    z.string().trim().max(200, t('validation.fromToMax')).optional().or(z.literal(''));
 
-/**
- * Used by the Create Meeting dialog.
- * Members are added manually after creation — no committeeId required.
- */
-export const createMeetingFormSchema = z
-  .object({
-    startAt: startAtField,
-    endAt: endAtField,
-  })
-  .refine(data => new Date(data.endAt) > new Date(data.startAt), {
-    message: 'End must be after start',
-    path: ['endAt'],
+  const startAtField = z
+    .string()
+    .datetime({ local: true, offset: true, message: t('validation.startRequired') });
+  const endAtField = z
+    .string()
+    .datetime({ local: true, offset: true, message: t('validation.endRequired') });
+
+  const createMeetingFormSchema = z
+    .object({
+      startAt: startAtField,
+      endAt: endAtField,
+    })
+    .refine(data => new Date(data.endAt) > new Date(data.startAt), {
+      message: t('validation.endAfterStart'),
+      path: ['endAt'],
+    });
+
+  const updateMeetingFormSchema = z
+    .object({
+      title: titleField,
+      location: locationField,
+      fromText: buildFromToField(),
+      toText: buildFromToField(),
+      startAt: startAtField,
+      endAt: endAtField,
+    })
+    .refine(data => new Date(data.endAt) > new Date(data.startAt), {
+      message: t('validation.endAfterStart'),
+      path: ['endAt'],
+    });
+
+  const bulkCreateMeetingsSchema = z.object({
+    dates: z
+      .array(z.string().datetime({ local: true, offset: true }))
+      .min(1, t('validation.pickAtLeastOneDate')),
+    defaultTitle: z.string().max(200).optional(),
   });
 
+  const cancelMeetingSchema = z.object({
+    reason: z
+      .string()
+      .trim()
+      .min(1, t('validation.reasonRequired'))
+      .max(500, t('validation.reasonMax')),
+  });
+
+  const routeBackSchema = z.object({
+    reason: z
+      .string()
+      .trim()
+      .min(1, t('validation.reasonRequired'))
+      .max(500, t('validation.reasonMax')),
+  });
+
+  const memberFormSchema = z.object({
+    userId: z.string().min(1).max(100),
+    memberName: z.string().min(1).max(200),
+    position: z.enum(POSITION_VALUES),
+  });
+
+  const updateMemberPositionSchema = z.object({
+    position: z.enum(POSITION_VALUES),
+  });
+
+  const updateAgendaSchema = z.object({
+    agendaCertifyMinutes: z.string().max(2000).nullable().optional(),
+    agendaChairmanInformed: z.string().max(2000).nullable().optional(),
+    agendaOthers: z.string().max(2000).nullable().optional(),
+  });
+
+  return {
+    createMeetingFormSchema,
+    updateMeetingFormSchema,
+    bulkCreateMeetingsSchema,
+    cancelMeetingSchema,
+    routeBackSchema,
+    memberFormSchema,
+    updateMemberPositionSchema,
+    updateAgendaSchema,
+  };
+};
+
+// ==================== Static (type-only) schemas — used for infer ====================
+// These provide stable TypeScript types without requiring a TFunction.
+
+const _titleField = z.string().trim().min(1).max(200);
+const _locationField = z.string().trim().max(200).optional().or(z.literal(''));
+const _fromToField = z.string().trim().max(200).optional().or(z.literal(''));
+const _startAtField = z.string().datetime({ local: true, offset: true });
+const _endAtField = z.string().datetime({ local: true, offset: true });
+
+export const createMeetingFormSchema = z.object({
+  startAt: _startAtField,
+  endAt: _endAtField,
+});
 export type CreateMeetingFormValues = z.infer<typeof createMeetingFormSchema>;
 
-/**
- * Used by the Edit/Update Meeting dialog.
- * `committeeId` is omitted — the committee snapshot is fixed at creation.
- */
-export const updateMeetingFormSchema = z
-  .object({
-    title: titleField,
-    location: locationField,
-    fromText: buildFromToField(),
-    toText: buildFromToField(),
-    startAt: startAtField,
-    endAt: endAtField,
-  })
-  .refine(data => new Date(data.endAt) > new Date(data.startAt), {
-    message: 'End must be after start',
-    path: ['endAt'],
-  });
-
+export const updateMeetingFormSchema = z.object({
+  title: _titleField,
+  location: _locationField,
+  fromText: _fromToField,
+  toText: _fromToField,
+  startAt: _startAtField,
+  endAt: _endAtField,
+});
 export type UpdateMeetingFormValues = z.infer<typeof updateMeetingFormSchema>;
 
-// ==================== Bulk create ====================
-
 export const bulkCreateMeetingsSchema = z.object({
-  dates: z
-    .array(z.string().datetime({ local: true, offset: true }))
-    .min(1, 'Pick at least one date'),
+  dates: z.array(z.string().datetime({ local: true, offset: true })).min(1),
   defaultTitle: z.string().max(200).optional(),
 });
-
 export type BulkCreateMeetingsFormValues = z.infer<typeof bulkCreateMeetingsSchema>;
 
-// ==================== Cancel ====================
-
-/** Cancel a meeting — reason is now required. */
 export const cancelMeetingSchema = z.object({
-  reason: z
-    .string()
-    .trim()
-    .min(1, 'Reason is required')
-    .max(500, 'Reason must be 500 characters or fewer'),
+  reason: z.string().trim().min(1).max(500),
 });
-
 export type CancelMeetingFormValues = z.infer<typeof cancelMeetingSchema>;
 
-// ==================== Secretary actions ====================
-
 export const routeBackSchema = z.object({
-  reason: z
-    .string()
-    .trim()
-    .min(1, 'Reason is required')
-    .max(500, 'Reason must be 500 characters or fewer'),
+  reason: z.string().trim().min(1).max(500),
 });
-
 export type RouteBackFormValues = z.infer<typeof routeBackSchema>;
-
-// ==================== Members ====================
 
 export const memberFormSchema = z.object({
   userId: z.string().min(1).max(100),
   memberName: z.string().min(1).max(200),
-  position: z.enum(POSITION_VALUES),
+  position: z.enum([
+    'Chairman',
+    'Director',
+    'Secretary',
+    'UW',
+    'Risk',
+    'Appraisal',
+    'Credit',
+    'Member',
+  ] as const),
 });
-
 export type MemberFormValues = z.infer<typeof memberFormSchema>;
 
 export const updateMemberPositionSchema = z.object({
-  position: z.enum(POSITION_VALUES),
+  position: z.enum([
+    'Chairman',
+    'Director',
+    'Secretary',
+    'UW',
+    'Risk',
+    'Appraisal',
+    'Credit',
+    'Member',
+  ] as const),
 });
-
 export type UpdateMemberPositionFormValues = z.infer<typeof updateMemberPositionSchema>;
-
-// ==================== Agenda ====================
 
 export const updateAgendaSchema = z.object({
   agendaCertifyMinutes: z.string().max(2000).nullable().optional(),
   agendaChairmanInformed: z.string().max(2000).nullable().optional(),
   agendaOthers: z.string().max(2000).nullable().optional(),
 });
-
 export type UpdateAgendaFormValues = z.infer<typeof updateAgendaSchema>;
+
+// ==================== Convenience hooks ====================
+
+export const useCreateMeetingSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).createMeetingFormSchema;
+};
+
+export const useUpdateMeetingSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).updateMeetingFormSchema;
+};
+
+export const useCancelMeetingSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).cancelMeetingSchema;
+};
+
+export const useRouteBackSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).routeBackSchema;
+};
+
+export const useMemberFormSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).memberFormSchema;
+};
+
+export const useUpdateAgendaSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).updateAgendaSchema;
+};
+
+export const useBulkCreateMeetingsSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).bulkCreateMeetingsSchema;
+};

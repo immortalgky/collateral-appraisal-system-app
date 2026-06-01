@@ -24,13 +24,6 @@ const TABLE_SKELETON_COLUMNS = [
   { width: 'w-20' },
 ];
 
-const STATUS_OPTIONS: { value: WebhookDeliveryStatus | ''; label: string }[] = [
-  { value: '', label: 'All statuses' },
-  { value: 'Pending', label: 'Pending' },
-  { value: 'Delivered', label: 'Delivered' },
-  { value: 'Failed', label: 'Failed' },
-];
-
 const statusBadgeClass: Record<WebhookDeliveryStatus, string> = {
   Pending: 'bg-amber-50 text-amber-700',
   Delivered: 'bg-emerald-50 text-emerald-700',
@@ -39,6 +32,13 @@ const statusBadgeClass: Record<WebhookDeliveryStatus, string> = {
 
 const WebhookDeliveryListPage = () => {
   const { t } = useTranslation('webhookAdmin');
+
+  const statusOptions: { value: WebhookDeliveryStatus | ''; label: string }[] = [
+    { value: '', label: t('filters.allStatuses') },
+    { value: 'Pending', label: t('status.Pending') },
+    { value: 'Delivered', label: t('status.Delivered') },
+    { value: 'Failed', label: t('status.Failed') },
+  ];
 
   // ─── Filter state ───────────────────────────────────────────────────────────
   const [eventTypeInput, setEventTypeInput] = useState('');
@@ -124,7 +124,7 @@ const WebhookDeliveryListPage = () => {
             onChange={e => setStatus(e.target.value as WebhookDeliveryStatus | '')}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
           >
-            {STATUS_OPTIONS.map(opt => (
+            {statusOptions.map(opt => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
@@ -207,7 +207,7 @@ const WebhookDeliveryListPage = () => {
               ) : isError ? (
                 <tr>
                   <td colSpan={8} className="py-4">
-                    <DataErrorState variant="inline" title="Failed to load webhook deliveries" onRetry={refetch} />
+                    <DataErrorState variant="inline" title={t('loadFailed')} onRetry={refetch} />
                   </td>
                 </tr>
               ) : deliveries.length === 0 ? (
@@ -226,12 +226,8 @@ const WebhookDeliveryListPage = () => {
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {new Date(delivery.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">
-                      {delivery.eventType}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {delivery.systemCode}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900">{delivery.eventType}</td>
+                    <td className="px-4 py-3 text-gray-600">{delivery.systemCode}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass[delivery.status]}`}

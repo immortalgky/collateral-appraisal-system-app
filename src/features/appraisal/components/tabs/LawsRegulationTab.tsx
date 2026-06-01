@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import FormCard from '@shared/components/sections/FormCard';
@@ -43,9 +44,7 @@ const ItemRow = ({ item, onClick, onDelete, readOnly }: ItemRowProps) => {
         <p className="text-sm font-medium text-gray-900">
           <ItemHeaderLabel headerCode={item.headerCode} />
         </p>
-        {item.remark && (
-          <p className="text-xs text-gray-500 line-clamp-1">{item.remark}</p>
-        )}
+        {item.remark && <p className="text-xs text-gray-500 line-clamp-1">{item.remark}</p>}
       </div>
 
       {/* Delete button (visible on hover) */}
@@ -74,6 +73,7 @@ const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'proper
 
 export const LawsRegulationTab = () => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
   const location = useLocation();
@@ -120,11 +120,11 @@ export const LawsRegulationTab = () => {
       },
       {
         onSuccess: () => {
-          toast.success('Item deleted successfully');
+          toast.success(t('lawsRegulations.toasts.deleted'));
           setDeleteTarget(null);
         },
         onError: () => {
-          toast.error('Failed to delete item');
+          toast.error(t('lawsRegulations.toasts.deleteFailed'));
           setDeleteTarget(null);
         },
       },

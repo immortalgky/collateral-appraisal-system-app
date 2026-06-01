@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -31,6 +32,7 @@ export default function AddFeeModal({
   isEditing = false,
   readOnly = false,
 }: AddFeeModalProps) {
+  const { t } = useTranslation(['appraisal', 'common']);
   const {
     register,
     handleSubmit,
@@ -72,7 +74,7 @@ export default function AddFeeModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isEditing ? 'Edit Fee' : 'Add Fee'}
+      title={isEditing ? t('fee.addFeeModal.titleEdit') : t('fee.addFeeModal.titleAdd')}
       size="md"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
@@ -81,9 +83,9 @@ export default function AddFeeModal({
 
         {/* Description */}
         <TextInput
-          label="Description"
+          label={t('fee.addFeeModal.descriptionLabel')}
           required
-          placeholder="Enter fee description"
+          placeholder={t('fee.addFeeModal.descriptionLabel')}
           {...register('description')}
           error={errors.description?.message}
           disabled={readOnly}
@@ -91,7 +93,7 @@ export default function AddFeeModal({
 
         {/* Amount */}
         <NumberInput
-          label="Amount"
+          label={t('fee.addFeeModal.amountLabel')}
           required
           maxIntegerDigits={15}
           decimalPlaces={2}
@@ -105,11 +107,11 @@ export default function AddFeeModal({
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Button type="button" variant="ghost" onClick={handleClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           {!readOnly && (
             <Button type="submit" variant="primary" isLoading={isSubmitting}>
-              {isEditing ? 'Update' : 'Add'}
+              {isEditing ? t('common:actions.save') : t('common:actions.add')}
             </Button>
           )}
         </div>

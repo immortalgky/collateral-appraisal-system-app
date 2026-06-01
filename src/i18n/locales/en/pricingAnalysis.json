@@ -1,0 +1,313 @@
+{
+  "page": {
+    "title": "Pricing Analysis",
+    "back": "Back",
+    "noAnalysisAvailable": "No pricing analysis available",
+    "failedToCreate": "Failed to create pricing analysis",
+    "creating": "Creating pricing analysis...",
+    "retry": "Retry",
+    "tabs": {
+      "properties": "Properties",
+      "model": "Model",
+      "markets": "Markets"
+    }
+  },
+  "confirm": {
+    "changeCalculationTitle": "Change Calculation Mode",
+    "changeCalculationMessage": "Switch to {{mode}} calculation? This will affect existing results.",
+    "confirmText": "Confirm",
+    "deselectMethod": "Are you sure? If you confirm the appraisal value of this method will be removed.",
+    "resetMethod": "Are you sure you want to reset this method? All calculation data will be cleared.",
+    "resetAnalysis": "Reset this analysis? All data including uploads, cost items, and summary will be permanently deleted."
+  },
+  "accordion": {
+    "group": "Group:",
+    "items": "{{count}} item(s)",
+    "noProperties": "No properties in this group",
+    "loadingModel": "Loading model data..."
+  },
+  "calculationMode": {
+    "manual": "Manual Entry",
+    "system": "System Calculation",
+    "manualDesc": "Enter appraisal values directly for each method",
+    "systemDesc": "System auto-calculates appraisal values",
+    "manualToggle": "Manual",
+    "systemToggle": "System"
+  },
+  "approaches": {
+    "title": "Approaches & Methods",
+    "editing": "Editing Approaches & Methods",
+    "editButton": "Edit Approaches",
+    "doneButton": "Done",
+    "addMethod": "Add Method",
+    "deleteMethod": "Delete Method",
+    "deleteHasData": "This method has calculated data. Deleting will permanently remove all results.",
+    "deleteConfirm": "Are you sure you want to delete this method?",
+    "manualUploadPdf": "Upload PDF",
+    "manualUploadClick": "Click to upload PDF",
+    "manualRemark": "Remark",
+    "manualRemarkPlaceholder": "Add any remarks or notes for this manual appraisal...",
+    "openPdf": "Open PDF"
+  },
+  "methodStatus": {
+    "calculated": "Calculated",
+    "pending": "Pending",
+    "notIncluded": "Not included"
+  },
+  "toasts": {
+    "saved": "Saved!",
+    "valueSaved": "Value saved",
+    "valueFailed": "Failed to save value",
+    "changed": "Changed",
+    "failedSave": "Failed to save comparative analysis",
+    "failedReset": "Failed to reset method",
+    "resetSuccess": "Method reset successfully",
+    "failedLoad": "Failed to load",
+    "analysisCreated": "Analysis created",
+    "analysisFailed": "Failed to create analysis",
+    "analysisSaved": "Saved!",
+    "analysisReset": "Analysis reset",
+    "analysisResetFailed": "Failed to reset analysis",
+    "missingIds": "Pricing analysis ID or method ID not found!",
+    "saveFailed": "Failed to save",
+    "loadMachineFailed": "Failed to load machine cost items",
+    "loadLeaseholdFailed": "Failed to load leasehold analysis",
+    "selectionSaved": "Selection saved",
+    "calculateFirst": "Please calculate appraisal value.",
+    "methodNotSelected": "Method does not select",
+    "methodAdded": "Method added",
+    "methodDeleted": "Method deleted",
+    "saveSelectionFirst": "Save selection first to generate method and approach IDs before calculation.",
+    "uploadXlsxOnly": "Only .xlsx files are accepted",
+    "uploadMaxSize": "File must be ≤ 5 MB",
+    "uploadFailed": "Upload failed",
+    "uploadDeleted": "Upload deleted",
+    "deleteFailed": "Delete failed"
+  },
+  "footer": {
+    "cancel": "Cancel",
+    "reset": "Reset",
+    "save": "Save"
+  },
+  "template": {
+    "sectionTitle": "Pricing Analysis Template",
+    "collateralType": "Collateral Type",
+    "template": "Template",
+    "generate": "Generate"
+  },
+  "wqs": {
+    "methodName": "Weighted Quality Scores (WQS)"
+  },
+  "directComparison": {
+    "methodName": "Direct Comparison"
+  },
+  "saleAdjustmentGrid": {
+    "methodName": "Sale Adjustment Grid"
+  },
+  "leasehold": {
+    "title": "Leasehold Analysis",
+    "appraisalDate": "Appraisal Date",
+    "leaseStart": "Lease Start",
+    "leaseEnd": "Lease End",
+    "rentalInformation": "Rental Information",
+    "viewRental": "View",
+    "landArea": "Land Area",
+    "partialUsage": "Partial Usage",
+    "leaseLandArea": "Lease Land Area",
+    "totalLeaseLandArea": "Total Lease Land Area",
+    "landValue": "Land Value",
+    "totalLandValue": "Total Land Value",
+    "landValueGrowthRate": "Land Value Growth Rate",
+    "rate": "Rate",
+    "interval": "Interval",
+    "every": "Every",
+    "addPeriods": "Add Periods",
+    "fromYear": "From Year",
+    "toYear": "To Year",
+    "growthRatePercent": "Growth Rate (%)",
+    "constructionCostIndex": "Construction Cost Index",
+    "buildingCalcStart": "Building Calc Start",
+    "depreciationRate": "Depreciation Rate",
+    "discountedRate": "Discounted Rate",
+    "totalIncome": "Total Income",
+    "valueAtExpiry": "Value at Expiry",
+    "finalValue": "Final Value",
+    "estimatePriceFromPv": "Estimate Price (from PV)",
+    "landPriceNotCovered": "Land price of the area not covered by the lease agreement",
+    "appraisalPriceWithPartialLand": "Appraisal Price w/ Partial Land",
+    "appraisalPrice": "Appraisal Price",
+    "units": {
+      "sqWa": "Sq. Wa",
+      "sqWaShort": "Sq.Wa",
+      "rai": "Rai",
+      "ngan": "Ngan",
+      "bahtPerSqWa": "Baht/Sq.Wa",
+      "baht": "Baht",
+      "percent": "%",
+      "percentEvery": "% every",
+      "years": "year(s)",
+      "yr": "yr"
+    },
+    "growthTypes": {
+      "frequency": "Frequency",
+      "period": "Period"
+    },
+    "toggle": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "table": {
+      "year": "Year",
+      "detail": "Detail",
+      "landValue": "Land Value",
+      "landGrowthPercent": "Land Growth (%)",
+      "buildingValue": "Building Value",
+      "depreciationAmount": "Depreciation Amount",
+      "depreciationPercent": "Depreciation (%)",
+      "buildingAfterDepreciation": "Building After Depreciation",
+      "totalLandAndBuilding": "Total Land & Building",
+      "rentalIncome": "Rental Income",
+      "pvFactor": "PV Factor",
+      "netCurrentRentalIncome": "Net Current Rental Income",
+      "totalIncomeOverLeaseTerm": "Total Income Over Lease Term",
+      "valueAtLeaseExpiry": "Value at Lease Expiry",
+      "finalValuePv": "Final Value (PV Sum)",
+      "finalValueRounded": "Final Value (Rounded)"
+    }
+  },
+  "costMachine": {
+    "title": "Cost Machine",
+    "loadFailed": "Failed to load machine cost items"
+  },
+  "costBuilding": {
+    "title": "Cost Building"
+  },
+  "hypothesis": {
+    "title": "Hypothesis / Residual Analysis",
+    "chooseTemplate": "Choose a template to start",
+    "generating": "Generating…",
+    "variants": {
+      "landBuilding": "Land & Building",
+      "landBuildingSubtitle": "3 tabs — unit details, cost of building, summary",
+      "condominium": "Condominium",
+      "condominiumSubtitle": "2 tabs — unit details, summary"
+    },
+    "tabs": {
+      "unitDetails": "Unit Details",
+      "costOfBuilding": "Cost of Building",
+      "summary": "Summary"
+    },
+    "toasts": {
+      "analysisCreated": "Analysis created",
+      "analysisFailed": "Failed to create analysis",
+      "saved": "Saved!",
+      "saveFailed": "Failed to save",
+      "analysisReset": "Analysis reset",
+      "analysisResetFailed": "Failed to reset analysis"
+    }
+  },
+  "dcf": {
+    "title": "Discounted Cash Flow",
+    "highestBestUsed": "Highest and Best Used",
+    "assumptions": "Assumptions",
+    "viewSummary": "View Assumption Summary"
+  },
+  "profitRent": {
+    "title": "Profit Rent Analysis"
+  },
+  "comparativeAnalysis": {
+    "title": "Comparative Analysis",
+    "addComparativeData": "Add Comparative Data",
+    "noSurveys": "No comparative surveys selected",
+    "factor": "Factor",
+    "weight": "Weight",
+    "intensity": "Intensity",
+    "score": "Score",
+    "weightedScore": "Weighted Score"
+  },
+  "surveySelection": {
+    "title": "Select Comparative Data",
+    "search": "Search...",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "selected": "{{count}} selected",
+    "subjectCollateral": "Subject Collateral"
+  },
+  "scoring": {
+    "totalWeight": "Total Weight",
+    "totalScore": "Total Score",
+    "collateral": "Collateral",
+    "survey": "Survey"
+  },
+  "finalValue": {
+    "title": "Adjust Final Value",
+    "coefficientOfDecision": "Coefficient of Decision (R²)",
+    "includeLandArea": "Include Land Area",
+    "hasBuildingCost": "Include Building Cost",
+    "landArea": "Land Area",
+    "usableArea": "Usable Area",
+    "finalValueAdjusted": "Final Value (Baht/Area)",
+    "finalValueRounded": "Final Value (Rounded)",
+    "landValue": "Land Value",
+    "buildingCost": "Building Cost",
+    "appraisalPrice": "Appraisal Price",
+    "appraisalPriceRounded": "Appraisal Price (Rounded)",
+    "totalBuildingCost": "Total Building Cost",
+    "appraisalPriceIncludeBuildingCost": "Appraisal Price (incl. Building)",
+    "appraisalPriceIncludeBuildingCostRounded": "Appraisal Price (incl. Building, Rounded)"
+  },
+  "remark": {
+    "title": "Notes & Assumptions",
+    "label": "Remark",
+    "placeholder": "Add any remarks or notes..."
+  },
+  "sensitivity": {
+    "title": "Sensitivity Analysis",
+    "discountRate": "Discount Rate"
+  },
+  "buildingCost": {
+    "propertyName": "Property Name",
+    "rcn": "RCN / Replacement Cost",
+    "lifeSpan": "Life Span (Years)",
+    "conditionFactor": "Condition Factor",
+    "functionalObsolescence": "Functional Obsolescence",
+    "economicObsolescence": "Economic Obsolescence",
+    "fmv": "Fair Market Value",
+    "marketDemand": "Market Demand",
+    "notes": "Notes"
+  },
+  "validation": {
+    "required": "This field is required",
+    "mustBePositive": "Must be a positive number",
+    "mustBeNonNegative": "Must be 0 or greater",
+    "mustBePercentage": "Must be between 0 and 100",
+    "invalidNumber": "Invalid number",
+    "minLength": "Minimum {{min}} characters",
+    "maxLength": "Maximum {{max}} characters",
+    "collateralTypeRequired": "Collateral type is required",
+    "templateRequired": "Template is required",
+    "templateCodeRequired": "Template code is required",
+    "landValueRequired": "Land value is required",
+    "discountRateRequired": "Discount rate is required",
+    "landGrowthRateRequired": "Land growth rate is required",
+    "depreciationRateRequired": "Depreciation rate is required"
+  },
+  "empty": {
+    "noData": "No data available",
+    "noResults": "No results found",
+    "noProperties": "No properties in this group",
+    "noSurveys": "No market surveys available",
+    "noMethods": "No methods selected"
+  },
+  "aria": {
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "toggleAccordion": "Toggle section",
+    "openPdf": "Open PDF"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data",
+    "saveFailed": "Failed to save",
+    "resetFailed": "Failed to reset"
+  }
+}

@@ -130,9 +130,7 @@ const LandBuildingView = ({
 
     <CostItemsTable items={costItems} />
 
-    {summary && (
-      <LandBuildingSummaryBlock summary={summary} />
-    )}
+    {summary && <LandBuildingSummaryBlock summary={summary} />}
 
     {remark && (
       <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{remark}</p>
@@ -197,9 +195,7 @@ const CondominiumView = ({
 
     <CostItemsTable items={costItems} />
 
-    {summary && (
-      <CondominiumSummaryBlock summary={summary} />
-    )}
+    {summary && <CondominiumSummaryBlock summary={summary} />}
 
     {remark && (
       <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{remark}</p>

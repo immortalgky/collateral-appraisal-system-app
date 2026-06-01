@@ -6,8 +6,7 @@ import type { ProjectUnitPrice, ProjectUnitPriceFlagData } from '../types';
 
 export const projectUnitPriceKeys = {
   /** ['appraisal', appraisalId, 'project', 'unit-prices'] */
-  all: (appraisalId: string) =>
-    ['appraisal', appraisalId, 'project', 'unit-prices'] as const,
+  all: (appraisalId: string) => ['appraisal', appraisalId, 'project', 'unit-prices'] as const,
 };
 
 // ==================== Hooks ====================
@@ -40,9 +39,7 @@ export const useCalculateProjectUnitPrices = () => {
 
   return useMutation({
     mutationFn: async (params: { appraisalId: string }): Promise<void> => {
-      await axios.post(
-        `/appraisals/${params.appraisalId}/project/unit-prices/calculate`,
-      );
+      await axios.post(`/appraisals/${params.appraisalId}/project/unit-prices/calculate`);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -67,10 +64,9 @@ export const useSaveProjectUnitPrices = () => {
       appraisalId: string;
       flags: ProjectUnitPriceFlagData[];
     }): Promise<void> => {
-      await axios.put(
-        `/appraisals/${params.appraisalId}/project/unit-prices`,
-        { unitPriceFlags: params.flags },
-      );
+      await axios.put(`/appraisals/${params.appraisalId}/project/unit-prices`, {
+        unitPriceFlags: params.flags,
+      });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

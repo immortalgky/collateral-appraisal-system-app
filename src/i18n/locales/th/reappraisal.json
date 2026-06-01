@@ -1,0 +1,153 @@
+{
+  "page": {
+    "list": {
+      "title": "การประเมินซ้ำตามรอบ (AS400)",
+      "description": "ตรวจสอบและเริ่มคำขอประเมินซ้ำสำหรับหลักประกันที่คัดเลือก"
+    },
+    "detail": {
+      "title": "รายละเอียดผู้สมัคร"
+    }
+  },
+  "reviewType": {
+    "1": "ทบทวนปกติ",
+    "2": "ก่อน Stage 3",
+    "3": "Stage 3"
+  },
+  "columns": {
+    "oldAppraisalReportNumber": "เลขที่รายงานประเมินเดิม",
+    "cifNumber": "เลข CIF",
+    "customerName": "ชื่อลูกค้า",
+    "reviewType": "ประเภทการทบทวน",
+    "remainingDay": "วันที่เหลือ",
+    "appraisalDate": "วันที่ประเมิน",
+    "channel": "ช่องทาง",
+    "status": "สถานะ",
+    "distance": "ระยะทาง (กม.)"
+  },
+  "filter": {
+    "title": "กรอง",
+    "button": "ตัวกรอง",
+    "reviewDateRange": "วันที่ประเมิน",
+    "remainingDays": "วันที่เหลือ",
+    "clearDates": "ล้างวันที่",
+    "clearRange": "ล้างช่วง",
+    "fields": {
+      "customerName": "ชื่อลูกค้า",
+      "oldAppraisalReportNumber": "เลขที่รายงานประเมินเดิม",
+      "cifNumber": "เลข CIF",
+      "collateralId": "รหัสหลักประกัน",
+      "reviewType": "ประเภทการทบทวน"
+    },
+    "placeholders": {
+      "customerName": "กรอกชื่อลูกค้า",
+      "oldAppraisalReportNumber": "กรอกเลขที่รายงาน",
+      "cifNumber": "กรอกเลข CIF",
+      "collateralId": "กรอกรหัสหลักประกัน",
+      "remainingDayFrom": "0",
+      "remainingDayTo": "เช่น 365"
+    },
+    "chips": {
+      "customerName": "ชื่อลูกค้า",
+      "oldAppraisalReportNumber": "เลขที่รายงาน",
+      "cifNumber": "เลข CIF",
+      "collateralId": "รหัสหลักประกัน",
+      "reviewType": "ประเภทการทบทวน",
+      "reviewDateFrom": "วันที่ตั้งแต่",
+      "reviewDateTo": "วันที่ถึง",
+      "remainingDayFrom": "เหลือตั้งแต่",
+      "remainingDayTo": "เหลือถึง"
+    }
+  },
+  "badge": {
+    "used": "ใช้แล้ว",
+    "inProgress": "กำลังดำเนินการ",
+    "pending": "รอดำเนินการ"
+  },
+  "empty": {
+    "noMatching": "ไม่พบรายการที่ตรงกัน",
+    "noCandidates": "ไม่มีรายการ",
+    "tryAdjusting": "ลองปรับตัวกรองของคุณ",
+    "noneAtThisTime": "ขณะนี้ไม่มีรายการประเมินซ้ำ",
+    "clearFilters": "ล้างตัวกรอง"
+  },
+  "error": {
+    "loadFailed": "โหลดรายการประเมินซ้ำไม่สำเร็จ"
+  },
+  "detail": {
+    "blockedTitle": "กำลังดำเนินการอยู่",
+    "backToList": "กลับไปยังรายการ",
+    "error": {
+      "loadFailed": "โหลดรายละเอียดผู้สมัครไม่สำเร็จ",
+      "notFound": "ไม่พบผู้สมัคร"
+    },
+    "banner": {
+      "inProgressTitle": "ผู้สมัครรายนี้กำลังดำเนินการอยู่",
+      "appraisalLabel": "การประเมิน",
+      "groupLabel": "กลุ่ม",
+      "consumed": "ผู้สมัครรายนี้ถูกใช้สร้างคำขอประเมินซ้ำแล้ว"
+    },
+    "fields": {
+      "collateralId": "รหัสหลักประกัน",
+      "collateralName": "ชื่อหลักประกัน",
+      "collateralDescription": "รายละเอียดหลักประกัน",
+      "collateralAddress": "ที่อยู่หลักประกัน",
+      "carCode": "รหัส CAR",
+      "valuationDate": "วันที่ประเมินราคา",
+      "pastDueDate": "วันค้างชำระ",
+      "externalName": "ผู้ประเมินภายนอก",
+      "internalName": "ผู้ประเมินภายใน",
+      "aoCode": "รหัส AO",
+      "aoName": "ชื่อ AO",
+      "sllStatus": "สถานะ SLL",
+      "sllDescription": "รายละเอียด SLL"
+    },
+    "source": {
+      "inSystem": "ในระบบ"
+    },
+    "duration": {
+      "year": "ปี",
+      "month": "เดือน",
+      "day": "วัน"
+    },
+    "group": {
+      "title": "รายการคำขอประเมิน (กลุ่มหลักประกัน)",
+      "subtitle": "ผู้สมัครหลักจะถูกรวมไว้เสมอ เลือกผู้สมัครใกล้เคียงเพื่อจัดกลุ่ม",
+      "nearbySelected": "เลือกใกล้เคียง {{count}} รายการ",
+      "main": "(หลัก)",
+      "empty": "ไม่มีผู้สมัครใกล้เคียงในรัศมีที่กำหนด",
+      "select": "เลือก",
+      "deselect": "ยกเลิกการเลือก",
+      "deleteCandidate": "ลบผู้สมัคร",
+      "cannotDelete": "ไม่สามารถลบรายการประเมินในระบบได้",
+      "footer_one": "จะรวม {{count}} รายการในคำขอ",
+      "footer_other": "จะรวม {{count}} รายการในคำขอ",
+      "columns": {
+        "oldAppraisalNumber": "เลขที่ประเมินเดิม",
+        "source": "แหล่งที่มา",
+        "daysSince": "จำนวนวันนับจากการประเมินครั้งล่าสุด"
+      }
+    },
+    "deleteModal": {
+      "title": "ลบผู้สมัคร",
+      "body": "คุณแน่ใจหรือไม่ว่าต้องการนำผู้สมัครรายนี้ออกจากรายการประเมินซ้ำ? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
+    },
+    "initiateModal": {
+      "title": "เริ่มคำขอประเมินซ้ำ",
+      "body_one": "เริ่มคำขอประเมินซ้ำสำหรับ {{count}} รายการ (รวมผู้สมัครหลัก) หรือไม่?",
+      "body_other": "เริ่มคำขอประเมินซ้ำสำหรับ {{count}} รายการ (รวมผู้สมัครหลัก) หรือไม่?"
+    },
+    "successModal": {
+      "title": "สร้างคำขอประเมินซ้ำแล้ว",
+      "heading": "เริ่มคำขอแล้ว",
+      "groupNumber": "เลขที่กลุ่ม:",
+      "created_one": "สร้างคำขอสำเร็จ {{count}} รายการ",
+      "created_other": "สร้างคำขอสำเร็จ {{count}} รายการ",
+      "skipped": "ข้าม (กำลังดำเนินการอยู่): {{count}}"
+    }
+  },
+  "actions": {
+    "initiate": "เริ่มคำขอประเมินซ้ำ",
+    "viewOnMap": "ดูบนแผนที่",
+    "delete": "ลบ"
+  }
+}

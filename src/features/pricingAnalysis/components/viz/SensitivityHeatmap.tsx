@@ -49,16 +49,18 @@ export function SensitivityHeatmap({
   const drStep = (discountRateRange * 2) / (steps - 1);
   const grStep = (growthRateRange * 2) / (steps - 1);
 
-  const discountRates = Array.from({ length: steps }, (_, i) =>
-    currentDiscountRate - discountRateRange + i * drStep
+  const discountRates = Array.from(
+    { length: steps },
+    (_, i) => currentDiscountRate - discountRateRange + i * drStep,
   );
-  const growthRates = Array.from({ length: steps }, (_, i) =>
-    currentGrowthRate - growthRateRange + i * grStep
+  const growthRates = Array.from(
+    { length: steps },
+    (_, i) => currentGrowthRate - growthRateRange + i * grStep,
   );
 
   // Pre-compute all values to find min/max for color scaling
-  const grid: (number | null)[][] = discountRates.map((dr) =>
-    growthRates.map((gr) => calculateValue(dr, gr))
+  const grid: (number | null)[][] = discountRates.map(dr =>
+    growthRates.map(gr => calculateValue(dr, gr)),
   );
 
   const allValues = grid.flat().filter((v): v is number => v != null);
@@ -75,14 +77,9 @@ export function SensitivityHeatmap({
           <thead>
             <tr>
               {/* Top-left corner: axis labels */}
-              <td className="text-gray-400 text-[8px] pr-1 pb-1 text-right">
-                DR \ GR
-              </td>
-              {growthRates.map((gr) => (
-                <th
-                  key={fmtRate(gr)}
-                  className="text-gray-500 font-medium pb-1 px-1 text-center"
-                >
+              <td className="text-gray-400 text-[8px] pr-1 pb-1 text-right">DR \ GR</td>
+              {growthRates.map(gr => (
+                <th key={fmtRate(gr)} className="text-gray-500 font-medium pb-1 px-1 text-center">
                   {fmtRate(gr)}
                 </th>
               ))}

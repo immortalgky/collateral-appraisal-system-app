@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@features/auth/store.ts';
 import { useNavigate } from 'react-router-dom';
 
 function CallbackPage() {
+  const { t } = useTranslation('auth');
   const setToken = useAuthStore(state => state.setToken);
   const navigate = useNavigate();
   const isProcessing = useRef(false);
@@ -55,7 +57,7 @@ function CallbackPage() {
       });
   }, [setToken, navigate]);
 
-  return <p>Processing login...</p>;
+  return <p>{t('page.processingLogin')}</p>;
 }
 
 export default CallbackPage;

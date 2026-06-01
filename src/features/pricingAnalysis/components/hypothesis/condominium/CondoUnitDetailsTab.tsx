@@ -4,12 +4,10 @@
  * Condo Area Sq.M, Selling Price, Remark 1, Remark 2
  */
 import React, { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/components';
 import { fmt } from '../../../domain/formatters';
-import {
-  useUploadHypothesisUnitDetails,
-  useDeleteHypothesisUpload,
-} from '../../../api';
+import { useUploadHypothesisUnitDetails, useDeleteHypothesisUpload } from '../../../api';
 import type {
   UploadHistoryDto,
   CondominiumUnitRowDto,
@@ -62,6 +60,7 @@ export function CondoUnitDetailsTab({
   previewSummary,
   totalLandAreaFromTitles,
 }: CondoUnitDetailsTabProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const [isDragOver, setIsDragOver] = useState(false);
   const [parseErrors, setParseErrors] = useState<ParseRowError[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,26 +70,26 @@ export function CondoUnitDetailsTab({
 
   const handleFile = (file: File) => {
     if (!file.name.endsWith('.xlsx')) {
-      toast.error('Only .xlsx files are accepted');
+      toast.error(t('toasts.uploadXlsxOnly'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be ≤ 5 MB');
+      toast.error(t('toasts.uploadMaxSize'));
       return;
     }
     setParseErrors(null);
     uploadMutation.mutate(
       { pricingAnalysisId, methodId, file },
       {
-        onSuccess: (result) => {
+        onSuccess: result => {
           toast.success(`Uploaded ${result.rowCount} rows`);
         },
-        onError: (error) => {
+        onError: error => {
           const errors = extractParseErrors(error);
           if (errors) {
             setParseErrors(errors);
           } else {
-            toast.error('Upload failed');
+            toast.error(t('toasts.uploadFailed'));
           }
         },
       },
@@ -108,8 +107,8 @@ export function CondoUnitDetailsTab({
     deleteMutation.mutate(
       { pricingAnalysisId, methodId, uploadId },
       {
-        onSuccess: () => toast.success('Upload deleted'),
-        onError: () => toast.error('Delete failed'),
+        onSuccess: () => toast.success(t('toasts.uploadDeleted')),
+        onError: () => toast.error(t('toasts.deleteFailed')),
       },
     );
   };
@@ -120,7 +119,10 @@ export function CondoUnitDetailsTab({
     <div className="space-y-4">
       {/* Upload zone */}
       <div
-        onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+        onDragOver={e => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
         onDragLeave={() => setIsDragOver(false)}
         onDrop={handleDrop}
         onClick={() => fileInputRef.current?.click()}
@@ -134,7 +136,7 @@ export function CondoUnitDetailsTab({
           type="file"
           accept=".xlsx"
           className="hidden"
-          onChange={(e) => {
+          onChange={e => {
             const f = e.target.files?.[0];
             if (f) handleFile(f);
             e.target.value = '';
@@ -152,8 +154,8 @@ export function CondoUnitDetailsTab({
               Drop an Excel file here or <span className="text-primary underline">browse</span>
             </p>
             <p className="text-xs text-gray-400">
-              .xlsx only · max 5 MB · Columns: Floor No, Building, Apt No, Apartment, Apartment Type,
-              Condo Area Sq.M, Selling Price, Remark 1, Remark 2
+              .xlsx only · max 5 MB · Columns: Floor No, Building, Apt No, Apartment, Apartment
+              Type, Condo Area Sq.M, Selling Price, Remark 1, Remark 2
             </p>
           </div>
         )}
@@ -163,7 +165,11 @@ export function CondoUnitDetailsTab({
       {parseErrors && parseErrors.length > 0 && (
         <div className="rounded-lg border border-red-200 overflow-hidden">
           <div className="bg-red-50 px-4 py-2 border-b border-red-200 flex items-center gap-2">
-            <Icon name="triangle-exclamation" style="solid" className="size-3.5 text-red-600 shrink-0" />
+            <Icon
+              name="triangle-exclamation"
+              style="solid"
+              className="size-3.5 text-red-600 shrink-0"
+            />
             <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wide">
               Excel Parse Errors — fix these rows and re-upload
             </h4>
@@ -216,7 +222,11 @@ export function CondoUnitDetailsTab({
                 <tr key={u.id} className={u.isActive ? 'bg-green-50' : ''}>
                   <td className="px-4 py-2 font-medium text-gray-700">
                     <div className="flex items-center gap-1.5">
-                      <Icon name="file-excel" style="regular" className="size-3.5 text-green-600 shrink-0" />
+                      <Icon
+                        name="file-excel"
+                        style="regular"
+                        className="size-3.5 text-green-600 shrink-0"
+                      />
                       {u.fileName}
                     </div>
                   </td>
@@ -271,8 +281,12 @@ export function CondoUnitDetailsTab({
                   <th className="text-left px-3 py-2 font-medium text-gray-500">Apartment No</th>
                   <th className="text-left px-3 py-2 font-medium text-gray-500">Apartment</th>
                   <th className="text-left px-3 py-2 font-medium text-gray-500">Apartment Type</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">Condo Area (Sq.M)</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">Selling Price (Baht)</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">
+                    Condo Area (Sq.M)
+                  </th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">
+                    Selling Price (Baht)
+                  </th>
                   <th className="text-left px-3 py-2 font-medium text-gray-500">Remark 1</th>
                   <th className="text-left px-3 py-2 font-medium text-gray-500">Remark 2</th>
                 </tr>
@@ -281,7 +295,9 @@ export function CondoUnitDetailsTab({
                 {rows.map(row => (
                   <tr key={row.sequenceNumber} className="hover:bg-gray-50">
                     <td className="px-3 py-1.5 text-gray-400">{row.sequenceNumber}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">{row.floorNo ?? '-'}</td>
+                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
+                      {row.floorNo ?? '-'}
+                    </td>
                     <td className="px-3 py-1.5 text-gray-700">{row.building ?? '-'}</td>
                     <td className="px-3 py-1.5 text-gray-700">{row.aptNo ?? '-'}</td>
                     <td className="px-3 py-1.5 text-gray-700">{row.apartment ?? '-'}</td>
@@ -315,9 +331,25 @@ export function CondoUnitDetailsTab({
             value={fmt(totalLandAreaFromTitles)}
             unit="Sq.Wa"
           />
-          <AggCard label="Indoor Sales Area" value={fmt(previewSummary.indoorSalesArea)} unit="Sq.M" />
-          <AggCard label="Total Units" value={previewSummary.setAvgRoomSizeUnits != null ? String(previewSummary.setAvgRoomSizeUnits) : '-'} />
-          <AggCard label="Total Selling Price" value={fmt(previewSummary.totalProjectSellingPrice)} unit="Baht" highlight />
+          <AggCard
+            label="Indoor Sales Area"
+            value={fmt(previewSummary.indoorSalesArea)}
+            unit="Sq.M"
+          />
+          <AggCard
+            label="Total Units"
+            value={
+              previewSummary.setAvgRoomSizeUnits != null
+                ? String(previewSummary.setAvgRoomSizeUnits)
+                : '-'
+            }
+          />
+          <AggCard
+            label="Total Selling Price"
+            value={fmt(previewSummary.totalProjectSellingPrice)}
+            unit="Baht"
+            highlight
+          />
         </div>
       )}
     </div>
@@ -344,7 +376,13 @@ function AggCard({
       <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{label}</p>
       <p className={`text-sm font-semibold ${highlight ? 'text-primary' : 'text-gray-900'}`}>
         {value}
-        {unit && <span className={`text-[10px] font-normal ml-1 ${highlight ? 'text-primary/60' : 'text-gray-400'}`}>{unit}</span>}
+        {unit && (
+          <span
+            className={`text-[10px] font-normal ml-1 ${highlight ? 'text-primary/60' : 'text-gray-400'}`}
+          >
+            {unit}
+          </span>
+        )}
       </p>
     </div>
   );

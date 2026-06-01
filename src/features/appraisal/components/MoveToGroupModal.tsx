@@ -1,7 +1,8 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import type { PropertyGroup } from '../types';
-import { useState } from 'react';
 import Icon from '@shared/components/Icon';
 
 interface MoveToGroupModalProps {
@@ -23,9 +24,10 @@ export const MoveToGroupModal = ({
   isLoading = false,
   readOnly = false,
 }: MoveToGroupModalProps) => {
+  const { t } = useTranslation(['appraisal', 'common']);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
 
-  const availableGroups = groups.filter((group) => group.id !== currentGroupId);
+  const availableGroups = groups.filter(group => group.id !== currentGroupId);
 
   const handleSubmit = () => {
     if (selectedGroupId) {
@@ -41,11 +43,9 @@ export const MoveToGroupModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Move to Group" size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('moveToGroupModal.title')} size="md">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Select the group where you want to move this property:
-        </p>
+        <p className="text-sm text-gray-600">{t('moveToGroupModal.selectGroup')}</p>
 
         {/* Group List */}
         <div className="space-y-2 max-h-96 overflow-y-auto">
@@ -55,7 +55,7 @@ export const MoveToGroupModal = ({
               <p className="text-sm">No other groups available</p>
             </div>
           ) : (
-            availableGroups.map((group) => (
+            availableGroups.map(group => (
               <button
                 key={group.id}
                 onClick={() => setSelectedGroupId(group.id)}
@@ -68,9 +68,7 @@ export const MoveToGroupModal = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-medium text-gray-900">{group.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {group.items.length} item(s)
-                    </p>
+                    <p className="text-sm text-gray-500">{group.items.length} item(s)</p>
                   </div>
                   {selectedGroupId === group.id && (
                     <Icon name="circle-check" className="text-blue-500" />
@@ -84,7 +82,7 @@ export const MoveToGroupModal = ({
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4">
           <Button type="button" variant="outline" onClick={handleClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           {!readOnly && (
             <Button
@@ -93,7 +91,7 @@ export const MoveToGroupModal = ({
               onClick={handleSubmit}
               disabled={!selectedGroupId || isLoading}
             >
-              {isLoading ? 'Moving...' : 'Move Property'}
+              {isLoading ? t('properties.moveModal.loading') : t('properties.contextMenu.moveTo')}
             </Button>
           )}
         </div>

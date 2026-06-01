@@ -50,6 +50,7 @@ const QuotationActionBar = ({
   onSubmitToChecker,
   onSubmitQuotation,
 }: QuotationActionBarProps) => {
+  const { t } = useTranslation('quotation');
   const anyPending = isSavePending || isSubmitPending;
   const isDisabled = anyPending || disabled;
   return (
@@ -62,7 +63,7 @@ const QuotationActionBar = ({
         isLoading={isSavePending}
       >
         <Icon name="floppy-disk" style="solid" className="size-4 mr-2" />
-        Save Quotation
+        {t('buttons.saveQuotation')}
       </Button>
 
       {variant === 'maker' ? (
@@ -73,7 +74,7 @@ const QuotationActionBar = ({
           isLoading={isSubmitPending}
         >
           <Icon name="paper-plane" style="solid" className="size-4 mr-2" />
-          Submit to Checker
+          {t('buttons.submitToChecker')}
         </Button>
       ) : (
         <Button
@@ -83,7 +84,7 @@ const QuotationActionBar = ({
           isLoading={isSubmitPending}
         >
           <Icon name="circle-check" style="solid" className="size-4 mr-2" />
-          Submit Quotation
+          {t('buttons.submitQuotation')}
         </Button>
       )}
     </div>
@@ -130,7 +131,7 @@ const ExtCompanySubmitQuotationPage = () => {
       navigate('/ext/quotations');
     }
   };
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation('quotation');
 
   /** Locale-aware cutoff formatter — Thai Buddhist for th-*, `dd/MM/yyyy HH:mm` otherwise. */
   const formatCutoff = (dateString: string) => {
@@ -253,8 +254,7 @@ const ExtCompanySubmitQuotationPage = () => {
     // Includes post-submission states (Submitted/UnderReview/Tentative/Accepted/Rejected)
     // so the standalone read-only view shows what was actually submitted.
     // Decline is the only state with no values to show.
-    const hydrateFromSubmission =
-      mySubmission && mySubmission.status !== 'Declined';
+    const hydrateFromSubmission = mySubmission && mySubmission.status !== 'Declined';
 
     const items = appraisals.map(ap => {
       const existingItem = hydrateFromSubmission
@@ -341,10 +341,10 @@ const ExtCompanySubmitQuotationPage = () => {
 
   const handleSaveDraft = () => {
     saveDraft(buildDraftPayload(), {
-      onSuccess: () => toast.success('Quotation saved successfully'),
+      onSuccess: () => toast.success(t('toasts.saved')),
       onError: (err: unknown) => {
         const e = err as { apiError?: { detail?: string } };
-        toast.error(e?.apiError?.detail ?? 'Failed to save draft');
+        toast.error(e?.apiError?.detail ?? t('toasts.saveFailed'));
       },
     });
   };
@@ -353,7 +353,7 @@ const ExtCompanySubmitQuotationPage = () => {
     // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
     const violations = findDurationCapViolations(getValues());
     if (violations.length > 0) {
-      toast.error(`Estimated Mandays exceeds the maximum duration for: ${violations.join(', ')}`);
+      toast.error(t('toasts.mandaysExceeded', { list: violations.join(', ') }));
       return;
     }
     // First save the draft, then promote to PendingCheckerReview
@@ -365,19 +365,19 @@ const ExtCompanySubmitQuotationPage = () => {
             onSuccess: async () => {
               // Chain the workflow action so the per-company task advances Maker → Checker.
               await advanceWorkflowStage('SubmitToChecker');
-              toast.success('Sent to checker');
+              toast.success(t('toasts.sentToChecker'));
               navigateAfterSubmit();
             },
             onError: (err: unknown) => {
               const e = err as { apiError?: { detail?: string } };
-              toast.error(e?.apiError?.detail ?? 'Failed to submit to checker');
+              toast.error(e?.apiError?.detail ?? t('toasts.submitToCheckerFailed'));
             },
           },
         );
       },
       onError: (err: unknown) => {
         const e = err as { apiError?: { detail?: string } };
-        toast.error(e?.apiError?.detail ?? 'Failed to save draft before submitting');
+        toast.error(e?.apiError?.detail ?? t('toasts.saveBeforeSubmitFailed'));
       },
     });
   };
@@ -421,13 +421,13 @@ const ExtCompanySubmitQuotationPage = () => {
       },
       {
         onSuccess: () => {
-          toast.success('Negotiation round declined');
+          toast.success(t('toasts.negotiationDeclined'));
           setIsDeclineNegotiationOpen(false);
           navigateAfterSubmit();
         },
         onError: (err: unknown) => {
           const e = err as { apiError?: { detail?: string } };
-          toast.error(e?.apiError?.detail ?? 'Failed to decline negotiation');
+          toast.error(e?.apiError?.detail ?? t('toasts.negotiationDeclineFailed'));
           setIsDeclineNegotiationOpen(false);
         },
       },
@@ -463,9 +463,7 @@ const ExtCompanySubmitQuotationPage = () => {
       if (overCap) {
         const ap = appraisals.find(a => a.appraisalId === overCap.appraisalId);
         toast.error(
-          `Discount + Negotiated Discount exceeds Fee Amount on ${
-            ap?.appraisalNumber?.trim() || 'an appraisal'
-          }`,
+          t('toasts.discountExceedsFee', { number: ap?.appraisalNumber?.trim() || 'an appraisal' }),
         );
         return;
       }
@@ -474,7 +472,7 @@ const ExtCompanySubmitQuotationPage = () => {
         i => i.negotiatedDiscount != null && i.negotiatedDiscount > 0,
       );
       if (!hasAnyDiscount) {
-        toast.error('Enter a Negotiated Discount on at least one appraisal before submitting');
+        toast.error(t('toasts.enterNegotiatedDiscount'));
         return;
       }
 
@@ -488,12 +486,12 @@ const ExtCompanySubmitQuotationPage = () => {
         },
         {
           onSuccess: () => {
-            toast.success('Proposal sent to bank');
+            toast.success(t('toasts.proposalSent'));
             navigateAfterSubmit();
           },
           onError: (err: unknown) => {
             const e = err as { apiError?: { detail?: string } };
-            toast.error(e?.apiError?.detail ?? 'Failed to submit proposal');
+            toast.error(e?.apiError?.detail ?? t('toasts.proposalFailed'));
           },
         },
       );
@@ -513,14 +511,14 @@ const ExtCompanySubmitQuotationPage = () => {
         if (idx !== selectedIndex) setSelectedIndex(idx);
         return;
       }
-      toast.error('Please fix the highlighted errors before submitting');
+      toast.error(t('toasts.fixErrors'));
     },
   );
 
   const handleSubmitQuotation = handleSubmit(values => {
     const violations = findDurationCapViolations(values);
     if (violations.length > 0) {
-      toast.error(`Estimated Mandays exceeds the maximum duration for: ${violations.join(', ')}`);
+      toast.error(t('toasts.mandaysExceeded', { list: violations.join(', ') }));
       return;
     }
     submitQuotation(
@@ -547,12 +545,12 @@ const ExtCompanySubmitQuotationPage = () => {
         onSuccess: async () => {
           // Checker's "Submit" action terminates the per-company fan-out item with `Submitted`.
           await advanceWorkflowStage('Submit');
-          toast.success('Quotation submitted');
+          toast.success(t('toasts.quotationSubmitted'));
           navigateAfterSubmit();
         },
         onError: (err: unknown) => {
           const e = err as { apiError?: { detail?: string } };
-          toast.error(e?.apiError?.detail ?? 'Failed to submit quotation');
+          toast.error(e?.apiError?.detail ?? t('toasts.submitFailed'));
         },
       },
     );
@@ -571,10 +569,10 @@ const ExtCompanySubmitQuotationPage = () => {
   // Human-readable label for the current review stage — shown in the read-only banner.
   const currentStageLabel = (() => {
     const s = mySubmission?.status;
-    if (s === 'Draft') return 'Maker review';
-    if (s === 'PendingCheckerReview') return 'Checker review';
-    if (s === 'Submitted') return 'review by the bank';
-    return 'review by your team';
+    if (s === 'Draft') return t('shared.makerReview');
+    if (s === 'PendingCheckerReview') return t('shared.checkerReview');
+    if (s === 'Submitted') return t('shared.bankReview');
+    return t('shared.teamReview');
   })();
 
   /**
@@ -651,15 +649,15 @@ const ExtCompanySubmitQuotationPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
-        <p className="text-sm text-gray-600">Unable to load quotation invitation.</p>
+        <p className="text-sm text-gray-600">{t('errors.unableToLoad')}</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/ext/quotations')}>
-          Back to Invitations
+          {t('buttons.backToInvitations')}
         </Button>
       </div>
     );
   }
 
-  const roleLabel = isChecker ? 'Checker' : 'Maker';
+  const roleLabel = isChecker ? t('role.Checker') : t('role.Maker');
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -668,17 +666,16 @@ const ExtCompanySubmitQuotationPage = () => {
         {/* ── Page header ───────────────────────────────────────────────────── */}
         <div className="mb-4">
           <div className="text-base font-semibold text-gray-900 leading-snug">
-            External Appraisal Company Quotation Information{' '}
-            <span className="text-primary">[{roleLabel}]</span>
+            {t('page.extQuotationTitle')} <span className="text-primary">[{roleLabel}]</span>
           </div>
           <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
             <span>
-              <span className="font-medium text-gray-700">Quotation ID:</span>{' '}
+              <span className="font-medium text-gray-700">{t('page.quotationId')}:</span>{' '}
               {quotation.quotationNumber}
             </span>
             <span>·</span>
             <span>
-              <span className="font-medium text-gray-700">Cut-Off Date:</span>{' '}
+              <span className="font-medium text-gray-700">{t('page.cutOffDate')}:</span>{' '}
               {formatCutoff(quotation.cutOffTime)}
             </span>
           </div>
@@ -693,7 +690,7 @@ const ExtCompanySubmitQuotationPage = () => {
             <div className="flex items-center gap-1.5 mb-1">
               <Icon name="comment-dots" style="solid" className="size-4 text-orange-600 shrink-0" />
               <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide">
-                Admin Negotiation Note — Round {openNegotiation.roundNumber}
+                {t('negotiation.adminNegotiationNote', { n: openNegotiation.roundNumber })}
               </span>
             </div>
             {openNegotiation.message ? (
@@ -701,12 +698,10 @@ const ExtCompanySubmitQuotationPage = () => {
                 {openNegotiation.message}
               </p>
             ) : (
-              <p className="text-sm text-orange-700 italic">No note provided.</p>
+              <p className="text-sm text-orange-700 italic">{t('negotiation.noNoteProvided')}</p>
             )}
             <p className="mt-2 text-xs text-orange-700 border-t border-orange-200 pt-2">
-              Adjust the per-item <span className="font-medium">Discount (Negotiate)</span> below,
-              then click <span className="font-medium">Submit Proposal</span> to send your response
-              to the bank.
+              {t('negotiation.adjustDiscountHint')}
             </p>
           </div>
         ) : (
@@ -719,7 +714,7 @@ const ExtCompanySubmitQuotationPage = () => {
                   className="size-4 text-amber-500 shrink-0"
                 />
                 <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
-                  Special Instructions
+                  {t('shared.specialInstructions')}
                 </span>
               </div>
               <p className="text-sm text-amber-900 whitespace-pre-line">
@@ -734,10 +729,12 @@ const ExtCompanySubmitQuotationPage = () => {
           <div className="rounded-xl border border-red-200 overflow-hidden mb-5">
             <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border-b border-red-200">
               <Icon name="ban" style="solid" className="size-5 text-red-500" />
-              <span className="text-sm font-semibold text-gray-900">Invitation Declined</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {t('shared.invitationDeclined')}
+              </span>
             </div>
             <div className="px-4 py-3 text-sm text-gray-500">
-              You have declined this invitation. The bank has been notified.
+              {t('shared.invitationDeclinedBody')}
             </div>
           </div>
         )}
@@ -747,12 +744,14 @@ const ExtCompanySubmitQuotationPage = () => {
           <div className="rounded-xl border border-green-200 overflow-hidden mb-5">
             <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-200">
               <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
-              <span className="text-sm font-semibold text-gray-900">Quotation Submitted</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {t('shared.quotationSubmittedTitle')}
+              </span>
             </div>
             <div className="px-4 py-4 space-y-3 text-sm text-gray-600">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <div>
-                  <div className="text-xs text-gray-500 mb-0.5">Total Quoted Price</div>
+                  <div className="text-xs text-gray-500 mb-0.5">{t('shared.totalQuotedPrice')}</div>
                   <div className="font-semibold text-gray-900">
                     {mySubmission?.totalQuotedPrice != null
                       ? THB.format(mySubmission.totalQuotedPrice)
@@ -760,7 +759,7 @@ const ExtCompanySubmitQuotationPage = () => {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500 mb-0.5">Estimated Days</div>
+                  <div className="text-xs text-gray-500 mb-0.5">{t('shared.estimatedDays')}</div>
                   <div className="font-semibold text-gray-900">
                     {mySubmission?.estimatedDays ?? '—'}
                   </div>
@@ -768,7 +767,7 @@ const ExtCompanySubmitQuotationPage = () => {
               </div>
               {mySubmission?.remarks && (
                 <div>
-                  <div className="text-xs text-gray-500 mb-0.5">Remarks</div>
+                  <div className="text-xs text-gray-500 mb-0.5">{t('shared.remarks')}</div>
                   <div>{mySubmission.remarks}</div>
                 </div>
               )}
@@ -780,16 +779,14 @@ const ExtCompanySubmitQuotationPage = () => {
         {isPastDue && !mySubmission && !isDeclined && (
           <div className="flex flex-col items-center py-12 gap-3 text-center">
             <Icon name="clock" style="regular" className="size-10 text-gray-300" />
-            <p className="text-sm text-gray-500">The submission deadline has passed.</p>
+            <p className="text-sm text-gray-500">{t('shared.deadlinePassed')}</p>
           </div>
         )}
 
         {/* ── Read-only banner (shown when task ownership is absent) ──────────── */}
         {!canEdit && !isDeclined && !isSubmitted && !isPastDue && appraisals.length > 0 && (
           <Alert variant="info" className="mb-4">
-            This quotation is currently under{' '}
-            <span className="font-medium">{currentStageLabel}</span>. Only the assigned reviewer
-            can edit it.
+            {t('shared.readOnlyBanner', { stage: currentStageLabel })}
           </Alert>
         )}
 
@@ -817,19 +814,21 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Section 1: Appraisal Information (read-only) */}
                     <section aria-label="Appraisal Information">
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Appraisal Information
+                        {t('sections.appraisalInformation')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="block text-xs text-gray-500 mb-0.5">
-                            Appraisal Number
+                            {t('fields.appraisalNumber')}
                           </span>
                           <span className="font-medium text-gray-900">
                             {selectedAppraisal.appraisalNumber?.trim() || '—'}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-xs text-gray-500 mb-0.5">Customer Name</span>
+                          <span className="block text-xs text-gray-500 mb-0.5">
+                            {t('fields.customerName')}
+                          </span>
                           <span className="font-medium text-gray-900">
                             {selectedAppraisal.customerName ?? '—'}
                           </span>
@@ -841,7 +840,7 @@ const ExtCompanySubmitQuotationPage = () => {
                     {selectedDocs.length > 0 && (
                       <section aria-label="Attached Documents">
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                          Attach Document
+                          {t('sections.attachDocument')}
                         </h2>
                         <div className="rounded-lg border border-gray-200 overflow-hidden">
                           <table className="w-full text-xs table-fixed">
@@ -853,10 +852,18 @@ const ExtCompanySubmitQuotationPage = () => {
                             </colgroup>
                             <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
                               <tr>
-                                <th className="text-left px-3 py-2.5 font-semibold">Type</th>
-                                <th className="text-left px-3 py-2.5 font-semibold">File Name</th>
-                                <th className="text-left px-3 py-2.5 font-semibold">Uploaded At</th>
-                                <th className="text-left px-3 py-2.5 font-semibold">Notes</th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.type')}
+                                </th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.fileName')}
+                                </th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.uploadedAt')}
+                                </th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.notes')}
+                                </th>
                               </tr>
                             </thead>
                             {docSectionGroups.map(group => (
@@ -926,7 +933,7 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Section 3: Quotation Information — Fee Breakdown */}
                     <section aria-label="Quotation Information">
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Quotation Information — Appraisal Fee
+                        {t('sections.quotationInformationFee')}
                       </h2>
 
                       {/* Hidden appraisalId binding */}
@@ -943,16 +950,13 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Section 4: Duration / Mandays */}
                     <section aria-label="Duration and Mandays">
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Duration
+                        {t('sections.duration')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4">
                         {/* Admin-set cap — read-only. When set, company's Estimated Mandays must not exceed it. */}
                         <div>
-                          <label
-                            className="block text-sm text-gray-600 mb-1"
-                            title="Set by the requester; you cannot change this"
-                          >
-                            Max Appraisal Duration (days)
+                          <label className="block text-sm text-gray-600 mb-1">
+                            {t('fields.maxAppraisalDuration')}
                           </label>
                           <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
                             {selectedAppraisal?.maxAppraisalDays ?? '—'}
@@ -965,7 +969,7 @@ const ExtCompanySubmitQuotationPage = () => {
                             htmlFor={`est-mandays-${selectedIndex}`}
                             className="block text-sm text-gray-600 mb-1"
                           >
-                            Estimated Mandays <span className="text-danger">*</span>
+                            {t('fields.estimatedMandays')} <span className="text-danger">*</span>
                           </label>
                           <Controller
                             control={control}
@@ -974,7 +978,7 @@ const ExtCompanySubmitQuotationPage = () => {
                               <NumberInput
                                 {...field}
                                 id={`est-mandays-${selectedIndex}`}
-                                aria-label="Estimated Mandays"
+                                aria-label={t('fields.estimatedMandays')}
                                 disabled={!canEdit || isNegotiatingLock}
                                 decimalPlaces={0}
                                 thousandSeparator={false}
@@ -990,7 +994,7 @@ const ExtCompanySubmitQuotationPage = () => {
                             if (cap != null && entered != null && entered > cap) {
                               return (
                                 <p className="mt-1 text-xs text-danger">
-                                  Exceeds the maximum duration set by the requester ({cap} days).
+                                  {t('shared.exceededMaxDuration', { cap })}
                                 </p>
                               );
                             }
@@ -1001,9 +1005,9 @@ const ExtCompanySubmitQuotationPage = () => {
                     </section>
 
                     {/* Section 5: Per-item Remark */}
-                    <section aria-label="Appraisal Remark">
+                    <section aria-label={t('sections.appraisalRemark')}>
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Remark for this Appraisal
+                        {t('sections.appraisalRemark')}
                       </h2>
                       <Controller
                         control={control}
@@ -1013,7 +1017,7 @@ const ExtCompanySubmitQuotationPage = () => {
                             {...field}
                             value={field.value ?? ''}
                             disabled={!canEdit || isNegotiatingLock}
-                            placeholder="Add any notes specific to this appraisal (conditions, assumptions, scope caveats)..."
+                            placeholder={t('placeholders.appraisalRemark')}
                             maxLength={4000}
                             showCharCount
                           />
@@ -1023,7 +1027,7 @@ const ExtCompanySubmitQuotationPage = () => {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full p-8 text-sm text-gray-400">
-                    Select an appraisal from the list to begin.
+                    {t('empty.selectAppraisal')}
                   </div>
                 )}
               </div>
@@ -1034,7 +1038,9 @@ const ExtCompanySubmitQuotationPage = () => {
               {/* Total + Participating */}
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div>
-                  <span className="text-sm font-semibold text-gray-700">Total Fee Amount:</span>
+                  <span className="text-sm font-semibold text-gray-700">
+                    {t('fields.totalFeeAmount')}
+                  </span>
                   <span className="ml-2 text-base font-bold text-primary">
                     {grandTotal > 0 ? THB.format(grandTotal) : '—'}
                   </span>
@@ -1046,7 +1052,7 @@ const ExtCompanySubmitQuotationPage = () => {
                 {!isNegotiatingLock && (
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700">
-                      Participating <span className="text-danger">*</span>
+                      {t('fields.participating')} <span className="text-danger">*</span>
                     </span>
                     <div className="flex items-center gap-2">
                       <button
@@ -1079,9 +1085,9 @@ const ExtCompanySubmitQuotationPage = () => {
               {/* Quotation Remark */}
               <div>
                 <Textarea
-                  label="Quotation Remark"
+                  label={t('fields.quotationRemark')}
                   disabled={!canEdit || isNegotiatingLock}
-                  placeholder="Add overall remarks or conditions..."
+                  placeholder={t('placeholders.remarkHint')}
                   maxLength={4000}
                   showCharCount
                   {...register('remarks')}
@@ -1098,10 +1104,10 @@ const ExtCompanySubmitQuotationPage = () => {
             if (!isNegotiationPending) setIsDeclineNegotiationOpen(false);
           }}
           onConfirm={confirmDeclineNegotiation}
-          title="Decline this negotiation round?"
-          message="Your quotation will be withdrawn and the bank will return to choosing another winner. This cannot be undone."
-          confirmText="Decline Round"
-          cancelText="Keep Negotiating"
+          title={t('cancel.title')}
+          message={t('toasts.negotiationDeclined')}
+          confirmText={t('buttons.declineInvitation')}
+          cancelText={t('buttons.openNegotiation')}
           variant="danger"
           isLoading={isNegotiationPending}
         />
@@ -1156,7 +1162,7 @@ const ExtCompanySubmitQuotationPage = () => {
               isLoading={isNegotiationPending}
             >
               <Icon name="paper-plane" style="solid" className="size-4 mr-2" />
-              Submit Proposal
+              {t('buttons.submitProposal')}
             </Button>
           </div>
         ) : (

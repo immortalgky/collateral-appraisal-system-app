@@ -120,15 +120,13 @@ export function restoreWQSFromSavedData({
     return {
       marketId: survey.id ?? '',
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
-      offeringPriceMeasurementUnit:
-        saved?.offeringPriceUnit ?? survey.offerPriceUnit ?? '',
+      offeringPriceMeasurementUnit: saved?.offeringPriceUnit ?? survey.offerPriceUnit ?? '',
       offeringPriceAdjustmentPct:
         saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
       offeringPriceAdjustmentAmt:
         saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
-      sellingPriceMeasurementUnit:
-        (saved as any)?.sellingPriceUnit ?? survey.salePriceUnit ?? '',
+      sellingPriceMeasurementUnit: (saved as any)?.sellingPriceUnit ?? survey.salePriceUnit ?? '',
       sellingPriceAdjustmentYear: saved?.adjustedPeriodPct ?? toNum(surveyMap.get('23'), 3),
       numberOfYears: saved?.buySellYear ?? yearDiffFromToday(survey.saleDate),
       totalAdjustedSellingPrice: saved?.cumulativeAdjPeriod ?? 0,

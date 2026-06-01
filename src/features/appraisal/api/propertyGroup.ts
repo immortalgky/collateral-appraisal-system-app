@@ -59,9 +59,7 @@ export const useGetPropertyGroupById = (
   return useQuery({
     queryKey: propertyGroupKeys.detail(appraisalId!, groupId!),
     queryFn: async (): Promise<GetPropertyGroupByIdResponse> => {
-      const { data } = await axios.get(
-        `/appraisals/${appraisalId}/property-groups/${groupId}`,
-      );
+      const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
       return data;
     },
     enabled: !!appraisalId && !!groupId,
@@ -81,10 +79,10 @@ export const useCreatePropertyGroup = () => {
       groupName: string;
       description?: string | null;
     }) => {
-      const { data } = await axios.post(
-        `/appraisals/${params.appraisalId}/property-groups`,
-        { groupName: params.groupName, description: params.description ?? null },
-      );
+      const { data } = await axios.post(`/appraisals/${params.appraisalId}/property-groups`, {
+        groupName: params.groupName,
+        description: params.description ?? null,
+      });
       return data;
     },
     onSuccess: (_, variables) => {
@@ -137,10 +135,7 @@ export const useDeletePropertyGroup = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      appraisalId: string;
-      groupId: string;
-    }) => {
+    mutationFn: async (params: { appraisalId: string; groupId: string }) => {
       const { data } = await axios.delete(
         `/appraisals/${params.appraisalId}/property-groups/${params.groupId}`,
       );
@@ -164,11 +159,7 @@ export const useAddPropertyToGroup = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      appraisalId: string;
-      groupId: string;
-      propertyId: string;
-    }) => {
+    mutationFn: async (params: { appraisalId: string; groupId: string; propertyId: string }) => {
       const { data } = await axios.post(
         `/appraisals/${params.appraisalId}/property-groups/${params.groupId}/properties`,
         { propertyId: params.propertyId },
@@ -224,11 +215,7 @@ export const useRemovePropertyFromGroup = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      appraisalId: string;
-      groupId: string;
-      propertyId: string;
-    }) => {
+    mutationFn: async (params: { appraisalId: string; groupId: string; propertyId: string }) => {
       const { data } = await axios.delete(
         `/appraisals/${params.appraisalId}/property-groups/${params.groupId}/properties/${params.propertyId}`,
       );

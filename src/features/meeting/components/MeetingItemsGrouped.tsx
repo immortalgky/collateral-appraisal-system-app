@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
@@ -36,13 +37,16 @@ const DECISION_VARIANT: Record<ItemDecision, string> = {
   RoutedBack: 'bg-red-50 text-red-700',
 };
 
-const ItemDecisionBadge = ({ decision }: { decision: ItemDecision }) => (
-  <span
-    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${DECISION_VARIANT[decision]}`}
-  >
-    {decision === 'RoutedBack' ? 'Routed Back' : decision}
-  </span>
-);
+const ItemDecisionBadge = ({ decision }: { decision: ItemDecision }) => {
+  const { t } = useTranslation('meeting');
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${DECISION_VARIANT[decision]}`}
+    >
+      {t(`decision.${decision}` as `decision.${ItemDecision}`)}
+    </span>
+  );
+};
 
 // ── Per-item action cell ──────────────────────────────────────────────────────
 
@@ -54,6 +58,7 @@ interface ItemActionsProps {
 }
 
 const ItemActions = ({ meetingId, item, canReleaseItems, canRemoveItems }: ItemActionsProps) => {
+  const { t } = useTranslation('meeting');
   const releaseDialog = useDisclosure();
   const routeBackDialog = useDisclosure();
   const removeDialog = useDisclosure();
@@ -81,7 +86,7 @@ const ItemActions = ({ meetingId, item, canReleaseItems, canRemoveItems }: ItemA
               onClick={releaseDialog.onOpen}
             >
               <Icon name="check" style="solid" className="size-3 mr-1" />
-              Release
+              {t('buttons.release')}
             </Button>
             <Button
               className="text-red-600"
@@ -91,7 +96,7 @@ const ItemActions = ({ meetingId, item, canReleaseItems, canRemoveItems }: ItemA
               onClick={routeBackDialog.onOpen}
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-3 mr-1" />
-              Route Back
+              {t('buttons.routeBack')}
             </Button>
           </>
         )}
@@ -101,8 +106,8 @@ const ItemActions = ({ meetingId, item, canReleaseItems, canRemoveItems }: ItemA
             variant="ghost"
             size="xs"
             type="button"
-            aria-label={`Remove ${appraisalLabel} from meeting`}
-            title="Remove from meeting"
+            aria-label={t('aria.removeFromMeeting', { label: appraisalLabel })}
+            title={t('dialogs.removeAppraisal')}
             onClick={removeDialog.onOpen}
           >
             <Icon name="trash" style="solid" className="size-3" />
@@ -145,8 +150,6 @@ const ItemActions = ({ meetingId, item, canReleaseItems, canRemoveItems }: ItemA
 
 /**
  * Shared colgroup so Decision and Acknowledgement tables align column-for-column.
- * Six columns: No · Appraisal Number · Customer Name · Appraisal Staff · Appraisal Value · Decision.
- * The Decision column is empty in Acknowledgement tables to preserve cross-table alignment.
  */
 const ItemsTableColgroup = () => (
   <colgroup>
@@ -160,13 +163,6 @@ const ItemsTableColgroup = () => (
 );
 
 // ── Decision group table ──────────────────────────────────────────────────────
-
-const DECISION_GROUP_LABELS: Record<AppraisalType, string> = {
-  New: 'New Appraisals',
-  ReAppraisal: 'Re-Appraisals',
-  Progressive: 'Progressive Appraisals',
-  PreAppraisal: 'Pre-Appraisals',
-};
 
 const DECISION_GROUP_ORDER: AppraisalType[] = ['New', 'ReAppraisal', 'Progressive', 'PreAppraisal'];
 
@@ -184,84 +180,87 @@ const DecisionGroupTable = ({
   meetingId,
   canReleaseItems,
   canRemoveItems,
-}: DecisionGroupTableProps) => (
-  <div>
-    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">{label}</h4>
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full table-fixed divide-y divide-gray-200">
-        <ItemsTableColgroup />
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-              No
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Appraisal Number
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Customer Name
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Appraisal Staff
-            </th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-              Appraisal Value
-            </th>
-            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-              Decision
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {items.length === 0 ? (
+}: DecisionGroupTableProps) => {
+  const { t } = useTranslation('meeting');
+  return (
+    <div>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">{label}</h4>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full table-fixed divide-y divide-gray-200">
+          <ItemsTableColgroup />
+          <thead className="bg-gray-50">
             <tr>
-              <td colSpan={6} className="px-4 py-4 text-center text-sm text-gray-400 italic">
-                No items
-              </td>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                {t('columns.no')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('columns.appraisalNumber')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('columns.customerName')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('columns.appraisalStaff')}
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                {t('columns.appraisalValue')}
+              </th>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                {t('columns.decision')}
+              </th>
             </tr>
-          ) : (
-            items.map((item, index) => {
-              const label = item.appraisalNumber ?? item.appraisalId.slice(0, 8);
-              return (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-700 text-center whitespace-nowrap">
-                    {index + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap truncate">
-                    <Link
-                      to={`/appraisals/${item.appraisalId}/summary`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {label}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap truncate">
-                    {item.customerName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap truncate">
-                    {item.appraisalStaff}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
-                    {formatCurrency(item.appraisedValue ?? 0)}
-                  </td>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-4 text-center text-sm text-gray-400 italic">
+                  {t('empty.noItems')}
+                </td>
+              </tr>
+            ) : (
+              items.map((item, index) => {
+                const itemLabel = item.appraisalNumber ?? item.appraisalId.slice(0, 8);
+                return (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-700 text-center whitespace-nowrap">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap truncate">
+                      <Link
+                        to={`/appraisals/${item.appraisalId}/summary`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {itemLabel}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap truncate">
+                      {item.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 text-left whitespace-nowrap truncate">
+                      {item.appraisalStaff}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
+                      {formatCurrency(item.appraisedValue ?? 0)}
+                    </td>
 
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <ItemActions
-                      meetingId={meetingId}
-                      item={item}
-                      canReleaseItems={canReleaseItems}
-                      canRemoveItems={canRemoveItems}
-                    />
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      <ItemActions
+                        meetingId={meetingId}
+                        item={item}
+                        canReleaseItems={canReleaseItems}
+                        canRemoveItems={canRemoveItems}
+                      />
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Acknowledgement info card ─────────────────────────────────────────────────
 
@@ -270,76 +269,79 @@ interface AckGroupCardProps {
   items: MeetingItemDto[];
 }
 
-const AckGroupCard = ({ label, items }: AckGroupCardProps) => (
-  <div>
-    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">{label}</h4>
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="w-full table-fixed divide-y divide-gray-200">
-        <ItemsTableColgroup />
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
-              No
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Appraisal Number
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Customer Name
-            </th>
-            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-              Appraisal Staff
-            </th>
-            <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-              Appraisal Value
-            </th>
-            {/* Empty 6th header — keeps column positions aligned with the Decision tables. */}
-            <th className="px-4 py-2" aria-hidden="true" />
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {items.length === 0 ? (
+const AckGroupCard = ({ label, items }: AckGroupCardProps) => {
+  const { t } = useTranslation('meeting');
+  return (
+    <div>
+      <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">{label}</h4>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full table-fixed divide-y divide-gray-200">
+          <ItemsTableColgroup />
+          <thead className="bg-gray-50">
             <tr>
-              <td colSpan={6} className="px-4 py-4 text-center text-sm text-gray-400 italic">
-                No items
-              </td>
+              <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                {t('columns.no')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('columns.appraisalNumber')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('columns.customerName')}
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                {t('columns.appraisalStaff')}
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                {t('columns.appraisalValue')}
+              </th>
+              {/* Empty 6th header — keeps column positions aligned with the Decision tables. */}
+              <th className="px-4 py-2" aria-hidden="true" />
             </tr>
-          ) : (
-            items.map((item, index) => {
-              const appraisalLabel = item.appraisalNumber ?? item.appraisalId.slice(0, 8);
-              return (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-500 text-center whitespace-nowrap">
-                    {index + 1}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap truncate">
-                    <Link
-                      to={`/appraisals/${item.appraisalId}/summary`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      {appraisalLabel}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap truncate">
-                    {item.customerName}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap truncate">
-                    {item.appraisalStaff}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
-                    {formatCurrency(item.appraisedValue ?? 0)}
-                  </td>
-                  {/* Empty 6th cell mirrors the Decision column slot. */}
-                  <td className="px-4 py-3" aria-hidden="true" />
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {items.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-4 text-center text-sm text-gray-400 italic">
+                  {t('empty.noItems')}
+                </td>
+              </tr>
+            ) : (
+              items.map((item, index) => {
+                const appraisalLabel = item.appraisalNumber ?? item.appraisalId.slice(0, 8);
+                return (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-500 text-center whitespace-nowrap">
+                      {index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap truncate">
+                      <Link
+                        to={`/appraisals/${item.appraisalId}/summary`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {appraisalLabel}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap truncate">
+                      {item.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap truncate">
+                      {item.appraisalStaff}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 text-right whitespace-nowrap">
+                      {formatCurrency(item.appraisedValue ?? 0)}
+                    </td>
+                    {/* Empty 6th cell mirrors the Decision column slot. */}
+                    <td className="px-4 py-3" aria-hidden="true" />
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Main component ────────────────────────────────────────────────────────────
 
@@ -348,6 +350,8 @@ const MeetingItemsGrouped = ({
   canReleaseItems,
   canRemoveItems,
 }: MeetingItemsGroupedProps) => {
+  const { t } = useTranslation('meeting');
+
   // Build a lookup from the grouped DTO (backend nests these under `items`)
   const decisionByGroup = new Map<AppraisalType, MeetingItemDto[]>();
   for (const group of meeting.items.decisionItems) {
@@ -367,11 +371,13 @@ const MeetingItemsGrouped = ({
     <div className="space-y-6">
       {/* Decision section */}
       <div className="space-y-4">
-        <h3 className="text-sm font-semibold text-gray-700">Decision Items ({totalDecision})</h3>
+        <h3 className="text-sm font-semibold text-gray-700">
+          {t('sections.decisionItems', { n: totalDecision })}
+        </h3>
         {DECISION_GROUP_ORDER.map(type => (
           <DecisionGroupTable
             key={type}
-            label={DECISION_GROUP_LABELS[type]}
+            label={t(`decisionGroups.${type}` as `decisionGroups.${AppraisalType}`)}
             items={decisionByGroup.get(type) ?? []}
             meetingId={meeting.id}
             canReleaseItems={canReleaseItems}
@@ -383,15 +389,11 @@ const MeetingItemsGrouped = ({
       {/* Acknowledgement section — always shown (empty groups render their own no-items copy). */}
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-gray-700">
-          Acknowledgement Items ({totalAck})
+          {t('sections.acknowledgementItems', { n: totalAck })}
         </h3>
-        <AckGroupCard
-          label="Acknowledge for Urgent Approval (Group 2)"
-          items={ackByGroup.get('2') ?? []}
-        />
-        <AckGroupCard label="Acknowledge (Group 1)" items={ackByGroup.get('1') ?? []} />
+        <AckGroupCard label={t('ackGroups.urgent')} items={ackByGroup.get('2') ?? []} />
+        <AckGroupCard label={t('ackGroups.standard')} items={ackByGroup.get('1') ?? []} />
       </div>
-
     </div>
   );
 };

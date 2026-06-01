@@ -35,7 +35,10 @@ export const useUpdateFactor = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...body }: UpdateMarketComparableFactorRequestType & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...body
+    }: UpdateMarketComparableFactorRequestType & { id: string }) => {
       const { data } = await axios.put(`/market-comparable-factors/${id}`, body);
       return data;
     },

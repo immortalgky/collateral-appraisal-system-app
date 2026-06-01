@@ -264,22 +264,29 @@ function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
         <Row label={t('pinDetail.appraisal.location')} value={location} />
       </div>
 
-      <div className="border-t border-gray-100 pt-3 flex flex-col gap-3">
-        <AppraisalExtraSection appraisalId={pin.appraisalId} />
-      </div>
+      {/* Extra data + "view full appraisal" only when a real in-system appraisal
+          backs this pin. Reappraisal candidates (AS400-only / SIBS-pending) have
+          no appraisalId — skip the fetch to avoid querying a non-existent appraisal. */}
+      {pin.appraisalId ? (
+        <>
+          <div className="border-t border-gray-100 pt-3 flex flex-col gap-3">
+            <AppraisalExtraSection appraisalId={pin.appraisalId} />
+          </div>
 
-      <Link
-        to={`/appraisals/${pin.appraisalId}`}
-        className="mt-2 flex items-center justify-center gap-1.5 w-full bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-sm font-medium py-2 rounded-lg transition-colors"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+          <Link
+            to={`/appraisals/${pin.appraisalId}`}
+            className="mt-2 flex items-center justify-center gap-1.5 w-full bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-sm font-medium py-2 rounded-lg transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
             d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
         </svg>
-        {t('pinDetail.appraisal.openReport')}
-      </Link>
+            {t('pinDetail.appraisal.openReport')}
+          </Link>
+        </>
+      ) : null}
     </div>
   );
 }

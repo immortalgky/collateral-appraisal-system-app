@@ -308,7 +308,13 @@ export const useAddMeetingMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ meetingId, body }: { meetingId: string; body: AddMeetingMemberRequest }) => {
+    mutationFn: async ({
+      meetingId,
+      body,
+    }: {
+      meetingId: string;
+      body: AddMeetingMemberRequest;
+    }) => {
       await axios.post(`/meetings/${meetingId}/members`, body);
     },
     onSuccess: (_data, variables) => {
@@ -358,7 +364,13 @@ export const useUpdateMeetingAgenda = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ meetingId, body }: { meetingId: string; body: UpdateMeetingAgendaRequest }) => {
+    mutationFn: async ({
+      meetingId,
+      body,
+    }: {
+      meetingId: string;
+      body: UpdateMeetingAgendaRequest;
+    }) => {
       await axios.patch(`/meetings/${meetingId}/agenda`, body);
     },
     onSuccess: (_data, variables) => {

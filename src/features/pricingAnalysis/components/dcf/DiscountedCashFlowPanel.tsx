@@ -5,6 +5,7 @@ import {
   type UseFormGetFieldState,
   type UseFormSetValue,
 } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
@@ -65,6 +66,7 @@ export function DiscountedCashFlowPanel({
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const methods = useForm<DCFFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(DCFForm),
@@ -330,11 +332,11 @@ export function DiscountedCashFlowPanel({
           appraisalValue: result.appraisalPriceRounded ?? result.finalValueRounded ?? 0,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Save failed';
+      const message = err instanceof Error ? err.message : t('toasts.saveFailed');
       setSaveError(message);
-      toast.error(`Failed to save: ${message}`);
+      toast.error(`${t('toasts.saveFailed')}: ${message}`);
     }
   });
 
@@ -343,7 +345,7 @@ export function DiscountedCashFlowPanel({
       if (isPricingTemplatesError) refetchPricingTemplates();
       if (isTemplateDtoError) refetchTemplateDto();
     };
-    return <DataErrorState title="Failed to load DCF templates" onRetry={handleRetry} />;
+    return <DataErrorState title={t('errors.loadFailed')} onRetry={handleRetry} />;
   }
 
   return (
@@ -355,7 +357,7 @@ export function DiscountedCashFlowPanel({
         }}
       >
         {incomeAnalysisQuery.isLoading && (
-          <div className="py-6 text-sm text-gray-500">Loading…</div>
+          <div className="py-6 text-sm text-gray-500">{t('empty.noData')}</div>
         )}
 
         <PricingAnalysisTemplateSelector

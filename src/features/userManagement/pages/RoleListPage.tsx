@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
@@ -12,14 +13,10 @@ import RoleDetailPanel from '../components/RoleDetailPanel';
 import { useGetRoles, useCreateRole } from '../api/roles';
 import type { RoleScope } from '../types';
 
-const SCOPE_OPTIONS = [
-  { value: 'Bank', label: 'Bank' },
-  { value: 'Company', label: 'Company' },
-];
-
 type ScopeTab = 'Bank' | 'Company';
 
 const RoleListPage = () => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [activeTab, setActiveTab] = useState<ScopeTab>('Bank');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -27,7 +24,11 @@ const RoleListPage = () => {
 
   // Create modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({ name: '', description: '', scope: 'Bank' as RoleScope });
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    description: '',
+    scope: 'Bank' as RoleScope,
+  });
 
   // Debounce search
   useEffect(() => {
@@ -50,6 +51,11 @@ const RoleListPage = () => {
   const roles = data?.items ?? [];
   const createRole = useCreateRole();
 
+  const SCOPE_OPTIONS = [
+    { value: 'Bank', label: t('tabs.bank') },
+    { value: 'Company', label: t('tabs.company') },
+  ];
+
   const handleOpenCreate = () => {
     setCreateForm({ name: '', description: '', scope: activeTab });
     setShowCreateModal(true);
@@ -57,19 +63,24 @@ const RoleListPage = () => {
 
   const handleCreate = () => {
     if (!createForm.name || !createForm.scope) {
-      toast.error('Name and scope are required');
+      toast.error(t('validation.nameAndScopeRequired'));
       return;
     }
     createRole.mutate(
-      { name: createForm.name, description: createForm.description, scope: createForm.scope, permissionIds: [] },
+      {
+        name: createForm.name,
+        description: createForm.description,
+        scope: createForm.scope,
+        permissionIds: [],
+      },
       {
         onSuccess: (data: any) => {
-          toast.success('Role created');
+          toast.success(t('toasts.roleCreated'));
           setShowCreateModal(false);
           // Select the newly created role if ID returned
           if (data?.id) setSelectedRoleId(data.id);
         },
-        onError: () => toast.error('Failed to create role'),
+        onError: () => toast.error(t('toasts.roleCreateFailed')),
       },
     );
   };
@@ -77,8 +88,8 @@ const RoleListPage = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
       <SectionHeader
-        title="Roles"
-        subtitle="Manage roles and their permissions"
+        title={t('page.roles.title')}
+        subtitle={t('page.roles.subtitle')}
         icon="user-shield"
         iconColor="purple"
       />
@@ -100,7 +111,7 @@ const RoleListPage = () => {
                     : 'text-gray-500 hover:text-gray-700',
                 )}
               >
-                {tab}
+                {tab === 'Bank' ? t('tabs.bank') : t('tabs.company')}
               </button>
             ))}
           </div>
@@ -117,14 +128,15 @@ const RoleListPage = () => {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search roles..."
+                placeholder={t('placeholders.searchRoles')}
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
             <button
               type="button"
               onClick={handleOpenCreate}
-              title="Add role"
+              title={t('aria.addRole')}
+              aria-label={t('aria.addRole')}
               className="shrink-0 size-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/80 transition-colors"
             >
               <Icon name="plus" style="solid" className="size-3.5" />
@@ -142,7 +154,7 @@ const RoleListPage = () => {
             ) : roles.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-xs gap-1">
                 <Icon name="user-shield" style="regular" className="size-7 opacity-40" />
-                <span>No roles found</span>
+                <span>{t('empty.noRolesFound')}</span>
               </div>
             ) : (
               roles.map(role => (
@@ -178,7 +190,7 @@ const RoleListPage = () => {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
               <Icon name="user-shield" style="regular" className="size-12 opacity-30" />
-              <p className="text-sm">Select a role to view details</p>
+              <p className="text-sm">{t('empty.selectRole')}</p>
             </div>
           )}
         </div>
@@ -188,22 +200,22 @@ const RoleListPage = () => {
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create Role"
+        title={t('dialogs.createRole.title')}
         size="md"
       >
         <div className="grid grid-cols-1 gap-4 p-6">
           <TextInput
-            label="Name"
+            label={t('fields.name')}
             value={createForm.name}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, name: value }));
             }}
             required
-            placeholder="Role name"
+            placeholder={t('placeholders.roleName')}
           />
           <Dropdown
-            label="Scope"
+            label={t('fields.scope')}
             value={createForm.scope}
             onChange={(val: string | null) =>
               setCreateForm(prev => ({ ...prev, scope: (val ?? 'Bank') as RoleScope }))
@@ -212,21 +224,26 @@ const RoleListPage = () => {
             required
           />
           <TextInput
-            label="Description"
+            label={t('fields.description')}
             value={createForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, description: value }));
             }}
-            placeholder="Brief description of this role"
+            placeholder={t('placeholders.roleDescription')}
           />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
-          <Button variant="primary" size="sm" isLoading={createRole.isPending} onClick={handleCreate}>
-            Create
+          <Button
+            variant="primary"
+            size="sm"
+            isLoading={createRole.isPending}
+            onClick={handleCreate}
+          >
+            {t('buttons.create')}
           </Button>
         </div>
       </Modal>

@@ -149,84 +149,85 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   return (
     <div className="relative min-w-0" onClick={handleContainerClick}>
       <div ref={containerRef} className="flex items-center gap-2 overflow-hidden pb-2">
-      {/* Add Button */}
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={disabled ? undefined : onAddClick}
-        onKeyDown={e => { if (!disabled && (e.key === 'Enter' || e.key === ' ')) onAddClick(); }}
-        className={clsx(
-          'flex flex-col items-center justify-center',
-          'w-[148px] h-28 shrink-0',
-          'bg-gray-50 border border-dashed border-gray-300 rounded-lg',
-          'cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors',
-          disabled && 'opacity-50 cursor-not-allowed',
-        )}
-      >
-        <Icon name="plus" style="solid" className="w-5 h-5 text-gray-400 mb-1" />
-        <span className="text-xs text-gray-500 text-center px-2">Click to add picture</span>
-      </div>
+        {/* Add Button */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={disabled ? undefined : onAddClick}
+          onKeyDown={e => {
+            if (!disabled && (e.key === 'Enter' || e.key === ' ')) onAddClick();
+          }}
+          className={clsx(
+            'flex flex-col items-center justify-center',
+            'w-[148px] h-28 shrink-0',
+            'bg-gray-50 border border-dashed border-gray-300 rounded-lg',
+            'cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors',
+            disabled && 'opacity-50 cursor-not-allowed',
+          )}
+        >
+          <Icon name="plus" style="solid" className="w-5 h-5 text-gray-400 mb-1" />
+          <span className="text-xs text-gray-500 text-center px-2">Click to add picture</span>
+        </div>
 
-      {/* Photo Thumbnails */}
-      {visiblePhotos.map((photo, index) => {
-        const isSelected = selectedId === photo.id;
-        const isThumbnail = thumbnailId === photo.id;
-        const isLastAndOverflow = hasOverflow && index === visiblePhotos.length - 1;
+        {/* Photo Thumbnails */}
+        {visiblePhotos.map((photo, index) => {
+          const isSelected = selectedId === photo.id;
+          const isThumbnail = thumbnailId === photo.id;
+          const isLastAndOverflow = hasOverflow && index === visiblePhotos.length - 1;
 
-        return (
-          <div
-            key={photo.id}
-            className={clsx(
-              'relative w-36 h-28 shrink-0 rounded-lg overflow-hidden cursor-pointer',
-              'transition-all duration-200',
-              isSelected && 'ring-4 ring-primary',
-              isThumbnail && !isSelected && !isLastAndOverflow && 'ring-2 ring-amber-400',
-              photo.isUploading && 'opacity-60',
-            )}
-            onClick={() => (isLastAndOverflow ? onPreview(photo) : handleClick(photo))}
-            onContextMenu={e => !isLastAndOverflow && handleContextMenu(e, photo.id)}
-          >
-            {photo.isUploading ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                <LoadingSpinner size="sm" />
-              </div>
-            ) : (
-              <img
-                src={getPhotoUrl(photo)}
-                alt={photo.fileName}
-                className="w-full h-full object-cover"
-                onLoad={e => {
-                  if (photo.file) {
-                    URL.revokeObjectURL((e.target as HTMLImageElement).src);
-                  }
-                }}
-              />
-            )}
+          return (
+            <div
+              key={photo.id}
+              className={clsx(
+                'relative w-36 h-28 shrink-0 rounded-lg overflow-hidden cursor-pointer',
+                'transition-all duration-200',
+                isSelected && 'ring-4 ring-primary',
+                isThumbnail && !isSelected && !isLastAndOverflow && 'ring-2 ring-amber-400',
+                photo.isUploading && 'opacity-60',
+              )}
+              onClick={() => (isLastAndOverflow ? onPreview(photo) : handleClick(photo))}
+              onContextMenu={e => !isLastAndOverflow && handleContextMenu(e, photo.id)}
+            >
+              {photo.isUploading ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <LoadingSpinner size="sm" />
+                </div>
+              ) : (
+                <img
+                  src={getPhotoUrl(photo)}
+                  alt={photo.fileName}
+                  className="w-full h-full object-cover"
+                  onLoad={e => {
+                    if (photo.file) {
+                      URL.revokeObjectURL((e.target as HTMLImageElement).src);
+                    }
+                  }}
+                />
+              )}
 
-            {/* "+N" overlay on last visible card when overflow */}
-            {isLastAndOverflow && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                <span className="text-white text-lg font-semibold">+{remainingCount}</span>
-              </div>
-            )}
+              {/* "+N" overlay on last visible card when overflow */}
+              {isLastAndOverflow && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                  <span className="text-white text-lg font-semibold">+{remainingCount}</span>
+                </div>
+              )}
 
-            {/* Cover Badge */}
-            {isThumbnail && !photo.isUploading && !isLastAndOverflow && (
-              <div className="absolute top-1 left-1 bg-amber-400 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-                Cover
-              </div>
-            )}
+              {/* Cover Badge */}
+              {isThumbnail && !photo.isUploading && !isLastAndOverflow && (
+                <div className="absolute top-1 left-1 bg-amber-400 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+                  Cover
+                </div>
+              )}
 
-            {/* Uploading Overlay */}
-            {photo.isUploading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                <span className="text-xs text-white font-medium">Uploading...</span>
-              </div>
-            )}
-          </div>
-        );
-      })}
-
+              {/* Uploading Overlay */}
+              {photo.isUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                  <span className="text-xs text-white font-medium">Uploading...</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Context Menu */}

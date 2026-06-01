@@ -1,4 +1,5 @@
 import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import type { AppointmentDto2Type } from '@shared/schemas/v1';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -18,6 +19,7 @@ export default function AppointmentInfoCard({
   onReschedule,
   onCancel,
 }: AppointmentInfoCardProps) {
+  const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const hasAppointment = Boolean(appointment);
 
@@ -31,12 +33,16 @@ export default function AppointmentInfoCard({
     : null;
 
   // Status badge colors
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusBadge = (status: string | undefined) => {
+    switch ((status ?? '').toLowerCase()) {
       case 'approved':
         return 'bg-success/10 text-success border-success';
       case 'pending':
         return 'bg-warning/10 text-warning border-warning';
+      case 'pendingapproval':
+        return 'bg-amber-100 text-amber-700 border-amber-300';
+      case 'rejected':
+        return 'bg-danger/10 text-danger border-danger';
       case 'cancelled':
         return 'bg-danger/10 text-danger border-danger';
       default:
@@ -55,10 +61,10 @@ export default function AppointmentInfoCard({
               <Icon name="calendar-plus" style="regular" className="w-7 h-7 text-orange-500" />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="text-base font-medium text-gray-800">No appointment scheduled</span>
-              <span className="text-sm text-gray-500">
-                Schedule an appointment to proceed with the appraisal
+              <span className="text-base font-medium text-gray-800">
+                {t('appointment.noAppointment')}
               </span>
+              <span className="text-sm text-gray-500">{t('appointment.noAppointmentHint')}</span>
             </div>
           </div>
 
@@ -70,7 +76,7 @@ export default function AppointmentInfoCard({
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition-colors shadow-sm"
             >
               <Icon name="calendar-plus" style="solid" className="w-5 h-5" />
-              <span className="text-sm font-medium">Schedule Appointment</span>
+              <span className="text-sm font-medium">{t('appointment.scheduleButton')}</span>
             </button>
           )}
         </div>
@@ -99,7 +105,7 @@ export default function AppointmentInfoCard({
             <div className="flex items-center gap-2">
               <Icon name="location-dot" style="light" className="w-5 h-5 text-gray-800" />
               <span className="text-xs text-gray-800 w-3/4 line-clamp-2 break-words">
-                {appointment.locationDetail || 'Location not specified'}
+                {appointment.locationDetail || t('appointment.locationNotSpecified')}
               </span>
             </div>
 
@@ -109,7 +115,7 @@ export default function AppointmentInfoCard({
                 <Icon name="user" style="solid" className="w-3 h-3 text-gray-500" />
               </div>
               <span className="text-xs text-gray-800">
-                {appointment.contactPerson || 'Contact not specified'}
+                {appointment.contactPerson || t('appointment.contactNotSpecified')}
                 {appointment.contactPhone && ` (${appointment.contactPhone})`}
               </span>
             </div>
@@ -121,9 +127,9 @@ export default function AppointmentInfoCard({
               >
                 {appointment.status}
               </span>
-              {appointment.rescheduleCount > 0 && (
+              {(appointment.rescheduleCount ?? 0) > 0 && (
                 <span className="text-xs text-gray-400">
-                  Rescheduled {appointment.rescheduleCount}x
+                  {t('appointment.rescheduledCount', { n: appointment.rescheduleCount })}
                 </span>
               )}
             </div>
@@ -133,14 +139,14 @@ export default function AppointmentInfoCard({
         {/* Right Section - Action Buttons */}
         {!readOnly && (
           <div className="flex items-center gap-2">
-            {onCancel && appointment.status.toLowerCase() !== 'cancelled' && (
+            {onCancel && (appointment.status ?? '').toLowerCase() !== 'cancelled' && (
               <button
                 type="button"
                 onClick={onCancel}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 transition-colors"
               >
                 <Icon name="xmark" style="solid" className="w-4 h-4" />
-                <span className="text-sm font-medium">Cancel</span>
+                <span className="text-sm font-medium">{t('appointment.cancelButton')}</span>
               </button>
             )}
             <button
@@ -149,7 +155,9 @@ export default function AppointmentInfoCard({
               className="flex items-center gap-2 px-4 py-2 rounded-lg border border-secondary bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors"
             >
               <Icon name="clock-rotate-left" style="solid" className="w-5 h-5" />
-              <span className="text-sm font-medium uppercase tracking-wider">Re-Schedule</span>
+              <span className="text-sm font-medium uppercase tracking-wider">
+                {t('appointment.rescheduleButton')}
+              </span>
             </button>
           </div>
         )}

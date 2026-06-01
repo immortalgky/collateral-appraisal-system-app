@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { useActivityCompletionProgress } from '../hooks/useActivityCompletionProgress';
 
 // Workflow Progress types
 
@@ -70,6 +71,13 @@ export interface ActivityActionsResponse {
   canRaiseFollowup?: boolean;
 }
 
+/** Structured per-step validation error returned by the completion endpoint. */
+export interface StructuredValidationError {
+  stepName: string;
+  errorCode: string;
+  message: string;
+}
+
 export interface CompleteActivityResponse {
   workflowInstanceId: string;
   status: string;
@@ -77,7 +85,7 @@ export interface CompleteActivityResponse {
   currentAssignee: string | null;
   nextAssignee: string | null;
   isCompleted: boolean;
-  validationErrors: string[] | null;
+  validationErrors: StructuredValidationError[] | null;
 }
 
 export interface TaskHistoryItem {
@@ -171,10 +179,19 @@ export const useGetWorkflowProgress = (appraisalId: string | undefined) => {
  * Hook for completing a workflow activity (submitting a decision)
  * POST /api/workflows/instances/{workflowInstanceId}/activities/{activityId}/complete
  */
+/**
+ * Hook for completing a workflow activity (submitting a decision).
+ * POST /api/workflows/instances/{workflowInstanceId}/activities/{activityId}/complete
+ *
+ * Progress is surfaced INSIDE the completion ConfirmDialog (live step checklist /
+ * button text driven by the activity progress store), so this hook does NOT open
+ * the global loading overlay — that would stack a second modal over the dialog.
+ * ActivityStepProgress SignalR events feed the progress store via
+ * useActivityCompletionProgress.
+ */
 export const useCompleteActivity = () => {
   const queryClient = useQueryClient();
-
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: async ({
       workflowInstanceId,
       activityId,
@@ -206,4 +223,9 @@ export const useCompleteActivity = () => {
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
   });
+
+  // Wire SignalR progress events into the activity progress store while pending
+  useActivityCompletionProgress({ active: mutation.isPending });
+
+  return mutation;
 };

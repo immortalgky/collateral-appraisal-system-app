@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
@@ -45,13 +46,15 @@ function formatPrice(value: number): string {
 
 function formatPriceRange(min?: number | null, max?: number | null): string {
   if (!min && !max) return '-';
-  if (min && max) return min === max ? formatPrice(min) : `${formatPrice(min)} - ${formatPrice(max)}`;
+  if (min && max)
+    return min === max ? formatPrice(min) : `${formatPrice(min)} - ${formatPrice(max)}`;
   return formatPrice(min ?? max ?? 0);
 }
 
 function formatPriceRangeFull(min?: number | null, max?: number | null): string {
   if (!min && !max) return '-';
-  if (min && max) return min === max ? min.toLocaleString() : `${min.toLocaleString()} - ${max.toLocaleString()}`;
+  if (min && max)
+    return min === max ? min.toLocaleString() : `${min.toLocaleString()} - ${max.toLocaleString()}`;
   return (min ?? max)?.toLocaleString() ?? '-';
 }
 
@@ -92,13 +95,18 @@ function PricingAnalysisAction({
   onClick: () => void;
   size?: 'sm' | 'xs';
 }) {
+  const { t } = useTranslation('blockProject');
   const sizeCls = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs';
 
   return (
     <button
       type="button"
       disabled={isPending}
-      title={hasAnalysis ? 'View pricing analysis' : 'Run pricing analysis'}
+      title={
+        hasAnalysis
+          ? t('modelListing.aria.viewPricingAnalysis')
+          : t('modelListing.aria.runPricingAnalysis')
+      }
       onClick={e => {
         e.stopPropagation();
         onClick();
@@ -120,7 +128,11 @@ function PricingAnalysisAction({
         className={clsx('size-3', isPending && 'animate-spin')}
       />
       {/* #2 — "View Pricing" instead of "Pricing" */}
-      {isPending ? 'Running…' : hasAnalysis ? 'View Pricing' : 'Run Pricing'}
+      {isPending
+        ? t('modelListing.running')
+        : hasAnalysis
+          ? t('modelListing.viewPricing')
+          : t('modelListing.runPricing')}
     </button>
   );
 }
@@ -136,6 +148,7 @@ function ModelCard({
   isPricingAnalysisPending,
   onDelete,
 }: ModelCardProps) {
+  const { t } = useTranslation('blockProject');
   const icon = isCondo(projectType) ? 'layer-group' : 'house';
   const hasAnalysis = Boolean(model.pricingAnalysisId);
   const standardPrice = formatStandardPrice(model.finalAppraisedValue);
@@ -160,14 +173,20 @@ function ModelCard({
         <td className="px-2 py-2 cursor-pointer" onClick={onClick}>
           <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
             {thumbnailSrc ? (
-              <img src={thumbnailSrc} alt={model.modelName ?? 'Model'} className="w-full h-full object-cover" />
+              <img
+                src={thumbnailSrc}
+                alt={model.modelName ?? t('modelListing.unnamedModel')}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <Icon name={icon} style="solid" className="text-gray-400 w-5 h-5" />
             )}
           </div>
         </td>
         <td className="px-3 py-2 cursor-pointer" onClick={onClick}>
-          <p className="text-sm font-medium text-gray-900 truncate">{model.modelName ?? 'Unnamed Model'}</p>
+          <p className="text-sm font-medium text-gray-900 truncate">
+            {model.modelName ?? t('modelListing.unnamedModel')}
+          </p>
           {model.modelDescription && (
             <p className="text-xs text-gray-500 truncate">{model.modelDescription}</p>
           )}
@@ -194,7 +213,10 @@ function ModelCard({
             </td>
           </>
         )}
-        <td className="px-3 py-2 text-sm font-semibold text-primary cursor-pointer" onClick={onClick}>
+        <td
+          className="px-3 py-2 text-sm font-semibold text-primary cursor-pointer"
+          onClick={onClick}
+        >
           {standardPrice ?? '-'}
         </td>
         <td className="px-2 py-2">
@@ -212,7 +234,7 @@ function ModelCard({
                 type="button"
                 onClick={onDelete}
                 className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                title="Delete model"
+                title={t('modelListing.aria.deleteModel')}
               >
                 <Icon name="trash-can" style="regular" className="size-3.5" />
               </button>
@@ -234,7 +256,7 @@ function ModelCard({
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
-            alt={model.modelName ?? 'Model thumbnail'}
+            alt={model.modelName ?? t('modelListing.unnamedModel')}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -259,7 +281,7 @@ function ModelCard({
       <div className="p-4">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-semibold text-gray-900 truncate">
-            {model.modelName ?? 'Unnamed Model'}
+            {model.modelName ?? t('modelListing.unnamedModel')}
           </p>
           {(!readOnly || hasAnalysis) && (
             <PricingAnalysisAction
@@ -273,29 +295,45 @@ function ModelCard({
         {/* #7 — 2-col stat grid */}
         <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
           <div>
-            <p className="text-[10px] text-gray-400 uppercase tracking-wide">Usable Area</p>
-            <p className="text-xs font-medium text-gray-700">{formatAreaRange(model.usableAreaMin, model.usableAreaMax)}</p>
+            <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+              {t('modelListing.usableArea')}
+            </p>
+            <p className="text-xs font-medium text-gray-700">
+              {formatAreaRange(model.usableAreaMin, model.usableAreaMax)}
+            </p>
           </div>
 
           {isCondo(projectType) ? (
             <>
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Starting Price</p>
-                <p className="text-xs font-medium text-gray-700">{formatPriceRange(model.startingPriceMin, model.startingPriceMax)}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                  {t('modelListing.startingPrice')}
+                </p>
+                <p className="text-xs font-medium text-gray-700">
+                  {formatPriceRange(model.startingPriceMin, model.startingPriceMax)}
+                </p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Room Type</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                  {t('modelListing.roomType')}
+                </p>
                 <p className="text-xs font-medium text-gray-700">{roomTypeDescription || '-'}</p>
               </div>
             </>
           ) : (
             <>
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Land Area</p>
-                <p className="text-xs font-medium text-gray-700">{formatLandAreaRange(model.landAreaMin, model.landAreaMax)}</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                  {t('modelListing.landArea')}
+                </p>
+                <p className="text-xs font-medium text-gray-700">
+                  {formatLandAreaRange(model.landAreaMin, model.landAreaMax)}
+                </p>
               </div>
               <div>
-                <p className="text-[10px] text-gray-400 uppercase tracking-wide">Houses</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide">
+                  {t('modelListing.houses')}
+                </p>
                 <p className="text-xs font-medium text-gray-700">{model.numberOfHouse ?? '-'}</p>
               </div>
             </>
@@ -312,7 +350,7 @@ function ModelCard({
           ) : (
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 text-amber-600 text-xs font-medium">
               <Icon name="clock" style="regular" className="size-3" />
-              Pending analysis
+              {t('modelListing.pendingAnalysis')}
             </div>
           )}
         </div>
@@ -328,6 +366,7 @@ interface ModelListingTabProps {
 }
 
 export default function ModelListingTab({ projectType }: ModelListingTabProps) {
+  const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const basePath = useBasePath();
   const navigate = useNavigate();
@@ -340,7 +379,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
   const models = useMemo(
     () =>
       (Array.isArray(modelsData) ? [...modelsData] : []).sort((a, b) =>
-        (a.modelName ?? '').localeCompare(b.modelName ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+        (a.modelName ?? '').localeCompare(b.modelName ?? '', undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        }),
       ),
     [modelsData],
   );
@@ -360,8 +402,11 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
 
   const routeSegment = isCondo(projectType) ? 'block-condo' : 'block-village';
 
-  const { mutate: createPricingAnalysis, isPending: isCreatingPricingAnalysis, variables: pricingMutationVars } =
-    useCreateProjectModelPricingAnalysis();
+  const {
+    mutate: createPricingAnalysis,
+    isPending: isCreatingPricingAnalysis,
+    variables: pricingMutationVars,
+  } = useCreateProjectModelPricingAnalysis();
 
   const handleModelClick = (modelId: string) => {
     navigate(`${basePath}/${routeSegment}/model/${modelId}`);
@@ -377,12 +422,12 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
       { appraisalId, modelId: deleteTarget.id },
       {
         onSuccess: () => {
-          toast.success(`Model "${deleteTarget.name}" deleted`);
+          toast.success(t('toasts.model.deleteSuccess'));
           setDeleteTarget(null);
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to delete model');
+          toast.error(error?.apiError?.detail ?? t('toasts.model.deleteFailed'));
           setDeleteTarget(null);
         },
       },
@@ -402,16 +447,14 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
       {
         onSuccess: data => {
           if (!data?.id) {
-            toast.error('No pricing analysis ID returned from server');
+            toast.error(t('toasts.model.pricingNoId'));
             return;
           }
-          navigate(
-            `${basePath}/${routeSegment}/model/${model.id}/pricing-analysis/${data.id}`,
-          );
+          navigate(`${basePath}/${routeSegment}/model/${model.id}/pricing-analysis/${data.id}`);
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to create pricing analysis');
+          toast.error(error?.apiError?.detail ?? t('toasts.model.pricingCreateFailed'));
         },
       },
     );
@@ -437,8 +480,8 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-red-50 rounded-xl border-2 border-dashed border-red-200">
         <Icon name="exclamation-triangle" className="text-4xl mb-3 text-red-400" />
-        <p className="text-sm font-medium text-red-500">Failed to load models</p>
-        <p className="text-xs text-red-400 mt-1">Please try refreshing the page</p>
+        <p className="text-sm font-medium text-red-500">{t('modelListing.failedToLoad')}</p>
+        <p className="text-xs text-red-400 mt-1">{t('modelListing.failedToLoadHint')}</p>
       </div>
     );
   }
@@ -459,7 +502,7 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
             )}
           >
             <Icon name="grid-2" style="solid" />
-            <span>Grid</span>
+            <span>{t('modelListing.grid')}</span>
           </button>
           <button
             type="button"
@@ -472,14 +515,14 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
             )}
           >
             <Icon name="list" style="solid" />
-            <span>List</span>
+            <span>{t('modelListing.list')}</span>
           </button>
         </div>
 
         {!readOnly && (
           <Button variant="primary" onClick={handleAddModel} className="flex items-center gap-2">
             <Icon name="plus" />
-            Add Model
+            {t('modelListing.addModel')}
           </Button>
         )}
       </div>
@@ -487,12 +530,9 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
       {/* Model List */}
       {models.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-          <Icon
-            name={isCondo(projectType) ? 'layer-group' : 'house'}
-            className="text-4xl mb-3"
-          />
-          <p className="text-sm font-medium text-gray-500">No models yet</p>
-          <p className="text-xs text-gray-400 mt-1">Click "Add Model" to create your first model</p>
+          <Icon name={isCondo(projectType) ? 'layer-group' : 'house'} className="text-4xl mb-3" />
+          <p className="text-sm font-medium text-gray-500">{t('modelListing.noModels')}</p>
+          <p className="text-xs text-gray-400 mt-1">{t('modelListing.noModelsHint')}</p>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto">
@@ -509,7 +549,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
               isPricingAnalysisPending={
                 isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
               }
-              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' }); }}
+              onDelete={e => {
+                e.stopPropagation();
+                setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' });
+              }}
             />
           ))}
         </div>
@@ -518,21 +561,37 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model Name</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usable Area</th>
+                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('modelListing.cols.image')}
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('modelListing.cols.modelName')}
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('modelListing.cols.usableArea')}
+                </th>
                 {isCondo(projectType) ? (
                   <>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Starting Price</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Type</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('modelListing.cols.startingPrice')}
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('modelListing.cols.roomType')}
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Land Area (Std)</th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Houses</th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('modelListing.cols.landAreaStd')}
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('modelListing.cols.houses')}
+                    </th>
                   </>
                 )}
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Standard Price</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('modelListing.cols.standardPrice')}
+                </th>
                 <th className="w-28 px-2 py-2" />
               </tr>
             </thead>
@@ -550,7 +609,10 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
                   isPricingAnalysisPending={
                     isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
                   }
-                  onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' }); }}
+                  onDelete={e => {
+                    e.stopPropagation();
+                    setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' });
+                  }}
                 />
               ))}
             </tbody>
@@ -562,9 +624,9 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Model"
+        title={t('dialogs.deleteModelListing.title')}
         message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
+        confirmText={t('dialogs.deleteModelListing.confirm')}
         isLoading={isDeleting}
       />
     </div>

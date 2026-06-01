@@ -1,0 +1,64 @@
+{
+  "columns": {
+    "appraisalNumber": "评估编号",
+    "customerName": "客户姓名",
+    "taskType": "任务类型",
+    "purpose": "用途",
+    "status": "状态",
+    "sla": "SLA",
+    "assigned": "分配时间",
+    "dueAt": "截止时间"
+  },
+  "peopleColumns": {
+    "userCode": "用户代码",
+    "userName": "用户名",
+    "openTasks": "进行中任务",
+    "availableTasks": "可领取任务",
+    "totalTasks": "任务总数"
+  },
+  "sla": {
+    "onTrack": "正常",
+    "onTime": "准时",
+    "atRisk": "有风险",
+    "breached": "已超时"
+  },
+  "table": {
+    "ref": "(参考 {{number}})",
+    "reassign": "重新分配"
+  },
+  "empty": {
+    "tasksTitle": "没有受监控的任务",
+    "tasksDesc": "在您监控的组中未找到任务，或所有任务均处于不可重新分配的状态。",
+    "peopleTitle": "没有可监控的人员",
+    "peopleDesc": "您监控的组中目前没有人有进行中的任务。"
+  },
+  "filters": {
+    "searchTasksPlaceholder": "搜索任务...",
+    "allSla": "所有 SLA",
+    "groupPlaceholder": "组...",
+    "assigneePlaceholder": "负责人...",
+    "activityPlaceholder": "活动...",
+    "peopleSearchPlaceholder": "搜索用户代码或姓名...",
+    "searchLabel": "搜索",
+    "personSearchPlaceholder": "评估编号或客户姓名...",
+    "statusLabel": "状态",
+    "taskTypeLabel": "任务类型"
+  },
+  "errors": {
+    "loadPeopleFailed": "加载受监控人员失败",
+    "loadTasksFailed": "加载任务失败"
+  },
+  "reassign": {
+    "title": "重新分配任务",
+    "currentlyAssigned": "当前分配给",
+    "due": "截止：",
+    "slaPreserved": "SLA 保持不变",
+    "newAssignee": "新负责人",
+    "loadingUsers": "正在加载符合条件的用户…",
+    "noEligible": "未找到符合此活动条件的用户。",
+    "pageInfo": "{{from}}–{{to}}，共 {{total}}",
+    "success": "已重新分配给 {{name}}。截止时间不变。",
+    "failed": "重新分配失败。",
+    "unexpectedError": "发生意外错误。请重试。"
+  }
+}

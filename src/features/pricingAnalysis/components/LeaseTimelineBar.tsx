@@ -17,7 +17,11 @@ function formatShort(d: Date): string {
   return `${day}/${month}/${year}`;
 }
 
-export function LeaseTimelineBar({ leaseStartDate, leaseEndDate, appraisalDate }: LeaseTimelineBarProps) {
+export function LeaseTimelineBar({
+  leaseStartDate,
+  leaseEndDate,
+  appraisalDate,
+}: LeaseTimelineBarProps) {
   const start = toDate(leaseStartDate);
   const end = toDate(leaseEndDate);
   const appraisal = toDate(appraisalDate);
@@ -30,7 +34,9 @@ export function LeaseTimelineBar({ leaseStartDate, leaseEndDate, appraisalDate }
   const elapsedMs = appraisal ? appraisal.getTime() - start.getTime() : 0;
   const pct = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
 
-  const remainingDays = appraisal ? Math.max(0, Math.round((end.getTime() - appraisal.getTime()) / (1000 * 60 * 60 * 24))) : Math.round(totalMs / (1000 * 60 * 60 * 24));
+  const remainingDays = appraisal
+    ? Math.max(0, Math.round((end.getTime() - appraisal.getTime()) / (1000 * 60 * 60 * 24)))
+    : Math.round(totalMs / (1000 * 60 * 60 * 24));
   const remainingYears = (remainingDays / 365.25).toFixed(1);
 
   return (

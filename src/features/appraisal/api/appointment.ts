@@ -40,7 +40,9 @@ export const useCreateAppointment = () => {
     mutationFn: async ({
       appraisalId,
       ...body
-    }: CreateAppointmentRequestType & { appraisalId: string }): Promise<CreateAppointmentResponseType> => {
+    }: CreateAppointmentRequestType & {
+      appraisalId: string;
+    }): Promise<CreateAppointmentResponseType> => {
       const { data } = await axios.post(`/appraisals/${appraisalId}/appointments`, body);
       return data;
     },
@@ -70,7 +72,7 @@ export const useRescheduleAppointment = () => {
     }): Promise<void> => {
       await axios.patch(
         `/appraisals/${appraisalId}/appointments/${appointmentId}/reschedule`,
-        body
+        body,
       );
     },
     onSuccess: (_, variables) => {
@@ -97,10 +99,7 @@ export const useCancelAppointment = () => {
       appraisalId: string;
       appointmentId: string;
     }): Promise<void> => {
-      await axios.patch(
-        `/appraisals/${appraisalId}/appointments/${appointmentId}/cancel`,
-        body
-      );
+      await axios.patch(`/appraisals/${appraisalId}/appointments/${appointmentId}/cancel`, body);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -126,10 +125,7 @@ export const useApproveAppointment = () => {
       appraisalId: string;
       appointmentId: string;
     }): Promise<void> => {
-      await axios.patch(
-        `/appraisals/${appraisalId}/appointments/${appointmentId}/approve`,
-        body
-      );
+      await axios.patch(`/appraisals/${appraisalId}/appointments/${appointmentId}/approve`, body);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

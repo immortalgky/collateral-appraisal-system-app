@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Icon } from '@/shared/components';
+import { useTranslation } from 'react-i18next';
 import { getCollateralTypeLabel } from '../utils/getLabel';
 
 interface SupportingDataTableRowProps {
@@ -17,6 +18,8 @@ export const SupportingDataTableRow = ({
   onEdit,
   onDelete,
 }: SupportingDataTableRowProps) => {
+  const { t } = useTranslation(['supportingDataMaintenance', 'common']);
+
   const handleRowClick = () => {
     onEdit(index);
   };
@@ -38,14 +41,16 @@ export const SupportingDataTableRow = ({
       {/* Sq. No */}
       <td className="px-2 py-2" onClick={handleRowClick}>
         <p className="text-sm font-medium text-gray-900 truncate">
-          {index + 1 || <span className="italic text-gray-400">Untitled</span>}
+          {index + 1 || <span className="italic text-gray-400">{t('placeholders.untitled')}</span>}
         </p>
       </td>
 
       {/* Property Name */}
       <td className="px-2 py-2" onClick={handleRowClick}>
         <p className="text-sm font-medium text-gray-900 truncate" title={data?.propertyName}>
-          {data?.propertyName || <span className="italic text-gray-400">Untitled</span>}
+          {data?.propertyName || (
+            <span className="italic text-gray-400">{t('placeholders.untitled')}</span>
+          )}
         </p>
       </td>
 
@@ -59,7 +64,7 @@ export const SupportingDataTableRow = ({
       {/* Address */}
       <td className="px-3 py-2 max-w-0 w-1/3" onClick={handleRowClick}>
         <p className="text-xs text-gray-700 truncate" title={address}>
-          {address || <span className="italic text-gray-400">Not set</span>}
+          {address || <span className="italic text-gray-400">{t('placeholders.notSet')}</span>}
         </p>
       </td>
 
@@ -72,7 +77,7 @@ export const SupportingDataTableRow = ({
               {Number(data.latitude).toFixed(6)}, {Number(data.longitude).toFixed(6)}
             </span>
           ) : (
-            <span className="italic text-gray-400">Not set</span>
+            <span className="italic text-gray-400">{t('placeholders.notSet')}</span>
           )}
         </div>
       </td>
@@ -82,6 +87,7 @@ export const SupportingDataTableRow = ({
         <Menu as="div" className="relative inline-block">
           <MenuButton
             onClick={e => e.stopPropagation()}
+            aria-label={t('aria.openContextMenu')}
             className="p-1.5 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
@@ -104,7 +110,7 @@ export const SupportingDataTableRow = ({
                     } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
                   >
                     <Icon name="pen-to-square" className="text-xs text-gray-400" />
-                    Edit
+                    {t('common:actions.edit')}
                   </button>
                 )}
               </MenuItem>
@@ -124,7 +130,7 @@ export const SupportingDataTableRow = ({
                         } flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600`}
                       >
                         <Icon name="trash" className="text-xs" />
-                        Delete
+                        {t('common:actions.delete')}
                       </button>
                     )}
                   </MenuItem>

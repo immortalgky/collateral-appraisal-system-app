@@ -15,7 +15,9 @@ const fmt = (n: number | null | undefined): string => {
   return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-export function DiscountedCashFlowHighestBestUsed({ isReadOnly }: DiscountedCashFlowHighestBestUsedProps) {
+export function DiscountedCashFlowHighestBestUsed({
+  isReadOnly,
+}: DiscountedCashFlowHighestBestUsedProps) {
   const { control, getValues, setValue } = useFormContext();
   const isHighestBestUsed = useWatch({ control, name: 'isHighestBestUsed' });
   const finalValue = useWatch({ control, name: 'finalValue' });
@@ -104,7 +106,12 @@ export function DiscountedCashFlowHighestBestUsed({ isReadOnly }: DiscountedCash
     },
     {
       targetPath: 'appraisalPrice',
-      deps: ['finalValueAdjust', 'finalValueRounded', 'isHighestBestUsed', 'highestBestUsed.totalValue'],
+      deps: [
+        'finalValueAdjust',
+        'finalValueRounded',
+        'isHighestBestUsed',
+        'highestBestUsed.totalValue',
+      ],
       compute: ({ getValues }) => {
         const isHbu = getValues('isHighestBestUsed') ?? false;
         // HBU=Yes: building IS the highest-and-best-use, so appraisal anchors to
@@ -187,7 +194,13 @@ export function DiscountedCashFlowHighestBestUsed({ isReadOnly }: DiscountedCash
               fieldName={'highestBestUsed.areaNgan'}
               inputType="number"
               disabled={isReadOnly}
-              number={{ label: 'Ngan', decimalPlaces: 0, maxIntegerDigits: 1, maxValue: 3, allowNegative: false }}
+              number={{
+                label: 'Ngan',
+                decimalPlaces: 0,
+                maxIntegerDigits: 1,
+                maxValue: 3,
+                allowNegative: false,
+              }}
             />
           </div>
           <div className="w-32">
@@ -203,7 +216,12 @@ export function DiscountedCashFlowHighestBestUsed({ isReadOnly }: DiscountedCash
               fieldName={'highestBestUsed.pricePerSqWa'}
               inputType="number"
               disabled={isReadOnly}
-              number={{ label: 'Price/ Sq.Wa', decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+              number={{
+                label: 'Price/ Sq.Wa',
+                decimalPlaces: 2,
+                maxIntegerDigits: 15,
+                allowNegative: false,
+              }}
             />
           </div>
         </div>
@@ -222,9 +240,7 @@ export function DiscountedCashFlowHighestBestUsed({ isReadOnly }: DiscountedCash
               />
             </div>
           </HbuDerivationRow>
-          {showLandRow && (
-            <HbuDerivationRow label="+ Land Value" value={fmt(landValueNum)} />
-          )}
+          {showLandRow && <HbuDerivationRow label="+ Land Value" value={fmt(landValueNum)} />}
           <HbuDerivationRow
             label="= Appraisal Price (Computed)"
             value={fmt(computedAppraisal)}
@@ -281,9 +297,7 @@ function HbuStat({
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] text-gray-500">{label}</span>
-      <span
-        className={`tabular-nums ${strong ? 'text-gray-900 font-semibold' : 'text-gray-800'}`}
-      >
+      <span className={`tabular-nums ${strong ? 'text-gray-900 font-semibold' : 'text-gray-800'}`}>
         {value}
       </span>
     </div>

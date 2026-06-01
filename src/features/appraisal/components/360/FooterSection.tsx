@@ -30,13 +30,7 @@ const FooterSection = ({ appraisal }: FooterSectionProps) => {
   );
 };
 
-const InfoField = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: any;
-}) => (
+const InfoField = ({ label, value }: { label: string; value: any }) => (
   <div>
     <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
     <p className="text-sm text-gray-900">{value != null ? String(value) : '-'}</p>

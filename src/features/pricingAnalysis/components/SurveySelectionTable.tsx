@@ -28,7 +28,13 @@ interface SurveySelectionTableProps {
 /** Small location pin matching the map marker colour, for the first column. */
 function RowPin({ color }: { color: string }) {
   return (
-    <svg viewBox="0 0 24 32" width="12" height="16" className="inline-block shrink-0" aria-hidden="true">
+    <svg
+      viewBox="0 0 24 32"
+      width="12"
+      height="16"
+      className="inline-block shrink-0"
+      aria-hidden="true"
+    >
       <path
         d="M12 0.5C5.65 0.5 0.5 5.65 0.5 12c0 7.7 11.5 19.5 11.5 19.5S23.5 19.7 23.5 12C23.5 5.65 18.35 0.5 12 0.5z"
         fill={color}
@@ -43,8 +49,8 @@ const stickyGradient =
 
 /** Opaque background for sticky body cells so scrolling content doesn't bleed through. */
 function stickyCellBg(isSelected: boolean, isOddRow: boolean) {
-  if (isSelected) return 'bg-teal-50';       // opaque tint for selected
-  if (isOddRow) return 'bg-gray-50';         // opaque alternating
+  if (isSelected) return 'bg-teal-50'; // opaque tint for selected
+  if (isOddRow) return 'bg-gray-50'; // opaque alternating
   return 'bg-white';
 }
 
@@ -60,10 +66,8 @@ export function SurveySelectionTable({
   onRowHover,
   subjectRows = [],
 }: SurveySelectionTableProps) {
-  const allChecked =
-    surveys.length > 0 && surveys.every(s => selectedIds.has(s.id ?? ''));
-  const someChecked =
-    surveys.some(s => selectedIds.has(s.id ?? '')) && !allChecked;
+  const allChecked = surveys.length > 0 && surveys.every(s => selectedIds.has(s.id ?? ''));
+  const someChecked = surveys.some(s => selectedIds.has(s.id ?? '')) && !allChecked;
 
   if (surveys.length === 0) {
     return (
@@ -80,9 +84,7 @@ export function SurveySelectionTable({
         <thead className="sticky top-0 z-30">
           <tr className="border-b border-gray-200">
             {/* Checkbox header */}
-            <th
-              className="bg-gray-50 sticky left-0 z-30 w-[50px] min-w-[50px] px-3 py-2 text-center"
-            >
+            <th className="bg-gray-50 sticky left-0 z-30 w-[50px] min-w-[50px] px-3 py-2 text-center">
               <input
                 type="checkbox"
                 checked={allChecked}
@@ -94,9 +96,7 @@ export function SurveySelectionTable({
               />
             </th>
             {/* Comparable No header */}
-            <th
-              className="bg-gray-50 sticky left-[50px] z-30 w-[150px] min-w-[150px] px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
-            >
+            <th className="bg-gray-50 sticky left-[50px] z-30 w-[150px] min-w-[150px] px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
               Comparable No.
             </th>
             {/* Survey Name header */}
@@ -111,8 +111,7 @@ export function SurveySelectionTable({
             {/* Dynamic factor columns */}
             {factorColumns.map(col => {
               const label =
-                getFactorDesciption(col.factorCode, allFactors, language) ??
-                col.factorCode;
+                getFactorDesciption(col.factorCode, allFactors, language) ?? col.factorCode;
               return (
                 <th
                   key={col.factorCode}
@@ -236,15 +235,11 @@ export function SurveySelectionTable({
                   )}
                   title={survey.surveyName ?? ''}
                 >
-                  <span className="truncate block max-w-[160px]">
-                    {survey.surveyName}
-                  </span>
+                  <span className="truncate block max-w-[160px]">{survey.surveyName}</span>
                 </td>
                 {/* Factor value cells */}
                 {factorColumns.map(col => {
-                  const factorData = survey.factorData?.find(
-                    f => f.factorCode === col.factorCode,
-                  );
+                  const factorData = survey.factorData?.find(f => f.factorCode === col.factorCode);
                   return (
                     <td
                       key={col.factorCode}
@@ -257,7 +252,9 @@ export function SurveySelectionTable({
                           parameterGroup={factorData.parameterGroup as string | undefined}
                           fieldDecimal={factorData.fieldDecimal as number | undefined}
                         />
-                      ) : '-'}
+                      ) : (
+                        '-'
+                      )}
                     </td>
                   );
                 })}

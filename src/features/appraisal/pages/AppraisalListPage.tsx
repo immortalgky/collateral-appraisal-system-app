@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import {
@@ -13,7 +14,7 @@ import {
   type SmartViewDto,
   type SavedSearchDto,
 } from '../api/appraisalSearch';
-import { appraisalFilters, appraisalColumns } from '../components/search/tabConfigs';
+import { makeAppraisalFilters, makeAppraisalColumns } from '../components/search/tabConfigs';
 import SearchFilterBar from '../components/search/SearchFilterBar';
 import ActiveFilterChips from '../components/search/ActiveFilterChips';
 import SmartViewBar from '../components/search/SmartViewBar';
@@ -23,9 +24,12 @@ import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlid
 import DataErrorState from '@/shared/components/DataErrorState';
 
 const NON_FILTER_KEYS = new Set(['search', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
-const VALID_FILTER_KEYS = new Set(appraisalFilters.map(f => f.key));
 
 function AppraisalListPage() {
+  const { t } = useTranslation(['appraisal', 'common']);
+  const appraisalFilters = makeAppraisalFilters(t);
+  const appraisalColumns = makeAppraisalColumns(t);
+  const VALID_FILTER_KEYS = new Set(appraisalFilters.map(f => f.key));
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read initial state from URL (once on mount)
@@ -80,7 +84,16 @@ function AppraisalListPage() {
       if (v) params[k] = v;
     });
     setSearchParams(params, { replace: true });
-  }, [debouncedSearch, pageNumber, pageSize, sortBy, sortDir, filters, activeViewKey, setSearchParams]);
+  }, [
+    debouncedSearch,
+    pageNumber,
+    pageSize,
+    sortBy,
+    sortDir,
+    filters,
+    activeViewKey,
+    setSearchParams,
+  ]);
 
   // Data hooks
   const { data, isLoading, isError, error, refetch } = useAppraisalSearch({
@@ -171,7 +184,7 @@ function AppraisalListPage() {
   if (isError) {
     return (
       <DataErrorState
-        title="Failed to load appraisals"
+        title={t('common:status.failedToLoad')}
         message={(error as Error)?.message}
         onRetry={refetch}
       />
@@ -183,11 +196,11 @@ function AppraisalListPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Appraisals</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
           <p className="text-xs text-gray-500 mt-0.5">
             {totalCount > 0
-              ? `${totalCount.toLocaleString()} appraisals found`
-              : 'Browse and search appraisals'}
+              ? t('list.countFound', { count: totalCount.toLocaleString() })
+              : t('list.browseHint')}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -195,22 +208,22 @@ function AppraisalListPage() {
           <div className="relative group">
             <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300">
               <Icon style="solid" name="arrow-down-tray" className="size-3" />
-              Export
+              {t('list.export')}
             </button>
             <div className="hidden group-hover:block absolute right-0 top-full pt-1 w-36 z-40">
               <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
-              <button
-                onClick={() => handleExport('xlsx')}
-                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
-              >
-                Excel (.xlsx)
-              </button>
-              <button
-                onClick={() => handleExport('csv')}
-                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
-              >
-                CSV (.csv)
-              </button>
+                <button
+                  onClick={() => handleExport('xlsx')}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                >
+                  {t('list.exportXlsx')}
+                </button>
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                >
+                  {t('list.exportCsv')}
+                </button>
               </div>
             </div>
           </div>
@@ -239,7 +252,7 @@ function AppraisalListPage() {
           />
           <input
             type="text"
-            placeholder="Search by appraisal number, customer name, or request number..."
+            placeholder={t('list.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"

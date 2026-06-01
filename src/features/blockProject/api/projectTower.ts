@@ -43,9 +43,7 @@ export const useGetProjectTowerById = (appraisalId: string, towerId?: string) =>
   return useQuery({
     queryKey: projectTowerKeys.detail(appraisalId, towerId!),
     queryFn: async (): Promise<ProjectTower> => {
-      const { data } = await axios.get(
-        `/appraisals/${appraisalId}/project/towers/${towerId}`,
-      );
+      const { data } = await axios.get(`/appraisals/${appraisalId}/project/towers/${towerId}`);
       return data;
     },
     enabled: !!appraisalId && !!towerId,
@@ -121,13 +119,8 @@ export const useDeleteProjectTower = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      appraisalId: string;
-      towerId: string;
-    }): Promise<void> => {
-      await axios.delete(
-        `/appraisals/${params.appraisalId}/project/towers/${params.towerId}`,
-      );
+    mutationFn: async (params: { appraisalId: string; towerId: string }): Promise<void> => {
+      await axios.delete(`/appraisals/${params.appraisalId}/project/towers/${params.towerId}`);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -197,9 +190,7 @@ export const useRemoveProjectTowerImage = () => {
       imageId: string;
       appraisalId: string;
     }): Promise<void> => {
-      await axios.delete(
-        `/appraisals/${appraisalId}/project/towers/${entityId}/images/${imageId}`,
-      );
+      await axios.delete(`/appraisals/${appraisalId}/project/towers/${entityId}/images/${imageId}`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

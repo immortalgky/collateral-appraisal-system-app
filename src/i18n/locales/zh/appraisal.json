@@ -1,0 +1,900 @@
+{
+  "completionChecklist": {
+    "title": "验证检查",
+    "submitting": "提交中…",
+    "allPassed": "所有检查已通过"
+  },
+  "completionErrors": {
+    "defaultTitle": "验证失败"
+  },
+  "list": {
+    "title": "估价列表",
+    "countFound": "找到 {{count}} 条估价记录",
+    "browseHint": "浏览和搜索估价记录",
+    "searchPlaceholder": "按估价编号、客户名称或请求编号搜索...",
+    "export": "导出",
+    "exportXlsx": "Excel (.xlsx)",
+    "exportCsv": "CSV (.csv)",
+    "empty": "未找到估价记录",
+    "emptyHint": "请尝试调整搜索条件或筛选器",
+    "columns": {
+      "appraisalNumber": "估价编号",
+      "customer": "客户",
+      "status": "状态",
+      "priority": "优先级",
+      "sla": "SLA",
+      "province": "省份",
+      "assignment": "分配",
+      "company": "公司",
+      "appointment": "预约",
+      "created": "创建时间"
+    },
+    "filters": {
+      "statusLabel": "状态",
+      "statusPlaceholder": "所有状态",
+      "priorityLabel": "优先级",
+      "priorityPlaceholder": "所有优先级",
+      "slaStatusLabel": "SLA 状态",
+      "slaStatusPlaceholder": "所有 SLA",
+      "typeLabel": "类型",
+      "typePlaceholder": "所有类型",
+      "assignmentLabel": "分配",
+      "assignmentPlaceholder": "所有分配方式",
+      "provincePlaceholder": "所有省份",
+      "companyPlaceholder": "搜索公司...",
+      "createdFrom": "创建开始",
+      "createdTo": "创建结束",
+      "slaDueFrom": "SLA 截止开始",
+      "slaDueTo": "SLA 截止结束"
+    },
+    "status": {
+      "Pending": "待处理",
+      "Assigned": "已分配",
+      "InProgress": "进行中",
+      "UnderReview": "审核中",
+      "Completed": "已完成",
+      "Cancelled": "已取消"
+    },
+    "priority": {
+      "Normal": "普通",
+      "High": "高"
+    },
+    "sla": {
+      "OnTrack": "正常",
+      "AtRisk": "有风险",
+      "Breached": "已超期",
+      "overdue": "超期 {{time}}",
+      "left": "剩余 {{time}}"
+    },
+    "assignmentType": {
+      "Internal": "内部",
+      "External": "外部"
+    },
+    "appraisalType": {
+      "New": "新建",
+      "Revaluation": "重新评估"
+    }
+  },
+  "appointment": {
+    "sectionTitle": "预约信息",
+    "noAppointment": "未安排预约",
+    "noAppointmentHint": "安排预约以继续评估流程",
+    "scheduleButton": "安排预约",
+    "rescheduleButton": "重新安排",
+    "cancelButton": "取消",
+    "locationNotSpecified": "未指定地点",
+    "contactNotSpecified": "未指定联系人",
+    "rescheduledCount": "已改期 {{n}} 次",
+    "scheduleModal": {
+      "titleNew": "安排预约",
+      "titleReschedule": "重新安排预约",
+      "submitNew": "安排",
+      "submitReschedule": "保存",
+      "dateTimeLabel": "预约日期和时间",
+      "locationLabel": "地点",
+      "locationPlaceholder": "输入预约地点详情",
+      "reasonLabel": "改期原因",
+      "reasonPlaceholder": "输入改期原因（可选）"
+    },
+    "cancelDialog": {
+      "title": "取消预约？",
+      "message": "确定要取消此预约吗？此操作无法撤销。",
+      "confirm": "取消预约",
+      "cancel": "保留预约"
+    },
+    "toasts": {
+      "scheduled": "预约已安排",
+      "rescheduled": "预约已改期",
+      "cancelled": "预约已取消",
+      "scheduleFailed": "更新预约失败，请重试。",
+      "cancelFailed": "取消预约失败，请重试。"
+    }
+  },
+  "fee": {
+    "sectionTitle": "费用信息",
+    "feePaymentTypeLabel": "费用支付类型",
+    "columns": {
+      "type": "类型",
+      "description": "描述",
+      "amount": "金额",
+      "actions": "操作"
+    },
+    "empty": "暂无费用",
+    "emptyHint": "添加第一条费用记录",
+    "addFee": "添加额外费用",
+    "subtotal": "小计",
+    "vat": "增值税 ({{rate}}%)",
+    "vatTooltip": "按小计计算的增值税",
+    "total": "合计",
+    "constructionInspectionFee": "施工检验费",
+    "constructionInspectionFeeHint": "此费用将用于该抵押品下次施工检验申请的评估费。",
+    "addFeeModal": {
+      "titleAdd": "添加费用",
+      "titleEdit": "编辑费用",
+      "typeLabel": "费用类型",
+      "descriptionLabel": "描述",
+      "amountLabel": "金额"
+    },
+    "deleteFeeDialog": {
+      "title": "删除费用",
+      "message": "确定要删除 {{description}} 吗？此操作无法撤销。",
+      "confirm": "删除"
+    },
+    "aria": {
+      "editFee": "编辑费用：{{description}}",
+      "editFeeTitle": "编辑费用",
+      "deleteFee": "删除费用：{{description}}",
+      "deleteFeeTitle": "删除费用",
+      "approveFee": "批准",
+      "rejectFee": "拒绝"
+    },
+    "cannotDeleteFee": "无法删除此费用项。总费用 ({{newTotal}}) 将低于已支付金额 ({{totalPaid}})。",
+    "toasts": {
+      "feeAdded": "费用添加成功",
+      "feeAddFailed": "添加费用失败。",
+      "feeUpdated": "费用更新成功",
+      "feeUpdateFailed": "更新费用失败。",
+      "feeDeleted": "费用删除成功",
+      "feeDeleteFailed": "删除费用失败。",
+      "feeTypeUpdated": "费用类型已更新",
+      "feeTypeUpdateFailed": "更新费用类型失败。",
+      "feeApproved": "费用项已批准",
+      "feeApproveFailed": "批准费用项失败。",
+      "feeRejected": "费用项已拒绝",
+      "feeRejectFailed": "拒绝费用项失败。",
+      "ciFeesSaved": "施工检验费已保存",
+      "ciFeesFailed": "保存施工检验费失败。"
+    }
+  },
+  "payment": {
+    "sectionTitle": "付款信息",
+    "paymentDate": "付款日期",
+    "paidAmount": "已付金额",
+    "bankAbsorbAmount": "银行承担金额",
+    "bankAbsorbTooltip": "银行承担的金额，减少客户的付款义务",
+    "customerPayable": "客户应付",
+    "remaining": "剩余",
+    "noPayments": "暂无付款记录",
+    "addPayment": "添加付款",
+    "bankAbsorbed": "银行承担",
+    "paidPercent": "已付 {{n}}%",
+    "aria": {
+      "expandHistory": "展开付款历史",
+      "collapseHistory": "收起付款历史",
+      "editPayment": "编辑付款 {{amount}}",
+      "editPaymentTitle": "编辑付款",
+      "deletePayment": "删除付款 {{amount}}",
+      "deletePaymentTitle": "删除付款"
+    },
+    "addPaymentModal": {
+      "titleAdd": "添加付款",
+      "titleEdit": "编辑付款",
+      "dateLabel": "付款日期",
+      "amountLabel": "金额"
+    },
+    "deletePaymentDialog": {
+      "title": "删除付款",
+      "message": "确定要删除此 {{description}} 吗？此操作无法撤销。",
+      "confirm": "删除"
+    },
+    "columns": {
+      "paymentDate": "付款日期",
+      "amount": "金额"
+    },
+    "toasts": {
+      "paymentRecorded": "付款已记录",
+      "paymentRecordFailed": "记录付款失败。",
+      "paymentUpdated": "付款已更新",
+      "paymentUpdateFailed": "更新付款失败。",
+      "paymentDeleted": "付款已删除",
+      "paymentDeleteFailed": "删除付款失败。"
+    }
+  },
+  "administration": {
+    "pageTitle": "分配管理",
+    "assignmentLocked": "分配已锁定",
+    "assignmentLockedDesc": "此估价在报价单 #{{quotationNumber}} ({{status}}) 中。取消报价单或从中移除此估价以进行更改。",
+    "openQuotation": "打开报价单",
+    "assignmentType": {
+      "title": "分配类型",
+      "subtitle": "选择内部分配或外部公司",
+      "internal": "内部评估",
+      "internalDesc": "分配给内部评估人员",
+      "external": "外部公司",
+      "externalDesc": "分配给外部评估公司",
+      "internalDisabledHint": "授信额度超过 5000 万时不可内部分配"
+    },
+    "assignmentDetails": {
+      "titleInternal": "内部分配详情",
+      "titleExternal": "外部分配详情",
+      "subtitle": "配置分配方式并选择被分配人",
+      "methodLabel": "分配方式",
+      "manual": "手动选择",
+      "manualDesc": "选择指定的被分配人",
+      "roundrobin": "轮询",
+      "roundrobinDesc": "系统根据工作负载自动分配",
+      "quotation": "请求报价",
+      "quotationDesc": "先向公司请求报价"
+    },
+    "manualStaff": {
+      "label": "选择员工",
+      "placeholder": "点击搜索并选择员工..."
+    },
+    "manualCompany": {
+      "label": "选择外部公司",
+      "placeholder": "点击搜索并选择外部公司..."
+    },
+    "roundrobinInfo": {
+      "title": "轮询分配",
+      "internalDesc": "系统将根据当前工作负载分配情况，自动将此估价分配给下一位可用员工。",
+      "externalDesc": "系统将根据轮换计划，自动将此估价分配给下一家外部公司。"
+    },
+    "followupStaff": {
+      "label": "内部跟进人员",
+      "manualLabel": "手动选择",
+      "manualDesc": "选择指定员工",
+      "roundrobinLabel": "轮询",
+      "roundrobinDesc": "系统自动分配",
+      "roundrobinInfo": "系统将根据轮询分配自动指定跟进人员。",
+      "placeholder": "点击搜索并选择内部跟进人员..."
+    },
+    "unsavedChanges": "有未保存的更改",
+    "assigning": "分配中...",
+    "assign": "分配",
+    "toasts": {
+      "assignmentCreated": "分配创建成功",
+      "assignmentFailed": "创建分配失败，请重试。",
+      "noWorkflowTask": "分配需要活动的工作流任务。请从任务列表打开此页面。",
+      "notTaskOwner": "只有任务所有者才能分配此估价。",
+      "quotationLocked": "分配已锁定 — 估价在报价单 #{{quotationNumber}} ({{status}}) 中。",
+      "quotationNotFinalized": "报价单必须在有赢家的情况下完成才能外部路由。",
+      "loadingActions": "正在加载决策选项，请稍后重试。",
+      "selectAssignee": "提交前请选择下一个被分配人。"
+    }
+  },
+  "quotation": {
+    "sectionTitle": "报价单",
+    "noQuotation": "尚无报价请求",
+    "noQuotationHint": "创建报价单以邀请外部公司投标",
+    "requestQuotation": "请求报价",
+    "newQuotation": "新建报价单",
+    "sendQuotation": "发送报价单",
+    "cancelQuotation": "取消报价单",
+    "cancelQuotationTitle": "取消报价单",
+    "rejectWinner": "拒绝赢家",
+    "openNegotiation": "开启谈判",
+    "finalize": "最终确认",
+    "edit": "编辑",
+    "save": "保存",
+    "saving": "保存中...",
+    "sending": "发送中...",
+    "cancelling": "取消中...",
+    "goBack": "返回",
+    "back": "上一步",
+    "cancel": "取消",
+    "confirmSend": "确认并发送",
+    "removeFromQuotation": "从报价单中移除此估价",
+    "removeConfirmTitle": "从报价单中移除？",
+    "removeConfirmMessage": "此估价将从报价单 {{quotationNumber}} 中移除。如果是最后一个，报价单将被取消。",
+    "removeConfirm": "移除",
+    "cancelConfirmMessage": "这将取消报价单 {{quotationNumber}}。所有受邀公司将收到通知，工作流任务将被取消。此操作无法撤销。",
+    "cancelReasonLabel": "原因",
+    "cancelReasonOptional": "（可选）",
+    "cancelReasonPlaceholder": "为什么要取消此报价单？",
+    "draftHint": "此报价单仍为草稿。添加估价、邀请公司，然后点击发送报价单以开放投标。",
+    "notSet": "未设置",
+    "closes": "截止时间",
+    "hoursRemaining": "剩余 {{n}} 小时",
+    "stats": {
+      "companiesInvited": "受邀公司",
+      "responses": "回复",
+      "appraisals": "估价",
+      "cutOffTime": "截止时间"
+    },
+    "table": {
+      "company": "公司",
+      "totalFeeAmount": "总费用金额",
+      "totalDiscount": "总折扣",
+      "totalNetAmount": "总净额",
+      "totalEstimateManday": "预计工作天数",
+      "submittedAt": "提交时间",
+      "status": "状态"
+    },
+    "finalizedWith": "报价单已与 {{company}} 最终确认。",
+    "finalPrice": "最终价格：",
+    "finalizedHint": "点击\"分配\"将外部路由到此公司。",
+    "cancelledHint": "此报价单已被取消。为此估价创建新的报价单。",
+    "maximumNegotiationRounds": "已达到最大谈判轮次",
+    "shareDocuments": {
+      "title": "共享文件",
+      "step": "第 2 步（共 2 步）— 勾选要与受邀公司共享的文件",
+      "noAppraisals": "没有可共享文件的估价。",
+      "loadingDocuments": "加载文件中...",
+      "noRequestLinked": "此估价未关联请求，无法加载文件。",
+      "noDocuments": "此请求未找到已上传的文件。",
+      "selectAll": "全选",
+      "coverageWarning": "发送前请为每个估价选择至少一个文件。",
+      "coverageTitle": "为每个估价选择至少一个文件"
+    },
+    "editDraft": {
+      "appraisalCount": "{{n}}（使用添加/移除来更改估价）",
+      "companiesInvited": "受邀公司",
+      "eligibleFor": "适用于",
+      "companySearchPlaceholder": "搜索公司名称...",
+      "noEligibleCompanies": "该细分市场没有符合条件的公司",
+      "noCompaniesFound": "未找到公司",
+      "cutOffTime": "截止时间",
+      "appraisalsLabel": "估价",
+      "cutOffTimeRequired": "截止时间为必填项"
+    },
+    "emailModal": {
+      "title": "起草发送给外部评估公司的邮件"
+    },
+    "toasts": {
+      "quotationSent": "报价单已发送 — 投标现已开放",
+      "quotationSendFailed": "发送报价单失败",
+      "docSelectionFailed": "保存文件选择失败",
+      "quotationCancelled": "报价单已取消",
+      "quotationCancelFailed": "取消报价单失败",
+      "removedFromQuotation": "已从报价单中移除",
+      "removeFailed": "移除失败",
+      "draftUpdated": "草稿报价单已更新",
+      "draftUpdateFailed": "更新草稿失败",
+      "notCancellable": "报价单已无法取消（当前状态：{{status}}）。"
+    },
+    "loading": "加载报价单中..."
+  },
+  "decisionSummary": {
+    "pageTitle": "决策摘要",
+    "sections": {
+      "valuation": "估值",
+      "constructionSummary": "施工摘要",
+      "reviewOpinions": "审查与意见",
+      "decision": "决策"
+    },
+    "appraisalDate": "估价日期：",
+    "fields": {
+      "totalAppraisalPrice": "估价总价",
+      "forceSellingPrice": "强制出售价格",
+      "forceSellingPriceHint": "估价价格的 70%",
+      "buildingInsurance": "建筑保险",
+      "buildingInsuranceHint": "仅建筑物 — 不含土地",
+      "decisionApproach": "决策方法",
+      "priceVerification": "价格核实",
+      "priceVerificationOptions": [
+        "未核实",
+        "已核实"
+      ],
+      "reviewPrices": "审查价格",
+      "totalAppraisalPriceReview": "估价总价（审查）",
+      "forceSellingPriceReview": "强制出售价格（审查）",
+      "buildingInsuranceReview": "建筑保险（审查）",
+      "condition": "条件",
+      "conditionType": "条件类型",
+      "conditionTypePlaceholder": "选择条件类型...",
+      "conditionDetails": "条件详情",
+      "conditionDetailsPlaceholder": "输入条件详情...",
+      "remark": "备注",
+      "remarkType": "备注类型",
+      "remarkTypePlaceholder": "选择备注类型...",
+      "remarkDetails": "备注详情",
+      "remarkPlaceholder": "输入备注...",
+      "appraiserOpinions": "评估师意见",
+      "committeeOpinions": "委员会意见",
+      "opinionType": "意见类型",
+      "opinionTypePlaceholder": "选择意见类型...",
+      "appraiserOpinion": "评估师意见",
+      "appraiserOpinionPlaceholder": "输入评估师意见...",
+      "committeeOpinion": "委员会意见",
+      "committeeOpinionPlaceholder": "输入委员会意见...",
+      "additionalAssumptions": "附加/特殊假设",
+      "additionalAssumptionsDetails": "详情",
+      "additionalAssumptionsPlaceholder": "输入附加或特殊假设..."
+    },
+    "options": {
+      "conditionType": {
+        "normal": "正常",
+        "special": "特殊",
+        "other": "其他"
+      },
+      "remarkType": {
+        "normal": "正常",
+        "special": "特殊",
+        "other": "其他"
+      },
+      "opinionType": {
+        "agree": "同意",
+        "disagree": "不同意",
+        "conditional": "有条件"
+      }
+    },
+    "empty": {
+      "noApproachData": "暂无方法数据。",
+      "noGovernmentPrice": "暂无政府评估价格数据。"
+    },
+    "historySearch": "历史搜索",
+    "historySearchTitle": "历史搜索（附近估价和市场可比案例）",
+    "unsavedChanges": "有未保存的更改",
+    "confirmDialog": {
+      "title": "提交决策摘要",
+      "message": "确定要提交此决策摘要吗？",
+      "confirm": "提交",
+      "cancel": "取消",
+      "submitting": "提交中…",
+      "validationErrorsTitle": "请填写必填字段"
+    },
+    "toasts": {
+      "saved": "决策摘要保存成功",
+      "saveFailed": "保存决策摘要失败，请重试。",
+      "submitted": "决策提交成功",
+      "submitFailed": "提交决策失败",
+      "validationErrors": "发生验证错误"
+    }
+  },
+  "decision": {
+    "sectionTitle": "决策",
+    "activityTracking": "活动追踪",
+    "decisionLabel": "决策",
+    "commentsLabel": "意见",
+    "noDecision": "尚未做出决策",
+    "assignNextTo": "下一步分配给",
+    "decisionPlaceholder": "选择决策...",
+    "assigneePlaceholder": "选择被分配人...",
+    "requestDocuments": "请求补充文件",
+    "loadingActivity": "加载活动中...",
+    "loadingActions": "加载选项中...",
+    "loadingAssignees": "加载被分配人中...",
+    "commentPlaceholders": {
+      "default": "输入此决策的意见或原因...",
+      "approve": "为什么批准？",
+      "reject": "为什么拒绝？",
+      "routeBack": "需要修改什么？",
+      "proceed": "继续前的最终备注？",
+      "hold": "为什么暂停？"
+    }
+  },
+  "propertyInfo": {
+    "tabs": {
+      "properties": "房产",
+      "markets": "市场",
+      "gallery": "图库",
+      "photos": "照片",
+      "laws": "法律法规"
+    }
+  },
+  "properties": {
+    "addNewGroup": "添加新组",
+    "noGroups": "暂无房产组",
+    "noGroupsHint": "点击\"添加新组\"创建第一个组",
+    "loadError": "加载房产组失败",
+    "loadErrorHint": "请刷新页面重试",
+    "viewGrid": "网格视图",
+    "viewList": "列表视图",
+    "contextMenu": {
+      "view": "查看",
+      "edit": "编辑",
+      "moveTo": "移至",
+      "copy": "复制",
+      "paste": "粘贴",
+      "delete": "删除"
+    },
+    "moveModal": {
+      "title": "移动房产",
+      "loading": "移动中..."
+    },
+    "deleteModal": {
+      "title": "删除房产",
+      "message": "确定要移除此房产吗？",
+      "confirm": "移除"
+    },
+    "toasts": {
+      "groupCreateFailed": "创建组失败",
+      "groupRenameFailed": "重命名组失败",
+      "groupDeleteFailed": "删除组失败",
+      "propertyRemoveFailed": "从组中移除房产失败",
+      "propertyMoveFailed": "移动房产失败",
+      "propertyPasteFailed": "粘贴房产失败",
+      "reorderFailed": "重排房产失败"
+    }
+  },
+  "view360": {
+    "pageTitle": "360 视图",
+    "header": {
+      "totalAppraisalPrice": "估价总价",
+      "forceSellingPrice": "强制出售价格",
+      "buildingInsurance": "建筑保险"
+    },
+    "requestInfo": {
+      "sectionTitle": "请求信息"
+    },
+    "propertyGroups": {
+      "sectionTitle": "房产组"
+    },
+    "pricingAnalysis": {
+      "sectionTitle": "定价分析"
+    },
+    "decisionSummary": {
+      "sectionTitle": "决策摘要"
+    }
+  },
+  "activityTracking": {
+    "pageTitle": "活动追踪",
+    "tabs": {
+      "timeline": "时间线",
+      "log": "日志"
+    },
+    "empty": "暂无活动记录",
+    "columns": {
+      "activity": "活动",
+      "assignedTo": "分配给",
+      "startedAt": "开始时间",
+      "completedAt": "完成时间",
+      "status": "状态",
+      "movement": "动态",
+      "remark": "备注"
+    }
+  },
+  "documentChecklist": {
+    "pageTitle": "文件清单",
+    "empty": "无需提交文件",
+    "columns": {
+      "document": "文件",
+      "required": "必需",
+      "received": "已收到",
+      "remarks": "备注"
+    },
+    "toasts": {
+      "saveFailed": "保存清单失败",
+      "saved": "清单已保存"
+    }
+  },
+  "gallery": {
+    "sectionTitle": "图库",
+    "noPhotos": "暂无照片",
+    "noPhotosHint": "上传照片以开始",
+    "addPhoto": "添加照片",
+    "uploadPhoto": "上传照片",
+    "takePhoto": "拍照",
+    "photoSource": "选择照片来源",
+    "editPhoto": "编辑照片",
+    "deletePhoto": "删除照片",
+    "previewPhoto": "预览照片",
+    "gridView": "网格视图",
+    "listView": "列表视图",
+    "columns": {
+      "fileName": "文件名",
+      "category": "类别",
+      "uploadedBy": "上传者",
+      "uploadedAt": "上传时间",
+      "actions": "操作"
+    },
+    "aria": {
+      "editPhoto": "编辑照片",
+      "deletePhoto": "删除照片",
+      "previewPhoto": "预览照片"
+    },
+    "deleteConfirm": {
+      "title": "删除照片",
+      "message": "确定要删除此照片吗？此操作无法撤销。",
+      "confirm": "删除"
+    },
+    "toasts": {
+      "uploaded": "照片已上传",
+      "uploadFailed": "上传照片失败",
+      "deleted": "照片已删除",
+      "deleteFailed": "删除照片失败",
+      "updated": "照片已更新",
+      "updateFailed": "更新照片失败"
+    }
+  },
+  "search": {
+    "pageTitle": "估价搜索",
+    "placeholder": "搜索估价...",
+    "savedSearches": "已保存的搜索",
+    "saveSearch": "保存搜索",
+    "deleteSavedSearch": "删除已保存的搜索",
+    "activeFilters": "活动筛选器",
+    "clearAll": "全部清除"
+  },
+  "lawsRegulations": {
+    "pageTitle": "法律法规",
+    "addRecord": "添加记录",
+    "noRecords": "暂无法律法规",
+    "noRecordsHint": "添加适用于此房产的法律法规",
+    "columns": {
+      "type": "类型",
+      "detail": "详情",
+      "actions": "操作"
+    },
+    "toasts": {
+      "saved": "记录已保存",
+      "saveFailed": "保存记录失败",
+      "deleted": "记录已删除",
+      "deleteFailed": "删除记录失败"
+    }
+  },
+  "markets": {
+    "pageTitle": "市场可比案例",
+    "addComparable": "添加可比案例",
+    "noComparables": "暂无市场可比案例",
+    "noComparablesHint": "添加市场可比数据以支持估价",
+    "columns": {
+      "address": "地址",
+      "area": "面积",
+      "price": "价格",
+      "pricePerUnit": "单价",
+      "source": "来源",
+      "date": "日期"
+    },
+    "toasts": {
+      "saved": "市场可比案例已保存",
+      "saveFailed": "保存市场可比案例失败",
+      "deleted": "市场可比案例已删除",
+      "deleteFailed": "删除市场可比案例失败"
+    }
+  },
+  "constructionInspection": {
+    "sectionTitle": "施工检验",
+    "summary": "施工摘要",
+    "columns": {
+      "description": "描述",
+      "buildingValue": "建筑价值",
+      "buildingValue100": "建筑价值 100%（检验前）",
+      "totalValue": "总价值"
+    }
+  },
+  "forms": {
+    "land": {
+      "sectionTitleInfo": "土地信息",
+      "sectionTitleLocation": "土地位置",
+      "sectionTitleBoundary": "土地边界",
+      "sectionTitleCharacteristics": "土地特征",
+      "sectionTitlePlot": "地块位置"
+    },
+    "building": {
+      "sectionTitle": "建筑详情"
+    },
+    "condo": {
+      "sectionTitle": "公寓详情",
+      "areaDetail": "面积详情",
+      "pma": "PMA 信息"
+    },
+    "machinery": {
+      "sectionTitle": "机械详情"
+    },
+    "titleDeed": {
+      "sectionTitle": "地契"
+    },
+    "leaseAgreement": {
+      "sectionTitle": "租赁协议"
+    },
+    "rentalInfo": {
+      "sectionTitle": "租赁信息"
+    },
+    "marketComparable": {
+      "sectionTitle": "市场可比案例"
+    }
+  },
+  "validation": {
+    "dateTimeRequired": "日期和时间为必填项",
+    "locationRequired": "地点为必填项",
+    "descriptionRequired": "描述为必填项",
+    "amountNonNegative": "金额不能为负数",
+    "amountPositive": "金额必须大于 0",
+    "paymentDateRequired": "付款日期为必填项",
+    "feeTypeRequired": "费用类型为必填项",
+    "bankAbsorbNonNegative": "银行承担金额不能为负数",
+    "ciFeeNonNegative": "施工检验费不能为负数",
+    "subDistrictRequired": "Sub district is required.",
+    "districtRequired": "District is required.",
+    "provinceRequired": "Province is required.",
+    "builtOnTitleNumberRequired": "Built on title number is required.",
+    "condoRegistrationNumberRequired": "Condo registration number is required.",
+    "roomNumberRequired": "Room number is required.",
+    "buildingNumberRequired": "Building number is required.",
+    "condoNameRequired": "Condo name is required.",
+    "headerRequired": "Header is required",
+    "assignmentTypeRequired": "Please select an assignment type",
+    "assignmentMethodRequired": "Please select an assignment method",
+    "remarksMaxLength": "Remarks must not exceed 500 characters",
+    "selectAssignee": "Please select an assignee",
+    "selectFollowupStaff": "Please select an internal followup staff"
+  },
+  "toasts": {
+    "photoUploaded": "Photo uploaded successfully",
+    "photoUploadFailed": "Failed to upload photo",
+    "photoLinked": "Photo linked successfully",
+    "photosLinked": "{{count}} photos linked successfully",
+    "photoLinkFailed": "Failed to link photo",
+    "photoLinkIndexFailed": "Failed to link photo {{index}}",
+    "photoRemoved": "Photo removed",
+    "photoUnlinked": "Photo unlinked from property",
+    "photoUnlinkFailed": "Failed to unlink photo",
+    "photoUnlinkMissingId": "Cannot unlink: missing image ID",
+    "photoUnlinkMissingMappingId": "Cannot unlink: missing mapping ID",
+    "photoRemoveFailed": "Failed to remove photo",
+    "photoDeletedPermanently": "Photo deleted permanently",
+    "photoDeleteFailed": "Failed to delete photo",
+    "photoThumbnailSetFailed": "Failed to set cover photo",
+    "photoThumbnailUnsetFailed": "Failed to remove cover photo",
+    "photoThumbnailSetPropertyFailed": "Failed to set thumbnail",
+    "photoThumbnailUnsetPropertyFailed": "Failed to unset thumbnail",
+    "descriptionUpdated": "Description updated",
+    "descriptionUpdateFailed": "Failed to update description",
+    "galleryPhotoNotFound": "Gallery photo not found",
+    "uploading": "Uploading {{count}} file(s)...",
+    "uploadedFile": "Uploaded {{name}}",
+    "uploadFileFailed": "Failed to upload {{name}}",
+    "photosLinkedToProperty": "Linked {{count}} photo(s) to property",
+    "photosLinkedPartial": "Linked {{success}}, failed {{failed}}",
+    "photoSelectTopicFirst": "Please select a topic first",
+    "photoUnsupportedFormat": "Please select supported image files only (JPG, JPEG, PNG)",
+    "photoUnsupportedFormatGallery": "{{name}} is not a supported image file (JPG, JPEG, PNG only)",
+    "photoAddedCount": "Added {{count}} photo(s)",
+    "photoAssignFailed": "Failed to assign photo",
+    "photoRemoveFromTopicFailed": "Failed to remove photo from topic",
+    "topicUnassignFailed": "Failed to unassign photos from topic",
+    "topicCreated": "Topic created",
+    "uploadSessionFailed": "Failed to create upload session",
+    "documentUpdated": "Document updated",
+    "filesUploaded": "Files uploaded successfully",
+    "annotationSaveFailed": "Failed to save annotated image",
+    "fileUploadFailed": "Failed to upload file",
+    "documentLoadFailed": "Failed to load document for editing",
+    "onlyImageFilesAllowed": "Only image files are allowed",
+    "galleryFilesAdded": "Files added from gallery",
+    "galleryFilesAddFailed": "Failed to add files from gallery",
+    "documentRemoved": "Document removed",
+    "documentRemoveFailed": "Failed to remove document",
+    "layoutUpdateFailed": "Failed to update layout",
+    "galleryPhotoDeletedCount": "Deleted {{count}} photo(s)",
+    "galleryPhotoDeletedPartial": "Deleted {{deleted}}, failed {{failed}}",
+    "galleryPhotoSelectFirst": "Please select at least one photo",
+    "comparableUnlinked": "Comparable unlinked successfully",
+    "comparableUnlinkFailed": "Failed to unlink comparable",
+    "lawItemDeleted": "Item deleted successfully",
+    "lawItemDeleteFailed": "Failed to delete item",
+    "lawImageUploaded": "Uploaded \"{{name}}\"",
+    "lawImageUploadFailed": "Failed to upload image",
+    "lawImagesUploading": "Uploading {{count}} file(s)...",
+    "lawSaveFailed": "Failed to save",
+    "lawDescriptionUpdated": "Description updated",
+    "lawDescriptionUpdateFailed": "Failed to update description",
+    "quotationTaskContextMissing": "Task context is missing. Please reopen the task and try again.",
+    "quotationStarted": "Quotation started — companies have been invited",
+    "quotationAddSelectDraft": "Please select a Draft quotation to add to",
+    "quotationAddedToDraft": "Appraisal added to {{quotationNumber}}",
+    "voteSubmitFailed": "Failed to submit vote",
+    "committeeDecisionRecorded": "Committee decision recorded",
+    "voteRecorded": "Vote recorded",
+    "propertyCondoUpdated": "Property condominium updated successfully",
+    "propertyCondoCreated": "Property condominium created successfully",
+    "propertyLandUpdated": "Property land updated successfully",
+    "propertyLandCreated": "Property land created successfully",
+    "propertyLandBuildingUpdated": "Property land and building updated successfully",
+    "propertyLandBuildingCreated": "Property land and building created successfully",
+    "propertyBuildingUpdated": "Property building updated successfully",
+    "propertyBuildingCreated": "Property building created successfully",
+    "propertyMachineryUpdated": "Property Machinery updated successfully",
+    "propertyMachineryCreated": "Property Machinery created successfully",
+    "leaseAgreementBuildingUpdated": "Lease agreement building updated successfully",
+    "leaseAgreementBuildingCreated": "Lease agreement building created successfully",
+    "leaseAgreementLandUpdated": "Lease agreement land updated successfully",
+    "leaseAgreementLandCreated": "Lease agreement land created successfully",
+    "leaseAgreementLandBuildingUpdated": "Lease agreement land and building updated successfully",
+    "leaseAgreementLandBuildingCreated": "Lease agreement land and building created successfully",
+    "leaseAgreementCondoUpdated": "Lease agreement condo updated successfully",
+    "leaseAgreementCondoCreated": "Lease agreement condo created successfully",
+    "draftSaved": "Draft saved successfully",
+    "marketComparableUpdated": "Market comparable updated successfully",
+    "marketComparableCreated": "Market comparable created successfully",
+    "marketComparableDeleted": "Market comparable deleted successfully",
+    "marketComparableDeleteFailed": "Failed to delete market comparable"
+  },
+  "common": {
+    "unsavedChanges": "有未保存的更改",
+    "loading": "加载中...",
+    "saving": "保存中...",
+    "noData": "—",
+    "cancelButton": "取消",
+    "saveButton": "保存",
+    "submitButton": "提交",
+    "assignButton": "分配",
+    "editButton": "编辑",
+    "deleteButton": "删除",
+    "addButton": "添加",
+    "closeButton": "关闭",
+    "backButton": "返回",
+    "retryButton": "重试",
+    "appraisals": "估价",
+    "company": "公司",
+    "province": "省份",
+    "status": "状态"
+  },
+  "pageHeader": {
+    "appraisalNumber": "估价编号"
+  },
+  "collateralSelectModal": {
+    "title": "选择抵押品",
+    "searchPlaceholder": "搜索抵押品...",
+    "noResults": "未找到抵押品"
+  },
+  "collateralAssignmentModal": {
+    "title": "抵押品分配",
+    "assign": "分配"
+  },
+  "moveToGroupModal": {
+    "title": "移至组",
+    "selectGroup": "选择组",
+    "moving": "移动中..."
+  },
+  "deleteConfirmationModal": {
+    "title": "删除房产",
+    "message": "确定要从组中移除此房产吗？此操作无法撤销。",
+    "confirm": "删除"
+  },
+  "editPropertyModal": {
+    "title": "编辑房产"
+  },
+  "addToQuotationModal": {
+    "title": "添加到报价单",
+    "searchPlaceholder": "搜索报价单...",
+    "noQuotations": "未找到开放的报价单",
+    "add": "添加到报价单",
+    "toasts": {
+      "added": "已添加到报价单",
+      "addFailed": "添加到报价单失败"
+    }
+  },
+  "createQuotationModal": {
+    "title": "创建报价请求",
+    "fields": {
+      "companies": "邀请公司",
+      "cutOffTime": "截止时间",
+      "assignmentType": "分配类型",
+      "assignmentMethod": "分配方式"
+    },
+    "submit": "创建报价单",
+    "creating": "创建中...",
+    "toasts": {
+      "created": "报价请求已创建",
+      "createFailed": "创建报价请求失败"
+    }
+  },
+  "changeRequest": {
+    "title": "提交变更请求",
+    "openButton": "打开变更请求",
+    "cancelButton": "取消",
+    "addDate": "暂存新日期",
+    "changeDate": "更改暂存日期",
+    "addFee": "添加费用行",
+    "submitButton": "提交变更请求",
+    "confirmTitle": "提交变更请求",
+    "confirmMessage": "提交暂存的预约和/或费用变更以供审批？这将把请求路由给相应的审批人。",
+    "confirmSubmit": "提交",
+    "toasts": {
+      "submitted": "变更请求已提交审批",
+      "submitFailed": "提交变更请求失败"
+    }
+  }
+}

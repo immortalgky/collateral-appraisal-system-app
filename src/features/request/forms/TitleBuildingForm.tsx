@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
-import { titleBuildingFields, titleBuildingFieldsAlt } from '../configs/fields';
+import { makeTitleBuildingFields, makeTitleBuildingFieldsAlt } from '../configs/fields';
 
 interface TitleBuildingFormProps {
   index: number;
@@ -7,7 +9,12 @@ interface TitleBuildingFormProps {
 }
 
 const TitleBuildingForm = ({ index, variant = 3 }: TitleBuildingFormProps) => {
-  const fields = variant == 3 ? titleBuildingFields : titleBuildingFieldsAlt;
+  const { t } = useTranslation('request');
+  const fields = useMemo(
+    () => (variant === 3 ? makeTitleBuildingFields(t) : makeTitleBuildingFieldsAlt(t)),
+    [t, variant],
+  );
+
   return <FormFields fields={fields} namePrefix={'titles'} index={index} />;
 };
 

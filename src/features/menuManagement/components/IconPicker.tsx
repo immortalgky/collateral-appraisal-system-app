@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import type { IconStyle } from '../types';
 
@@ -42,6 +43,7 @@ export function IconPicker({
   onChangeStyle,
   disabled = false,
 }: IconPickerProps) {
+  const { t } = useTranslation('menuManagement');
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [icons, setIcons] = useState<string[]>([]);
@@ -97,7 +99,7 @@ export function IconPicker({
             <span className="text-gray-700">{value}</span>
           </>
         ) : (
-          <span className="text-gray-400">Pick icon...</span>
+          <span className="text-gray-400">{t('iconPicker.pickIcon')}</span>
         )}
         <Icon name="chevron-down" style="solid" className="size-3 text-gray-400 ml-auto" />
       </button>
@@ -130,8 +132,8 @@ export function IconPicker({
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search icons..."
-              aria-label="Search icons"
+              placeholder={t('iconPicker.searchPlaceholder')}
+              aria-label={t('iconPicker.searchAriaLabel')}
               className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
@@ -139,9 +141,9 @@ export function IconPicker({
           {/* Icon grid */}
           <div className="p-2 max-h-56 overflow-y-auto">
             {loading ? (
-              <p className="text-center text-sm text-gray-400 py-4">Loading icons...</p>
+              <p className="text-center text-sm text-gray-400 py-4">{t('iconPicker.loading')}</p>
             ) : filtered.length === 0 ? (
-              <p className="text-center text-sm text-gray-400 py-4">No icons found</p>
+              <p className="text-center text-sm text-gray-400 py-4">{t('iconPicker.noIcons')}</p>
             ) : (
               <div className="grid grid-cols-8 gap-1">
                 {filtered.slice(0, 200).map(id => (
@@ -164,7 +166,7 @@ export function IconPicker({
             )}
             {!loading && filtered.length > 200 && (
               <p className="text-center text-xs text-gray-400 mt-2">
-                {filtered.length - 200} more — refine your search
+                {t('iconPicker.moreIcons', { n: filtered.length - 200 })}
               </p>
             )}
           </div>

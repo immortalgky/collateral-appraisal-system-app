@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { taskFormSchema, type TaskFormValues } from '../../schemas';
+import { makeTaskFormSchema, type TaskFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { TaskProperties } from '../../types';
 import { AssignmentStrategy } from '../../types';
@@ -10,20 +11,6 @@ import { AssignmentStrategy } from '../../types';
 interface TaskFormProps {
   nodeId: string;
 }
-
-const STRATEGY_OPTIONS = [
-  { value: AssignmentStrategy.STARTED_BY, label: 'Started By' },
-  { value: AssignmentStrategy.ROUND_ROBIN, label: 'Round Robin' },
-  { value: AssignmentStrategy.PREVIOUS_OWNER, label: 'Previous Owner' },
-  { value: 'pool', label: 'Pool' },
-  { value: 'variable_assignee', label: 'Variable Assignee' },
-];
-
-const MOVEMENT_OPTIONS = [
-  { value: 'F', label: 'Forward (F)' },
-  { value: 'B', label: 'Backward (B)' },
-  { value: 'C', label: 'Complete (C)' },
-];
 
 function recordToArray(record: Record<string, string>): { key: string; value: string }[] {
   return Object.entries(record).map(([key, value]) => ({ key, value }));
@@ -38,27 +25,56 @@ function arrayToRecord(arr: { key: string; value: string }[]): Record<string, st
 }
 
 export function TaskForm({ nodeId }: TaskFormProps) {
-  const nodes = useWorkflowStore((s) => s.nodes);
-  const updateActivityData = useWorkflowStore((s) => s.updateActivityData);
+  const { t } = useTranslation('workflowBuilder');
+  const nodes = useWorkflowStore(s => s.nodes);
+  const updateActivityData = useWorkflowStore(s => s.updateActivityData);
 
-  const node = nodes.find((n) => n.id === nodeId);
+  const node = nodes.find(n => n.id === nodeId);
   const data = node?.data as ActivityNodeData | undefined;
   const props = data?.properties as TaskProperties | undefined;
 
-  const { register, handleSubmit, reset, control, formState: { errors } } =
-    useForm<TaskFormValues>({
-      resolver: zodResolver(taskFormSchema),
-      defaultValues: buildDefaults(data, props),
-    });
+  const strategyOptions = [
+    { value: AssignmentStrategy.STARTED_BY, label: t('forms.strategies.startedBy') },
+    { value: AssignmentStrategy.ROUND_ROBIN, label: t('forms.strategies.roundRobin') },
+    { value: AssignmentStrategy.PREVIOUS_OWNER, label: t('forms.strategies.previousOwner') },
+    { value: 'pool', label: t('forms.strategies.pool') },
+    { value: 'variable_assignee', label: t('forms.strategies.variableAssignee') },
+  ];
 
-  const { fields: decisionFields, append: appendDecision, remove: removeDecision } =
-    useFieldArray({ control, name: 'decisionConditions' });
+  const movementOptions = [
+    { value: 'F', label: t('forms.movements.forward') },
+    { value: 'B', label: t('forms.movements.backward') },
+    { value: 'C', label: t('forms.movements.complete') },
+  ];
 
-  const { fields: actionFields, append: appendAction, remove: removeAction } =
-    useFieldArray({ control, name: 'actions' });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<TaskFormValues>({
+    resolver: zodResolver(makeTaskFormSchema(t)),
+    defaultValues: buildDefaults(data, props),
+  });
 
-  const { fields: mappingFields, append: appendMapping, remove: removeMapping } =
-    useFieldArray({ control, name: 'inputMappings' });
+  const {
+    fields: decisionFields,
+    append: appendDecision,
+    remove: removeDecision,
+  } = useFieldArray({ control, name: 'decisionConditions' });
+
+  const {
+    fields: actionFields,
+    append: appendAction,
+    remove: removeAction,
+  } = useFieldArray({ control, name: 'actions' });
+
+  const {
+    fields: mappingFields,
+    append: appendMapping,
+    remove: removeMapping,
+  } = useFieldArray({ control, name: 'inputMappings' });
 
   useEffect(() => {
     if (data && props) {
@@ -87,7 +103,8 @@ export function TaskForm({ nodeId }: TaskFormProps) {
         teamIdVariable: values.teamIdVariable || undefined,
         assignmentRules: values.teamConstrained ? { teamConstrained: true } : undefined,
         assigneeVariable: values.assigneeVariable || undefined,
-        inputMappings: values.inputMappings.length > 0 ? arrayToRecord(values.inputMappings) : undefined,
+        inputMappings:
+          values.inputMappings.length > 0 ? arrayToRecord(values.inputMappings) : undefined,
       },
     });
   };
@@ -96,17 +113,14 @@ export function TaskForm({ nodeId }: TaskFormProps) {
 
   return (
     <form onChange={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="badge badge-primary gap-1 text-xs">Task Activity</div>
+      <div className="badge badge-primary gap-1 text-xs">{t('forms.badges.taskActivity')}</div>
 
       {/* Basic info */}
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Name</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.name')}</span>
         </label>
-        <input
-          {...register('name')}
-          className="input input-bordered input-sm w-full"
-        />
+        <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
           <label className="label">
             <span className="label-text-alt text-error">{errors.name.message}</span>
@@ -116,7 +130,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Description</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.description')}</span>
         </label>
         <textarea
           {...register('description')}
@@ -127,45 +141,44 @@ export function TaskForm({ nodeId }: TaskFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Activity Name</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.activityName')}</span>
         </label>
-        <input
-          {...register('activityName')}
-          className="input input-bordered input-sm w-full"
-        />
+        <input {...register('activityName')} className="input input-bordered input-sm w-full" />
       </div>
 
       {/* Assignment */}
-      <div className="divider text-xs">Assignment</div>
+      <div className="divider text-xs">{t('forms.sections.assignment')}</div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Assignee Role</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.assigneeRole')}</span>
         </label>
         <input
           {...register('assigneeRole')}
           className="input input-bordered input-sm w-full"
-          placeholder="e.g. Admin"
+          placeholder={t('forms.placeholders.assigneeRoleHint')}
         />
       </div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Assignee Group</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.assigneeGroup')}</span>
         </label>
         <input
           {...register('assigneeGroup')}
           className="input input-bordered input-sm w-full"
-          placeholder="e.g. Admin"
+          placeholder={t('forms.placeholders.assigneeGroupHint')}
         />
       </div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Initial Assignment Strategy</span>
+          <span className="label-text text-xs font-medium">
+            {t('forms.fields.initialAssignmentStrategy')}
+          </span>
         </label>
         <div className="flex flex-col gap-1">
-          {STRATEGY_OPTIONS.map((opt) => (
+          {strategyOptions.map(opt => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -181,10 +194,12 @@ export function TaskForm({ nodeId }: TaskFormProps) {
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Revisit Assignment Strategy</span>
+          <span className="label-text text-xs font-medium">
+            {t('forms.fields.revisitAssignmentStrategy')}
+          </span>
         </label>
         <div className="flex flex-col gap-1">
-          {STRATEGY_OPTIONS.map((opt) => (
+          {strategyOptions.map(opt => (
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -201,27 +216,29 @@ export function TaskForm({ nodeId }: TaskFormProps) {
       {/* Timeout */}
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Timeout Duration (ISO 8601)</span>
+          <span className="label-text text-xs font-medium">
+            {t('forms.fields.timeoutDuration')}
+          </span>
         </label>
         <input
           {...register('timeoutDuration')}
           className="input input-bordered input-sm w-full"
-          placeholder="PT72H"
+          placeholder={t('forms.placeholders.timeoutDurationHint')}
         />
       </div>
 
       {/* Required Roles */}
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Required Roles (comma-separated)</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.requiredRoles')}</span>
         </label>
         <input
           className="input input-bordered input-sm w-full"
           defaultValue={data.requiredRoles.join(', ')}
-          onBlur={(e) => {
+          onBlur={e => {
             const roles = e.target.value
               .split(',')
-              .map((r) => r.trim())
+              .map(r => r.trim())
               .filter(Boolean);
             updateActivityData(nodeId, { requiredRoles: roles });
           }}
@@ -229,7 +246,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
       </div>
 
       {/* Decision Conditions */}
-      <div className="divider text-xs">Decision Conditions</div>
+      <div className="divider text-xs">{t('forms.sections.decisionConditions')}</div>
 
       <div className="flex flex-col gap-2">
         {decisionFields.map((field, index) => (
@@ -237,13 +254,13 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             <input
               {...register(`decisionConditions.${index}.key`)}
               className="input input-bordered input-xs flex-1"
-              placeholder="Decision name"
+              placeholder={t('forms.placeholders.decisionNameHint')}
               onBlur={handleSubmit(onSubmit)}
             />
             <input
               {...register(`decisionConditions.${index}.value`)}
               className="input input-bordered input-xs flex-[2]"
-              placeholder="Condition expression"
+              placeholder={t('forms.placeholders.conditionHint')}
             />
             <button
               type="button"
@@ -265,12 +282,12 @@ export function TaskForm({ nodeId }: TaskFormProps) {
           }}
           className="btn btn-ghost btn-xs text-primary"
         >
-          + Add Decision
+          {t('forms.buttons.addDecision')}
         </button>
       </div>
 
       {/* Actions */}
-      <div className="divider text-xs">Actions</div>
+      <div className="divider text-xs">{t('forms.sections.actions')}</div>
 
       <div className="flex flex-col gap-3">
         {actionFields.map((field, index) => (
@@ -278,22 +295,22 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="label py-0">
-                  <span className="label-text text-xs">Value</span>
+                  <span className="label-text text-xs">{t('forms.actionFields.value')}</span>
                 </label>
                 <input
                   {...register(`actions.${index}.value`)}
                   className="input input-bordered input-xs w-full"
-                  placeholder="e.g. approve"
+                  placeholder={t('forms.placeholders.actionValueHint')}
                 />
               </div>
               <div className="flex-1">
                 <label className="label py-0">
-                  <span className="label-text text-xs">Label</span>
+                  <span className="label-text text-xs">{t('forms.actionFields.label')}</span>
                 </label>
                 <input
                   {...register(`actions.${index}.label`)}
                   className="input input-bordered input-xs w-full"
-                  placeholder="e.g. Approve"
+                  placeholder={t('forms.placeholders.actionLabelHint')}
                 />
               </div>
               <button
@@ -310,38 +327,42 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             <div className="flex gap-2">
               <div className="flex-1">
                 <label className="label py-0">
-                  <span className="label-text text-xs">Assignment Mode</span>
+                  <span className="label-text text-xs">
+                    {t('forms.actionFields.assignmentMode')}
+                  </span>
                 </label>
                 <select
                   {...register(`actions.${index}.assignmentMode`)}
                   className="select select-bordered select-xs w-full"
                 >
-                  <option value="system">System</option>
-                  <option value="user">User</option>
+                  <option value="system">{t('forms.assignmentModes.system')}</option>
+                  <option value="user">{t('forms.assignmentModes.user')}</option>
                 </select>
               </div>
               <div className="flex-1">
                 <label className="label py-0">
-                  <span className="label-text text-xs">Movement</span>
+                  <span className="label-text text-xs">{t('forms.actionFields.movement')}</span>
                 </label>
                 <select
                   {...register(`actions.${index}.movement`)}
                   className="select select-bordered select-xs w-full"
                 >
-                  {MOVEMENT_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {movementOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
                   ))}
                 </select>
               </div>
             </div>
             <div>
               <label className="label py-0">
-                <span className="label-text text-xs">Condition (optional)</span>
+                <span className="label-text text-xs">{t('forms.actionFields.condition')}</span>
               </label>
               <input
                 {...register(`actions.${index}.condition`)}
                 className="input input-bordered input-xs w-full"
-                placeholder="e.g. status == 'pending'"
+                placeholder={t('forms.placeholders.actionConditionHint')}
               />
             </div>
           </div>
@@ -349,17 +370,23 @@ export function TaskForm({ nodeId }: TaskFormProps) {
         <button
           type="button"
           onClick={() => {
-            appendAction({ value: '', label: '', assignmentMode: 'system', movement: 'F', condition: '' });
+            appendAction({
+              value: '',
+              label: '',
+              assignmentMode: 'system',
+              movement: 'F',
+              condition: '',
+            });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
           className="btn btn-ghost btn-xs text-primary"
         >
-          + Add Action
+          {t('forms.buttons.addAction')}
         </button>
       </div>
 
       {/* Additional Options */}
-      <div className="divider text-xs">Additional Options</div>
+      <div className="divider text-xs">{t('forms.sections.additionalOptions')}</div>
 
       <div className="flex flex-col gap-2">
         <label className="flex items-center gap-2 cursor-pointer">
@@ -368,7 +395,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             {...register('canRaiseFollowup')}
             className="checkbox checkbox-primary checkbox-xs"
           />
-          <span className="text-xs">Can Raise Followup</span>
+          <span className="text-xs">{t('forms.checkboxes.canRaiseFollowup')}</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input
@@ -376,33 +403,35 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             {...register('canRaiseQuotation')}
             className="checkbox checkbox-primary checkbox-xs"
           />
-          <span className="text-xs">Can Raise Quotation</span>
+          <span className="text-xs">{t('forms.checkboxes.canRaiseQuotation')}</span>
         </label>
       </div>
 
       {/* Variable Assignee */}
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Assignee Variable</span>
+          <span className="label-text text-xs font-medium">
+            {t('forms.fields.assigneeVariable')}
+          </span>
         </label>
         <input
           {...register('assigneeVariable')}
           className="input input-bordered input-sm w-full"
-          placeholder="e.g. internalFollowupStaffId"
+          placeholder={t('forms.placeholders.assigneeVariableHint')}
         />
       </div>
 
       {/* Team Assignment */}
-      <div className="divider text-xs">Team Assignment</div>
+      <div className="divider text-xs">{t('forms.sections.teamAssignment')}</div>
 
       <div className="form-control">
         <label className="label">
-          <span className="label-text text-xs font-medium">Team ID Variable</span>
+          <span className="label-text text-xs font-medium">{t('forms.fields.teamIdVariable')}</span>
         </label>
         <input
           {...register('teamIdVariable')}
           className="input input-bordered input-sm w-full"
-          placeholder="e.g. assignedCompanyId"
+          placeholder={t('forms.placeholders.teamIdVariableHint')}
         />
       </div>
 
@@ -412,11 +441,11 @@ export function TaskForm({ nodeId }: TaskFormProps) {
           {...register('teamConstrained')}
           className="checkbox checkbox-primary checkbox-xs"
         />
-        <span className="text-xs">Team Constrained</span>
+        <span className="text-xs">{t('forms.fields.teamConstrained')}</span>
       </label>
 
       {/* Input Mappings */}
-      <div className="divider text-xs">Input Mappings</div>
+      <div className="divider text-xs">{t('forms.sections.inputMappings')}</div>
 
       <div className="flex flex-col gap-2">
         {mappingFields.map((field, index) => (
@@ -424,13 +453,13 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             <input
               {...register(`inputMappings.${index}.key`)}
               className="input input-bordered input-xs flex-1"
-              placeholder="Key"
+              placeholder={t('forms.placeholders.inputMappingKeyHint')}
               onBlur={handleSubmit(onSubmit)}
             />
             <input
               {...register(`inputMappings.${index}.value`)}
               className="input input-bordered input-xs flex-[2]"
-              placeholder="Value / variable"
+              placeholder={t('forms.placeholders.inputMappingValueHint')}
             />
             <button
               type="button"
@@ -452,7 +481,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
           }}
           className="btn btn-ghost btn-xs text-primary"
         >
-          + Add Mapping
+          {t('forms.buttons.addMapping')}
         </button>
       </div>
     </form>
@@ -474,7 +503,7 @@ function buildDefaults(
     timeoutDuration: props?.timeoutDuration ?? 'PT72H',
     decisionConditions: recordToArray(props?.decisionConditions ?? {}),
     requiredRoles: data?.requiredRoles ?? [],
-    actions: (props?.actions ?? []).map((a) => ({
+    actions: (props?.actions ?? []).map(a => ({
       value: a.value ?? '',
       label: a.label ?? '',
       assignmentMode: a.assignmentMode ?? 'system',

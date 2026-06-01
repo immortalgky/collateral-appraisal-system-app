@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 import { signalrLogger } from '@shared/utils/signalrLogger';
+import i18n from '@/i18n';
 import { useQueryClient } from '@tanstack/react-query';
 import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationStore } from '../store';
@@ -93,7 +94,7 @@ export function useNotificationHub() {
         if (!cancelled) {
           console.error('[NotificationHub] SignalR connection failed:', err);
           if (!hasShownConnectErrorToast.current) {
-            toast.error('Real-time notifications unavailable');
+            toast.error(i18n.t('notification:realtimeUnavailable'));
             hasShownConnectErrorToast.current = true;
           }
         }

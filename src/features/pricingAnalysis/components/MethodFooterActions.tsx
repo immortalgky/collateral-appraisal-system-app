@@ -1,6 +1,7 @@
 import ActionBar from '@/shared/components/ActionBar';
 import { Button, Icon } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useTranslation } from 'react-i18next';
 
 export function MethodFooterActions({
   onCancel,
@@ -14,13 +15,14 @@ export function MethodFooterActions({
   showReset?: boolean;
 }) {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   if (isReadOnly) return null;
 
   return (
     <ActionBar>
       <ActionBar.Left>
         <Button variant="ghost" type="button" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
+          {t('footer.cancel')}
         </Button>
         {showReset && onReset && (
           <>
@@ -33,20 +35,16 @@ export function MethodFooterActions({
               className="text-red-500 hover:text-red-600"
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-4 mr-2" />
-              Reset
+              {t('footer.reset')}
             </Button>
           </>
         )}
         <ActionBar.Divider />
       </ActionBar.Left>
       <ActionBar.Right>
-        <Button
-          type="submit"
-          isLoading={isSubmitting}
-          disabled={isSubmitting}
-        >
+        <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
           {!isSubmitting && <Icon style="solid" name="check" className="size-4 mr-2" />}
-          Save
+          {t('footer.save')}
         </Button>
       </ActionBar.Right>
     </ActionBar>

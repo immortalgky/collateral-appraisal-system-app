@@ -6,6 +6,7 @@ import Icon from '@/shared/components/Icon';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 
@@ -42,6 +43,7 @@ const CreateQuotationModal = ({
   assignmentMethod,
   internalFollowupAssignmentMethod,
 }: CreateQuotationModalProps) => {
+  const { t } = useTranslation('appraisal');
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
@@ -59,9 +61,10 @@ const CreateQuotationModal = ({
 
   // Map raw company data to the SelectedCompany shape, filtering out the appeal-excluded company
   const allCompanies: SelectedCompany[] = useMemo(
-    () => (rawCompanies ?? [])
-      .filter(c => c.id !== excludedCompanyId)
-      .map(c => ({ id: c.id, companyName: c.companyName })),
+    () =>
+      (rawCompanies ?? [])
+        .filter(c => c.id !== excludedCompanyId)
+        .map(c => ({ id: c.id, companyName: c.companyName })),
     [rawCompanies, excludedCompanyId],
   );
 
@@ -97,7 +100,7 @@ const CreateQuotationModal = ({
   const handleSubmit = () => {
     if (selectedCompanies.length === 0 || !cutOffDateTime) return;
     if (!appraisalId || !requestId || !workflowInstanceId) {
-      toast.error('Task context is missing. Please reopen the task and try again.');
+      toast.error(t('toasts.quotationTaskContextMissing'));
       return;
     }
 
@@ -123,7 +126,7 @@ const CreateQuotationModal = ({
       },
       {
         onSuccess: () => {
-          toast.success('Quotation started — companies have been invited');
+          toast.success(t('toasts.quotationStarted'));
           handleClose();
           onSuccess?.();
         },
@@ -199,7 +202,11 @@ const CreateQuotationModal = ({
             <div className="max-h-48 overflow-y-auto">
               {isLoadingCompanies ? (
                 <div className="px-4 py-6 text-center text-gray-500">
-                  <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin mx-auto mb-1" />
+                  <Icon
+                    name="spinner"
+                    style="solid"
+                    className="w-4 h-4 animate-spin mx-auto mb-1"
+                  />
                   <span className="text-xs">Loading...</span>
                 </div>
               ) : companyList.length === 0 ? (
@@ -223,7 +230,9 @@ const CreateQuotationModal = ({
                         <div
                           className={clsx(
                             'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                            isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white',
+                            isSelected
+                              ? 'bg-purple-500 border-purple-500'
+                              : 'border-gray-300 bg-white',
                           )}
                         >
                           {isSelected && (
@@ -293,7 +302,11 @@ const CreateQuotationModal = ({
         {/* Context warning if required fields are missing */}
         {(!requestId || !workflowInstanceId) && (
           <div className="bg-amber-50 rounded-lg p-3 flex items-start gap-2">
-            <Icon name="triangle-exclamation" style="solid" className="size-4 text-amber-500 shrink-0 mt-0.5" />
+            <Icon
+              name="triangle-exclamation"
+              style="solid"
+              className="size-4 text-amber-500 shrink-0 mt-0.5"
+            />
             <p className="text-xs text-amber-700">
               This quotation must be started from an active admin workflow task. Make sure you have
               opened this page from the task list.

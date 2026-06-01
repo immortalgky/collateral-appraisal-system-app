@@ -1,5 +1,6 @@
 import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants';
 import { type SubmitErrorHandler, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   SaleAdjustmentGridDto,
@@ -85,6 +86,7 @@ export function SaleAdjustmentGridPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: SaleAdjustmentGridPanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'SAG_COST';
 
@@ -136,7 +138,7 @@ export function SaleAdjustmentGridPanel({
   /** Form handler — skips full Zod validation so we can save factors/scores independently */
   const handleOnSubmit = async () => {
     if (!activeMethod?.pricingAnalysisId || !methodId) {
-      toast.error('Pricing analysis ID or method ID not found!');
+      toast.error(t('toasts.missingIds'));
       return;
     }
 
@@ -167,10 +169,10 @@ export function SaleAdjustmentGridPanel({
           appraisalValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
       reset(value);
     } catch {
-      toast.error('Failed to save comparative analysis');
+      toast.error(t('toasts.failedSave'));
     }
   };
 
@@ -235,9 +237,9 @@ export function SaleAdjustmentGridPanel({
       setIsGenerated(false);
       setPricingTemplate(undefined);
       reset();
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
@@ -270,18 +272,14 @@ export function SaleAdjustmentGridPanel({
       }
       // Restore toggles BEFORE the rounded inputs so we pick the right target path.
       if (savedHasBuildingCost != null) {
-        setValue(
-          'saleAdjustmentGridAppraisalPrice.hasBuildingCost' as any,
-          savedHasBuildingCost,
-          { shouldDirty: false },
-        );
+        setValue('saleAdjustmentGridAppraisalPrice.hasBuildingCost' as any, savedHasBuildingCost, {
+          shouldDirty: false,
+        });
       }
       if (savedIncludeLandArea != null) {
-        setValue(
-          'saleAdjustmentGridAppraisalPrice.includeLandArea' as any,
-          savedIncludeLandArea,
-          { shouldDirty: false },
-        );
+        setValue('saleAdjustmentGridAppraisalPrice.includeLandArea' as any, savedIncludeLandArea, {
+          shouldDirty: false,
+        });
       }
       // Restore the user-rounded Appraisal Price into the visible input.
       // With building cost: appraisalPriceIncludeBuildingCostRounded.
@@ -295,11 +293,9 @@ export function SaleAdjustmentGridPanel({
       }
       // With building cost, also restore "Land Price (rounded)" which is bound to appraisalPriceRounded.
       if (hbc && savedLandValue != null && savedLandValue !== 0) {
-        setValue(
-          'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any,
-          savedLandValue,
-          { shouldDirty: true },
-        );
+        setValue('saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as any, savedLandValue, {
+          shouldDirty: true,
+        });
       }
       if (savedBuildingCost != null && savedBuildingCost !== 0) {
         setValue('saleAdjustmentGridAppraisalPrice.buildingCost' as any, savedBuildingCost, {
@@ -404,7 +400,7 @@ export function SaleAdjustmentGridPanel({
       >
         <PricingAnalysisTemplateSelector
           icon="table"
-          methodName="Sale Adjustment Grid"
+          methodName={t('saleAdjustmentGrid.methodName')}
           onGenerate={handleOnGenerate}
           collateralType={{
             fieldName: 'collateralType',
@@ -451,7 +447,7 @@ export function SaleAdjustmentGridPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>

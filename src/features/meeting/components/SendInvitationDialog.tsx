@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import { useAuthStore } from '@/features/auth/store';
@@ -44,6 +45,7 @@ const SendInvitationDialog = ({
   isResend = false,
   onSuccess,
 }: SendInvitationDialogProps) => {
+  const { t } = useTranslation('meeting');
   const sendInvitation = useSendInvitation();
   const currentUser = useAuthStore(s => s.user);
 
@@ -73,15 +75,18 @@ const SendInvitationDialog = ({
         onSuccess: data => {
           toast.success(
             isResend
-              ? `Invitation re-sent — Meeting No. ${data.meetingNo}`
-              : `Invitation emailed — Meeting No. ${data.meetingNo}`,
+              ? t('toasts.invitationResent', { no: data.meetingNo })
+              : t('toasts.invitationSent', { no: data.meetingNo }),
           );
           onSuccess?.(data);
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || `Failed to ${isResend ? 're-send' : 'send'} invitation`);
+          toast.error(
+            detail ||
+              (isResend ? t('toasts.invitationResendFailed') : t('toasts.invitationFailed')),
+          );
         },
       },
     );
@@ -91,10 +96,10 @@ const SendInvitationDialog = ({
     <EmailCompositionModal
       isOpen={isOpen}
       onClose={onClose}
-      title={isResend ? 'Resend Invitation' : 'New Email'}
+      title={isResend ? t('dialogs.resendInvitation') : t('dialogs.newEmail')}
       showAttachments={true}
       showCc={false}
-      subjectLabel="Title"
+      subjectLabel={t('fields.subjectLabel')}
       defaultValues={defaultValues}
       isPending={sendInvitation.isPending}
       onSubmit={handleSubmit}

@@ -23,6 +23,7 @@ import {
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
@@ -30,6 +31,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateCondoPage = () => {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -89,7 +91,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Property condominium updated successfully');
+            toast.success(t('toasts.propertyCondoUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -108,7 +110,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Property condominium created successfully');
+            toast.success(t('toasts.propertyCondoCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/condo/${response.propertyId}`);
@@ -138,7 +140,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -157,7 +159,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();

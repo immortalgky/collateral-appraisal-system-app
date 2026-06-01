@@ -1,10 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
-  type Edge,
-  type EdgeProps,
-  EdgeLabelRenderer,
-  useReactFlow,
-} from '@xyflow/react';
+import { type Edge, type EdgeProps, EdgeLabelRenderer, useReactFlow } from '@xyflow/react';
 import { useWorkflowStore } from '../../../hooks/useWorkflowStore';
 
 type Waypoint = { x: number; y: number };
@@ -17,9 +12,13 @@ function buildPath(sx: number, sy: number, tx: number, ty: number, waypoints: Wa
 
 // Find which segment index the click landed on, for insertion
 function findSegmentIndex(
-  sx: number, sy: number, tx: number, ty: number,
+  sx: number,
+  sy: number,
+  tx: number,
+  ty: number,
   waypoints: Waypoint[],
-  cx: number, cy: number,
+  cx: number,
+  cy: number,
 ): number {
   const pts = [{ x: sx, y: sy }, ...waypoints, { x: tx, y: ty }];
   let bestSeg = 0;
@@ -52,13 +51,19 @@ function midLabelPos(sx: number, sy: number, tx: number, ty: number, waypoints: 
 
 export function DraggableEdge({
   id,
-  sourceX, sourceY,
-  targetX, targetY,
-  data, style, markerEnd, label, selected,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  data,
+  style,
+  markerEnd,
+  label,
+  selected,
 }: EdgeProps) {
   const [hovered, setHovered] = useState(false);
   const { setEdges: rfSetEdges, screenToFlowPosition } = useReactFlow();
-  const storeSetEdges = useWorkflowStore((s) => s.setEdges);
+  const storeSetEdges = useWorkflowStore(s => s.setEdges);
 
   const edgeDataProps = data?.properties as Record<string, unknown> | undefined;
   const waypoints: Waypoint[] = (edgeDataProps?._uiWaypoints as Waypoint[]) ?? [];
@@ -67,7 +72,7 @@ export function DraggableEdge({
   const { x: labelX, y: labelY } = midLabelPos(sourceX, sourceY, targetX, targetY, waypoints);
 
   const stroke = (style?.stroke as string) ?? '#94a3b8';
-  const strokeWidth = (hovered || selected) ? 2.5 : 2;
+  const strokeWidth = hovered || selected ? 2.5 : 2;
   const isConditional = (data?.type as string) === 'Conditional';
   const strokeDash = isConditional ? '6,4' : undefined;
 
@@ -75,7 +80,7 @@ export function DraggableEdge({
   const commitWaypoints = useCallback(
     (newWaypoints: Waypoint[]) => {
       const updater = (edges: Edge[]) =>
-        edges.map((edge) => {
+        edges.map(edge => {
           if (edge.id !== id) return edge;
           return {
             ...edge,
@@ -103,7 +108,15 @@ export function DraggableEdge({
         return;
       }
       const flow = screenToFlowPosition({ x: e.clientX, y: e.clientY });
-      const insertAt = findSegmentIndex(sourceX, sourceY, targetX, targetY, waypoints, flow.x, flow.y);
+      const insertAt = findSegmentIndex(
+        sourceX,
+        sourceY,
+        targetX,
+        targetY,
+        waypoints,
+        flow.x,
+        flow.y,
+      );
       const newWaypoints = [...waypoints];
       newWaypoints.splice(insertAt, 0, { x: flow.x, y: flow.y });
       commitWaypoints(newWaypoints);
@@ -138,16 +151,22 @@ export function DraggableEdge({
         }
         lastX = nx;
         lastY = ny;
-        rfSetEdges((edges) =>
-          edges.map((edge) => {
+        rfSetEdges(edges =>
+          edges.map(edge => {
             if (edge.id !== id) return edge;
-            const wps: Waypoint[] = [...(((edge.data?.properties as Record<string, unknown>)?._uiWaypoints as Waypoint[]) ?? [])];
+            const wps: Waypoint[] = [
+              ...(((edge.data?.properties as Record<string, unknown>)
+                ?._uiWaypoints as Waypoint[]) ?? []),
+            ];
             wps[index] = { x: lastX, y: lastY };
             return {
               ...edge,
               data: {
                 ...edge.data,
-                properties: { ...((edge.data?.properties as Record<string, unknown>) ?? {}), _uiWaypoints: wps },
+                properties: {
+                  ...((edge.data?.properties as Record<string, unknown>) ?? {}),
+                  _uiWaypoints: wps,
+                },
               },
             };
           }),
@@ -158,15 +177,21 @@ export function DraggableEdge({
         // Persist final drag position to store
         const current = useWorkflowStore.getState().edges;
         storeSetEdges(
-          current.map((edge) => {
+          current.map(edge => {
             if (edge.id !== id) return edge;
-            const wps: Waypoint[] = [...(((edge.data?.properties as Record<string, unknown>)?._uiWaypoints as Waypoint[]) ?? [])];
+            const wps: Waypoint[] = [
+              ...(((edge.data?.properties as Record<string, unknown>)
+                ?._uiWaypoints as Waypoint[]) ?? []),
+            ];
             wps[index] = { x: lastX, y: lastY };
             return {
               ...edge,
               data: {
                 ...edge.data,
-                properties: { ...((edge.data?.properties as Record<string, unknown>) ?? {}), _uiWaypoints: wps },
+                properties: {
+                  ...((edge.data?.properties as Record<string, unknown>) ?? {}),
+                  _uiWaypoints: wps,
+                },
               },
             };
           }),
@@ -191,7 +216,7 @@ export function DraggableEdge({
   );
 
   const onDelete = useCallback(() => {
-    rfSetEdges((es) => es.filter((e) => e.id !== id));
+    rfSetEdges(es => es.filter(e => e.id !== id));
   }, [id, rfSetEdges]);
 
   const showHint = hovered && waypoints.length === 0;
@@ -255,8 +280,8 @@ export function DraggableEdge({
             opacity: hovered ? 1 : 0.35,
             transition: 'opacity 150ms ease-out',
           }}
-          onMouseDown={(e) => onDotMouseDown(e, i)}
-          onDoubleClick={(e) => onDotDblClick(e, i)}
+          onMouseDown={e => onDotMouseDown(e, i)}
+          onDoubleClick={e => onDotDblClick(e, i)}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
         />

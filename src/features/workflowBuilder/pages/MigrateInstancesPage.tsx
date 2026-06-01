@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useListRunningInstances, useMigrateInstances, useGetVersion } from '../api';
 import { useMigrationStore } from '../hooks/useMigrationStore';
 import { InstanceTable } from '../components/migrate/InstanceTable';
@@ -13,6 +14,7 @@ import type {
 } from '../types';
 
 export default function MigrateInstancesPage() {
+  const { t } = useTranslation('workflowBuilder');
   const { workflowId = '', targetVersionId = '' } = useParams<{
     workflowId: string;
     targetVersionId: string;
@@ -69,14 +71,14 @@ export default function MigrateInstancesPage() {
     }
   }
 
-  const selectedInstance = instances.find((i) => i.id === selectedId) ?? null;
+  const selectedInstance = instances.find(i => i.id === selectedId) ?? null;
 
-  const safeIds = instances.filter((i) => classifications[i.id] === 'Safe').map((i) => i.id);
-  const unsafeIds = instances.filter((i) => classifications[i.id] === 'Unsafe').map((i) => i.id);
+  const safeIds = instances.filter(i => classifications[i.id] === 'Safe').map(i => i.id);
+  const unsafeIds = instances.filter(i => classifications[i.id] === 'Unsafe').map(i => i.id);
 
-  const bumpCount = Object.values(actions).filter((a) => a.kind === 'bump').length;
-  const remapCount = Object.values(actions).filter((a) => a.kind === 'remap').length;
-  const skipCount = Object.values(actions).filter((a) => a.kind === 'skip').length;
+  const bumpCount = Object.values(actions).filter(a => a.kind === 'bump').length;
+  const remapCount = Object.values(actions).filter(a => a.kind === 'remap').length;
+  const skipCount = Object.values(actions).filter(a => a.kind === 'skip').length;
 
   const handleApply = () => {
     const safeInstanceIds: string[] = [];
@@ -89,7 +91,7 @@ export default function MigrateInstancesPage() {
     }
 
     if (safeInstanceIds.length === 0 && Object.keys(manualRemaps).length === 0) {
-      toast('No instances selected for migration.');
+      toast(t('toasts.noInstancesSelected'));
       return;
     }
 
@@ -101,12 +103,12 @@ export default function MigrateInstancesPage() {
         migratedBy: 'current-user',
       },
       {
-        onSuccess: (result) => {
+        onSuccess: result => {
           setResultModal(result);
           reset();
         },
         onError: () => {
-          toast.error('Migration failed');
+          toast.error(t('errors.migrationFailed'));
         },
       },
     );
@@ -120,10 +122,11 @@ export default function MigrateInstancesPage() {
           <button
             onClick={() => navigate(`/workflow-builder/${workflowId}`)}
             className="btn btn-ghost btn-sm"
+            aria-label={t('toolbar.backToList')}
           >
             ←
           </button>
-          <h1 className="text-base font-semibold">Migrate Running Instances</h1>
+          <h1 className="text-base font-semibold">{t('migrate.title')}</h1>
         </div>
 
         {/* Bulk actions */}
@@ -133,17 +136,17 @@ export default function MigrateInstancesPage() {
             onClick={() => bulkSet(safeIds, { kind: 'bump' })}
             disabled={safeIds.length === 0}
           >
-            All Safe → Migrate
+            {t('migrate.bulkSafeLabel')}
           </button>
           <button
             className="btn btn-ghost btn-xs"
             onClick={() => bulkSet(unsafeIds, { kind: 'skip' })}
             disabled={unsafeIds.length === 0}
           >
-            All Unsafe → Pin
+            {t('migrate.bulkUnsafeLabel')}
           </button>
           <button className="btn btn-ghost btn-xs" onClick={reset}>
-            Clear all
+            {t('migrate.clearAll')}
           </button>
         </div>
       </div>
@@ -174,7 +177,7 @@ export default function MigrateInstancesPage() {
             targetSchema={targetSchema}
             breakingChanges={impactReport?.breakingChanges ?? []}
             currentAction={selectedId ? actions[selectedId] : undefined}
-            onActionChange={(action) => {
+            onActionChange={action => {
               if (selectedId) setAction(selectedId, action);
             }}
           />
@@ -184,7 +187,7 @@ export default function MigrateInstancesPage() {
       {/* Footer */}
       <div className="flex items-center justify-between border-t border-base-300 bg-base-100 px-4 py-2">
         <p className="text-sm text-base-content/60">
-          {bumpCount} migrating · {remapCount} remapping · {skipCount} pinned
+          {t('migrate.footer', { bump: bumpCount, remap: remapCount, skip: skipCount })}
         </p>
         <button
           className="btn btn-primary btn-sm"
@@ -194,7 +197,7 @@ export default function MigrateInstancesPage() {
           {migrateMutation.isPending ? (
             <span className="loading loading-spinner loading-xs" />
           ) : null}
-          Apply migration
+          {t('migrate.applyMigration')}
         </button>
       </div>
 
@@ -202,22 +205,28 @@ export default function MigrateInstancesPage() {
       {resultModal && (
         <dialog open className="modal modal-open">
           <div className="modal-box">
-            <h3 className="text-lg font-bold">Migration Complete</h3>
+            <h3 className="text-lg font-bold">{t('migrate.resultModal.title')}</h3>
             <div className="mt-4 flex flex-col gap-1 text-sm">
               <p>
-                <span className="text-success">{resultModal.migratedCount}</span> migrated
+                <span className="text-success">{resultModal.migratedCount}</span>{' '}
+                {t('migrate.resultModal.migrated')}
               </p>
               {resultModal.failedCount > 0 && (
                 <p>
-                  <span className="text-error">{resultModal.failedCount}</span> failed
+                  <span className="text-error">{resultModal.failedCount}</span>{' '}
+                  {t('migrate.resultModal.failed')}
                 </p>
               )}
               {resultModal.skippedCount > 0 && (
-                <p>{resultModal.skippedCount} skipped</p>
+                <p>
+                  {resultModal.skippedCount} {t('migrate.resultModal.skipped')}
+                </p>
               )}
               {resultModal.errors.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs font-semibold text-error">Errors</p>
+                  <p className="text-xs font-semibold text-error">
+                    {t('migrate.resultModal.errorsTitle')}
+                  </p>
                   {resultModal.errors.map((e, i) => (
                     <p key={i} className="text-xs text-error">
                       {e.instanceId.slice(0, 8)}… — {e.message}
@@ -234,7 +243,7 @@ export default function MigrateInstancesPage() {
                   navigate(`/workflow-builder/${workflowId}`);
                 }}
               >
-                Done
+                {t('migrate.resultModal.done')}
               </button>
             </div>
           </div>

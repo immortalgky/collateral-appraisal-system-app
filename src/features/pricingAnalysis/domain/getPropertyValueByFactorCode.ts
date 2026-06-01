@@ -17,7 +17,9 @@ export const getPropertyValueByFactorCode = (
     try {
       const arr = JSON.parse(raw);
       if (Array.isArray(arr)) return arr.join(',');
-    } catch { /* not valid JSON, return as-is */ }
+    } catch {
+      /* not valid JSON, return as-is */
+    }
   }
   return raw;
 };

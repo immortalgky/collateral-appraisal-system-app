@@ -1,6 +1,7 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormFields, useFormReadOnly } from '@/shared/components/form';
-import { titleInfoFields } from '../configs/fields';
-import { useEffect, useRef, useState } from 'react';
+import { makeTitleInfoFields } from '../configs/fields';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import TitleLandForm from './TitleLandForm';
 import TitleBuildingForm from './TitleBuildingForm';
@@ -31,6 +32,8 @@ interface TitleFormProps {
 }
 
 const TitleInformationForm = () => {
+  const { t } = useTranslation(['request', 'common']);
+  const titleInfoFieldsMemo = useMemo(() => makeTitleInfoFields(t), [t]);
   const isReadOnly = useFormReadOnly();
   const [editIndex, setEditIndex] = useState<number | undefined>();
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; index: number | null }>({
@@ -129,20 +132,21 @@ const TitleInformationForm = () => {
   };
 
   const getCollateralTypeLabel = (type: string | undefined) => {
-    const option = collateralTypeOptions.find(opt => opt.value === type);
-    return option?.label || 'New Title';
+    if (!type) return t('empty.noTitles');
+    const key = `collateralTypes.${type}` as const;
+    return t(key as any) || type;
   };
 
   const getCollateralTypeIcon = (type: string | undefined) => {
     if (!type) return 'file-circle-question';
     // Land family
-    if (['01','13','14','17','19','21','26','27'].includes(type)) return 'mountain-sun';
+    if (['01', '13', '14', '17', '19', '21', '26', '27'].includes(type)) return 'mountain-sun';
     // Land+Building family
-    if (['02','03','04','23','24','32'].includes(type)) return 'city';
+    if (['02', '03', '04', '23', '24', '32'].includes(type)) return 'city';
     // Building family
-    if (['05','06','07','15','16','18','20','22'].includes(type)) return 'building';
+    if (['05', '06', '07', '15', '16', '18', '20', '22'].includes(type)) return 'building';
     // Condo family
-    if (['08','33'].includes(type)) return 'building-user';
+    if (['08', '33'].includes(type)) return 'building-user';
     // Vehicle
     if (type === '10') return 'car';
     // Machine
@@ -152,7 +156,7 @@ const TitleInformationForm = () => {
     // Lease land
     if (type === '29') return 'file-contract';
     // Lease land+building
-    if (['09','25','30','31'].includes(type)) return 'file-signature';
+    if (['09', '25', '30', '31'].includes(type)) return 'file-signature';
     // Lease condo
     if (type === '28') return 'file-lines';
     return 'file-circle-question';
@@ -183,223 +187,227 @@ const TitleInformationForm = () => {
 
   return (
     <CollateralLookupProvider>
-    <>
-      {/* Initialize required documents for all titles */}
-      {titles?.map((_: any, index: number) => (
-        <TitleRequiredDocsInitializer key={`init-${index}`} index={index} />
-      ))}
+      <>
+        {/* Initialize required documents for all titles */}
+        {titles?.map((_: any, index: number) => (
+          <TitleRequiredDocsInitializer key={`init-${index}`} index={index} />
+        ))}
 
-      <FormCard
-        title="Title Information"
-        subtitle={isEditing ? `Editing Title ${editIndex + 1}` : `${titles?.length} title(s)`}
-        icon="file-certificate"
-        iconColor="purple"
-        required={true}
-        rightIcon={
-          isEditing ? (
-            <button
-              type="button"
-              onClick={handleBackToList}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <Icon style="solid" name="arrow-left" className="size-4" />
-              Back to List
-            </button>
-          ) : !isReadOnly ? (
-            <button
-              type="button"
-              onClick={handleAddTitle}
-              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors"
-            >
-              <Icon style="solid" name="plus" className="size-4" />
-              Add Title
-            </button>
-          ) : null
-        }
-      >
-        {!isEditing ? (
-          /* Table View */
-          <TitleTableView
-            titles={titles}
-            onSelect={handleSelectTitle}
-            onDelete={handleDeleteTitle}
-            onDuplicate={handleDuplicateTitle}
-            onAdd={handleAddTitle}
-            getCollateralTypeLabel={getCollateralTypeLabel}
-            getCollateralTypeIcon={getCollateralTypeIcon}
-            isTitleComplete={isTitleComplete}
-            isReadOnly={isReadOnly}
-          />
-        ) : (
-          /* Detail View with Sidebar */
-          <div className="flex gap-4">
-            {/* Left Sidebar - Title List (Sticky) */}
-            <div className="w-44 shrink-0 border-r border-gray-100 pr-4 sticky top-0 self-start">
-              {/* Scrollable Title List */}
-              <div
-                ref={listContainerRef}
-                className="overflow-y-auto overflow-x-visible max-h-[calc(100vh-20rem)]"
+        <FormCard
+          title={t('forms.titleInformation')}
+          subtitle={
+            isEditing
+              ? t('forms.editingTitle', { n: editIndex + 1 })
+              : t('forms.titleCount', { count: titles?.length ?? 0 })
+          }
+          icon="file-certificate"
+          iconColor="purple"
+          required={true}
+          rightIcon={
+            isEditing ? (
+              <button
+                type="button"
+                onClick={handleBackToList}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                <div className="flex flex-col gap-2 pr-1 pt-1 pl-1">
-                  {titles.map((title, index) => {
-                    const isComplete = isTitleComplete(index);
+                <Icon style="solid" name="arrow-left" className="size-4" />
+                {t('titleOptions.backToList')}
+              </button>
+            ) : !isReadOnly ? (
+              <button
+                type="button"
+                onClick={handleAddTitle}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors"
+              >
+                <Icon style="solid" name="plus" className="size-4" />
+                {t('titleOptions.addTitle')}
+              </button>
+            ) : null
+          }
+        >
+          {!isEditing ? (
+            /* Table View */
+            <TitleTableView
+              titles={titles}
+              onSelect={handleSelectTitle}
+              onDelete={handleDeleteTitle}
+              onDuplicate={handleDuplicateTitle}
+              onAdd={handleAddTitle}
+              getCollateralTypeLabel={getCollateralTypeLabel}
+              getCollateralTypeIcon={getCollateralTypeIcon}
+              isTitleComplete={isTitleComplete}
+              isReadOnly={isReadOnly}
+            />
+          ) : (
+            /* Detail View with Sidebar */
+            <div className="flex gap-4">
+              {/* Left Sidebar - Title List (Sticky) */}
+              <div className="w-44 shrink-0 border-r border-gray-100 pr-4 sticky top-0 self-start">
+                {/* Scrollable Title List */}
+                <div
+                  ref={listContainerRef}
+                  className="overflow-y-auto overflow-x-visible max-h-[calc(100vh-20rem)]"
+                >
+                  <div className="flex flex-col gap-2 pr-1 pt-1 pl-1">
+                    {titles.map((title, index) => {
+                      const isComplete = isTitleComplete(index);
 
-                    return (
-                      <div
-                        key={index}
-                        className={clsx(
-                          'group relative flex items-center gap-2 p-2 rounded-lg text-left transition-all cursor-pointer',
-                          editIndex === index
-                            ? 'bg-primary/10 border border-primary shadow-sm'
-                            : 'bg-gray-50 border border-transparent hover:bg-gray-100 hover:border-gray-200',
-                        )}
-                        onClick={() => handleSelectTitle(index)}
-                        onContextMenu={e => handleContextMenu(e, index)}
-                      >
-                        {/* Index Badge */}
-                        <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
-                          {index + 1}
-                        </div>
-
-                        {/* Validation Status Indicator */}
+                      return (
                         <div
+                          key={index}
                           className={clsx(
-                            'absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm',
-                            isComplete ? 'bg-success text-white' : 'bg-amber-400 text-white',
-                          )}
-                        >
-                          <Icon
-                            style="solid"
-                            name={isComplete ? 'check' : 'exclamation'}
-                            className="size-1.5"
-                          />
-                        </div>
-
-                        <div
-                          className={clsx(
-                            'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm',
+                            'group relative flex items-center gap-2 p-2 rounded-lg text-left transition-all cursor-pointer',
                             editIndex === index
-                              ? 'bg-primary text-white'
-                              : 'bg-white text-gray-500 border border-gray-200',
+                              ? 'bg-primary/10 border border-primary shadow-sm'
+                              : 'bg-gray-50 border border-transparent hover:bg-gray-100 hover:border-gray-200',
                           )}
+                          onClick={() => handleSelectTitle(index)}
+                          onContextMenu={e => handleContextMenu(e, index)}
                         >
-                          <Icon
-                            style="solid"
-                            name={getCollateralTypeIcon(title?.collateralType)}
-                            className="size-3.5"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
+                          {/* Index Badge */}
+                          <div className="absolute -top-1 -left-1 w-4 h-4 rounded-full bg-gray-600 text-white text-[9px] font-bold flex items-center justify-center shadow-sm">
+                            {index + 1}
+                          </div>
+
+                          {/* Validation Status Indicator */}
                           <div
                             className={clsx(
-                              'text-xs font-medium truncate',
-                              editIndex === index ? 'text-primary' : 'text-gray-700',
+                              'absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center shadow-sm',
+                              isComplete ? 'bg-success text-white' : 'bg-amber-400 text-white',
                             )}
                           >
-                            {getCollateralTypeLabel(title?.collateralType)}
+                            <Icon
+                              style="solid"
+                              name={isComplete ? 'check' : 'exclamation'}
+                              className="size-1.5"
+                            />
                           </div>
-                          <div className="text-[10px] text-gray-400 truncate">
-                            {title?.titleNumber || 'No title number'}
-                          </div>
-                        </div>
-                        {/* Delete button - visible on hover (hidden in readOnly) */}
-                        {!isReadOnly && (
-                          <button
-                            type="button"
-                            onClick={e => {
-                              e.stopPropagation();
-                              handleDeleteTitle(index);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger/20 transition-all shrink-0"
-                            title="Delete"
+
+                          <div
+                            className={clsx(
+                              'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm',
+                              editIndex === index
+                                ? 'bg-primary text-white'
+                                : 'bg-white text-gray-500 border border-gray-200',
+                            )}
                           >
-                            <Icon style="solid" name="xmark" className="size-2.5" />
-                          </button>
-                        )}
+                            <Icon
+                              style="solid"
+                              name={getCollateralTypeIcon(title?.collateralType)}
+                              className="size-3.5"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div
+                              className={clsx(
+                                'text-xs font-medium truncate',
+                                editIndex === index ? 'text-primary' : 'text-gray-700',
+                              )}
+                            >
+                              {getCollateralTypeLabel(title?.collateralType)}
+                            </div>
+                            <div className="text-[10px] text-gray-400 truncate">
+                              {title?.titleNumber || t('empty.noTitleNumber')}
+                            </div>
+                          </div>
+                          {/* Delete button - visible on hover (hidden in readOnly) */}
+                          {!isReadOnly && (
+                            <button
+                              type="button"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDeleteTitle(index);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger/20 transition-all shrink-0"
+                              title="Delete"
+                            >
+                              <Icon style="solid" name="xmark" className="size-2.5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Pinned Add New Button (hidden in readOnly) */}
+                {!isReadOnly && (
+                  <div className="pt-2 mt-2 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={handleAddTitle}
+                      className="w-full flex items-center gap-2 p-2 rounded-lg border border-dashed border-gray-200 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
+                        <Icon style="solid" name="plus" className="size-3.5" />
                       </div>
-                    );
-                  })}
-                </div>
+                      <span className="text-xs font-medium">{t('titleOptions.addNew')}</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Pinned Add New Button (hidden in readOnly) */}
-              {!isReadOnly && (
-                <div className="pt-2 mt-2 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={handleAddTitle}
-                    className="w-full flex items-center gap-2 p-2 rounded-lg border border-dashed border-gray-200 text-gray-500 hover:border-primary hover:text-primary hover:bg-primary/5 transition-all"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0 border border-gray-200">
-                      <Icon style="solid" name="plus" className="size-3.5" />
-                    </div>
-                    <span className="text-xs font-medium">Add New</span>
-                  </button>
+              {/* Right Panel - Detail Form */}
+              <div className="flex-1 min-w-0">
+                {/* Collateral lookup banner — fires when dedup-key fields fill in */}
+                {!isReadOnly && editIndex !== undefined && (
+                  <div className="mb-3 pr-2">
+                    <TitleLookupIntegration titleIndex={editIndex} />
+                  </div>
+                )}
+                <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
+                  <FormFields fields={titleInfoFieldsMemo} namePrefix="titles" index={editIndex} />
+                  <TitleForm index={editIndex} currentFormType={currentFormType} />
+                  <TitleDocumentAddressForm index={editIndex} isReadOnly={isReadOnly} />
+                  <DopaAddressForm index={editIndex} isReadOnly={isReadOnly} />
                 </div>
-              )}
-            </div>
-
-            {/* Right Panel - Detail Form */}
-            <div className="flex-1 min-w-0">
-              {/* Collateral lookup banner — fires when dedup-key fields fill in */}
-              {!isReadOnly && editIndex !== undefined && (
-                <div className="mb-3 pr-2">
-                  <TitleLookupIntegration titleIndex={editIndex} />
-                </div>
-              )}
-              <div key={`title-form-${editIndex}`} className="grid grid-cols-6 gap-3 pr-2">
-                <FormFields fields={titleInfoFields} namePrefix="titles" index={editIndex} />
-                <TitleForm index={editIndex} currentFormType={currentFormType} />
-                <TitleDocumentAddressForm index={editIndex} isReadOnly={isReadOnly} />
-                <DopaAddressForm index={editIndex} isReadOnly={isReadOnly} />
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Context Menu (hidden in readOnly) */}
-        {contextMenu && !isReadOnly && (
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
-            style={{ top: contextMenu.y, left: contextMenu.x }}
-          >
-            <button
-              type="button"
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              onClick={() => {
-                handleDuplicateTitle(contextMenu.index);
-                closeContextMenu();
-              }}
+          {/* Context Menu (hidden in readOnly) */}
+          {contextMenu && !isReadOnly && (
+            <div
+              className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[140px]"
+              style={{ top: contextMenu.y, left: contextMenu.x }}
             >
-              <Icon style="regular" name="copy" className="size-4 text-gray-400" />
-              Duplicate
-            </button>
-            <button
-              type="button"
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
-              onClick={() => {
-                handleDeleteTitle(contextMenu.index);
-                closeContextMenu();
-              }}
-            >
-              <Icon style="regular" name="trash" className="size-4" />
-              Delete
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={() => {
+                  handleDuplicateTitle(contextMenu.index);
+                  closeContextMenu();
+                }}
+              >
+                <Icon style="regular" name="copy" className="size-4 text-gray-400" />
+                {t('actions.duplicate')}
+              </button>
+              <button
+                type="button"
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
+                onClick={() => {
+                  handleDeleteTitle(contextMenu.index);
+                  closeContextMenu();
+                }}
+              >
+                <Icon style="regular" name="trash" className="size-4" />
+                {t('actions.delete')}
+              </button>
+            </div>
+          )}
 
-        <ConfirmDialog
-          isOpen={deleteConfirm.isOpen}
-          onClose={() => setDeleteConfirm({ isOpen: false, index: null })}
-          onConfirm={confirmDelete}
-          title="Delete Title"
-          message="Are you sure you want to delete this title? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
-          variant="danger"
-        />
-      </FormCard>
-    </>
+          <ConfirmDialog
+            isOpen={deleteConfirm.isOpen}
+            onClose={() => setDeleteConfirm({ isOpen: false, index: null })}
+            onConfirm={confirmDelete}
+            title={t('confirm.deleteTitleTitle')}
+            message={t('confirm.deleteTitleMessage')}
+            confirmText={t('common:actions.delete')}
+            cancelText={t('common:actions.cancel')}
+            variant="danger"
+          />
+        </FormCard>
+      </>
     </CollateralLookupProvider>
   );
 };
@@ -449,17 +457,17 @@ const TitleTableView = ({
   isTitleComplete,
   isReadOnly = false,
 }: TitleTableViewProps) => {
+  const { t } = useTranslation(['request', 'common']);
+
   if (titles?.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
           <Icon style="regular" name="file-lines" className="size-8 text-gray-400" />
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-1">No titles yet</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-1">{t('empty.noTitles')}</h3>
         <p className="text-sm text-gray-500 mb-4">
-          {isReadOnly
-            ? 'No title documents have been added'
-            : 'Add your first title document to get started'}
+          {isReadOnly ? t('empty.noTitlesReadOnly') : t('empty.noTitlesAdd')}
         </p>
         {!isReadOnly && (
           <button
@@ -468,7 +476,7 @@ const TitleTableView = ({
             className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
           >
             <Icon style="solid" name="plus" className="size-4" />
-            Add First Title
+            {t('titleOptions.addFirstTitle')}
           </button>
         )}
       </div>
@@ -479,17 +487,56 @@ const TitleTableView = ({
     const details: { label: string; value: string }[] = [];
     const type = title?.collateralType;
 
-    const LAND_AREA_TYPES = ['01','02','03','04','09','13','14','17','19','21','23','24','25','26','27','29','30','31','32'];
-    const BUILDING_USABLE_TYPES = ['02','03','04','05','06','07','09','15','16','18','20','22','23','24','25','30','31','32'];
-    const CONDO_TYPES_LOCAL = ['08','33'];
+    const LAND_AREA_TYPES = [
+      '01',
+      '02',
+      '03',
+      '04',
+      '09',
+      '13',
+      '14',
+      '17',
+      '19',
+      '21',
+      '23',
+      '24',
+      '25',
+      '26',
+      '27',
+      '29',
+      '30',
+      '31',
+      '32',
+    ];
+    const BUILDING_USABLE_TYPES = [
+      '02',
+      '03',
+      '04',
+      '05',
+      '06',
+      '07',
+      '09',
+      '15',
+      '16',
+      '18',
+      '20',
+      '22',
+      '23',
+      '24',
+      '25',
+      '30',
+      '31',
+      '32',
+    ];
+    const CONDO_TYPES_LOCAL = ['08', '33'];
 
     // Title info (non-movable types)
-    if (!['10','11','12'].includes(type)) {
+    if (!['10', '11', '12'].includes(type)) {
       const titleStr =
         title?.titleType || title?.titleNumber
           ? `${title?.titleType ? `${title.titleType}: ` : ''}${title?.titleNumber || ''}`
           : null;
-      if (titleStr) details.push({ label: 'Title', value: titleStr });
+      if (titleStr) details.push({ label: t('titleDetails.title'), value: titleStr });
     }
 
     // Province + district — look up names from store if not available on the DTO
@@ -499,7 +546,10 @@ const TitleTableView = ({
     const province = title?.titleAddress?.provinceName || titleAddrLookup?.provinceName || '';
     const district = title?.titleAddress?.districtName || titleAddrLookup?.districtName || '';
     if (province) {
-      details.push({ label: 'Location', value: district ? `${province} / ${district}` : province });
+      details.push({
+        label: t('titleDetails.location'),
+        value: district ? `${province} / ${district}` : province,
+      });
     }
 
     // Area (land types)
@@ -507,7 +557,7 @@ const TitleTableView = ({
       const hasArea = title?.areaRai || title?.areaNgan || title?.areaSquareWa;
       if (hasArea) {
         details.push({
-          label: 'Area',
+          label: t('titleDetails.area'),
           value: `${title?.areaRai || 0}-${title?.areaNgan || 0}-${title?.areaSquareWa || 0}`,
         });
       }
@@ -515,37 +565,43 @@ const TitleTableView = ({
 
     // Usable area (building + land+building types)
     if (BUILDING_USABLE_TYPES.includes(type) && title?.usableArea) {
-      details.push({ label: 'Usable Area', value: `${title.usableArea} sq.m` });
+      details.push({
+        label: t('titleDetails.usableArea'),
+        value: t('titleDetails.usableAreaUnit', { value: title.usableArea }),
+      });
     }
 
     // Condo-specific
     if (CONDO_TYPES_LOCAL.includes(type)) {
-      if (title?.condoName) details.push({ label: 'Condo', value: title.condoName });
+      if (title?.condoName)
+        details.push({ label: t('titleDetails.condo'), value: title.condoName });
       const room = [
-        title?.roomNumber && `Room ${title.roomNumber}`,
-        title?.floorNumber && `Floor ${title.floorNumber}`,
+        title?.roomNumber && t('titleDetails.room', { n: title.roomNumber }),
+        title?.floorNumber && t('titleDetails.floor', { n: title.floorNumber }),
       ]
         .filter(Boolean)
         .join(', ');
-      if (room) details.push({ label: 'Unit', value: room });
+      if (room) details.push({ label: t('titleDetails.unit'), value: room });
     }
 
     // Vehicle-specific
     if (type === '10') {
       if (title?.licensePlateNumber)
-        details.push({ label: 'License Plate', value: title.licensePlateNumber });
-      if (title?.vehicleType) details.push({ label: 'Vehicle Type', value: title.vehicleType });
+        details.push({ label: t('titleDetails.licensePlate'), value: title.licensePlateNumber });
+      if (title?.vehicleType)
+        details.push({ label: t('titleDetails.vehicleType'), value: title.vehicleType });
     }
 
     // Machine-specific
     if (type === '11') {
-      if (title?.machineType) details.push({ label: 'Machine Type', value: title.machineType });
+      if (title?.machineType)
+        details.push({ label: t('titleDetails.machineType'), value: title.machineType });
       if (title?.numberOfMachine)
-        details.push({ label: 'Qty', value: String(title.numberOfMachine) });
+        details.push({ label: t('titleDetails.qty'), value: String(title.numberOfMachine) });
     }
 
     // Owner
-    if (title?.ownerName) details.push({ label: 'Owner', value: title.ownerName });
+    if (title?.ownerName) details.push({ label: t('titleDetails.owner'), value: title.ownerName });
 
     return details;
   };
@@ -611,7 +667,9 @@ const TitleTableView = ({
                   </span>
                 ))}
                 {details.length === 0 && (
-                  <span className="text-xs text-gray-300 italic">No details filled in yet</span>
+                  <span className="text-xs text-gray-300 italic">
+                    {t('empty.noDetailsFilledIn')}
+                  </span>
                 )}
               </div>
 
@@ -658,7 +716,7 @@ const TitleTableView = ({
                         onSelect(index);
                       }}
                       className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-primary/10 hover:text-primary transition-colors"
-                      title="Edit"
+                      title={t('common:actions.edit')}
                     >
                       <Icon style="solid" name="pen" className="size-3" />
                     </button>
@@ -669,7 +727,7 @@ const TitleTableView = ({
                         onDuplicate(index);
                       }}
                       className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-secondary/10 hover:text-secondary transition-colors"
-                      title="Duplicate"
+                      title={t('actions.duplicate')}
                     >
                       <Icon style="regular" name="copy" className="size-3" />
                     </button>
@@ -680,7 +738,7 @@ const TitleTableView = ({
                         onDelete(index);
                       }}
                       className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-danger/10 hover:text-danger transition-colors"
-                      title="Delete"
+                      title={t('actions.delete')}
                     >
                       <Icon style="solid" name="trash" className="size-3" />
                     </button>
@@ -701,17 +759,19 @@ const TitleRequiredDocsInitializer = ({ index }: { index: number }) => {
   return null;
 };
 
-const LAND_ONLY_CODES = ['01','13','14','17','19','21','26','27','29'];
-const LAND_AND_BUILDING_CODES = ['02','03','04','09','23','24','25','30','31','32'];
-const BUILDING_ONLY_CODES = ['05','06','07','15','16','18','20','22'];
-const CONDO_FORM_CODES = ['08','28','33'];
+const LAND_ONLY_CODES = ['01', '13', '14', '17', '19', '21', '26', '27', '29'];
+const LAND_AND_BUILDING_CODES = ['02', '03', '04', '09', '23', '24', '25', '30', '31', '32'];
+const BUILDING_ONLY_CODES = ['05', '06', '07', '15', '16', '18', '20', '22'];
+const CONDO_FORM_CODES = ['08', '28', '33'];
 
 const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
+  const { t } = useTranslation('request');
+
   if (!currentFormType) {
     return (
       <div className="col-span-6 text-center py-8 text-gray-500">
         <Icon style="regular" name="hand-pointer" className="size-8 mx-auto mb-2 text-gray-400" />
-        <p>Please select a collateral type to continue</p>
+        <p>{t('titleOptions.noCollateralType')}</p>
       </div>
     );
   }
@@ -730,45 +790,9 @@ const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
   return (
     <div className="col-span-6 text-center py-8 text-gray-500">
       <Icon style="regular" name="hand-pointer" className="size-8 mx-auto mb-2 text-gray-400" />
-      <p>Please select a collateral type to continue</p>
+      <p>{t('titleOptions.noCollateralType')}</p>
     </div>
   );
 };
-
-const collateralTypeOptions: { value: string; label: string }[] = [
-  { value: '01', label: 'Land' },
-  { value: '02', label: 'Land with buildings' },
-  { value: '03', label: 'Land with buildings (blueprint)' },
-  { value: '04', label: 'Land allocation (whole project)' },
-  { value: '05', label: 'Buildings' },
-  { value: '06', label: 'Building (blueprint)' },
-  { value: '07', label: 'Building (whole project)' },
-  { value: '08', label: 'Apartment' },
-  { value: '09', label: 'Leasehold rights, real estate' },
-  { value: '10', label: 'Car' },
-  { value: '11', label: 'Machinery' },
-  { value: '12', label: 'Ship' },
-  { value: '13', label: 'Land (Part 1)' },
-  { value: '14', label: 'Land (Part 2)' },
-  { value: '15', label: 'Building (Part 1)' },
-  { value: '16', label: 'Building (Part 2)' },
-  { value: '17', label: 'Land (Part 2)' },
-  { value: '18', label: 'Building (Part 2)' },
-  { value: '19', label: 'Land (Group 1)' },
-  { value: '20', label: 'Building (Group 1)' },
-  { value: '21', label: 'Land (Group 2)' },
-  { value: '22', label: 'Building (Group 2)' },
-  { value: '23', label: 'Land with buildings (Group 1)' },
-  { value: '24', label: 'Land with buildings (Group 2)' },
-  { value: '25', label: 'Leasehold rights (land with buildings)' },
-  { value: '26', label: 'Land (Group 3)' },
-  { value: '27', label: 'Land (Group 4)' },
-  { value: '28', label: 'Leasehold rights (condominium)' },
-  { value: '29', label: 'Land lease rights' },
-  { value: '30', label: 'Leasehold rights' },
-  { value: '31', label: 'Lease rights for space within shopping center' },
-  { value: '32', label: 'Land with buildings (BlockLand)' },
-  { value: '33', label: 'Condominium (BlockCondo)' },
-];
 
 export default TitleInformationForm;

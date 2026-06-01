@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import i18n from '@/i18n';
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
 import type { Approach, Method } from '../types/selection';
@@ -24,7 +25,7 @@ export function useCalculationFlow({
     const { appr, method } = findMethodByType(state, k);
 
     if (!method?.id || !appr?.id) {
-      toast.error('Save selection first to generate method and approach IDs before calculation.');
+      toast.error(i18n.t('pricingAnalysis:toasts.saveSelectionFirst'));
       return;
     }
 

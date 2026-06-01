@@ -62,12 +62,7 @@ export const LandDetailFormSchema = z.object({
 
   // Location
   location: z.array(
-    z.enum([
-      'sanitaryZone',
-      'municipality',
-      'subdivisionAdminOrg',
-      'bangkokMetropolitan',
-    ])
+    z.enum(['sanitaryZone', 'municipality', 'subdivisionAdminOrg', 'bangkokMetropolitan']),
   ),
 
   // Plot Location
@@ -95,7 +90,7 @@ export const LandDetailFormSchema = z.object({
       'adjacentToSewageTreatment',
       'garbageDisposalArea',
       'other',
-    ])
+    ]),
   ),
   plotLocationOther: z.string().optional(),
 
@@ -117,7 +112,7 @@ export const LandDetailFormSchema = z.object({
 
   // Road Surface
   roadSurface: z.array(
-    z.enum(['reinforcedConcrete', 'gravelCrushedStone', 'soil', 'paved', 'other'])
+    z.enum(['reinforcedConcrete', 'gravelCrushedStone', 'soil', 'paved', 'other']),
   ),
   roadSurfaceOther: z.string().optional(),
 
@@ -129,7 +124,7 @@ export const LandDetailFormSchema = z.object({
       'drainagePipeStone',
       'streetlight',
       'other',
-    ])
+    ]),
   ),
   publicUtilityOther: z.string().optional(),
 
@@ -139,7 +134,7 @@ export const LandDetailFormSchema = z.object({
 
   // Land Entrance-Exit
   landEntranceExit: z.array(
-    z.enum(['publicInterest', 'insideAllocationProject', 'personal', 'servitude', 'other'])
+    z.enum(['publicInterest', 'insideAllocationProject', 'personal', 'servitude', 'other']),
   ),
   landEntranceExitOther: z.string().optional(),
 

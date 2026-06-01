@@ -77,7 +77,9 @@ function PropertyTooltip({ active, payload, label }: any) {
       </div>
       <div className="border-t border-gray-100 mt-1 pt-1" style={{ color: '#6366f1' }}>
         <span className="font-medium">Encumbered Collateral: {fmtTooltip(encumbered)}</span>
-        <div className="text-[10px] text-gray-500 font-normal">PV(remaining rent) + PV(reversion)</div>
+        <div className="text-[10px] text-gray-500 font-normal">
+          PV(remaining rent) + PV(reversion)
+        </div>
       </div>
     </div>
   );
@@ -101,16 +103,13 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
   // Used to discount the reversion (property at lease end) back to today's PV.
   const lastRow = rows[rows.length - 1];
   const lastPvFactor =
-    lastRow && lastRow.rentalIncome > 0
-      ? lastRow.netCurrentRentalIncome / lastRow.rentalIncome
-      : 0;
+    lastRow && lastRow.rentalIncome > 0 ? lastRow.netCurrentRentalIncome / lastRow.rentalIncome : 0;
   const reversionPvToday = lastRow ? lastRow.totalLandAndBuilding * lastPvFactor : 0;
 
   // Composition of total leasehold value (PV today): rent stream + reversion.
   const totalRentPv = totalNetPv;
   const totalLeaseholdValuePv = totalRentPv + reversionPvToday;
-  const rentPercent =
-    totalLeaseholdValuePv > 0 ? (totalRentPv / totalLeaseholdValuePv) * 100 : 0;
+  const rentPercent = totalLeaseholdValuePv > 0 ? (totalRentPv / totalLeaseholdValuePv) * 100 : 0;
   const reversionPercent =
     totalLeaseholdValuePv > 0 ? (reversionPvToday / totalLeaseholdValuePv) * 100 : 0;
 
@@ -158,10 +157,16 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
     <div className="grid grid-cols-2 gap-3">
       {/* Left: Property Value */}
       <div className="rounded-lg border border-gray-200 p-3">
-        <div className="text-[11px] font-medium text-gray-500">Collateral Value Over Lease Term</div>
+        <div className="text-[11px] font-medium text-gray-500">
+          Collateral Value Over Lease Term
+        </div>
         <div className="text-[9px] text-gray-400 mb-1">All values in today's PV baht</div>
         <ResponsiveContainer width="100%" height={200}>
-          <ComposedChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 0 }} stackOffset="none">
+          <ComposedChart
+            data={data}
+            margin={{ top: 5, right: 5, left: 5, bottom: 0 }}
+            stackOffset="none"
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
               dataKey="year"
@@ -169,13 +174,9 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               domain={[firstYear, lastYear]}
               ticks={yearTicks}
               tick={{ fontSize: 9, fill: '#9ca3af' }}
-              tickFormatter={(v) => String(Math.round(v))}
+              tickFormatter={v => String(Math.round(v))}
             />
-            <YAxis
-              tick={{ fontSize: 9, fill: '#9ca3af' }}
-              tickFormatter={fmtCompact}
-              width={45}
-            />
+            <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={fmtCompact} width={45} />
             <Tooltip content={<PropertyTooltip />} />
             <Legend wrapperStyle={{ fontSize: 9, paddingTop: 2 }} />
             <Area
@@ -211,7 +212,12 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               x={lastYear}
               stroke="#ef4444"
               strokeDasharray="3 3"
-              label={{ value: 'Lease End', position: 'insideTopRight', fontSize: 9, fill: '#ef4444' }}
+              label={{
+                value: 'Lease End',
+                position: 'insideTopRight',
+                fontSize: 9,
+                fill: '#ef4444',
+              }}
             />
           </ComposedChart>
         </ResponsiveContainer>
@@ -221,9 +227,9 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
       <div className="rounded-lg border border-gray-200 p-3">
         <div className="text-[11px] font-medium text-gray-500">Leasehold Value Composition</div>
         <div className="text-[9px] text-gray-400 mb-1">
-          Rent: {fmtCompact(totalRentPv)} ({rentPercent.toFixed(0)}%) ·
-          Reversion: {fmtCompact(reversionPvToday)} ({reversionPercent.toFixed(0)}%) ·
-          Total: {fmtCompact(totalLeaseholdValuePv)}
+          Rent: {fmtCompact(totalRentPv)} ({rentPercent.toFixed(0)}%) · Reversion:{' '}
+          {fmtCompact(reversionPvToday)} ({reversionPercent.toFixed(0)}%) · Total:{' '}
+          {fmtCompact(totalLeaseholdValuePv)}
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
@@ -234,7 +240,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               domain={[firstYear, lastYear]}
               ticks={yearTicks}
               tick={{ fontSize: 9, fill: '#9ca3af' }}
-              tickFormatter={(v) => String(Math.round(v))}
+              tickFormatter={v => String(Math.round(v))}
             />
             <YAxis
               yAxisId="left"
@@ -247,7 +253,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               orientation="right"
               domain={[0, 100]}
               tick={{ fontSize: 9, fill: '#9ca3af' }}
-              tickFormatter={(v) => `${v}%`}
+              tickFormatter={v => `${v}%`}
               width={32}
             />
             <Tooltip content={<IncomeTooltip />} />

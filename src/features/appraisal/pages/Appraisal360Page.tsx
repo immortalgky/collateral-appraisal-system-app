@@ -9,7 +9,10 @@ import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyType } from '../types';
 import { useGetAppraisalMapPins } from '../api/marketComparable';
 import { HistorySearchMapDrawer } from '@/features/common/historySearch/HistorySearchMapDrawer';
-import type { AppraisalPinDto, MarketComparablePinDto } from '@/features/common/historySearch/types';
+import type {
+  AppraisalPinDto,
+  MarketComparablePinDto,
+} from '@/features/common/historySearch/types';
 
 import StickyHeaderCard from '../components/360/StickyHeaderCard';
 import RequestInfoSection from '../components/360/RequestInfoSection';
@@ -35,10 +38,27 @@ const Appraisal360Page = () => {
   const [mapOpen, setMapOpen] = useState(false);
 
   // Data hooks
-  const { data: appraisal, isLoading: isLoadingAppraisal, isError: isAppraisalError, error: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
-  const { data: request, isError: isRequestError, error: requestError, refetch: refetchRequest } = useGetRequestById(appraisal?.requestId);
+  const {
+    data: appraisal,
+    isLoading: isLoadingAppraisal,
+    isError: isAppraisalError,
+    error: appraisalError,
+    refetch: refetchAppraisal,
+  } = useGetAppraisalById(appraisalId);
+  const {
+    data: request,
+    isError: isRequestError,
+    error: requestError,
+    refetch: refetchRequest,
+  } = useGetRequestById(appraisal?.requestId);
   const { groups, isLoading: isLoadingGroups } = useEnrichedPropertyGroups(appraisalId);
-  const { data: decisionSummary, isLoading: isLoadingDecision, isError: isDecisionError, error: decisionError, refetch: refetchDecision } = useGetDecisionSummary(appraisalId);
+  const {
+    data: decisionSummary,
+    isLoading: isLoadingDecision,
+    isError: isDecisionError,
+    error: decisionError,
+    refetch: refetchDecision,
+  } = useGetDecisionSummary(appraisalId);
 
   // Map-pins data — fetched lazily when the user opens the map
   const { data: mapPinsData } = useGetAppraisalMapPins(mapOpen ? appraisalId : undefined);
@@ -91,10 +111,13 @@ const Appraisal360Page = () => {
     ? { lat: appraisingCollateralPins[0].lat, lon: appraisingCollateralPins[0].lon }
     : undefined;
 
-
   const isPageLoading = isLoadingAppraisal;
 
-  const handlePropertyClick = (propertyId: string, propertyType: PropertyType, groupName: string) => {
+  const handlePropertyClick = (
+    propertyId: string,
+    propertyType: PropertyType,
+    groupName: string,
+  ) => {
     setSlideOver({ type: 'property', propertyId, propertyType, groupName });
   };
 
@@ -106,7 +129,12 @@ const Appraisal360Page = () => {
     const group = groups.find(g => g.id === groupId);
     const paId = group?.pricingAnalysisId;
     if (paId) {
-      setSlideOver({ type: 'pricing', groupId, pricingAnalysisId: paId, groupName: group?.name || '' });
+      setSlideOver({
+        type: 'pricing',
+        groupId,
+        pricingAnalysisId: paId,
+        groupName: group?.name || '',
+      });
     }
   };
 
@@ -146,7 +174,9 @@ const Appraisal360Page = () => {
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
-              onClick={() => {/* TODO: download appraisal report */}}
+              onClick={() => {
+                /* TODO: download appraisal report */
+              }}
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-teal-600" />
               Appraisal Report
@@ -154,7 +184,9 @@ const Appraisal360Page = () => {
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
-              onClick={() => {/* TODO: download summary document */}}
+              onClick={() => {
+                /* TODO: download summary document */
+              }}
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-purple-600" />
               Appraisal Summary

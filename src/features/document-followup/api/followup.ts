@@ -14,10 +14,8 @@ import type {
 
 export const followupKeys = {
   all: ['document-followups'] as const,
-  byTask: (raisingTaskId: string) =>
-    ['document-followups', 'by-task', raisingTaskId] as const,
-  detail: (followupId: string) =>
-    ['document-followups', 'detail', followupId] as const,
+  byTask: (raisingTaskId: string) => ['document-followups', 'by-task', raisingTaskId] as const,
+  detail: (followupId: string) => ['document-followups', 'detail', followupId] as const,
   byWorkflowInstance: (followupWorkflowInstanceId: string) =>
     ['document-followups', 'by-workflow', followupWorkflowInstanceId] as const,
 };
@@ -25,13 +23,8 @@ export const followupKeys = {
 // ----- Raw API functions -----
 
 /** POST /workflows/document-followups */
-export async function raiseFollowup(
-  body: RaiseFollowupRequest,
-): Promise<RaiseFollowupResponse> {
-  const { data } = await axios.post<RaiseFollowupResponse>(
-    '/workflows/document-followups',
-    body,
-  );
+export async function raiseFollowup(body: RaiseFollowupRequest): Promise<RaiseFollowupResponse> {
+  const { data } = await axios.post<RaiseFollowupResponse>('/workflows/document-followups', body);
   return data;
 }
 
@@ -60,10 +53,7 @@ export async function submitDocumentFollowup(
   followupId: string,
   body: SubmitDocumentFollowupRequest,
 ): Promise<void> {
-  await axios.post(
-    `/workflows/document-followups/${followupId}/submit`,
-    body,
-  );
+  await axios.post(`/workflows/document-followups/${followupId}/submit`, body);
 }
 
 /** POST /workflows/document-followups/{id}/line-items/{lineItemId}/decline */
@@ -79,25 +69,16 @@ export async function declineLineItem(
 }
 
 /** GET /workflows/document-followups?raisingTaskId={id}&status=open */
-export async function getOpenFollowupsForTask(
-  raisingTaskId: string,
-): Promise<FollowupSummary[]> {
-  const { data } = await axios.get<FollowupSummary[]>(
-    '/workflows/document-followups',
-    {
-      params: { raisingTaskId, status: 'open' },
-    },
-  );
+export async function getOpenFollowupsForTask(raisingTaskId: string): Promise<FollowupSummary[]> {
+  const { data } = await axios.get<FollowupSummary[]>('/workflows/document-followups', {
+    params: { raisingTaskId, status: 'open' },
+  });
   return data;
 }
 
 /** GET /workflows/document-followups/{id} */
-export async function getFollowupById(
-  followupId: string,
-): Promise<FollowupDetail> {
-  const { data } = await axios.get<FollowupDetail>(
-    `/workflows/document-followups/${followupId}`,
-  );
+export async function getFollowupById(followupId: string): Promise<FollowupDetail> {
+  const { data } = await axios.get<FollowupDetail>(`/workflows/document-followups/${followupId}`);
   return data;
 }
 
@@ -110,10 +91,9 @@ export async function getFollowupById(
 export async function getFollowupByWorkflowInstanceId(
   followupWorkflowInstanceId: string,
 ): Promise<FollowupDetail | null> {
-  const { data } = await axios.get<FollowupSummary[]>(
-    '/workflows/document-followups',
-    { params: { followupWorkflowInstanceId } },
-  );
+  const { data } = await axios.get<FollowupSummary[]>('/workflows/document-followups', {
+    params: { followupWorkflowInstanceId },
+  });
   const items = Array.isArray(data) ? data : [];
   const summary = items[0] ?? null;
   if (!summary) return null;

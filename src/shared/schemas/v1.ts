@@ -1997,6 +1997,7 @@ const PaymentHistoryDto = z
     appraisalFeeId: z.string().uuid(),
     paymentAmount: z.number(),
     paymentDate: z.string().datetime({ offset: true }),
+    source: z.string().optional(),
   })
   .partial()
   .passthrough();

@@ -16,9 +16,7 @@ import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import {
-  useGetLeaseAgreementLandPropertyById,
-} from '../api/property';
+import { useGetLeaseAgreementLandPropertyById } from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
 import LeaseAgreementForm from '../forms/LeaseAgreementForm';
 import RentalInfoForm from '../forms/RentalInfoForm';
@@ -29,6 +27,7 @@ import {
 } from '../schemas/form';
 import { mapLandPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
@@ -42,7 +41,11 @@ import { propertyGroupKeys } from '../api/propertyGroup';
 const useCreateLeaseAgreementLandProperty = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { appraisalId: string; groupId?: string; data: any }): Promise<any> => {
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: any;
+    }): Promise<any> => {
       const url = `/appraisals/${params.appraisalId}/lease-agreement-land-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
       const { data } = await axios.post(url, params.data);
       return data;
@@ -56,7 +59,11 @@ const useCreateLeaseAgreementLandProperty = () => {
 const useUpdateLeaseAgreementLandProperty = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { appraisalId: string; propertyId: string; data: any }): Promise<any> => {
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: any;
+    }): Promise<any> => {
       const { data } = await axios.put(
         `/appraisals/${params.appraisalId}/properties/${params.propertyId}/lease-agreement-land-detail`,
         params.data,
@@ -75,6 +82,7 @@ const useUpdateLeaseAgreementLandProperty = () => {
 // ─── Page Component ───────────────────────────────────────────────
 
 const CreateLeaseAgreementLandPage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -88,7 +96,10 @@ const CreateLeaseAgreementLandPage = () => {
   const isEditMode = Boolean(propertyId);
 
   // ─── Land detail form ─────────────────────────────────────────
-  const { data: propertyData, isLoading } = useGetLeaseAgreementLandPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetLeaseAgreementLandPropertyById(
+    appraisalId,
+    propertyId,
+  );
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData)
@@ -138,7 +149,7 @@ const CreateLeaseAgreementLandPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Lease agreement land updated successfully');
+            toast.success(t('toasts.leaseAgreementLandUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -154,7 +165,7 @@ const CreateLeaseAgreementLandPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            toast.success('Lease agreement land created successfully');
+            toast.success(t('toasts.leaseAgreementLandCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/lease-land/${response.propertyId}`);
@@ -179,7 +190,7 @@ const CreateLeaseAgreementLandPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -195,7 +206,7 @@ const CreateLeaseAgreementLandPage = () => {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
@@ -231,9 +242,24 @@ const CreateLeaseAgreementLandPage = () => {
           containerId="form-scroll-container"
           anchors={[
             { label: 'Photos', id: 'photos', icon: 'images' },
-            { label: 'Land', id: 'land-section', icon: 'mountain-sun', onClick: () => setActiveTab('land') },
-            { label: 'Lease Agreement', id: 'lease-agreement-section', icon: 'file-contract', onClick: () => setActiveTab('lease-agreement') },
-            { label: 'Rental Info', id: 'rental-info-section', icon: 'calendar-days', onClick: () => setActiveTab('rental-info') },
+            {
+              label: 'Land',
+              id: 'land-section',
+              icon: 'mountain-sun',
+              onClick: () => setActiveTab('land'),
+            },
+            {
+              label: 'Lease Agreement',
+              id: 'lease-agreement-section',
+              icon: 'file-contract',
+              onClick: () => setActiveTab('lease-agreement'),
+            },
+            {
+              label: 'Rental Info',
+              id: 'rental-info-section',
+              icon: 'calendar-days',
+              onClick: () => setActiveTab('rental-info'),
+            },
           ]}
         />
       </div>
@@ -279,7 +305,11 @@ const CreateLeaseAgreementLandPage = () => {
                     <Section id="properties-section" anchor>
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <Icon name="mountain-sun" style="solid" className="w-5 h-5 text-amber-600" />
+                          <Icon
+                            name="mountain-sun"
+                            style="solid"
+                            className="w-5 h-5 text-amber-600"
+                          />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
                       </div>
@@ -309,7 +339,11 @@ const CreateLeaseAgreementLandPage = () => {
                     <Section anchor className="min-w-0 overflow-hidden">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                          <Icon name="file-contract" style="solid" className="w-5 h-5 text-purple-600" />
+                          <Icon
+                            name="file-contract"
+                            style="solid"
+                            className="w-5 h-5 text-purple-600"
+                          />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
                       </div>
@@ -326,7 +360,11 @@ const CreateLeaseAgreementLandPage = () => {
                     <Section anchor className="min-w-0 overflow-hidden">
                       <div className="flex items-center gap-3 mb-4">
                         <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon name="calendar-days" style="solid" className="w-5 h-5 text-teal-600" />
+                          <Icon
+                            name="calendar-days"
+                            style="solid"
+                            className="w-5 h-5 text-teal-600"
+                          />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
                       </div>

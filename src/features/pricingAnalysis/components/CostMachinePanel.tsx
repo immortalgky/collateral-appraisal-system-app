@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import { CostMachineFormSchema, type CostMachineFormType } from '../schemas/costMachineForm';
@@ -43,6 +44,7 @@ export function CostMachinePanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: CostMachinePanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
   const queryClient = useQueryClient();
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
@@ -141,9 +143,9 @@ export function CostMachinePanel({
           appraisalValue: result.totalFmv,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('toasts.saveFailed'));
     }
   };
 
@@ -163,9 +165,9 @@ export function CostMachinePanel({
       });
       isInitialized.current = false;
       initializeCostMachineForm({ machineryItems, reset });
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
@@ -183,13 +185,13 @@ export function CostMachinePanel({
           <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
             <Icon name="gear" className="size-4" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Cost Machine</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('costMachine.title')}</h2>
         </div>
 
         {/* Content */}
         {isCostItemsError ? (
           <DataErrorState
-            title="Failed to load machine cost items"
+            title={t('costMachine.loadFailed')}
             onRetry={refetchCostItems}
             variant="inline"
           />
@@ -208,7 +210,7 @@ export function CostMachinePanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>

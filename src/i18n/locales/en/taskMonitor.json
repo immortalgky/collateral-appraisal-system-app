@@ -1,0 +1,64 @@
+{
+  "columns": {
+    "appraisalNumber": "Appraisal Number",
+    "customerName": "Customer Name",
+    "taskType": "Task Type",
+    "purpose": "Purpose",
+    "status": "Status",
+    "sla": "SLA",
+    "assigned": "Assigned",
+    "dueAt": "Due At"
+  },
+  "peopleColumns": {
+    "userCode": "User code",
+    "userName": "User name",
+    "openTasks": "Open Tasks",
+    "availableTasks": "Available Tasks",
+    "totalTasks": "Total Tasks"
+  },
+  "sla": {
+    "onTrack": "On Track",
+    "onTime": "On Time",
+    "atRisk": "At Risk",
+    "breached": "Breached"
+  },
+  "table": {
+    "ref": "(Ref. {{number}})",
+    "reassign": "Reassign"
+  },
+  "empty": {
+    "tasksTitle": "No monitored tasks",
+    "tasksDesc": "No tasks found in the groups you monitor, or all tasks are in a non-reassignable state.",
+    "peopleTitle": "No people to monitor",
+    "peopleDesc": "Nobody in the groups you monitor has any active tasks right now."
+  },
+  "filters": {
+    "searchTasksPlaceholder": "Search tasks...",
+    "allSla": "All SLA",
+    "groupPlaceholder": "Group...",
+    "assigneePlaceholder": "Assignee...",
+    "activityPlaceholder": "Activity...",
+    "peopleSearchPlaceholder": "Search user code or name...",
+    "searchLabel": "Search",
+    "personSearchPlaceholder": "Appraisal number or customer name...",
+    "statusLabel": "Status",
+    "taskTypeLabel": "Task Type"
+  },
+  "errors": {
+    "loadPeopleFailed": "Failed to load monitored people",
+    "loadTasksFailed": "Failed to load tasks"
+  },
+  "reassign": {
+    "title": "Reassign Task",
+    "currentlyAssigned": "Currently assigned to",
+    "due": "Due:",
+    "slaPreserved": "SLA preserved",
+    "newAssignee": "New assignee",
+    "loadingUsers": "Loading eligible users…",
+    "noEligible": "No eligible users found for this activity.",
+    "pageInfo": "{{from}}–{{to}} of {{total}}",
+    "success": "Reassigned to {{name}}. DueAt unchanged.",
+    "failed": "Reassignment failed.",
+    "unexpectedError": "An unexpected error occurred. Please try again."
+  }
+}

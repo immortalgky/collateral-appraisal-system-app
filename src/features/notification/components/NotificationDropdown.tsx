@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { Link } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
@@ -9,6 +10,7 @@ import { useAuthStore } from '@features/auth/store';
 import clsx from 'clsx';
 
 export default function NotificationDropdown() {
+  const { t } = useTranslation('notification');
   const { notifications, markAsRead, markAllAsRead, fetchNotifications } = useNotificationStore();
   const username = useAuthStore(s => s.user?.username ?? '');
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -23,7 +25,7 @@ export default function NotificationDropdown() {
   return (
     <Popover className="relative">
       <PopoverButton className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-gray-50 dark:bg-base-200 text-blue-500 hover:bg-gray-100 dark:hover:bg-base-300 hover:text-blue-600 transition-all focus:outline-none">
-        <span className="sr-only">Notifications</span>
+        <span className="sr-only">{t('title')}</span>
         <Icon name="bell" style="solid" className="size-5" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-danger rounded-full ring-2 ring-white">
@@ -41,7 +43,9 @@ export default function NotificationDropdown() {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-base-300">
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-base-content">Notifications</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-base-content">
+                  {t('title')}
+                </h3>
                 {unreadCount > 0 && (
                   <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-danger rounded-full">
                     {unreadCount}
@@ -54,7 +58,7 @@ export default function NotificationDropdown() {
                   onClick={() => markAllAsRead(username)}
                   className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
-                  Mark all as read
+                  {t('markAllRead')}
                 </button>
               )}
             </div>
@@ -86,15 +90,23 @@ export default function NotificationDropdown() {
                         <p
                           className={clsx(
                             'text-sm truncate',
-                            !notification.isRead ? 'font-semibold text-gray-900 dark:text-base-content' : 'font-medium text-gray-700 dark:text-gray-300',
+                            !notification.isRead
+                              ? 'font-semibold text-gray-900 dark:text-base-content'
+                              : 'font-medium text-gray-700 dark:text-gray-300',
                           )}
                         >
                           {notification.title}
                         </p>
-                        {!notification.isRead && <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />}
+                        {!notification.isRead && (
+                          <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5">{notification.message}</p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{timeAgo(notification.createdAt)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5">
+                        {notification.message}
+                      </p>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                        {timeAgo(notification.createdAt, t)}
+                      </p>
                     </div>
                   </button>
                 );
@@ -108,7 +120,7 @@ export default function NotificationDropdown() {
                 onClick={() => close()}
                 className="block w-full text-center px-4 py-2.5 text-sm font-medium text-primary hover:bg-gray-50 dark:hover:bg-base-300 transition-colors rounded-b-xl"
               >
-                View All
+                {t('viewAll')}
               </Link>
             </div>
           </>

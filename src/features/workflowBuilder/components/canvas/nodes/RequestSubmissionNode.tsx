@@ -13,16 +13,15 @@ export function RequestSubmissionNode({ id, data, selected }: NodeProps) {
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Request Submission'}
       subtitle={props?.propertyType || 'Appraisal request'}
       selected={!!selected}
     >
       {props?.purpose && (
-        <span className="badge badge-primary badge-sm badge-outline">
-          {props.purpose}
-        </span>
+        <span className="badge badge-primary badge-sm badge-outline">{props.purpose}</span>
       )}
     </BaseNode>
   );

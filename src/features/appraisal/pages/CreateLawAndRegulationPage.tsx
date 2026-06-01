@@ -6,6 +6,7 @@ import { useBasePath, useAppraisalId } from '@/features/appraisal/context/Apprai
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import { useParameterDescription } from '@shared/utils/parameterUtils';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import ActionBar from '@shared/components/ActionBar';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -30,7 +31,7 @@ import type {
   GalleryPhotoDtoType,
 } from '@shared/schemas/v1';
 import {
-  createLawAndRegulationForm,
+  useCreateLawAndRegulationFormSchema,
   createLawAndRegulationFormDefault,
   type CreateLawAndRegulationFormType,
 } from '../schemas/lawAndRegulation';
@@ -70,6 +71,7 @@ const formFields: FormField[] = [
 const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateLawAndRegulationPage = () => {
+  const { t } = useTranslation('appraisal');
   const _baseReadOnly = usePageReadOnly();
   const isCiAppraisal = useIsCiAppraisal();
   const isReadOnly = _baseReadOnly || isCiAppraisal;
@@ -85,12 +87,15 @@ const CreateLawAndRegulationPage = () => {
     (PARENT_SEGMENTS as readonly string[]).find(s => s === segments[0]) ?? 'property';
 
   // RHF + Zod
+  const lawAndRegulationFormSchema = useCreateLawAndRegulationFormSchema();
   const methods = useForm<CreateLawAndRegulationFormType>({
     defaultValues: createLawAndRegulationFormDefault,
-    resolver: zodResolver(createLawAndRegulationForm),
+    resolver: zodResolver(lawAndRegulationFormSchema),
   });
 
-  const { formState: { isDirty } } = methods;
+  const {
+    formState: { isDirty },
+  } = methods;
   const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // Image & UI state
@@ -105,7 +110,10 @@ const CreateLawAndRegulationPage = () => {
   const [showGalleryModal, setShowGalleryModal] = useState(false);
 
   // Delete confirmation state
-  const [deleteTarget, setDeleteTarget] = useState<{ galleryPhotoId: string; fileName: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    galleryPhotoId: string;
+    fileName: string;
+  } | null>(null);
 
   // Drag-and-drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -118,7 +126,8 @@ const CreateLawAndRegulationPage = () => {
   const saveMutation = useSaveLawAndRegulations();
   const uploadMutation = useUploadDocument();
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
-  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } = useUpdateGalleryPhoto();
+  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } =
+    useUpdateGalleryPhoto();
 
   // DTO map for gallery update calls
   const galleryPhotoDtoMap = useMemo(() => {
@@ -160,9 +169,7 @@ const CreateLawAndRegulationPage = () => {
   const headerLabel = useParameterDescription('Header', editingItem?.headerCode);
   const lawLeafLabel = isEditMode ? headerLabel || '...' : null;
   useBreadcrumbExtras(
-    lawLeafLabel
-      ? [{ label: lawLeafLabel, href: location.pathname, icon: 'gavel' }]
-      : [],
+    lawLeafLabel ? [{ label: lawLeafLabel, href: location.pathname, icon: 'gavel' }] : [],
     [lawLeafLabel, location.pathname],
   );
 
@@ -273,7 +280,7 @@ const CreateLawAndRegulationPage = () => {
           photoTopicIds: null,
           fileName: uploadResult.fileName,
           filePath: uploadResult.storageUrl,
-          fileExtension: file.name.includes('.') ? file.name.split('.').pop() ?? null : null,
+          fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
           mimeType: file.type || null,
           fileSizeBytes: uploadResult.fileSize,
           uploadedByName: null,
@@ -289,9 +296,9 @@ const CreateLawAndRegulationPage = () => {
             description: null,
           },
         ]);
-        toast.success(`Uploaded "${file.name}"`);
+        toast.success(t('toasts.lawImageUploaded', { name: file.name }));
       } catch {
-        toast.error('Failed to upload image');
+        toast.error(t('toasts.lawImageUploadFailed'));
       }
     },
     [appraisalId, getOrCreateSession, uploadMutation, addGalleryPhoto],
@@ -336,9 +343,11 @@ const CreateLawAndRegulationPage = () => {
       e.preventDefault();
       dragCounterRef.current = 0;
       setIsDragging(false);
-      const files = Array.from(e.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+      const files = Array.from(e.dataTransfer?.files ?? []).filter(f =>
+        f.type.startsWith('image/'),
+      );
       if (files.length > 0) {
-        toast.success(`Uploading ${files.length} file(s)...`);
+        toast.success(t('toasts.lawImagesUploading', { count: files.length }));
         files.forEach(f => handleUploadRef.current(f));
       }
     };
@@ -369,28 +378,23 @@ const CreateLawAndRegulationPage = () => {
   }, [galleryData, currentGalleryPhotoIds]);
 
   // "Choose from Gallery" handler
-  const handleGallerySelect = useCallback(
-    (selectedImages: GalleryImage[]) => {
-      setImages(prev => [
-        ...prev,
-        ...selectedImages.map((img, idx) => ({
-          id: null,
-          galleryPhotoId: img.id,
-          displaySequence: prev.length + idx + 1,
-          title: null,
-          description: null,
-        })),
-      ]);
-      if (selectedImages.length > 0) {
-        toast.success(
-          selectedImages.length === 1
-            ? 'Photo added'
-            : `${selectedImages.length} photos added`,
-        );
-      }
-    },
-    [],
-  );
+  const handleGallerySelect = useCallback((selectedImages: GalleryImage[]) => {
+    setImages(prev => [
+      ...prev,
+      ...selectedImages.map((img, idx) => ({
+        id: null,
+        galleryPhotoId: img.id,
+        displaySequence: prev.length + idx + 1,
+        title: null,
+        description: null,
+      })),
+    ]);
+    if (selectedImages.length > 0) {
+      toast.success(
+        selectedImages.length === 1 ? 'Photo added' : `${selectedImages.length} photos added`,
+      );
+    }
+  }, []);
 
   // Delete handler for PhotoGridView
   const handleImageDelete = useCallback((image: GalleryImage) => {
@@ -405,13 +409,18 @@ const CreateLawAndRegulationPage = () => {
   }, [deleteTarget]);
 
   // Click handler for PhotoGridView (opens preview)
-  const handleImageClick = useCallback((image: GalleryImage) => {
-    const match = previewablePhotos.find(p => p.id === image.id);
-    setPreviewPhoto(match ?? { id: image.id, src: image.src, fileName: image.fileName });
-  }, [previewablePhotos]);
+  const handleImageClick = useCallback(
+    (image: GalleryImage) => {
+      const match = previewablePhotos.find(p => p.id === image.id);
+      setPreviewPhoto(match ?? { id: image.id, src: image.src, fileName: image.fileName });
+    },
+    [previewablePhotos],
+  );
 
   // Build items array for batch save
-  const buildItemsPayload = (formData: CreateLawAndRegulationFormType): LawAndRegulationItemInputType[] => {
+  const buildItemsPayload = (
+    formData: CreateLawAndRegulationFormType,
+  ): LawAndRegulationItemInputType[] => {
     const currentItem: LawAndRegulationItemInputType = {
       id: isEditMode && itemId ? itemId : null,
       headerCode: formData.headerCode,
@@ -468,7 +477,7 @@ const CreateLawAndRegulationPage = () => {
   const handleSave = (action: 'draft' | 'submit') => {
     if (!appraisalId) return;
 
-    methods.handleSubmit((formData) => {
+    methods.handleSubmit(formData => {
       setSaveAction(action);
       const items = buildItemsPayload(formData);
 
@@ -482,7 +491,7 @@ const CreateLawAndRegulationPage = () => {
             navigateBack();
           },
           onError: () => {
-            toast.error('Failed to save');
+            toast.error(t('toasts.lawSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -650,33 +659,41 @@ const CreateLawAndRegulationPage = () => {
             onClose={() => setPreviewPhoto(null)}
             onNavigate={setPreviewPhoto}
             showInUseStatus={false}
-            onDelete={isReadOnly ? undefined : () => {
-              setDeleteTarget({
-                galleryPhotoId: previewPhoto.id,
-                fileName: previewPhoto.fileName ?? 'this image',
-              });
-            }}
-            onSaveDescription={isReadOnly ? undefined : async (caption: string) => {
-              if (!appraisalId) return;
-              try {
-                const dto = galleryPhotoDtoMap.get(previewPhoto.id);
-                await updateGalleryPhotoApi({
-                  appraisalId,
-                  photoId: previewPhoto.id,
-                  caption: caption || null,
-                  photoCategory: dto?.photoCategory ?? null,
-                  latitude: dto?.latitude ?? null,
-                  longitude: dto?.longitude ?? null,
-                  capturedAt: dto?.capturedAt ?? null,
-                });
-                setPreviewPhoto(prev =>
-                  prev ? { ...prev, caption: caption || null } : null,
-                );
-                toast.success('Description updated');
-              } catch {
-                toast.error('Failed to update description');
-              }
-            }}
+            onDelete={
+              isReadOnly
+                ? undefined
+                : () => {
+                    setDeleteTarget({
+                      galleryPhotoId: previewPhoto.id,
+                      fileName: previewPhoto.fileName ?? 'this image',
+                    });
+                  }
+            }
+            onSaveDescription={
+              isReadOnly
+                ? undefined
+                : async (caption: string) => {
+                    if (!appraisalId) return;
+                    try {
+                      const dto = galleryPhotoDtoMap.get(previewPhoto.id);
+                      await updateGalleryPhotoApi({
+                        appraisalId,
+                        photoId: previewPhoto.id,
+                        caption: caption || null,
+                        photoCategory: dto?.photoCategory ?? null,
+                        latitude: dto?.latitude ?? null,
+                        longitude: dto?.longitude ?? null,
+                        capturedAt: dto?.capturedAt ?? null,
+                      });
+                      setPreviewPhoto(prev =>
+                        prev ? { ...prev, caption: caption || null } : null,
+                      );
+                      toast.success(t('toasts.lawDescriptionUpdated'));
+                    } catch {
+                      toast.error(t('toasts.lawDescriptionUpdateFailed'));
+                    }
+                  }
+            }
             isSavingDescription={isUpdatingDescription}
           />
         )}

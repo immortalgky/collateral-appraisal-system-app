@@ -1,23 +1,38 @@
 import { useId, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { IconPicker } from './IconPicker';
 import { PermissionSelect } from './PermissionSelect';
 import type { MenuItemAdminDto, MenuScope, IconStyle } from '../types';
 
+type ColorKey =
+  | 'Blue'
+  | 'Emerald'
+  | 'Purple'
+  | 'Amber'
+  | 'Cyan'
+  | 'Teal'
+  | 'Rose'
+  | 'Orange'
+  | 'Indigo'
+  | 'Sky'
+  | 'Violet'
+  | 'Gray';
+
 /** Constrained 500-level Tailwind color swatch options for icon color */
-const COLOR_OPTIONS: { label: string; value: string }[] = [
-  { label: 'Blue', value: 'text-blue-500' },
-  { label: 'Emerald', value: 'text-emerald-500' },
-  { label: 'Purple', value: 'text-purple-500' },
-  { label: 'Amber', value: 'text-amber-500' },
-  { label: 'Cyan', value: 'text-cyan-500' },
-  { label: 'Teal', value: 'text-teal-500' },
-  { label: 'Rose', value: 'text-rose-500' },
-  { label: 'Orange', value: 'text-orange-500' },
-  { label: 'Indigo', value: 'text-indigo-500' },
-  { label: 'Sky', value: 'text-sky-500' },
-  { label: 'Violet', value: 'text-violet-500' },
-  { label: 'Gray', value: 'text-gray-500' },
+const COLOR_VALUES: { key: ColorKey; value: string }[] = [
+  { key: 'Blue', value: 'text-blue-500' },
+  { key: 'Emerald', value: 'text-emerald-500' },
+  { key: 'Purple', value: 'text-purple-500' },
+  { key: 'Amber', value: 'text-amber-500' },
+  { key: 'Cyan', value: 'text-cyan-500' },
+  { key: 'Teal', value: 'text-teal-500' },
+  { key: 'Rose', value: 'text-rose-500' },
+  { key: 'Orange', value: 'text-orange-500' },
+  { key: 'Indigo', value: 'text-indigo-500' },
+  { key: 'Sky', value: 'text-sky-500' },
+  { key: 'Violet', value: 'text-violet-500' },
+  { key: 'Gray', value: 'text-gray-500' },
 ];
 
 const COLOR_BG_MAP: Record<string, string> = {
@@ -63,7 +78,7 @@ function getTranslation(
   translations: { languageCode: string; label: string }[],
   lang: string,
 ): string {
-  return translations.find(t => t.languageCode === lang)?.label ?? '';
+  return translations.find(tr => tr.languageCode === lang)?.label ?? '';
 }
 
 /**
@@ -78,6 +93,7 @@ export function MenuItemForm({
   onSubmit,
   isSubmitting,
 }: MenuItemFormProps) {
+  const { t } = useTranslation(['menuManagement', 'common']);
   const isSystem = initial?.isSystem ?? false;
   const [activeTab, setActiveTab] = useState<(typeof LANGS)[number]>('en');
   const fieldId = useId();
@@ -110,7 +126,7 @@ export function MenuItemForm({
   const updateTranslation = (lang: string, label: string) => {
     setValues(v => ({
       ...v,
-      translations: v.translations.map(t => (t.languageCode === lang ? { ...t, label } : t)),
+      translations: v.translations.map(tr => (tr.languageCode === lang ? { ...tr, label } : tr)),
     }));
   };
 
@@ -124,7 +140,7 @@ export function MenuItemForm({
       {/* Item Key */}
       <div>
         <label htmlFor={ids.itemKey} className="block text-sm font-medium text-gray-700 mb-1">
-          Item Key <span className="text-red-500">*</span>
+          {t('form.itemKey')} <span className="text-red-500">*</span>
         </label>
         <input
           id={ids.itemKey}
@@ -133,21 +149,19 @@ export function MenuItemForm({
           onChange={e => setValues(v => ({ ...v, itemKey: e.target.value }))}
           disabled={isSystem}
           required
-          placeholder="e.g. main.dashboard"
+          placeholder={t('form.itemKeyPlaceholder')}
           className={clsx(
             'w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30',
             isSystem && 'bg-gray-50 cursor-not-allowed text-gray-500',
           )}
         />
-        {isSystem && (
-          <p className="text-xs text-amber-600 mt-1">Item key is locked for system items.</p>
-        )}
+        {isSystem && <p className="text-xs text-amber-600 mt-1">{t('form.itemKeyLocked')}</p>}
       </div>
 
       {/* Scope */}
       <div>
         <label htmlFor={ids.scope} className="block text-sm font-medium text-gray-700 mb-1">
-          Scope
+          {t('form.scope')}
         </label>
         <select
           id={ids.scope}
@@ -166,7 +180,7 @@ export function MenuItemForm({
       {/* Parent */}
       <div>
         <label htmlFor={ids.parent} className="block text-sm font-medium text-gray-700 mb-1">
-          Parent
+          {t('form.parent')}
         </label>
         <select
           id={ids.parent}
@@ -174,7 +188,7 @@ export function MenuItemForm({
           onChange={e => setValues(v => ({ ...v, parentId: e.target.value || null }))}
           className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
         >
-          <option value="">— None (top-level) —</option>
+          <option value="">{t('form.parentNone')}</option>
           {parentOptions.map(opt => (
             <option key={opt.id} value={opt.id}>
               {opt.label}
@@ -186,25 +200,23 @@ export function MenuItemForm({
       {/* Path */}
       <div>
         <label htmlFor={ids.path} className="block text-sm font-medium text-gray-700 mb-1">
-          Path
+          {t('form.path')}
         </label>
         <input
           id={ids.path}
           type="text"
           value={values.path ?? ''}
           onChange={e => setValues(v => ({ ...v, path: e.target.value || null }))}
-          placeholder="/dashboard or :basePath/property"
+          placeholder={t('form.pathPlaceholder')}
           className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
-        <p className="text-xs text-gray-400 mt-1">
-          Appraisal items may use :basePath and :requestId placeholders.
-        </p>
+        <p className="text-xs text-gray-400 mt-1">{t('form.pathHint')}</p>
       </div>
 
       {/* Icon — composite control, use role=group + aria-label */}
       <div role="group" aria-labelledby={`${fieldId}-icon-label`}>
         <span id={`${fieldId}-icon-label`} className="block text-sm font-medium text-gray-700 mb-1">
-          Icon
+          {t('form.icon')}
         </span>
         <IconPicker
           value={values.iconName}
@@ -220,7 +232,7 @@ export function MenuItemForm({
           id={`${fieldId}-color-label`}
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Icon Color
+          {t('form.iconColor')}
         </span>
         <div className="flex flex-wrap gap-2">
           <button
@@ -230,33 +242,38 @@ export function MenuItemForm({
               'w-7 h-7 rounded-full border-2 bg-gray-200 flex items-center justify-center',
               !values.iconColor ? 'border-gray-700' : 'border-transparent',
             )}
-            title="None"
-            aria-label="No color"
+            title={t('form.iconColorNone')}
+            aria-label={t('form.iconColorNone')}
           >
             <span className="text-gray-500 text-xs">—</span>
           </button>
-          {COLOR_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setValues(v => ({ ...v, iconColor: opt.value }))}
-              title={opt.label}
-              aria-label={opt.label}
-              aria-pressed={values.iconColor === opt.value}
-              className={clsx(
-                'w-7 h-7 rounded-full border-2',
-                COLOR_BG_MAP[opt.value] ?? 'bg-gray-400',
-                values.iconColor === opt.value ? 'border-gray-700 scale-110' : 'border-transparent',
-              )}
-            />
-          ))}
+          {COLOR_VALUES.map(opt => {
+            const label = t(`colors.${opt.key}`);
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setValues(v => ({ ...v, iconColor: opt.value }))}
+                title={label}
+                aria-label={label}
+                aria-pressed={values.iconColor === opt.value}
+                className={clsx(
+                  'w-7 h-7 rounded-full border-2',
+                  COLOR_BG_MAP[opt.value] ?? 'bg-gray-400',
+                  values.iconColor === opt.value
+                    ? 'border-gray-700 scale-110'
+                    : 'border-transparent',
+                )}
+              />
+            );
+          })}
         </div>
       </div>
 
       {/* Sort Order */}
       <div>
         <label htmlFor={ids.sortOrder} className="block text-sm font-medium text-gray-700 mb-1">
-          Sort Order
+          {t('form.sortOrder')}
         </label>
         <input
           id={ids.sortOrder}
@@ -274,12 +291,11 @@ export function MenuItemForm({
           id={`${fieldId}-view-perm-label`}
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          View Permission <span className="text-red-500">*</span>
+          {t('form.viewPermission')} <span className="text-red-500">*</span>
         </span>
         <PermissionSelect
           value={values.viewPermissionCode}
           onChange={code => setValues(v => ({ ...v, viewPermissionCode: code }))}
-          placeholder="Select view permission..."
         />
       </div>
 
@@ -289,13 +305,13 @@ export function MenuItemForm({
           id={`${fieldId}-edit-perm-label`}
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Edit Permission
+          {t('form.editPermission')}
         </span>
         <PermissionSelect
           value={values.editPermissionCode ?? ''}
           onChange={code => setValues(v => ({ ...v, editPermissionCode: code || null }))}
-          placeholder="None (read-only)"
           allowEmpty
+          emptyLabel={t('permissionSelect.editPermissionEmpty')}
         />
       </div>
 
@@ -305,7 +321,7 @@ export function MenuItemForm({
           id={`${fieldId}-labels-label`}
           className="block text-sm font-medium text-gray-700 mb-2"
         >
-          Labels
+          {t('form.labels')}
         </span>
         <div className="border border-gray-200 rounded-xl overflow-hidden">
           {/* Tab headers */}
@@ -333,7 +349,7 @@ export function MenuItemForm({
             {LANGS.map(lang => (
               <div key={lang} className={activeTab === lang ? '' : 'hidden'}>
                 <label htmlFor={ids.labelInput(lang)} className="sr-only">
-                  {lang.toUpperCase()} label
+                  {t('form.labelAriaInput', { lang: lang.toUpperCase() })}
                 </label>
                 <input
                   id={ids.labelInput(lang)}
@@ -343,8 +359,8 @@ export function MenuItemForm({
                   required={lang === 'en'}
                   placeholder={
                     lang === 'en'
-                      ? 'English label (required)'
-                      : `${lang.toUpperCase()} label (optional)`
+                      ? t('form.labelPlaceholderEn')
+                      : t('form.labelPlaceholderOther', { lang: lang.toUpperCase() })
                   }
                   className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
@@ -361,7 +377,7 @@ export function MenuItemForm({
           disabled={isSubmitting}
           className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isSubmitting ? 'Saving...' : 'Save'}
+          {isSubmitting ? t('form.submitting') : t('form.submit')}
         </button>
       </div>
     </form>

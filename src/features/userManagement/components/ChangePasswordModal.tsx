@@ -1,21 +1,11 @@
 import { useState } from 'react';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import { useChangePassword } from '../api/users';
-
-const schema = z
-  .object({
-    currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Please confirm your new password'),
-  })
-  .refine(data => data.newPassword === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -26,10 +16,22 @@ interface ChangePasswordModalProps {
 const emptyForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
 
 const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const changePassword = useChangePassword(userId);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Partial<typeof emptyForm>>({});
   const [showPasswords, setShowPasswords] = useState(false);
+
+  const schema = z
+    .object({
+      currentPassword: z.string().min(1, t('validation.currentPasswordRequired')),
+      newPassword: z.string().min(8, t('validation.newPasswordMinLength')),
+      confirmPassword: z.string().min(1, t('validation.confirmPasswordRequired')),
+    })
+    .refine(data => data.newPassword === data.confirmPassword, {
+      message: t('validation.passwordsDoNotMatch'),
+      path: ['confirmPassword'],
+    });
 
   const updateField = (key: keyof typeof emptyForm, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -57,11 +59,12 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
 
     changePassword.mutate(result.data, {
       onSuccess: () => {
-        toast.success('Password changed successfully');
+        toast.success(t('toasts.passwordChanged'));
         handleClose();
       },
       onError: (err: any) => {
-        const msg = err?.apiError?.detail || err?.apiError?.title || 'Failed to change password';
+        const msg =
+          err?.apiError?.detail || err?.apiError?.title || t('toasts.passwordChangeFailed');
         toast.error(msg);
       },
     });
@@ -70,12 +73,17 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
   const inputType = showPasswords ? 'text' : 'password';
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Change Password" size="sm">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={t('dialogs.changePassword.title')}
+      size="sm"
+    >
       <div className="flex flex-col gap-4 p-6">
         {/* Current password */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
-            Current Password <span className="text-danger">*</span>
+            {t('fields.currentPassword')} <span className="text-danger">*</span>
           </label>
           <input
             type={inputType}
@@ -84,7 +92,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
               errors.currentPassword ? 'border-danger' : 'border-gray-200'
             }`}
-            placeholder="Enter current password"
+            placeholder={t('placeholders.enterCurrentPassword')}
           />
           {errors.currentPassword && (
             <p className="mt-1 text-xs text-danger">{errors.currentPassword}</p>
@@ -94,7 +102,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
         {/* New password */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
-            New Password <span className="text-danger">*</span>
+            {t('fields.newPassword')} <span className="text-danger">*</span>
           </label>
           <input
             type={inputType}
@@ -103,17 +111,15 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
               errors.newPassword ? 'border-danger' : 'border-gray-200'
             }`}
-            placeholder="At least 8 characters"
+            placeholder={t('placeholders.atLeast8Chars')}
           />
-          {errors.newPassword && (
-            <p className="mt-1 text-xs text-danger">{errors.newPassword}</p>
-          )}
+          {errors.newPassword && <p className="mt-1 text-xs text-danger">{errors.newPassword}</p>}
         </div>
 
         {/* Confirm password */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">
-            Confirm New Password <span className="text-danger">*</span>
+            {t('fields.confirmNewPassword')} <span className="text-danger">*</span>
           </label>
           <input
             type={inputType}
@@ -122,7 +128,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
               errors.confirmPassword ? 'border-danger' : 'border-gray-200'
             }`}
-            placeholder="Re-enter new password"
+            placeholder={t('placeholders.reEnterNewPassword')}
           />
           {errors.confirmPassword && (
             <p className="mt-1 text-xs text-danger">{errors.confirmPassword}</p>
@@ -136,16 +142,21 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
           className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 self-start"
         >
           <Icon name={showPasswords ? 'eye-slash' : 'eye'} style="regular" className="size-3.5" />
-          {showPasswords ? 'Hide' : 'Show'} passwords
+          {showPasswords ? t('buttons.hidePasswords') : t('buttons.showPasswords')}
         </button>
       </div>
 
       <div className="flex justify-end gap-2 px-6 pb-6">
         <Button variant="ghost" size="sm" onClick={handleClose}>
-          Cancel
+          {t('common:actions.cancel')}
         </Button>
-        <Button variant="primary" size="sm" isLoading={changePassword.isPending} onClick={handleSave}>
-          Change Password
+        <Button
+          variant="primary"
+          size="sm"
+          isLoading={changePassword.isPending}
+          onClick={handleSave}
+        >
+          {t('buttons.changePassword')}
         </Button>
       </div>
     </Modal>

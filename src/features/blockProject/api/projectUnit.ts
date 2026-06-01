@@ -49,9 +49,7 @@ export const useGetProjectUnitUploads = (appraisalId: string) => {
   return useQuery({
     queryKey: projectUnitKeys.uploads(appraisalId),
     queryFn: async (): Promise<ProjectUnitUpload[]> => {
-      const { data } = await axios.get(
-        `/appraisals/${appraisalId}/project/units/uploads`,
-      );
+      const { data } = await axios.get(`/appraisals/${appraisalId}/project/units/uploads`);
       return data;
     },
     enabled: !!appraisalId,

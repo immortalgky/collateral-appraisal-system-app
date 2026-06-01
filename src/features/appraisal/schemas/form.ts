@@ -1,5 +1,7 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   allBuildingFields,
   allCondoFields,
@@ -159,50 +161,79 @@ export const createLandAndBuildingForm = buildFormSchema(
   createLandAndBuildingFormBase,
 ).superRefine(constructionProportionRefinement);
 
-export const createLandAndBuildingPMAFormBase = z.object({
-  buildingInsurancePrice: z.coerce.number().nullable(),
-  sellingPrice: z.coerce.number().nullable(),
-  forcedSalePrice: z.coerce.number().nullable(),
-  titleNo: z.string().nullable().optional(),
-  rawang: z.string().nullable().optional(),
-  landNo: z.string().nullable().optional(),
-  surveyNo: z.string().nullable().optional(),
-  bookNumber: z.string().nullable().optional(),
-  pageNumber: z.string().nullable().optional(),
-  areaRai: z.number().int().nullable().optional(),
-  areaNgan: z.number().int().nullable().optional(),
-  areaSquareWa: z.number().nullable().optional(),
-  subDistrict: z.string().min(1, 'Sub district is required.'),
-  subDistrictName: z.string().nullable(),
-  district: z.string().min(1, 'District is required.'),
-  districtName: z.string().nullable(),
-  province: z.string().min(1, 'Province is required.'),
-  provinceName: z.string().nullable(),
-});
+const makeLandAndBuildingPMAFormBase = (t: TFunction<'appraisal'>) =>
+  z.object({
+    buildingInsurancePrice: z.coerce.number().nullable(),
+    sellingPrice: z.coerce.number().nullable(),
+    forcedSalePrice: z.coerce.number().nullable(),
+    titleNo: z.string().nullable().optional(),
+    rawang: z.string().nullable().optional(),
+    landNo: z.string().nullable().optional(),
+    surveyNo: z.string().nullable().optional(),
+    bookNumber: z.string().nullable().optional(),
+    pageNumber: z.string().nullable().optional(),
+    areaRai: z.number().int().nullable().optional(),
+    areaNgan: z.number().int().nullable().optional(),
+    areaSquareWa: z.number().nullable().optional(),
+    subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
+    subDistrictName: z.string().nullable(),
+    district: z.string().min(1, t('validation.districtRequired')),
+    districtName: z.string().nullable(),
+    province: z.string().min(1, t('validation.provinceRequired')),
+    provinceName: z.string().nullable(),
+  });
 
-export const createCondoPMAFormBase = z.object({
-  buildingInsurancePrice: z.coerce.number().nullable(),
-  sellingPrice: z.coerce.number().nullable(),
-  forcedSalePrice: z.coerce.number().nullable(),
-  builtOnTitleNumber: z.string().min(1, 'Built on title number is required.'),
-  condoRegistrationNumber: z.string().min(1, 'Condo registration number is required.'),
-  roomNumber: z.string().min(1, 'Room number is required.'),
-  floorNumber: z.coerce.number(),
-  buildingNumber: z.string().min(1, 'Building number is required.'),
-  condoName: z.string().min(1, 'Condo name is required.'),
-  subDistrict: z.string().min(1, 'Sub district is required.'),
-  subDistrictName: z.string().nullable(),
-  district: z.string().min(1, 'District is required.'),
-  districtName: z.string().nullable(),
-  province: z.string().min(1, 'Province is required.'),
-  provinceName: z.string().nullable(),
-});
+// Static export for type inference
+export const createLandAndBuildingPMAFormBase = makeLandAndBuildingPMAFormBase(
+  ((key: string) => key) as unknown as TFunction<'appraisal'>,
+);
 
+const makeCondoPMAFormBase = (t: TFunction<'appraisal'>) =>
+  z.object({
+    buildingInsurancePrice: z.coerce.number().nullable(),
+    sellingPrice: z.coerce.number().nullable(),
+    forcedSalePrice: z.coerce.number().nullable(),
+    builtOnTitleNumber: z.string().min(1, t('validation.builtOnTitleNumberRequired')),
+    condoRegistrationNumber: z.string().min(1, t('validation.condoRegistrationNumberRequired')),
+    roomNumber: z.string().min(1, t('validation.roomNumberRequired')),
+    floorNumber: z.coerce.number(),
+    buildingNumber: z.string().min(1, t('validation.buildingNumberRequired')),
+    condoName: z.string().min(1, t('validation.condoNameRequired')),
+    subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
+    subDistrictName: z.string().nullable(),
+    district: z.string().min(1, t('validation.districtRequired')),
+    districtName: z.string().nullable(),
+    province: z.string().min(1, t('validation.provinceRequired')),
+    provinceName: z.string().nullable(),
+  });
+
+// Static export for type inference
+export const createCondoPMAFormBase = makeCondoPMAFormBase(
+  ((key: string) => key) as unknown as TFunction<'appraisal'>,
+);
+
+export const makeLandAndBuildingPMAForm = (t: TFunction<'appraisal'>) =>
+  buildFormSchema(allLandAndBuildingPMAFields, makeLandAndBuildingPMAFormBase(t));
+
+export const makeCondoPMAForm = (t: TFunction<'appraisal'>) =>
+  buildFormSchema(allCondoPMAFields, makeCondoPMAFormBase(t));
+
+// Static exports using identity t for type inference only
 export const createLandAndBuildingPMAForm = buildFormSchema(
   allLandAndBuildingPMAFields,
   createLandAndBuildingPMAFormBase,
 );
 export const createCondoPMAForm = buildFormSchema(allCondoPMAFields, createCondoPMAFormBase);
+
+export const useLandAndBuildingPMAFormSchema = () => {
+  const { t } = useTranslation('appraisal');
+  return makeLandAndBuildingPMAForm(t);
+};
+
+export const useCondoPMAFormSchema = () => {
+  const { t } = useTranslation('appraisal');
+  return makeCondoPMAForm(t);
+};
 export const createMachineryForm = buildFormSchema(allMachineryFields);
 
 export const factorDataDto = z

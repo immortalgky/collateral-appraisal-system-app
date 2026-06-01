@@ -1,0 +1,131 @@
+{
+  "banner": {
+    "title": "คำขอเอกสารที่ยังเปิดอยู่",
+    "pendingItems": "{{n}} รายการที่รอดำเนินการจากผู้ยื่นคำขอ — การส่งถูกระงับจนกว่าจะแก้ไข",
+    "loadingDetails": "กำลังโหลดรายละเอียด...",
+    "raised": "ยกระดับเมื่อ",
+    "raisedBy": "โดย {{name}}",
+    "cancelAll": "ยกเลิกทั้งหมด"
+  },
+  "columns": {
+    "documentType": "ประเภทเอกสาร",
+    "notes": "หมายเหตุ",
+    "status": "สถานะ"
+  },
+  "status": {
+    "Pending": "รอดำเนินการ",
+    "Uploaded": "อัปโหลดแล้ว",
+    "Declined": "ปฏิเสธ",
+    "Cancelled": "ยกเลิก"
+  },
+  "raiseDialog": {
+    "title": "ขอเอกสารเพิ่มเติม",
+    "subtitle": "ระบุเอกสารที่ต้องการจากผู้ยื่นคำขอ",
+    "requestLabel": "คำขอเอกสาร #{{number}}",
+    "documentTypeLabel": "ประเภทเอกสาร",
+    "documentTypePlaceholder": "เลือกประเภทเอกสาร...",
+    "notesLabel": "หมายเหตุ / คำแนะนำ",
+    "notesPlaceholder": "อธิบายสิ่งที่ต้องการและเหตุผล...",
+    "addAnother": "เพิ่มคำขอเอกสารอีกรายการ",
+    "submitting": "กำลังส่ง...",
+    "sendRequest": "ส่งคำขอ"
+  },
+  "uploadDialog": {
+    "title": "อัปโหลดเอกสาร",
+    "fulfilling": "กำลังดำเนินการสำหรับ:",
+    "attachToLabel": "แนบกับ",
+    "loadingTitles": "กำลังโหลดโฉนด...",
+    "applicationLevel": "ระดับใบสมัคร (คำขอ)",
+    "fileLabel": "ไฟล์",
+    "selectedFile": "ไฟล์ที่เลือก:",
+    "deferredNotePre": "ไฟล์ถูกอัปโหลดไปยังพื้นที่เก็บข้อมูลแล้ว แต่",
+    "deferredNoteNot": "ยังไม่ได้",
+    "deferredNotePost": "แนบกับคำขอ การแนบเอกสารจะเกิดขึ้นพร้อมกันเมื่อคุณคลิก",
+    "deferredNoteAction": "ส่งคำตอบ",
+    "deferredNoteEnd": "",
+    "titleFallback": "โฉนด",
+    "uploading": "กำลังอัปโหลด...",
+    "stageFile": "จัดเตรียมไฟล์",
+    "loadError": "โหลดฟอร์มอัปโหลดไม่สำเร็จ"
+  },
+  "cancelReasonModal": {
+    "reasonPlaceholder": "ระบุเหตุผล...",
+    "cancelFollowupTitle": "ยกเลิกคำขอเอกสาร",
+    "cancelLineItemTitle": "ยกเลิกรายการ",
+    "cancelReasonSubtitle": "กรุณาระบุเหตุผลในการยกเลิก",
+    "confirm": "ยืนยัน"
+  },
+  "declineModal": {
+    "title": "ปฏิเสธคำขอเอกสาร",
+    "youAreDeclining": "คุณกำลังปฏิเสธ:",
+    "reasonRequired": "จำเป็นต้องระบุเหตุผลในการปฏิเสธคำขอนี้",
+    "reasonLabel": "เหตุผลในการปฏิเสธ",
+    "reasonPlaceholder": "ระบุเหตุผลในการปฏิเสธ...",
+    "decline": "ปฏิเสธ"
+  },
+  "bulkDeclineModal": {
+    "title": "ปฏิเสธทั้งหมดที่เหลือ",
+    "youAreDeclining_one": "คุณกำลังปฏิเสธ {{count}} คำขอที่รอดำเนินการ",
+    "youAreDeclining_other": "คุณกำลังปฏิเสธ {{count}} คำขอที่รอดำเนินการ",
+    "reasonRequired": "จำเป็นต้องระบุเหตุผลในการปฏิเสธคำขอทั้งหมด",
+    "reasonLabel": "เหตุผลในการปฏิเสธ",
+    "reasonPlaceholder": "ระบุเหตุผลในการปฏิเสธคำขอที่เหลือทั้งหมด...",
+    "declineAll": "ปฏิเสธทั้งหมด"
+  },
+  "page": {
+    "back": "กลับไปยังการประเมิน",
+    "title": "ส่งเอกสารเพิ่มเติม",
+    "infoTitle": "ผู้ตรวจสอบได้ขอเอกสารเพิ่มเติม",
+    "infoBody": "กรุณาส่งหรือปฏิเสธเอกสารที่ขอด้านล่าง งานของผู้ตรวจสอบจะดำเนินต่อเมื่อแก้ไขรายการทั้งหมดแล้ว",
+    "requestedBy": "ขอโดย {{name}} เมื่อ {{date}}",
+    "pendingRequests": "คำขอที่รอดำเนินการ ({{count}})",
+    "declineAllRemaining": "ปฏิเสธทั้งหมดที่เหลือ",
+    "resolved": "แก้ไขแล้ว ({{count}})",
+    "reasonPrefix": "เหตุผล:",
+    "replaceStagedFile": "แทนที่",
+    "removeStagedFile": "ลบออก",
+    "declineButton": "ปฏิเสธ",
+    "uploadButton": "อัปโหลด",
+    "uploadUnavailableTitle": "ไม่มีบริบทคำขอ — ไม่สามารถอัปโหลดได้",
+    "allStagedBanner": "คำขอที่รอดำเนินการทั้งหมดมีไฟล์ที่จัดเตรียมไว้แล้ว กด ส่งคำตอบ เพื่อส่ง",
+    "allResolvedBanner": "คำขอเอกสารทั้งหมดได้รับการแก้ไขแล้ว",
+    "submitResponse": "ส่งคำตอบ",
+    "stageHint": "จัดเตรียมไฟล์ (หรือปฏิเสธ) สำหรับทุกรายการที่รอดำเนินการเพื่อเปิดใช้งานการส่ง",
+    "documentChecklist": "รายการตรวจสอบเอกสาร",
+    "checklistHint": "มุมมองอ่านอย่างเดียวของเอกสารที่แนบกับคำขอแล้ว ไฟล์ที่จัดเตรียมไว้ด้านบนจะถูกแนบพร้อมกันเมื่อคุณคลิก ส่งคำตอบ",
+    "loadingRequests": "กำลังโหลดคำขอเอกสาร...",
+    "loadError": "โหลดคำขอเอกสารไม่สำเร็จ",
+    "loadErrorDetail": "งานนี้อาจไม่ได้ใช้งานอีกต่อไป",
+    "confirmSubmitTitle": "ส่งคำตอบ",
+    "confirmSubmitMessage": "ส่งคำตอบของคุณไปยังผู้ตรวจสอบหรือไม่? การดำเนินการนี้จะทำเครื่องหมายรายการทั้งหมดว่าได้รับการแก้ไขและอนุญาตให้ผู้ตรวจสอบดำเนินการต่อ",
+    "confirmSubmit": "ส่ง"
+  },
+  "toasts": {
+    "submitSuccess": "ส่งคำตอบสำเร็จแล้ว",
+    "submitAlreadyDone": "การติดตามนี้ถูกส่งไปแล้ว",
+    "submitItemsRequired": "ต้องส่งหรือปฏิเสธรายการทั้งหมดก่อนส่ง",
+    "submitFailed": "ส่งคำตอบไม่สำเร็จ",
+    "raiseSuccess": "ยกระดับคำขอเอกสารสำเร็จแล้ว",
+    "raiseFailed": "ยกระดับคำขอเอกสารไม่สำเร็จ",
+    "cancelSuccess": "ยกเลิกคำขอเอกสารแล้ว",
+    "cancelFailed": "ยกเลิกคำขอเอกสารไม่สำเร็จ",
+    "cancelLineItemSuccess": "ยกเลิกรายการแล้ว",
+    "cancelLineItemFailed": "ยกเลิกรายการไม่สำเร็จ",
+    "declineSuccess": "ปฏิเสธคำขอเอกสารแล้ว",
+    "declineFailed": "ปฏิเสธคำขอเอกสารไม่สำเร็จ",
+    "bulkDeclineFailed": "ไม่สามารถปฏิเสธบางรายการได้ กรุณาลองใหม่อีกครั้ง",
+    "fileChooseRequired": "กรุณาเลือกไฟล์เพื่ออัปโหลด",
+    "fileStaged": "จัดเตรียมไฟล์แล้ว ไฟล์จะถูกแนบเมื่อคุณส่ง",
+    "uploadFailed": "อัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+  },
+  "validation": {
+    "documentTypeRequired": "กรุณาระบุประเภทเอกสาร",
+    "notesRequired": "กรุณาระบุหมายเหตุ",
+    "reasonRequired": "กรุณาระบุเหตุผล",
+    "atLeastOneItem": "ต้องมีคำขอเอกสารอย่างน้อยหนึ่งรายการ"
+  },
+  "aria": {
+    "cancelLineItem": "ยกเลิกรายการนี้",
+    "closeDialog": "ปิด"
+  }
+}

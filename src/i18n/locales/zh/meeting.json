@@ -1,0 +1,296 @@
+{
+  "page": {
+    "meetings": {
+      "title": "会议",
+      "subtitle": "安排三级委员会会议并发布评估供投票"
+    },
+    "queue": {
+      "title": "等待会议队列",
+      "subtitle": "等待分配会议的三级评估（融资限额 > 3000万）"
+    }
+  },
+  "tabs": {
+    "active": "进行中",
+    "history": "历史"
+  },
+  "columns": {
+    "meetingNo": "会议编号",
+    "title": "标题",
+    "status": "状态",
+    "start": "开始",
+    "end": "结束",
+    "cutOff": "截止",
+    "items": "项目",
+    "appraisalNo": "评估编号",
+    "facilityLimit": "融资限额",
+    "enqueued": "入队时间",
+    "memberNo": "序号",
+    "memberName": "委员姓名",
+    "position": "职位",
+    "actions": "操作",
+    "appraisalNumber": "评估编号",
+    "customerName": "客户名称",
+    "appraisalStaff": "评估人员",
+    "appraisalValue": "评估价值",
+    "decision": "决议",
+    "no": "序"
+  },
+  "filters": {
+    "searchPlaceholder": "搜索会议编号或客户名称",
+    "allStatus": "全部状态",
+    "from": "从",
+    "to": "至"
+  },
+  "buttons": {
+    "viewQueue": "查看队列",
+    "bulkCreate": "批量创建",
+    "newMeeting": "新建会议",
+    "allMeetings": "所有会议",
+    "addToExisting": "添加到现有会议",
+    "addToNewMeeting": "添加到新会议",
+    "addToExistingCount": "添加到现有会议 ({{n}})",
+    "addToNewMeetingCount": "添加到新会议 ({{n}})",
+    "addAppraisals": "添加评估",
+    "addMember": "添加委员",
+    "clear": "清除",
+    "edit": "编辑",
+    "cutOff": "截止",
+    "sendInvitation": "发送邀请",
+    "resendInvitation": "重新发送邀请",
+    "cancel": "取消",
+    "back": "返回",
+    "release": "发布",
+    "routeBack": "退回",
+    "remove": "移除",
+    "saveAgenda": "保存议程",
+    "saveChanges": "保存更改",
+    "createMeeting": "创建会议",
+    "create": "创建",
+    "keepMeeting": "保留会议",
+    "cancelMeeting": "取消会议",
+    "confirmCutOff": "确认截止",
+    "addMemberSubmit": "添加委员",
+    "cancelMemberAdd": "取消"
+  },
+  "actions": {
+    "cutOff": "截止",
+    "sendInvitation": "发送邀请",
+    "resendInvitation": "重新发送邀请",
+    "cancel": "取消"
+  },
+  "status": {
+    "New": "新建",
+    "InvitationSent": "已发邀请",
+    "InProgress": "进行中",
+    "RoutedBack": "已退回",
+    "Ended": "已结束",
+    "Cancelled": "已取消"
+  },
+  "position": {
+    "Chairman": "主席",
+    "Director": "董事",
+    "Secretary": "秘书",
+    "UW": "UW",
+    "Risk": "风险",
+    "Appraisal": "评估",
+    "Credit": "信贷",
+    "Member": "委员"
+  },
+  "decision": {
+    "Pending": "待定",
+    "Released": "已发布",
+    "RoutedBack": "已退回"
+  },
+  "decisionGroups": {
+    "New": "新评估",
+    "ReAppraisal": "再评估",
+    "Progressive": "进度评估",
+    "PreAppraisal": "预评估"
+  },
+  "ackGroups": {
+    "urgent": "确认紧急审批（第2组）",
+    "standard": "确认（第1组）"
+  },
+  "sections": {
+    "decisionItems": "决议项目 ({{n}})",
+    "acknowledgementItems": "确认项目 ({{n}})",
+    "appraisals": "评估 ({{n}})",
+    "queuedItemsToInclude": "待纳入的队列项目",
+    "schedule": "会议安排",
+    "committeeMembers": "委员会成员",
+    "agenda": "议程"
+  },
+  "fields": {
+    "title": "标题",
+    "titlePlaceholder": "例如：委员会会议 — 第14周",
+    "start": "开始",
+    "end": "结束",
+    "from": "从",
+    "to": "至",
+    "location": "地点",
+    "optionalPlaceholder": "可选",
+    "reason": "原因",
+    "reasonRequired": "原因",
+    "cancelReasonPlaceholder": "取消本次会议的原因是什么？",
+    "routeBackReasonPlaceholder": "描述退回本评估的原因...",
+    "user": "用户",
+    "agendaCertifyMinutes": "核准上次会议记录",
+    "agendaCertifyMinutesWithNo": "核准第 {{no}} 次会议记录",
+    "agendaCertifyMinutesPlaceholder": "会议记录认证文本...",
+    "agendaChairmanInformed": "主席知悉事项",
+    "agendaChairmanInformedPlaceholder": "告知主席的信息...",
+    "agendaOthers": "其他事项",
+    "agendaOthersPlaceholder": "其他议程项目...",
+    "subjectLabel": "标题"
+  },
+  "dialogs": {
+    "newMeeting": "新建会议",
+    "editMeeting": "编辑会议",
+    "cancelMeeting": "取消会议",
+    "confirmCutOff": "确认截止",
+    "releaseAppraisal": "发布评估",
+    "removeAppraisal": "移除评估",
+    "routeBackAppraisal": "退回评估",
+    "addAppraisalsFromQueue": "从队列添加评估",
+    "addMember": "添加委员",
+    "addToExistingMeeting": "添加到现有会议",
+    "bulkCreateMeetings": "批量创建会议",
+    "resendInvitation": "重新发送邀请",
+    "newEmail": "新邮件"
+  },
+  "banners": {
+    "ended": "会议已结束",
+    "endedAt": "会议于 {{date}} 结束。",
+    "inProgress": "会议正在进行中。将决议项目发布供审批，或退回给工作人员修改。",
+    "routedBack": "一个或多个项目已被退回。请发布所有决议项目以关闭会议。",
+    "cancelled": "会议已取消，项目已返回队列。",
+    "cancelReason": "原因：{{reason}}"
+  },
+  "detail": {
+    "start": "开始",
+    "end": "结束",
+    "from": "从",
+    "to": "至",
+    "location": "地点",
+    "cutOffAt": "截止时间",
+    "invitationSent": "已发邀请",
+    "notes": "备注",
+    "previousMeeting": "上次会议"
+  },
+  "empty": {
+    "noMeetings": "未找到会议。",
+    "noQueue": "队列中没有待处理的评估。",
+    "noItems": "无项目",
+    "noQueuedItems": "目前队列中没有项目。",
+    "noQueuedAppraisals": "目前没有评估在队列中等待。",
+    "noOpenMeetings": "没有可用的开放会议，请先创建新会议。",
+    "noMembers": "此会议快照中没有成员。"
+  },
+  "addToExisting": {
+    "description": "选择一个开放（新建或已发邀请）的会议，将已选 {{count}} 份评估添加进去。",
+    "descriptionPlural": "选择一个开放（新建或已发邀请）的会议，将已选 {{count}} 份评估添加进去。",
+    "selectMeeting": "— 选择会议 —",
+    "addToMeeting": "添加到会议",
+    "adding": "添加中..."
+  },
+  "cancelDialog": {
+    "description": "取消将把所有已分配的评估退回队列。原有工作流程仍保持暂停状态，可重新分配到新会议。",
+    "cancelling": "取消中..."
+  },
+  "cutOffDialog": {
+    "description": "将新入队的项目纳入本次会议。已在会议中的项目将被跳过。发送邀请后若有新项目，可再次运行截止操作。",
+    "ackNote": "确认项目（自上次会议以来待处理的小组委员会审批）将由系统自动纳入。",
+    "processing": "处理中..."
+  },
+  "releaseDialog": {
+    "confirm": "将 {{label}} 发布给所有会议成员审批？每位成员将收到一个并行审批任务。",
+    "releasing": "发布中..."
+  },
+  "removeDialog": {
+    "confirm": "从本次会议中移除 {{label}}？它将被退回会议队列，可在以后添加到其他会议。",
+    "removing": "移除中..."
+  },
+  "routeBackDialog": {
+    "description": "将 {{label}} 退回评估团队进行修改，必须提供原因。",
+    "routingBack": "退回中..."
+  },
+  "bulkCreateDialog": {
+    "description": "选择一个或多个日期，系统将为每个所选日期创建一个新会议。之后可以为每个会议添加委员。",
+    "datesSelected": "已选 {{n}} 个日期",
+    "datesSelectedPlural": "已选 {{n}} 个日期",
+    "creating": "创建中...",
+    "overflow": "+{{n}} 更多"
+  },
+  "addItemsDialog": {
+    "selectedCount": "已选 {{selected}} / {{total}}",
+    "adding": "添加中..."
+  },
+  "addMemberDialog": {
+    "loadingUsers": "加载用户中...",
+    "noUsers": "没有具有 AppraisalCommittee 角色的用户",
+    "selectUser": "选择用户",
+    "adding": "添加中..."
+  },
+  "queue": {
+    "description": "等待分配会议的三级评估（融资限额 > 3000万）",
+    "selectMeetingFirst": "请先选择一个会议"
+  },
+  "toasts": {
+    "meetingCreated": "会议 {{no}} 创建成功",
+    "meetingCreateFailed": "创建会议失败",
+    "meetingUpdated": "会议已更新",
+    "meetingUpdateFailed": "更新会议失败",
+    "meetingCancelled": "会议已取消，项目已返回队列。",
+    "meetingCancelFailed": "取消会议失败",
+    "cutOffCompleted": "截止完成 — 新队列项目已添加到本次会议",
+    "cutOffFailed": "执行截止失败",
+    "invitationSent": "邀请已发送邮件 — 会议编号 {{no}}",
+    "invitationResent": "邀请已重新发送 — 会议编号 {{no}}",
+    "invitationFailed": "发送邀请失败",
+    "invitationResendFailed": "重新发送邀请失败",
+    "itemsAdded": "已添加 {{count}} 份评估",
+    "itemsAddedPlural": "已添加 {{count}} 份评估",
+    "itemsAddFailed": "添加评估失败",
+    "meetingCreatedButItemsFailed": "会议已创建但添加项目失败",
+    "itemsAddToExistingFailed": "向会议添加项目失败",
+    "itemReleased": "评估已发布给所有会议成员审批",
+    "itemReleaseFailed": "发布评估失败",
+    "itemRoutedBack": "评估已退回评估团队",
+    "itemRouteBackFailed": "退回评估失败",
+    "itemRemoved": "评估 {{label}} 已退回队列",
+    "itemRemoveFailed": "移除评估失败",
+    "memberAdded": "委员已添加",
+    "memberAddFailed": "添加委员失败",
+    "memberRemoved": "委员已移除",
+    "memberRemoveFailed": "移除委员失败",
+    "positionUpdateFailed": "更新职位失败",
+    "agendaSaved": "议程已保存",
+    "agendaSaveFailed": "保存议程失败",
+    "bulkCreated": "已创建 {{count}} 个会议草稿",
+    "bulkCreatedPlural": "已创建 {{count}} 个会议草稿",
+    "bulkCreateFailed": "创建会议失败",
+    "pickAtLeastOneDate": "请至少选择一个日期"
+  },
+  "validation": {
+    "titleRequired": "标题为必填项",
+    "titleMax": "标题不得超过200个字符",
+    "locationMax": "地点不得超过200个字符",
+    "fromToMax": "不得超过200个字符",
+    "startRequired": "开始日期为必填项",
+    "endRequired": "结束日期为必填项",
+    "endAfterStart": "结束时间必须在开始时间之后",
+    "reasonRequired": "原因为必填项",
+    "reasonMax": "原因不得超过500个字符",
+    "pickAtLeastOneDate": "请至少选择一个日期"
+  },
+  "aria": {
+    "rowActions": "行操作",
+    "selectAll": "全选",
+    "selectItem": "选择 {{label}}",
+    "removeDate": "移除 {{date}}",
+    "removeFromMeeting": "从会议中移除 {{label}}"
+  },
+  "confirm": {
+    "removeMember": "将 {{name}} 从本次会议中移除？"
+  }
+}

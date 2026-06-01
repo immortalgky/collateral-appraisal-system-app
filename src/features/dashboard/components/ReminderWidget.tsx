@@ -1,5 +1,12 @@
 import { useState } from 'react';
-import { formatDistanceToNow, formatDistanceToNowStrict, format, parseISO, differenceInHours } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import {
+  formatDistanceToNow,
+  formatDistanceToNowStrict,
+  format,
+  parseISO,
+  differenceInHours,
+} from 'date-fns';
 import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
@@ -8,13 +15,6 @@ import { useReminders } from '../api/hooks';
 import type { ReminderItem, ReminderItemType } from '../api/types';
 
 type ChipKey = 'all' | 'overdue' | ReminderItemType;
-
-const CHIPS: Array<{ key: ChipKey; label: string }> = [
-  { key: 'all', label: 'All' },
-  { key: 'overdue', label: 'Overdue' },
-  { key: 'task_due', label: 'Task Due' },
-  { key: 'followup', label: 'Follow-up' },
-];
 
 function formatDueLabel(dueAt: string | null, overdue: boolean): string {
   if (!dueAt) return '';
@@ -39,9 +39,18 @@ function ReminderRowSkeleton() {
 }
 
 function ReminderWidget() {
+  const { t } = useTranslation('dashboard');
   const { data, isLoading, dataUpdatedAt } = useReminders();
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [activeChip, setActiveChip] = useState<ChipKey>('all');
+
+  // Built inside component so t() is in scope
+  const CHIPS: Array<{ key: ChipKey; label: string }> = [
+    { key: 'all', label: t('reminders.chips.all') },
+    { key: 'overdue', label: t('reminders.chips.overdue') },
+    { key: 'task_due', label: t('reminders.chips.task_due') },
+    { key: 'followup', label: t('reminders.chips.followup') },
+  ];
 
   const allVisible: ReminderItem[] = (data?.items ?? []).filter(item => !dismissed.has(item.id));
 
@@ -61,7 +70,7 @@ function ReminderWidget() {
         {/* Header */}
         <div className="flex flex-col gap-0.5 px-5 py-4 border-b border-gray-100 shrink-0">
           <h3 className="font-semibold text-gray-800">
-            Reminders
+            {t('reminders.title')}
             {!isLoading && allVisible.length > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-400">· {allVisible.length}</span>
             )}
@@ -71,7 +80,7 @@ function ReminderWidget() {
             {updatedLabel && (
               <>
                 <span aria-hidden>·</span>
-                <span>Updated {updatedLabel} ago</span>
+                <span>{t('updatedAgo', { n: updatedLabel })}</span>
               </>
             )}
           </div>
@@ -112,8 +121,13 @@ function ReminderWidget() {
               </div>
               <p className="text-sm text-gray-500 text-center">
                 {allVisible.length === 0
-                  ? "No reminders right now — you're caught up."
-                  : `No ${activeChip === 'all' ? '' : CHIPS.find(c => c.key === activeChip)?.label.toLowerCase() + ' '}reminders.`}
+                  ? t('reminders.noneAll')
+                  : t('reminders.noneFiltered', {
+                      filter:
+                        activeChip === 'all'
+                          ? ''
+                          : CHIPS.find(c => c.key === activeChip)?.label.toLowerCase() + ' ',
+                    })}
               </p>
             </div>
           ) : (
@@ -121,7 +135,9 @@ function ReminderWidget() {
               const dueLabel = formatDueLabel(item.dueAt, item.overdue);
               return (
                 <div key={item.id} className="flex items-center gap-3 px-5 py-4 group">
-                  <div className={`p-2 rounded-full shrink-0 ${item.overdue ? 'bg-red-50' : 'bg-blue-50'}`}>
+                  <div
+                    className={`p-2 rounded-full shrink-0 ${item.overdue ? 'bg-red-50' : 'bg-blue-50'}`}
+                  >
                     <Icon
                       name="bell"
                       style="solid"
@@ -131,7 +147,9 @@ function ReminderWidget() {
 
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                     {item.appraisalNumber && (
-                      <span className="text-xs font-semibold text-blue-600">{item.appraisalNumber}</span>
+                      <span className="text-xs font-semibold text-blue-600">
+                        {item.appraisalNumber}
+                      </span>
                     )}
                     <span className="text-sm font-medium text-gray-800 truncate">{item.title}</span>
                     {dueLabel && <span className="text-xs text-gray-400">{dueLabel}</span>}
@@ -139,7 +157,7 @@ function ReminderWidget() {
 
                   {item.overdue && (
                     <span className="px-2.5 py-1 text-xs font-medium rounded-full shrink-0 bg-red-50 text-red-600">
-                      Overdue
+                      {t('reminders.overdueLabel')}
                     </span>
                   )}
 
@@ -147,7 +165,7 @@ function ReminderWidget() {
                   <button
                     type="button"
                     onClick={() => setDismissed(prev => new Set([...prev, item.id]))}
-                    aria-label="Dismiss reminder"
+                    aria-label={t('reminders.aria.dismiss')}
                     className="w-5 h-5 flex items-center justify-center rounded text-gray-300 hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   >
                     <Icon name="xmark" style="solid" className="size-3" />

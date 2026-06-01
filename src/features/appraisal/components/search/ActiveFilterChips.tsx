@@ -88,12 +88,7 @@ function ActiveFilterChips({ filters, onRemove, onClearAll }: ActiveFilterChipsP
 
         if (key === 'assigneeCompanyId') {
           return (
-            <CompanyChip
-              key={key}
-              label={label}
-              companyId={value}
-              onRemove={() => onRemove(key)}
-            />
+            <CompanyChip key={key} label={label} companyId={value} onRemove={() => onRemove(key)} />
           );
         }
 

@@ -2,6 +2,7 @@ import { Icon, type ListBoxItem } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import ParameterSearchInput from '@/shared/components/inputs/ParameterSearchInput';
+import { useTranslation } from 'react-i18next';
 
 interface PricingAnalysisTemplateSelectorProps {
   icon: string;
@@ -30,6 +31,7 @@ export function PricingAnalysisTemplateSelector({
   template,
 }: PricingAnalysisTemplateSelectorProps) {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
 
   return (
     <div className="flex flex-col gap-4 mt-4">
@@ -41,12 +43,12 @@ export function PricingAnalysisTemplateSelector({
       </div>
       <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
         <div className="flex h-full items-center text-sm font-medium text-gray-600 shrink-0">
-          Pricing Analysis Template
+          {t('template.sectionTitle')}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex-1 min-w-0">
             <RHFInputCell
-              dropdown={{ label: 'Collateral Type', group: collateralType.group }}
+              dropdown={{ label: t('template.collateralType'), group: collateralType.group }}
               fieldName={collateralType.fieldName ?? 'collateralType'}
               inputType="select"
               options={collateralType.options}
@@ -59,7 +61,7 @@ export function PricingAnalysisTemplateSelector({
         </div>
         <div className="flex-1 min-w-0">
           <RHFInputCell
-            dropdown={{ label: 'Template', group: collateralType.group }}
+            dropdown={{ label: t('template.template'), group: collateralType.group }}
             fieldName={template.fieldName ?? 'pricingTemplateCode'}
             inputType="select"
             options={template.options}
@@ -75,7 +77,7 @@ export function PricingAnalysisTemplateSelector({
             onClick={() => onGenerate()}
             className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-primary/90 transition-colors shrink-0"
           >
-            Generate
+            {t('template.generate')}
           </button>
         )}
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import {
   useActivitiesList,
@@ -17,6 +18,7 @@ import type { ActivityOverrideRow } from '../types';
  * table stays small.
  */
 export function ActivityOverridesPanel() {
+  const { t } = useTranslation(['menuManagement', 'common']);
   const { data: activities, isLoading: isLoadingActivities } = useActivitiesList();
   const [activityId, setActivityId] = useState<string | null>(null);
 
@@ -92,16 +94,18 @@ export function ActivityOverridesPanel() {
       {/* Activity picker */}
       <div className="flex items-end gap-3">
         <div className="flex-1 max-w-md">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Activity</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1">
+            {t('activityOverrides.activityLabel')}
+          </label>
           <select
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             value={activityId ?? ''}
             onChange={e => setActivityId(e.target.value || null)}
             disabled={isLoadingActivities}
           >
-            {isLoadingActivities && <option>Loading…</option>}
+            {isLoadingActivities && <option>{t('activityOverrides.activityLoadingOption')}</option>}
             {!isLoadingActivities && (activities?.length ?? 0) === 0 && (
-              <option value="">No activities found</option>
+              <option value="">{t('activityOverrides.activityNoneOption')}</option>
             )}
             {activities?.map(a => (
               <option key={a.activityId} value={a.activityId}>
@@ -110,10 +114,7 @@ export function ActivityOverridesPanel() {
             ))}
           </select>
         </div>
-        <p className="text-xs text-gray-500 pb-2 flex-1">
-          Overrides apply only to the Appraisal sidebar when a user enters a task for this
-          activity. Unchecked rows fall back to role-based permissions.
-        </p>
+        <p className="text-xs text-gray-500 pb-2 flex-1">{t('activityOverrides.overridesHint')}</p>
       </div>
 
       {/* Table */}
@@ -127,13 +128,13 @@ export function ActivityOverridesPanel() {
         {isError && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Icon name="triangle-exclamation" style="solid" className="size-10 text-red-400" />
-            <p className="text-sm text-gray-500">Failed to load overrides</p>
+            <p className="text-sm text-gray-500">{t('errors.failedToLoadOverrides')}</p>
             <button
               type="button"
               onClick={() => refetch()}
               className="text-sm text-primary hover:underline"
             >
-              Retry
+              {t('common:actions.retry')}
             </button>
           </div>
         )}
@@ -142,11 +143,21 @@ export function ActivityOverridesPanel() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">Appraisal Menu</th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600">Item Key</th>
-                <th className="text-center px-4 py-2.5 font-medium text-gray-600 w-28">Visible</th>
-                <th className="text-center px-4 py-2.5 font-medium text-gray-600 w-28">Editable</th>
-                <th className="text-left px-4 py-2.5 font-medium text-gray-600 w-40">Status</th>
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                  {t('activityOverrides.columns.appraisalMenu')}
+                </th>
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600">
+                  {t('activityOverrides.columns.itemKey')}
+                </th>
+                <th className="text-center px-4 py-2.5 font-medium text-gray-600 w-28">
+                  {t('activityOverrides.columns.visible')}
+                </th>
+                <th className="text-center px-4 py-2.5 font-medium text-gray-600 w-28">
+                  {t('activityOverrides.columns.editable')}
+                </th>
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600 w-40">
+                  {t('activityOverrides.columns.status')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -175,10 +186,20 @@ export function ActivityOverridesPanel() {
                       />
                     </td>
                     <td className="px-4 py-2.5 text-xs">
-                      {touched && <span className="text-amber-600">Unsaved</span>}
-                      {!touched && isDefault && <span className="text-gray-400">Role default</span>}
+                      {touched && (
+                        <span className="text-amber-600">
+                          {t('activityOverrides.status.unsaved')}
+                        </span>
+                      )}
+                      {!touched && isDefault && (
+                        <span className="text-gray-400">
+                          {t('activityOverrides.status.roleDefault')}
+                        </span>
+                      )}
                       {!touched && !isDefault && (
-                        <span className="text-blue-600">Activity override</span>
+                        <span className="text-blue-600">
+                          {t('activityOverrides.status.activityOverride')}
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -198,7 +219,7 @@ export function ActivityOverridesPanel() {
             disabled={!isDirty || updateMutation.isPending}
             className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Reset
+            {t('activityOverrides.actions.reset')}
           </button>
           <button
             type="button"
@@ -209,7 +230,7 @@ export function ActivityOverridesPanel() {
             {updateMutation.isPending && (
               <Icon name="spinner" style="solid" className="size-4 animate-spin" />
             )}
-            Save Changes
+            {t('activityOverrides.actions.saveChanges')}
           </button>
         </div>
       )}

@@ -38,9 +38,7 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
           <h3 className="text-sm font-semibold text-gray-900">
             {group.name || `Group ${group.groupNumber ?? ''}`}
           </h3>
-          {group.description && (
-            <p className="text-xs text-gray-500">{group.description}</p>
-          )}
+          {group.description && <p className="text-xs text-gray-500">{group.description}</p>}
         </div>
         <span className="ml-auto text-xs font-medium text-gray-400">
           {group.items.length} {group.items.length === 1 ? 'property' : 'properties'}
@@ -86,7 +84,9 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
                       />
                       {isLast && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-sm font-semibold text-white">+{remainingCount}</span>
+                          <span className="text-sm font-semibold text-white">
+                            +{remainingCount}
+                          </span>
                         </div>
                       )}
                     </button>
@@ -104,11 +104,21 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
               <table className="w-full text-sm table-fixed">
                 <thead>
                   <tr className="bg-gray-50 text-left">
-                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-10">#</th>
-                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[22%]">Type</th>
-                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[25%]">Property Name</th>
-                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[18%]">Area</th>
-                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">Location</th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-10">
+                      #
+                    </th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[22%]">
+                      Type
+                    </th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[25%]">
+                      Property Name
+                    </th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[18%]">
+                      Area
+                    </th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">
+                      Location
+                    </th>
                     <th className="px-6 py-2.5 w-12" />
                   </tr>
                 </thead>
@@ -123,16 +133,16 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
                       <td className="px-4 py-3">
                         <span className="inline-flex items-center gap-1.5 text-gray-700">
                           <PropertyTypeIcon type={item.type} />
-                          <ParameterDisplay group="PropertyType" code={item.type} fallback={item.type} />
+                          <ParameterDisplay
+                            group="PropertyType"
+                            code={item.type}
+                            fallback={item.type}
+                          />
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-gray-700 truncate">
-                        {item.address}
-                      </td>
+                      <td className="px-4 py-3 text-gray-700 truncate">{item.address}</td>
                       <td className="px-4 py-3 text-gray-700 truncate">{item.area}</td>
-                      <td className="px-4 py-3 text-gray-500 truncate">
-                        {item.location}
-                      </td>
+                      <td className="px-4 py-3 text-gray-500 truncate">{item.location}</td>
                       <td className="px-6 py-3 text-gray-400">
                         <Icon name="chevron-right" style="solid" className="w-3 h-3" />
                       </td>
@@ -142,7 +152,9 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
               </table>
             </div>
           ) : (
-            <div className="p-5 text-center text-sm text-gray-400">No properties in this group.</div>
+            <div className="p-5 text-center text-sm text-gray-400">
+              No properties in this group.
+            </div>
           )}
         </div>
       </div>

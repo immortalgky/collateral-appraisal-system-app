@@ -23,6 +23,7 @@ interface SortableTileProps {
 }
 
 function SortableTile({ node, lang }: SortableTileProps) {
+  const { t } = useTranslation('common');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: node.id,
   });
@@ -49,7 +50,7 @@ function SortableTile({ node, lang }: SortableTileProps) {
         <button
           type="button"
           {...listeners}
-          aria-label="Reorder"
+          aria-label={t('favorites.aria.reorder')}
           className="absolute inset-0 rounded-lg cursor-grab active:cursor-grabbing focus:outline-none"
           tabIndex={-1}
         />

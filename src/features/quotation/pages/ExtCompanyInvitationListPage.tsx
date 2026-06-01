@@ -15,18 +15,18 @@ import { useGetMyInvitations } from '../api/quotation';
     `DateOnly?` query binder expects. */
 const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : undefined);
 
-// Vendor-relevant status filter options (subset of all companyStatus values)
-const VENDOR_STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: 'Pending', label: 'Pending Submission' },
-  { value: 'Draft', label: 'Pending Submission' },
-  { value: 'PendingCheckerReview', label: 'Pending Checker Review' },
-  { value: 'Submitted', label: 'Quoted' },
-  { value: 'UnderReview', label: 'Under Review' },
-  { value: 'Tentative', label: 'Tentative Winner' },
-  { value: 'Negotiating', label: 'Negotiating' },
-  { value: 'Declined', label: 'Declined' },
-  { value: 'Cancelled', label: 'Cancelled' },
-];
+// Vendor-relevant status filter options (backend code values — labels are translated via t())
+const VENDOR_STATUS_CODES = [
+  'Pending',
+  'Draft',
+  'PendingCheckerReview',
+  'Submitted',
+  'UnderReview',
+  'Tentative',
+  'Negotiating',
+  'Declined',
+  'Cancelled',
+] as const;
 
 const formatCurrency = (amount: number | null) => {
   if (amount == null) return '—';
@@ -43,7 +43,7 @@ const formatCurrency = (amount: number | null) => {
  */
 const ExtCompanyInvitationListPage = () => {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['quotation', 'common']);
 
   // Pagination state
   const [pageNumber, setPageNumber] = useState(0);
@@ -98,7 +98,7 @@ const ExtCompanyInvitationListPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Failed to load quotation invitations</p>
+        <p className="text-gray-600">{t('errors.failedToLoadInvitations')}</p>
         <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
       </div>
     );
@@ -110,14 +110,12 @@ const ExtCompanyInvitationListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Quotation Invitations</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.invitationsTitle')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Manage your company's quotation invitations from banks
-          </p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.invitationsSubtitle')}</p>
         </div>
       </div>
 
@@ -126,23 +124,23 @@ const ExtCompanyInvitationListPage = () => {
         {/* Search */}
         <div className="flex-1 max-w-xs">
           <Input
-            placeholder="Quotation number or requester"
+            placeholder={t('filters.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
           />
         </div>
 
-        {/* Status Filter — kept as native select; shared Dropdown renders "value - label" which is wrong here. */}
+        {/* Status Filter */}
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none bg-white min-w-36 hover:border-gray-300"
         >
-          <option value="">All statuses</option>
-          {VENDOR_STATUS_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          <option value="">{t('filters.allStatuses')}</option>
+          {VENDOR_STATUS_CODES.map(code => (
+            <option key={code} value={code}>
+              {t(`vendorStatus.${code}` as `vendorStatus.${(typeof VENDOR_STATUS_CODES)[number]}`)}
             </option>
           ))}
         </select>
@@ -150,7 +148,7 @@ const ExtCompanyInvitationListPage = () => {
         {/* Cut Off Time — From */}
         <div className="w-40">
           <DateInput
-            label="Cut Off From"
+            label={t('filters.cutOffFrom')}
             value={cutOffTimeFrom}
             onChange={setCutOffTimeFrom}
             placeholder="dd/mm/yyyy"
@@ -160,7 +158,7 @@ const ExtCompanyInvitationListPage = () => {
         {/* Cut Off Time — To */}
         <div className="w-40">
           <DateInput
-            label="Cut Off To"
+            label={t('filters.cutOffTo')}
             value={cutOffTimeTo}
             onChange={setCutOffTimeTo}
             placeholder="dd/mm/yyyy"
@@ -170,7 +168,7 @@ const ExtCompanyInvitationListPage = () => {
         {hasFilters && (
           <Button variant="ghost" size="xs" onClick={handleClearFilters}>
             <Icon style="solid" name="xmark" className="size-3 mr-1" />
-            Clear all
+            {t('common:actions.clearAll')}
           </Button>
         )}
       </div>
@@ -181,23 +179,29 @@ const ExtCompanyInvitationListPage = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Quotation #</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Status</th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.quotationNumber')}
+                </th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.status')}
+                </th>
                 <th className="text-center font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  No of Appraisal
+                  {t('columns.noOfAppraisal')}
                 </th>
                 <th className="text-right font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Total Fee Amount
+                  {t('columns.totalFeeAmount')}
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Received At
+                  {t('columns.receivedAt')}
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Cut Off Time
+                  {t('columns.cutOffTime')}
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Quoted By</th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.quotedBy')}
+                </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Quoted At
+                  {t('columns.quotedAt')}
                 </th>
               </tr>
             </thead>
@@ -224,11 +228,13 @@ const ExtCompanyInvitationListPage = () => {
                     <div className="flex flex-col items-center gap-3">
                       <Icon name="inbox" style="regular" className="size-12 text-gray-300" />
                       <div className="text-center">
-                        <p className="text-sm font-medium text-gray-700">No invitations yet</p>
+                        <p className="text-sm font-medium text-gray-700">
+                          {t('empty.noInvitations')}
+                        </p>
                         <p className="text-xs text-gray-500 mt-0.5">
                           {hasFilters
-                            ? 'Try different filters'
-                            : 'When a bank invites your company to bid, it will appear here'}
+                            ? t('empty.noInvitationsFilterHint')
+                            : t('empty.noInvitationsHint')}
                         </p>
                       </div>
                     </div>

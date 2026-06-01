@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -34,6 +35,7 @@ const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'proper
 
 export const MarketsTab = () => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
   const location = useLocation();
@@ -58,9 +60,7 @@ export const MarketsTab = () => {
   // This appraisal's own linked comparables (with coords) — shown as RED
   // "appraising" pins on the Find Existing map so the user can tell which
   // surveys are already part of their application (vs blue pool comparables).
-  const { data: mapPinsData } = useGetAppraisalMapPins(
-    findExistingOpen ? appraisalId : undefined,
-  );
+  const { data: mapPinsData } = useGetAppraisalMapPins(findExistingOpen ? appraisalId : undefined);
   const appraisingMcPins = useMemo<MarketComparablePinDto[]>(
     () =>
       (mapPinsData?.marketComparables ?? []).map(m => ({
@@ -120,11 +120,11 @@ export const MarketsTab = () => {
       { appraisalId, comparableId: unlinkConfirm.id },
       {
         onSuccess: () => {
-          toast.success('Comparable unlinked successfully');
+          toast.success(t('toasts.comparableUnlinked'));
           setUnlinkConfirm({ isOpen: false, id: null });
         },
         onError: () => {
-          toast.error('Failed to unlink comparable');
+          toast.error(t('toasts.comparableUnlinkFailed'));
         },
       },
     );

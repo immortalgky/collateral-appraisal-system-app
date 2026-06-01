@@ -29,8 +29,11 @@ vi.mock('@/shared/components/form', () => ({
     namePrefix?: string;
   }) => (
     <div data-testid="form-fields">
-      {fields.map((field) => (
-        <div key={field.name} data-testid={`field-${namePrefix ? `${namePrefix}.` : ''}${field.name}`}>
+      {fields.map(field => (
+        <div
+          key={field.name}
+          data-testid={`field-${namePrefix ? `${namePrefix}.` : ''}${field.name}`}
+        >
           <label>
             {field.label}
             {field.required && <span>*</span>}
@@ -203,7 +206,7 @@ describe('AddressForm', () => {
               contactPersonContactNo: '0812345678',
             },
           }}
-        />
+        />,
       );
 
       await user.click(screen.getByRole('button', { name: 'Submit' }));
@@ -228,7 +231,7 @@ describe('AddressForm', () => {
           // onSubmit should not be called due to validation errors
           expect(handleSubmit).not.toHaveBeenCalled();
         },
-        { timeout: 1000 }
+        { timeout: 1000 },
       );
     });
   });
@@ -255,7 +258,7 @@ describe('AddressForm', () => {
               contactPersonContactNo: '123',
             },
           }}
-        />
+        />,
       );
 
       // Click reset
@@ -282,7 +285,7 @@ describe('AddressForm', () => {
               province: 'Chiang Mai',
             },
           }}
-        />
+        />,
       );
 
       // Fields should exist (in real test, we'd verify input values)
@@ -314,22 +317,14 @@ describe('Simple Form Example', () => {
         <form onSubmit={methods.handleSubmit(onSubmit)}>
           <div>
             <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              {...methods.register('email')}
-            />
+            <input id="email" type="email" {...methods.register('email')} />
             {methods.formState.errors.email && (
               <span role="alert">{methods.formState.errors.email.message}</span>
             )}
           </div>
           <div>
             <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              {...methods.register('password')}
-            />
+            <input id="password" type="password" {...methods.register('password')} />
             {methods.formState.errors.password && (
               <span role="alert">{methods.formState.errors.password.message}</span>
             )}
@@ -384,7 +379,7 @@ describe('Simple Form Example', () => {
           email: 'test@example.com',
           password: 'password123',
         },
-        expect.anything() // form event
+        expect.anything(), // form event
       );
     });
   });
