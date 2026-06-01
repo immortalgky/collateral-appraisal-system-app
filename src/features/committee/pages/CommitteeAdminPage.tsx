@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -18,10 +20,7 @@ import {
   useRemoveCommitteeMember,
   useUpdateCommitteeMember,
 } from '../api/committees';
-import type {
-  CommitteeMemberAttendance,
-  CommitteeMemberDto,
-} from '../api/types';
+import type { CommitteeMemberAttendance, CommitteeMemberDto } from '../api/types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -29,29 +28,31 @@ const COMMITTEE_ROLE = 'AppraisalCommittee';
 
 const ATTENDANCE_OPTIONS: CommitteeMemberAttendance[] = ['Always', 'Odd', 'Even'];
 
-const ATTENDANCE_LABELS: Record<CommitteeMemberAttendance, string> = {
-  Always: 'Always',
-  Odd: 'Odd meetings (1, 3, 5, ...)',
-  Even: 'Even meetings (2, 4, 6, ...)',
+// Attendance code → i18n key under `attendance.*`
+const ATTENDANCE_KEY: Record<CommitteeMemberAttendance, 'always' | 'odd' | 'even'> = {
+  Always: 'always',
+  Odd: 'odd',
+  Even: 'even',
 };
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
 
-const addMemberSchema = z.object({
-  userId: z.string().min(1, 'Select a user'),
-  memberName: z.string().min(1, 'Member name is required'),
-  role: z.enum([
-    'Chairman',
-    'Director',
-    'Secretary',
-    'UW',
-    'Risk',
-    'Appraisal',
-    'Credit',
-    'Member',
-  ] as const),
-  attendance: z.enum(['Always', 'Odd', 'Even'] as const),
-});
+const makeAddMemberSchema = (t: TFunction<'committee'>) =>
+  z.object({
+    userId: z.string().min(1, t('validation.selectUser')),
+    memberName: z.string().min(1, t('validation.memberNameRequired')),
+    role: z.enum([
+      'Chairman',
+      'Director',
+      'Secretary',
+      'UW',
+      'Risk',
+      'Appraisal',
+      'Credit',
+      'Member',
+    ] as const),
+    attendance: z.enum(['Always', 'Odd', 'Even'] as const),
+  });
 
 const updateMemberSchema = z.object({
   role: z.enum([
@@ -68,7 +69,7 @@ const updateMemberSchema = z.object({
   isActive: z.boolean(),
 });
 
-type AddMemberFormValues = z.infer<typeof addMemberSchema>;
+type AddMemberFormValues = z.infer<ReturnType<typeof makeAddMemberSchema>>;
 type UpdateMemberFormValues = z.infer<typeof updateMemberSchema>;
 
 // ── Shared input class ────────────────────────────────────────────────────────
@@ -78,14 +79,14 @@ const inputClass =
 
 // ── Attendance tooltip ────────────────────────────────────────────────────────
 
-const AttendanceHelp = () => (
-  <span
-    className="ml-1 text-gray-400 cursor-help"
-    title="Controls which meetings this member is included in when a committee snapshot is taken. Odd = meetings 1, 3, 5, ...; Even = meetings 2, 4, 6, ..."
-  >
-    <Icon name="circle-question" style="regular" className="inline w-3.5 h-3.5" />
-  </span>
-);
+const AttendanceHelp = () => {
+  const { t } = useTranslation('committee');
+  return (
+    <span className="ml-1 text-gray-400 cursor-help" title={t('help.attendance')}>
+      <Icon name="circle-question" style="regular" className="inline w-3.5 h-3.5" />
+    </span>
+  );
+};
 
 // ── Add member dialog ─────────────────────────────────────────────────────────
 
@@ -96,6 +97,7 @@ interface AddMemberDialogProps {
 }
 
 const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps) => {
+  const { t } = useTranslation(['committee', 'common']);
   const addMember = useAddCommitteeMember();
   const { data: usersData, isLoading: isLoadingUsers } = useGetUsers({
     role: COMMITTEE_ROLE,
@@ -110,7 +112,7 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
     setValue,
     formState: { errors },
   } = useForm<AddMemberFormValues>({
-    resolver: zodResolver(addMemberSchema),
+    resolver: zodResolver(makeAddMemberSchema(t)),
     defaultValues: { userId: '', memberName: '', role: 'Member', attendance: 'Always' },
   });
 
@@ -149,23 +151,23 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
       },
       {
         onSuccess: () => {
-          toast.success('Member added');
+          toast.success(t('toasts.added'));
           handleClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to add member');
+          toast.error(detail || t('toasts.addFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Committee Member" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('addDialog.title')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label htmlFor="cm-user" className="block text-sm font-medium text-gray-700 mb-1">
-            User <span className="text-red-500">*</span>
+            {t('fields.user')} <span className="text-red-500">*</span>
           </label>
           <select
             id="cm-user"
@@ -176,10 +178,10 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
           >
             <option value="" disabled>
               {isLoadingUsers
-                ? 'Loading...'
+                ? t('common:status.loading')
                 : committeeUsers.length === 0
-                  ? 'No users with AppraisalCommittee role'
-                  : 'Select a user'}
+                  ? t('addDialog.noUsers')
+                  : t('addDialog.selectUser')}
             </option>
             {committeeUsers.map(user => (
               <option key={user.id} value={user.userName}>
@@ -196,7 +198,7 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
 
         <div>
           <label htmlFor="cm-role" className="block text-sm font-medium text-gray-700 mb-1">
-            Role <span className="text-red-500">*</span>
+            {t('fields.role')} <span className="text-red-500">*</span>
           </label>
           <select id="cm-role" {...register('role')} className={inputClass}>
             {POSITION_OPTIONS.map(pos => (
@@ -210,12 +212,12 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
 
         <div>
           <label htmlFor="cm-attendance" className="block text-sm font-medium text-gray-700 mb-1">
-            Attendance <AttendanceHelp />
+            {t('fields.attendance')} <AttendanceHelp />
           </label>
           <select id="cm-attendance" {...register('attendance')} className={inputClass}>
             {ATTENDANCE_OPTIONS.map(att => (
               <option key={att} value={att}>
-                {ATTENDANCE_LABELS[att]}
+                {t(`attendance.${ATTENDANCE_KEY[att]}`)}
               </option>
             ))}
           </select>
@@ -225,11 +227,16 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="ghost" type="button" onClick={handleClose} disabled={addMember.isPending}>
-            Cancel
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={handleClose}
+            disabled={addMember.isPending}
+          >
+            {t('common:actions.cancel')}
           </Button>
           <Button type="submit" disabled={addMember.isPending}>
-            {addMember.isPending ? 'Adding...' : 'Add Member'}
+            {addMember.isPending ? t('addDialog.adding') : t('addDialog.submit')}
           </Button>
         </div>
       </form>
@@ -247,6 +254,7 @@ interface EditMemberDialogProps {
 }
 
 const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDialogProps) => {
+  const { t } = useTranslation(['committee', 'common']);
   const updateMember = useUpdateCommitteeMember();
 
   const {
@@ -271,25 +279,25 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
       { committeeId, memberId: member.id, body: values },
       {
         onSuccess: () => {
-          toast.success('Member updated');
+          toast.success(t('toasts.updated'));
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to update member');
+          toast.error(detail || t('toasts.updateFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Edit Member" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('editDialog.title')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <p className="text-sm text-gray-700 font-medium">{member.memberName}</p>
 
         <div>
           <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-1">
-            Role
+            {t('fields.role')}
           </label>
           <select id="edit-role" {...register('role')} className={inputClass}>
             {POSITION_OPTIONS.map(pos => (
@@ -298,19 +306,17 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
               </option>
             ))}
           </select>
-          {errors.role && (
-            <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>
-          )}
+          {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
         </div>
 
         <div>
           <label htmlFor="edit-attendance" className="block text-sm font-medium text-gray-700 mb-1">
-            Attendance <AttendanceHelp />
+            {t('fields.attendance')} <AttendanceHelp />
           </label>
           <select id="edit-attendance" {...register('attendance')} className={inputClass}>
             {ATTENDANCE_OPTIONS.map(att => (
               <option key={att} value={att}>
-                {ATTENDANCE_LABELS[att]}
+                {t(`attendance.${ATTENDANCE_KEY[att]}`)}
               </option>
             ))}
           </select>
@@ -327,7 +333,7 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
             className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
           <label htmlFor="edit-isActive" className="text-sm font-medium text-gray-700">
-            Active
+            {t('fields.active')}
           </label>
         </div>
 
@@ -338,10 +344,10 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
             onClick={handleClose}
             disabled={updateMember.isPending}
           >
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button type="submit" disabled={updateMember.isPending}>
-            {updateMember.isPending ? 'Saving...' : 'Save'}
+            {updateMember.isPending ? t('common:status.saving') : t('common:actions.save')}
           </Button>
         </div>
       </form>
@@ -356,6 +362,7 @@ interface CommitteeDetailPanelProps {
 }
 
 const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
+  const { t } = useTranslation(['committee', 'common']);
   const { data: committee, isLoading } = useGetCommitteeDetail(committeeId);
   const removeMember = useRemoveCommitteeMember();
   const addMemberDialog = useDisclosure();
@@ -372,14 +379,14 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
   if (!committee) return null;
 
   const handleRemove = (member: CommitteeMemberDto) => {
-    if (!confirm(`Remove ${member.memberName} from this committee?`)) return;
+    if (!confirm(t('confirm.remove', { name: member.memberName }))) return;
     removeMember.mutate(
       { committeeId, memberId: member.id },
       {
-        onSuccess: () => toast.success('Member removed'),
+        onSuccess: () => toast.success(t('toasts.removed')),
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to remove member');
+          toast.error(detail || t('toasts.removeFailed'));
         },
       },
     );
@@ -391,32 +398,32 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-700">
-          Members ({members.filter(m => m.isActive).length} active)
+          {t('panel.membersActive', { count: members.filter(m => m.isActive).length })}
         </h3>
         <Button size="sm" type="button" onClick={addMemberDialog.onOpen}>
           <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-          Add Member
+          {t('panel.addMember')}
         </Button>
       </div>
 
       {members.length === 0 ? (
-        <p className="text-sm text-gray-400 italic py-4 text-center">No members yet.</p>
+        <p className="text-sm text-gray-400 italic py-4 text-center">{t('panel.noMembers')}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
-                  Name
+                  {t('columns.name')}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
-                  Role
+                  {t('columns.role')}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
-                  Attendance
+                  {t('columns.attendance')}
                 </th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
+                  {t('columns.status')}
                 </th>
                 <th className="w-20 px-4 py-2.5" />
               </tr>
@@ -427,7 +434,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                   <td className="px-4 py-3 text-gray-900 font-medium">{member.memberName}</td>
                   <td className="px-4 py-3 text-gray-600">{member.role}</td>
                   <td className="px-4 py-3 text-gray-600">
-                    {ATTENDANCE_LABELS[member.attendance] ?? member.attendance}
+                    {t(`attendance.${ATTENDANCE_KEY[member.attendance]}`)}
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -437,7 +444,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                           : 'bg-gray-100 text-gray-500'
                       }`}
                     >
-                      {member.isActive ? 'Active' : 'Inactive'}
+                      {member.isActive ? t('common:status.active') : t('common:status.inactive')}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -446,7 +453,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                         type="button"
                         onClick={() => setEditingMember(member)}
                         className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                        aria-label={`Edit ${member.memberName}`}
+                        aria-label={t('aria.edit', { name: member.memberName })}
                       >
                         <Icon name="pen" style="solid" className="size-3.5" />
                       </button>
@@ -454,7 +461,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                         type="button"
                         onClick={() => handleRemove(member)}
                         className="p-1 text-gray-400 hover:text-red-600 rounded"
-                        aria-label={`Remove ${member.memberName}`}
+                        aria-label={t('aria.remove', { name: member.memberName })}
                       >
                         <Icon name="trash" style="solid" className="size-3.5" />
                       </button>
@@ -488,6 +495,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const CommitteeAdminPage = () => {
+  const { t } = useTranslation('committee');
   const [selectedCommitteeId, setSelectedCommitteeId] = useState<string | null>(null);
   const { data: committees, isLoading } = useGetCommittees();
 
@@ -496,10 +504,8 @@ const CommitteeAdminPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
       <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">Committees</h3>
-        <p className="text-xs text-gray-500 mt-0.5">
-          Manage committee members and attendance rotation
-        </p>
+        <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
+        <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
       </div>
 
       <div className="flex flex-1 min-h-0 gap-4">
@@ -510,7 +516,9 @@ const CommitteeAdminPage = () => {
               <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
             </div>
           ) : committeeList.length === 0 ? (
-            <p className="px-4 py-8 text-sm text-gray-400 italic text-center">No committees.</p>
+            <p className="px-4 py-8 text-sm text-gray-400 italic text-center">
+              {t('page.noCommittees')}
+            </p>
           ) : (
             <ul>
               {committeeList.map(c => (
@@ -526,7 +534,9 @@ const CommitteeAdminPage = () => {
                   >
                     <span className="font-medium">{c.name}</span>
                     <span className="ml-2 text-xs text-gray-400">{c.code}</span>
-                    <div className="text-xs text-gray-500 mt-0.5">{c.memberCount} members</div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {t('page.memberCount', { count: c.memberCount })}
+                    </div>
                   </button>
                 </li>
               ))}
@@ -542,7 +552,7 @@ const CommitteeAdminPage = () => {
             </div>
           ) : (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
-              Select a committee to manage its members
+              {t('page.selectPrompt')}
             </div>
           )}
         </div>

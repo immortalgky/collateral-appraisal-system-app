@@ -1,0 +1,65 @@
+{
+  "tierPage": {
+    "title": "Fee Approval Tiers",
+    "subtitle": "Configure the fee-amount tier matrix that determines which approver handles a fee change request.",
+    "addTier": "Add Tier",
+    "noTiers": "No tiers configured. Add a tier to enable fee approval routing."
+  },
+  "rulePage": {
+    "title": "Appointment Approval Rule",
+    "subtitle": "Configure which appointment reschedule conditions require approval."
+  },
+  "tierModal": {
+    "createTitle": "Add Fee Approval Tier",
+    "editTitle": "Edit Fee Approval Tier",
+    "create": "Create"
+  },
+  "fields": {
+    "minAmount": "Min Amount",
+    "maxAmount": "Max Amount",
+    "tierLabel": "Tier Label",
+    "approverCode": "Approver Code",
+    "assignedType": "Assigned Type",
+    "priority": "Priority",
+    "isActive": "Active",
+    "appliesTo": "Applies To"
+  },
+  "ruleFields": {
+    "weekendHoliday": "Require approval for weekend/holiday dates",
+    "weekendHolidayHint": "Triggers approval when the new appointment falls on a non-business day.",
+    "weekday": "Require approval for weekday dates",
+    "weekdayHint": "Triggers approval when the new appointment falls on a normal weekday (not a weekend or holiday). Off by default.",
+    "leadTime": "Require approval for short lead-time",
+    "leadTimeHint": "Triggers approval when the new appointment is sooner than the configured number of days away.",
+    "leadTimeDays": "Minimum lead-time days",
+    "reschedule": "Require approval after N reschedules",
+    "rescheduleHint": "Triggers approval once the reschedule count meets or exceeds the threshold.",
+    "rescheduleThreshold": "Reschedule count threshold"
+  },
+  "assignedType": {
+    "user": "User",
+    "group": "Group"
+  },
+  "columns": {
+    "label": "Label",
+    "range": "Amount Range",
+    "approver": "Approver",
+    "type": "Type",
+    "priority": "Priority",
+    "status": "Status",
+    "appliesTo": "Applies To"
+  },
+  "confirm": {
+    "deleteTier": "Delete tier \"{{label}}\"? This cannot be undone."
+  },
+  "toasts": {
+    "tierCreated": "Tier created",
+    "tierCreateFailed": "Failed to create tier",
+    "tierUpdated": "Tier updated",
+    "tierUpdateFailed": "Failed to update tier",
+    "tierDeleted": "Tier deleted",
+    "tierDeleteFailed": "Failed to delete tier",
+    "ruleSaved": "Rule saved",
+    "ruleSaveFailed": "Failed to save rule"
+  }
+}

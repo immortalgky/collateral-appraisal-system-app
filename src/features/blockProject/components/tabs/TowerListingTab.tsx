@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
@@ -32,6 +33,7 @@ interface TowerCardProps {
 }
 
 function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete }: TowerCardProps) {
+  const { t } = useTranslation('blockProject');
   const cardProps = {
     role: 'button' as const,
     tabIndex: 0,
@@ -50,14 +52,20 @@ function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete 
         <td className="px-2 py-2 cursor-pointer" onClick={onClick}>
           <div className="w-10 h-10 rounded bg-gray-100 overflow-hidden flex items-center justify-center">
             {thumbnailSrc ? (
-              <img src={thumbnailSrc} alt={tower.towerName ?? 'Tower'} className="w-full h-full object-cover" />
+              <img
+                src={thumbnailSrc}
+                alt={tower.towerName ?? t('towerListing.unnamedTower')}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <Icon name="building" style="solid" className="text-gray-400 w-5 h-5" />
             )}
           </div>
         </td>
         <td className="px-3 py-2 cursor-pointer" onClick={onClick}>
-          <p className="text-sm font-medium text-gray-900 truncate">{tower.towerName ?? 'Unnamed Tower'}</p>
+          <p className="text-sm font-medium text-gray-900 truncate">
+            {tower.towerName ?? t('towerListing.unnamedTower')}
+          </p>
         </td>
         <td className="px-3 py-2 text-sm text-gray-700 cursor-pointer" onClick={onClick}>
           {tower.numberOfUnits?.toLocaleString() ?? '-'}
@@ -72,7 +80,7 @@ function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete 
                 type="button"
                 onClick={onDelete}
                 className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                title="Delete tower"
+                title={t('towerListing.aria.deleteTower')}
               >
                 <Icon name="trash-can" style="regular" className="size-3.5" />
               </button>
@@ -93,7 +101,7 @@ function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete 
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
-            alt={tower.towerName ?? 'Tower thumbnail'}
+            alt={tower.towerName ?? t('towerListing.unnamedTower')}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -117,18 +125,18 @@ function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete 
 
       <div className="p-4">
         <p className="text-sm font-semibold text-gray-900 truncate">
-          {tower.towerName ?? 'Unnamed Tower'}
+          {tower.towerName ?? t('towerListing.unnamedTower')}
         </p>
 
         <div className="mt-3 space-y-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">No. of Units</span>
+            <span className="text-gray-400">{t('towerListing.card.numberOfUnits')}</span>
             <span className="text-gray-700 font-medium">
               {tower.numberOfUnits?.toLocaleString() ?? '-'}
             </span>
           </div>
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400">No. of Floors</span>
+            <span className="text-gray-400">{t('towerListing.card.numberOfFloors')}</span>
             <span className="text-gray-700 font-medium">{tower.numberOfFloors ?? '-'}</span>
           </div>
         </div>
@@ -144,6 +152,7 @@ function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete 
  * Navigation uses block-condo route segment (Towers are Condo-only).
  */
 export default function TowerListingTab() {
+  const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const basePath = useBasePath();
   const navigate = useNavigate();
@@ -156,7 +165,10 @@ export default function TowerListingTab() {
   const towers = useMemo(
     () =>
       [...(towersData ?? [])].sort((a, b) =>
-        (a.towerName ?? '').localeCompare(b.towerName ?? '', undefined, { numeric: true, sensitivity: 'base' }),
+        (a.towerName ?? '').localeCompare(b.towerName ?? '', undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        }),
       ),
     [towersData],
   );
@@ -188,12 +200,12 @@ export default function TowerListingTab() {
       { appraisalId, towerId: deleteTarget.id },
       {
         onSuccess: () => {
-          toast.success(`Tower "${deleteTarget.name}" deleted`);
+          toast.success(t('toasts.tower.deleteSuccess'));
           setDeleteTarget(null);
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to delete tower');
+          toast.error(error?.apiError?.detail ?? t('toasts.tower.deleteFailed'));
           setDeleteTarget(null);
         },
       },
@@ -220,8 +232,8 @@ export default function TowerListingTab() {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-red-50 rounded-xl border-2 border-dashed border-red-200">
         <Icon name="exclamation-triangle" className="text-4xl mb-3 text-red-400" />
-        <p className="text-sm font-medium text-red-500">Failed to load towers</p>
-        <p className="text-xs text-red-400 mt-1">Please try refreshing the page</p>
+        <p className="text-sm font-medium text-red-500">{t('towerListing.failedToLoad')}</p>
+        <p className="text-xs text-red-400 mt-1">{t('towerListing.failedToLoadHint')}</p>
       </div>
     );
   }
@@ -242,7 +254,7 @@ export default function TowerListingTab() {
             )}
           >
             <Icon name="grid-2" style="solid" />
-            <span>Grid</span>
+            <span>{t('towerListing.grid')}</span>
           </button>
           <button
             type="button"
@@ -255,14 +267,14 @@ export default function TowerListingTab() {
             )}
           >
             <Icon name="list" style="solid" />
-            <span>List</span>
+            <span>{t('towerListing.list')}</span>
           </button>
         </div>
 
         {!readOnly && (
           <Button variant="primary" onClick={handleAddTower} className="flex items-center gap-2">
             <Icon name="plus" />
-            Add Tower
+            {t('towerListing.addTower')}
           </Button>
         )}
       </div>
@@ -271,8 +283,8 @@ export default function TowerListingTab() {
       {towers.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
           <Icon name="building" className="text-4xl mb-3" />
-          <p className="text-sm font-medium text-gray-500">No towers yet</p>
-          <p className="text-xs text-gray-400 mt-1">Click "Add Tower" to create your first tower</p>
+          <p className="text-sm font-medium text-gray-500">{t('towerListing.noTowers')}</p>
+          <p className="text-xs text-gray-400 mt-1">{t('towerListing.noTowersHint')}</p>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto">
@@ -284,7 +296,10 @@ export default function TowerListingTab() {
               viewMode="grid"
               readOnly={readOnly}
               onClick={() => handleTowerClick(tower.id)}
-              onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
+              onDelete={e => {
+                e.stopPropagation();
+                setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' });
+              }}
             />
           ))}
         </div>
@@ -293,10 +308,18 @@ export default function TowerListingTab() {
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tower Name</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Units</th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Floors</th>
+                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('towerListing.cols.image')}
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('towerListing.cols.towerName')}
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('towerListing.cols.numberOfUnits')}
+                </th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {t('towerListing.cols.numberOfFloors')}
+                </th>
                 <th className="w-16 px-2 py-2" />
               </tr>
             </thead>
@@ -309,7 +332,10 @@ export default function TowerListingTab() {
                   viewMode="list"
                   readOnly={readOnly}
                   onClick={() => handleTowerClick(tower.id)}
-                  onDelete={e => { e.stopPropagation(); setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' }); }}
+                  onDelete={e => {
+                    e.stopPropagation();
+                    setDeleteTarget({ id: tower.id, name: tower.towerName ?? 'this tower' });
+                  }}
                 />
               ))}
             </tbody>
@@ -321,9 +347,9 @@ export default function TowerListingTab() {
         isOpen={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Tower"
+        title={t('dialogs.deleteTowerListing.title')}
         message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
+        confirmText={t('dialogs.deleteTowerListing.confirm')}
         isLoading={isDeleting}
       />
     </div>

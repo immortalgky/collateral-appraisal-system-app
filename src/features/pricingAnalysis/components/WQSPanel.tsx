@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type SubmitErrorHandler } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelector';
 import { MethodFooterActions } from './MethodFooterActions';
 import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
@@ -82,6 +83,7 @@ export function WQSPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: WQSPanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'WQS_COST';
   const property: Record<string, unknown> | undefined = isCostApproach
@@ -133,7 +135,7 @@ export function WQSPanel({
   /** Form handler — skips full Zod validation so we can save factors/scores independently */
   const handleOnSubmit = async () => {
     if (!activeMethod?.pricingAnalysisId || !methodId) {
-      toast.error('Pricing analysis ID or method ID not found!');
+      toast.error(t('toasts.missingIds'));
       return;
     }
 
@@ -159,10 +161,10 @@ export function WQSPanel({
           appraisalValue: landValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
       reset(value);
     } catch {
-      toast.error('Failed to save comparative analysis');
+      toast.error(t('toasts.failedSave'));
     }
   };
 
@@ -227,9 +229,9 @@ export function WQSPanel({
       setIsGenerated(false);
       setPricingTemplate(undefined);
       reset();
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
@@ -394,7 +396,7 @@ export function WQSPanel({
       >
         <PricingAnalysisTemplateSelector
           icon="scale-balanced"
-          methodName="Weighted Quality Scores (WQS)"
+          methodName={t('wqs.methodName')}
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
@@ -439,7 +441,7 @@ export function WQSPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>

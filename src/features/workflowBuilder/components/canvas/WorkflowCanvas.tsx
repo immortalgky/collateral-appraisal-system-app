@@ -78,14 +78,14 @@ function WorkflowCanvasInner() {
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition } = useReactFlow();
 
-  const nodes = useWorkflowStore((s) => s.nodes);
-  const edges = useWorkflowStore((s) => s.edges);
-  const setNodes = useWorkflowStore((s) => s.setNodes);
-  const selectNode = useWorkflowStore((s) => s.selectNode);
-  const selectEdge = useWorkflowStore((s) => s.selectEdge);
-  const clearSelection = useWorkflowStore((s) => s.clearSelection);
-  const addActivity = useWorkflowStore((s) => s.addActivity);
-  const addTransition = useWorkflowStore((s) => s.addTransition);
+  const nodes = useWorkflowStore(s => s.nodes);
+  const edges = useWorkflowStore(s => s.edges);
+  const setNodes = useWorkflowStore(s => s.setNodes);
+  const selectNode = useWorkflowStore(s => s.selectNode);
+  const selectEdge = useWorkflowStore(s => s.selectEdge);
+  const clearSelection = useWorkflowStore(s => s.clearSelection);
+  const addActivity = useWorkflowStore(s => s.addActivity);
+  const addTransition = useWorkflowStore(s => s.addTransition);
 
   const [localNodes, setLocalNodes, onNodesChange] = useNodesState(nodes);
   const [localEdges, setLocalEdges, onEdgesChange] = useEdgesState(edges);
@@ -103,16 +103,14 @@ function WorkflowCanvasInner() {
   }
 
   const handleNodesChange: typeof onNodesChange = useCallback(
-    (changes) => {
+    changes => {
       onNodesChange(changes);
       // Sync positions back to store after drag
-      const hasDrag = changes.some((c) => c.type === 'position' && !c.dragging);
+      const hasDrag = changes.some(c => c.type === 'position' && !c.dragging);
       if (hasDrag) {
         setNodes(
-          localNodes.map((n) => {
-            const change = changes.find(
-              (c) => c.type === 'position' && c.id === n.id,
-            );
+          localNodes.map(n => {
+            const change = changes.find(c => c.type === 'position' && c.id === n.id);
             if (change && change.type === 'position' && change.position) {
               return { ...n, position: change.position };
             }
@@ -125,7 +123,7 @@ function WorkflowCanvasInner() {
   );
 
   const handleEdgesChange: typeof onEdgesChange = useCallback(
-    (changes) => {
+    changes => {
       onEdgesChange(changes);
     },
     [onEdgesChange],
@@ -173,9 +171,7 @@ function WorkflowCanvasInner() {
     (event: DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData(
-        'application/workflow-activity-type',
-      );
+      const type = event.dataTransfer.getData('application/workflow-activity-type');
       if (!type) return;
 
       const position = screenToFlowPosition({

@@ -1,0 +1,63 @@
+{
+  "page": {
+    "title": "Committees",
+    "subtitle": "Manage committee members and attendance rotation",
+    "noCommittees": "No committees.",
+    "memberCount": "{{count}} members",
+    "selectPrompt": "Select a committee to manage its members"
+  },
+  "panel": {
+    "membersActive": "Members ({{count}} active)",
+    "addMember": "Add Member",
+    "noMembers": "No members yet."
+  },
+  "columns": {
+    "name": "Name",
+    "role": "Role",
+    "attendance": "Attendance",
+    "status": "Status"
+  },
+  "fields": {
+    "user": "User",
+    "role": "Role",
+    "attendance": "Attendance",
+    "active": "Active"
+  },
+  "attendance": {
+    "always": "Always",
+    "odd": "Odd meetings (1, 3, 5, ...)",
+    "even": "Even meetings (2, 4, 6, ...)"
+  },
+  "help": {
+    "attendance": "Controls which meetings this member is included in when a committee snapshot is taken. Odd = meetings 1, 3, 5, ...; Even = meetings 2, 4, 6, ..."
+  },
+  "addDialog": {
+    "title": "Add Committee Member",
+    "noUsers": "No users with AppraisalCommittee role",
+    "selectUser": "Select a user",
+    "adding": "Adding...",
+    "submit": "Add Member"
+  },
+  "editDialog": {
+    "title": "Edit Member"
+  },
+  "confirm": {
+    "remove": "Remove {{name}} from this committee?"
+  },
+  "aria": {
+    "edit": "Edit {{name}}",
+    "remove": "Remove {{name}}"
+  },
+  "validation": {
+    "selectUser": "Select a user",
+    "memberNameRequired": "Member name is required"
+  },
+  "toasts": {
+    "added": "Member added",
+    "addFailed": "Failed to add member",
+    "updated": "Member updated",
+    "updateFailed": "Failed to update member",
+    "removed": "Member removed",
+    "removeFailed": "Failed to remove member"
+  }
+}

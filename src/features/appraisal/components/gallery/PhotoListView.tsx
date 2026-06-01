@@ -20,138 +20,136 @@ interface ListRowProps {
   onDelete: (image: GalleryImage) => void;
 }
 
-const ListRow = memo(({
-  image,
-  isSelected,
-  showUsedBadge,
-  hasSelection,
-  hasEdit,
-  hasDelete,
-  onSelect,
-  onClick,
-  onEdit,
-  onDelete,
-}: ListRowProps) => (
-  <tr
-    onClick={() => onClick(image)}
-    className={clsx(
-      'hover:bg-gray-50 cursor-pointer transition-colors',
-      isSelected && 'bg-primary/5'
-    )}
-  >
-    {hasSelection && (
-      <td className="py-3 px-2">
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            onSelect(image.id);
-          }}
-          className={clsx(
-            'w-5 h-5 rounded border flex items-center justify-center transition-colors',
-            isSelected
-              ? 'bg-primary border-primary text-white'
-              : 'border-gray-300 hover:border-gray-400'
-          )}
-        >
-          {isSelected && <Icon name="check" style="solid" className="text-xs" />}
-        </button>
-      </td>
-    )}
-    <td className="py-3 px-4">
-      <div className="w-12 h-9 rounded overflow-hidden bg-gray-100">
-        <img
-          src={image.thumbnailSrc}
-          alt={image.alt}
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover"
-        />
-      </div>
-    </td>
-    <td className="py-3 px-4">
-      <span className="text-sm text-gray-900 font-medium">
-        {image.fileName || image.alt}
-      </span>
-    </td>
-    {showUsedBadge && (
-      <td className="py-3 px-4">
-        {image.isInUse ? (
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"
-          >
-            <Icon name="check" className="text-[10px]" />
-            In Use
-          </span>
-        ) : (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
-            Not Used
-          </span>
-        )}
-      </td>
-    )}
-    <td className="py-3 px-4">
-      <span className="text-sm text-gray-600 uppercase">
-        {image.fileExtension || image.mimeType?.split('/')[1] || '-'}
-      </span>
-    </td>
-    <td className="py-3 px-4">
-      <span className="text-sm text-gray-600">
-        {image.fileSizeBytes != null
-          ? image.fileSizeBytes < 1024 * 1024
-            ? `${(image.fileSizeBytes / 1024).toFixed(1)} KB`
-            : `${(image.fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`
-          : '-'}
-      </span>
-    </td>
-    <td className="py-3 px-4">
-      <span className="text-sm text-gray-500 truncate max-w-[200px] block">
-        {image.description || '-'}
-      </span>
-    </td>
-    <td className="py-3 px-4">
-      <div className="flex items-center justify-end gap-1">
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            onClick(image);
-          }}
-          className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-          title="View"
-        >
-          <Icon name="eye" />
-        </button>
-        {hasEdit && (
+const ListRow = memo(
+  ({
+    image,
+    isSelected,
+    showUsedBadge,
+    hasSelection,
+    hasEdit,
+    hasDelete,
+    onSelect,
+    onClick,
+    onEdit,
+    onDelete,
+  }: ListRowProps) => (
+    <tr
+      onClick={() => onClick(image)}
+      className={clsx(
+        'hover:bg-gray-50 cursor-pointer transition-colors',
+        isSelected && 'bg-primary/5',
+      )}
+    >
+      {hasSelection && (
+        <td className="py-3 px-2">
           <button
             type="button"
             onClick={e => {
               e.stopPropagation();
-              onEdit(image);
+              onSelect(image.id);
+            }}
+            className={clsx(
+              'w-5 h-5 rounded border flex items-center justify-center transition-colors',
+              isSelected
+                ? 'bg-primary border-primary text-white'
+                : 'border-gray-300 hover:border-gray-400',
+            )}
+          >
+            {isSelected && <Icon name="check" style="solid" className="text-xs" />}
+          </button>
+        </td>
+      )}
+      <td className="py-3 px-4">
+        <div className="w-12 h-9 rounded overflow-hidden bg-gray-100">
+          <img
+            src={image.thumbnailSrc}
+            alt={image.alt}
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover"
+          />
+        </div>
+      </td>
+      <td className="py-3 px-4">
+        <span className="text-sm text-gray-900 font-medium">{image.fileName || image.alt}</span>
+      </td>
+      {showUsedBadge && (
+        <td className="py-3 px-4">
+          {image.isInUse ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+              <Icon name="check" className="text-[10px]" />
+              In Use
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+              Not Used
+            </span>
+          )}
+        </td>
+      )}
+      <td className="py-3 px-4">
+        <span className="text-sm text-gray-600 uppercase">
+          {image.fileExtension || image.mimeType?.split('/')[1] || '-'}
+        </span>
+      </td>
+      <td className="py-3 px-4">
+        <span className="text-sm text-gray-600">
+          {image.fileSizeBytes != null
+            ? image.fileSizeBytes < 1024 * 1024
+              ? `${(image.fileSizeBytes / 1024).toFixed(1)} KB`
+              : `${(image.fileSizeBytes / (1024 * 1024)).toFixed(2)} MB`
+            : '-'}
+        </span>
+      </td>
+      <td className="py-3 px-4">
+        <span className="text-sm text-gray-500 truncate max-w-[200px] block">
+          {image.description || '-'}
+        </span>
+      </td>
+      <td className="py-3 px-4">
+        <div className="flex items-center justify-end gap-1">
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation();
+              onClick(image);
             }}
             className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
-            title="Edit"
+            title="View"
           >
-            <Icon name="pen-to-square" />
+            <Icon name="eye" />
           </button>
-        )}
-        {hasDelete && (
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation();
-              onDelete(image);
-            }}
-            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-            title="Delete"
-          >
-            <Icon name="trash" />
-          </button>
-        )}
-      </div>
-    </td>
-  </tr>
-));
+          {hasEdit && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                onEdit(image);
+              }}
+              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              title="Edit"
+            >
+              <Icon name="pen-to-square" />
+            </button>
+          )}
+          {hasDelete && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation();
+                onDelete(image);
+              }}
+              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+              title="Delete"
+            >
+              <Icon name="trash" />
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  ),
+);
 ListRow.displayName = 'ListRow';
 
 export const PhotoListView = ({
@@ -172,28 +170,40 @@ export const PhotoListView = ({
     }
   }, [onSelectionChange, selectedImageIds, images]);
 
-  const handleSelect = useCallback((imageId: string) => {
-    if (!onSelectionChange || !selectedImageIds) return;
-    const newSelected = new Set(selectedImageIds);
-    if (newSelected.has(imageId)) {
-      newSelected.delete(imageId);
-    } else {
-      newSelected.add(imageId);
-    }
-    onSelectionChange(newSelected);
-  }, [onSelectionChange, selectedImageIds]);
+  const handleSelect = useCallback(
+    (imageId: string) => {
+      if (!onSelectionChange || !selectedImageIds) return;
+      const newSelected = new Set(selectedImageIds);
+      if (newSelected.has(imageId)) {
+        newSelected.delete(imageId);
+      } else {
+        newSelected.add(imageId);
+      }
+      onSelectionChange(newSelected);
+    },
+    [onSelectionChange, selectedImageIds],
+  );
 
-  const handleClick = useCallback((image: GalleryImage) => {
-    onImageClick?.(image);
-  }, [onImageClick]);
+  const handleClick = useCallback(
+    (image: GalleryImage) => {
+      onImageClick?.(image);
+    },
+    [onImageClick],
+  );
 
-  const handleEdit = useCallback((image: GalleryImage) => {
-    onImageEdit?.(image);
-  }, [onImageEdit]);
+  const handleEdit = useCallback(
+    (image: GalleryImage) => {
+      onImageEdit?.(image);
+    },
+    [onImageEdit],
+  );
 
-  const handleDelete = useCallback((image: GalleryImage) => {
-    onImageDelete?.(image);
-  }, [onImageDelete]);
+  const handleDelete = useCallback(
+    (image: GalleryImage) => {
+      onImageDelete?.(image);
+    },
+    [onImageDelete],
+  );
 
   if (images.length === 0) {
     return (
@@ -223,7 +233,7 @@ export const PhotoListView = ({
                     'w-5 h-5 rounded border flex items-center justify-center transition-colors',
                     allSelected
                       ? 'bg-primary border-primary text-white'
-                      : 'border-gray-300 hover:border-gray-400'
+                      : 'border-gray-300 hover:border-gray-400',
                   )}
                 >
                   {allSelected && <Icon name="check" style="solid" className="text-xs" />}

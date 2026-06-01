@@ -23,17 +23,10 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
 
   // Derive which approaches have at least one selected group
   const selectedApproaches = new Set(
-    groups.flatMap(g =>
-      (g.approaches ?? [])
-        .filter(a => a.isSelected)
-        .map(a => a.approachType),
-    ),
+    groups.flatMap(g => (g.approaches ?? []).filter(a => a.isSelected).map(a => a.approachType)),
   );
 
-  const totalSummary = sortedGroups.reduce(
-    (sum, group) => sum + (group.groupSummaryValue ?? 0),
-    0,
-  );
+  const totalSummary = sortedGroups.reduce((sum, group) => sum + (group.groupSummaryValue ?? 0), 0);
 
   return (
     <div className="overflow-x-auto border border-gray-200 rounded-sm">
@@ -42,7 +35,10 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Group</th>
             {APPROACH_COLUMNS.map(col => (
-              <th key={col.key} className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+              <th
+                key={col.key}
+                className="px-3 py-2 text-right text-xs font-semibold text-gray-600"
+              >
                 <div className="flex items-center justify-end gap-1.5">
                   {selectedApproaches.has(col.key) && (
                     <Icon
@@ -65,12 +61,14 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
           {sortedGroups.map(group => (
             <tr
               key={group.groupNumber}
-              className={onGroupClick ? 'group hover:bg-gray-50 cursor-pointer transition-colors' : 'hover:bg-gray-50'}
+              className={
+                onGroupClick
+                  ? 'group hover:bg-gray-50 cursor-pointer transition-colors'
+                  : 'hover:bg-gray-50'
+              }
               onClick={() => onGroupClick?.(group.propertyGroupId)}
             >
-              <td className="px-3 py-2 font-medium text-gray-900">
-                {group.groupNumber}
-              </td>
+              <td className="px-3 py-2 font-medium text-gray-900">{group.groupNumber}</td>
               {APPROACH_COLUMNS.map(col => {
                 const approach = group.approaches?.find(a => a.approachType === col.key);
                 const isSelected = approach?.isSelected ?? false;
@@ -79,9 +77,7 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
                   <td
                     key={col.key}
                     className={`px-3 py-2 text-right ${
-                      isSelected
-                        ? 'bg-teal-50 text-teal-800 font-semibold'
-                        : 'text-gray-700'
+                      isSelected ? 'bg-teal-50 text-teal-800 font-semibold' : 'text-gray-700'
                     }`}
                   >
                     {approach?.approachValue != null ? (
@@ -97,7 +93,11 @@ const ApproachMatrixTable = ({ groups, onGroupClick }: ApproachMatrixTableProps)
               </td>
               {onGroupClick && (
                 <td className="px-3 py-2 text-center">
-                  <Icon name="chevron-right" style="solid" className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                  <Icon
+                    name="chevron-right"
+                    style="solid"
+                    className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors"
+                  />
                 </td>
               )}
             </tr>

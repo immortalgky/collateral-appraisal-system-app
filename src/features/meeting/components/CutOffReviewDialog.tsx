@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -13,6 +14,7 @@ interface CutOffReviewDialogProps {
 }
 
 const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffReviewDialogProps) => {
+  const { t } = useTranslation('meeting');
   const cutOff = useCutOffMeeting();
   const { data: queueData, isLoading: queueLoading } = useGetMeetingQueue({
     status: 'Queued',
@@ -30,47 +32,44 @@ const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffRev
       { id: meetingId },
       {
         onSuccess: () => {
-          toast.success('Cut-off completed — new queued items added to this meeting');
+          toast.success(t('toasts.cutOffCompleted'));
           onSuccess?.();
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to perform cut-off');
+          toast.error(detail || t('toasts.cutOffFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Confirm Cut-Off" size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.confirmCutOff')} size="md">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Pulls any newly queued items into this meeting. Items already on the meeting are
-          skipped. You may run cut-off again after sending the invitation if new items arrive.
-        </p>
+        <p className="text-sm text-gray-600">{t('cutOffDialog.description')}</p>
 
         {/* Queued items preview */}
         <div>
           <h3 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-            Queued Items to be Included
+            {t('sections.queuedItemsToInclude')}
           </h3>
           {queueLoading ? (
             <div className="flex items-center justify-center py-4">
               <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
             </div>
           ) : queuedItems.length === 0 ? (
-            <p className="text-sm text-gray-500 italic py-2">No queued items at this time.</p>
+            <p className="text-sm text-gray-500 italic py-2">{t('empty.noQueuedItems')}</p>
           ) : (
             <div className="rounded-lg border border-gray-200 overflow-hidden max-h-48 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                      Appraisal #
+                      {t('columns.appraisalNo')}
                     </th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      Facility Limit
+                      {t('columns.facilityLimit')}
                     </th>
                   </tr>
                 </thead>
@@ -100,23 +99,15 @@ const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffRev
             style="regular"
             className="w-4 h-4 text-gray-400 shrink-0 mt-0.5"
           />
-          <p className="text-xs text-gray-500">
-            Acknowledgement items (sub-committee approvals pending since last meeting) are
-            auto-included by the backend.
-          </p>
+          <p className="text-xs text-gray-500">{t('cutOffDialog.ackNote')}</p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button
-            variant="ghost"
-            type="button"
-            onClick={handleClose}
-            disabled={cutOff.isPending}
-          >
-            Cancel
+          <Button variant="ghost" type="button" onClick={handleClose} disabled={cutOff.isPending}>
+            {t('buttons.cancel')}
           </Button>
           <Button type="button" onClick={handleConfirm} disabled={cutOff.isPending}>
-            {cutOff.isPending ? 'Processing...' : 'Confirm Cut-Off'}
+            {cutOff.isPending ? t('cutOffDialog.processing') : t('buttons.confirmCutOff')}
           </Button>
         </div>
       </div>

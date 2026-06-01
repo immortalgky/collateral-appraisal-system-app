@@ -4,6 +4,7 @@ import Button from '@shared/components/Button';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import type { GalleryImage } from '../../types/gallery';
@@ -80,18 +81,30 @@ const formatUploadDate = (iso: string | null | undefined): string => {
 
 const getCollateralTypeIcon = (code: string | null | undefined): string => {
   switch (code) {
-    case 'L': return 'mountain-sun';
-    case 'B': return 'building';
-    case 'LB': return 'city';
-    case 'U': return 'building-user';
-    case 'VEH': return 'car';
-    case 'MAC': return 'gear';
-    case 'LSL': return 'file-contract';
-    case 'LS': return 'file-signature';
-    case 'LSB': return 'file-signature';
-    case 'LSU': return 'file-contract';
-    case 'VES': return 'ship';
-    default: return 'folder';
+    case 'L':
+      return 'mountain-sun';
+    case 'B':
+      return 'building';
+    case 'LB':
+      return 'city';
+    case 'U':
+      return 'building-user';
+    case 'VEH':
+      return 'car';
+    case 'MAC':
+      return 'gear';
+    case 'LSL':
+      return 'file-contract';
+    case 'LS':
+      return 'file-signature';
+    case 'LSB':
+      return 'file-signature';
+    case 'LSU':
+      return 'file-contract';
+    case 'VES':
+      return 'ship';
+    default:
+      return 'folder';
   }
 };
 
@@ -240,15 +253,32 @@ const EmptyUploadState = ({
 
 export const DocumentChecklistTab = () => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
 
   // Queries
-  const { data: requestDocsData, isLoading: isLoadingRequestDocs, isError: isRequestDocsError, error: requestDocsError, refetch: refetchRequestDocs } =
-    useGetRequestDocuments(requestId);
-  const { data: appendicesData, isLoading: isLoadingAppendices, isError: isAppendicesError, error: appendicesError, refetch: refetchAppendices } = useGetAppendices(appraisalId);
-  const { data: galleryData, isError: isGalleryError, error: galleryError, refetch: refetchGallery } = useGetGalleryPhotos(appraisalId);
+  const {
+    data: requestDocsData,
+    isLoading: isLoadingRequestDocs,
+    isError: isRequestDocsError,
+    error: requestDocsError,
+    refetch: refetchRequestDocs,
+  } = useGetRequestDocuments(requestId);
+  const {
+    data: appendicesData,
+    isLoading: isLoadingAppendices,
+    isError: isAppendicesError,
+    error: appendicesError,
+    refetch: refetchAppendices,
+  } = useGetAppendices(appraisalId);
+  const {
+    data: galleryData,
+    isError: isGalleryError,
+    error: galleryError,
+    refetch: refetchGallery,
+  } = useGetGalleryPhotos(appraisalId);
 
   // Mutations
   const addAppendixDocument = useAddAppendixDocument();
@@ -259,7 +289,10 @@ export const DocumentChecklistTab = () => {
   const { mutateAsync: downloadDocument } = useDownloadDocument();
 
   // Delete confirmation state
-  const [deleteConfirm, setDeleteConfirm] = useState<{ appendixId: string; documentId: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    appendixId: string;
+    documentId: string;
+  } | null>(null);
 
   // Annotation editor state — use refs alongside state to avoid stale closures in async callbacks
   const [showAnnotationEditor, setShowAnnotationEditor] = useState(false);
@@ -347,7 +380,7 @@ export const DocumentChecklistTab = () => {
     updateAppendixLayout.mutate(
       { appraisalId, appendixId: appendix.id, layoutColumns },
       {
-        onError: () => toast.error('Failed to update layout'),
+        onError: () => toast.error(t('toasts.layoutUpdateFailed')),
       },
     );
   };
@@ -458,7 +491,7 @@ export const DocumentChecklistTab = () => {
           }
           setEditingDocument(null);
           setEditingAppendixId(null);
-          toast.success('Document updated');
+          toast.success(t('toasts.documentUpdated'));
         } else {
           // Edit-before-upload: upload annotated image
           if (curAppendixId) {
@@ -476,11 +509,11 @@ export const DocumentChecklistTab = () => {
           setPendingEditFiles([]);
           setEditingFileIndex(0);
           setActiveAppendixId(null);
-          toast.success('Files uploaded successfully');
+          toast.success(t('toasts.filesUploaded'));
         }
       } catch (error) {
         console.error('Annotation save failed:', error);
-        toast.error('Failed to save annotated image');
+        toast.error(t('toasts.annotationSaveFailed'));
       }
     },
     [appraisalId, uploadSingleFile, removeAppendixDocument],
@@ -497,7 +530,7 @@ export const DocumentChecklistTab = () => {
 
     if (currentFile && curAppendixId) {
       void uploadSingleFile(currentFile, curAppendixId).catch(() => {
-        toast.error('Failed to upload file');
+        toast.error(t('toasts.fileUploadFailed'));
       });
     }
 
@@ -540,7 +573,7 @@ export const DocumentChecklistTab = () => {
         setShowAnnotationEditor(true);
       } catch (error) {
         console.error('Failed to download document for editing:', error);
-        toast.error('Failed to load document for editing');
+        toast.error(t('toasts.documentLoadFailed'));
       }
     },
     [downloadDocument],
@@ -560,7 +593,7 @@ export const DocumentChecklistTab = () => {
     const nonImageFiles = fileArray.filter(f => !isImageFile(f));
 
     if (nonImageFiles.length > 0) {
-      toast.error('Only image files are allowed');
+      toast.error(t('toasts.onlyImageFilesAllowed'));
     }
 
     // Open editor for image files — save appendixId into editor state
@@ -600,10 +633,10 @@ export const DocumentChecklistTab = () => {
         });
       }
 
-      toast.success('Files added from gallery');
+      toast.success(t('toasts.galleryFilesAdded'));
     } catch (error) {
       console.error('Gallery select failed:', error);
-      toast.error('Failed to add files from gallery');
+      toast.error(t('toasts.galleryFilesAddFailed'));
     }
 
     setActiveAppendixId(null);
@@ -620,10 +653,10 @@ export const DocumentChecklistTab = () => {
       { appraisalId, appendixId: deleteConfirm.appendixId, documentId: deleteConfirm.documentId },
       {
         onSuccess: () => {
-          toast.success('Document removed');
+          toast.success(t('toasts.documentRemoved'));
           setDeleteConfirm(null);
         },
-        onError: () => toast.error('Failed to remove document'),
+        onError: () => toast.error(t('toasts.documentRemoveFailed')),
       },
     );
   };
@@ -662,7 +695,7 @@ export const DocumentChecklistTab = () => {
     const nonImageFiles = fileArray.filter(f => !isImageFile(f));
 
     if (nonImageFiles.length > 0) {
-      toast.error('Only image files are allowed');
+      toast.error(t('toasts.onlyImageFilesAllowed'));
     }
 
     if (imageFiles.length > 0) {
@@ -790,10 +823,7 @@ export const DocumentChecklistTab = () => {
                       >
                         <Icon
                           name={hasFile ? fileIcon.name : 'file'}
-                          className={clsx(
-                            'text-base',
-                            hasFile ? fileIcon.color : 'text-gray-300',
-                          )}
+                          className={clsx('text-base', hasFile ? fileIcon.color : 'text-gray-300')}
                         />
                       </div>
 
@@ -801,9 +831,7 @@ export const DocumentChecklistTab = () => {
                       <div className="min-w-0 flex-1 flex flex-col gap-0.5">
                         <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
                         {hasFile ? (
-                          <p className="text-xs text-gray-500 truncate">
-                            {metaParts.join(' · ')}
-                          </p>
+                          <p className="text-xs text-gray-500 truncate">{metaParts.join(' · ')}</p>
                         ) : (
                           <p className="text-xs text-gray-400 italic">No file uploaded</p>
                         )}
@@ -899,177 +927,179 @@ export const DocumentChecklistTab = () => {
               message={(appendicesError as Error)?.message}
               onRetry={refetchAppendices}
             />
-          ) : appendices.map(appendix => {
-            const isExpanded = expandedSections.has(appendix.id);
-            const isDragOver = dragOverSection === appendix.id;
-            const sortedDocs = [...appendix.documents].sort(
-              (a, b) => a.displaySequence - b.displaySequence,
-            );
+          ) : (
+            appendices.map(appendix => {
+              const isExpanded = expandedSections.has(appendix.id);
+              const isDragOver = dragOverSection === appendix.id;
+              const sortedDocs = [...appendix.documents].sort(
+                (a, b) => a.displaySequence - b.displaySequence,
+              );
 
-            return (
-              <div
-                key={appendix.id}
-                onDragOver={readOnly ? undefined : e => handleDragOver(e, appendix.id)}
-                onDragLeave={readOnly ? undefined : handleDragLeave}
-                onDrop={readOnly ? undefined : e => handleDrop(e, appendix.id)}
-                className={clsx('transition-colors', !readOnly && isDragOver && 'bg-primary/5')}
-              >
-                {/* Appendix Header */}
+              return (
                 <div
-                  className={clsx(
-                    'px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors',
-                    isExpanded && 'bg-gray-50/50',
-                  )}
-                  onClick={() => handleToggleSection(appendix.id)}
+                  key={appendix.id}
+                  onDragOver={readOnly ? undefined : e => handleDragOver(e, appendix.id)}
+                  onDragLeave={readOnly ? undefined : handleDragLeave}
+                  onDrop={readOnly ? undefined : e => handleDrop(e, appendix.id)}
+                  className={clsx('transition-colors', !readOnly && isDragOver && 'bg-primary/5')}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon
-                      name={isExpanded ? 'chevron-down' : 'chevron-right'}
-                      className="text-gray-400 text-sm transition-transform"
-                    />
-                    <span className="text-sm font-medium text-gray-900">
-                      {appendix.appendixTypeName}
-                    </span>
-                    {appendix.documents.length > 0 && (
-                      <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
-                        {appendix.documents.length}
+                  {/* Appendix Header */}
+                  <div
+                    className={clsx(
+                      'px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors',
+                      isExpanded && 'bg-gray-50/50',
+                    )}
+                    onClick={() => handleToggleSection(appendix.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        name={isExpanded ? 'chevron-down' : 'chevron-right'}
+                        className="text-gray-400 text-sm transition-transform"
+                      />
+                      <span className="text-sm font-medium text-gray-900">
+                        {appendix.appendixTypeName}
                       </span>
-                    )}
-                  </div>
+                      {appendix.documents.length > 0 && (
+                        <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                          {appendix.documents.length}
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                    {!readOnly && (
-                      <>
-                        {/* Layout Selector */}
-                        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1">
-                          <span className="text-xs text-gray-500">Layout:</span>
-                          <div className="flex gap-1">
-                            {[1, 2, 3].map(num => (
-                              <button
-                                key={num}
-                                type="button"
-                                onClick={() => handleLayoutChange(appendix, num)}
-                                className={clsx(
-                                  'w-6 h-6 rounded text-xs font-medium transition-colors',
-                                  appendix.layoutColumns === num
-                                    ? 'bg-primary text-white'
-                                    : 'text-gray-500 hover:bg-gray-100',
-                                )}
-                              >
-                                {num}
-                              </button>
-                            ))}
+                    <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
+                      {!readOnly && (
+                        <>
+                          {/* Layout Selector */}
+                          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1">
+                            <span className="text-xs text-gray-500">Layout:</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3].map(num => (
+                                <button
+                                  key={num}
+                                  type="button"
+                                  onClick={() => handleLayoutChange(appendix, num)}
+                                  className={clsx(
+                                    'w-6 h-6 rounded text-xs font-medium transition-colors',
+                                    appendix.layoutColumns === num
+                                      ? 'bg-primary text-white'
+                                      : 'text-gray-500 hover:bg-gray-100',
+                                  )}
+                                >
+                                  {num}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      </>
-                    )}
+                        </>
+                      )}
 
-                    {/* Preview Button */}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handlePreviewLayout(appendix.id)}
-                      className="text-xs"
-                    >
-                      <Icon name="eye" className="mr-1" />
-                      Preview
-                    </Button>
-
-                    {!readOnly && (
-                      /* Add Button */
-                      <button
-                        type="button"
-                        onClick={() => handleAddFiles(appendix.id)}
-                        className="p-1.5 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      {/* Preview Button */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePreviewLayout(appendix.id)}
+                        className="text-xs"
                       >
-                        <Icon name="circle-plus" style="solid" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+                        <Icon name="eye" className="mr-1" />
+                        Preview
+                      </Button>
 
-                {/* Section Content */}
-                {isExpanded && (
-                  <div className="border-t border-gray-100">
-                    {sortedDocs.length > 0 ? (
-                      <div className="divide-y divide-gray-50">
-                        {sortedDocs.map(doc => {
-                          const thumbnailUrl = `${API_BASE_URL}/documents/${doc.documentId}/download?download=false&size=large`;
-                          return (
-                            <div
-                              key={doc.id}
-                              className="px-6 py-3 hover:bg-gray-50/50 transition-colors grid grid-cols-[1fr_48px] gap-4 items-center ml-6"
-                            >
-                              {/* File Info */}
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-50">
-                                  <img
-                                    src={thumbnailUrl}
-                                    alt={doc.fileName || 'Document'}
-                                    className="w-10 h-10 rounded-lg object-cover"
-                                    onError={e => {
-                                      const target = e.currentTarget;
-                                      target.style.display = 'none';
-                                      const icon = getFileIcon(doc.fileName ?? null);
-                                      const parent = target.parentElement;
-                                      if (parent) {
-                                        parent.innerHTML = `<span class="${icon.color} text-lg"><i class="fa-solid fa-${icon.name}"></i></span>`;
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <div className="min-w-0">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleViewDocument(doc)}
-                                    className="text-sm text-primary hover:text-primary-700 hover:underline truncate block max-w-full text-left"
-                                    title={doc.fileName || 'Untitled document'}
-                                  >
-                                    {doc.fileName || 'Untitled document'}
-                                  </button>
-                                  <div className="flex items-center gap-2">
-                                    {doc.fileExtension && (
-                                      <span className="text-xs text-gray-400 uppercase">
-                                        {doc.fileExtension.replace(/^\./, '')}
-                                      </span>
-                                    )}
-                                    {doc.fileSizeBytes != null && doc.fileSizeBytes > 0 && (
-                                      <span className="text-xs text-gray-400">
-                                        {formatFileSize(doc.fileSizeBytes)}
-                                      </span>
-                                    )}
+                      {!readOnly && (
+                        /* Add Button */
+                        <button
+                          type="button"
+                          onClick={() => handleAddFiles(appendix.id)}
+                          className="p-1.5 text-green-500 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        >
+                          <Icon name="circle-plus" style="solid" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Section Content */}
+                  {isExpanded && (
+                    <div className="border-t border-gray-100">
+                      {sortedDocs.length > 0 ? (
+                        <div className="divide-y divide-gray-50">
+                          {sortedDocs.map(doc => {
+                            const thumbnailUrl = `${API_BASE_URL}/documents/${doc.documentId}/download?download=false&size=large`;
+                            return (
+                              <div
+                                key={doc.id}
+                                className="px-6 py-3 hover:bg-gray-50/50 transition-colors grid grid-cols-[1fr_48px] gap-4 items-center ml-6"
+                              >
+                                {/* File Info */}
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-blue-50">
+                                    <img
+                                      src={thumbnailUrl}
+                                      alt={doc.fileName || 'Document'}
+                                      className="w-10 h-10 rounded-lg object-cover"
+                                      onError={e => {
+                                        const target = e.currentTarget;
+                                        target.style.display = 'none';
+                                        const icon = getFileIcon(doc.fileName ?? null);
+                                        const parent = target.parentElement;
+                                        if (parent) {
+                                          parent.innerHTML = `<span class="${icon.color} text-lg"><i class="fa-solid fa-${icon.name}"></i></span>`;
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleViewDocument(doc)}
+                                      className="text-sm text-primary hover:text-primary-700 hover:underline truncate block max-w-full text-left"
+                                      title={doc.fileName || 'Untitled document'}
+                                    >
+                                      {doc.fileName || 'Untitled document'}
+                                    </button>
+                                    <div className="flex items-center gap-2">
+                                      {doc.fileExtension && (
+                                        <span className="text-xs text-gray-400 uppercase">
+                                          {doc.fileExtension.replace(/^\./, '')}
+                                        </span>
+                                      )}
+                                      {doc.fileSizeBytes != null && doc.fileSizeBytes > 0 && (
+                                        <span className="text-xs text-gray-400">
+                                          {formatFileSize(doc.fileSizeBytes)}
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              {/* Actions */}
-                              <div className="flex justify-end">
-                                <ActionDropdown
-                                  onView={() => handleViewDocument(doc)}
-                                  onEdit={() => void handleEditDocument(appendix.id, doc)}
-                                  onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
-                                  isEditable={!readOnly}
-                                />
+                                {/* Actions */}
+                                <div className="flex justify-end">
+                                  <ActionDropdown
+                                    onView={() => handleViewDocument(doc)}
+                                    onEdit={() => void handleEditDocument(appendix.id, doc)}
+                                    onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
+                                    isEditable={!readOnly}
+                                  />
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : readOnly ? (
-                      <div className="flex flex-col items-center justify-center py-8">
-                        <p className="text-sm text-gray-400">No documents</p>
-                      </div>
-                    ) : (
-                      <EmptyUploadState
-                        onUpload={() => handleAddFiles(appendix.id)}
-                        isDragging={isDragOver}
-                      />
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                            );
+                          })}
+                        </div>
+                      ) : readOnly ? (
+                        <div className="flex flex-col items-center justify-center py-8">
+                          <p className="text-sm text-gray-400">No documents</p>
+                        </div>
+                      ) : (
+                        <EmptyUploadState
+                          onUpload={() => handleAddFiles(appendix.id)}
+                          isDragging={isDragOver}
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
 
           {appendices.length === 0 && (
             <div className="px-6 py-8 text-center text-sm text-gray-400">

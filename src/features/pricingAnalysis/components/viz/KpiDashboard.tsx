@@ -103,7 +103,7 @@ export function KpiDashboard({ primary, secondary, compact = false }: KpiDashboa
         className="grid gap-3"
         style={{ gridTemplateColumns: `repeat(${all.length}, minmax(0, 1fr))` }}
       >
-        {all.map((card) => (
+        {all.map(card => (
           <SecondaryCard key={card.label} card={card} />
         ))}
       </div>
@@ -118,7 +118,7 @@ export function KpiDashboard({ primary, secondary, compact = false }: KpiDashboa
           className="grid gap-3"
           style={{ gridTemplateColumns: `repeat(${secondary.length}, minmax(0, 1fr))` }}
         >
-          {secondary.map((card) => (
+          {secondary.map(card => (
             <SecondaryCard key={card.label} card={card} />
           ))}
         </div>

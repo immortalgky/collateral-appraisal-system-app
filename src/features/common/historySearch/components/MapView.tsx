@@ -104,18 +104,21 @@ interface GMapConstructors {
 // Pin icons = the 3D Fluent UI Emoji PNG with a thin colored ring outline.
 // The ring color identifies the layer/state; the icon identifies the type.
 // See `../icons.ts` for the canonical layer→{icon,color} mapping.
-function makePinIcon(google: { maps: GMapConstructors }, dataUrl: string) {
+function makePinIcon(google: { maps: GMapConstructors }, dataUrl: string, scale = 1) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const g = google.maps as any;
-  // Classic map-pin SVG (48×64 viewBox, 3:4 aspect). Render at 30×40.
-  // Anchor at the pin's tip — y=60 in SVG coords, scaled to y=37.5 ≈ 38.
+  // Classic map-pin SVG (48×64 viewBox, 3:4 aspect). Render at 30×40 by default;
+  // `scale` enlarges it (e.g. for the emphasised "main" pin) keeping the same anchors.
+  const w = Math.round(30 * scale);
+  const h = Math.round(40 * scale);
   return {
     url: dataUrl,
-    scaledSize: new g.Size(30, 40),
-    size: new g.Size(30, 40),
-    anchor: new google.maps.Point(15, 38),
+    scaledSize: new g.Size(w, h),
+    size: new g.Size(w, h),
+    // Anchor at the pin's tip — y=60 in SVG coords, scaled to ~0.95 of the height.
+    anchor: new google.maps.Point(w / 2, Math.round(h * 0.95)),
     // Position a count label inside the pin's white circle (not at the tip anchor).
-    labelOrigin: new google.maps.Point(15, 14),
+    labelOrigin: new google.maps.Point(w / 2, Math.round(h * 0.35)),
   };
 }
 
@@ -161,6 +164,13 @@ interface MapViewProps {
    */
   appraisingCollateralPins?: AppraisalPinDto[];
   /**
+   * Optional `appraisalNumber` of the one appraising-collateral pin to render as the
+   * emphasised "main" pin — distinct purple 'collateral-main' marker, larger and
+   * on top — to set it apart from the other (orange) appraising pins. Matched on
+   * appraisalNumber (not appraisalId, which may be empty for AS400-only candidates).
+   */
+  primaryAppraisalNumber?: string | null;
+  /**
    * MC pins for the current appraisal (Feature 2 — 360 page).
    * Rendered using the 'mc-appraising' marker when showMcAppraising is true.
    */
@@ -194,6 +204,7 @@ export function MapView({
   onPinHover,
   onCoincidentPins,
   appraisingCollateralPins,
+  primaryAppraisalNumber,
   appraisingMcPins,
   cluster = true,
 }: MapViewProps) {
@@ -291,6 +302,8 @@ export function MapView({
     const appraisalIcon = makePinIcon(google, buildPinIcon('collateralExisting'));
     const mcIcon = makePinIcon(google, buildPinIcon('mcExisting'));
     const appraisingCollateralIcon = makePinIcon(google, buildPinIcon('collateralAppraising'));
+    // Emphasised "main" pin — distinct purple, ~1.3× size, drawn on top.
+    const mainCollateralIcon = makePinIcon(google, buildPinIcon('collateralMain'), 1.3);
     const appraisingMcIcon = makePinIcon(google, buildPinIcon('mcAppraising'));
 
     // Combine the visible pins, then group by exact location so coincident pins
@@ -373,24 +386,67 @@ export function MapView({
     // These markers are added directly to the map (not via the clusterer) so the
     // current appraisal's own location is always visible at any zoom level.
     // They are tracked in appraisingMarkersRef and removed by clearMarkers().
+    //
+    // Group by exact location first: appraising pins are often coincident (e.g. a
+    // reappraisal group whose candidates share the main's coordinate). Stacked
+    // markers hide each other and flicker by latitude z-order, so a coincident group
+    // collapses into ONE marker with a count badge that opens the chooser on click —
+    // matching the result-pin behaviour above. Singletons render as a normal pin.
     if (pinFilters.showCollateralAppraising && appraisingCollateralPins?.length) {
-      appraisingCollateralPins.forEach((pin, i) => {
+      const isMainPin = (pin: AppraisalPinDto) =>
+        primaryAppraisalNumber != null && pin.appraisalNumber === primaryAppraisalNumber;
+
+      const collateralGroups = new Map<string, AppraisalPinDto[]>();
+      appraisingCollateralPins.forEach(pin => {
+        const key = `${pin.lat.toFixed(5)},${pin.lon.toFixed(5)}`;
+        const g = collateralGroups.get(key);
+        if (g) g.push(pin);
+        else collateralGroups.set(key, [pin]);
+      });
+
+      let gi = 0;
+      collateralGroups.forEach(groupPins => {
+        const position = { lat: groupPins[0].lat, lng: groupPins[0].lon };
+        const hasMain = groupPins.some(isMainPin);
+        const trackKey = `appraising-collateral:${gi++}`;
+
+        if (groupPins.length > 1) {
+          // Coincident group → one count marker; keep the main's purple icon if present.
+          const marker = new google.maps.Marker({
+            position,
+            map: mapRef.current!,
+            icon: hasMain ? mainCollateralIcon : appraisingCollateralIcon,
+            label: { text: String(groupPins.length), color: '#ffffff', fontSize: '11px', fontWeight: '700' },
+            optimized: false,
+          });
+          if (hasMain) marker.setZIndex(1000);
+          marker.addListener('click', () => onCoincidentPinsRef.current?.(groupPins));
+          appraisingMarkersRef.current.push(marker);
+          markerMapRef.current.set(trackKey, marker);
+          markerToPinRef.current.set(marker, groupPins[0]);
+          pinPositionRef.current.set(trackKey, position);
+          return;
+        }
+
+        const pin = groupPins[0];
+        const isMain = isMainPin(pin);
         const marker = new google.maps.Marker({
-          position: { lat: pin.lat, lng: pin.lon },
+          position,
           map: mapRef.current!,
-          icon: appraisingCollateralIcon,
+          icon: isMain ? mainCollateralIcon : appraisingCollateralIcon,
           title: pin.appraisalNumber ?? '',
           optimized: false,
         });
+        // Keep the main pin above its sibling candidate pins.
+        if (isMain) marker.setZIndex(1000);
         marker.addListener('click', () => onAppraisalPinClick(pin));
         appraisingMarkersRef.current.push(marker);
         // Appraising-collateral pins on the 360 page all share the page's
         // appraisalId (used for PinDetailDrawer navigation), so they MUST NOT be
         // keyed by it in the tracking maps — use a unique per-marker key instead.
-        const trackKey = `appraising-collateral:${i}`;
         markerMapRef.current.set(trackKey, marker);
         markerToPinRef.current.set(marker, pin);
-        pinPositionRef.current.set(trackKey, { lat: pin.lat, lng: pin.lon });
+        pinPositionRef.current.set(trackKey, position);
       });
     }
 
@@ -472,6 +528,7 @@ export function MapView({
     onMarketComparablePinClick,
     onPinHover,
     appraisingCollateralPins,
+    primaryAppraisalNumber,
     appraisingMcPins,
     cluster,
   ]);
@@ -495,16 +552,30 @@ export function MapView({
     }
   }, [center]);
 
-  // Re-render markers when pins or filters change
+  // Re-render markers when pins or filters change — and crucially once the map is
+  // ready. renderMarkers() no-ops while mapRef is null, so without the mapsReady
+  // dependency the first (pre-init) run is lost and markers passed as stable props
+  // (e.g. the appraising pins on an embedded drawer) would never be added.
   useEffect(() => {
     renderMarkers();
-  }, [renderMarkers]);
+  }, [renderMarkers, mapsReady]);
 
-  // Pan/zoom the map to fit ALL visible pins after each search (fitToken bump) so
-  // the user can see every result at once. Single/coincident → center; otherwise
-  // zoom out to fit the bounding box. Includes the appraising (own) pins too.
-  useEffect(() => {
-    if (!fitToken || !mapRef.current || !window.google?.maps) return;
+  // Latest fit inputs, read by fitToAllPins() after async events (search, resize).
+  // Updated every render so the stable callback always sees the current pins/filters.
+  const fitInputsRef = useRef({
+    appraisalPins, marketComparablePins, appraisingCollateralPins, appraisingMcPins, pinFilters,
+  });
+  fitInputsRef.current = {
+    appraisalPins, marketComparablePins, appraisingCollateralPins, appraisingMcPins, pinFilters,
+  };
+
+  // Frame ALL visible pins (own + result pins). Single/coincident → center; otherwise
+  // fit the bounding box. Shared by the post-search fit and the resize recovery below.
+  const fitToAllPins = useCallback(() => {
+    if (!mapRef.current || !window.google?.maps) return;
+    const {
+      appraisalPins, marketComparablePins, appraisingCollateralPins, appraisingMcPins, pinFilters,
+    } = fitInputsRef.current;
 
     const pins: { lat: number; lon: number }[] = [
       ...(pinFilters.showCollateral ? appraisalPins : []),
@@ -534,9 +605,38 @@ export function MapView({
     pins.forEach(p => bounds.extend({ lat: p.lat, lng: p.lon }));
     // Padding keeps pins off the very edge of the viewport.
     mapRef.current.fitBounds(bounds, 64);
-  // Only react to a new search (fitToken); pins are read at fire time.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitToken]);
+  }, []);
+
+  // Pan/zoom the map to fit ALL visible pins after each search (fitToken bump) so
+  // the user can see every result at once.
+  useEffect(() => {
+    if (!fitToken) return;
+    fitToAllPins();
+  }, [fitToken, fitToAllPins]);
+
+  // Recover from being initialised while the container had no size — e.g. inside a
+  // drawer/modal that lays out or animates in after mount. Google Maps renders blank
+  // until a resize is triggered, and any fit computed at 0-size is wrong. On the first
+  // real size, trigger a resize and frame the pins; on later size changes (drawer
+  // expand/restore) keep the viewport in sync.
+  const hasSizedRef = useRef(false);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => {
+      if (!mapRef.current || !window.google?.maps) return;
+      const { width, height } = el.getBoundingClientRect();
+      if (width === 0 || height === 0) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window.google.maps as any).event.trigger(mapRef.current, 'resize');
+      if (!hasSizedRef.current) {
+        hasSizedRef.current = true;
+        fitToAllPins();
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mapsReady, fitToAllPins]);
 
   // Radius circle: create/update/remove when center or radiusKm changes
   useEffect(() => {

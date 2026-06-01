@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -59,6 +60,7 @@ interface CreateRequestFileInputProps {
 }
 
 const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputProps) => {
+  const { t } = useTranslation('request');
   const { setValue, watch } = useFormContext();
   const currentUser = useAuthStore(state => state.user);
   const { mutate: uploadDocuments, isPending } = useUploadDocument();
@@ -270,10 +272,10 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
 
       // Show success/partial message
       if (failedCount > 0) {
-        toast.error(`${failedCount} file(s) failed to upload`);
+        toast.error(t('toasts.uploadPartialFailed', { n: failedCount }));
       }
       if (uploadResults.length > 0) {
-        toast.success(`Successfully uploaded ${uploadResults.length} document(s)`);
+        toast.success(t('toasts.uploadSuccess', { n: uploadResults.length }));
       }
 
       // Clear progress after a delay to show completion
@@ -282,7 +284,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       }, 2000);
     } catch (error: any) {
       console.error('Session creation failed:', error);
-      toast.error(error.apiError?.detail || 'Failed to create upload session. Please try again.');
+      toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
 
       // Mark all pending as error
       setUploadProgress(prev =>
@@ -310,7 +312,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
         onChange={handleChange}
         accept={ALLOWED_EXTENSIONS.join(', ')}
         multiple={true}
-        supportedText="PDF, PNG, JPG (Max 10MB each)"
+        supportedText={t('documents.supportedText')}
         isLoading={isPending}
       />
 
@@ -324,7 +326,9 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
               className="w-5 h-5 text-red-600 mt-0.5"
             />
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-red-800 mb-2">File Validation Errors</h4>
+              <h4 className="text-sm font-semibold text-red-800 mb-2">
+                {t('documents.validationErrorsTitle')}
+              </h4>
               <ul className="list-disc list-inside space-y-1">
                 {validationErrors.map((error, index) => (
                   <li key={index} className="text-sm text-red-700">
@@ -353,11 +357,15 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <LoadingSpinner size="sm" variant="default" />
-              <span className="text-sm font-medium text-gray-700">Uploading documents...</span>
+              <span className="text-sm font-medium text-gray-700">
+                {t('documents.uploadingDocuments')}
+              </span>
             </div>
             <span className="text-xs text-gray-500">
-              {uploadProgress.filter(p => p.status === 'success').length}/{uploadProgress.length}{' '}
-              complete
+              {t('documents.uploadComplete', {
+                done: uploadProgress.filter(p => p.status === 'success').length,
+                total: uploadProgress.length,
+              })}
             </span>
           </div>
           <div className="space-y-2 max-h-48 overflow-y-auto">

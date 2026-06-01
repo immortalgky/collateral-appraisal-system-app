@@ -9,10 +9,7 @@ interface DecisionSummarySectionProps {
   isLoading: boolean;
 }
 
-const DecisionSummarySection = ({
-  decisionSummary,
-  isLoading,
-}: DecisionSummarySectionProps) => {
+const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummarySectionProps) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -33,7 +30,10 @@ const DecisionSummarySection = ({
       {/* Appraisal Price Summary */}
       <FormCard title="Appraisal Price Summary" icon="coins" iconColor="amber">
         <div className="grid grid-cols-3 gap-6">
-          <ReadOnlyField label="Total Appraisal Price" value={decisionSummary?.totalAppraisalPrice} />
+          <ReadOnlyField
+            label="Total Appraisal Price"
+            value={decisionSummary?.totalAppraisalPrice}
+          />
           <ReadOnlyField label="Force Selling Price" value={decisionSummary?.forceSellingPrice} />
           <ReadOnlyField label="Building Insurance" value={decisionSummary?.buildingInsurance} />
         </div>
@@ -51,18 +51,11 @@ const DecisionSummarySection = ({
           <p className="text-sm text-gray-500">No government price data available.</p>
         )}
       </FormCard>
-
     </div>
   );
 };
 
-const ReadOnlyField = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: number | null | undefined;
-}) => (
+const ReadOnlyField = ({ label, value }: { label: string; value: number | null | undefined }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">

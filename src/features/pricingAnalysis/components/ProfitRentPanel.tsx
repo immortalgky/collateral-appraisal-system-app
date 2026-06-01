@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useController, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import {
@@ -70,6 +71,7 @@ export function ProfitRentPanel({
   onCancelCalculationMethod,
 }: ProfitRentPanelProps) {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -370,14 +372,14 @@ export function ProfitRentPanel({
           appraisalValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
 
       isInitialized.current = false;
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
       });
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('toasts.saveFailed'));
     }
   };
 
@@ -396,9 +398,9 @@ export function ProfitRentPanel({
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
       });
-      toast.success('Reset successful');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset');
+      toast.error(t('toasts.failedReset'));
     }
   };
 

@@ -1,0 +1,631 @@
+{
+  "page": {
+    "tabs": {
+      "projectInfo": "Project Info",
+      "unitListing": "Unit Listing",
+      "towers": "Tower",
+      "models": "Model",
+      "unitPrice": "Unit Price",
+      "markets": "Markets",
+      "gallery": "Gallery",
+      "photos": "Photo",
+      "laws": "Laws and Regulation",
+      "projectLand": "Project Land"
+    }
+  },
+  "projectInfo": {
+    "title": "Project Information",
+    "sections": {
+      "projectInformation": "Project Information",
+      "projectLocation": "Project Location",
+      "projectDetail": "Project Detail"
+    },
+    "fields": {
+      "projectName": "Project Name",
+      "projectDescription": "Project Description",
+      "developer": "Developer",
+      "projectSaleLaunchDate": "Project Sale Launch Date",
+      "projectSaleLaunchDatePlaceholder": "YYYY or YYYY-MM or YYYY-MM-DD",
+      "rai": "Rai",
+      "ngan": "Ngan",
+      "squareWa": "Square Wa",
+      "unitForSale": "Unit For Sale",
+      "numberOfPhase": "Number of Phase",
+      "houseNumber": "House Number",
+      "road": "Road",
+      "soi": "Soi",
+      "subDistrict": "Sub District",
+      "district": "District",
+      "province": "Province",
+      "postcode": "Postcode",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "utilities": "Utilities",
+      "utilitiesOther": "Other Utilities",
+      "facilities": "Facilities",
+      "facilitiesOther": "Other Facilities",
+      "remark": "Remark",
+      "builtOnTitleDeedNumber": "Built on Title Deed Number",
+      "landOffice": "Land Office",
+      "licenseExpirationDate": "License Expiration Date",
+      "projectType": "Project Type",
+      "specifyPlaceholder": "Please specify..."
+    }
+  },
+  "towerDetail": {
+    "title": "Tower Detail",
+    "sections": {
+      "towerInformation": "Tower Information",
+      "condominiumCondition": "Condominium Condition",
+      "location": "Location",
+      "structureDecoration": "Structure & Decoration",
+      "roof": "Roof",
+      "legal": "Legal"
+    },
+    "fields": {
+      "towerName": "Tower Name",
+      "condoRegistrationNumber": "Condo Registration Number",
+      "numberOfUnits": "Number of Units",
+      "numberOfFloors": "Number of Floors",
+      "condition": "Condition",
+      "isObligation": "Is Obligation",
+      "obligation": "Obligation",
+      "documentValidation": "Document Validation",
+      "locationCorrect": "Location Correct",
+      "distance": "Distance (m)",
+      "roadWidth": "Road Width (m)",
+      "rightOfWay": "Right of Way (m)",
+      "roadSurface": "Road Surface",
+      "otherRoadSurface": "Other Road Surface",
+      "decoration": "Decoration",
+      "otherDecoration": "Other Decoration",
+      "buildingAge": "Building Age",
+      "buildingForm": "Building Form",
+      "constructionMaterials": "Construction Materials",
+      "otherRoofType": "Other Roof Type",
+      "isExpropriated": "Is Expropriated",
+      "inLineExpropriated": "In Line Expropriated",
+      "royalDecreeReference": "Royal Decree Reference",
+      "expropriationRemark": "Expropriation Remark",
+      "inForestBoundary": "In Forest Boundary",
+      "forestBoundaryRemark": "Forest Boundary Remark"
+    },
+    "navAnchors": {
+      "images": "Images",
+      "towerInfo": "Tower Info",
+      "remark": "Remark"
+    }
+  },
+  "modelDetail": {
+    "title": "Model Detail",
+    "sections": {
+      "modelInformation": "Model Information",
+      "roomLayout": "Room Layout",
+      "floor": "Floor",
+      "areaDetail": "Area Detail",
+      "remark": "Remark",
+      "landArea": "Land Area",
+      "buildingType": "Building Type",
+      "decoration": "Decoration",
+      "encroachment": "Encroachment",
+      "materialStyle": "Material & Style",
+      "isResidential": "Is Residential",
+      "generalStructure": "General Structure",
+      "roofCeiling": "Roof & Ceiling",
+      "wall": "Wall",
+      "surface": "Surface",
+      "constructionUse": "Construction & Use",
+      "depreciation": "Depreciation"
+    },
+    "fields": {
+      "modelName": "Model Name",
+      "modelDescription": "Model Description",
+      "tower": "Tower",
+      "selectTower": "Select tower...",
+      "noTowers": "No towers yet — add a tower first.",
+      "hasMezzanine": "Has Mezzanine",
+      "startingPriceMin": "Starting Price Min (THB)",
+      "startingPriceMax": "Starting Price Max (THB)",
+      "usableAreaMin": "Usable Area Min (sq.m.)",
+      "usableAreaMax": "Usable Area Max (sq.m.)",
+      "standardUsableArea": "Standard Usable Area (sq.m.)",
+      "fireInsuranceCondition": "Fire Insurance Condition",
+      "roomLayout": "Room Layout",
+      "otherRoomLayout": "Other Room Layout",
+      "numberOfHouses": "Number of Houses",
+      "landAreaMin": "Land Area Min (Sq.Wa)",
+      "landAreaMax": "Land Area Max (Sq.Wa)",
+      "standardLandArea": "Standard Land Area (Sq.Wa)"
+    },
+    "navAnchors": {
+      "images": "Images",
+      "modelInfo": "Model Info"
+    }
+  },
+  "landDetail": {
+    "title": "Land Detail",
+    "sections": {
+      "landInformation": "Land Information",
+      "landLocation": "Land Location",
+      "plotLocation": "Plot Location",
+      "landfill": "Landfill",
+      "roadSurface": "Road & Surface",
+      "landAccessUtilities": "Land Access & Utilities",
+      "limitation": "Limitation",
+      "assessment": "Assessment",
+      "sizeAndBoundary": "Size and Boundary",
+      "otherInformation": "Other Information",
+      "remark": "Remark"
+    },
+    "navAnchors": {
+      "landTitle": "Land Title",
+      "landDetail": "Land Detail"
+    },
+    "landInformationHeader": "Land Information"
+  },
+  "pricingAssumption": {
+    "sections": {
+      "locationAssumptions": "Location Assumptions",
+      "floorAssumptions": "Floor Assumptions",
+      "landAssumption": "Land Assumption",
+      "forceSaleValue": "Force Sale Value"
+    },
+    "locationDescription": "Location Description",
+    "locationMethodPlaceholder": "Select adjustment method",
+    "locationHint": "Choose an adjustment method, then set the per-location offset applied to each unit.",
+    "floorHint": "Price increment applied for every N floors above the base floor.",
+    "landHint": "Land price adjustment applied to each unit based on land area.",
+    "forceSaleHint": "Discount factor applied to calculated unit prices for forced-sale valuation.",
+    "forceSaleInfoHint": "Enter a value between 0 and 100. The calculated unit price is multiplied by this percentage to derive the force-sale price.",
+    "fields": {
+      "corner": "Corner",
+      "edge": "Edge",
+      "poolView": "Pool View",
+      "south": "South",
+      "other": "Other",
+      "nearGardenClubhouse": "Near Garden/Clubhouse",
+      "locationMethod": "Location Method",
+      "cornerBaht": "Corner (Baht)",
+      "edgeBaht": "Edge (Baht)",
+      "otherBaht": "Other (Baht)",
+      "poolViewBaht": "Pool View (Baht)",
+      "southBaht": "South (Baht)",
+      "forceSalePercentage": "Force Sale Percentage (%)",
+      "everyXFloor": "Every X Floor",
+      "amountBaht": "Amount (Baht)",
+      "nearGardenBaht": "Near Garden (Baht)",
+      "landIncreaseDecreaseRate": "Land Increase/Decrease Rate (%)"
+    }
+  },
+  "unitListing": {
+    "importUnits": "Import Units",
+    "uploadHistory": "Upload History",
+    "unitListing": "Unit Listing",
+    "noUploadHistory": "No upload history",
+    "noUnits": "No unit data — upload a spreadsheet to import units",
+    "unitsCount": "{{count}} units",
+    "confirmReplace": {
+      "title": "Replace existing units?",
+      "message": "Uploading a new file will replace all current unit data. This cannot be undone.",
+      "confirm": "Replace"
+    },
+    "confirmDelete": {
+      "title": "Delete upload?",
+      "confirm": "Delete"
+    },
+    "summary": {
+      "towers": "Towers:",
+      "models": "Models:",
+      "totalUnits": "Total Units:"
+    },
+    "cols": {
+      "no": "No",
+      "fileName": "File Name",
+      "dateTime": "Date / Time",
+      "status": "Status",
+      "used": "Used",
+      "sqNo": "Sq No",
+      "floor": "Floor",
+      "towerName": "Tower Name",
+      "regNumber": "Reg. Number",
+      "roomNo": "Room No",
+      "modelType": "Model Type",
+      "usableAreaSqm": "Usable Area (sq.m.)",
+      "sellingPriceBaht": "Selling Price (Baht)",
+      "plotNo": "Plot No",
+      "houseNo": "House No",
+      "modelName": "Model Name",
+      "numFloors": "No. of Floors",
+      "landAreaSqWa": "Land Area (Sq.Wa)"
+    },
+    "aria": {
+      "deleteUpload": "Delete upload"
+    }
+  },
+  "towerListing": {
+    "grid": "Grid",
+    "list": "List",
+    "addTower": "Add Tower",
+    "noTowers": "No towers yet",
+    "noTowersHint": "Click \"Add Tower\" to create your first tower",
+    "unnamedTower": "Unnamed Tower",
+    "failedToLoad": "Failed to load towers",
+    "failedToLoadHint": "Please try refreshing the page",
+    "cols": {
+      "image": "Image",
+      "towerName": "Tower Name",
+      "numberOfUnits": "No. of Units",
+      "numberOfFloors": "No. of Floors"
+    },
+    "card": {
+      "numberOfUnits": "No. of Units",
+      "numberOfFloors": "No. of Floors"
+    },
+    "confirmDelete": {
+      "title": "Delete Tower",
+      "confirm": "Delete"
+    },
+    "aria": {
+      "deleteTower": "Delete tower"
+    }
+  },
+  "modelListing": {
+    "grid": "Grid",
+    "list": "List",
+    "addModel": "Add Model",
+    "noModels": "No models yet",
+    "noModelsHint": "Click \"Add Model\" to create your first model",
+    "unnamedModel": "Unnamed Model",
+    "failedToLoad": "Failed to load models",
+    "failedToLoadHint": "Please try refreshing the page",
+    "pendingAnalysis": "Pending analysis",
+    "runPricing": "Run Pricing",
+    "viewPricing": "View Pricing",
+    "running": "Running…",
+    "usableArea": "Usable Area",
+    "startingPrice": "Starting Price",
+    "roomType": "Room Type",
+    "landArea": "Land Area",
+    "houses": "Houses",
+    "cols": {
+      "image": "Image",
+      "modelName": "Model Name",
+      "usableArea": "Usable Area",
+      "startingPrice": "Starting Price",
+      "roomType": "Room Type",
+      "landAreaStd": "Land Area (Std)",
+      "houses": "Houses",
+      "standardPrice": "Standard Price"
+    },
+    "confirmDelete": {
+      "title": "Delete Model",
+      "confirm": "Delete"
+    },
+    "aria": {
+      "deleteModel": "Delete model",
+      "viewPricingAnalysis": "View pricing analysis",
+      "runPricingAnalysis": "Run pricing analysis"
+    }
+  },
+  "unitPrice": {
+    "modelAssumptions": "Model Assumptions",
+    "noModelAssumptions": "No model assumptions — add models first",
+    "calculatedUnitPrices": "Calculated Unit Prices",
+    "noUnitsUploaded": "No units uploaded yet — upload a unit list first",
+    "totalUnits": "{{n}} units",
+    "total": "Total — {{n}} units",
+    "cols": {
+      "seqNo": "Seq No",
+      "floor": "Floor",
+      "towerName": "Tower Name",
+      "regNumber": "Reg Number",
+      "roomNo": "Room No.",
+      "plotNo": "Plot No",
+      "houseNo": "House No",
+      "model": "Model",
+      "numberOfFloors": "No. of Floors",
+      "landAreaSqWa": "Land Area (Sq.Wa)",
+      "usableAreaSqm": "Usable Area (sq.m)",
+      "sellingPrice": "Selling Price",
+      "corner": "Corner",
+      "edge": "Edge",
+      "poolView": "Pool View",
+      "south": "South",
+      "other": "Other",
+      "nearGardenClubhouse": "Near Garden/Clubhouse",
+      "adjustPriceLocation": "Adjust Price / Location",
+      "standardPrice": "Standard Price",
+      "priceIncrementFloor": "Price Increment/Floor",
+      "landDiffSqWa": "Land Diff (Sq.Wa)",
+      "landPlusMinus": "Land +/- (Baht)",
+      "locationAdj": "Location Adj.",
+      "appraisalValue": "Appraisal Value",
+      "roundedValue": "Rounded Value",
+      "forceSalePrice": "Force Sale Price",
+      "coverageAmount": "Coverage Amount",
+      "usableAreaSqm2": "Usable Area (sq.m.)",
+      "standardLandSqWa": "Standard Land (Sq.Wa)",
+      "standardPriceBahtSqm": "Standard Price (Baht/sq.m)",
+      "coverageAmountBahtSqm": "Coverage Amount (Baht/Sq.m)",
+      "fireInsuranceCondition": "Fire Insurance Condition",
+      "description": "Description"
+    }
+  },
+  "changeProjectType": {
+    "title": "Change Project Type",
+    "selectNewType": "Select new project type",
+    "current": "Current",
+    "warningTitle": "The following data will be permanently deleted:",
+    "cancel": "Cancel",
+    "changeType": "Change Type",
+    "changing": "Changing...",
+    "warnings": {
+      "modelsDeleted_one": "{{count}} Model will be deleted",
+      "modelsDeleted_other": "{{count}} Models will be deleted",
+      "towersDeleted_one": "{{count}} Tower will be deleted",
+      "towersDeleted_other": "{{count}} Towers will be deleted",
+      "unitsDeleted_one": "{{count}} Unit will be deleted",
+      "unitsDeleted_other": "{{count}} Units will be deleted",
+      "landDeleted": "Project Land details will be deleted",
+      "pricingReset": "Pricing assumptions will be reset"
+    }
+  },
+  "options": {
+    "locationMethod": {
+      "AdjustPriceSqm": "Adjust Price (Baht/sq.m.)",
+      "AdjustPricePercentage": "Adjust Price (%)",
+      "Lumpsum": "Lumpsum (flat Baht)"
+    },
+    "locationMethodBySqWa": {
+      "AdjustPriceSqm": "01 - Adjust Price/Sq.M",
+      "Lumpsum": "02 - Lumpsum"
+    },
+    "locationMethodByM": {
+      "AdjustPriceSqm": "01 - Adjust Price/Sq.Wa",
+      "Lumpsum": "02 - Lumpsum"
+    },
+    "condoFireInsurance": {
+      "LessThan8Floors": "Condo height < 8 floors",
+      "GreaterThan8Floors": "Condo height > 8 floors",
+      "LessThan8FloorsWithMezzanine": "Condo height < 8 floors and with mezzanine floor",
+      "GreaterThan8FloorsWithMezzanine": "Condo height > 8 floors and with mezzanine floor"
+    },
+    "condoProjectType": {
+      "Condominium": "Condominium",
+      "Apartment": "Apartment",
+      "ServicedApartment": "Serviced Apartment"
+    },
+    "lbProjectType": {
+      "VillageHousing": "Village Housing",
+      "TownHouseProject": "Town House Project",
+      "DetachedHouseProject": "Detached House Project",
+      "MixedProject": "Mixed Project"
+    },
+    "lbProjectStatus": {
+      "Active": "Active",
+      "Completed": "Completed",
+      "OnHold": "On Hold",
+      "Cancelled": "Cancelled"
+    },
+    "lbFloorSurface": {
+      "PolishedConcrete": "Polished Concrete",
+      "GlazedTiles": "Glazed Tiles",
+      "Parquet": "Parquet",
+      "Marble": "Marble",
+      "Granite": "Granite",
+      "Laminate": "Laminate",
+      "Other": "Other"
+    },
+    "lbFloorStructure": {
+      "ReinforcedConcrete": "Reinforced Concrete",
+      "WoodJoist": "Wood Joist",
+      "SteelDeck": "Steel Deck",
+      "Other": "Other"
+    },
+    "lbFireInsurance": {
+      "OneTwoStoreyTownhouse": "1-2 Storey Townhouse",
+      "ThreeStoreyTownhouse": "3 Storey Townhouse",
+      "SemiDetachedHouse": "Semi-detached house",
+      "SingleHouseAreaLessThan150": "Single house, Area < 150 Sq.m",
+      "SingleHouseArea150To200": "Single house, Area ≥ 150 < 200 Sq.m",
+      "SingleHouseArea200To400": "Single house, Area ≥ 200 < 400 Sq.m",
+      "SingleHouseArea400To500": "Single house, Area ≥ 400 < 500 Sq.m",
+      "SingleHouseAreaGreaterThan500": "Single house, Area > 500 Sq.m"
+    },
+    "depreciationMethod": {
+      "Period": "Period",
+      "Gross": "Gross"
+    },
+    "yesNo": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "correctIncorrect": {
+      "correct": "Correct",
+      "incorrect": "Incorrect"
+    }
+  },
+  "fields": {
+    "projectInfo": {
+      "projectName": "Project Name",
+      "projectDescription": "Project Description",
+      "developer": "Developer",
+      "projectSaleLaunchDate": "Project Sale Launch Date",
+      "rai": "Rai",
+      "ngan": "Ngan",
+      "squareWa": "Square Wa",
+      "unitForSale": "Unit For Sale",
+      "numberOfPhase": "Number of Phase",
+      "builtOnTitleDeedNumber": "Built on Title Deed Number",
+      "landOffice": "Land Office",
+      "licenseExpirationDate": "License Expiration Date",
+      "houseNumber": "House Number",
+      "road": "Road",
+      "soi": "Soi",
+      "subDistrict": "Sub District",
+      "district": "District",
+      "province": "Province",
+      "postcode": "Postcode",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "utilities": "Utilities",
+      "utilitiesOther": "Other Utilities",
+      "facilities": "Facilities",
+      "facilitiesOther": "Other Facilities",
+      "remark": "Remark"
+    },
+    "tower": {
+      "towerName": "Tower Name",
+      "condoRegistrationNumber": "Condo Registration Number",
+      "numberOfUnits": "Number of Units",
+      "numberOfFloors": "Number of Floors",
+      "condition": "Condition",
+      "isObligation": "Is Obligation",
+      "obligation": "Obligation",
+      "documentValidation": "Document Validation",
+      "locationCorrect": "Location Correct",
+      "distance": "Distance (m)",
+      "roadWidth": "Road Width (m)",
+      "rightOfWay": "Right of Way (m)",
+      "roadSurface": "Road Surface",
+      "otherRoadSurface": "Other Road Surface",
+      "decoration": "Decoration",
+      "otherDecoration": "Other Decoration",
+      "buildingAge": "Building Age",
+      "buildingForm": "Building Form",
+      "constructionMaterials": "Construction Materials",
+      "otherRoofType": "Other Roof Type",
+      "isExpropriated": "Is Expropriated",
+      "inLineExpropriated": "In Line Expropriated",
+      "royalDecreeReference": "Royal Decree Reference",
+      "expropriationRemark": "Expropriation Remark",
+      "inForestBoundary": "In Forest Boundary",
+      "forestBoundaryRemark": "Forest Boundary Remark",
+      "remark": "Remark"
+    },
+    "model": {
+      "modelName": "Model Name",
+      "modelDescription": "Model Description",
+      "hasMezzanine": "Has Mezzanine",
+      "startingPriceMin": "Starting Price Min (THB)",
+      "startingPriceMax": "Starting Price Max (THB)",
+      "usableAreaMin": "Usable Area Min (sq.m.)",
+      "usableAreaMax": "Usable Area Max (sq.m.)",
+      "standardUsableArea": "Standard Usable Area (sq.m.)",
+      "fireInsuranceCondition": "Fire Insurance Condition",
+      "roomLayout": "Room Layout",
+      "otherRoomLayout": "Other Room Layout",
+      "remark": "Remark",
+      "numberOfHouses": "Number of Houses",
+      "landAreaMin": "Land Area Min (Sq.Wa)",
+      "landAreaMax": "Land Area Max (Sq.Wa)",
+      "standardLandArea": "Standard Land Area (Sq.Wa)",
+      "groundFloorMaterials": "Ground Flooring Materials",
+      "otherGroundFloor": "Other Ground Floor Material",
+      "upperFloorMaterials": "Upper Flooring Materials",
+      "otherUpperFloor": "Other Upper Floor Material",
+      "bathroomFloorMaterials": "Bathroom Flooring Materials",
+      "otherBathroomFloor": "Other Bathroom Floor Material"
+    },
+    "land": {
+      "propertyName": "Property Name",
+      "subDistrict": "Sub District",
+      "district": "District",
+      "province": "Province",
+      "landDescription": "Land Description"
+    },
+    "pricing": {
+      "locationMethod": "Location Method",
+      "cornerAdjustment": "Corner (Baht)",
+      "edgeAdjustment": "Edge (Baht)",
+      "otherAdjustment": "Other (Baht)",
+      "poolViewAdjustment": "Pool View (Baht)",
+      "southAdjustment": "South (Baht)",
+      "forceSalePercentage": "Force Sale Percentage (%)",
+      "floorIncrementEveryXFloor": "Every X Floor",
+      "floorIncrementAmount": "Amount (Baht)",
+      "nearGardenAdjustment": "Near Garden (Baht)",
+      "landIncreaseDecreaseRate": "Land Increase/Decrease Rate (%)"
+    }
+  },
+  "validation": {
+    "invalidPartialDate": "Use YYYY, YYYY-MM, or YYYY-MM-DD",
+    "towerRequired": "Tower is required for Condo projects"
+  },
+  "toasts": {
+    "project": {
+      "saveSuccess": "Project information saved",
+      "saveDraftSuccess": "Draft saved successfully",
+      "saveFailed": "Failed to save project information",
+      "changeTypeFailed": "Failed to change project type"
+    },
+    "tower": {
+      "saveSuccess": "Tower saved successfully",
+      "updateSuccess": "Tower updated successfully",
+      "saveDraftSuccess": "Draft saved successfully",
+      "saveDraftFailed": "Failed to save draft",
+      "createFailed": "Failed to create tower",
+      "updateFailed": "Failed to update tower",
+      "deleteSuccess": "Tower deleted successfully",
+      "deleteFailed": "Failed to delete tower"
+    },
+    "model": {
+      "saveSuccess": "Model saved successfully",
+      "updateSuccess": "Model updated successfully",
+      "saveDraftSuccess": "Draft saved successfully",
+      "saveDraftFailed": "Failed to save draft",
+      "createFailed": "Failed to create model",
+      "updateFailed": "Failed to update model",
+      "deleteSuccess": "Model deleted successfully",
+      "deleteFailed": "Failed to delete model",
+      "pricingNoId": "No pricing analysis ID returned from server",
+      "pricingCreateFailed": "Failed to create pricing analysis"
+    },
+    "land": {
+      "saveSuccess": "Project land saved",
+      "saveDraftSuccess": "Draft saved successfully",
+      "saveFailed": "Failed to save project land"
+    },
+    "units": {
+      "importSuccess": "Units imported successfully",
+      "uploadFailed": "Upload failed. Please check the file format.",
+      "deleteSuccess": "Upload deleted",
+      "deleteFailed": "Failed to delete upload",
+      "invalidFileType": "Invalid file type. Only {{extensions}} are supported.",
+      "fileTooLarge": "File size exceeds 10 MB limit."
+    },
+    "pricing": {
+      "saveSuccess": "Pricing assumptions saved and unit prices recalculated",
+      "saveDraftSuccess": "Pricing assumptions saved as draft",
+      "saveFailed": "Failed to save assumptions"
+    }
+  },
+  "dialogs": {
+    "deleteTower": {
+      "title": "Delete Tower",
+      "message": "Are you sure you want to delete this tower? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "deleteModel": {
+      "title": "Delete Model",
+      "message": "Are you sure you want to delete this model? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "deleteTowerListing": {
+      "title": "Delete Tower",
+      "confirm": "Delete"
+    },
+    "deleteModelListing": {
+      "title": "Delete Model",
+      "confirm": "Delete"
+    }
+  },
+  "errors": {
+    "failedToLoadProject": "Failed to load project"
+  },
+  "partialDate": {
+    "year": "Year",
+    "month": "Month",
+    "day": "Day"
+  }
+}

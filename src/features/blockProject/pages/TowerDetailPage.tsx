@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
@@ -46,6 +47,7 @@ type AppError = AxiosError & { apiError?: ApiError };
  * On create navigates to block-condo/tower/:id.
  */
 export default function TowerDetailPage() {
+  const { t } = useTranslation('blockProject');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -140,13 +142,13 @@ export default function TowerDetailPage() {
       { appraisalId, towerId },
       {
         onSuccess: () => {
-          toast.success('Tower deleted successfully');
+          toast.success(t('toasts.tower.deleteSuccess'));
           skipWarning();
           navigate(`${basePath}/block-condo?tab=towers`);
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to delete tower');
+          toast.error(error?.apiError?.detail ?? t('toasts.tower.deleteFailed'));
           setIsDeleteDialogOpen(false);
         },
       },
@@ -162,14 +164,16 @@ export default function TowerDetailPage() {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success(isDraft ? 'Draft saved successfully' : 'Tower updated successfully');
+            toast.success(
+              isDraft ? t('toasts.tower.saveDraftSuccess') : t('toasts.tower.updateSuccess'),
+            );
             setSaveAction(null);
           },
           onError: (err: unknown) => {
             const error = err as AppError;
             toast.error(
               error?.apiError?.detail ??
-                (isDraft ? 'Failed to save draft' : 'Failed to update tower'),
+                (isDraft ? t('toasts.tower.saveDraftFailed') : t('toasts.tower.updateFailed')),
             );
             setSaveAction(null);
           },
@@ -181,7 +185,9 @@ export default function TowerDetailPage() {
         {
           onSuccess: async response => {
             await photoSectionRef.current?.linkImagesToTower(response.id);
-            toast.success(isDraft ? 'Draft saved successfully' : 'Tower saved successfully');
+            toast.success(
+              isDraft ? t('toasts.tower.saveDraftSuccess') : t('toasts.tower.saveSuccess'),
+            );
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/block-condo/tower/${response.id}`);
@@ -190,7 +196,7 @@ export default function TowerDetailPage() {
             const error = err as AppError;
             toast.error(
               error?.apiError?.detail ??
-                (isDraft ? 'Failed to save draft' : 'Failed to create tower'),
+                (isDraft ? t('toasts.tower.saveDraftFailed') : t('toasts.tower.createFailed')),
             );
             setSaveAction(null);
           },
@@ -224,9 +230,9 @@ export default function TowerDetailPage() {
         <NavAnchors
           containerId="tower-form-scroll"
           anchors={[
-            { label: 'Images', id: 'tower-images', icon: 'images' },
-            { label: 'Tower Info', id: 'tower-info', icon: 'building' },
-            { label: 'Remark', id: 'tower-remark', icon: 'comment' },
+            { label: t('towerDetail.navAnchors.images'), id: 'tower-images', icon: 'images' },
+            { label: t('towerDetail.navAnchors.towerInfo'), id: 'tower-info', icon: 'building' },
+            { label: t('towerDetail.navAnchors.remark'), id: 'tower-remark', icon: 'comment' },
           ]}
         />
       </div>
@@ -271,7 +277,10 @@ export default function TowerDetailPage() {
                 Cancel
               </Button>
               {isEditMode && !isReadOnly && (
-                <DeleteButton onClick={() => setIsDeleteDialogOpen(true)} disabled={isPending || isDeleting} />
+                <DeleteButton
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isPending || isDeleting}
+                />
               )}
               {!isReadOnly && (
                 <>
@@ -308,9 +317,9 @@ export default function TowerDetailPage() {
             isOpen={isDeleteDialogOpen}
             onClose={() => setIsDeleteDialogOpen(false)}
             onConfirm={handleDelete}
-            title="Delete Tower"
-            message="Are you sure you want to delete this tower? This action cannot be undone."
-            confirmText="Delete"
+            title={t('dialogs.deleteTower.title')}
+            message={t('dialogs.deleteTower.message')}
+            confirmText={t('dialogs.deleteTower.confirm')}
             isLoading={isDeleting}
           />
           <UnsavedChangesDialog blocker={blocker} />

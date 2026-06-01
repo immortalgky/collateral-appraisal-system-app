@@ -48,7 +48,9 @@ export const HypothesisDepreciationPeriodSchema = z
   })
   .refine(p => p.toYear >= p.atYear, { message: 'toYear must be >= atYear', path: ['toYear'] });
 
-export type HypothesisDepreciationPeriodFormRow = z.infer<typeof HypothesisDepreciationPeriodSchema>;
+export type HypothesisDepreciationPeriodFormRow = z.infer<
+  typeof HypothesisDepreciationPeriodSchema
+>;
 
 export const HypothesisCostItemSchema = z.object({
   /** Undefined for newly added rows (server assigns id on save) */

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { isAxiosError } from 'axios';
+import { useTranslation } from 'react-i18next';
 import axiosInstance from '@shared/api/axiosInstance';
 import Icon from '@/shared/components/Icon';
 
@@ -34,6 +35,7 @@ const SharedDocumentViewer = ({
   isOpen,
   onClose,
 }: SharedDocumentViewerProps) => {
+  const { t } = useTranslation(['quotation', 'common']);
   const [state, setState] = useState<ViewerState>({ status: 'idle' });
   // Track the current object URL so we can revoke it on cleanup without
   // reading stale state inside the effect closure.
@@ -69,7 +71,7 @@ const SharedDocumentViewer = ({
         if (isAxiosError(err) && (err.response?.status === 403 || err.response?.status === 404)) {
           setState({ status: 'forbidden' });
         } else {
-          setState({ status: 'error', message: 'Failed to load document.' });
+          setState({ status: 'error', message: t('errors.failedToLoadQuotation') });
         }
       }
     };
@@ -105,7 +107,7 @@ const SharedDocumentViewer = ({
                 type="button"
                 onClick={onClose}
                 className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100 shrink-0 ml-3"
-                aria-label="Close viewer"
+                aria-label={t('aria.closeViewer')}
               >
                 <Icon name="xmark" style="regular" className="size-4" />
               </button>
@@ -116,23 +118,20 @@ const SharedDocumentViewer = ({
               {state.status === 'idle' || state.status === 'loading' ? (
                 <div className="flex flex-col items-center gap-2 text-gray-400">
                   <Icon name="spinner" style="solid" className="size-6 animate-spin" />
-                  <span className="text-sm">Loading document...</span>
+                  <span className="text-sm">{t('shared.loadingDocument')}</span>
                 </div>
               ) : state.status === 'forbidden' ? (
                 <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
                   <div className="size-12 rounded-full bg-red-100 flex items-center justify-center">
                     <Icon name="lock" style="solid" className="size-5 text-red-500" />
                   </div>
-                  <p className="text-sm text-gray-600">
-                    You no longer have access to this document — the quotation may have been
-                    awarded or cancelled.
-                  </p>
+                  <p className="text-sm text-gray-600">{t('errors.noAccessDocument')}</p>
                   <button
                     type="button"
                     onClick={onClose}
                     className="text-xs text-primary hover:underline"
                   >
-                    Close
+                    {t('common:actions.close')}
                   </button>
                 </div>
               ) : state.status === 'error' ? (
@@ -150,7 +149,7 @@ const SharedDocumentViewer = ({
                     onClick={onClose}
                     className="text-xs text-primary hover:underline"
                   >
-                    Close
+                    {t('common:actions.close')}
                   </button>
                 </div>
               ) : // state.status === 'ready'

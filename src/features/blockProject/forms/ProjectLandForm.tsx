@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
@@ -39,6 +40,7 @@ type AppError = AxiosError & { apiError?: ApiError };
  * Property Land flow. Persistence is wired to BV's PUT /project/land endpoint.
  */
 export default function ProjectLandForm() {
+  const { t } = useTranslation('blockProject');
   const isReadOnly = usePageReadOnly();
   const appraisalId = useAppraisalId();
 
@@ -88,13 +90,13 @@ export default function ProjectLandForm() {
       {
         onSuccess: () => {
           reset(getValues());
-          toast.success(isDraft ? 'Draft saved successfully' : 'Project land saved');
+          toast.success(isDraft ? t('toasts.land.saveDraftSuccess') : t('toasts.land.saveSuccess'));
           setSaveAction(null);
           if (!isDraft) skipWarning();
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to save project land');
+          toast.error(error?.apiError?.detail ?? t('toasts.land.saveFailed'));
           setSaveAction(null);
         },
       },
@@ -121,8 +123,8 @@ export default function ProjectLandForm() {
         <NavAnchors
           containerId="project-land-scroll-container"
           anchors={[
-            { label: 'Land Title', id: 'land-title', icon: 'file-lines' },
-            { label: 'Land Detail', id: 'land-info', icon: 'mountain-sun' },
+            { label: t('landDetail.navAnchors.landTitle'), id: 'land-title', icon: 'file-lines' },
+            { label: t('landDetail.navAnchors.landDetail'), id: 'land-info', icon: 'mountain-sun' },
           ]}
         />
       </div>
@@ -152,7 +154,9 @@ export default function ProjectLandForm() {
                           className="w-5 h-5 text-amber-600"
                         />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {t('landDetail.landInformationHeader')}
+                      </h2>
                     </div>
                     <div className="h-px bg-gray-200" />
                   </Section>

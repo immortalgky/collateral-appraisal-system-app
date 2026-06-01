@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
 
 interface WorkflowToolbarProps {
   onSaveDraft: () => void;
   onPublish: () => void;
+  onCreateDraft?: () => void;
   isSaving?: boolean;
   isPublishing?: boolean;
+  isCreatingDraft?: boolean;
+  isPublished?: boolean;
   versionNumber?: number;
   versionStatus?: string;
 }
@@ -14,14 +18,18 @@ interface WorkflowToolbarProps {
 export function WorkflowToolbar({
   onSaveDraft,
   onPublish,
+  onCreateDraft,
   isSaving = false,
   isPublishing = false,
+  isCreatingDraft = false,
+  isPublished = false,
   versionNumber,
   versionStatus,
 }: WorkflowToolbarProps) {
-  const isDirty = useWorkflowStore((s) => s.isDirty);
-  const workflowMeta = useWorkflowStore((s) => s.workflowMeta);
-  const updateMeta = useWorkflowStore((s) => s.updateMeta);
+  const { t } = useTranslation('workflowBuilder');
+  const isDirty = useWorkflowStore(s => s.isDirty);
+  const workflowMeta = useWorkflowStore(s => s.workflowMeta);
+  const updateMeta = useWorkflowStore(s => s.updateMeta);
   const [showSettings, setShowSettings] = useState(false);
   const navigate = useNavigate();
 
@@ -39,151 +47,155 @@ export function WorkflowToolbar({
           <button
             onClick={() => navigate('/workflow-builder')}
             className="btn btn-ghost btn-sm"
-            title="Back to list"
+            title={t('toolbar.backToList')}
+            aria-label={t('toolbar.backToList')}
           >
             ←
           </button>
           <input
             className="input input-ghost input-sm font-semibold text-base-content"
             value={workflowMeta.name}
-            onChange={(e) => updateMeta({ name: e.target.value })}
-            placeholder="Workflow Name"
+            onChange={e => updateMeta({ name: e.target.value })}
+            placeholder={t('toolbar.workflowNamePlaceholder')}
+            readOnly={isPublished}
           />
           {versionNumber != null && (
             <span className={`badge badge-sm ${statusBadgeClass}`}>
               v{versionNumber} {versionStatus}
             </span>
           )}
-          {isDirty && (
-            <span className="badge badge-warning badge-xs">Unsaved</span>
-          )}
+          {isDirty && <span className="badge badge-warning badge-xs">{t('toolbar.unsaved')}</span>}
         </div>
 
         <div className="flex items-center gap-2">
           <button
             onClick={() => useWorkflowStore.getState().autoLayout()}
             className="btn btn-ghost btn-sm"
-            title="Auto-arrange nodes"
+            title={t('toolbar.autoLayoutTitle')}
           >
-            Auto Layout
+            {t('toolbar.autoLayout')}
           </button>
           <button
             onClick={() => setShowSettings(true)}
             className="btn btn-ghost btn-sm"
-            title="Workflow Settings"
+            title={t('toolbar.settingsTitle')}
           >
-            Settings
+            {t('toolbar.settings')}
           </button>
-          <button
-            onClick={onSaveDraft}
-            disabled={!isDirty || isSaving}
-            className="btn btn-outline btn-primary btn-sm"
-          >
-            {isSaving ? (
-              <span className="loading loading-spinner loading-xs" />
-            ) : null}
-            Save Draft
-          </button>
-          <button
-            onClick={onPublish}
-            disabled={isPublishing}
-            className="btn btn-primary btn-sm"
-          >
-            {isPublishing ? (
-              <span className="loading loading-spinner loading-xs" />
-            ) : null}
-            Publish
-          </button>
+          {isPublished ? (
+            <button
+              onClick={onCreateDraft}
+              disabled={isCreatingDraft}
+              className="btn btn-primary btn-sm"
+            >
+              {isCreatingDraft ? <span className="loading loading-spinner loading-xs" /> : null}
+              {t('toolbar.editNewVersion')}
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={onSaveDraft}
+                disabled={!isDirty || isSaving}
+                className="btn btn-outline btn-primary btn-sm"
+              >
+                {isSaving ? <span className="loading loading-spinner loading-xs" /> : null}
+                {t('toolbar.saveDraft')}
+              </button>
+              <button onClick={onPublish} disabled={isPublishing} className="btn btn-primary btn-sm">
+                {isPublishing ? <span className="loading loading-spinner loading-xs" /> : null}
+                {t('toolbar.publish')}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
       {/* Settings Modal */}
-      {showSettings && (
-        <SettingsModal onClose={() => setShowSettings(false)} />
-      )}
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
     </>
   );
 }
 
 function SettingsModal({ onClose }: { onClose: () => void }) {
-  const workflowMeta = useWorkflowStore((s) => s.workflowMeta);
-  const updateMeta = useWorkflowStore((s) => s.updateMeta);
-  const updateMetadata = useWorkflowStore((s) => s.updateMetadata);
+  const { t } = useTranslation('workflowBuilder');
+  const workflowMeta = useWorkflowStore(s => s.workflowMeta);
+  const updateMeta = useWorkflowStore(s => s.updateMeta);
+  const updateMetadata = useWorkflowStore(s => s.updateMetadata);
 
   return (
     <dialog open className="modal modal-open">
       <div className="modal-box">
-        <h3 className="text-lg font-bold">Workflow Settings</h3>
+        <h3 className="text-lg font-bold">{t('settings.title')}</h3>
 
         <div className="mt-4 flex flex-col gap-4">
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-sm font-medium">Name</span>
+              <span className="label-text text-sm font-medium">{t('settings.name')}</span>
             </label>
             <input
               className="input input-bordered input-sm w-full"
               value={workflowMeta.name}
-              onChange={(e) => updateMeta({ name: e.target.value })}
+              onChange={e => updateMeta({ name: e.target.value })}
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-sm font-medium">Description</span>
+              <span className="label-text text-sm font-medium">{t('settings.description')}</span>
             </label>
             <textarea
               className="textarea textarea-bordered textarea-sm w-full"
               rows={3}
               value={workflowMeta.description}
-              onChange={(e) => updateMeta({ description: e.target.value })}
+              onChange={e => updateMeta({ description: e.target.value })}
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-sm font-medium">Category</span>
+              <span className="label-text text-sm font-medium">{t('settings.category')}</span>
             </label>
             <input
               className="input input-bordered input-sm w-full"
               value={workflowMeta.category}
-              onChange={(e) => updateMeta({ category: e.target.value })}
+              onChange={e => updateMeta({ category: e.target.value })}
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-sm font-medium">Author</span>
+              <span className="label-text text-sm font-medium">{t('settings.author')}</span>
             </label>
             <input
               className="input input-bordered input-sm w-full"
               value={workflowMeta.metadata.author}
-              onChange={(e) => updateMetadata({ author: e.target.value })}
+              onChange={e => updateMetadata({ author: e.target.value })}
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-sm font-medium">Version</span>
+              <span className="label-text text-sm font-medium">{t('settings.version')}</span>
             </label>
             <input
               className="input input-bordered input-sm w-full"
               value={workflowMeta.metadata.version}
-              onChange={(e) => updateMetadata({ version: e.target.value })}
+              onChange={e => updateMetadata({ version: e.target.value })}
             />
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-sm font-medium">Tags (comma-separated)</span>
+              <span className="label-text text-sm font-medium">{t('settings.tags')}</span>
             </label>
             <input
               className="input input-bordered input-sm w-full"
               value={workflowMeta.metadata.tags.join(', ')}
-              onChange={(e) =>
+              onChange={e =>
                 updateMetadata({
                   tags: e.target.value
                     .split(',')
-                    .map((t) => t.trim())
+                    .map(tag => tag.trim())
                     .filter(Boolean),
                 })
               }
@@ -193,7 +205,7 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
 
         <div className="modal-action">
           <button onClick={onClose} className="btn btn-sm">
-            Close
+            {t('settings.close')}
           </button>
         </div>
       </div>

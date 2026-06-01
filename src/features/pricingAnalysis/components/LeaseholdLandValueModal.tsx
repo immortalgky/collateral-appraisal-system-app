@@ -44,7 +44,14 @@ export function LeaseholdLandValueModal({
       setIntervalYears(landGrowthIntervalYears);
       setPeriods([...landGrowthPeriods]);
     }
-  }, [isOpen, landValuePerSqWa, landGrowthRateType, landGrowthRatePercent, landGrowthIntervalYears, landGrowthPeriods]);
+  }, [
+    isOpen,
+    landValuePerSqWa,
+    landGrowthRateType,
+    landGrowthRatePercent,
+    landGrowthIntervalYears,
+    landGrowthPeriods,
+  ]);
 
   if (!isOpen) return null;
 
@@ -57,7 +64,11 @@ export function LeaseholdLandValueModal({
     setPeriods(periods.filter((_, i) => i !== idx));
   };
 
-  const handlePeriodChange = (idx: number, field: keyof Omit<LandGrowthPeriod, 'id'>, val: number | null) => {
+  const handlePeriodChange = (
+    idx: number,
+    field: keyof Omit<LandGrowthPeriod, 'id'>,
+    val: number | null,
+  ) => {
     const updated = [...periods];
     updated[idx] = { ...updated[idx], [field]: val ?? 0 };
     setPeriods(updated);
@@ -82,8 +93,14 @@ export function LeaseholdLandValueModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4"
+        onClick={e => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Land Value</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -95,7 +112,7 @@ export function LeaseholdLandValueModal({
         <NumberInput
           label="Land Value *"
           value={value}
-          onChange={(e) => setValue(e.target.value ?? 0)}
+          onChange={e => setValue(e.target.value ?? 0)}
           decimalPlaces={2}
           rightIcon={<span className="text-xs text-gray-400">Baht/Sq.Wa</span>}
           className="!pr-[5.5rem]"
@@ -137,7 +154,7 @@ export function LeaseholdLandValueModal({
               <NumberInput
                 label="Rate (%)"
                 value={ratePercent}
-                onChange={(e) => setRatePercent(e.target.value ?? 0)}
+                onChange={e => setRatePercent(e.target.value ?? 0)}
                 decimalPlaces={2}
                 rightIcon={<span className="text-xs text-gray-400">%</span>}
               />
@@ -147,7 +164,7 @@ export function LeaseholdLandValueModal({
               <NumberInput
                 label="Year(s)"
                 value={intervalYears}
-                onChange={(e) => setIntervalYears(e.target.value ?? 1)}
+                onChange={e => setIntervalYears(e.target.value ?? 1)}
                 decimalPlaces={0}
                 rightIcon={<span className="text-xs text-gray-400">Year</span>}
               />
@@ -168,17 +185,17 @@ export function LeaseholdLandValueModal({
               <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-end">
                 <NumberInput
                   value={p.fromYear}
-                  onChange={(e) => handlePeriodChange(idx, 'fromYear', e.target.value)}
+                  onChange={e => handlePeriodChange(idx, 'fromYear', e.target.value)}
                   decimalPlaces={0}
                 />
                 <NumberInput
                   value={p.toYear}
-                  onChange={(e) => handlePeriodChange(idx, 'toYear', e.target.value)}
+                  onChange={e => handlePeriodChange(idx, 'toYear', e.target.value)}
                   decimalPlaces={0}
                 />
                 <NumberInput
                   value={p.growthRatePercent}
-                  onChange={(e) => handlePeriodChange(idx, 'growthRatePercent', e.target.value)}
+                  onChange={e => handlePeriodChange(idx, 'growthRatePercent', e.target.value)}
                   decimalPlaces={2}
                   rightIcon={<span className="text-xs text-gray-400">%</span>}
                 />

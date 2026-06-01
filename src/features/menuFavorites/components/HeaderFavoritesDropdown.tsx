@@ -117,7 +117,9 @@ export function HeaderFavoritesDropdown() {
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-gray-100 dark:border-base-300">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-base-content">{t('favorites.header.title')}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-base-content">
+                {t('favorites.header.title')}
+              </h3>
             </div>
 
             {/* Items */}

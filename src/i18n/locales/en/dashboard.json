@@ -1,0 +1,379 @@
+{
+  "page": {
+    "welcome": "Welcome back",
+    "date": "{{date}}",
+    "editDone": "Done",
+    "editStart": "Edit",
+    "dragHint": "Drag widgets between panels • Small widgets can go in sidebar"
+  },
+  "empty": {
+    "noWidgets": "No widgets on your dashboard",
+    "noWidgetsHint": "Click Edit to add widgets",
+    "dropMain": "Drag widgets here for main panel",
+    "dropSidebarSmallOnly": "Small widgets only",
+    "dropHere": "Drop here"
+  },
+  "addWidget": {
+    "title": "Add Widget",
+    "mainPanelOnly": "Main Panel Only",
+    "smallWidgets": "Small Widgets",
+    "addToMain": "Main Panel",
+    "addToSidebar": "Sidebar",
+    "allVisible": "All widgets visible",
+    "allVisibleHint": "Your dashboard is fully configured"
+  },
+  "draggable": {
+    "size": {
+      "quarter": "1/4",
+      "third": "1/3",
+      "half": "1/2",
+      "twoThirds": "2/3",
+      "full": "Full"
+    }
+  },
+  "widgetError": {
+    "defaultMessage": "Failed to load data",
+    "retry": "Retry"
+  },
+  "updatedAgo": "Updated {{n}} ago",
+  "period": {
+    "MTD": "Month to date",
+    "QTD": "Quarter to date",
+    "YTD": "Year to date",
+    "LAST_12M": "Last 12 months",
+    "CUSTOM": "Custom range",
+    "customFrom": "From",
+    "customTo": "To",
+    "apply": "Apply"
+  },
+  "taskSummary": {
+    "title": "Task Summary",
+    "notStarted": "Not Started",
+    "inProgress": "In Progress",
+    "overdue": "Overdue",
+    "completed": "Completed",
+    "tasks": "Tasks",
+    "openList": "Open list",
+    "periodDay": "D",
+    "periodDayTitle": "Daily (today)",
+    "periodWeek": "W",
+    "periodWeekTitle": "Weekly (this week)",
+    "periodMonth": "M",
+    "periodMonthTitle": "Monthly (this month)",
+    "periodAll": "All",
+    "periodAllTitle": "All time",
+    "customRange": "Custom date range",
+    "hintAssigned": "Filter task list by Assigned",
+    "hintInProgress": "Filter task list by In Progress",
+    "hintBreached": "Filter task list by SLA Breached",
+    "ariaGauge": "{{label}}: {{count}} tasks. {{hint}} Open filtered task list.",
+    "error": "Unable to load task summary"
+  },
+  "recentTask": {
+    "title": "Recent Task",
+    "viewAll": "View All",
+    "columns": {
+      "appraisalNo": "Appraisal No.",
+      "customerName": "Customer Name",
+      "taskType": "Task Type",
+      "purpose": "Purpose",
+      "status": "Status"
+    },
+    "empty": "No recent tasks yet."
+  },
+  "totalAppraisals": {
+    "title": "Total Appraisals",
+    "detailedView": "Total Appraisals — Detailed view",
+    "kpi": {
+      "created": "Created",
+      "completed": "Completed",
+      "completionRate": "Completion rate"
+    },
+    "pace": "At current pace:",
+    "paceByPeriodEnd": "by period end",
+    "paceVsPrior": "vs prior",
+    "noData": "No appraisals in this range",
+    "chart": {
+      "prevPeriod": "Prior period",
+      "created": "Created",
+      "completed": "Completed"
+    },
+    "table": {
+      "period": "Period",
+      "created": "Created",
+      "completed": "Completed",
+      "completionPct": "Completion %",
+      "prior": "Prior"
+    },
+    "rangeInfo": "Range: {{from}} – {{to}} · {{buckets}} bucket{{bucketPlural}} · {{days}} days",
+    "aria": {
+      "expand": "Expand widget",
+      "menu": "Widget menu"
+    },
+    "menu": {
+      "refresh": "Refresh",
+      "reset": "Reset"
+    },
+    "error": "Unable to load appraisal trends"
+  },
+  "progressSummary": {
+    "title": "Appraisal Progress Summary",
+    "total": "Total",
+    "vsPrior": "vs prior",
+    "noData": "No appraisals match these filters.",
+    "clearFilters": "Clear filters",
+    "filters": {
+      "label": "Filters",
+      "assigneeUsername": "Assignee username",
+      "assigneePlaceholder": "e.g. P5229",
+      "bankingSegment": "Banking segment",
+      "bankingPlaceholder": "e.g. SME, Corporate",
+      "comparePrior": "Compare to prior period",
+      "apply": "Apply"
+    },
+    "status": {
+      "Pending": "Pending",
+      "InProgress": "In Progress",
+      "UnderReview": "Under Review",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled"
+    },
+    "aria": {
+      "menu": "Widget menu",
+      "filtersBtn": "Filters",
+      "legendRow": "{{label}}: {{count}}, {{pct}} percent{{hidden}}. Press Enter to open filtered list, Space to toggle visibility.",
+      "legendHidden": ", hidden",
+      "toggleVisibility": "{{action}} {{label}} segment",
+      "show": "Show",
+      "hide": "Hide"
+    },
+    "menu": {
+      "refresh": "Refresh",
+      "clearFilters": "Clear filters",
+      "reset": "Reset"
+    },
+    "error": "Unable to load progress summary"
+  },
+  "teamWorkload": {
+    "title": "Team Workload",
+    "legend": {
+      "notStarted": "Not Started",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "overdue": "Overdue (overlap)"
+    },
+    "overdueCount": "{{n}} overdue",
+    "clickRowHint": "Click a row to view tasks",
+    "noData": "No team workload data for this period",
+    "aria": {
+      "menu": "Widget menu"
+    },
+    "menu": {
+      "refresh": "Refresh",
+      "reset": "Reset"
+    },
+    "error": "Unable to load team workload"
+  },
+  "externalSummary": {
+    "title": "External Appraisal Summary",
+    "allCompanies": "All companies",
+    "clickBarHint": "Click a bar to view that company's appraisals",
+    "clearCompanyFilter": "Clear company filter",
+    "noData": "No company data for this period",
+    "chart": {
+      "assigned": "Assigned",
+      "completed": "Completed"
+    },
+    "aria": {
+      "filterByCompany": "Filter by company",
+      "menu": "Widget menu"
+    },
+    "menu": {
+      "refresh": "Refresh",
+      "reset": "Reset"
+    },
+    "error": "Unable to load company summary"
+  },
+  "quotationSummary": {
+    "title": "Quotation Task Summary",
+    "pendingCreation": "Pending Quotation Creation",
+    "waitingSubmission": "Waiting Company Submission",
+    "waitingRm": "Waiting RM Selection",
+    "openList": "Open list",
+    "error": "Unable to load quotation task summary"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "viewCalendar": "View Calendar",
+    "topics": "Topics",
+    "topicLabels": {
+      "meeting": "Meetings",
+      "task_due": "Task Due"
+    },
+    "categoryLabels": {
+      "meeting": "Meeting",
+      "sla": "SLA critical",
+      "task": "Task due"
+    },
+    "legend": {
+      "meeting": "Meeting",
+      "taskDue": "Task due",
+      "slaCritical": "red = SLA critical"
+    },
+    "aria": {
+      "filterByTopic": "Filter by topic",
+      "selectMonth": "Select month",
+      "selectYear": "Select year",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "months": {
+      "0": "January",
+      "1": "February",
+      "2": "March",
+      "3": "April",
+      "4": "May",
+      "5": "June",
+      "6": "July",
+      "7": "August",
+      "8": "September",
+      "9": "October",
+      "10": "November",
+      "11": "December"
+    },
+    "monthsShort": {
+      "0": "Jan",
+      "1": "Feb",
+      "2": "Mar",
+      "3": "Apr",
+      "4": "May",
+      "5": "Jun",
+      "6": "Jul",
+      "7": "Aug",
+      "8": "Sep",
+      "9": "Oct",
+      "10": "Nov",
+      "11": "Dec"
+    },
+    "days": {
+      "MON": "MON",
+      "TUE": "TUE",
+      "WED": "WED",
+      "THU": "THU",
+      "FRI": "FRI",
+      "SAT": "SAT",
+      "SUN": "SUN"
+    },
+    "eventCount": "{{n}} event{{plural}}",
+    "asOf": "as of {{date}}"
+  },
+  "calendarPage": {
+    "breadcrumbDashboard": "Dashboard",
+    "breadcrumbCalendar": "Calendar",
+    "title": "Calendar",
+    "subtitle": "Meetings, task due dates and SLA deadlines assigned to you",
+    "viewModes": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "today": "Today",
+    "topicsLabel": "Topics",
+    "noEventsForDay": "No events for this day.",
+    "error": "Unable to load calendar events"
+  },
+  "reminders": {
+    "title": "Reminders",
+    "chips": {
+      "all": "All",
+      "overdue": "Overdue",
+      "task_due": "Task Due",
+      "followup": "Follow-up"
+    },
+    "overdueLabel": "Overdue",
+    "noneAll": "No reminders right now — you're caught up.",
+    "noneFiltered": "No {{filter}} reminders.",
+    "aria": {
+      "dismiss": "Dismiss reminder"
+    }
+  },
+  "notes": {
+    "title": "Notes",
+    "addNew": "Add new",
+    "emptyMessage": "No notes — start jotting.",
+    "delete": {
+      "title": "Delete Note",
+      "message": "This note will be permanently deleted. Continue?",
+      "confirm": "Delete"
+    },
+    "editor": {
+      "titleNew": "New Note",
+      "titleEdit": "Edit Note",
+      "placeholder": "Write your note...",
+      "overCapError": "Trim to 4,000 characters or fewer to save.",
+      "saveError": "Failed to save — try again.",
+      "saving": "Saving...",
+      "save": "Save"
+    },
+    "aria": {
+      "editNote": "Edit note",
+      "deleteNote": "Delete note"
+    }
+  },
+  "widgetConfigs": {
+    "totalAppraisals": {
+      "title": "Total Appraisals",
+      "description": "Line chart showing appraisal trends"
+    },
+    "taskSummary": {
+      "title": "Task Summary",
+      "description": "Overview of task statuses with gauges"
+    },
+    "progressSummary": {
+      "title": "Progress Summary",
+      "description": "Donut chart of pending requests"
+    },
+    "teamWorkload": {
+      "title": "Team Workload",
+      "description": "Team member task distribution"
+    },
+    "recentTask": {
+      "title": "Recent Task",
+      "description": "Table of recent tasks"
+    },
+    "externalTaskSummary": {
+      "title": "External Task Summary",
+      "description": "Bar chart of external appraisals"
+    },
+    "quotationTaskSummary": {
+      "title": "Quotation Task Summary",
+      "description": "Track quotation pipeline stages for intAdmin"
+    },
+    "calendar": {
+      "title": "Calendar",
+      "description": "Mini calendar view"
+    },
+    "reminders": {
+      "title": "Reminders",
+      "description": "Upcoming reminders and alerts"
+    },
+    "notes": {
+      "title": "Notes",
+      "description": "Personal notes"
+    }
+  },
+  "appraisalList": {
+    "columns": {
+      "property": "Property",
+      "type": "Type",
+      "status": "Status",
+      "date": "Date",
+      "value": "Value",
+      "actions": "Actions"
+    },
+    "actions": {
+      "view": "View",
+      "edit": "Edit"
+    }
+  }
+}

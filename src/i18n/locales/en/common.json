@@ -21,7 +21,17 @@
     "import": "Import",
     "print": "Print",
     "refresh": "Refresh",
-    "viewDetails": "View Details"
+    "viewDetails": "View Details",
+    "apply": "Apply",
+    "clear": "Clear",
+    "clearAll": "Clear all"
+  },
+  "select": {
+    "placeholder": "Please select"
+  },
+  "range": {
+    "from": "From",
+    "to": "To"
   },
   "status": {
     "loading": "Loading...",
@@ -54,7 +64,9 @@
     "en": "EN",
     "th": "TH",
     "english": "English",
-    "thai": "Thai"
+    "thai": "Thai",
+    "zh": "ZH",
+    "chinese": "中文"
   },
   "favorites": {
     "row": {
@@ -65,7 +77,8 @@
     "picker": {
       "title": "Manage Favorites",
       "searchPlaceholder": "Search menu items...",
-      "selected": "selected"
+      "selected": "selected",
+      "folderBadge": "folder"
     },
     "sidebar": {
       "title": "Favorites"
@@ -75,6 +88,13 @@
       "title": "Your favorites",
       "empty": "Pin items to see them here",
       "manage": "Manage favorites"
+    },
+    "aria": {
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites",
+      "reorder": "Reorder",
+      "collapse": "Collapse",
+      "expand": "Expand"
     }
   }
 }

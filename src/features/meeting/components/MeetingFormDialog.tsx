@@ -3,14 +3,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format, parseISO } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import {
-  createMeetingFormSchema,
   type CreateMeetingFormValues,
-  updateMeetingFormSchema,
   type UpdateMeetingFormValues,
+  useCreateMeetingSchema,
+  useUpdateMeetingSchema,
 } from '../schemas/meeting';
 import { useCreateMeeting, useUpdateMeeting } from '../api/meetings';
 import DateTimePickerInput from '@shared/components/inputs/DateTimePickerInput.tsx';
@@ -27,12 +28,7 @@ const todayAt = (hour: number): Date => {
 /**
  * Wire format for meeting datetimes: the user's picked wall-clock time without a
  * timezone offset (e.g. "2026-04-28T09:00:00"). The backend parses this as a
- * Kind=Unspecified DateTime and treats it as application time, so it lines up
- * with IDateTimeProvider.ApplicationNow comparisons.
- *
- * If we sent an ISO string with offset (the picker's default `formatISO` shape),
- * System.Text.Json would convert it to the server's local TZ — which on Docker
- * defaults to UTC, putting StartAt 7 hours behind ApplicationNow.
+ * Kind=Unspecified DateTime and treats it as application time.
  */
 const toAppLocalIso = (value: string | Date): string => {
   const d = typeof value === 'string' ? parseISO(value) : value;
@@ -77,7 +73,9 @@ interface CreateFormProps {
 }
 
 const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
+  const { t } = useTranslation(['meeting', 'common']);
   const createMeeting = useCreateMeeting();
+  const schema = useCreateMeetingSchema();
 
   const {
     handleSubmit,
@@ -85,7 +83,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
     setValue,
     formState: { errors },
   } = useForm<CreateMeetingFormValues>({
-    resolver: zodResolver(createMeetingFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: buildCreateDefaults(),
   });
 
@@ -97,13 +95,13 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
       { startAt: toAppLocalIso(values.startAt), endAt: toAppLocalIso(values.endAt) },
       {
         onSuccess: data => {
-          toast.success(`Meeting ${data.meetingNo} created`);
+          toast.success(t('toasts.meetingCreated', { no: data.meetingNo }));
           onSuccess?.(data.id);
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to create meeting');
+          toast.error(detail || t('toasts.meetingCreateFailed'));
         },
       },
     );
@@ -114,7 +112,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
       {/* Start / End */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <DateTimePickerInput
-          label="Start"
+          label={t('fields.start')}
           required
           value={startAtValue}
           onChange={iso => setValue('startAt', iso ?? '', { shouldValidate: true })}
@@ -122,7 +120,7 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
           disablePastDates
         />
         <DateTimePickerInput
-          label="End"
+          label={t('fields.end')}
           required
           value={endAtValue}
           onChange={iso => setValue('endAt', iso ?? '', { shouldValidate: true })}
@@ -133,10 +131,10 @@ const CreateForm = ({ onClose, onSuccess }: CreateFormProps) => {
 
       <div className="flex justify-end gap-3 pt-2">
         <Button variant="ghost" type="button" onClick={onClose} disabled={createMeeting.isPending}>
-          Cancel
+          {t('buttons.cancel')}
         </Button>
         <Button type="submit" disabled={createMeeting.isPending}>
-          {createMeeting.isPending ? 'Saving...' : 'Create Meeting'}
+          {createMeeting.isPending ? t('common:status.saving') : t('buttons.createMeeting')}
         </Button>
       </div>
     </form>
@@ -153,7 +151,9 @@ interface EditFormProps {
 }
 
 const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProps) => {
+  const { t } = useTranslation(['meeting', 'common']);
   const updateMeeting = useUpdateMeeting();
+  const schema = useUpdateMeetingSchema();
 
   const {
     register,
@@ -163,7 +163,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
     reset,
     formState: { errors },
   } = useForm<UpdateMeetingFormValues>({
-    resolver: zodResolver(updateMeetingFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: initialValues,
   });
 
@@ -189,13 +189,13 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
       },
       {
         onSuccess: () => {
-          toast.success('Meeting updated');
+          toast.success(t('toasts.meetingUpdated'));
           onSuccess?.(meetingId);
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to update meeting');
+          toast.error(detail || t('toasts.meetingUpdateFailed'));
         },
       },
     );
@@ -206,14 +206,14 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
       {/* Title */}
       <div>
         <label htmlFor="meeting-title" className="block text-sm font-medium text-gray-700 mb-1">
-          Title <span className="text-red-500">*</span>
+          {t('fields.title')} <span className="text-red-500">*</span>
         </label>
         <input
           id="meeting-title"
           type="text"
           {...register('title')}
           className={sharedInputClass}
-          placeholder="e.g. Committee meeting — Week 14"
+          placeholder={t('fields.titlePlaceholder')}
         />
         {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
       </div>
@@ -221,7 +221,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
       {/* Start / End */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <DateTimePickerInput
-          label="Start"
+          label={t('fields.start')}
           required
           value={startAtValue}
           onChange={iso => setValue('startAt', iso ?? '', { shouldValidate: true })}
@@ -229,7 +229,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           disablePastDates
         />
         <DateTimePickerInput
-          label="End"
+          label={t('fields.end')}
           required
           value={endAtValue}
           onChange={iso => setValue('endAt', iso ?? '', { shouldValidate: true })}
@@ -245,32 +245,29 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
             htmlFor="meeting-fromText"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            From
+            {t('fields.from')}
           </label>
           <input
             id="meeting-fromText"
             type="text"
             {...register('fromText')}
             className={sharedInputClass}
-            placeholder="Optional"
+            placeholder={t('fields.optionalPlaceholder')}
           />
           {errors.fromText && (
             <p className="mt-1 text-xs text-red-600">{errors.fromText.message}</p>
           )}
         </div>
         <div>
-          <label
-            htmlFor="meeting-toText"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            To
+          <label htmlFor="meeting-toText" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.to')}
           </label>
           <input
             id="meeting-toText"
             type="text"
             {...register('toText')}
             className={sharedInputClass}
-            placeholder="Optional"
+            placeholder={t('fields.optionalPlaceholder')}
           />
           {errors.toText && <p className="mt-1 text-xs text-red-600">{errors.toText.message}</p>}
         </div>
@@ -279,24 +276,24 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
       {/* Location */}
       <div>
         <label htmlFor="meeting-location" className="block text-sm font-medium text-gray-700 mb-1">
-          Location
+          {t('fields.location')}
         </label>
         <input
           id="meeting-location"
           type="text"
           {...register('location')}
           className={sharedInputClass}
-          placeholder="Optional"
+          placeholder={t('fields.optionalPlaceholder')}
         />
         {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
         <Button variant="ghost" type="button" onClick={onClose} disabled={updateMeeting.isPending}>
-          Cancel
+          {t('buttons.cancel')}
         </Button>
         <Button type="submit" disabled={updateMeeting.isPending}>
-          {updateMeeting.isPending ? 'Saving...' : 'Save Changes'}
+          {updateMeeting.isPending ? t('common:status.saving') : t('buttons.saveChanges')}
         </Button>
       </div>
     </form>
@@ -312,13 +309,14 @@ const MeetingFormDialog = ({
   defaultValues,
   onSuccess,
 }: MeetingFormDialogProps) => {
+  const { t } = useTranslation('meeting');
   const isEditMode = Boolean(meetingId);
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditMode ? 'Edit Meeting' : 'New Meeting'}
+      title={isEditMode ? t('dialogs.editMeeting') : t('dialogs.newMeeting')}
       size="md"
     >
       {isEditMode && meetingId ? (

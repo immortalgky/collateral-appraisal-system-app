@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Icon from '@/shared/components/Icon';
 import { useChangeProjectType } from '../api/project';
@@ -34,33 +35,6 @@ interface ChangeProjectTypeDialogProps {
 
 const ALL_TYPES: ProjectType[] = ['U', 'LB', 'L'];
 
-function buildWarningLines(
-  from: ProjectType,
-  to: ProjectType,
-  counts: ChildCounts,
-): string[] {
-  const lines: string[] = [];
-
-  if (counts.models > 0) {
-    lines.push(`${counts.models} Model${counts.models !== 1 ? 's' : ''} will be deleted`);
-  }
-  // Towers only exist on Condo projects
-  if (isCondo(from) && !isCondo(to) && counts.towers > 0) {
-    lines.push(`${counts.towers} Tower${counts.towers !== 1 ? 's' : ''} will be deleted`);
-  }
-  if (counts.units > 0) {
-    lines.push(`${counts.units} Unit${counts.units !== 1 ? 's' : ''} will be deleted`);
-  }
-  // Land only exists on LandAndBuilding-like projects
-  if (!isCondo(from) && isCondo(to) && counts.hasLand) {
-    lines.push('Project Land details will be deleted');
-  }
-  if (counts.hasPricing) {
-    lines.push('Pricing assumptions will be reset');
-  }
-  return lines;
-}
-
 function targetRoute(basePath: string, newType: ProjectType): string {
   const segment = isCondo(newType) ? 'block-condo' : 'block-village';
   return `${basePath}/${segment}`;
@@ -76,11 +50,10 @@ export default function ChangeProjectTypeDialog({
   basePath,
   childCounts,
 }: ChangeProjectTypeDialogProps) {
+  const { t } = useTranslation('blockProject');
   const navigate = useNavigate();
   const readOnly = usePageReadOnly();
-  const [selected, setSelected] = useState<ProjectType>(
-    isCondo(currentProjectType) ? 'LB' : 'U',
-  );
+  const [selected, setSelected] = useState<ProjectType>(isCondo(currentProjectType) ? 'LB' : 'U');
 
   const { mutate: changeType, isPending } = useChangeProjectType();
   const projectTypeParams = useParametersByGroup('ProjectType');
@@ -92,7 +65,26 @@ export default function ChangeProjectTypeDialog({
     }
   }, [isOpen, currentProjectType]);
 
-  const warningLines = buildWarningLines(currentProjectType, selected, childCounts);
+  const warningLines = (() => {
+    const lines: string[] = [];
+    const counts = childCounts;
+    if (counts.models > 0) {
+      lines.push(t('changeProjectType.warnings.modelsDeleted', { count: counts.models }));
+    }
+    if (isCondo(currentProjectType) && !isCondo(selected) && counts.towers > 0) {
+      lines.push(t('changeProjectType.warnings.towersDeleted', { count: counts.towers }));
+    }
+    if (counts.units > 0) {
+      lines.push(t('changeProjectType.warnings.unitsDeleted', { count: counts.units }));
+    }
+    if (!isCondo(currentProjectType) && isCondo(selected) && counts.hasLand) {
+      lines.push(t('changeProjectType.warnings.landDeleted'));
+    }
+    if (counts.hasPricing) {
+      lines.push(t('changeProjectType.warnings.pricingReset'));
+    }
+    return lines;
+  })();
   const canConfirm = selected !== currentProjectType;
 
   const handleConfirm = () => {
@@ -106,9 +98,9 @@ export default function ChangeProjectTypeDialog({
           onClose();
         },
         onError: (error: unknown) => {
-          const apiError = (error as { response?: { data?: { detail?: string } } })
-            ?.response?.data?.detail;
-          toast.error(apiError ?? 'Failed to change project type');
+          const apiError = (error as { response?: { data?: { detail?: string } } })?.response?.data
+            ?.detail;
+          toast.error(apiError ?? t('toasts.project.changeTypeFailed'));
           // Keep dialog open so user can retry or cancel
         },
       },
@@ -124,14 +116,16 @@ export default function ChangeProjectTypeDialog({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Change Project Type"
+      title={t('changeProjectType.title')}
       size="sm"
       showCloseButton={!isPending}
     >
       <div className="space-y-5">
         {/* Radio group */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">Select new project type</p>
+          <p className="text-sm font-medium text-gray-700">
+            {t('changeProjectType.selectNewType')}
+          </p>
           <div className="space-y-2">
             {ALL_TYPES.map(type => {
               const isCurrent = type === currentProjectType;
@@ -161,7 +155,9 @@ export default function ChangeProjectTypeDialog({
                     {projectTypeParams.find(p => p.code === type)?.description ?? type}
                   </span>
                   {isCurrent && (
-                    <span className="ml-auto text-xs text-gray-400 font-normal">Current</span>
+                    <span className="ml-auto text-xs text-gray-400 font-normal">
+                      {t('changeProjectType.current')}
+                    </span>
                   )}
                 </label>
               );
@@ -180,7 +176,7 @@ export default function ChangeProjectTypeDialog({
               />
               <div className="space-y-1">
                 <p className="text-xs font-semibold text-amber-800">
-                  The following data will be permanently deleted:
+                  {t('changeProjectType.warningTitle')}
                 </p>
                 <ul className="space-y-0.5">
                   {warningLines.map(line => (
@@ -203,7 +199,7 @@ export default function ChangeProjectTypeDialog({
             disabled={isPending}
             className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('changeProjectType.cancel')}
           </button>
           <button
             type="button"
@@ -214,10 +210,10 @@ export default function ChangeProjectTypeDialog({
             {isPending ? (
               <span className="flex items-center justify-center gap-2">
                 <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                Changing...
+                {t('changeProjectType.changing')}
               </span>
             ) : (
-              'Change Type'
+              t('changeProjectType.changeType')
             )}
           </button>
         </div>

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import type { QuotationDraftSummaryDto } from '../schemas/quotation';
@@ -27,6 +28,8 @@ const ExistingDraftPicker = ({
   selectedId,
   onSelect,
 }: ExistingDraftPickerProps) => {
+  const { t } = useTranslation('quotation');
+
   if (isLoading) {
     return (
       <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -52,8 +55,8 @@ const ExistingDraftPicker = ({
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-2 rounded-xl border border-dashed border-gray-200">
         <Icon name="inbox" style="regular" className="size-8 text-gray-300" />
-        <p className="text-sm text-gray-500">No Draft quotations found</p>
-        <p className="text-xs text-gray-400">Switch to the "Create New" tab to start one</p>
+        <p className="text-sm text-gray-500">{t('empty.noDraftQuotations')}</p>
+        <p className="text-xs text-gray-400">{t('empty.noDraftHint')}</p>
       </div>
     );
   }
@@ -65,19 +68,19 @@ const ExistingDraftPicker = ({
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Draft No.
+                {t('columns.draftNo')}
               </th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Created
+                {t('columns.created')}
               </th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Appraisals
+                {t('columns.appraisals')}
               </th>
               <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Companies
+                {t('columns.companies')}
               </th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Cut Off Time
+                {t('columns.cutOffTime')}
               </th>
             </tr>
           </thead>

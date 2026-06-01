@@ -23,10 +23,12 @@ import { mapSupportingDataDetailResponseToForm } from '../utils/mapper';
 import SupportingDataDetailPhotoSection, {
   type SupportingDataDetailPhotoSectionRef,
 } from '../components/SupportingDataDetailPhotoSection';
+import { useTranslation } from 'react-i18next';
 
 export function CreateSupportingDataPage() {
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const { t } = useTranslation('supportingDataMaintenance');
 
   const { supportingId, id } = useParams<{ supportingId: string; id?: string }>();
 
@@ -87,11 +89,11 @@ export function CreateSupportingDataPage() {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Supporting data updated successfully');
+            toast.success(t('toasts.detailUpdatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to update data. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.detailUpdateFailed'));
             setSaveAction(null);
           },
         },
@@ -108,7 +110,7 @@ export function CreateSupportingDataPage() {
               response.supportingId ?? supportingId!,
               response.id,
             );
-            toast.success('Supporting data created successfully');
+            toast.success(t('toasts.detailCreatedSuccess'));
             setSaveAction(null);
             skipWarning();
             navigate(
@@ -116,7 +118,7 @@ export function CreateSupportingDataPage() {
             );
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to create data. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.detailCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -138,11 +140,11 @@ export function CreateSupportingDataPage() {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.detailDraftSavedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.detailDraftSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -159,7 +161,7 @@ export function CreateSupportingDataPage() {
               response.supportingId ?? supportingId!,
               response.id,
             );
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.detailDraftSavedSuccess'));
             setSaveAction(null);
             skipWarning();
             navigate(
@@ -167,7 +169,7 @@ export function CreateSupportingDataPage() {
             );
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.detailDraftSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -190,9 +192,9 @@ export function CreateSupportingDataPage() {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
+            { label: t('nav.photos'), id: 'photos', icon: 'images' },
             {
-              label: 'Supporting Data Detail',
+              label: t('nav.supportingDataDetail'),
               id: 'supporting-data-detail-section',
               icon: 'file-circle-info',
             },
@@ -218,7 +220,7 @@ export function CreateSupportingDataPage() {
                   <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                     <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('nav.photos')}</h2>
                 </div>
                 <div className="h-px bg-gray-200 mb-4" />
                 <SupportingDataDetailPhotoSection
@@ -239,7 +241,9 @@ export function CreateSupportingDataPage() {
                       className="w-5 h-5 text-amber-600"
                     />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Supporting Data Detail</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {t('formSections.supportingDataDetailHeader')}
+                  </h2>
                 </div>
                 <div className="h-px bg-gray-200" />
               </Section>
@@ -272,7 +276,7 @@ export function CreateSupportingDataPage() {
                   disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('actions.save')}
                 </Button>
               </ActionBar.Right>
             )}

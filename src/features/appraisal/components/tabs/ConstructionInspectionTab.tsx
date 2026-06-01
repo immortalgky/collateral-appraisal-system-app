@@ -113,26 +113,55 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
           constructionWorkGroupId: gId,
           totalConstructionValue: items.reduce((s: number, i: any) => s + i.constructionValue, 0),
           totalProportion: items.reduce((s: number, i: any) => s + i.proportionPct, 0),
-          totalCurrentProportion: items.reduce((s: number, i: any) => s + (Number(i.currentProportionPct) || 0), 0),
-          averagePreviousProgress: items.reduce((s: number, i: any) => s + (Number(i.previousProgressPct) || 0), 0) / items.length,
-          averageCurrentProgress: items.reduce((s: number, i: any) => s + (Number(i.currentProgressPct) || 0), 0) / items.length,
-          totalPreviousPropertyValue: items.reduce((s: number, i: any) => s + i.previousPropertyValue, 0),
-          totalCurrentPropertyValue: items.reduce((s: number, i: any) => s + i.currentPropertyValue, 0),
+          totalCurrentProportion: items.reduce(
+            (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
+            0,
+          ),
+          averagePreviousProgress:
+            items.reduce((s: number, i: any) => s + (Number(i.previousProgressPct) || 0), 0) /
+            items.length,
+          averageCurrentProgress:
+            items.reduce((s: number, i: any) => s + (Number(i.currentProgressPct) || 0), 0) /
+            items.length,
+          totalPreviousPropertyValue: items.reduce(
+            (s: number, i: any) => s + i.previousPropertyValue,
+            0,
+          ),
+          totalCurrentPropertyValue: items.reduce(
+            (s: number, i: any) => s + i.currentPropertyValue,
+            0,
+          ),
         };
       })
       .filter(Boolean) as any[];
   }, [computedSubItems, workGroups]);
 
   const grandTotal = useMemo(() => {
-    const totalConstructionValue = computedSubItems.reduce((s: number, i: any) => s + i.constructionValue, 0);
-    const totalPreviousPropertyValue = computedSubItems.reduce((s: number, i: any) => s + i.previousPropertyValue, 0);
-    const totalCurrentPropertyValue = computedSubItems.reduce((s: number, i: any) => s + i.currentPropertyValue, 0);
+    const totalConstructionValue = computedSubItems.reduce(
+      (s: number, i: any) => s + i.constructionValue,
+      0,
+    );
+    const totalPreviousPropertyValue = computedSubItems.reduce(
+      (s: number, i: any) => s + i.previousPropertyValue,
+      0,
+    );
+    const totalCurrentPropertyValue = computedSubItems.reduce(
+      (s: number, i: any) => s + i.currentPropertyValue,
+      0,
+    );
     return {
       totalConstructionValue,
       totalProportion: computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0),
-      totalCurrentProportion: computedSubItems.reduce((s: number, i: any) => s + (Number(i.currentProportionPct) || 0), 0),
-      weightedPreviousProgress: totalConstructionValue > 0 ? (totalPreviousPropertyValue / totalConstructionValue) * 100 : 0,
-      weightedCurrentProgress: totalConstructionValue > 0 ? (totalCurrentPropertyValue / totalConstructionValue) * 100 : 0,
+      totalCurrentProportion: computedSubItems.reduce(
+        (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
+        0,
+      ),
+      weightedPreviousProgress:
+        totalConstructionValue > 0
+          ? (totalPreviousPropertyValue / totalConstructionValue) * 100
+          : 0,
+      weightedCurrentProgress:
+        totalConstructionValue > 0 ? (totalCurrentPropertyValue / totalConstructionValue) * 100 : 0,
       totalPreviousPropertyValue,
       totalCurrentPropertyValue,
     };
@@ -149,7 +178,12 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       return (grandTotal.totalCurrentPropertyValue / totalValue) * 100;
     }
     return summary?.summaryCurrentProgressPct ?? 0;
-  }, [enterDetail, totalValue, grandTotal.totalCurrentPropertyValue, summary?.summaryCurrentProgressPct]);
+  }, [
+    enterDetail,
+    totalValue,
+    grandTotal.totalCurrentPropertyValue,
+    summary?.summaryCurrentProgressPct,
+  ]);
 
   // Copy from another property
   const [isCopyOpen, setIsCopyOpen] = useState(false);
@@ -202,7 +236,11 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   };
 
   // Handlers
-  const handleAddSubItem = (constructionWorkGroupId: string, constructionWorkItemId: string, workItemName: string) => {
+  const handleAddSubItem = (
+    constructionWorkGroupId: string,
+    constructionWorkItemId: string,
+    workItemName: string,
+  ) => {
     // Calculate displayOrder based on existing items in this group
     const existingInGroup = (subItems as any[]).filter(
       (i: any) => i.constructionWorkGroupId === constructionWorkGroupId,
@@ -262,7 +300,9 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
                     <div className="fixed inset-0 z-10" onClick={() => setIsCopyOpen(false)} />
                     <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[260px] max-h-60 overflow-y-auto">
                       <div className="px-3 pb-1.5 mb-1 border-b border-gray-100">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Copy construction data from</span>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                          Copy construction data from
+                        </span>
                       </div>
                       {otherBuildingProperties.map(prop => (
                         <button
@@ -271,7 +311,11 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
                           onClick={() => handleCopyFrom(prop)}
                           className="flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-all"
                         >
-                          <Icon name="building" style="solid" className="size-3 text-gray-400 flex-shrink-0" />
+                          <Icon
+                            name="building"
+                            style="solid"
+                            className="size-3 text-gray-400 flex-shrink-0"
+                          />
                           <span className="truncate font-medium text-xs">{prop.address}</span>
                         </button>
                       ))}
@@ -281,72 +325,95 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
               </div>
             )}
 
-          {/* Property Selector Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2.5 text-sm pl-3 pr-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all"
-            >
-              <span className="inline-block size-2 rounded-full bg-amber-400 ring-2 ring-amber-100" />
-              <span className="text-gray-700 max-w-[180px] truncate font-medium text-xs">
-                {currentProperty?.address || 'Select Property'}
-              </span>
-              <Icon
-                name="chevron-down"
-                style="solid"
-                className={`size-3 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
+            {/* Property Selector Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2.5 text-sm pl-3 pr-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-gray-300 transition-all"
+              >
+                <span className="inline-block size-2 rounded-full bg-amber-400 ring-2 ring-amber-100" />
+                <span className="text-gray-700 max-w-[180px] truncate font-medium text-xs">
+                  {currentProperty?.address || 'Select Property'}
+                </span>
+                <Icon
+                  name="chevron-down"
+                  style="solid"
+                  className={`size-3 text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-            {isDropdownOpen && buildingProperties.length > 0 && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
-                <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[260px] max-h-60 overflow-y-auto">
-                  <div className="px-3 pb-1.5 mb-1 border-b border-gray-100">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Building Properties</span>
+              {isDropdownOpen && buildingProperties.length > 0 && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1.5 z-20 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[260px] max-h-60 overflow-y-auto">
+                    <div className="px-3 pb-1.5 mb-1 border-b border-gray-100">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        Building Properties
+                      </span>
+                    </div>
+                    {buildingProperties.map(prop => (
+                      <button
+                        key={prop.id}
+                        type="button"
+                        onClick={() => handlePropertySelect(prop)}
+                        className={`flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm transition-all ${
+                          prop.id === propertyId
+                            ? 'bg-primary/5 text-primary'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block size-2 rounded-full flex-shrink-0 ${
+                            prop.id === propertyId
+                              ? 'bg-primary ring-2 ring-primary/20'
+                              : 'bg-gray-300'
+                          }`}
+                        />
+                        <span className="truncate font-medium text-xs">{prop.address}</span>
+                        {prop.id === propertyId && (
+                          <Icon
+                            name="check"
+                            style="solid"
+                            className="size-3 text-primary ml-auto flex-shrink-0"
+                          />
+                        )}
+                      </button>
+                    ))}
                   </div>
-                  {buildingProperties.map(prop => (
-                    <button
-                      key={prop.id}
-                      type="button"
-                      onClick={() => handlePropertySelect(prop)}
-                      className={`flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm transition-all ${
-                        prop.id === propertyId
-                          ? 'bg-primary/5 text-primary'
-                          : 'text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      <span className={`inline-block size-2 rounded-full flex-shrink-0 ${
-                        prop.id === propertyId ? 'bg-primary ring-2 ring-primary/20' : 'bg-gray-300'
-                      }`} />
-                      <span className="truncate font-medium text-xs">{prop.address}</span>
-                      {prop.id === propertyId && (
-                        <Icon name="check" style="solid" className="size-3 text-primary ml-auto flex-shrink-0" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Stats Row */}
         <div className="grid grid-cols-3 divide-x divide-gray-100">
           <div className="px-5 py-3.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Total Value</div>
-            <div className="text-base font-bold text-gray-900">{formatNumber(totalValue, 2)} <span className="text-xs font-normal text-gray-400">Baht</span></div>
-          </div>
-          <div className="px-5 py-3.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Current Value</div>
-            <div className="text-base font-bold text-primary">
-              {formatNumber(enterDetail ? grandTotal.totalCurrentPropertyValue : summaryCurrentValue, 2)} <span className="text-xs font-normal text-gray-400">Baht</span>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Total Value
+            </div>
+            <div className="text-base font-bold text-gray-900">
+              {formatNumber(totalValue, 2)}{' '}
+              <span className="text-xs font-normal text-gray-400">Baht</span>
             </div>
           </div>
           <div className="px-5 py-3.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Overall Progress</div>
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Current Value
+            </div>
+            <div className="text-base font-bold text-primary">
+              {formatNumber(
+                enterDetail ? grandTotal.totalCurrentPropertyValue : summaryCurrentValue,
+                2,
+              )}{' '}
+              <span className="text-xs font-normal text-gray-400">Baht</span>
+            </div>
+          </div>
+          <div className="px-5 py-3.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+              Overall Progress
+            </div>
             <div className="flex items-center gap-3">
               <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
@@ -399,9 +466,7 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
             onUpdateSummary={(field, value) =>
               setValue(`constructionSummary.${field}`, value, { shouldDirty: true })
             }
-            onSetRemark={value =>
-              setValue('constructionRemark', value, { shouldDirty: true })
-            }
+            onSetRemark={value => setValue('constructionRemark', value, { shouldDirty: true })}
             readOnly={readOnly}
             ciMode={ciMode}
           />

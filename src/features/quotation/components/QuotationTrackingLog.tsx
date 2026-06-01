@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useGetQuotationActivityLog } from '../api/quotation';
 
@@ -19,6 +20,7 @@ const formatDateTime = (iso: string): string => {
  * Rows are displayed chronologically (backend sorts ASC).
  */
 const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
+  const { t } = useTranslation('quotation');
   const { data: rows, isLoading, isError } = useGetQuotationActivityLog(quotationId);
 
   return (
@@ -27,7 +29,7 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
         <div className="size-7 rounded-lg bg-violet-100 flex items-center justify-center">
           <Icon name="clock-rotate-left" style="solid" className="size-3.5 text-violet-600" />
         </div>
-        <h2 className="text-sm font-semibold text-gray-700">Quotation Tracking Log</h2>
+        <h2 className="text-sm font-semibold text-gray-700">{t('trackingLog.title')}</h2>
       </div>
 
       {isLoading && (
@@ -38,7 +40,7 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
 
       {isError && (
         <div className="px-4 py-6 text-center">
-          <p className="text-sm text-gray-500">Unable to load activity log.</p>
+          <p className="text-sm text-gray-500">{t('trackingLog.unableToLoad')}</p>
         </div>
       )}
 
@@ -46,7 +48,7 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
         <>
           {(rows ?? []).length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-gray-500">No activity yet.</p>
+              <p className="text-sm text-gray-500">{t('empty.noActivity')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -54,13 +56,13 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Activity Name
+                      {t('columns.activityName')}
                     </th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action Date Time
+                      {t('columns.actionDateTime')}
                     </th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Action By
+                      {t('columns.actionBy')}
                     </th>
                   </tr>
                 </thead>

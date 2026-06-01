@@ -58,6 +58,22 @@
       "markAvailable": "ตั้งเป็นคงเหลือ",
       "bankPlaceholder": "ธนาคารผู้ให้สินเชื่อ (ไม่บังคับ)",
       "clear": "ยกเลิกการเลือก"
+    },
+    "donutSoldLabel": "หน่วยที่ขายแล้ว",
+    "unitSuffix": "หน่วย",
+    "cols": {
+      "floor": "ชั้น",
+      "towerName": "ชื่ออาคาร",
+      "regNumber": "เลขทะเบียน",
+      "roomNo": "เลขห้อง",
+      "modelType": "ประเภทแบบ",
+      "usableAreaSqm": "พื้นที่ใช้สอย (ตร.ม.)",
+      "sellingPriceBaht": "ราคาขาย (บาท)",
+      "plotNo": "เลขแปลง",
+      "houseNo": "เลขที่บ้าน",
+      "modelName": "ชื่อแบบ",
+      "numFloors": "จำนวนชั้น",
+      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)"
     }
   },
   "units": {
@@ -80,7 +96,10 @@
       "placeholder": "เลือก...",
       "Cash": "เงินสด",
       "Loan": "กู้สินเชื่อ"
-    }
+    },
+    "selectAll": "เลือกทั้งหมด",
+    "selectUnit": "เลือกยูนิต",
+    "bankNamePlaceholder": "ชื่อธนาคาร…"
   },
   "errors": {
     "loadFailed": "โหลดข้อมูลโครงการไม่สำเร็จ",

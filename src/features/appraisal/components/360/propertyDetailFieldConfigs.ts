@@ -73,7 +73,11 @@ const LAND_SECTIONS: SectionDef[] = [
       { key: 'publicUtilityType', label: 'Public Utility', parameterGroup: 'PublicUtility' },
       { key: 'landUseType', label: 'Land Use', parameterGroup: 'LandUse' },
       { key: 'landEntranceExitType', label: 'Entrance/Exit', parameterGroup: 'LandEntranceExit' },
-      { key: 'transportationAccessType', label: 'Transportation', parameterGroup: 'Transportation' },
+      {
+        key: 'transportationAccessType',
+        label: 'Transportation',
+        parameterGroup: 'Transportation',
+      },
       { key: 'hasElectricity', label: 'Has Electricity', isBoolean: true },
       { key: 'electricityDistance', label: 'Electricity Distance', isNumber: true },
     ],
@@ -98,7 +102,11 @@ const LAND_SECTIONS: SectionDef[] = [
   {
     title: 'Assessment',
     fields: [
-      { key: 'propertyAnticipationType', label: 'Anticipation of Prosperity', parameterGroup: 'AnticipationOfProsperity' },
+      {
+        key: 'propertyAnticipationType',
+        label: 'Anticipation of Prosperity',
+        parameterGroup: 'AnticipationOfProsperity',
+      },
       { key: 'evictionType', label: 'Eviction', parameterGroup: 'Eviction' },
       { key: 'allocationType', label: 'Allocation', parameterGroup: 'Allocation' },
     ],
@@ -108,13 +116,33 @@ const LAND_SECTIONS: SectionDef[] = [
     fields: [
       { key: 'totalLandAreaInSqWa', label: 'Total Area (Sq.Wa)', isNumber: true, decimalPlaces: 2 },
       { key: 'northAdjacentArea', label: 'North Adjacent' },
-      { key: 'northBoundaryLength', label: 'North Boundary Length', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'northBoundaryLength',
+        label: 'North Boundary Length',
+        isNumber: true,
+        decimalPlaces: 2,
+      },
       { key: 'southAdjacentArea', label: 'South Adjacent' },
-      { key: 'southBoundaryLength', label: 'South Boundary Length', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'southBoundaryLength',
+        label: 'South Boundary Length',
+        isNumber: true,
+        decimalPlaces: 2,
+      },
       { key: 'eastAdjacentArea', label: 'East Adjacent' },
-      { key: 'eastBoundaryLength', label: 'East Boundary Length', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'eastBoundaryLength',
+        label: 'East Boundary Length',
+        isNumber: true,
+        decimalPlaces: 2,
+      },
       { key: 'westAdjacentArea', label: 'West Adjacent' },
-      { key: 'westBoundaryLength', label: 'West Boundary Length', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'westBoundaryLength',
+        label: 'West Boundary Length',
+        isNumber: true,
+        decimalPlaces: 2,
+      },
     ],
   },
   {
@@ -141,7 +169,11 @@ const BUILDING_SECTIONS: SectionDef[] = [
       { key: 'ownerName', label: 'Owner Name' },
       { key: 'hasObligation', label: 'Has Obligation', isBoolean: true },
       { key: 'obligationDetails', label: 'Obligation Details' },
-      { key: 'buildingConditionType', label: 'Building Condition', parameterGroup: 'BuildingCondition' },
+      {
+        key: 'buildingConditionType',
+        label: 'Building Condition',
+        parameterGroup: 'BuildingCondition',
+      },
       { key: 'isUnderConstruction', label: 'Under Construction', isBoolean: true },
       { key: 'constructionCompletionPercent', label: 'Construction Completion %', isNumber: true },
       { key: 'isAppraisable', label: 'Appraisable', isBoolean: true },
@@ -159,9 +191,17 @@ const BUILDING_SECTIONS: SectionDef[] = [
   {
     title: 'Material & Structure',
     fields: [
-      { key: 'buildingMaterialType', label: 'Building Material', parameterGroup: 'BuildingMaterial' },
+      {
+        key: 'buildingMaterialType',
+        label: 'Building Material',
+        parameterGroup: 'BuildingMaterial',
+      },
       { key: 'buildingStyleType', label: 'Building Style', parameterGroup: 'BuildingStyle' },
-      { key: 'constructionStyleType', label: 'Construction Style', parameterGroup: 'ConstructionStyle' },
+      {
+        key: 'constructionStyleType',
+        label: 'Construction Style',
+        parameterGroup: 'ConstructionStyle',
+      },
       { key: 'structureType', label: 'Structure', parameterGroup: 'GeneralStructure' },
       { key: 'roofFrameType', label: 'Roof Frame', parameterGroup: 'RoofFrame' },
       { key: 'roofType', label: 'Roof', parameterGroup: 'Roof' },
@@ -198,9 +238,7 @@ const BUILDING_SECTIONS: SectionDef[] = [
   },
   {
     title: 'Remark',
-    fields: [
-      { key: 'remark', label: 'Remark' },
-    ],
+    fields: [{ key: 'remark', label: 'Remark' }],
   },
 ];
 
@@ -228,7 +266,11 @@ const CONDO_SECTIONS: SectionDef[] = [
       { key: 'buildingConditionType', label: 'Condition', parameterGroup: 'CondoCondition' },
       { key: 'hasObligation', label: 'Has Obligation', isBoolean: true },
       { key: 'obligationDetails', label: 'Obligation Details' },
-      { key: 'documentValidationResultType', label: 'Document Validation', parameterGroup: 'DocumentValidation' },
+      {
+        key: 'documentValidationResultType',
+        label: 'Document Validation',
+        parameterGroup: 'DocumentValidation',
+      },
     ],
   },
   {
@@ -250,7 +292,11 @@ const CONDO_SECTIONS: SectionDef[] = [
       { key: 'buildingAge', label: 'Building Age (yrs)', isNumber: true },
       { key: 'numberOfFloors', label: 'Floors', isNumber: true },
       { key: 'buildingFormType', label: 'Building Form', parameterGroup: 'BuildingForm' },
-      { key: 'constructionMaterialType', label: 'Construction Material', parameterGroup: 'ConstructionMaterials' },
+      {
+        key: 'constructionMaterialType',
+        label: 'Construction Material',
+        parameterGroup: 'ConstructionMaterials',
+      },
       { key: 'decorationType', label: 'Decoration', parameterGroup: 'Decoration' },
     ],
   },
@@ -259,9 +305,21 @@ const CONDO_SECTIONS: SectionDef[] = [
     fields: [
       { key: 'roomLayoutType', label: 'Room Layout', parameterGroup: 'RoomLayout' },
       { key: 'locationViewType', label: 'Location View', parameterGroup: 'LocationView' },
-      { key: 'groundFloorMaterialType', label: 'Ground Floor Material', parameterGroup: 'GroundFlooringMaterials' },
-      { key: 'upperFloorMaterialType', label: 'Upper Floor Material', parameterGroup: 'UpperFlooringMaterials' },
-      { key: 'bathroomFloorMaterialType', label: 'Bathroom Floor Material', parameterGroup: 'BathroomFlooringMaterials' },
+      {
+        key: 'groundFloorMaterialType',
+        label: 'Ground Floor Material',
+        parameterGroup: 'GroundFlooringMaterials',
+      },
+      {
+        key: 'upperFloorMaterialType',
+        label: 'Upper Floor Material',
+        parameterGroup: 'UpperFlooringMaterials',
+      },
+      {
+        key: 'bathroomFloorMaterialType',
+        label: 'Bathroom Floor Material',
+        parameterGroup: 'BathroomFlooringMaterials',
+      },
       { key: 'roofType', label: 'Roof', parameterGroup: 'Condo_Roof' },
     ],
   },
@@ -291,9 +349,7 @@ const CONDO_SECTIONS: SectionDef[] = [
   },
   {
     title: 'Remark',
-    fields: [
-      { key: 'remark', label: 'Remark' },
-    ],
+    fields: [{ key: 'remark', label: 'Remark' }],
   },
 ];
 

@@ -5,15 +5,11 @@ import MeetingChip from '@/features/meeting/components/MeetingChip';
 
 import {
   useGetApprovalList,
+  useGetApprovalHistory,
   type ApprovalCondition,
   type ApprovalMember,
   type GetApprovalListResponse,
 } from '../../api/decisionSummary';
-
-interface ApprovalListSectionProps {
-  workflowInstanceId: string | undefined;
-  activityId: string | undefined;
-}
 
 /** Client-derived status from quorum/majority/route_back — backend does not emit a status string. */
 type DerivedStatus = 'Approved' | 'Returned' | 'Pending';
@@ -55,26 +51,16 @@ const conditionLabel = (condition: ApprovalCondition): string => {
     : 'Minimum vote count required';
 };
 
-const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSectionProps) => {
-  const { data, isLoading } = useGetApprovalList(workflowInstanceId, activityId);
+// ==================== Presentational Component ====================
 
-  if (!workflowInstanceId || !activityId) {
-    // No active approval activity for this appraisal — committee-review step hasn't been reached.
-    return (
-      <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
-        <div className="flex flex-col items-center justify-center py-8 gap-3">
-          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
-            <Icon name="users-gear" style="regular" className="w-6 h-6 text-blue-400" />
-          </div>
-          <p className="text-sm text-gray-500">
-            Committee approval is not active for this appraisal yet.
-          </p>
-        </div>
-      </FormCard>
-    );
-  }
+interface ApprovalListSectionBaseProps {
+  data: GetApprovalListResponse | undefined;
+  isLoading: boolean;
+  isError: boolean;
+}
 
-  if (isLoading || !data) {
+const ApprovalListSectionBase = ({ data, isLoading, isError }: ApprovalListSectionBaseProps) => {
+  if (isLoading || (!data && !isError)) {
     return (
       <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
         <div className="flex items-center justify-center py-8">
@@ -82,6 +68,11 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
         </div>
       </FormCard>
     );
+  }
+
+  if (!data) {
+    // No data and not loading — either error or empty state handled by callers.
+    return null;
   }
 
   const status = deriveStatus(data);
@@ -231,9 +222,73 @@ const ApprovalListSection = ({ workflowInstanceId, activityId }: ApprovalListSec
           </div>
         )}
       </div>
-
     </FormCard>
   );
 };
 
-export default ApprovalListSection;
+// ==================== Data-Wiring Components ====================
+
+interface LiveApprovalListSectionProps {
+  workflowInstanceId: string | undefined;
+  activityId: string | undefined;
+}
+
+/**
+ * Live approval section — polls the workflow-scoped endpoint every 10 s while
+ * the committee vote is still in progress. Used while the workflow is active.
+ *
+ * Renders a "not active yet" placeholder when workflowInstanceId or activityId
+ * are absent (committee step not reached).
+ */
+export const LiveApprovalListSection = ({
+  workflowInstanceId,
+  activityId,
+}: LiveApprovalListSectionProps) => {
+  const { data, isLoading, isError } = useGetApprovalList(workflowInstanceId, activityId);
+
+  if (!workflowInstanceId || !activityId) {
+    return (
+      <FormCard title="Committee Approval" icon="users-gear" iconColor="blue">
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center">
+            <Icon name="users-gear" style="regular" className="w-6 h-6 text-blue-400" />
+          </div>
+          <p className="text-sm text-gray-500">
+            Committee approval is not active for this appraisal yet.
+          </p>
+        </div>
+      </FormCard>
+    );
+  }
+
+  return <ApprovalListSectionBase data={data} isLoading={isLoading} isError={isError} />;
+};
+
+interface ApprovalHistorySectionProps {
+  appraisalId: string | undefined;
+  activityId: string;
+}
+
+/**
+ * History approval section — fetches the immutable final-round votes for a
+ * completed appraisal. No polling. Returns null on 404 (workflow was cancelled
+ * before reaching the approval step — card is hidden gracefully).
+ */
+export const ApprovalHistorySection = ({
+  appraisalId,
+  activityId,
+}: ApprovalHistorySectionProps) => {
+  const { data, isLoading, isError, error } = useGetApprovalHistory(appraisalId, activityId);
+
+  // 404 means no votes were ever cast — hide the card silently.
+  const is404 =
+    isError &&
+    error != null &&
+    (error as { response?: { status?: number } }).response?.status === 404;
+
+  if (is404 || (!isLoading && isError && !data)) {
+    return null;
+  }
+
+  return <ApprovalListSectionBase data={data} isLoading={isLoading} isError={isError} />;
+};

@@ -264,51 +264,84 @@ export function CostMachineSection({
           <table className="table table-xs min-w-max border-separate border-spacing-0">
             <thead className="bg-neutral-50">
               <tr>
-                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>No.</th>
-                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>Quantity</th>
-                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>Machinery Information</th>
+                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>
+                  No.
+                </th>
+                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>
+                  Quantity
+                </th>
+                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>
+                  Machinery Information
+                </th>
                 <th rowSpan={2} className={clsx(th, 'min-w-32 text-right')}>
-                  RCN Replacement Cost<br />
+                  RCN Replacement Cost
+                  <br />
                   <span className="font-normal text-gray-500">(Baht)</span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  N<br /><span className="font-normal text-xs text-gray-500">Life Span (Year(s))</span>
+                  N<br />
+                  <span className="font-normal text-xs text-gray-500">Life Span (Year(s))</span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  n<br /><span className="font-normal text-xs text-gray-500">Duration in Use (Year(s))</span>
+                  n<br />
+                  <span className="font-normal text-xs text-gray-500">
+                    Duration in Use (Year(s))
+                  </span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  R<br /><span className="font-normal text-gray-500">Residual Life Span (Year(s))</span>
+                  R<br />
+                  <span className="font-normal text-gray-500">Residual Life Span (Year(s))</span>
                 </th>
-                <th colSpan={4} className={clsx(thCenter, 'border-b-2')}>Depreciation</th>
+                <th colSpan={4} className={clsx(thCenter, 'border-b-2')}>
+                  Depreciation
+                </th>
                 <th rowSpan={3} className={clsx(th, 'text-right')}>
-                  Fair Market Value<br />
+                  Fair Market Value
+                  <br />
                   <span className="text-xs font-normal text-gray-500">FMV (Baht)</span>
                 </th>
                 <th rowSpan={3} className={clsx(thCenter, 'min-w-32')}>
-                  Market Demand<br />
+                  Market Demand
+                  <br />
                   <span className="text-xs font-normal text-gray-500">Available / Used</span>
                 </th>
-                <th rowSpan={3} className={clsx(th, 'min-w-32')}>Notes</th>
+                <th rowSpan={3} className={clsx(th, 'min-w-32')}>
+                  Notes
+                </th>
               </tr>
               <tr>
-                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Machinery Name</th>
-                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Registration No.</th>
-                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Country of Manufacturer</th>
-                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>Condition Use</th>
-                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>Year</th>
-                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  C<br /><span className="font-normal text-xs text-gray-500">Condition Factor</span>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>
+                  Machinery Name
+                </th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>
+                  Registration No.
+                </th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>
+                  Country of Manufacturer
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  P<br /><span className="font-normal text-xs text-gray-500">Physical Deterioration</span>
+                  Condition Use
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  F<br /><span className="font-normal text-xs text-gray-500">Functional Obsolescence</span>
+                  Year
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  C<br />
+                  <span className="font-normal text-xs text-gray-500">Condition Factor</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  P<br />
+                  <span className="font-normal text-xs text-gray-500">Physical Deterioration</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  F<br />
+                  <span className="font-normal text-xs text-gray-500">Functional Obsolescence</span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
                   E<br />
-                  <span className="font-normal text-xs text-gray-500">Economic / External Obsolescence</span>
+                  <span className="font-normal text-xs text-gray-500">
+                    Economic / External Obsolescence
+                  </span>
                 </th>
               </tr>
             </thead>

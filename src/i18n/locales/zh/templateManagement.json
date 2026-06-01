@@ -1,0 +1,185 @@
+{
+  "factors": {
+    "pageTitle": "Market Comparable Factors",
+    "pageSubtitle": "Manage the master list of factors shared across all template types",
+    "createButton": "Create Factor",
+    "searchPlaceholder": "Search by code or name...",
+    "filterAll": "All",
+    "filterActive": "Active",
+    "filterInactive": "Inactive",
+    "showingOf": "Showing {{shown}} of {{total}} factor(s)",
+    "empty": "No factors found",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "fieldName": "Field Name",
+      "dataType": "Data Type",
+      "config": "Config",
+      "status": "Status",
+      "action": "Action"
+    },
+    "configLength": "Length: {{n}}",
+    "configLen": "Len: {{n}}",
+    "configDec": "Dec: {{n}}",
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "dataTypes": {
+      "Dropdown": "Dropdown",
+      "Radio": "Radio",
+      "CheckboxGroup": "Checkbox Group",
+      "Checkbox": "Checkbox",
+      "Numeric": "Numeric",
+      "Text": "Text"
+    }
+  },
+  "factorForm": {
+    "createTitle": "Create Factor",
+    "editTitle": "Edit Factor",
+    "fields": {
+      "factorCode": "Factor Code",
+      "factorCodePlaceholder": "e.g., AREA",
+      "fieldName": "Field Name",
+      "fieldNamePlaceholder": "e.g., areaSize",
+      "dataType": "Data Type",
+      "parameterGroup": "Parameter Group",
+      "parameterGroupPlaceholder": "e.g., PropertyType",
+      "fieldLength": "Field Length",
+      "fieldLengthPlaceholder": "e.g., 100",
+      "fieldDecimal": "Field Decimal",
+      "fieldDecimalPlaceholder": "e.g., 2"
+    },
+    "translations": {
+      "sectionLabel": "Factor Name Translations",
+      "addLanguagePlaceholder": "Add language...",
+      "columns": {
+        "language": "Language",
+        "factorName": "Factor Name",
+        "action": "Action"
+      },
+      "namePlaceholder": "Factor name in {{lang}}",
+      "required": "required",
+      "languages": {
+        "en": "English (en)",
+        "th": "Thai (th)",
+        "cn": "Chinese (cn)",
+        "jp": "Japanese (jp)"
+      }
+    },
+    "validation": {
+      "requiredFields": "Please fill in all required fields (EN name is required)",
+      "parameterGroupRequired": "Parameter Group is required for this data type",
+      "fieldLengthRequired": "Field Length is required for this data type",
+      "fieldDecimalRequired": "Field Decimal is required for Numeric data type"
+    }
+  },
+  "templates": {
+    "mcPageTitle": "Market Comparable Templates",
+    "mcPageSubtitle": "Manage templates for market survey data collection",
+    "compPageTitle": "Comparative Analysis Templates",
+    "compPageSubtitle": "Manage templates for pricing calculation methods (DC/SAG/WQS)",
+    "createButton": "Create Template",
+    "searchPlaceholder": "Search by code or name...",
+    "showingOf": "Showing {{shown}} of {{total}} template(s)",
+    "empty": "No templates found",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "propertyType": "Property Type",
+      "description": "Description",
+      "factors": "Factors",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "templateDetail": {
+    "mcCreateTitle": "Create Market Comparable Template",
+    "mcEditTitle": "Edit Market Comparable Template",
+    "compCreateTitle": "Create Comparative Analysis Template",
+    "compEditTitle": "Edit Comparative Analysis Template",
+    "createSubtitle": "Fill in the template details"
+  },
+  "templateForm": {
+    "fields": {
+      "templateCode": "Template Code",
+      "templateCodePlaceholder": "e.g., MC_LAND_01",
+      "templateName": "Template Name",
+      "templateNamePlaceholder": "Template name",
+      "propertyType": "Property Type",
+      "propertyTypePlaceholder": "Select property type",
+      "description": "Description",
+      "descriptionPlaceholder": "Optional description"
+    },
+    "validation": {
+      "requiredFields": "Please fill in all required fields"
+    }
+  },
+  "factorManager": {
+    "sectionTitle": "Template Factors",
+    "sectionSubtitle": "{{n}} factor(s) assigned",
+    "addFactorButton": "Add Factor",
+    "emptyTitle": "No factors assigned yet",
+    "emptyHint": "Click \"Add Factor\" to assign factors from the master list",
+    "unknownFactor": "Unknown Factor",
+    "columns": {
+      "seq": "#",
+      "code": "Code",
+      "name": "Name",
+      "mandatory": "Mandatory",
+      "calculation": "Calculation",
+      "defaultWeight": "Default Weight",
+      "defaultIntensity": "Default Intensity",
+      "action": "Action"
+    },
+    "yes": "Yes",
+    "no": "No"
+  },
+  "addFactorModal": {
+    "title": "Add Factors",
+    "searchPlaceholder": "Search by code or name...",
+    "selectAll": "Select All",
+    "deselectAll": "Clear",
+    "noFactors": "No available factors found",
+    "columns": {
+      "code": "Code",
+      "name": "Name",
+      "dataType": "Data Type",
+      "mandatory": "Mandatory",
+      "calculation": "Calculation"
+    },
+    "selectedCount": "{{n}} factor(s) selected",
+    "selectPrompt": "Select factors to add",
+    "addButton": "Add",
+    "addButtonWithCount": "Add ({{n}})"
+  },
+  "toasts": {
+    "factorCreated": "Factor created successfully",
+    "factorCreateFailed": "Failed to create factor",
+    "factorUpdated": "Factor updated successfully",
+    "factorUpdateFailed": "Failed to update factor",
+    "templateCreated": "Template created successfully",
+    "templateCreateFailed": "Failed to create template",
+    "templateUpdated": "Template updated successfully",
+    "templateUpdateFailed": "Failed to update template",
+    "templateDeleted": "Template deleted successfully",
+    "templateDeleteFailed": "Failed to delete template",
+    "factorsAdded": "{{n}} factor(s) added",
+    "factorAddFailed": "Failed to add factor",
+    "factorRemoved": "Factor removed",
+    "factorRemoveFailed": "Failed to remove factor",
+    "mandatoryUpdated": "Mandatory updated",
+    "mandatoryUpdateFailed": "Failed to update mandatory",
+    "calculationUpdated": "Calculation factor updated",
+    "calculationUpdateFailed": "Failed to update calculation factor",
+    "defaultValuesUpdated": "Default values updated",
+    "defaultValuesUpdateFailed": "Failed to update default values"
+  },
+  "confirm": {
+    "deleteTemplate": "Are you sure you want to delete this template?"
+  }
+}

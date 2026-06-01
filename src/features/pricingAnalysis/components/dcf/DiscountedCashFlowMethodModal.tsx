@@ -185,92 +185,92 @@ export function DiscountedCashFlowMethodModal({
           variant="inline"
         />
       ) : (
-      <FormProvider {...methods}>
-        <form
-          onSubmit={e => {
-            e.stopPropagation();
-            handleSubmit(onSubmit)(e);
-          }}
-          onKeyDown={handleKeyDown}
-        >
-          <div className="flex flex-col gap-2 mb-4">
-            <div className="flex flex-row gap-1.5">
-              <span className="w-56">Category</span>
-              <div className="w-80">
-                {/* <RHFInputCell
+        <FormProvider {...methods}>
+          <form
+            onSubmit={e => {
+              e.stopPropagation();
+              handleSubmit(onSubmit)(e);
+            }}
+            onKeyDown={handleKeyDown}
+          >
+            <div className="flex flex-col gap-2 mb-4">
+              <div className="flex flex-row gap-1.5">
+                <span className="w-56">Category</span>
+                <div className="w-80">
+                  {/* <RHFInputCell
                   fieldName="targetCategoryClientId"
                   inputType="select"
                   options={categoryOptions}
                 /> */}
-                <span className="text-sm">
-                  {currentSection?.categories?.find(
-                    c => c.clientId === getValues('targetCategoryClientId'),
-                  )?.categoryName ?? ''}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-row items-center gap-1.5">
-              <span className="w-56">Assumption</span>
-              <div className="w-80">
-                <RHFInputCell
-                  fieldName="assumptionType"
-                  inputType="select"
-                  options={filteredAssumptionOptions}
-                  onSelectChange={handleAssumptionTypeChange}
-                />
-              </div>
-              {assumptionType === 'M99' ? (
-                <div className="flex">
-                  <RHFInputCell fieldName="assumptionName" inputType="text" />
+                  <span className="text-sm">
+                    {currentSection?.categories?.find(
+                      c => c.clientId === getValues('targetCategoryClientId'),
+                    )?.categoryName ?? ''}
+                  </span>
                 </div>
-              ) : (
-                // Keep assumptionName registered so reset() values survive handleSubmit
-                // (useForm is shouldUnregister: true; unrendered fields are dropped).
-                <input type="hidden" {...register('assumptionName')} />
-              )}
-            </div>
+              </div>
 
-            <div className="flex flex-row gap-1.5">
-              <span className="w-56">Method</span>
-              <div className="w-80">
-                <RHFInputCell
-                  fieldName="method.methodType"
-                  inputType="select"
-                  options={filteredMethodOptions}
-                  onSelectChange={handleMethodTypeChange}
-                />
+              <div className="flex flex-row items-center gap-1.5">
+                <span className="w-56">Assumption</span>
+                <div className="w-80">
+                  <RHFInputCell
+                    fieldName="assumptionType"
+                    inputType="select"
+                    options={filteredAssumptionOptions}
+                    onSelectChange={handleAssumptionTypeChange}
+                  />
+                </div>
+                {assumptionType === 'M99' ? (
+                  <div className="flex">
+                    <RHFInputCell fieldName="assumptionName" inputType="text" />
+                  </div>
+                ) : (
+                  // Keep assumptionName registered so reset() values survive handleSubmit
+                  // (useForm is shouldUnregister: true; unrendered fields are dropped).
+                  <input type="hidden" {...register('assumptionName')} />
+                )}
+              </div>
+
+              <div className="flex flex-row gap-1.5">
+                <span className="w-56">Method</span>
+                <div className="w-80">
+                  <RHFInputCell
+                    fieldName="method.methodType"
+                    inputType="select"
+                    options={filteredMethodOptions}
+                    onSelectChange={handleMethodTypeChange}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {systemMethodType && (
-            <DiscountedCashFlowModalRenderer
-              key={systemMethodType ?? 'none'}
-              name="method.detail"
-              methodType={systemMethodType}
-              properties={properties}
-              getOuterFormValues={getOuterFormValues}
-              isReadOnly={isReadOnly}
-            />
-          )}
+            {systemMethodType && (
+              <DiscountedCashFlowModalRenderer
+                key={systemMethodType ?? 'none'}
+                name="method.detail"
+                methodType={systemMethodType}
+                properties={properties}
+                getOuterFormValues={getOuterFormValues}
+                isReadOnly={isReadOnly}
+              />
+            )}
 
-          <div className="flex items-center justify-between mt-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onCancelEditMode();
-              }}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" variant="primary" size="sm" disabled={isReadOnly}>
-              Save
-            </Button>
-          </div>
-        </form>
-      </FormProvider>
+            <div className="flex items-center justify-between mt-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  onCancelEditMode();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" variant="primary" size="sm" disabled={isReadOnly}>
+                Save
+              </Button>
+            </div>
+          </form>
+        </FormProvider>
       )}
     </Modal>
   );

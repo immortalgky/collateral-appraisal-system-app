@@ -1,13 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { getDocumentTypeName, useGetDocumentTypes } from '@/features/request/api/documentTypes';
 import { useGetRequestById } from '@/features/request/api/requests';
-import {
-  createUploadSession,
-  useUploadDocument,
-} from '@/features/request/api/documents';
+import { createUploadSession, useUploadDocument } from '@/features/request/api/documents';
 import { getDocumentCategory } from '@/features/request/types/document';
 import type { FollowupLineItem } from '../types/followup';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -43,10 +41,18 @@ export function UploadLineItemDialog({
   lineItem,
   onStaged,
 }: UploadLineItemDialogProps) {
-  const { data: documentTypes = [], isError: isDocTypesError, refetch: refetchDocTypes } = useGetDocumentTypes();
-  const { data: request, isLoading: titlesLoading, isError: isRequestError, refetch: refetchRequest } = useGetRequestById(
-    isOpen ? requestId : undefined,
-  );
+  const { t } = useTranslation(['documentFollowup', 'common']);
+  const {
+    data: documentTypes = [],
+    isError: isDocTypesError,
+    refetch: refetchDocTypes,
+  } = useGetDocumentTypes();
+  const {
+    data: request,
+    isLoading: titlesLoading,
+    isError: isRequestError,
+    refetch: refetchRequest,
+  } = useGetRequestById(isOpen ? requestId : undefined);
   const titles = request?.titles ?? [];
 
   const [target, setTarget] = useState<Target>({ kind: 'request' });
@@ -70,7 +76,7 @@ export function UploadLineItemDialog({
 
   const handleUpload = async () => {
     if (!file) {
-      toast.error('Please choose a file to upload.');
+      toast.error(t('toasts.fileChooseRequired'));
       return;
     }
     setUploading(true);
@@ -84,6 +90,8 @@ export function UploadLineItemDialog({
         documentCategory: getDocumentCategory(lineItem.documentType),
       });
 
+      const applicationLevelLabel = t('uploadDialog.applicationLevel');
+
       const staged: StagedAttachment =
         target.kind === 'request'
           ? {
@@ -93,7 +101,7 @@ export function UploadLineItemDialog({
               fileName: uploaded.fileName,
               attachToRequest: true,
               titleId: null,
-              targetLabel: 'Application level',
+              targetLabel: applicationLevelLabel,
             }
           : {
               lineItemId: lineItem.id,
@@ -106,7 +114,7 @@ export function UploadLineItemDialog({
             };
 
       onStaged(staged);
-      toast.success('File staged. It will be attached when you submit.');
+      toast.success(t('toasts.fileStaged'));
       onClose();
     } catch (error: unknown) {
       const apiError = error as {
@@ -114,7 +122,7 @@ export function UploadLineItemDialog({
         message?: string;
       };
       const message =
-        apiError?.response?.data?.detail ?? apiError?.message ?? 'Upload failed. Please try again.';
+        apiError?.response?.data?.detail ?? apiError?.message ?? t('toasts.uploadFailed');
       toast.error(message);
     } finally {
       setUploading(false);
@@ -130,9 +138,10 @@ export function UploadLineItemDialog({
               <Icon name="upload" style="solid" className="size-5 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-900">Upload Document</h3>
+              <h3 className="text-base font-semibold text-gray-900">{t('uploadDialog.title')}</h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                Fulfilling: <span className="font-medium text-gray-700">{documentTypeLabel}</span>
+                {t('uploadDialog.fulfilling')}{' '}
+                <span className="font-medium text-gray-700">{documentTypeLabel}</span>
               </p>
             </div>
           </div>
@@ -140,6 +149,7 @@ export function UploadLineItemDialog({
             type="button"
             onClick={onClose}
             disabled={uploading}
+            aria-label={t('aria.closeDialog')}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40"
           >
             <Icon name="xmark" style="solid" className="size-4" />
@@ -149,7 +159,7 @@ export function UploadLineItemDialog({
         {(isDocTypesError || isRequestError) && (
           <DataErrorState
             variant="inline"
-            title="Failed to load upload form"
+            title={t('uploadDialog.loadError')}
             onRetry={() => {
               if (isDocTypesError) refetchDocTypes();
               if (isRequestError) refetchRequest();
@@ -160,12 +170,12 @@ export function UploadLineItemDialog({
         {/* Target picker */}
         <div className="mb-4">
           <label className="block text-xs font-medium text-gray-700 mb-1.5">
-            Attach to
+            {t('uploadDialog.attachToLabel')}
           </label>
           {titlesLoading ? (
             <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
               <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-              Loading titles...
+              {t('uploadDialog.loadingTitles')}
             </div>
           ) : (
             <select
@@ -175,28 +185,28 @@ export function UploadLineItemDialog({
                 if (val === '__request__') {
                   setTarget({ kind: 'request' });
                 } else {
-                  const picked = titles.find((t: any) => t.id === val);
+                  const picked = titles.find((ti: any) => ti.id === val);
                   const label =
                     (picked?.titleNumber as string | null | undefined) ??
                     (picked?.collateralType as string | null | undefined) ??
-                    'Title';
+                    t('uploadDialog.titleFallback');
                   setTarget({ kind: 'title', titleId: val, label });
                 }
               }}
               disabled={uploading}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
             >
-              <option value="__request__">Application level (request)</option>
-              {titles.map((t: any, idx: number) => {
+              <option value="__request__">{t('uploadDialog.applicationLevel')}</option>
+              {titles.map((ti: any, idx: number) => {
                 const label =
-                  (t.titleNumber as string | null | undefined) ??
-                  (t.collateralType as string | null | undefined) ??
-                  `Title ${idx + 1}`;
-                const titleId = (t.id as string | null | undefined) ?? '';
+                  (ti.titleNumber as string | null | undefined) ??
+                  (ti.collateralType as string | null | undefined) ??
+                  `${t('uploadDialog.titleFallback')} ${idx + 1}`;
+                const titleId = (ti.id as string | null | undefined) ?? '';
                 return (
                   <option key={titleId || `title-${idx}`} value={titleId} disabled={!titleId}>
                     {label}
-                    {t.collateralType ? ` — ${t.collateralType}` : ''}
+                    {ti.collateralType ? ` — ${ti.collateralType}` : ''}
                   </option>
                 );
               })}
@@ -206,7 +216,9 @@ export function UploadLineItemDialog({
 
         {/* File input */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">File</label>
+          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+            {t('uploadDialog.fileLabel')}
+          </label>
           <input
             ref={fileInputRef}
             type="file"
@@ -216,15 +228,17 @@ export function UploadLineItemDialog({
           />
           {file && (
             <p className="mt-2 text-xs text-gray-500 truncate">
-              Selected: <span className="text-gray-700">{file.name}</span>
+              {t('uploadDialog.selectedFile')} <span className="text-gray-700">{file.name}</span>
             </p>
           )}
         </div>
 
         <div className="text-xs text-gray-500 mb-4 p-3 rounded-lg bg-gray-50 border border-gray-100">
-          The file is uploaded to storage now but <span className="font-semibold">not</span>{' '}
-          attached to the request yet. Attachments happen atomically when you click{' '}
-          <span className="font-semibold">Submit Response</span>.
+          {t('uploadDialog.deferredNotePre')}{' '}
+          <span className="font-semibold">{t('uploadDialog.deferredNoteNot')}</span>{' '}
+          {t('uploadDialog.deferredNotePost')}{' '}
+          <span className="font-semibold">{t('uploadDialog.deferredNoteAction')}</span>
+          {t('uploadDialog.deferredNoteEnd')}
         </div>
 
         {/* Footer */}
@@ -235,7 +249,7 @@ export function UploadLineItemDialog({
             disabled={uploading}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t('common:actions.cancel')}
           </button>
           <button
             type="button"
@@ -246,19 +260,19 @@ export function UploadLineItemDialog({
             {uploading ? (
               <>
                 <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                Uploading...
+                {t('uploadDialog.uploading')}
               </>
             ) : (
               <>
                 <Icon name="upload" style="solid" className="size-4" />
-                Stage file
+                {t('uploadDialog.stageFile')}
               </>
             )}
           </button>
         </div>
       </div>
       <div className="modal-backdrop bg-black/40" onClick={uploading ? undefined : onClose}>
-        <button type="button">close</button>
+        <button type="button">{t('aria.closeDialog')}</button>
       </div>
     </div>,
     document.body,

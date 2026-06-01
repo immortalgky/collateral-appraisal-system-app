@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
@@ -20,6 +21,7 @@ const PermissionAssignmentModal = ({
   currentPermissions,
   isSaving,
 }: PermissionAssignmentModalProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(currentPermissions.map(p => p.id)),
@@ -71,13 +73,13 @@ const PermissionAssignmentModal = ({
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [filtered]);
 
+  const selectionLabel = t(
+    selected.size === 1 ? 'selectionCount.permissions' : 'selectionCount.permissions_other',
+    { count: selected.size },
+  );
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Assign Permissions"
-      size="lg"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title={t('dialogs.assignPermissions.title')} size="lg">
       <div className="flex flex-col gap-4 p-6">
         {/* Search */}
         <div className="relative">
@@ -90,7 +92,7 @@ const PermissionAssignmentModal = ({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search permissions..."
+            placeholder={t('placeholders.searchPermissionsShort')}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
@@ -111,7 +113,7 @@ const PermissionAssignmentModal = ({
                     type="button"
                     onClick={() => toggle(id)}
                     className="hover:text-primary/70 leading-none"
-                    aria-label={`Remove ${label}`}
+                    aria-label={t('aria.removeItem', { name: label })}
                   >
                     <Icon name="xmark" style="solid" className="size-3" />
                   </button>
@@ -121,19 +123,19 @@ const PermissionAssignmentModal = ({
           </div>
         )}
 
-        <div className="text-xs text-gray-400">
-          {selected.size} permission{selected.size !== 1 ? 's' : ''} selected
-        </div>
+        <div className="text-xs text-gray-400">{selectionLabel}</div>
 
         {/* Permission list grouped by module */}
         <div className="max-h-96 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
           {isLoading ? (
             <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
               <Icon name="spinner" style="solid" className="size-4 animate-spin mr-2" />
-              Loading permissions...
+              {t('loading.permissions')}
             </div>
           ) : byModule.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">No permissions found</div>
+            <div className="text-center py-8 text-gray-400 text-sm">
+              {t('empty.noPermissionsFound')}
+            </div>
           ) : (
             byModule.map(([module, perms]) => (
               <div key={module}>
@@ -164,10 +166,10 @@ const PermissionAssignmentModal = ({
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSave}>
-            Save Permissions
+            {t('buttons.savePermissions')}
           </Button>
         </div>
       </div>

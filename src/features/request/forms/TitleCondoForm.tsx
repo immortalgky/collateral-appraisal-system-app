@@ -1,12 +1,17 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
-import { titleCondoFields } from '../configs/fields';
+import { makeTitleCondoFields } from '../configs/fields';
 
 interface TitleCondoFormProps {
   index: number;
 }
 
 const TitleCondoForm = ({ index }: TitleCondoFormProps) => {
-  return <FormFields fields={titleCondoFields} namePrefix={'titles'} index={index} />;
+  const { t } = useTranslation('request');
+  const fields = useMemo(() => makeTitleCondoFields(t), [t]);
+
+  return <FormFields fields={fields} namePrefix={'titles'} index={index} />;
 };
 
 export default TitleCondoForm;

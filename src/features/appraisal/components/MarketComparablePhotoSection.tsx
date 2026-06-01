@@ -51,7 +51,11 @@ function useAddMarketComparableImageAdapter(): UseMutationResult<
         options as Parameters<typeof mutation.mutate>[1],
       );
     },
-  } as UseMutationResult<{ id: string }, unknown, { entityId: string; appraisalId: string; galleryPhotoId: string }>;
+  } as UseMutationResult<
+    { id: string },
+    unknown,
+    { entityId: string; appraisalId: string; galleryPhotoId: string }
+  >;
 }
 
 function useRemoveMarketComparableImageAdapter(): UseMutationResult<
@@ -71,7 +75,11 @@ function useRemoveMarketComparableImageAdapter(): UseMutationResult<
         options as Parameters<typeof mutation.mutate>[1],
       );
     },
-  } as UseMutationResult<unknown, unknown, { entityId: string; imageId: string; appraisalId: string }>;
+  } as UseMutationResult<
+    unknown,
+    unknown,
+    { entityId: string; imageId: string; appraisalId: string }
+  >;
 }
 
 const MarketComparablePhotoSection = forwardRef<

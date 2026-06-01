@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
@@ -10,6 +11,7 @@ import { useGetUsers } from '../api/users';
 type ScopeTab = 'Bank' | 'Company';
 
 const UserProfilePage = () => {
+  const { t } = useTranslation('userManagement');
   const [activeTab, setActiveTab] = useState<ScopeTab>('Bank');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -37,8 +39,8 @@ const UserProfilePage = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
       <SectionHeader
-        title="Users"
-        subtitle="Manage user accounts, roles, and access"
+        title={t('page.users.title')}
+        subtitle={t('page.users.subtitle')}
         icon="users"
         iconColor="purple"
       />
@@ -60,7 +62,7 @@ const UserProfilePage = () => {
                     : 'text-gray-500 hover:text-gray-700',
                 )}
               >
-                {tab}
+                {tab === 'Bank' ? t('tabs.bank') : t('tabs.company')}
               </button>
             ))}
           </div>
@@ -77,14 +79,15 @@ const UserProfilePage = () => {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder="Search users..."
+                placeholder={t('placeholders.searchUsers')}
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
             <button
               type="button"
               onClick={() => setShowCreateModal(true)}
-              title="Add user"
+              title={t('aria.addUser')}
+              aria-label={t('aria.addUser')}
               className="shrink-0 size-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/80 transition-colors"
             >
               <Icon name="plus" style="solid" className="size-3.5" />
@@ -102,7 +105,7 @@ const UserProfilePage = () => {
             ) : filteredUsers.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-xs gap-1">
                 <Icon name="users" style="regular" className="size-7 opacity-40" />
-                <span>No users found</span>
+                <span>{t('empty.noUsersFound')}</span>
               </div>
             ) : (
               filteredUsers.map(user => {
@@ -126,7 +129,9 @@ const UserProfilePage = () => {
                       {initials}
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-800 truncate">{displayName}</div>
+                      <div className="text-sm font-medium text-gray-800 truncate">
+                        {displayName}
+                      </div>
                       {user.position && (
                         <div className="text-xs text-gray-400 truncate">{user.position}</div>
                       )}
@@ -145,7 +150,7 @@ const UserProfilePage = () => {
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
               <Icon name="circle-user" style="regular" className="size-12 opacity-30" />
-              <p className="text-sm">Select a user to view details</p>
+              <p className="text-sm">{t('empty.selectUser')}</p>
             </div>
           )}
         </div>

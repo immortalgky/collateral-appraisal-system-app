@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -18,6 +19,7 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
   document,
   onSave,
 }) => {
+  const { t } = useTranslation(['request', 'common']);
   const [set, setSet] = useState(document.set ?? 1);
   const [notes, setNotes] = useState(document.documentDescription || '');
   const { data: documentTypes = [] } = useGetDocumentTypes();
@@ -50,7 +52,7 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} title="Edit Document Details" size="md">
+    <Modal isOpen={isOpen} onClose={handleCancel} title={t('documentEdit.modalTitle')} size="md">
       <div className="space-y-4">
         {/* Read-only information */}
         <div className="bg-gray-50 p-4 rounded-lg space-y-3">
@@ -86,16 +88,16 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
 
           {/* Document details */}
           <div className="grid grid-cols-3 gap-2 text-sm">
-            <span className="text-gray-600 font-medium">Document Type:</span>
+            <span className="text-gray-600 font-medium">{t('documentEdit.documentType')}</span>
             <span className="col-span-2 text-gray-900">
               {document.documentType
                 ? getDocumentTypeName(documentTypes, document.documentType)
-                : 'Unknown'}
+                : t('documentEdit.unknownType')}
             </span>
           </div>
           {document.uploadedByName && (
             <div className="grid grid-cols-3 gap-2 text-sm">
-              <span className="text-gray-600 font-medium">Uploaded By:</span>
+              <span className="text-gray-600 font-medium">{t('documentEdit.uploadedBy')}</span>
               <span className="col-span-2 text-gray-900">{document.uploadedByName}</span>
             </div>
           )}
@@ -105,7 +107,7 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
         <div className="space-y-4">
           <div>
             <label htmlFor="set" className="block text-sm font-medium text-gray-700 mb-1">
-              Set Number
+              {t('documentEdit.setNumber')}
             </label>
             <input
               id="set"
@@ -119,14 +121,14 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
 
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
+              {t('documentEdit.notes')}
             </label>
             <textarea
               id="notes"
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={3}
-              placeholder="Add notes..."
+              placeholder={t('documentEdit.notesPlaceholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
           </div>
@@ -135,10 +137,10 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
         {/* Action buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button variant="outline" onClick={handleCancel}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" onClick={handleSave}>
-            Save Changes
+            {t('documentEdit.saveChanges')}
           </Button>
         </div>
       </div>

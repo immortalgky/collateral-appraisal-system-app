@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
@@ -16,6 +17,7 @@ import {
 import { useGetFactors } from '../api/marketComparableFactor';
 
 const MarketComparableTemplateDetailPage = () => {
+  const { t } = useTranslation(['templateManagement', 'common']);
   const { templateId } = useParams<{ templateId: string }>();
   const navigate = useNavigate();
   const isEditMode = !!templateId;
@@ -47,7 +49,7 @@ const MarketComparableTemplateDetailPage = () => {
 
   const handleSave = () => {
     if (!form.templateCode || !form.templateName || !form.propertyType) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('templateForm.validation.requiredFields'));
       return;
     }
 
@@ -55,35 +57,42 @@ const MarketComparableTemplateDetailPage = () => {
       updateMutation.mutate(
         { id: templateId!, ...form },
         {
-          onSuccess: () => toast.success('Template updated successfully'),
-          onError: () => toast.error('Failed to update template'),
+          onSuccess: () => toast.success(t('toasts.templateUpdated')),
+          onError: () => toast.error(t('toasts.templateUpdateFailed')),
         },
       );
     } else {
       createMutation.mutate(form, {
-        onSuccess: (data) => {
-          toast.success('Template created successfully');
+        onSuccess: data => {
+          toast.success(t('toasts.templateCreated'));
           navigate(`/market-comparable-templates/${data.id}`, { replace: true });
         },
-        onError: () => toast.error('Failed to create template'),
+        onError: () => toast.error(t('toasts.templateCreateFailed')),
       });
     }
   };
 
-  const handleAddFactors = (selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[]) => {
+  const handleAddFactors = (
+    selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[],
+  ) => {
     if (!templateId) return;
     const baseSequence = (templateDetail?.factors?.length ?? 0) + 1;
     let completed = 0;
     const total = selections.length;
     selections.forEach((sel, i) => {
       addFactorMutation.mutate(
-        { templateId: templateId!, factorId: sel.factorId, displaySequence: baseSequence + i, isMandatory: sel.isMandatory },
+        {
+          templateId: templateId!,
+          factorId: sel.factorId,
+          displaySequence: baseSequence + i,
+          isMandatory: sel.isMandatory,
+        },
         {
           onSuccess: () => {
             completed++;
-            if (completed === total) toast.success(`${total} factor(s) added`);
+            if (completed === total) toast.success(t('toasts.factorsAdded', { n: total }));
           },
-          onError: () => toast.error('Failed to add factor'),
+          onError: () => toast.error(t('toasts.factorAddFailed')),
         },
       );
     });
@@ -91,7 +100,7 @@ const MarketComparableTemplateDetailPage = () => {
 
   const handleToggleMandatory = (factorId: string, isMandatory: boolean) => {
     if (!templateId) return;
-    const existing = templateDetail?.factors?.find((f) => f.factorId === factorId);
+    const existing = templateDetail?.factors?.find(f => f.factorId === factorId);
     if (!existing) return;
     removeFactorMutation.mutate(
       { templateId, factorId },
@@ -105,12 +114,12 @@ const MarketComparableTemplateDetailPage = () => {
               isMandatory,
             },
             {
-              onSuccess: () => toast.success('Mandatory updated'),
-              onError: () => toast.error('Failed to update mandatory'),
+              onSuccess: () => toast.success(t('toasts.mandatoryUpdated')),
+              onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
             },
           );
         },
-        onError: () => toast.error('Failed to update mandatory'),
+        onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
       },
     );
   };
@@ -120,8 +129,8 @@ const MarketComparableTemplateDetailPage = () => {
     removeFactorMutation.mutate(
       { templateId, factorId },
       {
-        onSuccess: () => toast.success('Factor removed'),
-        onError: () => toast.error('Failed to remove factor'),
+        onSuccess: () => toast.success(t('toasts.factorRemoved')),
+        onError: () => toast.error(t('toasts.factorRemoveFailed')),
       },
     );
   };
@@ -141,13 +150,14 @@ const MarketComparableTemplateDetailPage = () => {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/market-comparable-templates')}
+          aria-label={t('common:actions.back')}
           className="text-gray-400 hover:text-gray-600 transition-colors"
         >
           <Icon name="chevron-left" style="solid" className="size-5" />
         </button>
         <SectionHeader
-          title={isEditMode ? 'Edit Market Comparable Template' : 'Create Market Comparable Template'}
-          subtitle={isEditMode ? templateDetail?.templateCode : 'Fill in the template details'}
+          title={isEditMode ? t('templateDetail.mcEditTitle') : t('templateDetail.mcCreateTitle')}
+          subtitle={isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
           icon="rectangle-list"
           iconColor="cyan"
           className="mb-0"
@@ -158,11 +168,15 @@ const MarketComparableTemplateDetailPage = () => {
         <TemplateForm value={form} onChange={setForm} isEditMode={isEditMode} />
 
         <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/market-comparable-templates')}>
-            Cancel
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/market-comparable-templates')}
+          >
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSave}>
-            {isEditMode ? 'Update' : 'Create'}
+            {isEditMode ? t('common:actions.save') : t('common:actions.create')}
           </Button>
         </div>
       </div>

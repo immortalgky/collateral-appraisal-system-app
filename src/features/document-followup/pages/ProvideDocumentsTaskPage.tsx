@@ -1,9 +1,11 @@
+import '@/features/document-followup/i18n';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -18,11 +20,8 @@ import { useGetFollowupByWorkflowInstance } from '../hooks/useGetFollowupByWorkf
 import { useSubmitDocumentFollowup } from '../hooks/useSubmitDocumentFollowup';
 import { useDeclineLineItem } from '../hooks/useDeclineLineItem';
 import { LineItemStatusBadge } from '../components/LineItemStatusBadge';
-import {
-  UploadLineItemDialog,
-  type StagedAttachment,
-} from '../components/UploadLineItemDialog';
-import { declineLineItemSchema, type DeclineLineItemFormValues } from '../schemas/followup';
+import { UploadLineItemDialog, type StagedAttachment } from '../components/UploadLineItemDialog';
+import { makeDeclineLineItemSchema, type DeclineLineItemFormValues } from '../schemas/followup';
 import type { FollowupLineItem } from '../types/followup';
 
 // ---- Decline Reason Modal ----
@@ -34,6 +33,7 @@ interface DeclineModalProps {
 }
 
 function DeclineModal({ lineItem, followupId, onClose }: DeclineModalProps) {
+  const { t } = useTranslation(['documentFollowup', 'common']);
   const declineMutation = useDeclineLineItem();
   const { data: documentTypes = [] } = useGetDocumentTypes();
 
@@ -42,7 +42,7 @@ function DeclineModal({ lineItem, followupId, onClose }: DeclineModalProps) {
     handleSubmit,
     formState: { errors },
   } = useForm<DeclineLineItemFormValues>({
-    resolver: zodResolver(declineLineItemSchema),
+    resolver: zodResolver(makeDeclineLineItemSchema(t)),
   });
 
   const onSubmit = (values: DeclineLineItemFormValues) => {
@@ -60,31 +60,29 @@ function DeclineModal({ lineItem, followupId, onClose }: DeclineModalProps) {
             <Icon name="hand" style="solid" className="size-7 text-red-500" />
           </div>
           <h3 className="font-semibold text-base text-gray-900 mb-1 text-center">
-            Decline Document Request
+            {t('declineModal.title')}
           </h3>
           <p className="text-sm text-gray-500 mb-1 text-center">
-            You are declining:{' '}
+            {t('declineModal.youAreDeclining')}{' '}
             <span className="font-medium text-gray-700">
               {getDocumentTypeName(documentTypes, lineItem.documentType)}
             </span>
           </p>
           <p className="text-xs text-gray-400 mb-4 text-center">
-            A reason is required to decline this request.
+            {t('declineModal.reasonRequired')}
           </p>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Reason for declining <span className="text-red-500">*</span>
+                {t('declineModal.reasonLabel')} <span className="text-red-500">*</span>
               </label>
               <textarea
                 {...register('reason')}
                 rows={3}
-                placeholder="Enter reason for declining..."
+                placeholder={t('declineModal.reasonPlaceholder')}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
               />
-              {errors.reason && (
-                <p className="text-xs text-danger mt-1">{errors.reason.message}</p>
-              )}
+              {errors.reason && <p className="text-xs text-danger mt-1">{errors.reason.message}</p>}
             </div>
             <div className="flex gap-3">
               <button
@@ -93,7 +91,7 @@ function DeclineModal({ lineItem, followupId, onClose }: DeclineModalProps) {
                 disabled={declineMutation.isPending}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50"
               >
-                Back
+                {t('common:actions.back')}
               </button>
               <button
                 type="submit"
@@ -103,14 +101,14 @@ function DeclineModal({ lineItem, followupId, onClose }: DeclineModalProps) {
                 {declineMutation.isPending && (
                   <Icon name="spinner" style="solid" className="size-4 animate-spin" />
                 )}
-                Decline
+                {t('declineModal.decline')}
               </button>
             </div>
           </form>
         </div>
       </div>
       <div className="modal-backdrop bg-black/40" onClick={onClose}>
-        <button type="button">close</button>
+        <button type="button">{t('aria.closeDialog')}</button>
       </div>
     </dialog>
   );
@@ -125,7 +123,13 @@ interface BulkDeclineModalProps {
   onClose: () => void;
 }
 
-function BulkDeclineModal({ pendingCount, followupId, pendingItems, onClose }: BulkDeclineModalProps) {
+function BulkDeclineModal({
+  pendingCount,
+  followupId,
+  pendingItems,
+  onClose,
+}: BulkDeclineModalProps) {
+  const { t } = useTranslation(['documentFollowup', 'common']);
   const { mutateAsync: declineAsync } = useDeclineLineItem();
   const [isPending, setIsPending] = useState(false);
 
@@ -134,7 +138,7 @@ function BulkDeclineModal({ pendingCount, followupId, pendingItems, onClose }: B
     handleSubmit,
     formState: { errors },
   } = useForm<DeclineLineItemFormValues>({
-    resolver: zodResolver(declineLineItemSchema),
+    resolver: zodResolver(makeDeclineLineItemSchema(t)),
   });
 
   const onSubmit = async (values: DeclineLineItemFormValues) => {
@@ -145,7 +149,7 @@ function BulkDeclineModal({ pendingCount, followupId, pendingItems, onClose }: B
       }
       onClose();
     } catch {
-      toast.error('Failed to decline some items. Please try again.');
+      toast.error(t('toasts.bulkDeclineFailed'));
     } finally {
       setIsPending(false);
     }
@@ -159,30 +163,26 @@ function BulkDeclineModal({ pendingCount, followupId, pendingItems, onClose }: B
             <Icon name="hand" style="solid" className="size-7 text-red-500" />
           </div>
           <h3 className="font-semibold text-base text-gray-900 mb-1 text-center">
-            Decline All Remaining
+            {t('bulkDeclineModal.title')}
           </h3>
           <p className="text-sm text-gray-500 mb-1 text-center">
-            You are declining{' '}
-            <span className="font-semibold text-gray-700">{pendingCount}</span> pending{' '}
-            {pendingCount === 1 ? 'request' : 'requests'}.
+            {t('bulkDeclineModal.youAreDeclining', { count: pendingCount })}
           </p>
           <p className="text-xs text-gray-400 mb-4 text-center">
-            A reason is required to decline all requests.
+            {t('bulkDeclineModal.reasonRequired')}
           </p>
           <form onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="mb-4">
               <label className="block text-xs font-medium text-gray-700 mb-1">
-                Reason for declining <span className="text-red-500">*</span>
+                {t('bulkDeclineModal.reasonLabel')} <span className="text-red-500">*</span>
               </label>
               <textarea
                 {...register('reason')}
                 rows={3}
-                placeholder="Enter reason for declining all remaining requests..."
+                placeholder={t('bulkDeclineModal.reasonPlaceholder')}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
               />
-              {errors.reason && (
-                <p className="text-xs text-danger mt-1">{errors.reason.message}</p>
-              )}
+              {errors.reason && <p className="text-xs text-danger mt-1">{errors.reason.message}</p>}
             </div>
             <div className="flex gap-3">
               <button
@@ -191,24 +191,22 @@ function BulkDeclineModal({ pendingCount, followupId, pendingItems, onClose }: B
                 disabled={isPending}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50"
               >
-                Back
+                {t('common:actions.back')}
               </button>
               <button
                 type="submit"
                 disabled={isPending}
                 className="flex-1 px-4 py-2.5 bg-danger hover:bg-danger/80 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {isPending && (
-                  <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                )}
-                Decline All
+                {isPending && <Icon name="spinner" style="solid" className="size-4 animate-spin" />}
+                {t('bulkDeclineModal.declineAll')}
               </button>
             </div>
           </form>
         </div>
       </div>
       <div className="modal-backdrop bg-black/40" onClick={onClose}>
-        <button type="button">close</button>
+        <button type="button">{t('aria.closeDialog')}</button>
       </div>
     </dialog>
   );
@@ -217,13 +215,22 @@ function BulkDeclineModal({ pendingCount, followupId, pendingItems, onClose }: B
 // ---- Main Page ----
 
 function ProvideDocumentsTaskPage() {
+  const { t } = useTranslation(['documentFollowup', 'common']);
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
 
-  const { data: followup, isLoading, isError } = useGetFollowupByWorkflowInstance(workflowInstanceId);
-  const { data: documentTypes = [], isError: isDocTypesError, refetch: refetchDocTypes } = useGetDocumentTypes();
+  const {
+    data: followup,
+    isLoading,
+    isError,
+  } = useGetFollowupByWorkflowInstance(workflowInstanceId);
+  const {
+    data: documentTypes = [],
+    isError: isDocTypesError,
+    refetch: refetchDocTypes,
+  } = useGetDocumentTypes();
   const submitFollowup = useSubmitDocumentFollowup();
 
   const [decliningItem, setDecliningItem] = useState<FollowupLineItem | null>(null);
@@ -268,20 +275,24 @@ function ProvideDocumentsTaskPage() {
       {
         onSuccess: () => {
           setIsConfirmSubmitOpen(false);
-          toast.success('Response submitted successfully');
+          toast.success(t('toasts.submitSuccess'));
           navigate('/tasks?activityId=provide-additional-documents');
         },
         onError: (error: unknown) => {
           setIsConfirmSubmitOpen(false);
           const status = (error as { response?: { status?: number } })?.response?.status;
           if (status === 409) {
-            toast.error('This followup has already been submitted.');
+            toast.error(t('toasts.submitAlreadyDone'));
             navigate('/tasks?activityId=provide-additional-documents');
           } else if (status === 400) {
-            toast.error('All items must be provided or declined before submitting.');
+            toast.error(t('toasts.submitItemsRequired'));
           } else {
-            const apiError = error as { response?: { data?: { detail?: string } }; message?: string };
-            const message = apiError?.response?.data?.detail ?? apiError?.message ?? 'Failed to submit response';
+            const apiError = error as {
+              response?: { data?: { detail?: string } };
+              message?: string;
+            };
+            const message =
+              apiError?.response?.data?.detail ?? apiError?.message ?? t('toasts.submitFailed');
             toast.error(message);
           }
         },
@@ -293,7 +304,7 @@ function ProvideDocumentsTaskPage() {
     return (
       <div className="flex items-center gap-2 py-8 text-sm text-gray-400">
         <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-        Loading document requests...
+        {t('page.loadingRequests')}
       </div>
     );
   }
@@ -302,16 +313,14 @@ function ProvideDocumentsTaskPage() {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="size-10 text-red-400" />
-        <p className="text-gray-600 font-medium">Failed to load document requests</p>
-        <p className="text-sm text-gray-400">
-          This task may no longer be active.
-        </p>
+        <p className="text-gray-600 font-medium">{t('page.loadError')}</p>
+        <p className="text-sm text-gray-400">{t('page.loadErrorDetail')}</p>
       </div>
     );
   }
 
   if (isDocTypesError) {
-    return <DataErrorState title="Failed to load document types" onRetry={refetchDocTypes} />;
+    return <DataErrorState title={t('page.loadError')} onRetry={refetchDocTypes} />;
   }
 
   const pendingItems = followup.lineItems.filter(i => i.status === 'Pending');
@@ -319,13 +328,14 @@ function ProvideDocumentsTaskPage() {
   // Every pending item is "handled" when it has a staged file (queued for attach on submit).
   // Declined items are already non-pending, so this only scopes over Pending rows.
   const allPendingStaged = pendingItems.every(i => !!stagedByLineItem[i.id]);
-  const canSubmit =
-    isTaskOwner && allPendingStaged && followup.status !== 'Cancelled';
+  const canSubmit = isTaskOwner && allPendingStaged && followup.status !== 'Cancelled';
 
   // Back-link to parent appraisal
   const parentAppraisalHref = followup.parentAppraisalId
     ? `/tasks/${taskId}`
     : '/tasks?activityId=provide-additional-documents';
+
+  const raisedByLabel = followup.raisedBy.displayName ?? followup.raisedBy.userId ?? 'Unknown';
 
   return (
     <div className="flex flex-col gap-4">
@@ -336,12 +346,12 @@ function ProvideDocumentsTaskPage() {
           className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors"
         >
           <Icon name="arrow-left" style="solid" className="size-3.5" />
-          Back to appraisal
+          {t('page.back')}
         </Link>
       </div>
 
       {/* Header card */}
-      <FormCard title="Provide Additional Documents" icon="file-circle-check" iconColor="amber">
+      <FormCard title={t('page.title')} icon="file-circle-check" iconColor="amber">
         <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100 mb-4">
           <Icon
             name="circle-info"
@@ -349,17 +359,13 @@ function ProvideDocumentsTaskPage() {
             className="size-5 text-amber-600 shrink-0 mt-0.5"
           />
           <div>
-            <p className="text-sm font-medium text-amber-800">
-              The checker has requested additional documents.
-            </p>
-            <p className="text-xs text-amber-600 mt-0.5">
-              Please provide or decline each requested document below. The checker's task will
-              proceed once all items are resolved.
-            </p>
+            <p className="text-sm font-medium text-amber-800">{t('page.infoTitle')}</p>
+            <p className="text-xs text-amber-600 mt-0.5">{t('page.infoBody')}</p>
             <p className="text-xs text-amber-500 mt-1">
-              Requested by{' '}
-              {followup.raisedBy.displayName ?? followup.raisedBy.userId ?? 'Unknown'}{' '}
-              on {formatDate(followup.raisedAt)}
+              {t('page.requestedBy', {
+                name: raisedByLabel,
+                date: formatDate(followup.raisedAt),
+              })}
             </p>
           </div>
         </div>
@@ -370,7 +376,7 @@ function ProvideDocumentsTaskPage() {
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <Icon name="clock" style="solid" className="size-4 text-amber-500" />
-                Pending Requests ({pendingItems.length})
+                {t('page.pendingRequests', { count: pendingItems.length })}
               </h4>
               {isTaskOwner && pendingItems.length > 1 && (
                 <button
@@ -379,16 +385,13 @@ function ProvideDocumentsTaskPage() {
                   className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors flex items-center gap-1.5"
                 >
                   <Icon name="hand" style="solid" className="size-3" />
-                  Decline All Remaining
+                  {t('page.declineAllRemaining')}
                 </button>
               )}
             </div>
             <div className="space-y-3">
               {pendingItems.map(item => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-xl border border-gray-200 bg-white"
-                >
+                <div key={item.id} className="p-4 rounded-xl border border-gray-200 bg-white">
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-800">
@@ -399,62 +402,65 @@ function ProvideDocumentsTaskPage() {
                     <LineItemStatusBadge status={item.status} />
                   </div>
 
-                  {isTaskOwner && (() => {
-                    const staged = stagedByLineItem[item.id];
-                    if (staged) {
+                  {isTaskOwner &&
+                    (() => {
+                      const staged = stagedByLineItem[item.id];
+                      if (staged) {
+                        return (
+                          <div className="flex items-center gap-2 mt-2">
+                            <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-xs text-green-800">
+                              <Icon
+                                name="check"
+                                style="solid"
+                                className="size-3.5 text-green-600"
+                              />
+                              <span className="truncate">
+                                <span className="font-semibold">{staged.fileName}</span>{' '}
+                                <span className="text-green-600/80">· {staged.targetLabel}</span>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setUploadingItem(item)}
+                              className="px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-colors"
+                            >
+                              {t('page.replaceStagedFile')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleUnstage(item.id)}
+                              className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors"
+                            >
+                              {t('page.removeStagedFile')}
+                            </button>
+                          </div>
+                        );
+                      }
                       return (
                         <div className="flex items-center gap-2 mt-2">
-                          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 border border-green-200 text-xs text-green-800">
-                            <Icon name="check" style="solid" className="size-3.5 text-green-600" />
-                            <span className="truncate">
-                              <span className="font-semibold">{staged.fileName}</span>{' '}
-                              <span className="text-green-600/80">· {staged.targetLabel}</span>
-                            </span>
-                          </div>
                           <button
                             type="button"
                             onClick={() => setUploadingItem(item)}
-                            className="px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-200 rounded-lg transition-colors"
+                            disabled={!followup.requestId}
+                            title={
+                              followup.requestId ? undefined : t('page.uploadUnavailableTitle')
+                            }
+                            className="flex-1 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/80 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                           >
-                            Replace
+                            <Icon name="upload" style="solid" className="size-3.5" />
+                            {t('page.uploadButton')}
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleUnstage(item.id)}
-                            className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors"
+                            onClick={() => setDecliningItem(item)}
+                            className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors flex items-center gap-1.5"
                           >
-                            Remove
+                            <Icon name="hand" style="solid" className="size-3.5" />
+                            {t('page.declineButton')}
                           </button>
                         </div>
                       );
-                    }
-                    return (
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          type="button"
-                          onClick={() => setUploadingItem(item)}
-                          disabled={!followup.requestId}
-                          title={
-                            followup.requestId
-                              ? undefined
-                              : 'Request context not available — cannot upload.'
-                          }
-                          className="flex-1 px-3 py-2 text-xs font-medium text-white bg-primary hover:bg-primary/80 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          <Icon name="upload" style="solid" className="size-3.5" />
-                          Upload
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDecliningItem(item)}
-                          className="px-3 py-2 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 rounded-lg transition-colors flex items-center gap-1.5"
-                        >
-                          <Icon name="hand" style="solid" className="size-3.5" />
-                          Decline
-                        </button>
-                      </div>
-                    );
-                  })()}
+                    })()}
                 </div>
               ))}
             </div>
@@ -466,20 +472,20 @@ function ProvideDocumentsTaskPage() {
           <div>
             <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
               <Icon name="circle-check" style="solid" className="size-4 text-green-500" />
-              Resolved ({resolvedItems.length})
+              {t('page.resolved', { count: resolvedItems.length })}
             </h4>
             <div className="overflow-hidden rounded-lg border border-gray-200">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                      Document Type
+                      {t('columns.documentType')}
                     </th>
                     <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                      Notes
+                      {t('columns.notes')}
                     </th>
                     <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                      Status
+                      {t('columns.status')}
                     </th>
                   </tr>
                 </thead>
@@ -493,7 +499,7 @@ function ProvideDocumentsTaskPage() {
                         {item.notes}
                         {item.reason && (
                           <span className="block text-xs text-red-500 mt-0.5">
-                            Reason: {item.reason}
+                            {t('page.reasonPrefix')} {item.reason}
                           </span>
                         )}
                       </td>
@@ -512,17 +518,13 @@ function ProvideDocumentsTaskPage() {
         {allPendingStaged && pendingItems.length > 0 && followup.status !== 'Cancelled' && (
           <div className="flex items-center gap-3 mt-4 p-3 rounded-xl bg-green-50 border border-green-100">
             <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
-            <p className="text-sm text-green-700 font-medium">
-              All pending requests have a file staged. Submit Response to send them.
-            </p>
+            <p className="text-sm text-green-700 font-medium">{t('page.allStagedBanner')}</p>
           </div>
         )}
         {pendingItems.length === 0 && followup.status !== 'Cancelled' && (
           <div className="flex items-center gap-3 mt-4 p-3 rounded-xl bg-green-50 border border-green-100">
             <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
-            <p className="text-sm text-green-700 font-medium">
-              All document requests have been resolved.
-            </p>
+            <p className="text-sm text-green-700 font-medium">{t('page.allResolvedBanner')}</p>
           </div>
         )}
 
@@ -539,23 +541,18 @@ function ProvideDocumentsTaskPage() {
                 <Icon name="spinner" style="solid" className="size-4 animate-spin" />
               )}
               <Icon name="paper-plane" style="solid" className="size-4" />
-              Submit Response
+              {t('page.submitResponse')}
             </button>
             {!allPendingStaged && pendingItems.length > 0 && (
-              <p className="ml-4 self-center text-xs text-gray-400">
-                Stage a file (or decline) for every pending item to enable submit.
-              </p>
+              <p className="ml-4 self-center text-xs text-gray-400">{t('page.stageHint')}</p>
             )}
           </div>
         )}
       </FormCard>
 
       {/* Inline Document Checklist — read-only reference of currently-attached documents. */}
-      <FormCard title="Document Checklist" icon="folder-open" iconColor="blue">
-        <p className="text-xs text-gray-500 mb-4">
-          Read-only view of documents already attached to the request. Staged files above are
-          attached atomically when you click Submit Response.
-        </p>
+      <FormCard title={t('page.documentChecklist')} icon="folder-open" iconColor="blue">
+        <p className="text-xs text-gray-500 mb-4">{t('page.checklistHint')}</p>
         <DocumentChecklistTab />
       </FormCard>
 
@@ -596,10 +593,10 @@ function ProvideDocumentsTaskPage() {
         isOpen={isConfirmSubmitOpen}
         onClose={() => setIsConfirmSubmitOpen(false)}
         onConfirm={handleSubmitResponse}
-        title="Submit Response"
-        message="Submit your response to the checker? This will mark all items as resolved and allow the checker to proceed."
-        confirmText="Submit"
-        cancelText="Cancel"
+        title={t('page.confirmSubmitTitle')}
+        message={t('page.confirmSubmitMessage')}
+        confirmText={t('page.confirmSubmit')}
+        cancelText={t('common:actions.cancel')}
         variant="primary"
         isLoading={submitFollowup.isPending}
       />

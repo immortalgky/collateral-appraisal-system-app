@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Dropdown from '@shared/components/inputs/Dropdown';
@@ -23,6 +24,7 @@ function hasAnyFilter(v: PersonTasksFilterValues): boolean {
 }
 
 function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
+  const { t } = useTranslation(['taskMonitor', 'common']);
   // Local state for the text input — debounced so we don't refetch every keystroke
   const [search, setSearch] = useState(value.search ?? '');
   const debouncedSearch = useDebounce(search, 400);
@@ -70,7 +72,7 @@ function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
       {/* Combined search: Appraisal Number / Customer Name (server-side LIKE on both) */}
       <div className="flex-1 min-w-[220px]">
         <label htmlFor="filter-search" className="block text-[11px] font-medium text-gray-500 mb-1">
-          Search
+          {t('filters.searchLabel')}
         </label>
         <div className="relative">
           <Icon
@@ -83,7 +85,7 @@ function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Appraisal number or customer name..."
+            placeholder={t('filters.personSearchPlaceholder')}
             className={`${inputClass} pl-9`}
           />
         </div>
@@ -91,22 +93,22 @@ function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
 
       <div className="flex-1 min-w-[180px]">
         <Dropdown
-          label="Status"
+          label={t('filters.statusLabel')}
           value={value.appraisalStatus ?? ''}
           onChange={(v: string | null) => onChange({ ...value, appraisalStatus: v ?? undefined })}
           options={statusOptions}
-          placeholder="Please Select"
+          placeholder={t('common:select.placeholder')}
           showValuePrefix={false}
         />
       </div>
 
       <div className="flex-1 min-w-[180px]">
         <Dropdown
-          label="Task Type"
+          label={t('filters.taskTypeLabel')}
           value={value.taskType ?? ''}
           onChange={(v: string | null) => onChange({ ...value, taskType: v ?? undefined })}
           options={taskTypeOptions}
-          placeholder="Please Select"
+          placeholder={t('common:select.placeholder')}
           showValuePrefix={false}
         />
       </div>
@@ -114,7 +116,7 @@ function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
       {isFiltered && (
         <div className="shrink-0">
           <Button type="button" variant="outline" size="sm" onClick={handleClear}>
-            Clear
+            {t('common:actions.clear')}
           </Button>
         </div>
       )}

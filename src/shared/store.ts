@@ -86,16 +86,33 @@ export const useParameterStore = create<ParameterStore>(set => ({
   },
 }));
 
+// Ref-count so that overlapping callers (e.g. two concurrent task completions,
+// or a completion while another loading action is active) don't prematurely
+// hide the overlay. The overlay stays visible until every caller has settled.
+let _loadingRefCount = 0;
+
 export const useLoadingStore = create<LoadingStore>(set => ({
   isLoading: false,
   message: undefined,
-  showLoading: (message?: string) => set({ isLoading: true, message }),
-  hideLoading: () => set({ isLoading: false, message: undefined }),
+  showLoading: (message?: string) => {
+    _loadingRefCount += 1;
+    set({ isLoading: true, message });
+  },
+  hideLoading: () => {
+    _loadingRefCount = Math.max(0, _loadingRefCount - 1);
+    if (_loadingRefCount === 0) {
+      set({ isLoading: false, message: undefined });
+    }
+  },
+  setMessage: (message: string) =>
+    set(state => (state.isLoading ? { message } : {})),
 }));
 
 // Export utility functions for manual loading control
 export const showLoading = (message?: string) => useLoadingStore.getState().showLoading(message);
 export const hideLoading = () => useLoadingStore.getState().hideLoading();
+export const setLoadingMessage = (message: string) =>
+  useLoadingStore.getState().setMessage(message);
 
 export const useBreadcrumbStore = create<BreadcrumbStore>(set => ({
   items: [],

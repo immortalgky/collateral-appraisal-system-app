@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
@@ -24,14 +25,6 @@ const WIDGET_ID = 'progress-summary';
 const STATUS_ORDER = ['Pending', 'InProgress', 'UnderReview', 'Completed', 'Cancelled'] as const;
 type StatusKey = (typeof STATUS_ORDER)[number];
 
-const STATUS_LABELS: Record<StatusKey, string> = {
-  Pending: 'Pending',
-  InProgress: 'In Progress',
-  UnderReview: 'Under Review',
-  Completed: 'Completed',
-  Cancelled: 'Cancelled',
-};
-
 const STATUS_COLORS: Record<StatusKey, string> = {
   Pending: '#6b7280',
   InProgress: '#3b82f6',
@@ -53,6 +46,7 @@ type ProgressSettings = {
 const EMPTY_SETTINGS: ProgressSettings = Object.freeze({}) as ProgressSettings;
 
 function ProgressSummaryWidget() {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const settings = useDashboardStore(
@@ -102,6 +96,15 @@ function ProgressSummaryWidget() {
     () => getPresetRange(presetKey, today, customRange),
     [presetKey, today, customRange],
   );
+
+  // Status labels built inside component so t() is available
+  const STATUS_LABELS: Record<StatusKey, string> = {
+    Pending: t('progressSummary.status.Pending'),
+    InProgress: t('progressSummary.status.InProgress'),
+    UnderReview: t('progressSummary.status.UnderReview'),
+    Completed: t('progressSummary.status.Completed'),
+    Cancelled: t('progressSummary.status.Cancelled'),
+  };
 
   const baseFilters: AppraisalStatusSummaryFilters = useMemo(
     () => ({
@@ -158,7 +161,8 @@ function ProgressSummaryWidget() {
     const priorTotal = allRows.reduce((s, r) => s + r.prevCount, 0);
     const total = allRows.reduce((s, r) => s + r.count, 0);
     return { allRows, visibleTotal, priorTotal, total };
-  }, [current.data, prior.data, hiddenSet]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current.data, prior.data, hiddenSet, t]);
 
   const chartSlices = rows.allRows
     .filter(r => !r.hidden && r.count > 0)
@@ -220,8 +224,6 @@ function ProgressSummaryWidget() {
     if (status) params.set('status', status);
     params.set('createdFrom', toIsoDate(range.from));
     params.set('createdTo', toIsoDate(range.to));
-    // Note: list page doesn't currently support assigneeId/bankingSegment filters;
-    // those stay scoped to the widget query and don't flow into the URL.
     navigate(`/appraisals/list?${params}`);
   };
 
@@ -248,7 +250,7 @@ function ProgressSummaryWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800">Appraisal Progress Summary</h3>
+              <h3 className="font-semibold text-gray-800">{t('progressSummary.title')}</h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
@@ -259,10 +261,10 @@ function ProgressSummaryWidget() {
                 type="button"
                 onClick={() => setFiltersOpen(o => !o)}
                 className="inline-flex items-center gap-1 px-2 h-8 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-                aria-label="Filters"
+                aria-label={t('progressSummary.aria.filtersBtn')}
               >
                 <Icon name="filter" style="solid" className="size-3.5" />
-                <span>Filters</span>
+                <span>{t('progressSummary.filters.label')}</span>
                 {activeFilterCount > 0 && (
                   <span className="ml-1 inline-flex items-center justify-center text-[10px] font-semibold rounded-full bg-blue-600 text-white min-w-4 h-4 px-1">
                     {activeFilterCount}
@@ -273,23 +275,22 @@ function ProgressSummaryWidget() {
                 <div className="absolute right-0 z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white shadow-lg p-3">
                   <div className="space-y-3">
                     <label className="flex flex-col gap-1 text-xs text-gray-500">
-                      Assignee username
+                      {t('progressSummary.filters.assigneeUsername')}
                       <input
                         type="text"
                         value={assigneeInput}
                         onChange={e => setAssigneeInput(e.target.value)}
-                        placeholder="e.g. P5229"
+                        placeholder={t('progressSummary.filters.assigneePlaceholder')}
                         className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      {/* TODO: wire to a shared users/assignees autocomplete hook when available */}
                     </label>
                     <label className="flex flex-col gap-1 text-xs text-gray-500">
-                      Banking segment
+                      {t('progressSummary.filters.bankingSegment')}
                       <input
                         type="text"
                         value={bankingInput}
                         onChange={e => setBankingInput(e.target.value)}
-                        placeholder="e.g. SME, Corporate"
+                        placeholder={t('progressSummary.filters.bankingPlaceholder')}
                         className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </label>
@@ -301,14 +302,14 @@ function ProgressSummaryWidget() {
                           onChange={e => updateSettings(WIDGET_ID, { compare: e.target.checked })}
                           className="rounded"
                         />
-                        Compare to prior period
+                        {t('progressSummary.filters.comparePrior')}
                       </label>
                       <button
                         type="button"
                         onClick={applyFilters}
                         className="text-sm font-medium rounded bg-blue-600 text-white px-3 py-1 hover:bg-blue-700"
                       >
-                        Apply
+                        {t('progressSummary.filters.apply')}
                       </button>
                     </div>
                   </div>
@@ -319,7 +320,7 @@ function ProgressSummaryWidget() {
               <button
                 type="button"
                 onClick={() => setMenuOpen(o => !o)}
-                aria-label="Widget menu"
+                aria-label={t('progressSummary.aria.menu')}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
@@ -328,7 +329,7 @@ function ProgressSummaryWidget() {
                 <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
                   {updatedLabel && (
                     <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
-                      Updated {updatedLabel} ago
+                      {t('updatedAgo', { n: updatedLabel })}
                     </p>
                   )}
                   <button
@@ -341,7 +342,7 @@ function ProgressSummaryWidget() {
                       style="solid"
                       className="size-3 text-gray-400"
                     />
-                    Refresh
+                    {t('progressSummary.menu.refresh')}
                   </button>
                   <button
                     type="button"
@@ -350,7 +351,7 @@ function ProgressSummaryWidget() {
                     className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent flex items-center gap-2"
                   >
                     <Icon name="eraser" style="solid" className="size-3 text-gray-400" />
-                    Clear filters
+                    {t('progressSummary.menu.clearFilters')}
                   </button>
                   <button
                     type="button"
@@ -358,7 +359,7 @@ function ProgressSummaryWidget() {
                     className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
-                    Reset
+                    {t('progressSummary.menu.reset')}
                   </button>
                 </div>
               )}
@@ -368,10 +369,7 @@ function ProgressSummaryWidget() {
 
         <div className="p-6">
           {isError ? (
-            <WidgetError
-              message="Unable to load progress summary"
-              onRetry={() => current.refetch()}
-            />
+            <WidgetError message={t('progressSummary.error')} onRetry={() => current.refetch()} />
           ) : isLoading ? (
             <div className="flex items-center gap-8">
               <Skeleton variant="circular" width={200} height={200} />
@@ -400,8 +398,6 @@ function ProgressSummaryWidget() {
                         stroke="none"
                         isAnimationActive={false}
                         onClick={data => {
-                          // Recharts passes slice data directly; `payload` may exist as a wrapper
-                          // in some versions. Read `status` from either shape.
                           const direct = (data as { status?: StatusKey }).status;
                           const nested = (data as { payload?: { status?: StatusKey } }).payload
                             ?.status;
@@ -421,7 +417,7 @@ function ProgressSummaryWidget() {
                   <span className="text-3xl font-bold text-gray-800 tabular-nums">
                     {rows.total.toLocaleString()}
                   </span>
-                  <span className="text-xs text-gray-400">Total</span>
+                  <span className="text-xs text-gray-400">{t('progressSummary.total')}</span>
                   {settings.compare && rows.priorTotal > 0 && (
                     <span
                       className={`text-[11px] mt-0.5 tabular-nums ${
@@ -433,7 +429,7 @@ function ProgressSummaryWidget() {
                       }`}
                     >
                       {totalDelta > 0 ? '↑' : totalDelta < 0 ? '↓' : '→'}
-                      {Math.abs(totalDelta)} vs prior
+                      {Math.abs(totalDelta)} {t('progressSummary.vsPrior')}
                     </span>
                   )}
                 </div>
@@ -444,6 +440,7 @@ function ProgressSummaryWidget() {
                 {rows.allRows.map(r => {
                   const pct =
                     rows.visibleTotal > 0 && !r.hidden ? (r.count / rows.visibleTotal) * 100 : 0;
+                  const hiddenSuffix = r.hidden ? t('progressSummary.aria.legendHidden') : '';
                   return (
                     <div
                       key={r.status}
@@ -452,7 +449,12 @@ function ProgressSummaryWidget() {
                       }`}
                       role="button"
                       tabIndex={0}
-                      aria-label={`${r.label}: ${r.count}, ${pct.toFixed(1)} percent${r.hidden ? ', hidden' : ''}. Press Enter to open filtered list, Space to toggle visibility.`}
+                      aria-label={t('progressSummary.aria.legendRow', {
+                        label: r.label,
+                        count: r.count,
+                        pct: pct.toFixed(1),
+                        hidden: hiddenSuffix,
+                      })}
                       onClick={() => drillDown(r.status)}
                       onKeyDown={e => {
                         if (e.key === 'Enter') drillDown(r.status);
@@ -470,7 +472,12 @@ function ProgressSummaryWidget() {
                             toggleStatusVisibility(r.status);
                           }}
                           onKeyDown={e => e.stopPropagation()}
-                          aria-label={`${r.hidden ? 'Show' : 'Hide'} ${r.label} segment`}
+                          aria-label={t('progressSummary.aria.toggleVisibility', {
+                            action: r.hidden
+                              ? t('progressSummary.aria.show')
+                              : t('progressSummary.aria.hide'),
+                            label: r.label,
+                          })}
                           aria-pressed={!r.hidden}
                           className="shrink-0"
                         >
@@ -507,14 +514,14 @@ function ProgressSummaryWidget() {
 
           {!isLoading && !isError && rows.total === 0 && (
             <div className="mt-4 text-center text-sm text-gray-400">
-              No appraisals match these filters.
+              {t('progressSummary.noData')}
               {hasActiveFilters && (
                 <button
                   type="button"
                   onClick={handleClearFilters}
                   className="ml-1 text-blue-600 hover:text-blue-700"
                 >
-                  Clear filters
+                  {t('progressSummary.clearFilters')}
                 </button>
               )}
             </div>

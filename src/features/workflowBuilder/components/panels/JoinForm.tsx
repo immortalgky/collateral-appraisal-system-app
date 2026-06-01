@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { joinFormSchema, type JoinFormValues } from '../../schemas';
+import { makeJoinFormSchema, type JoinFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { JoinProperties } from '../../types';
 
@@ -11,18 +12,24 @@ interface Props {
 }
 
 export function JoinForm({ nodeId }: Props) {
-  const nodes = useWorkflowStore((s) => s.nodes);
-  const updateActivityData = useWorkflowStore((s) => s.updateActivityData);
+  const { t } = useTranslation('workflowBuilder');
+  const nodes = useWorkflowStore(s => s.nodes);
+  const updateActivityData = useWorkflowStore(s => s.updateActivityData);
 
-  const node = nodes.find((n) => n.id === nodeId);
+  const node = nodes.find(n => n.id === nodeId);
   const data = node?.data as ActivityNodeData | undefined;
   const props = data?.properties as JoinProperties | undefined;
 
   // Get available fork nodes to populate forkId dropdown
-  const forkNodes = nodes.filter((n) => (n.data as ActivityNodeData).type === 'ForkActivity');
+  const forkNodes = nodes.filter(n => (n.data as ActivityNodeData).type === 'ForkActivity');
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<JoinFormValues>({
-    resolver: zodResolver(joinFormSchema),
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<JoinFormValues>({
+    resolver: zodResolver(makeJoinFormSchema(t)),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -67,24 +74,38 @@ export function JoinForm({ nodeId }: Props) {
 
   return (
     <form onChange={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="badge badge-success gap-1 text-xs">Join</div>
+      <div className="badge badge-success gap-1 text-xs">{t('forms.badges.join')}</div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Name</span></label>
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.name')}</span>
+        </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
-        {errors.name && <label className="label"><span className="label-text-alt text-error">{errors.name.message}</span></label>}
+        {errors.name && (
+          <label className="label">
+            <span className="label-text-alt text-error">{errors.name.message}</span>
+          </label>
+        )}
       </div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Description</span></label>
-        <textarea {...register('description')} className="textarea textarea-bordered textarea-sm w-full" rows={2} />
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.description')}</span>
+        </label>
+        <textarea
+          {...register('description')}
+          className="textarea textarea-bordered textarea-sm w-full"
+          rows={2}
+        />
       </div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Fork Node</span></label>
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.forkNode')}</span>
+        </label>
         <select {...register('forkId')} className="select select-bordered select-sm w-full">
-          <option value="">Select fork node...</option>
-          {forkNodes.map((fn) => (
+          <option value="">{t('forms.placeholders.selectForkNode')}</option>
+          {forkNodes.map(fn => (
             <option key={fn.id} value={fn.id}>
               {(fn.data as ActivityNodeData).name || fn.id}
             </option>
@@ -93,34 +114,47 @@ export function JoinForm({ nodeId }: Props) {
       </div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Join Type</span></label>
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.joinType')}</span>
+        </label>
         <select {...register('joinType')} className="select select-bordered select-sm w-full">
-          <option value="all">All (wait for all branches)</option>
-          <option value="any">Any (first branch to complete)</option>
-          <option value="n_of_m">N of M</option>
+          <option value="all">{t('forms.joinTypes.all')}</option>
+          <option value="any">{t('forms.joinTypes.any')}</option>
+          <option value="n_of_m">{t('forms.joinTypes.nOfM')}</option>
         </select>
       </div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Timeout (minutes, 0 = none)</span></label>
-        <input {...register('timeoutMinutes')} type="number" min={0} className="input input-bordered input-sm w-full" />
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.timeoutMinutes')}</span>
+        </label>
+        <input
+          {...register('timeoutMinutes')}
+          type="number"
+          min={0}
+          className="input input-bordered input-sm w-full"
+        />
       </div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Merge Strategy</span></label>
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.mergeStrategy')}</span>
+        </label>
         <select {...register('mergeStrategy')} className="select select-bordered select-sm w-full">
-          <option value="merge">Merge all outputs</option>
-          <option value="first">Use first completed</option>
-          <option value="last">Use last completed</option>
+          <option value="merge">{t('forms.mergeStrategies.merge')}</option>
+          <option value="first">{t('forms.mergeStrategies.first')}</option>
+          <option value="last">{t('forms.mergeStrategies.last')}</option>
         </select>
       </div>
 
       <div className="form-control">
-        <label className="label"><span className="label-text text-xs font-medium">Timeout Action</span></label>
+        <label className="label">
+          <span className="label-text text-xs font-medium">{t('forms.fields.timeoutAction')}</span>
+        </label>
         <select {...register('timeoutAction')} className="select select-bordered select-sm w-full">
-          <option value="continue">Continue</option>
-          <option value="cancel">Cancel</option>
-          <option value="error">Error</option>
+          <option value="continue">{t('forms.timeoutActions.continue')}</option>
+          <option value="cancel">{t('forms.timeoutActions.cancel')}</option>
+          <option value="error">{t('forms.timeoutActions.error')}</option>
         </select>
       </div>
     </form>

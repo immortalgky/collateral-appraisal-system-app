@@ -342,7 +342,8 @@ export function SurveySelectionMap({
       {/* No-location note */}
       {noLocationCount > 0 && (
         <div className="absolute bottom-2 left-2 z-10 rounded-md bg-amber-50/95 px-2.5 py-1 shadow-sm text-[11px] text-amber-700 backdrop-blur">
-          {noLocationCount} survey{noLocationCount > 1 ? 's' : ''} without a location aren’t shown on the map
+          {noLocationCount} survey{noLocationCount > 1 ? 's' : ''} without a location aren’t shown
+          on the map
         </div>
       )}
     </div>

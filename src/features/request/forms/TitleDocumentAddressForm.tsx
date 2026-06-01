@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
-import { titleAddressFields } from '../configs/fields';
+import { makeTitleAddressFields } from '../configs/fields';
 import TitleInformationHeader from '../components/TitleInformationHeader';
 import { useFormContext } from 'react-hook-form';
 
@@ -9,6 +11,8 @@ interface TitleDocumentAdressFormProps {
 }
 
 const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressFormProps) => {
+  const { t } = useTranslation('request');
+  const fields = useMemo(() => makeTitleAddressFields(t), [t]);
   const { getValues, setValue } = useFormContext();
 
   const prefix = `titles.${index}.titleAddress`;
@@ -32,12 +36,12 @@ const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressForm
   return (
     <>
       <TitleInformationHeader
-        title="Title document address"
+        title={t('titleAddress.header')}
         onCopy={handleCopy}
         isReadOnly={isReadOnly}
         className="col-span-6"
       />
-      <FormFields fields={titleAddressFields} namePrefix={'titles'} index={index} />
+      <FormFields fields={fields} namePrefix={'titles'} index={index} />
     </>
   );
 };

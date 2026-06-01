@@ -1,0 +1,296 @@
+{
+  "page": {
+    "meetings": {
+      "title": "การประชุม",
+      "subtitle": "จัดกำหนดการประชุมคณะกรรมการระดับ 3 และปล่อยงานประเมินสู่กระบวนการลงมติ"
+    },
+    "queue": {
+      "title": "คิวรอการประชุม",
+      "subtitle": "งานประเมินระดับ 3 (วงเงินสินเชื่อ > 30 ล้าน) ที่รอการมอบหมายประชุม"
+    }
+  },
+  "tabs": {
+    "active": "ใช้งานอยู่",
+    "history": "ประวัติ"
+  },
+  "columns": {
+    "meetingNo": "เลขที่การประชุม",
+    "title": "ชื่อการประชุม",
+    "status": "สถานะ",
+    "start": "เริ่มต้น",
+    "end": "สิ้นสุด",
+    "cutOff": "วันปิดรับ",
+    "items": "รายการ",
+    "appraisalNo": "เลขที่งานประเมิน",
+    "facilityLimit": "วงเงินสินเชื่อ",
+    "enqueued": "เวลาเข้าคิว",
+    "memberNo": "ที่",
+    "memberName": "ชื่อกรรมการ",
+    "position": "ตำแหน่ง",
+    "actions": "การดำเนินการ",
+    "appraisalNumber": "เลขที่งานประเมิน",
+    "customerName": "ชื่อลูกค้า",
+    "appraisalStaff": "เจ้าหน้าที่ประเมิน",
+    "appraisalValue": "มูลค่าประเมิน",
+    "decision": "มติ",
+    "no": "ที่"
+  },
+  "filters": {
+    "searchPlaceholder": "ค้นหาเลขที่ประชุม หรือชื่อลูกค้า",
+    "allStatus": "ทุกสถานะ",
+    "from": "ตั้งแต่",
+    "to": "ถึง"
+  },
+  "buttons": {
+    "viewQueue": "ดูคิว",
+    "bulkCreate": "สร้างหลายรายการ",
+    "newMeeting": "ประชุมใหม่",
+    "allMeetings": "การประชุมทั้งหมด",
+    "addToExisting": "เพิ่มในการประชุมที่มีอยู่",
+    "addToNewMeeting": "เพิ่มในการประชุมใหม่",
+    "addToExistingCount": "เพิ่มในการประชุมที่มีอยู่ ({{n}})",
+    "addToNewMeetingCount": "เพิ่มในการประชุมใหม่ ({{n}})",
+    "addAppraisals": "เพิ่มงานประเมิน",
+    "addMember": "เพิ่มกรรมการ",
+    "clear": "ล้าง",
+    "edit": "แก้ไข",
+    "cutOff": "ปิดรับ",
+    "sendInvitation": "ส่งหนังสือเชิญ",
+    "resendInvitation": "ส่งหนังสือเชิญอีกครั้ง",
+    "cancel": "ยกเลิก",
+    "back": "กลับ",
+    "release": "ปล่อยลงมติ",
+    "routeBack": "ส่งกลับแก้ไข",
+    "remove": "นำออก",
+    "saveAgenda": "บันทึกวาระ",
+    "saveChanges": "บันทึกการเปลี่ยนแปลง",
+    "createMeeting": "สร้างการประชุม",
+    "create": "สร้าง",
+    "keepMeeting": "คงการประชุม",
+    "cancelMeeting": "ยกเลิกการประชุม",
+    "confirmCutOff": "ยืนยันการปิดรับ",
+    "addMemberSubmit": "เพิ่มกรรมการ",
+    "cancelMemberAdd": "ยกเลิก"
+  },
+  "actions": {
+    "cutOff": "ปิดรับ",
+    "sendInvitation": "ส่งหนังสือเชิญ",
+    "resendInvitation": "ส่งหนังสือเชิญอีกครั้ง",
+    "cancel": "ยกเลิก"
+  },
+  "status": {
+    "New": "ใหม่",
+    "InvitationSent": "ส่งหนังสือเชิญแล้ว",
+    "InProgress": "กำลังดำเนินการ",
+    "RoutedBack": "ส่งกลับแก้ไข",
+    "Ended": "เสร็จสิ้น",
+    "Cancelled": "ยกเลิกแล้ว"
+  },
+  "position": {
+    "Chairman": "ประธาน",
+    "Director": "กรรมการ",
+    "Secretary": "เลขานุการ",
+    "UW": "UW",
+    "Risk": "ความเสี่ยง",
+    "Appraisal": "ฝ่ายประเมิน",
+    "Credit": "สินเชื่อ",
+    "Member": "สมาชิก"
+  },
+  "decision": {
+    "Pending": "รอพิจารณา",
+    "Released": "ปล่อยแล้ว",
+    "RoutedBack": "ส่งกลับแก้ไข"
+  },
+  "decisionGroups": {
+    "New": "งานประเมินใหม่",
+    "ReAppraisal": "งานประเมินซ้ำ",
+    "Progressive": "งานประเมินตามความคืบหน้า",
+    "PreAppraisal": "งานประเมินเบื้องต้น"
+  },
+  "ackGroups": {
+    "urgent": "รับทราบเร่งด่วน (กลุ่ม 2)",
+    "standard": "รับทราบ (กลุ่ม 1)"
+  },
+  "sections": {
+    "decisionItems": "รายการมติ ({{n}})",
+    "acknowledgementItems": "รายการรับทราบ ({{n}})",
+    "appraisals": "งานประเมิน ({{n}})",
+    "queuedItemsToInclude": "รายการในคิวที่จะรวม",
+    "schedule": "กำหนดการประชุม",
+    "committeeMembers": "คณะกรรมการ",
+    "agenda": "วาระการประชุม"
+  },
+  "fields": {
+    "title": "ชื่อการประชุม",
+    "titlePlaceholder": "เช่น การประชุมคณะกรรมการ — สัปดาห์ที่ 14",
+    "start": "เริ่มต้น",
+    "end": "สิ้นสุด",
+    "from": "จาก",
+    "to": "ถึง",
+    "location": "สถานที่",
+    "optionalPlaceholder": "ไม่บังคับ",
+    "reason": "เหตุผล",
+    "reasonRequired": "เหตุผล",
+    "cancelReasonPlaceholder": "เหตุผลในการยกเลิกการประชุมนี้คืออะไร?",
+    "routeBackReasonPlaceholder": "อธิบายเหตุผลที่ส่งงานประเมินนี้กลับแก้ไข...",
+    "user": "ผู้ใช้",
+    "agendaCertifyMinutes": "รับรองรายงานการประชุมครั้งก่อน",
+    "agendaCertifyMinutesWithNo": "รับรองรายงานการประชุมครั้งที่ {{no}}",
+    "agendaCertifyMinutesPlaceholder": "ข้อความรับรองรายงานการประชุม...",
+    "agendaChairmanInformed": "แจ้งให้ประธานทราบ",
+    "agendaChairmanInformedPlaceholder": "ข้อมูลที่แจ้งประธาน...",
+    "agendaOthers": "วาระอื่นๆ",
+    "agendaOthersPlaceholder": "วาระอื่นๆ ที่ต้องการพิจารณา...",
+    "subjectLabel": "หัวเรื่อง"
+  },
+  "dialogs": {
+    "newMeeting": "ประชุมใหม่",
+    "editMeeting": "แก้ไขการประชุม",
+    "cancelMeeting": "ยกเลิกการประชุม",
+    "confirmCutOff": "ยืนยันการปิดรับ",
+    "releaseAppraisal": "ปล่อยงานประเมิน",
+    "removeAppraisal": "นำงานประเมินออก",
+    "routeBackAppraisal": "ส่งงานประเมินกลับแก้ไข",
+    "addAppraisalsFromQueue": "เพิ่มงานประเมินจากคิว",
+    "addMember": "เพิ่มกรรมการ",
+    "addToExistingMeeting": "เพิ่มในการประชุมที่มีอยู่",
+    "bulkCreateMeetings": "สร้างการประชุมหลายรายการ",
+    "resendInvitation": "ส่งหนังสือเชิญอีกครั้ง",
+    "newEmail": "อีเมลใหม่"
+  },
+  "banners": {
+    "ended": "การประชุมเสร็จสิ้น",
+    "endedAt": "การประชุมเสร็จสิ้นเมื่อ {{date}}",
+    "inProgress": "การประชุมกำลังดำเนินอยู่ ปล่อยรายการมติสู่การอนุมัติ หรือส่งกลับเจ้าหน้าที่แก้ไข",
+    "routedBack": "มีรายการหนึ่งหรือมากกว่าถูกส่งกลับแก้ไข โปรดปล่อยรายการมติทั้งหมดเพื่อปิดการประชุม",
+    "cancelled": "ยกเลิกการประชุมแล้ว รายการถูกส่งกลับคิว",
+    "cancelReason": "เหตุผล: {{reason}}"
+  },
+  "detail": {
+    "start": "เริ่มต้น",
+    "end": "สิ้นสุด",
+    "from": "จาก",
+    "to": "ถึง",
+    "location": "สถานที่",
+    "cutOffAt": "วันปิดรับ",
+    "invitationSent": "ส่งหนังสือเชิญแล้ว",
+    "notes": "หมายเหตุ",
+    "previousMeeting": "การประชุมก่อนหน้า"
+  },
+  "empty": {
+    "noMeetings": "ไม่พบการประชุม",
+    "noQueue": "ไม่มีงานประเมินรอในคิว",
+    "noItems": "ไม่มีรายการ",
+    "noQueuedItems": "ไม่มีรายการในคิวในขณะนี้",
+    "noQueuedAppraisals": "ขณะนี้ไม่มีงานประเมินรอในคิว",
+    "noOpenMeetings": "ไม่มีการประชุมที่เปิดรับ โปรดสร้างการประชุมใหม่ก่อน",
+    "noMembers": "ยังไม่มีกรรมการในการประชุมนี้"
+  },
+  "addToExisting": {
+    "description": "เลือกการประชุมที่เปิดรับ (ใหม่ หรือส่งหนังสือเชิญแล้ว) เพื่อเพิ่มงานประเมินที่เลือก {{count}} รายการ",
+    "descriptionPlural": "เลือกการประชุมที่เปิดรับ (ใหม่ หรือส่งหนังสือเชิญแล้ว) เพื่อเพิ่มงานประเมินที่เลือก {{count}} รายการ",
+    "selectMeeting": "— เลือกการประชุม —",
+    "addToMeeting": "เพิ่มในการประชุม",
+    "adding": "กำลังเพิ่ม..."
+  },
+  "cancelDialog": {
+    "description": "การยกเลิกจะส่งคืนงานประเมินทั้งหมดกลับไปยังคิว กระบวนการทำงานเดิมจะยังคงหยุดชั่วคราวและสามารถมอบหมายให้กับการประชุมใหม่ได้",
+    "cancelling": "กำลังยกเลิก..."
+  },
+  "cutOffDialog": {
+    "description": "ดึงรายการที่เพิ่งเข้าคิวมาไว้ในการประชุมนี้ รายการที่อยู่ในการประชุมแล้วจะถูกข้าม คุณสามารถทำการปิดรับซ้ำได้หลังจากส่งหนังสือเชิญ หากมีรายการใหม่เข้ามา",
+    "ackNote": "รายการรับทราบ (การอนุมัติคณะอนุกรรมการที่รอดำเนินการตั้งแต่การประชุมครั้งก่อน) จะถูกรวมโดยอัตโนมัติโดยระบบ",
+    "processing": "กำลังประมวลผล..."
+  },
+  "releaseDialog": {
+    "confirm": "ปล่อย {{label}} ให้กรรมการทุกคนลงมติ? กรรมการแต่ละคนจะได้รับงานอนุมัติแบบคู่ขนาน",
+    "releasing": "กำลังปล่อย..."
+  },
+  "removeDialog": {
+    "confirm": "นำ {{label}} ออกจากการประชุมนี้? งานประเมินจะถูกส่งกลับไปยังคิวและสามารถเพิ่มในการประชุมอื่นได้ในภายหลัง",
+    "removing": "กำลังนำออก..."
+  },
+  "routeBackDialog": {
+    "description": "ส่ง {{label}} กลับทีมประเมินเพื่อแก้ไข จำเป็นต้องระบุเหตุผล",
+    "routingBack": "กำลังส่งกลับ..."
+  },
+  "bulkCreateDialog": {
+    "description": "เลือกวันที่หนึ่งวันขึ้นไป ระบบจะสร้างการประชุมใหม่สำหรับแต่ละวันที่เลือก สามารถเพิ่มกรรมการให้แต่ละการประชุมได้ในภายหลัง",
+    "datesSelected": "เลือก {{n}} วัน",
+    "datesSelectedPlural": "เลือก {{n}} วัน",
+    "creating": "กำลังสร้าง...",
+    "overflow": "+{{n}} รายการ"
+  },
+  "addItemsDialog": {
+    "selectedCount": "เลือก {{selected}} จาก {{total}} รายการ",
+    "adding": "กำลังเพิ่ม..."
+  },
+  "addMemberDialog": {
+    "loadingUsers": "กำลังโหลดผู้ใช้...",
+    "noUsers": "ไม่มีผู้ใช้ที่มีบทบาท AppraisalCommittee",
+    "selectUser": "เลือกผู้ใช้",
+    "adding": "กำลังเพิ่ม..."
+  },
+  "queue": {
+    "description": "งานประเมินระดับ 3 (วงเงินสินเชื่อ > 30 ล้าน) ที่รอการมอบหมายประชุม",
+    "selectMeetingFirst": "โปรดเลือกการประชุมก่อน"
+  },
+  "toasts": {
+    "meetingCreated": "สร้างการประชุม {{no}} แล้ว",
+    "meetingCreateFailed": "ไม่สามารถสร้างการประชุมได้",
+    "meetingUpdated": "อัปเดตการประชุมแล้ว",
+    "meetingUpdateFailed": "ไม่สามารถอัปเดตการประชุมได้",
+    "meetingCancelled": "ยกเลิกการประชุมแล้ว รายการถูกส่งกลับคิว",
+    "meetingCancelFailed": "ไม่สามารถยกเลิกการประชุมได้",
+    "cutOffCompleted": "ปิดรับเสร็จสิ้น — รายการในคิวใหม่ถูกเพิ่มในการประชุมนี้",
+    "cutOffFailed": "ไม่สามารถปิดรับได้",
+    "invitationSent": "ส่งหนังสือเชิญทางอีเมล — เลขที่การประชุม {{no}}",
+    "invitationResent": "ส่งหนังสือเชิญซ้ำ — เลขที่การประชุม {{no}}",
+    "invitationFailed": "ไม่สามารถส่งหนังสือเชิญได้",
+    "invitationResendFailed": "ไม่สามารถส่งหนังสือเชิญซ้ำได้",
+    "itemsAdded": "เพิ่ม {{count}} งานประเมิน",
+    "itemsAddedPlural": "เพิ่ม {{count}} งานประเมิน",
+    "itemsAddFailed": "ไม่สามารถเพิ่มงานประเมินได้",
+    "meetingCreatedButItemsFailed": "สร้างการประชุมแล้วแต่ไม่สามารถเพิ่มรายการได้",
+    "itemsAddToExistingFailed": "ไม่สามารถเพิ่มรายการในการประชุมได้",
+    "itemReleased": "ปล่อยงานประเมินให้กรรมการทุกคนลงมติแล้ว",
+    "itemReleaseFailed": "ไม่สามารถปล่อยงานประเมินได้",
+    "itemRoutedBack": "ส่งงานประเมินกลับทีมประเมินแล้ว",
+    "itemRouteBackFailed": "ไม่สามารถส่งงานประเมินกลับได้",
+    "itemRemoved": "ส่งงานประเมิน {{label}} กลับคิวแล้ว",
+    "itemRemoveFailed": "ไม่สามารถนำงานประเมินออกได้",
+    "memberAdded": "เพิ่มกรรมการแล้ว",
+    "memberAddFailed": "ไม่สามารถเพิ่มกรรมการได้",
+    "memberRemoved": "นำกรรมการออกแล้ว",
+    "memberRemoveFailed": "ไม่สามารถนำกรรมการออกได้",
+    "positionUpdateFailed": "ไม่สามารถอัปเดตตำแหน่งได้",
+    "agendaSaved": "บันทึกวาระแล้ว",
+    "agendaSaveFailed": "ไม่สามารถบันทึกวาระได้",
+    "bulkCreated": "สร้างร่างการประชุม {{count}} รายการแล้ว",
+    "bulkCreatedPlural": "สร้างร่างการประชุม {{count}} รายการแล้ว",
+    "bulkCreateFailed": "ไม่สามารถสร้างการประชุมได้",
+    "pickAtLeastOneDate": "โปรดเลือกอย่างน้อยหนึ่งวัน"
+  },
+  "validation": {
+    "titleRequired": "จำเป็นต้องระบุชื่อการประชุม",
+    "titleMax": "ชื่อการประชุมต้องไม่เกิน 200 ตัวอักษร",
+    "locationMax": "สถานที่ต้องไม่เกิน 200 ตัวอักษร",
+    "fromToMax": "ต้องไม่เกิน 200 ตัวอักษร",
+    "startRequired": "จำเป็นต้องระบุวันที่เริ่มต้น",
+    "endRequired": "จำเป็นต้องระบุวันที่สิ้นสุด",
+    "endAfterStart": "วันสิ้นสุดต้องอยู่หลังวันเริ่มต้น",
+    "reasonRequired": "จำเป็นต้องระบุเหตุผล",
+    "reasonMax": "เหตุผลต้องไม่เกิน 500 ตัวอักษร",
+    "pickAtLeastOneDate": "โปรดเลือกอย่างน้อยหนึ่งวัน"
+  },
+  "aria": {
+    "rowActions": "การดำเนินการในแถว",
+    "selectAll": "เลือกทั้งหมด",
+    "selectItem": "เลือก {{label}}",
+    "removeDate": "นำ {{date}} ออก",
+    "removeFromMeeting": "นำ {{label}} ออกจากการประชุม"
+  },
+  "confirm": {
+    "removeMember": "นำ {{name}} ออกจากการประชุมนี้?"
+  }
+}

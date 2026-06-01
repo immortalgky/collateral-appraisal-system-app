@@ -1,10 +1,35 @@
+import { useTranslation } from 'react-i18next';
 import FormTable from '../components/tables/FormTable';
 import { SectionHeader } from '../../../shared/components';
 
 const PropertiesForm = () => {
+  const { t } = useTranslation('request');
+
+  const propertiesColumns = [
+    {
+      name: 'propertyType',
+      label: t('fields.propertyType'),
+      inputType: 'dropdown',
+      group: 'PropertyType',
+    },
+    {
+      name: 'buildingType',
+      label: t('fields.buildingType'),
+      inputType: 'dropdown',
+      group: 'BuildingType',
+    },
+    {
+      name: 'sellingPrice',
+      label: t('fields.sellingPrice'),
+      inputType: 'number',
+      maxIntegerDigits: 15,
+      decimalDigits: 2,
+    },
+  ];
+
   return (
     <div>
-      <SectionHeader title="Properties" required={true} />
+      <SectionHeader title={t('forms.properties')} required={true} />
       <FormTable
         name="properties"
         columns={propertiesColumns}
@@ -14,27 +39,5 @@ const PropertiesForm = () => {
     </div>
   );
 };
-
-const propertiesColumns = [
-  {
-    name: 'propertyType',
-    label: 'Property Type',
-    inputType: 'dropdown',
-    group: 'PropertyType',
-  },
-  {
-    name: 'buildingType',
-    label: 'Building Type',
-    inputType: 'dropdown',
-    group: 'BuildingType',
-  },
-  {
-    name: 'sellingPrice',
-    label: 'Selling Price',
-    inputType: 'number',
-    maxIntegerDigits: 15,
-    decimalDigits: 2,
-  },
-];
 
 export default PropertiesForm;

@@ -18,6 +18,7 @@ interface FavoriteItemRowProps {
 }
 
 function FavoriteItemRow({ node, lang, collapsed }: FavoriteItemRowProps) {
+  const { t } = useTranslation('common');
   const location = useLocation();
   const { remove } = useFavorites();
   const label = node.labels[lang] ?? node.labels['en'] ?? node.itemKey;
@@ -82,7 +83,7 @@ function FavoriteItemRow({ node, lang, collapsed }: FavoriteItemRowProps) {
             e.stopPropagation();
             remove(node.id);
           }}
-          aria-label="Remove from favorites"
+          aria-label={t('favorites.aria.removeFromFavorites')}
           className="ml-auto flex-shrink-0 p-0.5 rounded text-amber-400 hover:text-amber-500 transition-colors"
         >
           <Icon name="star" style="solid" className="size-3" />

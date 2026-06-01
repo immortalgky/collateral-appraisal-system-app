@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -13,7 +14,6 @@ import {
   CANCEL_ELIGIBLE,
   CUT_OFF_ELIGIBLE,
   MEETING_PERMISSIONS,
-  MEETING_STATUS_LABELS,
   MEETING_STATUS_OPTIONS,
   RESEND_INVITATION_ELIGIBLE,
 } from '../constants';
@@ -55,6 +55,7 @@ interface RowActionsMenuProps {
 }
 
 const RowActionsMenu = ({ actions }: RowActionsMenuProps) => {
+  const { t } = useTranslation('meeting');
   const [open, setOpen] = useState(false);
 
   if (actions.length === 0) return null;
@@ -68,7 +69,7 @@ const RowActionsMenu = ({ actions }: RowActionsMenuProps) => {
           setOpen(prev => !prev);
         }}
         className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
-        aria-label="Row actions"
+        aria-label={t('aria.rowActions')}
       >
         <Icon name="ellipsis-vertical" style="solid" className="size-4" />
       </button>
@@ -128,18 +129,23 @@ const MeetingRow = ({
   onResendInvitation,
   onCancel,
 }: MeetingRowProps) => {
+  const { t } = useTranslation('meeting');
   const { status } = meeting;
   const isNew = status === 'New';
 
   const actions: RowAction[] = [];
 
   if (isAdmin && CUT_OFF_ELIGIBLE.has(status)) {
-    actions.push({ label: 'Cut Off', icon: 'scissors', onClick: () => onCutOff(meeting) });
+    actions.push({
+      label: t('actions.cutOff'),
+      icon: 'scissors',
+      onClick: () => onCutOff(meeting),
+    });
   }
 
   if (isAdmin && isNew && meeting.itemCount > 0) {
     actions.push({
-      label: 'Send Invitation',
+      label: t('actions.sendInvitation'),
       icon: 'envelope',
       onClick: () => onSendInvitation(meeting),
     });
@@ -147,7 +153,7 @@ const MeetingRow = ({
 
   if (isAdmin && RESEND_INVITATION_ELIGIBLE.has(status)) {
     actions.push({
-      label: 'Resend Invitation',
+      label: t('actions.resendInvitation'),
       icon: 'paper-plane',
       onClick: () => onResendInvitation(meeting),
     });
@@ -155,7 +161,7 @@ const MeetingRow = ({
 
   if (isAdmin && CANCEL_ELIGIBLE.has(status)) {
     actions.push({
-      label: 'Cancel',
+      label: t('actions.cancel'),
       icon: 'xmark',
       onClick: () => onCancel(meeting),
       variant: 'danger',
@@ -200,6 +206,7 @@ const ACTIVE_STATUSES: MeetingStatus[] = MEETING_STATUS_OPTIONS.filter(
 );
 
 const MeetingListPage = () => {
+  const { t } = useTranslation(['meeting', 'common']);
   const navigate = useNavigate();
   const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
   const [tab, setTab] = useState<MeetingTab>('active');
@@ -283,30 +290,28 @@ const MeetingListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Meetings</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.meetings.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Schedule tier-3 committee meetings and release appraisals for voting
-          </p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.meetings.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={() => navigate('/meetings/queue')}>
             <Icon name="hourglass-half" style="solid" className="size-3.5 mr-1.5" />
-            View Queue
+            {t('buttons.viewQueue')}
           </Button>
           {hasAdmin && (
             <Button size="sm" variant="ghost" onClick={bulkCreateDialog.onOpen}>
               <Icon name="calendar-days" style="solid" className="size-3.5 mr-1.5" />
-              Bulk Create
+              {t('buttons.bulkCreate')}
             </Button>
           )}
           {hasAdmin && (
             <Button size="sm" onClick={newMeetingDialog.onOpen}>
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-              New Meeting
+              {t('buttons.newMeeting')}
             </Button>
           )}
         </div>
@@ -314,12 +319,10 @@ const MeetingListPage = () => {
 
       {/* Tabs */}
       <div className="shrink-0 flex items-center gap-1 border-b border-gray-200">
-        {(
-          [
-            { key: 'active', label: 'Active' },
-            { key: 'history', label: 'History' },
-          ] as { key: MeetingTab; label: string }[]
-        ).map(({ key, label }) => {
+        {[
+          { key: 'active' as const, labelKey: 'tabs.active' },
+          { key: 'history' as const, labelKey: 'tabs.history' },
+        ].map(({ key, labelKey }) => {
           const isActive = tab === key;
           return (
             <button
@@ -332,7 +335,7 @@ const MeetingListPage = () => {
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
-              {label}
+              {t(labelKey)}
             </button>
           );
         })}
@@ -342,31 +345,31 @@ const MeetingListPage = () => {
       <div className="shrink-0 flex flex-wrap items-center gap-3 pb-1">
         <div className="w-72">
           <TextInput
-            placeholder="Search meeting no. or customer name"
+            placeholder={t('filters.searchPlaceholder')}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
           />
         </div>
         <div className="w-44">
           <Dropdown
-            placeholder="All Status"
+            placeholder={t('filters.allStatus')}
             showValuePrefix={false}
             value={statusFilter}
             options={statusOptions.map(s => ({
               value: s,
-              label: MEETING_STATUS_LABELS[s],
+              label: t(`status.${s}` as `status.${MeetingStatus}`),
             }))}
             onChange={(val: string | null) => setStatusFilter((val ?? '') as MeetingStatus | '')}
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">From</span>
+          <span className="text-sm font-medium text-gray-700">{t('filters.from')}</span>
           <div className="w-40">
             <DateInput value={fromDate ?? null} onChange={val => setFromDate(val ?? undefined)} />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">To</span>
+          <span className="text-sm font-medium text-gray-700">{t('filters.to')}</span>
           <div className="w-40">
             <DateInput value={toDate ?? null} onChange={val => setToDate(val ?? undefined)} />
           </div>
@@ -374,7 +377,7 @@ const MeetingListPage = () => {
         {hasAnyFilter && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
             <Icon name="xmark" style="solid" className="size-3.5 mr-1" />
-            Clear
+            {t('buttons.clear')}
           </Button>
         )}
       </div>
@@ -386,20 +389,26 @@ const MeetingListPage = () => {
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="border-b border-gray-200">
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Meeting No.
+                  {t('columns.meetingNo')}
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Title</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Status</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Start
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.title')}
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  End
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.status')}
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Cut-off
+                  {t('columns.start')}
                 </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5">Items</th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  {t('columns.end')}
+                </th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  {t('columns.cutOff')}
+                </th>
+                <th className="text-right font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.items')}
+                </th>
                 <th className="w-10 px-3 py-2.5" />
               </tr>
             </thead>
@@ -417,13 +426,17 @@ const MeetingListPage = () => {
               ) : isError ? (
                 <tr>
                   <td colSpan={8}>
-                    <DataErrorState variant="inline" title="Failed to load meetings" onRetry={() => refetch()} />
+                    <DataErrorState
+                      variant="inline"
+                      title={t('common:status.failedToLoad')}
+                      onRetry={() => refetch()}
+                    />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
-                    No meetings found.
+                    {t('empty.noMeetings')}
                   </td>
                 </tr>
               ) : (

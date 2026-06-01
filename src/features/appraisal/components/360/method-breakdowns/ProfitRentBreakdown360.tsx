@@ -49,11 +49,7 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
         <DlRow label="Growth Rate Type" value={a.growthRateType} isText />
         <DlRow label="Growth Rate" value={a.growthRatePercent} pct />
         <DlRow label="Discount Rate" value={a.discountRate} pct />
-        <DlRow
-          label="Include Building Cost"
-          value={a.includeBuildingCost ? 'Yes' : 'No'}
-          isText
-        />
+        <DlRow label="Include Building Cost" value={a.includeBuildingCost ? 'Yes' : 'No'} isText />
       </div>
 
       {/* Output strip */}
@@ -69,18 +65,24 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
       {/* Calculation table */}
       {a.calculationDetails.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Year-by-Year Calculation</p>
+          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+            Year-by-Year Calculation
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs whitespace-nowrap">
               <thead>
                 <tr className="bg-gray-100">
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">Year</th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500"># Months</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Mkt Fee/Sq.Wa</th>
+                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                    Mkt Fee/Sq.Wa
+                  </th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">Growth %</th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">Fee/Month</th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">Fee/Year</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Contract Fee/Year</th>
+                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                    Contract Fee/Year
+                  </th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">Returns</th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">PV Factor</th>
                   <th className="px-2 py-1.5 text-right font-medium text-gray-500">PV</th>
@@ -91,14 +93,30 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
                   <tr key={row.year}>
                     <td className="px-2 py-1 text-right text-gray-700">{row.year}</td>
                     <td className="px-2 py-1 text-right text-gray-600">{row.numberOfMonths}</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.marketRentalFeePerSqWa, 2)}</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.marketRentalFeeGrowthPercent, 2)}%</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.marketRentalFeePerMonth, 2)}</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.marketRentalFeePerYear, 2)}</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.contractRentalFeePerYear, 2)}</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.returnsFromLease, 2)}</td>
-                    <td className="px-2 py-1 text-right text-gray-600">{formatNumber(row.pvFactor, 6)}</td>
-                    <td className="px-2 py-1 text-right font-medium text-gray-800">{formatNumber(row.presentValue, 2)}</td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.marketRentalFeePerSqWa, 2)}
+                    </td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.marketRentalFeeGrowthPercent, 2)}%
+                    </td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.marketRentalFeePerMonth, 2)}
+                    </td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.marketRentalFeePerYear, 2)}
+                    </td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.contractRentalFeePerYear, 2)}
+                    </td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.returnsFromLease, 2)}
+                    </td>
+                    <td className="px-2 py-1 text-right text-gray-600">
+                      {formatNumber(row.pvFactor, 6)}
+                    </td>
+                    <td className="px-2 py-1 text-right font-medium text-gray-800">
+                      {formatNumber(row.presentValue, 2)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -113,13 +131,19 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
           <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Building Cost</p>
           <DlRow label="Total Building Cost" value={a.totalBuildingCost} />
           <DlRow label="Appraisal Price" value={a.appraisalPriceWithBuilding} />
-          <DlRow label="Estimate Price Rounded" value={a.appraisalPriceWithBuildingRounded} highlight />
+          <DlRow
+            label="Estimate Price Rounded"
+            value={a.appraisalPriceWithBuildingRounded}
+            highlight
+          />
         </div>
       )}
 
       {/* Remark */}
       {data.remark && (
-        <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{data.remark}</p>
+        <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">
+          {data.remark}
+        </p>
       )}
     </div>
   );

@@ -1,0 +1,379 @@
+{
+  "page": {
+    "welcome": "欢迎回来",
+    "date": "{{date}}",
+    "editDone": "完成",
+    "editStart": "编辑",
+    "dragHint": "在面板间拖动小部件 • 小部件可放入侧边栏"
+  },
+  "empty": {
+    "noWidgets": "仪表板上没有小部件",
+    "noWidgetsHint": "点击编辑以添加小部件",
+    "dropMain": "将小部件拖到此处作为主面板",
+    "dropSidebarSmallOnly": "仅限小型小部件",
+    "dropHere": "放置于此"
+  },
+  "addWidget": {
+    "title": "添加小部件",
+    "mainPanelOnly": "仅限主面板",
+    "smallWidgets": "小型小部件",
+    "addToMain": "主面板",
+    "addToSidebar": "侧边栏",
+    "allVisible": "所有小部件已显示",
+    "allVisibleHint": "您的仪表板已完全配置"
+  },
+  "draggable": {
+    "size": {
+      "quarter": "1/4",
+      "third": "1/3",
+      "half": "1/2",
+      "twoThirds": "2/3",
+      "full": "全宽"
+    }
+  },
+  "widgetError": {
+    "defaultMessage": "加载数据失败",
+    "retry": "重试"
+  },
+  "updatedAgo": "{{n}}前更新",
+  "period": {
+    "MTD": "本月至今",
+    "QTD": "本季度至今",
+    "YTD": "今年至今",
+    "LAST_12M": "过去12个月",
+    "CUSTOM": "自定义范围",
+    "customFrom": "从",
+    "customTo": "至",
+    "apply": "应用"
+  },
+  "taskSummary": {
+    "title": "任务摘要",
+    "notStarted": "未开始",
+    "inProgress": "进行中",
+    "overdue": "已逾期",
+    "completed": "已完成",
+    "tasks": "任务",
+    "openList": "打开列表",
+    "periodDay": "日",
+    "periodDayTitle": "每日（今天）",
+    "periodWeek": "周",
+    "periodWeekTitle": "每周（本周）",
+    "periodMonth": "月",
+    "periodMonthTitle": "每月（本月）",
+    "periodAll": "全部",
+    "periodAllTitle": "所有时间",
+    "customRange": "自定义日期范围",
+    "hintAssigned": "按已分配筛选任务列表",
+    "hintInProgress": "按进行中筛选任务列表",
+    "hintBreached": "按SLA已违反筛选任务列表",
+    "ariaGauge": "{{label}}：{{count}}个任务。{{hint}} 打开筛选后的任务列表。",
+    "error": "无法加载任务摘要"
+  },
+  "recentTask": {
+    "title": "最近任务",
+    "viewAll": "查看全部",
+    "columns": {
+      "appraisalNo": "评估编号",
+      "customerName": "客户姓名",
+      "taskType": "任务类型",
+      "purpose": "用途",
+      "status": "状态"
+    },
+    "empty": "暂无最近任务。"
+  },
+  "totalAppraisals": {
+    "title": "评估总量",
+    "detailedView": "评估总量 — 详细视图",
+    "kpi": {
+      "created": "已创建",
+      "completed": "已完成",
+      "completionRate": "完成率"
+    },
+    "pace": "按当前进度：",
+    "paceByPeriodEnd": "至期末",
+    "paceVsPrior": "与上期相比",
+    "noData": "该范围内没有评估记录",
+    "chart": {
+      "prevPeriod": "上期",
+      "created": "已创建",
+      "completed": "已完成"
+    },
+    "table": {
+      "period": "周期",
+      "created": "已创建",
+      "completed": "已完成",
+      "completionPct": "完成率 %",
+      "prior": "上期"
+    },
+    "rangeInfo": "范围：{{from}} – {{to}} · {{buckets}} 个周期{{bucketPlural}} · {{days}} 天",
+    "aria": {
+      "expand": "展开小部件",
+      "menu": "小部件菜单"
+    },
+    "menu": {
+      "refresh": "刷新",
+      "reset": "重置"
+    },
+    "error": "无法加载评估趋势"
+  },
+  "progressSummary": {
+    "title": "评估进度摘要",
+    "total": "总计",
+    "vsPrior": "与上期相比",
+    "noData": "没有符合这些筛选条件的评估。",
+    "clearFilters": "清除筛选",
+    "filters": {
+      "label": "筛选",
+      "assigneeUsername": "负责人用户名",
+      "assigneePlaceholder": "例如 P5229",
+      "bankingSegment": "银行细分",
+      "bankingPlaceholder": "例如 SME, Corporate",
+      "comparePrior": "与上期比较",
+      "apply": "应用"
+    },
+    "status": {
+      "Pending": "待处理",
+      "InProgress": "进行中",
+      "UnderReview": "审核中",
+      "Completed": "已完成",
+      "Cancelled": "已取消"
+    },
+    "aria": {
+      "menu": "小部件菜单",
+      "filtersBtn": "筛选",
+      "legendRow": "{{label}}：{{count}}，{{pct}} 百分比{{hidden}}。按 Enter 打开筛选列表，按 Space 切换可见性。",
+      "legendHidden": "，已隐藏",
+      "toggleVisibility": "{{action}} {{label}} 部分",
+      "show": "显示",
+      "hide": "隐藏"
+    },
+    "menu": {
+      "refresh": "刷新",
+      "clearFilters": "清除筛选",
+      "reset": "重置"
+    },
+    "error": "无法加载进度摘要"
+  },
+  "teamWorkload": {
+    "title": "团队工作量",
+    "legend": {
+      "notStarted": "未开始",
+      "inProgress": "进行中",
+      "completed": "已完成",
+      "overdue": "已逾期（重叠）"
+    },
+    "overdueCount": "{{n}} 个逾期",
+    "clickRowHint": "点击行查看任务",
+    "noData": "该期间没有团队工作量数据",
+    "aria": {
+      "menu": "小部件菜单"
+    },
+    "menu": {
+      "refresh": "刷新",
+      "reset": "重置"
+    },
+    "error": "无法加载团队工作量"
+  },
+  "externalSummary": {
+    "title": "外部评估摘要",
+    "allCompanies": "所有公司",
+    "clickBarHint": "点击条形图查看该公司的评估",
+    "clearCompanyFilter": "清除公司筛选",
+    "noData": "该期间没有公司数据",
+    "chart": {
+      "assigned": "已分配",
+      "completed": "已完成"
+    },
+    "aria": {
+      "filterByCompany": "按公司筛选",
+      "menu": "小部件菜单"
+    },
+    "menu": {
+      "refresh": "刷新",
+      "reset": "重置"
+    },
+    "error": "无法加载公司摘要"
+  },
+  "quotationSummary": {
+    "title": "报价任务摘要",
+    "pendingCreation": "待创建报价",
+    "waitingSubmission": "等待公司提交",
+    "waitingRm": "等待RM选择",
+    "openList": "打开列表",
+    "error": "无法加载报价任务摘要"
+  },
+  "calendar": {
+    "title": "日历",
+    "viewCalendar": "查看日历",
+    "topics": "主题",
+    "topicLabels": {
+      "meeting": "会议",
+      "task_due": "任务到期"
+    },
+    "categoryLabels": {
+      "meeting": "会议",
+      "sla": "SLA 关键",
+      "task": "任务到期"
+    },
+    "legend": {
+      "meeting": "会议",
+      "taskDue": "任务到期",
+      "slaCritical": "红色 = SLA 关键"
+    },
+    "aria": {
+      "filterByTopic": "按主题筛选",
+      "selectMonth": "选择月份",
+      "selectYear": "选择年份",
+      "previous": "上一个",
+      "next": "下一个"
+    },
+    "months": {
+      "0": "一月",
+      "1": "二月",
+      "2": "三月",
+      "3": "四月",
+      "4": "五月",
+      "5": "六月",
+      "6": "七月",
+      "7": "八月",
+      "8": "九月",
+      "9": "十月",
+      "10": "十一月",
+      "11": "十二月"
+    },
+    "monthsShort": {
+      "0": "1月",
+      "1": "2月",
+      "2": "3月",
+      "3": "4月",
+      "4": "5月",
+      "5": "6月",
+      "6": "7月",
+      "7": "8月",
+      "8": "9月",
+      "9": "10月",
+      "10": "11月",
+      "11": "12月"
+    },
+    "days": {
+      "MON": "周一",
+      "TUE": "周二",
+      "WED": "周三",
+      "THU": "周四",
+      "FRI": "周五",
+      "SAT": "周六",
+      "SUN": "周日"
+    },
+    "eventCount": "{{n}} 个事件",
+    "asOf": "截至 {{date}}"
+  },
+  "calendarPage": {
+    "breadcrumbDashboard": "仪表板",
+    "breadcrumbCalendar": "日历",
+    "title": "日历",
+    "subtitle": "分配给您的会议、任务到期日和SLA截止日期",
+    "viewModes": {
+      "day": "日",
+      "week": "周",
+      "month": "月"
+    },
+    "today": "今天",
+    "topicsLabel": "主题",
+    "noEventsForDay": "本日没有活动。",
+    "error": "无法加载日历事件"
+  },
+  "reminders": {
+    "title": "提醒",
+    "chips": {
+      "all": "全部",
+      "overdue": "已逾期",
+      "task_due": "任务到期",
+      "followup": "跟进"
+    },
+    "overdueLabel": "已逾期",
+    "noneAll": "当前没有提醒 — 您已全部完成。",
+    "noneFiltered": "没有 {{filter}} 提醒。",
+    "aria": {
+      "dismiss": "关闭提醒"
+    }
+  },
+  "notes": {
+    "title": "备注",
+    "addNew": "添加新备注",
+    "emptyMessage": "没有备注 — 开始记录吧。",
+    "delete": {
+      "title": "删除备注",
+      "message": "此备注将被永久删除。是否继续？",
+      "confirm": "删除"
+    },
+    "editor": {
+      "titleNew": "新备注",
+      "titleEdit": "编辑备注",
+      "placeholder": "写下您的备注...",
+      "overCapError": "请将内容缩减至4,000个字符以内以保存。",
+      "saveError": "保存失败 — 请重试。",
+      "saving": "保存中...",
+      "save": "保存"
+    },
+    "aria": {
+      "editNote": "编辑备注",
+      "deleteNote": "删除备注"
+    }
+  },
+  "widgetConfigs": {
+    "totalAppraisals": {
+      "title": "评估总量",
+      "description": "显示评估趋势的折线图"
+    },
+    "taskSummary": {
+      "title": "任务摘要",
+      "description": "带仪表盘的任务状态概览"
+    },
+    "progressSummary": {
+      "title": "进度摘要",
+      "description": "待处理请求的环形图"
+    },
+    "teamWorkload": {
+      "title": "团队工作量",
+      "description": "团队成员任务分配"
+    },
+    "recentTask": {
+      "title": "最近任务",
+      "description": "最近任务列表"
+    },
+    "externalTaskSummary": {
+      "title": "外部任务摘要",
+      "description": "外部评估条形图"
+    },
+    "quotationTaskSummary": {
+      "title": "报价任务摘要",
+      "description": "跟踪 intAdmin 的报价流程阶段"
+    },
+    "calendar": {
+      "title": "日历",
+      "description": "迷你日历视图"
+    },
+    "reminders": {
+      "title": "提醒",
+      "description": "即将到来的提醒和通知"
+    },
+    "notes": {
+      "title": "备注",
+      "description": "个人备注"
+    }
+  },
+  "appraisalList": {
+    "columns": {
+      "property": "房产",
+      "type": "类型",
+      "status": "状态",
+      "date": "日期",
+      "value": "价值",
+      "actions": "操作"
+    },
+    "actions": {
+      "view": "查看",
+      "edit": "编辑"
+    }
+  }
+}

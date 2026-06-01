@@ -105,8 +105,19 @@ export const useAdminUpdateUser = () => {
 /** Admin: reset user password (requires ALLOW_RESET_PASSWORD permission) */
 export const useResetPassword = () => {
   return useMutation({
-    mutationFn: async ({ id, newPassword, confirmPassword }: { id: string; newPassword: string; confirmPassword: string }) => {
-      const { data } = await axios.post(`/auth/users/${id}/reset-password`, { newPassword, confirmPassword });
+    mutationFn: async ({
+      id,
+      newPassword,
+      confirmPassword,
+    }: {
+      id: string;
+      newPassword: string;
+      confirmPassword: string;
+    }) => {
+      const { data } = await axios.post(`/auth/users/${id}/reset-password`, {
+        newPassword,
+        confirmPassword,
+      });
       return data;
     },
   });

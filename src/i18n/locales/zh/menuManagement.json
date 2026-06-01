@@ -1,0 +1,133 @@
+{
+  "page": {
+    "title": "Menu Management",
+    "subtitle": "Manage navigation menu items. Drag to reorder.",
+    "subtitleActivities": "Configure per-activity overrides on top of role-based menu permissions.",
+    "newItem": "New Item"
+  },
+  "tabs": {
+    "main": "Main",
+    "appraisal": "Appraisal",
+    "activities": "Activities"
+  },
+  "empty": {
+    "noItems": "No menu items found for {{scope}} scope."
+  },
+  "errors": {
+    "failedToLoad": "Failed to load menu items",
+    "failedToLoadOverrides": "Failed to load overrides"
+  },
+  "table": {
+    "dragHint": "Drag vertically to reorder. Drag right to nest under the item above; drag left to promote to a higher level.",
+    "columns": {
+      "name": "Name",
+      "itemKey": "Item Key",
+      "scope": "Scope",
+      "viewPermission": "View Permission",
+      "actions": "Actions"
+    },
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "systemBadge": "system"
+  },
+  "aria": {
+    "dragToReorder": "Drag to reorder",
+    "loadingNavigation": "Loading navigation"
+  },
+  "confirm": {
+    "deleteItem": "Delete this menu item? This cannot be undone."
+  },
+  "editPage": {
+    "titleNew": "New Menu Item",
+    "titleEdit": "Edit: {{name}}",
+    "systemWarning": "System item — ItemKey is locked and deletion is disabled."
+  },
+  "form": {
+    "itemKey": "Item Key",
+    "itemKeyPlaceholder": "e.g. main.dashboard",
+    "itemKeyLocked": "Item key is locked for system items.",
+    "scope": "Scope",
+    "parent": "Parent",
+    "parentNone": "— None (top-level) —",
+    "path": "Path",
+    "pathPlaceholder": "/dashboard or :basePath/property",
+    "pathHint": "Appraisal items may use :basePath and :requestId placeholders.",
+    "icon": "Icon",
+    "iconColor": "Icon Color",
+    "iconColorNone": "No color",
+    "sortOrder": "Sort Order",
+    "viewPermission": "View Permission",
+    "editPermission": "Edit Permission",
+    "labels": "Labels",
+    "labelPlaceholderEn": "English label (required)",
+    "labelPlaceholderOther": "{{lang}} label (optional)",
+    "labelAriaInput": "{{lang}} label",
+    "submit": "Save",
+    "submitting": "Saving..."
+  },
+  "colors": {
+    "Blue": "Blue",
+    "Emerald": "Emerald",
+    "Purple": "Purple",
+    "Amber": "Amber",
+    "Cyan": "Cyan",
+    "Teal": "Teal",
+    "Rose": "Rose",
+    "Orange": "Orange",
+    "Indigo": "Indigo",
+    "Sky": "Sky",
+    "Violet": "Violet",
+    "Gray": "Gray"
+  },
+  "iconPicker": {
+    "pickIcon": "Pick icon...",
+    "searchPlaceholder": "Search icons...",
+    "searchAriaLabel": "Search icons",
+    "loading": "Loading icons...",
+    "noIcons": "No icons found",
+    "moreIcons": "{{n}} more — refine your search"
+  },
+  "permissionSelect": {
+    "searchPlaceholder": "Search permissions...",
+    "loading": "Loading...",
+    "editPermissionEmpty": "None (read-only)"
+  },
+  "activityOverrides": {
+    "activityLabel": "Activity",
+    "activityLoadingOption": "Loading…",
+    "activityNoneOption": "No activities found",
+    "overridesHint": "Overrides apply only to the Appraisal sidebar when a user enters a task for this activity. Unchecked rows fall back to role-based permissions.",
+    "columns": {
+      "appraisalMenu": "Appraisal Menu",
+      "itemKey": "Item Key",
+      "visible": "Visible",
+      "editable": "Editable",
+      "status": "Status"
+    },
+    "status": {
+      "unsaved": "Unsaved",
+      "roleDefault": "Role default",
+      "activityOverride": "Activity override"
+    },
+    "actions": {
+      "reset": "Reset",
+      "saveChanges": "Save Changes"
+    }
+  },
+  "toasts": {
+    "created": "Menu item \"{{key}}\" created",
+    "createFailed": "Failed to create menu item",
+    "updated": "Menu item updated",
+    "updateFailed": "Failed to update menu item",
+    "deleted": "Menu item deleted",
+    "deleteFailed": "Failed to delete menu item",
+    "reorderFailed": "Failed to reorder menu items",
+    "overridesSaved": "Activity overrides saved",
+    "overridesSaveFailed": "Failed to save activity overrides",
+    "loadNavFailed": "Failed to load navigation",
+    "loadNavFailedDetail": "Failed to load navigation. The sidebar may be empty.",
+    "syncMenuFailed": "Failed to sync menu"
+  }
+}

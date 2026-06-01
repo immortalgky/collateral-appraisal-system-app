@@ -16,20 +16,25 @@ export function SensitivityStrip({ currentRate, calculateFinalValue }: Sensitivi
     const offsets = [-2, -1, 0, 1, 2];
     const seen = new Set<number>();
     return offsets
-      .map((offset) => {
+      .map(offset => {
         const rate = Math.round(Math.max(0, currentRate + offset) * 10) / 10;
         if (seen.has(rate)) return null;
         seen.add(rate);
         const value = calculateFinalValue(rate);
         return { rate, value, offset, isCurrent: offset === 0 };
       })
-      .filter(Boolean) as { rate: number; value: number | null; offset: number; isCurrent: boolean }[];
+      .filter(Boolean) as {
+      rate: number;
+      value: number | null;
+      offset: number;
+      isCurrent: boolean;
+    }[];
   }, [currentRate, calculateFinalValue]);
 
   // Don't render if no valid calculations
-  if (scenarios.every((s) => s.value == null)) return null;
+  if (scenarios.every(s => s.value == null)) return null;
 
-  const currentValue = scenarios.find((s) => s.isCurrent)?.value ?? 0;
+  const currentValue = scenarios.find(s => s.isCurrent)?.value ?? 0;
 
   return (
     <div className="rounded-lg border border-gray-200 overflow-hidden">
@@ -37,8 +42,11 @@ export function SensitivityStrip({ currentRate, calculateFinalValue }: Sensitivi
         <div className="px-3 py-1.5 text-[10px] font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap shrink-0">
           Discount Rate Sensitivity
         </div>
-        <div className="flex-1 grid" style={{ gridTemplateColumns: `repeat(${scenarios.length}, minmax(0, 1fr))` }}>
-          {scenarios.map((s) => {
+        <div
+          className="flex-1 grid"
+          style={{ gridTemplateColumns: `repeat(${scenarios.length}, minmax(0, 1fr))` }}
+        >
+          {scenarios.map(s => {
             const diff = currentValue && s.value ? s.value - currentValue : 0;
             const diffPct = currentValue ? (diff / currentValue) * 100 : 0;
             return (
@@ -48,15 +56,22 @@ export function SensitivityStrip({ currentRate, calculateFinalValue }: Sensitivi
                   s.isCurrent ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''
                 }`}
               >
-                <div className={`text-[10px] font-medium mb-0.5 ${s.isCurrent ? 'text-primary' : 'text-gray-500'}`}>
+                <div
+                  className={`text-[10px] font-medium mb-0.5 ${s.isCurrent ? 'text-primary' : 'text-gray-500'}`}
+                >
                   {s.rate.toFixed(1)}%
                 </div>
-                <div className={`text-xs font-bold tabular-nums ${s.isCurrent ? 'text-primary' : 'text-gray-800'}`}>
+                <div
+                  className={`text-xs font-bold tabular-nums ${s.isCurrent ? 'text-primary' : 'text-gray-800'}`}
+                >
                   {s.value != null ? fmt(s.value) : '-'}
                 </div>
                 {!s.isCurrent && diff !== 0 && (
-                  <div className={`text-[9px] mt-0.5 tabular-nums ${diff > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {diff > 0 ? '+' : ''}{diffPct.toFixed(1)}%
+                  <div
+                    className={`text-[9px] mt-0.5 tabular-nums ${diff > 0 ? 'text-green-600' : 'text-red-500'}`}
+                  >
+                    {diff > 0 ? '+' : ''}
+                    {diffPct.toFixed(1)}%
                   </div>
                 )}
               </div>

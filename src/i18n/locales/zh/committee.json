@@ -1,0 +1,63 @@
+{
+  "page": {
+    "title": "委员会",
+    "subtitle": "管理委员会成员和出席轮换",
+    "noCommittees": "暂无委员会。",
+    "memberCount": "{{count}} 名成员",
+    "selectPrompt": "选择委员会以管理其成员"
+  },
+  "panel": {
+    "membersActive": "成员（{{count}} 名活跃）",
+    "addMember": "添加成员",
+    "noMembers": "暂无成员。"
+  },
+  "columns": {
+    "name": "姓名",
+    "role": "角色",
+    "attendance": "出席",
+    "status": "状态"
+  },
+  "fields": {
+    "user": "用户",
+    "role": "角色",
+    "attendance": "出席",
+    "active": "启用"
+  },
+  "attendance": {
+    "always": "始终",
+    "odd": "单数会议 (1, 3, 5, ...)",
+    "even": "双数会议 (2, 4, 6, ...)"
+  },
+  "help": {
+    "attendance": "控制在生成委员会快照时此成员包含在哪些会议中。单数 = 第 1、3、5… 次会议；双数 = 第 2、4、6… 次会议。"
+  },
+  "addDialog": {
+    "title": "添加委员会成员",
+    "noUsers": "没有具有 AppraisalCommittee 角色的用户",
+    "selectUser": "选择用户",
+    "adding": "添加中...",
+    "submit": "添加成员"
+  },
+  "editDialog": {
+    "title": "编辑成员"
+  },
+  "confirm": {
+    "remove": "将 {{name}} 从此委员会中移除？"
+  },
+  "aria": {
+    "edit": "编辑 {{name}}",
+    "remove": "移除 {{name}}"
+  },
+  "validation": {
+    "selectUser": "请选择用户",
+    "memberNameRequired": "成员姓名为必填项"
+  },
+  "toasts": {
+    "added": "已添加成员",
+    "addFailed": "添加成员失败",
+    "updated": "已更新成员",
+    "updateFailed": "更新成员失败",
+    "removed": "已移除成员",
+    "removeFailed": "移除成员失败"
+  }
+}

@@ -14,10 +14,10 @@ import { fmt } from '../../domain/formatters';
 import type { LandBuildingSummaryDto, CondominiumSummaryDto } from '../../types/hypothesis';
 
 const COLORS = {
-  main: '#f97316',     // orange-500
-  project: '#f59e0b',  // amber-500
-  tax: '#64748b',      // slate-500
-  risk: '#f43f5e',     // rose-500
+  main: '#f97316', // orange-500
+  project: '#f59e0b', // amber-500
+  tax: '#64748b', // slate-500
+  risk: '#f43f5e', // rose-500
 } as const;
 
 type Props =
@@ -64,7 +64,7 @@ export function HypothesisCostDonut(props: Props) {
                 strokeWidth={0}
                 onClick={(_, index) => scrollToTarget(slices[index]?.targetId)}
               >
-                {slices.map((s) => (
+                {slices.map(s => (
                   <Cell
                     key={s.label}
                     fill={s.color}
@@ -74,13 +74,13 @@ export function HypothesisCostDonut(props: Props) {
               </Pie>
               <Tooltip
                 contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
-                formatter={(v) => fmt(typeof v === 'number' ? v : Number(v))}
+                formatter={v => fmt(typeof v === 'number' ? v : Number(v))}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
         <ul className="w-full min-w-0 space-y-1.5">
-          {slices.map((s) => {
+          {slices.map(s => {
             const pct = total > 0 ? (s.value / total) * 100 : 0;
             const clickable = !!s.targetId;
             return (
@@ -96,8 +96,12 @@ export function HypothesisCostDonut(props: Props) {
                   style={{ backgroundColor: s.color }}
                 />
                 <span className="text-gray-600 whitespace-nowrap">{s.label}</span>
-                <span className="tabular-nums text-gray-800 font-medium ml-auto">{fmt(s.value)}</span>
-                <span className="tabular-nums text-gray-400 w-12 text-right">{pct.toFixed(1)}%</span>
+                <span className="tabular-nums text-gray-800 font-medium ml-auto">
+                  {fmt(s.value)}
+                </span>
+                <span className="tabular-nums text-gray-400 w-12 text-right">
+                  {pct.toFixed(1)}%
+                </span>
               </li>
             );
           })}
@@ -112,18 +116,53 @@ function buildSlices(props: Props): Slice[] | null {
     const s = props.summary;
     if (!s) return null;
     return [
-      { label: 'Project Dev Cost', value: s.totalProjectDevCost ?? 0, color: COLORS.main, targetId: 'hyp-section-dev' },
-      { label: 'Project Cost', value: s.totalProjectCost ?? 0, color: COLORS.project, targetId: 'hyp-section-project' },
-      { label: 'Gov Tax', value: s.totalGovTax ?? 0, color: COLORS.tax, targetId: 'hyp-section-tax' },
-      { label: 'Risk Premium', value: s.riskPremiumAmount ?? 0, color: COLORS.risk, targetId: 'hyp-section-risk' },
+      {
+        label: 'Project Dev Cost',
+        value: s.totalProjectDevCost ?? 0,
+        color: COLORS.main,
+        targetId: 'hyp-section-dev',
+      },
+      {
+        label: 'Project Cost',
+        value: s.totalProjectCost ?? 0,
+        color: COLORS.project,
+        targetId: 'hyp-section-project',
+      },
+      {
+        label: 'Gov Tax',
+        value: s.totalGovTax ?? 0,
+        color: COLORS.tax,
+        targetId: 'hyp-section-tax',
+      },
+      {
+        label: 'Risk Premium',
+        value: s.riskPremiumAmount ?? 0,
+        color: COLORS.risk,
+        targetId: 'hyp-section-risk',
+      },
     ];
   }
   const s = props.summary;
   if (!s) return null;
   return [
-    { label: 'Hard Cost', value: s.totalHardCost ?? 0, color: COLORS.main, targetId: 'hyp-section-hard' },
-    { label: 'Soft Cost', value: s.totalSoftCost ?? 0, color: COLORS.project, targetId: 'hyp-section-soft' },
+    {
+      label: 'Hard Cost',
+      value: s.totalHardCost ?? 0,
+      color: COLORS.main,
+      targetId: 'hyp-section-hard',
+    },
+    {
+      label: 'Soft Cost',
+      value: s.totalSoftCost ?? 0,
+      color: COLORS.project,
+      targetId: 'hyp-section-soft',
+    },
     { label: 'Gov Tax', value: s.totalGovTax ?? 0, color: COLORS.tax, targetId: 'hyp-section-tax' },
-    { label: 'Risk & Profit', value: s.riskProfitTotal ?? 0, color: COLORS.risk, targetId: 'hyp-section-risk' },
+    {
+      label: 'Risk & Profit',
+      value: s.riskProfitTotal ?? 0,
+      color: COLORS.risk,
+      targetId: 'hyp-section-risk',
+    },
   ];
 }

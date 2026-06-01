@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
 import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
@@ -107,6 +108,8 @@ const TotalCell = ({
       </span>
     );
   }
+  const { t } = useTranslation('request');
+
   if (isOverridden) {
     return (
       <div className="flex items-center gap-2">
@@ -126,7 +129,7 @@ const TotalCell = ({
           onClick={onReset}
           icon="rotate-left"
           className="bg-primary/10 text-primary hover:bg-primary/20"
-          title="Reset to calculated sum"
+          title={t('table.resetToCalculated')}
         />
       </div>
     );
@@ -140,7 +143,7 @@ const TotalCell = ({
           onClick={onOverride}
           icon="pen"
           className="bg-primary/10 text-primary hover:bg-primary/20"
-          title="Override total"
+          title={t('table.overrideTotal')}
         />
       )}
     </div>
@@ -206,6 +209,7 @@ const FormTable = ({
   totalFieldName,
   allowOverride = false,
 }: FormTableProps) => {
+  const { t } = useTranslation(['request', 'common']);
   const { getValues, setValue, control, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
   const { append, remove } = useFieldArray({ control, name });
@@ -277,14 +281,15 @@ const FormTable = ({
                   <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
                     <Icon style="regular" name="inbox" className="size-4 text-gray-400" />
                   </div>
-                  <p className="text-xs text-gray-500">No data yet</p>
+                  <p className="text-xs text-gray-500">{t('table.noData')}</p>
                   {!isReadOnly && (
                     <button
                       type="button"
                       onClick={handleAddRow}
                       className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
                     >
-                      <Icon style="solid" name="plus" className="size-3" /> Add First Item
+                      <Icon style="solid" name="plus" className="size-3" />{' '}
+                      {t('table.addFirstItem')}
                     </button>
                   )}
                 </div>
@@ -333,7 +338,7 @@ const FormTable = ({
                         onClick={() => setDeleteConfirm({ isOpen: true, index: i })}
                         icon="trash"
                         className="bg-danger-50 text-danger-600 hover:bg-danger-100"
-                        title="Delete"
+                        title={t('table.deleteRow')}
                       />
                     </div>
                   </td>
@@ -377,10 +382,11 @@ const FormTable = ({
                     return (
                       <td key={i} className="py-3 px-4 text-sm font-semibold text-gray-600">
                         <div className="flex items-center gap-2">
-                          <Icon style="solid" name="sigma" className="size-4 text-primary" /> Total
+                          <Icon style="solid" name="sigma" className="size-4 text-primary" />{' '}
+                          {t('table.total')}
                           {isOverridden && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
-                              Override
+                              {t('table.override')}
                             </span>
                           )}
                         </div>
@@ -405,7 +411,7 @@ const FormTable = ({
             <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
               <Icon style="solid" name="plus" className="size-2.5 text-white" />
             </div>
-            Add row
+            {t('table.addRow')}
           </button>
         </div>
       )}
@@ -418,10 +424,10 @@ const FormTable = ({
             setDeleteConfirm({ isOpen: false, index: null });
           }
         }}
-        title="Delete Row"
-        message="Are you sure you want to delete this row? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('table.deleteRowTitle')}
+        message={t('table.deleteRowMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
     </div>

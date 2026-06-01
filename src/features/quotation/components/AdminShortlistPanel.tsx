@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -31,6 +32,7 @@ interface AdminShortlistPanelProps {
 }
 
 const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistPanelProps) => {
+  const { t } = useTranslation('quotation');
   const { mutate: shortlist, isPending: isShortlisting } = useShortlistQuotation(quotationId);
   const { mutate: unshortlist, isPending: isUnshortlisting } = useUnshortlistQuotation(quotationId);
   const { mutate: pickWinner, isPending: isPickingWinner } = usePickTentativeWinner(quotationId);
@@ -57,11 +59,11 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
     if (cq.isShortlisted) {
       unshortlist(cq.id, {
         onError: (err: any) =>
-          toast.error(err?.apiError?.detail ?? 'Failed to remove from shortlist'),
+          toast.error(err?.apiError?.detail ?? t('toasts.shortlistRemoveFailed')),
       });
     } else {
       shortlist(cq.id, {
-        onError: (err: any) => toast.error(err?.apiError?.detail ?? 'Failed to add to shortlist'),
+        onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.shortlistAddFailed')),
       });
     }
   };
@@ -78,7 +80,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
   const handleConfirmSelectAsWinner = () => {
     const currentShortlisted = companyQuotations.filter(q => q.isShortlisted);
     if (currentShortlisted.length !== 1) {
-      toast.error('Shortlist changed — please re-confirm with exactly one company shortlisted.');
+      toast.error(t('toasts.shortlistChanged'));
       closeSelectWinnerConfirm();
       return;
     }
@@ -86,10 +88,9 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
     pickWinner(
       { companyQuotationId: target.id },
       {
-        onError: (err: any) =>
-          toast.error(err?.apiError?.detail ?? 'Failed to select company as winner'),
+        onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.selectWinnerFailed')),
         onSuccess: () => {
-          toast.success('Company selected as winner');
+          toast.success(t('toasts.companySelected'));
           closeSelectWinnerConfirm();
         },
       },
@@ -107,9 +108,12 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
               <Icon name="clipboard-list" style="solid" className="size-4 text-purple-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">Admin Review</span>
+              <span className="text-sm font-semibold text-gray-900">{t('shortlist.title')}</span>
               <span className="ml-2 text-xs text-purple-700">
-                {shortlistedCount} of {companyQuotations.length} shortlisted
+                {t('shortlist.shortlistedCount', {
+                  count: shortlistedCount,
+                  total: companyQuotations.length,
+                })}
               </span>
             </div>
           </div>
@@ -121,9 +125,9 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
               disabled={!canSelectAsWinner}
               title={
                 shortlistedCount === 0
-                  ? 'Shortlist exactly one company to enable'
+                  ? t('shortlist.selectWinnerHint0')
                   : shortlistedCount > 1
-                    ? 'Disabled when more than one company is shortlisted — use Send to RM instead'
+                    ? t('shortlist.selectWinnerHintMulti')
                     : undefined
               }
             >
@@ -132,11 +136,11 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
               ) : (
                 <Icon name="trophy" style="solid" className="size-3.5 mr-1.5" />
               )}
-              Select as Winner
+              {t('buttons.selectAsWinner')}
             </Button>
             <Button size="sm" onClick={openSendToRm} disabled={shortlistedCount === 0}>
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-              Send to RM
+              {t('buttons.sendToRm')}
             </Button>
           </div>
         </div>
@@ -144,7 +148,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
         {companyQuotations.length === 0 ? (
           <div className="px-4 py-8 text-center">
             <Icon name="inbox" style="regular" className="size-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">No submissions received</p>
+            <p className="text-sm text-gray-500">{t('empty.noSubmissions')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -152,30 +156,30 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
-                    Shortlist
+                    {t('columns.shortlist')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Company
+                    {t('columns.company')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Fee Amount
+                    {t('columns.totalFeeAmount')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Discount
+                    {t('columns.totalDiscount')}
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Net Amount
+                    {t('columns.totalNetAmount')}
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Estimate Manday
+                    {t('columns.totalEstimateManday')}
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Submitted At
+                    {t('columns.submittedAt')}
                   </th>
                   <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    {t('columns.status')}
                   </th>
-                  <th className="px-4 py-3 w-10" aria-label="Detail" />
+                  <th className="px-4 py-3 w-10" aria-label={t('columns.detail')} />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -215,7 +219,9 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                             isPending && 'opacity-50 cursor-not-allowed',
                           )}
                           aria-label={
-                            cq.isShortlisted ? 'Remove from shortlist' : 'Add to shortlist'
+                            cq.isShortlisted
+                              ? t('aria.removeFromShortlist')
+                              : t('aria.addToShortlist')
                           }
                         >
                           {cq.isShortlisted && (
@@ -255,8 +261,6 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                         <QuotationStatusBadge status={cq.status} />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {/* Only show detail icon for statuses an admin should review.
-                            Exclude Draft and PendingCheckerReview — in-progress ext-company drafts. */}
                         {cq.id &&
                           [
                             'Submitted',
@@ -269,7 +273,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                           ].includes(cq.status) && (
                             <button
                               type="button"
-                              aria-label={`View ${cq.companyName} quotation detail`}
+                              aria-label={t('aria.viewDetail', { company: cq.companyName })}
                               onClick={() => setDrawerCompanyQuotationId(cq.id)}
                               className="p-1 rounded hover:bg-gray-100 transition-colors"
                             >
@@ -294,10 +298,10 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
             <p className="text-xs text-purple-700 flex items-center gap-1">
               <Icon name="circle-info" style="solid" className="size-3.5 shrink-0" />
               {shortlistedCount === 0
-                ? 'Shortlist one company to select directly as winner, or two or more to send to RM.'
+                ? t('shortlist.hint0')
                 : shortlistedCount === 1
-                  ? '"Select as Winner" picks this company directly; "Send to RM" forwards the shortlist for RM review.'
-                  : '"Select as Winner" is disabled with multiple shortlisted — use "Send to RM" instead.'}
+                  ? t('shortlist.hint1')
+                  : t('shortlist.hintMultiple')}
             </p>
           </div>
         )}
@@ -314,20 +318,18 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
         isOpen={isSelectWinnerConfirmOpen}
         onClose={closeSelectWinnerConfirm}
         onConfirm={handleConfirmSelectAsWinner}
-        title="Select as Winner"
-        message={`Mark ${selectWinnerTargetName} as the winner? You will then be able to award or open a negotiation round.`}
-        confirmText="Select as Winner"
+        title={t('buttons.selectAsWinner')}
+        message={t('selectWinner.body', { company: selectWinnerTargetName })}
+        confirmText={t('buttons.selectAsWinner')}
         variant="primary"
         isLoading={isPickingWinner}
       />
 
-      {/* Right-side drawer for company quotation detail. Replaces the prior full-page
-          navigation so admins can cycle between company submissions without losing
-          their place in the Admin Review list. */}
+      {/* Right-side drawer for company quotation detail. */}
       <SlideOverPanel
         isOpen={!!drawerCompanyQuotationId}
         onClose={() => setDrawerCompanyQuotationId(null)}
-        title="External Appraisal Company Quotation Information"
+        title={t('page.extQuotationTitle')}
         subtitle={drawerCompany?.companyName ?? undefined}
         width="2xl"
       >

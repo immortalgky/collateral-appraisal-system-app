@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import Button from '@shared/components/Button';
 import Input from '@shared/components/Input';
 import Card from '@shared/components/Card';
@@ -9,23 +11,33 @@ interface LoginFormProps {
   isLoading: boolean;
 }
 
+const makeValidationSchema = (t: TFunction<'auth'>) => ({
+  validateEmail: (email: string): string | undefined => {
+    if (!email) return t('validation.emailRequired');
+    if (!isValidEmail(email)) return t('validation.emailInvalid');
+    return undefined;
+  },
+  validatePassword: (password: string): string | undefined => {
+    if (!password) return t('validation.passwordRequired');
+    return undefined;
+  },
+});
+
 function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
+  const { t } = useTranslation('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   const validateForm = (): boolean => {
+    const schema = makeValidationSchema(t);
     const newErrors: { email?: string; password?: string } = {};
 
-    if (!email) {
-      newErrors.email = 'Email is required';
-    } else if (!isValidEmail(email)) {
-      newErrors.email = 'Please enter a valid email address';
-    }
+    const emailError = schema.validateEmail(email);
+    if (emailError) newErrors.email = emailError;
 
-    if (!password) {
-      newErrors.password = 'Password is required';
-    }
+    const passwordError = schema.validatePassword(password);
+    if (passwordError) newErrors.password = passwordError;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -44,9 +56,9 @@ function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
           <Input
-            label="Email Address"
+            label={t('fields.email')}
             type="email"
-            placeholder="you@example.com"
+            placeholder={t('placeholders.email')}
             value={email}
             onChange={e => setEmail(e.target.value)}
             error={errors.email}
@@ -54,9 +66,9 @@ function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
           />
 
           <Input
-            label="Password"
+            label={t('fields.password')}
             type="password"
-            placeholder="••••••••"
+            placeholder={t('placeholders.password')}
             value={password}
             onChange={e => setPassword(e.target.value)}
             error={errors.password}
@@ -72,19 +84,19 @@ function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                Remember me
+                {t('form.rememberMe')}
               </label>
             </div>
 
             <div className="text-sm">
               <a href="#" className="text-blue-600 hover:text-blue-800">
-                Forgot your password?
+                {t('form.forgotPassword')}
               </a>
             </div>
           </div>
 
           <Button type="submit" fullWidth isLoading={isLoading}>
-            Sign In
+            {t('form.signIn')}
           </Button>
         </div>
       </form>

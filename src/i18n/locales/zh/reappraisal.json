@@ -1,0 +1,153 @@
+{
+  "page": {
+    "list": {
+      "title": "定期重新评估 (AS400)",
+      "description": "审查并发起抵押品候选人的重新评估请求"
+    },
+    "detail": {
+      "title": "候选人详情"
+    }
+  },
+  "reviewType": {
+    "1": "正常审查",
+    "2": "Stage 3 之前",
+    "3": "Stage 3"
+  },
+  "columns": {
+    "oldAppraisalReportNumber": "原评估报告编号",
+    "cifNumber": "CIF 编号",
+    "customerName": "客户姓名",
+    "reviewType": "审查类型",
+    "remainingDay": "剩余天数",
+    "appraisalDate": "评估日期",
+    "channel": "渠道",
+    "status": "状态",
+    "distance": "距离 (km)"
+  },
+  "filter": {
+    "title": "筛选",
+    "button": "筛选",
+    "reviewDateRange": "评估日期",
+    "remainingDays": "剩余天数",
+    "clearDates": "清除日期",
+    "clearRange": "清除范围",
+    "fields": {
+      "customerName": "客户姓名",
+      "oldAppraisalReportNumber": "原评估报告编号",
+      "cifNumber": "CIF 编号",
+      "collateralId": "抵押品编号",
+      "reviewType": "审查类型"
+    },
+    "placeholders": {
+      "customerName": "输入客户姓名",
+      "oldAppraisalReportNumber": "输入报告编号",
+      "cifNumber": "输入 CIF 编号",
+      "collateralId": "输入抵押品编号",
+      "remainingDayFrom": "0",
+      "remainingDayTo": "例如 365"
+    },
+    "chips": {
+      "customerName": "客户姓名",
+      "oldAppraisalReportNumber": "报告编号",
+      "cifNumber": "CIF 编号",
+      "collateralId": "抵押品编号",
+      "reviewType": "审查类型",
+      "reviewDateFrom": "起始日期",
+      "reviewDateTo": "结束日期",
+      "remainingDayFrom": "剩余起始",
+      "remainingDayTo": "剩余结束"
+    }
+  },
+  "badge": {
+    "used": "已使用",
+    "inProgress": "进行中",
+    "pending": "待处理"
+  },
+  "empty": {
+    "noMatching": "无匹配的候选人",
+    "noCandidates": "无候选人",
+    "tryAdjusting": "请尝试调整筛选条件。",
+    "noneAtThisTime": "目前没有重新评估候选人。",
+    "clearFilters": "清除筛选"
+  },
+  "error": {
+    "loadFailed": "加载重新评估候选人失败"
+  },
+  "detail": {
+    "blockedTitle": "进行中",
+    "backToList": "返回列表",
+    "error": {
+      "loadFailed": "加载候选人详情失败",
+      "notFound": "未找到候选人"
+    },
+    "banner": {
+      "inProgressTitle": "此候选人正在处理中。",
+      "appraisalLabel": "评估",
+      "groupLabel": "组",
+      "consumed": "此候选人已用于创建重新评估请求。"
+    },
+    "fields": {
+      "collateralId": "抵押品编号",
+      "collateralName": "抵押品名称",
+      "collateralDescription": "抵押品描述",
+      "collateralAddress": "抵押品地址",
+      "carCode": "CAR 代码",
+      "valuationDate": "估值日期",
+      "pastDueDate": "逾期天数",
+      "externalName": "外部估价师",
+      "internalName": "内部估价师",
+      "aoCode": "AO 代码",
+      "aoName": "AO 名称",
+      "sllStatus": "SLL 状态",
+      "sllDescription": "SLL 描述"
+    },
+    "source": {
+      "inSystem": "系统内"
+    },
+    "duration": {
+      "year": "年",
+      "month": "个月",
+      "day": "天"
+    },
+    "group": {
+      "title": "评估请求列表（组评估）",
+      "subtitle": "主候选人始终包含在内。选择附近的候选人进行分组。",
+      "nearbySelected": "已选择附近 {{count}} 项",
+      "main": "（主）",
+      "empty": "半径范围内没有附近的候选人。",
+      "select": "选择",
+      "deselect": "取消选择",
+      "deleteCandidate": "删除候选人",
+      "cannotDelete": "无法删除系统内的评估",
+      "footer_one": "请求将包含 {{count}} 个候选人",
+      "footer_other": "请求将包含 {{count}} 个候选人",
+      "columns": {
+        "oldAppraisalNumber": "原评估编号",
+        "source": "来源",
+        "daysSince": "距上次评估天数"
+      }
+    },
+    "deleteModal": {
+      "title": "删除候选人",
+      "body": "您确定要将此候选人从重新评估列表中移除吗？此操作无法撤销。"
+    },
+    "initiateModal": {
+      "title": "发起重新评估请求",
+      "body_one": "为 {{count}} 个候选人（包括主候选人）发起重新评估请求？",
+      "body_other": "为 {{count}} 个候选人（包括主候选人）发起重新评估请求？"
+    },
+    "successModal": {
+      "title": "重新评估请求已创建",
+      "heading": "请求已发起",
+      "groupNumber": "组编号：",
+      "created_one": "成功创建 {{count}} 个请求。",
+      "created_other": "成功创建 {{count}} 个请求。",
+      "skipped": "已跳过（进行中）：{{count}}"
+    }
+  },
+  "actions": {
+    "initiate": "发起重新评估请求",
+    "viewOnMap": "在地图上查看",
+    "delete": "删除"
+  }
+}

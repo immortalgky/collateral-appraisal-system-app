@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import type { AppraisalFeeDtoType, AppraisalFeeItemDtoType } from '@shared/schemas/v1';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import AddPaymentModal from './AddPaymentModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { getFeePaymentStatusDisplay } from '../utils/feePaymentStatus';
 
 interface PaymentInformationSectionProps {
   items: AppraisalFeeItemDtoType[];
@@ -40,6 +42,7 @@ export default function PaymentInformationSection({
   requestedAt,
   isBankAbsorb = false,
 }: PaymentInformationSectionProps) {
+  const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const [isPaymentHistoryExpanded, setIsPaymentHistoryExpanded] = useState(true);
   const [isAddPaymentModalOpen, setIsAddPaymentModalOpen] = useState(false);
@@ -59,31 +62,27 @@ export default function PaymentInformationSection({
   const effectiveBankAbsorbAmount = isBankAbsorb ? totalFee : bankAbsorbAmount;
   const effectiveRemaining = isBankAbsorb ? 0 : remaining;
   const paymentPercentage = totalFee > 0 ? Math.min((totalPaid / totalFee) * 100, 100) : 0;
-  const effectivePaymentPercentage = isBankAbsorb ? 100 : paymentPercentage;
 
   // Determine payment status
   const getPaymentStatus = () => {
     if (fee) {
-      switch (fee?.paymentStatus?.toLowerCase()) {
-        case 'paid':
-          return { label: 'Paid', color: 'success' };
-        case 'partial':
-        case 'partiallypaid':
-          return { label: 'Partial', color: 'warning' };
-        case 'notpaid':
-        case 'unpaid':
-          return { label: 'Not Paid', color: 'danger' };
-        default:
-          return { label: fee.paymentStatus, color: 'gray' };
-      }
+      return getFeePaymentStatusDisplay(fee.paymentStatus);
     }
-    if (totalFee <= 0) return { label: 'No Fee', color: 'gray' };
-    if (remaining <= 0) return { label: 'Paid', color: 'success' };
-    if (totalPaid > 0) return { label: 'Partial', color: 'warning' };
-    return { label: 'Not Paid', color: 'danger' };
+    if (totalFee <= 0) return { label: 'No Fee', color: 'gray' as const };
+    if (remaining <= 0) return { label: 'Paid', color: 'success' as const };
+    if (totalPaid > 0) return { label: 'Partial', color: 'warning' as const };
+    return { label: 'Not Paid', color: 'danger' as const };
   };
 
-  const paymentStatus = isBankAbsorb ? { label: 'Paid', color: 'success' } : getPaymentStatus();
+  const paymentStatus = isBankAbsorb
+    ? { label: 'Paid', color: 'success' as const }
+    : getPaymentStatus();
+
+  // Only show 100% on the progress bar when the fee is fully paid (status === 'paid').
+  // PendingInvoice means the customer portion is settled but the external invoice is outstanding —
+  // show the real customer-paid percentage rather than forcing the bar to full.
+  const effectivePaymentPercentage =
+    paymentStatus.color === 'success' && paymentStatus.label === 'Paid' ? 100 : paymentPercentage;
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -150,7 +149,7 @@ export default function PaymentInformationSection({
         <div className="size-8 rounded-lg bg-blue-500 flex items-center justify-center shadow-sm">
           <Icon name="credit-card" style="solid" className="size-4 text-white" />
         </div>
-        <h3 className="text-base font-semibold text-gray-800">Payment Information</h3>
+        <h3 className="text-base font-semibold text-gray-800">{t('payment.sectionTitle')}</h3>
       </div>
 
       {/* Total Amount Card with Progress */}
@@ -165,7 +164,9 @@ export default function PaymentInformationSection({
                   ? 'bg-warning/10 border-warning text-warning'
                   : paymentStatus.color === 'danger'
                     ? 'bg-danger/10 border-danger text-danger'
-                    : 'bg-gray-100 border-gray-200 text-gray-600'
+                    : paymentStatus.color === 'info'
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-gray-100 border-gray-200 text-gray-600'
             }`}
           >
             <Icon
@@ -174,7 +175,9 @@ export default function PaymentInformationSection({
                   ? 'circle-check'
                   : paymentStatus.color === 'warning'
                     ? 'clock'
-                    : 'circle-xmark'
+                    : paymentStatus.color === 'info'
+                      ? 'file-invoice'
+                      : 'circle-xmark'
               }
               style="solid"
               className="w-5 h-5"
@@ -187,7 +190,7 @@ export default function PaymentInformationSection({
         {totalFee > 0 && (
           <div className="mt-2">
             <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>{Math.round(effectivePaymentPercentage)}% paid</span>
+              <span>{t('payment.paidPercent', { n: Math.round(effectivePaymentPercentage) })}</span>
               <span>
                 {isBankAbsorb ? formatCurrency(totalFee) : formatCurrency(totalPaid)} /
                 {formatCurrency(totalFee)}
@@ -208,7 +211,7 @@ export default function PaymentInformationSection({
         <div className="flex flex-col gap-4">
           {/* Payment Date */}
           <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-            <span className="text-xs font-medium text-gray-500">Payment date</span>
+            <span className="text-xs font-medium text-gray-500">{t('payment.paymentDate')}</span>
             <span className="text-sm text-gray-800">
               {payments.length > 0
                 ? formatDate(
@@ -223,7 +226,7 @@ export default function PaymentInformationSection({
           {/* Paid Amount with Expandable Payment History */}
           <div className="border-b border-gray-200 pb-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-500">Paid amount</span>
+              <span className="text-xs font-medium text-gray-500">{t('payment.paidAmount')}</span>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-800">{formatCurrency(totalPaid)}</span>
                 {payments.length > 0 && (
@@ -234,8 +237,8 @@ export default function PaymentInformationSection({
                     aria-expanded={isPaymentHistoryExpanded}
                     aria-label={
                       isPaymentHistoryExpanded
-                        ? 'Collapse payment history'
-                        : 'Expand payment history'
+                        ? t('payment.aria.collapseHistory')
+                        : t('payment.aria.expandHistory')
                     }
                   >
                     <Icon
@@ -259,57 +262,75 @@ export default function PaymentInformationSection({
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
                     <Icon name="credit-card" style="regular" className="w-5 h-5 text-blue-500" />
                   </div>
-                  <p className="text-sm text-gray-600">No payments recorded</p>
+                  <p className="text-sm text-gray-600">{t('payment.noPayments')}</p>
                 </div>
               ) : (
                 <>
                   {/* Table Header */}
                   <div className="grid grid-cols-[1fr_1fr_60px] gap-2 pb-2 border-b border-gray-200">
-                    <span className="text-xs text-gray-500">Payment Date</span>
-                    <span className="text-xs text-gray-500 text-right">Amount</span>
+                    <span className="text-xs text-gray-500">
+                      {t('payment.columns.paymentDate')}
+                    </span>
+                    <span className="text-xs text-gray-500 text-right">
+                      {t('payment.columns.amount')}
+                    </span>
                     <span />
                   </div>
 
                   {/* Payment Rows */}
-                  {payments.map(payment => (
-                    <div
-                      key={payment.id}
-                      className="grid grid-cols-[1fr_1fr_60px] gap-2 py-2 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors animate-fadeIn"
-                    >
-                      <span className="text-sm text-gray-600">
-                        {formatDate(payment.paymentDate)}
-                      </span>
-                      <span className="text-sm text-gray-600 text-right">
-                        {formatCurrency(payment.paymentAmount)}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {!readOnly && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setEditingPaymentId(payment.id)}
-                              className="text-gray-400 hover:text-secondary transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
-                              aria-label={`Edit payment of ${formatCurrency(payment.paymentAmount)}`}
-                              title="Edit payment"
-                              disabled={isPaymentPending}
-                            >
-                              <Icon name="pen" style="regular" className="w-3 h-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeletingPaymentId(payment.id)}
-                              className="text-gray-400 hover:text-danger transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
-                              aria-label={`Delete payment of ${formatCurrency(payment.paymentAmount)}`}
-                              title="Delete payment"
-                              disabled={isPaymentPending}
-                            >
-                              <Icon name="trash" style="regular" className="w-3 h-3" />
-                            </button>
-                          </>
-                        )}
+                  {payments.map(payment => {
+                    const isBankAbsorbRow = payment.source?.toLowerCase() === 'bankabsorb';
+                    return (
+                      <div
+                        key={payment.id}
+                        className="grid grid-cols-[1fr_1fr_60px] gap-2 py-2 border-b border-gray-100 items-center hover:bg-gray-50 transition-colors animate-fadeIn"
+                      >
+                        <span className="text-sm text-gray-600">
+                          {formatDate(payment.paymentDate)}
+                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-sm text-gray-600">
+                            {formatCurrency(payment.paymentAmount)}
+                          </span>
+                          {isBankAbsorbRow && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200 text-blue-600 leading-none">
+                              {t('payment.bankAbsorbed')}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {!readOnly && !isBankAbsorbRow && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setEditingPaymentId(payment.id)}
+                                className="text-gray-400 hover:text-secondary transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
+                                aria-label={t('payment.aria.editPayment', {
+                                  amount: formatCurrency(payment.paymentAmount),
+                                })}
+                                title={t('payment.aria.editPaymentTitle')}
+                                disabled={isPaymentPending}
+                              >
+                                <Icon name="pen" style="regular" className="w-3 h-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDeletingPaymentId(payment.id)}
+                                className="text-gray-400 hover:text-danger transition-colors p-1 disabled:opacity-50 disabled:pointer-events-none"
+                                aria-label={t('payment.aria.deletePayment', {
+                                  amount: formatCurrency(payment.paymentAmount),
+                                })}
+                                title={t('payment.aria.deletePaymentTitle')}
+                                disabled={isPaymentPending}
+                              >
+                                <Icon name="trash" style="regular" className="w-3 h-3" />
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </>
               )}
 
@@ -322,7 +343,7 @@ export default function PaymentInformationSection({
                   className={`w-full flex items-center justify-center gap-2 py-2.5 mt-3 border-2 border-dashed rounded-lg transition-colors ${isPaymentPending ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-blue-300 text-blue-600 hover:bg-blue-50 hover:border-blue-400'}`}
                 >
                   <Icon name="circle-plus" style="solid" className="w-4 h-4" />
-                  <span className="text-sm font-medium">Add Payment</span>
+                  <span className="text-sm font-medium">{t('payment.addPayment')}</span>
                 </button>
               )}
             </div>
@@ -331,11 +352,8 @@ export default function PaymentInformationSection({
           {/* Bank Absorb Amount */}
           <div className="flex justify-between items-center border-b border-gray-200 pb-3">
             <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
-              Bank absorb amount
-              <span
-                className="text-gray-400 cursor-help"
-                title="Amount absorbed by the bank, reducing the customer's payment obligation"
-              >
+              {t('payment.bankAbsorbAmount')}
+              <span className="text-gray-400 cursor-help" title={t('payment.bankAbsorbTooltip')}>
                 <Icon name="circle-info" style="regular" className="w-3.5 h-3.5" />
               </span>
             </span>
@@ -347,7 +365,9 @@ export default function PaymentInformationSection({
           {/* Customer Payable (only shown when API data is available) */}
           {fee && (
             <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-              <span className="text-xs font-medium text-gray-500">Customer payable</span>
+              <span className="text-xs font-medium text-gray-500">
+                {t('payment.customerPayable')}
+              </span>
               <span className="text-sm text-gray-800">
                 {formatCurrency(fee.customerPayableAmount)}
               </span>
@@ -356,7 +376,7 @@ export default function PaymentInformationSection({
 
           {/* Remaining */}
           <div className="flex justify-between items-center">
-            <span className="text-xs font-medium text-gray-500">Remaining</span>
+            <span className="text-xs font-medium text-gray-500">{t('payment.remaining')}</span>
             <span
               className={`text-sm font-medium ${effectiveRemaining > 0 ? 'text-danger' : 'text-success'}`}
             >
@@ -392,9 +412,11 @@ export default function PaymentInformationSection({
         isOpen={deletingPaymentId !== null}
         onClose={() => setDeletingPaymentId(null)}
         onConfirm={handleDeletePayment}
-        title="Delete Payment"
-        message={`Are you sure you want to delete this ${getDeletingPaymentDescription()}? This action cannot be undone.`}
-        confirmText="Delete"
+        title={t('payment.deletePaymentDialog.title')}
+        message={t('payment.deletePaymentDialog.message', {
+          description: getDeletingPaymentDescription(),
+        })}
+        confirmText={t('payment.deletePaymentDialog.confirm')}
         variant="danger"
       />
     </div>

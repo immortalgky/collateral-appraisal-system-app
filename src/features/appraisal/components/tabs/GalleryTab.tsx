@@ -3,6 +3,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import ViewModeToggle, { type GalleryViewMode } from '../ViewModeToggle';
@@ -17,10 +18,7 @@ import {
   useLinkPhotoToProperty,
   useUpdateGalleryPhoto,
 } from '../../api/gallery';
-import {
-  createUploadSession,
-  useUploadDocument,
-} from '@features/request/api/documents';
+import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import PhotoEditModal from '../gallery/PhotoEditModal';
@@ -50,7 +48,12 @@ const StatCard = ({
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-gray-100">
-      <div className={clsx('w-10 h-10 rounded-lg flex items-center justify-center', colorClasses[color])}>
+      <div
+        className={clsx(
+          'w-10 h-10 rounded-lg flex items-center justify-center',
+          colorClasses[color],
+        )}
+      >
         <Icon name={icon} className="text-lg" />
       </div>
       <div>
@@ -78,9 +81,7 @@ const FilterChip = ({
     onClick={onClick}
     className={clsx(
       'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2',
-      isActive
-        ? 'bg-primary text-white shadow-sm'
-        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+      isActive ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
     )}
   >
     {label}
@@ -88,7 +89,7 @@ const FilterChip = ({
       <span
         className={clsx(
           'px-1.5 py-0.5 rounded-full text-xs',
-          isActive ? 'bg-white/20' : 'bg-gray-200'
+          isActive ? 'bg-white/20' : 'bg-gray-200',
         )}
       >
         {count}
@@ -171,7 +172,14 @@ const LinkToPropertyModal = ({
   onClose: () => void;
   onConfirm: (propertyId: string) => void;
   isLoading: boolean;
-  properties: { id: string; detailId?: string; type: string; address: string; area: string; image?: string }[];
+  properties: {
+    id: string;
+    detailId?: string;
+    type: string;
+    address: string;
+    area: string;
+    image?: string;
+  }[];
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -185,7 +193,9 @@ const LinkToPropertyModal = ({
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-lg font-semibold text-gray-900">Link to Property</h3>
-          <p className="text-sm text-gray-500 mt-1">Select a property to use this photo as thumbnail</p>
+          <p className="text-sm text-gray-500 mt-1">
+            Select a property to use this photo as thumbnail
+          </p>
         </div>
         <div className="p-6 max-h-96 overflow-y-auto">
           {properties.length === 0 ? (
@@ -206,12 +216,16 @@ const LinkToPropertyModal = ({
                     'w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3',
                     selectedId === property.id
                       ? 'border-primary bg-primary/5'
-                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50',
                   )}
                 >
                   <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
                     {property.image ? (
-                      <img src={property.image} alt={property.address} className="w-full h-full object-cover" />
+                      <img
+                        src={property.image}
+                        alt={property.address}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Icon name="image" className="text-gray-400" />
@@ -230,7 +244,7 @@ const LinkToPropertyModal = ({
                   <div
                     className={clsx(
                       'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0',
-                      selectedId === property.id ? 'bg-primary border-primary' : 'border-gray-300'
+                      selectedId === property.id ? 'bg-primary border-primary' : 'border-gray-300',
                     )}
                   >
                     {selectedId === property.id && (
@@ -267,6 +281,7 @@ const LinkToPropertyModal = ({
 
 export const GalleryTab = () => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
   const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
@@ -276,8 +291,13 @@ export const GalleryTab = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
-  const [uploadingPhotos, setUploadingPhotos] = useState<Map<string, { file: File; progress: number }>>(new Map());
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; photoId: string | null }>({ isOpen: false, photoId: null });
+  const [uploadingPhotos, setUploadingPhotos] = useState<
+    Map<string, { file: File; progress: number }>
+  >(new Map());
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; photoId: string | null }>({
+    isOpen: false,
+    photoId: null,
+  });
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
   const [linkToPropertyOpen, setLinkToPropertyOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<GalleryImage | null>(null);
@@ -322,7 +342,7 @@ export const GalleryTab = () => {
   // Map API photos to UI model
   const allImages: GalleryImage[] = useMemo(
     () => (galleryData?.photos ?? []).map(toGalleryImage),
-    [galleryData]
+    [galleryData],
   );
 
   // Filter and sort images
@@ -336,7 +356,7 @@ export const GalleryTab = () => {
         img =>
           img.fileName?.toLowerCase().includes(query) ||
           img.description?.toLowerCase().includes(query) ||
-          img.caption?.toLowerCase().includes(query)
+          img.caption?.toLowerCase().includes(query),
       );
     }
 
@@ -370,7 +390,7 @@ export const GalleryTab = () => {
       used: allImages.filter(img => img.isInUse).length,
       unused: allImages.filter(img => !img.isInUse).length,
     }),
-    [allImages]
+    [allImages],
   );
 
   const handleImageClick = (image: GalleryImage) => {
@@ -396,13 +416,13 @@ export const GalleryTab = () => {
       { appraisalId, photoId: deleteConfirm.photoId },
       {
         onSuccess: () => {
-          toast.success('Photo deleted successfully');
+          toast.success(t('gallery.toasts.deleted'));
           setDeleteConfirm({ isOpen: false, photoId: null });
         },
         onError: () => {
-          toast.error('Failed to delete photo');
+          toast.error(t('gallery.toasts.deleteFailed'));
         },
-      }
+      },
     );
   };
 
@@ -422,10 +442,10 @@ export const GalleryTab = () => {
         longitude: editingImage.longitude,
         capturedAt: editingImage.capturedAt,
       });
-      toast.success('Photo updated successfully');
+      toast.success(t('gallery.toasts.updated'));
       setEditingImage(null);
     } catch {
-      toast.error('Failed to update photo');
+      toast.error(t('gallery.toasts.updateFailed'));
     }
   };
 
@@ -448,9 +468,14 @@ export const GalleryTab = () => {
             deletedCount++;
             if (deletedCount + failedCount === idsToDelete.length) {
               if (failedCount === 0) {
-                toast.success(`Deleted ${deletedCount} photo(s)`);
+                toast.success(t('toasts.galleryPhotoDeletedCount', { count: deletedCount }));
               } else {
-                toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
+                toast.error(
+                  t('toasts.galleryPhotoDeletedPartial', {
+                    deleted: deletedCount,
+                    failed: failedCount,
+                  }),
+                );
               }
               setSelectedImageIds(new Set());
               setBulkDeleteConfirm(false);
@@ -459,12 +484,17 @@ export const GalleryTab = () => {
           onError: () => {
             failedCount++;
             if (deletedCount + failedCount === idsToDelete.length) {
-              toast.error(`Deleted ${deletedCount}, failed ${failedCount}`);
+              toast.error(
+                t('toasts.galleryPhotoDeletedPartial', {
+                  deleted: deletedCount,
+                  failed: failedCount,
+                }),
+              );
               setSelectedImageIds(new Set());
               setBulkDeleteConfirm(false);
             }
           },
-        }
+        },
       );
     });
   };
@@ -480,14 +510,14 @@ export const GalleryTab = () => {
           address: item.address,
           area: item.area,
           image: item.image,
-        }))
+        })),
       ),
-    [groups]
+    [groups],
   );
 
   const handleBulkLinkToProperty = () => {
     if (selectedImageIds.size === 0) {
-      toast.error('Please select at least one photo');
+      toast.error(t('toasts.galleryPhotoSelectFirst'));
       return;
     }
     setLinkToPropertyOpen(true);
@@ -513,7 +543,7 @@ export const GalleryTab = () => {
           onSuccess: () => {
             successCount++;
             if (successCount + failCount === ids.length) {
-              toast.success(`Linked ${successCount} photo(s) to property`);
+              toast.success(t('toasts.photosLinkedToProperty', { count: successCount }));
               setSelectedImageIds(new Set());
               setLinkToPropertyOpen(false);
             }
@@ -521,12 +551,14 @@ export const GalleryTab = () => {
           onError: () => {
             failCount++;
             if (successCount + failCount === ids.length) {
-              toast.error(`Linked ${successCount}, failed ${failCount}`);
+              toast.error(
+                t('toasts.photosLinkedPartial', { success: successCount, failed: failCount }),
+              );
               setSelectedImageIds(new Set());
               setLinkToPropertyOpen(false);
             }
           },
-        }
+        },
       );
     });
   };
@@ -593,86 +625,92 @@ export const GalleryTab = () => {
    * 2. Upload document via useUploadDocument
    * 3. Register in gallery via useAddGalleryPhoto
    */
-  const uploadSingleFile = useCallback(async (file: File) => {
-    if (!/\.(jpg|jpeg|png)$/i.test(file.name)) {
-      toast.error(`${file.name} is not a supported image file (JPG, JPEG, PNG only)`);
-      return;
-    }
+  const uploadSingleFile = useCallback(
+    async (file: File) => {
+      if (!/\.(jpg|jpeg|png)$/i.test(file.name)) {
+        toast.error(t('toasts.photoUnsupportedFormatGallery', { name: file.name }));
+        return;
+      }
 
-    if (!appraisalId) return;
+      if (!appraisalId) return;
 
-    const tempId = `uploading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    setUploadingPhotos(prev => new Map(prev).set(tempId, { file, progress: 0 }));
+      const tempId = `uploading-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      setUploadingPhotos(prev => new Map(prev).set(tempId, { file, progress: 0 }));
 
-    try {
-      // Step 1: Get or create upload session
-      const sessionId = await getOrCreateSession();
+      try {
+        // Step 1: Get or create upload session
+        const sessionId = await getOrCreateSession();
 
-      // Step 2: Upload the document
-      const uploadResult = await uploadDocument({
-        uploadSessionId: sessionId,
-        file,
-        documentType: 'GAL_PHOTO',
-        documentCategory: 'gallery',
-      });
+        // Step 2: Upload the document
+        const uploadResult = await uploadDocument({
+          uploadSessionId: sessionId,
+          file,
+          documentType: 'GAL_PHOTO',
+          documentCategory: 'gallery',
+        });
 
-      // Step 3: Register in gallery
-      await addGalleryPhoto({
-        appraisalId,
-        documentId: uploadResult.documentId,
-        photoType: 'general',
-        uploadedBy: 'current-user',
-        photoCategory: null,
-        caption: null,
-        latitude: null,
-        longitude: null,
-        capturedAt: null,
-        photoTopicIds: null,
-        fileName: uploadResult.fileName,
-        filePath: uploadResult.storageUrl,
-        fileExtension: file.name.includes('.') ? file.name.split('.').pop() ?? null : null,
-        mimeType: file.type || null,
-        fileSizeBytes: uploadResult.fileSize,
-        uploadedByName: null,
-      });
+        // Step 3: Register in gallery
+        await addGalleryPhoto({
+          appraisalId,
+          documentId: uploadResult.documentId,
+          photoType: 'general',
+          uploadedBy: 'current-user',
+          photoCategory: null,
+          caption: null,
+          latitude: null,
+          longitude: null,
+          capturedAt: null,
+          photoTopicIds: null,
+          fileName: uploadResult.fileName,
+          filePath: uploadResult.storageUrl,
+          fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
+          mimeType: file.type || null,
+          fileSizeBytes: uploadResult.fileSize,
+          uploadedByName: null,
+        });
 
-      setUploadingPhotos(prev => {
-        const next = new Map(prev);
-        next.delete(tempId);
-        return next;
-      });
-      toast.success(`Uploaded ${file.name}`);
-    } catch {
-      setUploadingPhotos(prev => {
-        const next = new Map(prev);
-        next.delete(tempId);
-        return next;
-      });
-      toast.error(`Failed to upload ${file.name}`);
-    }
-  }, [appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto]);
+        setUploadingPhotos(prev => {
+          const next = new Map(prev);
+          next.delete(tempId);
+          return next;
+        });
+        toast.success(t('toasts.uploadedFile', { name: file.name }));
+      } catch {
+        setUploadingPhotos(prev => {
+          const next = new Map(prev);
+          next.delete(tempId);
+          return next;
+        });
+        toast.error(t('toasts.uploadFileFailed', { name: file.name }));
+      }
+    },
+    [appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto],
+  );
 
   // Keep the ref in sync so the native drop handler can call uploadSingleFile
   onDropFilesRef.current = async (files: File[]) => {
-    toast.success(`Uploading ${files.length} file(s)...`);
+    toast.success(t('toasts.uploading', { count: files.length }));
     for (const file of files) {
       await uploadSingleFile(file);
     }
   };
 
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const handleFileSelect = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-    const fileArray = Array.from(files);
-    toast.success(`Uploading ${fileArray.length} file(s)...`);
-    for (const file of fileArray) {
-      await uploadSingleFile(file);
-    }
+      const fileArray = Array.from(files);
+      toast.success(t('toasts.uploading', { count: fileArray.length }));
+      for (const file of fileArray) {
+        await uploadSingleFile(file);
+      }
 
-    // Reset input
-    e.target.value = '';
-  }, [uploadSingleFile]);
+      // Reset input
+      e.target.value = '';
+    },
+    [uploadSingleFile],
+  );
 
   const handleSelectAll = () => {
     if (selectedImageIds.size === filteredImages.length) {
@@ -696,17 +734,11 @@ export const GalleryTab = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Photo Gallery</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Manage all photos for this appraisal
-          </p>
+          <p className="text-xs text-gray-500 mt-0.5">Manage all photos for this appraisal</p>
         </div>
 
         {!readOnly && (
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => fileInputRef.current?.click()}
-          >
+          <Button variant="primary" size="sm" onClick={() => fileInputRef.current?.click()}>
             <Icon name="cloud-arrow-up" className="mr-2" />
             Upload Photos
           </Button>
@@ -758,7 +790,10 @@ export const GalleryTab = () => {
         <div className="flex items-center justify-between gap-4">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
-            <Icon name="magnifying-glass" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Icon
+              name="magnifying-glass"
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               value={searchQuery}
@@ -833,7 +868,7 @@ export const GalleryTab = () => {
                   'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
                   selectedImageIds.size === filteredImages.length && filteredImages.length > 0
                     ? 'bg-primary border-primary'
-                    : 'border-gray-300 hover:border-primary'
+                    : 'border-gray-300 hover:border-primary',
                 )}
               >
                 {selectedImageIds.size === filteredImages.length && filteredImages.length > 0 && (
@@ -852,7 +887,7 @@ export const GalleryTab = () => {
           'absolute inset-0 z-40 flex items-center justify-center border-2 border-dashed rounded-2xl transition-opacity pointer-events-none',
           isDragging
             ? 'opacity-100 border-emerald-400 bg-emerald-50/50'
-            : 'opacity-0 border-transparent'
+            : 'opacity-0 border-transparent',
         )}
       >
         <div className="text-center">
@@ -886,8 +921,7 @@ export const GalleryTab = () => {
                 Clear filters
               </Button>
             </div>
-          ) : (
-            readOnly ? (
+          ) : readOnly ? (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                 <Icon name="image" className="text-3xl text-gray-400" />
@@ -896,7 +930,6 @@ export const GalleryTab = () => {
             </div>
           ) : (
             <EmptyGalleryState onUpload={() => fileInputRef.current?.click()} />
-          )
           )
         ) : (
           <>
@@ -933,11 +966,7 @@ export const GalleryTab = () => {
           <p>
             Showing {filteredImages.length} of {allImages.length} photos
           </p>
-          {searchQuery && (
-            <p>
-              Results for "{searchQuery}"
-            </p>
-          )}
+          {searchQuery && <p>Results for "{searchQuery}"</p>}
         </div>
       )}
 
@@ -971,18 +1000,24 @@ export const GalleryTab = () => {
                 capturedAt: selectedImage.capturedAt,
               });
               setSelectedImage(prev =>
-                prev ? { ...prev, caption: caption || null, description: caption || undefined } : null
+                prev
+                  ? { ...prev, caption: caption || null, description: caption || undefined }
+                  : null,
               );
-              toast.success('Description updated');
+              toast.success(t('toasts.descriptionUpdated'));
             } catch {
-              toast.error('Failed to update description');
+              toast.error(t('toasts.descriptionUpdateFailed'));
             }
           }}
           isSavingDescription={isUpdating}
-          onDelete={readOnly ? undefined : () => {
-            handleImageDelete(selectedImage);
-            setSelectedImage(null);
-          }}
+          onDelete={
+            readOnly
+              ? undefined
+              : () => {
+                  handleImageDelete(selectedImage);
+                  setSelectedImage(null);
+                }
+          }
         />
       )}
 

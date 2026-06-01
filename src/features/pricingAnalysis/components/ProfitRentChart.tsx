@@ -25,7 +25,7 @@ const fmtTooltip = (n: number): string =>
   n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function ProfitRentChart({ result }: ProfitRentChartProps) {
-  const data = result.rows.map((r) => ({
+  const data = result.rows.map(r => ({
     year: r.year,
     marketRental: r.marketRentalFeePerYear,
     contractRental: r.contractRentalFeePerYear,
@@ -35,14 +35,16 @@ export function ProfitRentChart({ result }: ProfitRentChartProps) {
 
   return (
     <div className="rounded-lg border border-gray-200 p-4">
-      <div className="text-xs font-medium text-gray-500 mb-2">Market vs Contract Rental & Present Value</div>
+      <div className="text-xs font-medium text-gray-500 mb-2">
+        Market vs Contract Rental & Present Value
+      </div>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="year"
             tick={{ fontSize: 10, fill: '#9ca3af' }}
-            tickFormatter={(v) => v.toFixed(1)}
+            tickFormatter={v => v.toFixed(1)}
           />
           <YAxis
             yAxisId="left"
@@ -61,11 +63,9 @@ export function ProfitRentChart({ result }: ProfitRentChartProps) {
             contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             formatter={((value: number, name: string) => [fmtTooltip(value), name]) as any}
-            labelFormatter={(label) => `Year ${Number(label).toFixed(1)}`}
+            labelFormatter={label => `Year ${Number(label).toFixed(1)}`}
           />
-          <Legend
-            wrapperStyle={{ fontSize: 10, paddingTop: 4 }}
-          />
+          <Legend wrapperStyle={{ fontSize: 10, paddingTop: 4 }} />
           <Bar
             yAxisId="left"
             dataKey="marketRental"

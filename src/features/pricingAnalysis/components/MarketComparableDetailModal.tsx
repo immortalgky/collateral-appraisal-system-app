@@ -26,12 +26,12 @@ export function MarketComparableDetailModal({
   onClose,
   marketComparableId,
 }: MarketComparableDetailModalProps) {
-  const { data: marketComparable, isLoading: isLoadingComparable } =
-    useGetMarketComparableById(marketComparableId ?? undefined);
-  const { data: template, isLoading: isLoadingTemplate } =
-    useGetMarketComparableTemplateById(
-      marketComparable?.marketComparable.templateId ?? undefined,
-    );
+  const { data: marketComparable, isLoading: isLoadingComparable } = useGetMarketComparableById(
+    marketComparableId ?? undefined,
+  );
+  const { data: template, isLoading: isLoadingTemplate } = useGetMarketComparableTemplateById(
+    marketComparable?.marketComparable.templateId ?? undefined,
+  );
 
   const isLoading = isLoadingComparable || isLoadingTemplate;
 

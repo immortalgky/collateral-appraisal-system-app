@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { AppraisalSummaryDto } from '../schemas/quotation';
 
@@ -22,11 +23,12 @@ const AppraisalLeftRail = ({
   onSelect,
   feeAmounts,
 }: AppraisalLeftRailProps) => {
+  const { t } = useTranslation('quotation');
   return (
     <div className="w-full md:w-auto md:min-h-0 md:overflow-hidden flex flex-col border-b md:border-b-0 md:border-r border-gray-200 bg-gray-50">
       <div className="px-3 py-2.5 border-b border-gray-200 shrink-0 bg-gray-50">
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Appraisals ({appraisals.length})
+          {t('appraisalPanel.title')} ({appraisals.length})
         </p>
       </div>
       <div className="divide-y divide-gray-100 flex-1 min-h-0 overflow-y-auto">

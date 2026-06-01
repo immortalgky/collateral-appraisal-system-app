@@ -13,7 +13,8 @@ export function CompanySelectionNode({ id, data, selected }: NodeProps) {
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Company Selection'}
       selected={selected}

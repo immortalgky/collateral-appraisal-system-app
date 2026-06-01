@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import Icon from './Icon';
+import { useLoadingStore } from '@shared/store';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -10,6 +12,26 @@ interface ConfirmDialogProps {
   cancelText?: string;
   variant?: 'danger' | 'warning' | 'info' | 'primary';
   isLoading?: boolean;
+  /**
+   * When true, while isLoading the body message is replaced by the live
+   * activity-completion progress text (e.g. "Checking: …") from the loading store,
+   * so the step being processed is visible even though this dialog sits above the
+   * global loading overlay.
+   */
+  showActivityProgress?: boolean;
+  /**
+   * Rich body slot. When provided, replaces the plain message paragraph.
+   * The dialog box also widens to max-w-md to accommodate richer content.
+   */
+  children?: ReactNode;
+  /**
+   * When true (and not loading), the header shows an error icon instead of the
+   * variant icon — so a failure state doesn't display a green success check.
+   * The confirm button keeps its variant colour (so Cancel/retry stay normal).
+   */
+  hasError?: boolean;
+  /** Text shown on the confirm button while loading (defaults to "Processing..."). */
+  loadingText?: string;
 }
 
 const ConfirmDialog = ({
@@ -22,8 +44,16 @@ const ConfirmDialog = ({
   cancelText = 'Cancel',
   variant = 'danger',
   isLoading = false,
+  showActivityProgress = false,
+  children,
+  hasError = false,
+  loadingText,
 }: ConfirmDialogProps) => {
+  const progressMessage = useLoadingStore(s => s.message);
   if (!isOpen) return null;
+
+  const showProgress = !children && isLoading && showActivityProgress && !!progressMessage;
+  const bodyMessage = showProgress ? progressMessage : message;
 
   const variantStyles = {
     danger: {
@@ -61,13 +91,29 @@ const ConfirmDialog = ({
 
   return (
     <dialog className="modal modal-open z-[60]">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-sm">
+      <div className={`modal-box bg-white rounded-2xl shadow-xl ${children ? 'max-w-md' : 'max-w-sm'}`}>
         <div className="flex flex-col items-center text-center">
-          <div className={`w-14 h-14 rounded-full ${styles.iconBg} flex items-center justify-center mb-4`}>
-            <Icon name={styles.icon} style="solid" className={`size-7 ${styles.iconColor}`} />
+          <div
+            className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${
+              isLoading ? 'bg-primary/10' : hasError ? 'bg-danger/10' : styles.iconBg
+            }`}
+          >
+            {isLoading ? (
+              <Icon name="spinner" style="solid" className="size-7 text-primary animate-spin" />
+            ) : hasError ? (
+              <Icon name="triangle-exclamation" style="solid" className="size-7 text-danger" />
+            ) : (
+              <Icon name={styles.icon} style="solid" className={`size-7 ${styles.iconColor}`} />
+            )}
           </div>
           <h3 className="font-semibold text-lg text-gray-900 mb-2">{title}</h3>
-          <p className="text-sm text-gray-500 mb-6">{message}</p>
+          {children ? (
+            <div className="w-full mb-6">{children}</div>
+          ) : (
+            <p className={`text-sm mb-6 ${showProgress ? 'text-primary animate-pulse' : 'text-gray-500'}`}>
+              {bodyMessage}
+            </p>
+          )}
           <div className="flex gap-3 w-full">
             <button
               type="button"
@@ -85,8 +131,8 @@ const ConfirmDialog = ({
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                  Processing...
+                  <Icon name="spinner" style="solid" className="size-4 animate-spin shrink-0" />
+                  <span className="truncate">{loadingText ?? 'Processing...'}</span>
                 </span>
               ) : (
                 confirmText
@@ -95,8 +141,13 @@ const ConfirmDialog = ({
           </div>
         </div>
       </div>
-      <div className="modal-backdrop bg-black/40" onClick={onClose}>
-        <button type="button">close</button>
+      <div
+        className="modal-backdrop bg-black/40"
+        onClick={isLoading ? undefined : onClose}
+      >
+        <button type="button" disabled={isLoading}>
+          close
+        </button>
       </div>
     </dialog>
   );

@@ -19,17 +19,17 @@ export function getLayoutedNodes<T extends Record<string, unknown> = Record<stri
     marginy: 50,
   });
 
-  nodes.forEach((node) => {
+  nodes.forEach(node => {
     g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   });
 
-  edges.forEach((edge) => {
+  edges.forEach(edge => {
     g.setEdge(edge.source, edge.target);
   });
 
   dagre.layout(g);
 
-  return nodes.map((node) => {
+  return nodes.map(node => {
     const pos = g.node(node.id);
     return {
       ...node,

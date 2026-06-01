@@ -1,0 +1,153 @@
+{
+  "page": {
+    "list": {
+      "title": "Periodical Reappraisal (AS400)",
+      "description": "Review and initiate reappraisal requests for collateral candidates"
+    },
+    "detail": {
+      "title": "Candidate Detail"
+    }
+  },
+  "reviewType": {
+    "1": "Normal Review",
+    "2": "Before Stage 3",
+    "3": "Stage 3"
+  },
+  "columns": {
+    "oldAppraisalReportNumber": "Old Appraisal Report Number",
+    "cifNumber": "CIF Number",
+    "customerName": "Customer Name",
+    "reviewType": "Review Type",
+    "remainingDay": "Remaining Day",
+    "appraisalDate": "Appraisal Date",
+    "channel": "Channel",
+    "status": "Status",
+    "distance": "Distance (km)"
+  },
+  "filter": {
+    "title": "Filter",
+    "button": "Filters",
+    "reviewDateRange": "Appraisal Date",
+    "remainingDays": "Remaining Days",
+    "clearDates": "Clear dates",
+    "clearRange": "Clear range",
+    "fields": {
+      "customerName": "Customer Name",
+      "oldAppraisalReportNumber": "Old Appraisal Report Number",
+      "cifNumber": "CIF Number",
+      "collateralId": "Collateral ID",
+      "reviewType": "Review Type"
+    },
+    "placeholders": {
+      "customerName": "Enter customer name",
+      "oldAppraisalReportNumber": "Enter report number",
+      "cifNumber": "Enter CIF number",
+      "collateralId": "Enter collateral ID",
+      "remainingDayFrom": "0",
+      "remainingDayTo": "e.g. 365"
+    },
+    "chips": {
+      "customerName": "Customer Name",
+      "oldAppraisalReportNumber": "Report Number",
+      "cifNumber": "CIF Number",
+      "collateralId": "Collateral ID",
+      "reviewType": "Review Type",
+      "reviewDateFrom": "Date From",
+      "reviewDateTo": "Date To",
+      "remainingDayFrom": "Remaining From",
+      "remainingDayTo": "Remaining To"
+    }
+  },
+  "badge": {
+    "used": "Used",
+    "inProgress": "In Progress",
+    "pending": "Pending"
+  },
+  "empty": {
+    "noMatching": "No matching candidates",
+    "noCandidates": "No candidates",
+    "tryAdjusting": "Try adjusting your filters.",
+    "noneAtThisTime": "There are no reappraisal candidates at this time.",
+    "clearFilters": "Clear filters"
+  },
+  "error": {
+    "loadFailed": "Failed to load reappraisal candidates"
+  },
+  "detail": {
+    "blockedTitle": "Already in progress",
+    "backToList": "Back to list",
+    "error": {
+      "loadFailed": "Failed to load candidate details",
+      "notFound": "Candidate not found"
+    },
+    "banner": {
+      "inProgressTitle": "This candidate is already in progress.",
+      "appraisalLabel": "Appraisal",
+      "groupLabel": "Group",
+      "consumed": "This candidate has been used to create a reappraisal request."
+    },
+    "fields": {
+      "collateralId": "Collateral ID",
+      "collateralName": "Collateral Name",
+      "collateralDescription": "Collateral Description",
+      "collateralAddress": "Collateral Address",
+      "carCode": "CAR Code",
+      "valuationDate": "Valuation Date",
+      "pastDueDate": "Past Due Date",
+      "externalName": "External Name",
+      "internalName": "Internal Name",
+      "aoCode": "AO Code",
+      "aoName": "AO Name",
+      "sllStatus": "SLL Status",
+      "sllDescription": "SLL Description"
+    },
+    "source": {
+      "inSystem": "In-System"
+    },
+    "duration": {
+      "year": "year",
+      "month": "month",
+      "day": "day"
+    },
+    "group": {
+      "title": "Application Request List (Group Appraisal)",
+      "subtitle": "The main candidate is always included. Select nearby candidates to group.",
+      "nearbySelected": "{{count}} nearby selected",
+      "main": "(main)",
+      "empty": "No nearby candidates within radius.",
+      "select": "Select",
+      "deselect": "Deselect",
+      "deleteCandidate": "Delete candidate",
+      "cannotDelete": "Cannot delete in-system appraisal",
+      "footer_one": "{{count}} candidate will be included in the request",
+      "footer_other": "{{count}} candidates will be included in the request",
+      "columns": {
+        "oldAppraisalNumber": "Old Appraisal Number",
+        "source": "Source",
+        "daysSince": "Days Since Last Appraisal"
+      }
+    },
+    "deleteModal": {
+      "title": "Delete Candidate",
+      "body": "Are you sure you want to remove this candidate from the reappraisal list? This action cannot be undone."
+    },
+    "initiateModal": {
+      "title": "Initiate Reappraisal Request",
+      "body_one": "Initiate reappraisal request for {{count}} candidate (including the main candidate)?",
+      "body_other": "Initiate reappraisal request for {{count}} candidates (including the main candidate)?"
+    },
+    "successModal": {
+      "title": "Reappraisal Request Created",
+      "heading": "Request Initiated",
+      "groupNumber": "Group Number:",
+      "created_one": "{{count}} request created successfully.",
+      "created_other": "{{count}} requests created successfully.",
+      "skipped": "Skipped (already in progress): {{count}}"
+    }
+  },
+  "actions": {
+    "initiate": "Initiate reappraisal request",
+    "viewOnMap": "View on Map",
+    "delete": "Delete"
+  }
+}

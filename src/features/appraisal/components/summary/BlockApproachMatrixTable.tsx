@@ -35,7 +35,10 @@ const BlockApproachMatrixTable = ({ rows, projectTotal }: BlockApproachMatrixTab
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">Model</th>
             {APPROACH_COLUMNS.map(col => (
-              <th key={col.key} className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+              <th
+                key={col.key}
+                className="px-3 py-2 text-right text-xs font-semibold text-gray-600"
+              >
                 <div className="flex items-center justify-end gap-1.5">
                   {selectedApproaches.has(col.key) && (
                     <Icon
@@ -54,9 +57,7 @@ const BlockApproachMatrixTable = ({ rows, projectTotal }: BlockApproachMatrixTab
         <tbody className="divide-y divide-gray-100">
           {rows.map(row => (
             <tr key={row.projectModelId} className="hover:bg-gray-50">
-              <td className="px-3 py-2 font-medium text-gray-900">
-                {row.modelName ?? '-'}
-              </td>
+              <td className="px-3 py-2 font-medium text-gray-900">{row.modelName ?? '-'}</td>
               {APPROACH_COLUMNS.map(col => {
                 const value = row[col.valueKey];
                 const isSelected = row.selectedApproach === col.key;
@@ -79,9 +80,11 @@ const BlockApproachMatrixTable = ({ rows, projectTotal }: BlockApproachMatrixTab
                     c => c.key === row.selectedApproach,
                   )?.valueKey;
                   const value = summaryValue ? row[summaryValue] : null;
-                  return value != null
-                    ? formatNumber(value, 2)
-                    : <span className="text-gray-300">-</span>;
+                  return value != null ? (
+                    formatNumber(value, 2)
+                  ) : (
+                    <span className="text-gray-300">-</span>
+                  );
                 })()}
               </td>
             </tr>
@@ -92,9 +95,7 @@ const BlockApproachMatrixTable = ({ rows, projectTotal }: BlockApproachMatrixTab
             <td className="px-3 py-2 text-gray-900" colSpan={APPROACH_COLUMNS.length + 1}>
               Project
             </td>
-            <td className="px-3 py-2 text-right text-gray-900">
-              {formatNumber(projectTotal, 2)}
-            </td>
+            <td className="px-3 py-2 text-right text-gray-900">{formatNumber(projectTotal, 2)}</td>
           </tr>
         </tfoot>
       </table>

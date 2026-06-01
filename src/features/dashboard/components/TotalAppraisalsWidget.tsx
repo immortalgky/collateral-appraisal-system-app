@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -114,6 +115,7 @@ const buildBuckets = (
 };
 
 function TotalAppraisalsWidget() {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const settings = useDashboardStore(
@@ -331,7 +333,7 @@ function TotalAppraisalsWidget() {
         <Line
           type="monotone"
           dataKey="prevCreated"
-          name="Prior period"
+          name={t('totalAppraisals.chart.prevPeriod')}
           stroke="#f59e0b"
           strokeWidth={1.5}
           strokeDasharray="4 4"
@@ -341,7 +343,7 @@ function TotalAppraisalsWidget() {
         <Line
           type="monotone"
           dataKey="created"
-          name="Created"
+          name={t('totalAppraisals.chart.created')}
           stroke="#3b82f6"
           strokeWidth={2.5}
           dot={{ r: 3, fill: '#3b82f6' }}
@@ -350,7 +352,7 @@ function TotalAppraisalsWidget() {
         <Line
           type="monotone"
           dataKey="completed"
-          name="Completed"
+          name={t('totalAppraisals.chart.completed')}
           stroke="#10b981"
           strokeWidth={2.5}
           dot={{ r: 3, fill: '#10b981' }}
@@ -367,7 +369,7 @@ function TotalAppraisalsWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800">Total Appraisals</h3>
+              <h3 className="font-semibold text-gray-800">{t('totalAppraisals.title')}</h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
@@ -376,7 +378,7 @@ function TotalAppraisalsWidget() {
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              aria-label="Expand widget"
+              aria-label={t('totalAppraisals.aria.expand')}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
             >
               <Icon name="expand" style="solid" className="size-4" />
@@ -385,7 +387,7 @@ function TotalAppraisalsWidget() {
               <button
                 type="button"
                 onClick={() => setMenuOpen(o => !o)}
-                aria-label="Widget menu"
+                aria-label={t('totalAppraisals.aria.menu')}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
@@ -394,7 +396,7 @@ function TotalAppraisalsWidget() {
                 <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
                   {updatedLabel && (
                     <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
-                      Updated {updatedLabel} ago
+                      {t('updatedAgo', { n: updatedLabel })}
                     </p>
                   )}
                   <button
@@ -407,7 +409,7 @@ function TotalAppraisalsWidget() {
                       style="solid"
                       className="size-3 text-gray-400"
                     />
-                    Refresh
+                    {t('totalAppraisals.menu.refresh')}
                   </button>
                   <button
                     type="button"
@@ -415,7 +417,7 @@ function TotalAppraisalsWidget() {
                     className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
-                    Reset
+                    {t('totalAppraisals.menu.reset')}
                   </button>
                 </div>
               )}
@@ -426,7 +428,7 @@ function TotalAppraisalsWidget() {
         <div className="p-6">
           {isError ? (
             <WidgetError
-              message="Unable to load appraisal trends"
+              message={t('totalAppraisals.error')}
               onRetry={() => {
                 current.refetch();
                 prior.refetch();
@@ -444,10 +446,18 @@ function TotalAppraisalsWidget() {
           ) : (
             <>
               <div className="grid grid-cols-3 gap-4 mb-4">
-                {renderKpi('Created', totals.created.toLocaleString(), totals.createdYoY)}
-                {renderKpi('Completed', totals.completed.toLocaleString(), totals.completedYoY)}
                 {renderKpi(
-                  'Completion rate',
+                  t('totalAppraisals.kpi.created'),
+                  totals.created.toLocaleString(),
+                  totals.createdYoY,
+                )}
+                {renderKpi(
+                  t('totalAppraisals.kpi.completed'),
+                  totals.completed.toLocaleString(),
+                  totals.completedYoY,
+                )}
+                {renderKpi(
+                  t('totalAppraisals.kpi.completionRate'),
                   `${totals.completionRate.toFixed(1)}%`,
                   totals.completionRateDeltaPp,
                   true,
@@ -458,11 +468,11 @@ function TotalAppraisalsWidget() {
                 <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
                   <Icon name="forward" style="solid" className="size-3 text-gray-400" />
                   <span>
-                    At current pace:{' '}
+                    {t('totalAppraisals.pace')}{' '}
                     <span className="font-medium text-gray-700 tabular-nums">
                       {pace.projectedTotal.toLocaleString()}
                     </span>{' '}
-                    by period end
+                    {t('totalAppraisals.paceByPeriodEnd')}
                     {totals.prevCreated > 0 && (
                       <>
                         {' '}
@@ -474,7 +484,8 @@ function TotalAppraisalsWidget() {
                           }
                         >
                           ({pace.projectedTotal >= totals.prevCreated ? '+' : ''}
-                          {(pace.projectedTotal - totals.prevCreated).toLocaleString()} vs prior)
+                          {(pace.projectedTotal - totals.prevCreated).toLocaleString()}{' '}
+                          {t('totalAppraisals.paceVsPrior')})
                         </span>
                       </>
                     )}
@@ -485,7 +496,7 @@ function TotalAppraisalsWidget() {
               <div className="h-56">
                 {data.every(d => d.created === 0 && d.completed === 0) ? (
                   <div className="h-full flex items-center justify-center text-sm text-gray-400">
-                    No appraisals in this range
+                    {t('totalAppraisals.noData')}
                   </div>
                 ) : (
                   chartContent
@@ -499,7 +510,7 @@ function TotalAppraisalsWidget() {
       <Modal
         isOpen={expanded}
         onClose={() => setExpanded(false)}
-        title="Total Appraisals — Detailed view"
+        title={t('totalAppraisals.detailedView')}
         size="2xl"
       >
         <div className="space-y-4">
@@ -508,11 +519,13 @@ function TotalAppraisalsWidget() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                 <tr>
-                  <th className="px-3 py-2 text-left">Period</th>
-                  <th className="px-3 py-2 text-right">Created</th>
-                  <th className="px-3 py-2 text-right">Completed</th>
-                  <th className="px-3 py-2 text-right">Completion %</th>
-                  <th className="px-3 py-2 text-right">Prior</th>
+                  <th className="px-3 py-2 text-left">{t('totalAppraisals.table.period')}</th>
+                  <th className="px-3 py-2 text-right">{t('totalAppraisals.table.created')}</th>
+                  <th className="px-3 py-2 text-right">{t('totalAppraisals.table.completed')}</th>
+                  <th className="px-3 py-2 text-right">
+                    {t('totalAppraisals.table.completionPct')}
+                  </th>
+                  <th className="px-3 py-2 text-right">{t('totalAppraisals.table.prior')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -536,7 +549,8 @@ function TotalAppraisalsWidget() {
             </table>
           </div>
           <p className="text-xs text-gray-500">
-            Range: {format(range.from, 'd MMM yyyy')} – {format(range.to, 'd MMM yyyy')}
+            {t('totalAppraisals.table.period')}: {format(range.from, 'd MMM yyyy')} –{' '}
+            {format(range.to, 'd MMM yyyy')}
             {' · '}
             {data.length} bucket{data.length === 1 ? '' : 's'}
             {' · '}

@@ -1,0 +1,52 @@
+{
+  "page": {
+    "back": "Back to appraisal",
+    "title": "Fee & Appointment Approval",
+    "loading": "Loading approval request...",
+    "loadError": "Failed to load approval request",
+    "loadErrorDetail": "This task may no longer be active.",
+    "infoTitle": "Fee & Appointment Change Approval",
+    "infoBody": "Review the requested changes below. Decide independently for the appointment (if any) and the fee group (if any).",
+    "raisedAt": "Raised on {{date}}",
+    "alreadyResolved": "This approval request has already been resolved.",
+    "decisionHint": "Select Approve or Reject for each section to enable submit.",
+    "submitDecision": "Submit Decision",
+    "confirmTitle": "Submit Decision",
+    "confirmMessage": "Are you sure you want to submit your decisions? This action cannot be undone.",
+    "confirmSubmit": "Submit"
+  },
+  "appointment": {
+    "blockTitle": "Appointment Change",
+    "newDate": "Requested New Date",
+    "rescheduleCount_one": "{{count}} reschedule",
+    "rescheduleCount_other": "{{count}} reschedules so far"
+  },
+  "fee": {
+    "blockTitle": "Additional Fees",
+    "columns": {
+      "code": "Code",
+      "description": "Description",
+      "amount": "Amount"
+    },
+    "total": "Total Requested",
+    "groupHint": "One decision applies to all fee lines above."
+  },
+  "decisions": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "pending": "Pending",
+    "reasonLabel": "Reason for rejection",
+    "reasonPlaceholder": "Enter reason for rejecting...",
+    "reasonPrefix": "Reason:"
+  },
+  "toasts": {
+    "resolveSuccess": "Decision submitted successfully",
+    "alreadyResolved": "This approval has already been resolved.",
+    "resolveFailed": "Failed to submit decision"
+  },
+  "validation": {
+    "reasonRequired": "A reason is required when rejecting"
+  }
+}

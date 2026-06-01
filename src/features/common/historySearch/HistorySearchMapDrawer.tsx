@@ -34,6 +34,11 @@ interface HistorySearchMapDrawerProps {
    */
   appraisingCollateralPins?: AppraisalPinDto[];
   /**
+   * Optional `appraisalNumber` of the appraising-collateral pin to emphasise as the
+   * "main" pin (distinct purple marker). Forwarded to HistorySearchMap.
+   */
+  primaryAppraisalNumber?: string | null;
+  /**
    * MC pins for the current appraisal — rendered via 'mc-appraising' markers.
    * Used on the 360 page to show this appraisal's own linked market comparables.
    */
@@ -63,6 +68,7 @@ export function HistorySearchMapDrawer({
   pinActionPending,
   pinScope,
   appraisingCollateralPins,
+  primaryAppraisalNumber,
   appraisingMcPins,
   defaultExpanded = false,
 }: HistorySearchMapDrawerProps) {
@@ -135,6 +141,7 @@ export function HistorySearchMapDrawer({
             pinActionPending={pinActionPending}
             pinScope={pinScope}
             appraisingCollateralPins={appraisingCollateralPins}
+            primaryAppraisalNumber={primaryAppraisalNumber}
             appraisingMcPins={appraisingMcPins}
           />
         </div>

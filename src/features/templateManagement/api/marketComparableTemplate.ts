@@ -52,7 +52,10 @@ export const useUpdateMCTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, ...body }: UpdateMarketComparableTemplateRequestType & { id: string }) => {
+    mutationFn: async ({
+      id,
+      ...body
+    }: UpdateMarketComparableTemplateRequestType & { id: string }) => {
       const { data } = await axios.put(`/market-comparable-templates/${id}`, body);
       return data;
     },
@@ -80,12 +83,17 @@ export const useAddFactorToMCTemplate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ templateId, ...body }: AddFactorToTemplateRequestType & { templateId: string }) => {
+    mutationFn: async ({
+      templateId,
+      ...body
+    }: AddFactorToTemplateRequestType & { templateId: string }) => {
       const { data } = await axios.post(`/market-comparable-templates/${templateId}/factors`, body);
       return data;
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.mcTemplateDetail(variables.templateId) });
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.mcTemplateDetail(variables.templateId),
+      });
     },
   });
 };
@@ -98,7 +106,9 @@ export const useRemoveFactorFromMCTemplate = () => {
       await axios.delete(`/market-comparable-templates/${templateId}/factors/${factorId}`);
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.mcTemplateDetail(variables.templateId) });
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.mcTemplateDetail(variables.templateId),
+      });
     },
   });
 };

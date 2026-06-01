@@ -52,6 +52,10 @@ export interface ProblemDetails {
   detail?: string | null;
   /** A URI reference that identifies the specific occurrence of the problem */
   instance?: string | null;
+  /** Extension: name of the validation step that produced the error (workflow 422s) */
+  stepName?: string | null;
+  /** Extension: stable error code for the failure (workflow 422s) */
+  errorCode?: string | null;
 }
 
 /**

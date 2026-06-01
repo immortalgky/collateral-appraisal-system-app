@@ -94,10 +94,9 @@ export const useUpdateConstructionInspectionFee = () => {
       feeId: string;
       amount: number | null;
     }): Promise<void> => {
-      await axios.patch(
-        `/appraisals/${appraisalId}/fees/${feeId}/construction-inspection-fee`,
-        { amount },
-      );
+      await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}/construction-inspection-fee`, {
+        amount,
+      });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

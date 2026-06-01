@@ -25,6 +25,7 @@ import LandDetailForm from '../forms/LandDetailForm';
 import { createLandForm, createLandFormDefault, type createLandFormType } from '../schemas/form';
 import { mapLandPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
@@ -32,6 +33,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateLandPage = () => {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -56,7 +58,12 @@ const CreateLandPage = () => {
     defaultValues: formDefaults,
     resolver: zodResolver(createLandForm),
   });
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
 
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -87,7 +94,7 @@ const CreateLandPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Property land updated successfully');
+            toast.success(t('toasts.propertyLandUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -106,7 +113,7 @@ const CreateLandPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Property land created successfully');
+            toast.success(t('toasts.propertyLandCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/land/${response.propertyId}`);
@@ -136,7 +143,7 @@ const CreateLandPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -155,7 +162,7 @@ const CreateLandPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();

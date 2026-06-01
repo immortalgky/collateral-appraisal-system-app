@@ -15,7 +15,7 @@ const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps
       className={clsx(
         'flex items-center gap-3 p-3 rounded-lg border',
         variant === 'emerald' && 'bg-emerald-50 border-emerald-200',
-        variant === 'purple' && 'bg-purple-50 border-purple-200'
+        variant === 'purple' && 'bg-purple-50 border-purple-200',
       )}
     >
       {/* Avatar */}
@@ -33,8 +33,10 @@ const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps
             className={clsx(
               'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium',
               staff.currentWorkload <= 2 && 'bg-green-50 text-green-700',
-              staff.currentWorkload > 2 && staff.currentWorkload <= 4 && 'bg-amber-50 text-amber-700',
-              staff.currentWorkload > 4 && 'bg-red-50 text-red-700'
+              staff.currentWorkload > 2 &&
+                staff.currentWorkload <= 4 &&
+                'bg-amber-50 text-amber-700',
+              staff.currentWorkload > 4 && 'bg-red-50 text-red-700',
             )}
           >
             {staff.currentWorkload} tasks

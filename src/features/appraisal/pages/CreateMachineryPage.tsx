@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import Icon from '@/shared/components/Icon';
 import { FormProvider } from '@/shared/components/form/FormProvider';
@@ -32,6 +33,7 @@ import { mapMachineryPropertyResponseToForm } from '../utils/mappers';
 import MachineryDetailForm from '../forms/MachineryDetailForm';
 
 const CreateMachineryPage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -93,7 +95,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Property Machinery updated successfully');
+            toast.success(t('toasts.propertyMachineryUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -112,7 +114,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Property Machinery created successfully');
+            toast.success(t('toasts.propertyMachineryCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/machinery/${response.propertyId}`);
@@ -142,7 +144,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -161,7 +163,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();

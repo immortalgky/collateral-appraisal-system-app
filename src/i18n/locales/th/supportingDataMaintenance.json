@@ -1,0 +1,180 @@
+{
+  "page": {
+    "title": "การบำรุงรักษาข้อมูลสนับสนุน",
+    "subtitle": "จัดการคำขอข้อมูลสนับสนุนที่นำเข้า",
+    "listTitle": "การบำรุงรักษาข้อมูลสนับสนุน"
+  },
+  "tabs": {
+    "importing": "กำลังนำเข้า",
+    "archived": "เก็บถาวร"
+  },
+  "columns": {
+    "supportingNumber": "เลขที่ข้อมูลสนับสนุน",
+    "createdDate": "วันที่สร้าง",
+    "importChannel": "ช่องทางนำเข้า",
+    "sourceOfData": "แหล่งข้อมูล",
+    "lastModifiedBy": "แก้ไขล่าสุดโดย",
+    "lastModifiedDate": "วันที่แก้ไขล่าสุด",
+    "movement": "การเคลื่อนไหว",
+    "status": "สถานะ",
+    "no": "ลำดับ",
+    "propertyName": "ชื่อทรัพย์สิน",
+    "type": "ประเภท",
+    "address": "ที่อยู่",
+    "coordinates": "พิกัด"
+  },
+  "filterLabels": {
+    "supportingNumber": "เลขที่ข้อมูลสนับสนุน",
+    "createdDate": "วันที่สร้าง",
+    "status": "สถานะ",
+    "importChannel": "ช่องทางนำเข้า",
+    "dateType": "ประเภทวันที่",
+    "dateFrom": "วันที่เริ่มต้น",
+    "dateTo": "วันที่สิ้นสุด"
+  },
+  "actions": {
+    "create": "สร้าง",
+    "filters": "ตัวกรอง",
+    "clearSearch": "ล้างการค้นหา",
+    "clearAll": "ล้างทั้งหมด",
+    "open": "เปิด",
+    "importExcel": "นำเข้า Excel",
+    "addItem": "เพิ่มรายการ",
+    "saveDraft": "บันทึกฉบับร่าง",
+    "submit": "ส่ง",
+    "save": "บันทึก"
+  },
+  "search": {
+    "placeholder": "ค้นหาข้อมูลสนับสนุน..."
+  },
+  "filterDialog": {
+    "title": "ตัวกรอง",
+    "supportingNumber": "เลขที่ข้อมูลสนับสนุน",
+    "supportingNumberPlaceholder": "ระบุเลขที่ข้อมูลสนับสนุน",
+    "status": "สถานะข้อมูลสนับสนุน",
+    "statusPlaceholder": "กรุณาเลือก",
+    "createdDate": "วันที่สร้าง",
+    "dateRange": "ช่วงวันที่",
+    "clearDates": "ล้างวันที่",
+    "dateType": "ประเภทวันที่",
+    "fromLabel": "ตั้งแต่",
+    "toLabel": "ถึง",
+    "dateRangeError": "วันที่ \"ตั้งแต่\" ต้องไม่เกินวันที่ \"ถึง\"",
+    "statusOptions": {
+      "Draft": "ฉบับร่าง",
+      "Pending": "รอดำเนินการ",
+      "Approved": "อนุมัติแล้ว",
+      "Cancelled": "ยกเลิกแล้ว",
+      "Reject": "ปฏิเสธ"
+    }
+  },
+  "formSections": {
+    "supportingDataTitle": "การบำรุงรักษาข้อมูลสนับสนุน",
+    "supportingDataSubtitle": "ข้อมูลทั่วไปของชุดข้อมูลสนับสนุนนี้",
+    "supportingDataDetailsTitle": "รายละเอียดข้อมูลสนับสนุน",
+    "decisionTitle": "การตัดสินใจ",
+    "photos": "รูปภาพ",
+    "supportingDataDetailHeader": "รายละเอียดข้อมูลสนับสนุน",
+    "propertyInformation": "ข้อมูลทรัพย์สิน",
+    "locationDetails": "รายละเอียดที่ตั้ง",
+    "financialDetails": "รายละเอียดทางการเงิน",
+    "contactInformation": "ข้อมูลติดต่อ",
+    "sourceAndReference": "ข้อมูลแหล่งที่มาและอ้างอิง"
+  },
+  "fields": {
+    "importChannel": "ช่องทางนำเข้า",
+    "importDate": "วันที่นำเข้า",
+    "sourceOfData": "แหล่งข้อมูล",
+    "appraisalCompany": "บริษัทประเมิน",
+    "description": "คำอธิบาย",
+    "decision": "การตัดสินใจ",
+    "remark": "หมายเหตุ",
+    "propertyName": "ชื่อทรัพย์สิน",
+    "collateralType": "ประเภทหลักประกัน",
+    "buildingType": "ประเภทอาคาร",
+    "developer": "ผู้พัฒนา",
+    "modelName": "รุ่น",
+    "landArea": "เนื้อที่ดิน (ตารางวา)",
+    "usableArea": "พื้นที่ใช้สอย (ตร.ม.)",
+    "projectName": "ชื่อโครงการ/หมู่บ้าน",
+    "roomFloor": "ชั้น/ห้อง",
+    "houseNo": "บ้านเลขที่",
+    "subDistrict": "ตำบล/แขวง",
+    "district": "อำเภอ/เขต",
+    "province": "จังหวัด",
+    "postcode": "รหัสไปรษณีย์",
+    "latitude": "ละติจูด",
+    "longitude": "ลองจิจูด",
+    "plotLocation": "ที่ตั้งแปลง",
+    "other": "อื่นๆ",
+    "pricePerUnit": "ราคาต่อหน่วย",
+    "offeringPrice": "ราคาเสนอขาย",
+    "sellingPrice": "ราคาขาย",
+    "phoneNo": "เบอร์โทรศัพท์",
+    "informationDate": "วันที่ข้อมูล",
+    "website": "เว็บไซต์",
+    "sourceUrl": "URL แหล่งที่มา",
+    "remarkDetail": "หมายเหตุ"
+  },
+  "empty": {
+    "noSupportingData": "ไม่มีข้อมูลสนับสนุน",
+    "noMatchingRecords": "ไม่พบรายการที่ตรงกัน",
+    "noItemsAdded": "ยังไม่มีรายการที่เพิ่มเข้ามา",
+    "addItemPrompt": "คลิก \"เพิ่มรายการ\" หรือ \"นำเข้า Excel\" เพื่อเพิ่มข้อมูลสนับสนุน",
+    "archivedItems": "รายการที่เก็บถาวรจะปรากฏที่นี่",
+    "importedItems": "ข้อมูลสนับสนุนที่นำเข้าจะปรากฏที่นี่",
+    "tryAdjusting": "ลองปรับการค้นหาของคุณ"
+  },
+  "errors": {
+    "failedToLoad": "โหลดข้อมูลสนับสนุนไม่สำเร็จ"
+  },
+  "toasts": {
+    "createdSuccess": "สร้างข้อมูลสนับสนุนสำเร็จ",
+    "createFailed": "สร้างข้อมูลสนับสนุนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "updatedSuccess": "อัปเดตข้อมูลสนับสนุนสำเร็จ",
+    "updateFailed": "อัปเดตข้อมูลสนับสนุนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "draftSavedSuccess": "บันทึกฉบับร่างสำเร็จ",
+    "draftSaveFailed": "บันทึกฉบับร่างไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "detailCreatedSuccess": "สร้างข้อมูลสนับสนุนสำเร็จ",
+    "detailCreateFailed": "สร้างข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "detailUpdatedSuccess": "อัปเดตข้อมูลสนับสนุนสำเร็จ",
+    "detailUpdateFailed": "อัปเดตข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "detailDraftSavedSuccess": "บันทึกฉบับร่างสำเร็จ",
+    "detailDraftSaveFailed": "บันทึกฉบับร่างไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "propertyCreatedSuccess": "สร้างข้อมูลสนับสนุนทรัพย์สินสำเร็จ",
+    "propertyCreateFailed": "สร้างข้อมูลสนับสนุนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "fileTypeError": "รับเฉพาะไฟล์ .xlsx เท่านั้น",
+    "fileSizeError": "ขนาดไฟล์ต้องไม่เกิน 5 MB",
+    "deletedSuccess": "ลบข้อมูลสนับสนุนสำเร็จ",
+    "deleteFailed": "ลบข้อมูลสนับสนุนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "detailDeletedSuccess": "ลบรายละเอียดข้อมูลสนับสนุนสำเร็จ",
+    "detailDeleteFailed": "ลบรายละเอียดข้อมูลสนับสนุนไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "photoUploaded": "อัปโหลดรูปภาพสำเร็จ",
+    "photoUploadFailed": "อัปโหลดรูปภาพไม่สำเร็จ",
+    "uploadInProgress": "กำลังอัปโหลด กรุณารอสักครู่",
+    "photoRemoved": "ลบรูปภาพแล้ว",
+    "missingImageId": "ไม่สามารถลบได้: ไม่พบรหัสรูปภาพ",
+    "photoRemoveFailed": "ลบรูปภาพไม่สำเร็จ",
+    "photoLinkFailed": "เชื่อมโยงรูปภาพ {{n}} ไม่สำเร็จ",
+    "rowsImported": "นำเข้าข้อมูล {{count}} รายการสำเร็จ",
+    "uploadFailed": "อัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "saveFormFirst": "กรุณาบันทึกฟอร์มก่อนอัปโหลด"
+  },
+  "confirm": {
+    "deleteTitle": "ลบรายละเอียดข้อมูลสนับสนุน",
+    "deleteMessage": "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การดำเนินการนี้ไม่สามารถเลิกทำได้"
+  },
+  "placeholders": {
+    "untitled": "ไม่มีชื่อ",
+    "notSet": "ไม่ได้ตั้งค่า"
+  },
+  "aria": {
+    "deleteItem": "ลบรายการ",
+    "openContextMenu": "เปิดเมนูบริบท",
+    "clearSearch": "ล้างการค้นหา"
+  },
+  "nav": {
+    "photos": "รูปภาพ",
+    "supportingDataDetail": "รายละเอียดข้อมูลสนับสนุน"
+  }
+}

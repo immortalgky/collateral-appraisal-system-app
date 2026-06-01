@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import { useAuthStore } from '@/features/auth/store';
@@ -16,6 +17,7 @@ interface NegotiationPanelProps {
 }
 
 const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
+  const { t } = useTranslation('quotation');
   const isIntAdmin = useAuthStore(s => s.user?.roles?.includes('IntAdmin') ?? false);
   const {
     isOpen: isNegotiateOpen,
@@ -33,7 +35,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
     return (
       <div className="p-4 text-center text-sm text-gray-500">
         <Icon name="crown" style="regular" className="size-8 text-gray-300 mx-auto mb-2" />
-        <p>Awaiting tentative winner selection from RM...</p>
+        <p>{t('selectWinner.rmPickInstruction')}</p>
       </div>
     );
   }
@@ -62,7 +64,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-amber-900">
-              RM requests negotiation with <strong>{winner.companyName}</strong>
+              {t('negotiation.rmRequestsNegotiation')} <strong>{winner.companyName}</strong>
             </p>
             {rmNegotiationNote && (
               <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
@@ -81,11 +83,11 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               <Icon name="handshake" style="solid" className="size-4 text-indigo-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">Negotiation</span>
+              <span className="text-sm font-semibold text-gray-900">{t('negotiation.title')}</span>
               <span className="ml-2 text-xs text-indigo-700">
                 {quotation.status === 'WinnerTentative'
-                  ? 'Winner selected — no active round'
-                  : 'Round in progress'}
+                  ? t('negotiation.winnerSelectedNoRound')
+                  : t('negotiation.roundInProgress')}
               </span>
             </div>
           </div>
@@ -98,7 +100,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                 className="text-red-600 border-red-300 hover:bg-red-50"
               >
                 <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-                Reject Winner
+                {t('buttons.rejectWinner')}
               </Button>
               <Button
                 size="sm"
@@ -106,13 +108,11 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                 className="bg-green-600 hover:bg-green-700"
                 disabled={quotation.status !== 'WinnerTentative'}
                 title={
-                  quotation.status === 'Negotiating'
-                    ? 'Wait for the company to respond before awarding'
-                    : undefined
+                  quotation.status === 'Negotiating' ? t('negotiation.awaitingResponse') : undefined
                 }
               >
                 <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-                Award
+                {t('buttons.award')}
               </Button>
             </div>
           )}
@@ -132,7 +132,9 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
                 {winner.currentNegotiatedPrice != null && (
                   <span>
-                    <span className="text-gray-400">Negotiated: </span>
+                    <span className="text-gray-400">
+                      {t('negotiation.counter', { price: '' }).replace(': ', ': ')}
+                    </span>
                     <span className="font-medium text-indigo-700">
                       {formatCurrency(winner.currentNegotiatedPrice)}
                     </span>
@@ -154,7 +156,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                 />
               ))}
               <span className="ml-1.5 text-xs text-gray-500">
-                {roundsUsed}/{MAX_ROUNDS} rounds
+                {t('negotiation.roundsCount', { used: roundsUsed, max: MAX_ROUNDS })}
               </span>
             </div>
           </div>
@@ -168,22 +170,24 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               disabled={!canOpenRound || roundsExhausted || awaitingResponse}
               title={
                 roundsExhausted
-                  ? 'Maximum negotiation rounds reached'
+                  ? t('negotiation.maxRoundsReached')
                   : awaitingResponse
-                    ? 'Awaiting company response'
+                    ? t('negotiation.awaitingResponse')
                     : undefined
               }
             >
               <Icon name="circle-play" style="solid" className="size-3.5 mr-1.5" />
-              Open Round {roundsUsed + 1}
+              {t('buttons.openRound', { n: roundsUsed + 1 })}
             </Button>
             {roundsExhausted && (
               <span className="ml-3 text-xs text-amber-600">
-                Maximum rounds ({MAX_ROUNDS}) reached — award or reject
+                {t('negotiation.maxRoundsNote', { max: MAX_ROUNDS })}
               </span>
             )}
             {awaitingResponse && !roundsExhausted && (
-              <span className="ml-3 text-xs text-amber-600">Awaiting company response...</span>
+              <span className="ml-3 text-xs text-amber-600">
+                {t('negotiation.awaitingResponse')}
+              </span>
             )}
           </div>
         </div>
@@ -192,7 +196,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
         {(winner.negotiations ?? []).length > 0 && (
           <div className="px-4 py-3">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
-              Negotiation History
+              {t('negotiation.history')}
             </p>
             <div className="space-y-3">
               {(winner.negotiations ?? []).map((neg, idx, arr) => (
@@ -225,9 +229,21 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                                 : 'text-amber-700',
                           )}
                         >
-                          <span className="font-medium">Company {neg.verb}ed</span>
+                          <span className="font-medium">
+                            {neg.verb === 'Accept'
+                              ? t('negotiation.companyAccepted')
+                              : neg.verb === 'Reject'
+                                ? t('negotiation.companyRejected')
+                                : t('negotiation.companyCountered')}
+                          </span>
                           {neg.counterPrice != null && (
-                            <span> — counter: {formatCurrency(neg.counterPrice)}</span>
+                            <span>
+                              {' '}
+                              —{' '}
+                              {t('negotiation.counter', {
+                                price: formatCurrency(neg.counterPrice),
+                              })}
+                            </span>
                           )}
                           {neg.responseMessage && (
                             <p className="mt-0.5 text-gray-500">{neg.responseMessage}</p>
@@ -236,7 +252,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
                       )}
                       {!neg.verb && idx === arr.length - 1 && (
                         <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-amber-600">
-                          Awaiting company response...
+                          {t('negotiation.awaitingResponse')}
                         </div>
                       )}
                     </div>
