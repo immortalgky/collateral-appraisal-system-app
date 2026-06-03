@@ -56,6 +56,7 @@ interface SaleAdjustmentGridPanelProps {
   savedAppraisalPrice?: number | null;
   savedHasBuildingCost?: boolean | null;
   savedIncludeLandArea?: boolean | null;
+  manualSubject?: boolean;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -82,6 +83,7 @@ export function SaleAdjustmentGridPanel({
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
+  manualSubject,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -204,7 +206,7 @@ export function SaleAdjustmentGridPanel({
       methodId: methodId!,
       methodType: methodType!,
       comparativeSurveys,
-      property: property!,
+      property: property,
       template,
       allFactors,
       reset,
@@ -246,13 +248,13 @@ export function SaleAdjustmentGridPanel({
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
       restoreSaleAdjustmentGridFromSavedData({
         methodId,
-        property,
+        property: property ?? {},
         comparativeSurveys,
         allFactors,
         linkedComparables,
@@ -327,7 +329,7 @@ export function SaleAdjustmentGridPanel({
       methodId,
       methodType,
       comparativeSurveys,
-      property,
+      property: property,
       template: undefined,
       allFactors,
       reset,
@@ -355,7 +357,7 @@ export function SaleAdjustmentGridPanel({
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
     if (!isGenerated) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
@@ -425,7 +427,7 @@ export function SaleAdjustmentGridPanel({
             <div className="flex-1 min-h-0 overflow-auto">
               <SaleAdjustmentGridForm
                 {...methods}
-                property={property}
+                property={property ?? {}}
                 buildingCost={buildingCost}
                 isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
@@ -433,6 +435,7 @@ export function SaleAdjustmentGridPanel({
                 template={pricingTemplate}
                 allFactors={allFactors}
                 onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+                manualSubject={manualSubject}
               />
             </div>
             <MethodFooterActions

@@ -24,7 +24,7 @@
   "fee": {
     "blockTitle": "ค่าธรรมเนียมเพิ่มเติม",
     "columns": {
-      "code": "รหัส",
+      "type": "ประเภท",
       "description": "รายละเอียด",
       "amount": "จำนวน"
     },

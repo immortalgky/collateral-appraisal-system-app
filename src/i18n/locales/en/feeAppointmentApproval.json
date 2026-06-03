@@ -24,7 +24,7 @@
   "fee": {
     "blockTitle": "Additional Fees",
     "columns": {
-      "code": "Code",
+      "type": "Type",
       "description": "Description",
       "amount": "Amount"
     },

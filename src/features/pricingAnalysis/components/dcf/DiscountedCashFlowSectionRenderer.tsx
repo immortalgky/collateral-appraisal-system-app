@@ -14,6 +14,9 @@ interface DiscountedCashFlowSectionRendererProps {
   color: SectionColor;
   isReadOnly?: boolean;
   onStructuralChange?: () => void;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 export function DiscountedCashFlowSectionRenderer({
   name,
@@ -24,6 +27,9 @@ export function DiscountedCashFlowSectionRenderer({
   color,
   isReadOnly,
   onStructuralChange,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: DiscountedCashFlowSectionRendererProps) {
   switch (section.sectionType) {
     case 'income': {
@@ -37,6 +43,9 @@ export function DiscountedCashFlowSectionRenderer({
           properties={properties}
           isReadOnly={isReadOnly}
           onStructuralChange={onStructuralChange}
+          incomeAnalysisId={incomeAnalysisId}
+          hostMethodId={hostMethodId}
+          marketSurveys={marketSurveys}
         />
       );
     }

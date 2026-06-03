@@ -40,6 +40,10 @@ import {
 import { fmt, formatDateOnly, toNum } from '../domain/formatters';
 import { roundToThousand } from '../domain/calculation';
 import DataErrorState from '@/shared/components/DataErrorState';
+import { MarketReferenceButton } from './MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../api/references';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface ProfitRentPanelProps {
   activeMethod?: {
@@ -52,6 +56,9 @@ interface ProfitRentPanelProps {
   propertiesMap?: Record<string, Record<string, unknown>>;
   firstPropertyId?: string;
   firstPropertyType?: string;
+  /** Passed through for the market-reference launcher */
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -66,6 +73,8 @@ export function ProfitRentPanel({
   propertiesMap,
   firstPropertyId,
   firstPropertyType,
+  marketSurveys,
+  templateList,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -588,9 +597,21 @@ export function ProfitRentPanel({
 
             {/* Market Rental Fee — input */}
             <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Market Rental Fee <span className="text-red-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-0.5">
+                <label className="text-[10px] text-gray-400 uppercase tracking-wide block">
+                  Market Rental Fee <span className="text-red-400">*</span>
+                </label>
+                {savedData?.analysis?.id && (
+                  <MarketReferenceButton
+                    subjectType={PricingAnalysisSubjectType.ProfitRentRef}
+                    anchorId={savedData.analysis.id}
+                    hostMethodId={methodId}
+                    marketSurveys={marketSurveys ?? []}
+                    templateList={templateList}
+                    onApplyValue={v => marketFeeField.onChange(v)}
+                  />
+                )}
+              </div>
               <div className="flex items-baseline gap-1">
                 <div className="w-24">
                   <NumberInput

@@ -45,6 +45,10 @@ import toast from 'react-hot-toast';
 import { formatDateOnly } from '../domain/formatters';
 import clsx from 'clsx';
 import DataErrorState from '@/shared/components/DataErrorState';
+import { MarketReferenceButton } from './MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../api/references';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface LeaseholdPanelProps {
   activeMethod?: {
@@ -57,6 +61,9 @@ interface LeaseholdPanelProps {
   firstPropertyId?: string;
   firstPropertyType?: string;
   propertiesMap?: Record<string, Record<string, unknown>>;
+  /** Passed through for the market-reference launcher */
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -71,6 +78,8 @@ export function LeaseholdPanel({
   firstPropertyId,
   firstPropertyType,
   propertiesMap,
+  marketSurveys,
+  templateList,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -762,9 +771,24 @@ export function LeaseholdPanel({
                 'rounded-md bg-gray-50 px-4 py-3',
               )}
             >
-              <label className="text-[11px] text-gray-400 uppercase tracking-wide mb-1 block">
-                {t('leasehold.landValue')} <span className="text-red-400">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide block">
+                  {t('leasehold.landValue')} <span className="text-red-400">*</span>
+                </label>
+                {savedData?.analysis?.id && (
+                  <MarketReferenceButton
+                    subjectType={PricingAnalysisSubjectType.LeaseholdLandRef}
+                    anchorId={savedData.analysis.id}
+                    hostMethodId={methodId}
+                    marketSurveys={marketSurveys ?? []}
+                    templateList={templateList}
+                    subjectProperty={propertyDetail as Record<string, unknown> | undefined}
+                    onApplyValue={v =>
+                      landValueField.onChange(v)
+                    }
+                  />
+                )}
+              </div>
               <div className="flex items-baseline gap-1.5">
                 <div className="w-28">
                   <NumberInput

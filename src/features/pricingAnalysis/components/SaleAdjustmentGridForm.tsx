@@ -29,6 +29,7 @@ interface SaleAdjustmentGridProps {
   template?: TemplateDetailType;
   allFactors: FactorDataType[];
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
+  manualSubject?: boolean;
 }
 
 export const SaleAdjustmentGridForm = ({
@@ -40,6 +41,7 @@ export const SaleAdjustmentGridForm = ({
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
+  manualSubject,
 }: SaleAdjustmentGridProps) => {
   const fieldPath = saleGridFieldPath;
 
@@ -58,6 +60,7 @@ export const SaleAdjustmentGridForm = ({
             comparativeMarketSurveys={comparativeMarketSurveys}
             fieldPath={fieldPath}
             onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
+            manualSubject={manualSubject}
           />
           {comparativeMarketSurveys.length > 0 && (
             <>

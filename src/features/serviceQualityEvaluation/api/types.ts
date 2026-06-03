@@ -24,6 +24,45 @@ export interface AppraisalEvaluationHeader {
   collateralTypes: string | null;
   inspectionDates: string | null;
   departmentOfAppraisal: string | null;
+  bankingSegment: string | null;
+}
+
+// ─── Evaluation Config ────────────────────────────────────────────────────────
+
+/** Parsed guidance per rating level (1..5) with bilingual text. */
+export type GuidanceMap = Record<string, { en: string; th: string }>;
+
+/** Parsed day thresholds for the Delivery slot (rating → upper-bound-days). */
+export type ThresholdsMap = Record<string, number>;
+
+/** One row from GET /appraisal-evaluation-configs?bankingSegment= */
+export interface EvaluationConfigDto {
+  id: string;
+  bankingSegment: string;
+  criteriaSlot: 1 | 2 | 3 | 4 | 5;
+  criteriaKey: string;
+  labelEn: string;
+  labelTh: string;
+  weight: number;
+  maxScore: number;
+  guidanceJson: string;
+  thresholdsJson: string | null;
+  displayOrder: number;
+}
+
+/** Parsed, ready-to-use config for one criteria slot. */
+export interface EvaluationConfig {
+  id: string;
+  bankingSegment: string;
+  criteriaSlot: 1 | 2 | 3 | 4 | 5;
+  criteriaKey: string;
+  labelEn: string;
+  labelTh: string;
+  weight: number;
+  maxScore: number;
+  guidance: GuidanceMap;
+  thresholds: ThresholdsMap | null;
+  displayOrder: number;
 }
 
 export interface AppraisalEvaluationDetail {

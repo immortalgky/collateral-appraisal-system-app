@@ -1,18 +1,29 @@
 import { Textarea } from '@/shared/components';
 import { CostMachineSection, type MachineryItem } from './CostMachineSection';
 import { useFormContext } from 'react-hook-form';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface CostMachineProp {
   machineryItems: MachineryItem[];
   isLoading?: boolean;
+  methodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
 }
-const CostMachineForm = ({ machineryItems, isLoading }: CostMachineProp) => {
+const CostMachineForm = ({ machineryItems, isLoading, methodId, marketSurveys, templateList }: CostMachineProp) => {
   const { register } = useFormContext();
 
   return (
     <div className="grid grid-cols-12 gap-x-6 gap-y-4">
       <div className="col-span-12">
-        <CostMachineSection machineryItems={machineryItems} isLoading={isLoading} />
+        <CostMachineSection
+          machineryItems={machineryItems}
+          isLoading={isLoading}
+          methodId={methodId}
+          marketSurveys={marketSurveys}
+          templateList={templateList}
+        />
       </div>
       <div className="col-span-12">
         <Textarea label="Remark" maxLength={4000} {...register('remark')} />

@@ -878,20 +878,25 @@
       "createFailed": "Failed to create quotation request"
     }
   },
-  "changeRequest": {
-    "title": "Submit Change Request",
-    "openButton": "Open Change Request",
-    "cancelButton": "Cancel",
-    "addDate": "Stage New Date",
-    "changeDate": "Change Staged Date",
-    "addFee": "Add Fee Line",
-    "submitButton": "Submit Change Request",
-    "confirmTitle": "Submit Change Request",
-    "confirmMessage": "Submit the staged appointment and/or fee changes for approval? This will route the request to the appropriate approver.",
-    "confirmSubmit": "Submit",
+  "approval": {
+    "banner": {
+      "needsApproval": "This change needs bank approval — submit it for review before it takes effect.",
+      "awaiting": "Awaiting bank approval. Edits are locked until the approval is resolved."
+    },
+    "badge": {
+      "needsApproval": "Needs approval",
+      "awaiting": "Pending approval"
+    },
+    "submitButton": "Submit for Approval — {{summary}}",
+    "submitConfirm": "Submit",
+    "summary": {
+      "dateChange": "1 date change",
+      "fees_one": "{{count}} fee",
+      "fees_other": "{{count}} fees"
+    },
     "toasts": {
-      "submitted": "Change request submitted for approval",
-      "submitFailed": "Failed to submit change request"
+      "submitted": "Submitted for bank approval",
+      "submitFailed": "Failed to submit for approval"
     }
   }
 }

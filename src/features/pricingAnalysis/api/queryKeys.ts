@@ -29,4 +29,15 @@ export const pricingAnalysisKeys = {
   hypothesisAnalysis: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'hypothesis-analysis', methodId] as const,
   pricingMethod: (methodId: string) => ['pricing-method', methodId] as const,
+  /** Market references: GET /pricing-analysis/references?subjectType=&anchorId=&anchorRefKey= */
+  references: (subjectType: number, anchorId: string, anchorRefKey?: string | null) =>
+    [
+      'price-analysis-references',
+      subjectType,
+      anchorId,
+      anchorRefKey ?? null,
+    ] as const,
+  /** All references for a group's PA: GET /pricing-analysis/{id}/references */
+  groupReferences: (pricingAnalysisId: string) =>
+    ['price-analysis-group-references', pricingAnalysisId] as const,
 };

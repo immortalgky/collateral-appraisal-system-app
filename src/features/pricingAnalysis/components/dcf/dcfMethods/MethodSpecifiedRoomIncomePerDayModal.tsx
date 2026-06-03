@@ -6,17 +6,29 @@ import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toDecimal, toNumber } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
+import { MarketReferenceButton } from '../../MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../../../api/references';
+import type { MarketComparableDetailType } from '../../../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 export function MethodSpecifyRoomIncomePerDayModal({
   name = '',
   isReadOnly,
   getOuterFormValues,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
+  templateList,
 }: {
   name: string;
   isReadOnly?: boolean;
   getOuterFormValues: UseFormGetValues<any>;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
 }) {
-  const { getValues } = useFormContext();
+  const { getValues, setValue } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -145,12 +157,43 @@ export function MethodSpecifyRoomIncomePerDayModal({
                       </div>
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <RHFInputCell
-                        fieldName={`${name}.roomDetails.${index}.roomIncome`}
-                        inputType="number"
-                        disabled={isReadOnly}
-                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
-                      />
+                      <div className="flex items-center gap-1">
+                        <div className="flex-1">
+                          <RHFInputCell
+                            fieldName={`${name}.roomDetails.${index}.roomIncome`}
+                            inputType="number"
+                            disabled={isReadOnly}
+                            number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                          />
+                        </div>
+                        {incomeAnalysisId && !isReadOnly && (() => {
+                          const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
+                          const roomOther = getValues(`${name}.roomDetails.${index}.roomTypeOther`);
+                          // M2 fix: use the raw room-type CODE as anchorRefKey so the backend
+                          // matches references by code, not by localized description.
+                          // For code "99" (other), use the raw roomTypeOther value as the key.
+                          const roomCode = String(roomType ?? '');
+                          const anchorRefKey =
+                            roomCode === '99' && roomOther
+                              ? String(roomOther)
+                              : roomCode;
+                          return (
+                            <MarketReferenceButton
+                              subjectType={PricingAnalysisSubjectType.RoomIncomeRef}
+                              anchorId={incomeAnalysisId}
+                              anchorRefKey={anchorRefKey}
+                              hostMethodId={hostMethodId}
+                              marketSurveys={marketSurveys ?? []}
+                              templateList={templateList}
+                              currentAnchorLabel={anchorRefKey}
+                              onApplyValue={v =>
+                                setValue(`${name}.roomDetails.${index}.roomIncome`, v, { shouldDirty: true })
+                              }
+                              className="shrink-0 !px-1 !py-0.5 text-[10px]"
+                            />
+                          );
+                        })()}
+                      </div>
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell

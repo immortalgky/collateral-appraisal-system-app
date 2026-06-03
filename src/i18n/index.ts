@@ -30,6 +30,7 @@ import enPricingAnalysis from './locales/en/pricingAnalysis.json';
 import enAppraisal from './locales/en/appraisal.json';
 import enFeeAppointmentApproval from './locales/en/feeAppointmentApproval.json';
 import enFeeApprovalConfig from './locales/en/feeApprovalConfig.json';
+import enEvaluationConfig from './locales/en/evaluationConfig.json';
 import enBlockProject from './locales/en/blockProject.json';
 import enWorkflowBuilder from './locales/en/workflowBuilder.json';
 
@@ -60,6 +61,7 @@ import thPricingAnalysis from './locales/th/pricingAnalysis.json';
 import thAppraisal from './locales/th/appraisal.json';
 import thFeeAppointmentApproval from './locales/th/feeAppointmentApproval.json';
 import thFeeApprovalConfig from './locales/th/feeApprovalConfig.json';
+import thEvaluationConfig from './locales/th/evaluationConfig.json';
 import thBlockProject from './locales/th/blockProject.json';
 import thWorkflowBuilder from './locales/th/workflowBuilder.json';
 
@@ -119,6 +121,7 @@ export const resources = {
     appraisal: enAppraisal,
     feeAppointmentApproval: enFeeAppointmentApproval,
     feeApprovalConfig: enFeeApprovalConfig,
+    evaluationConfig: enEvaluationConfig,
     blockProject: enBlockProject,
     workflowBuilder: enWorkflowBuilder,
   },
@@ -150,6 +153,7 @@ export const resources = {
     appraisal: thAppraisal,
     feeAppointmentApproval: thFeeAppointmentApproval,
     feeApprovalConfig: thFeeApprovalConfig,
+    evaluationConfig: thEvaluationConfig,
     blockProject: thBlockProject,
     workflowBuilder: thWorkflowBuilder,
   },
@@ -181,6 +185,7 @@ export const resources = {
     userManagement: zhUserManagement,
     pricingAnalysis: zhPricingAnalysis,
     appraisal: zhAppraisal,
+    evaluationConfig: enEvaluationConfig,
     blockProject: zhBlockProject,
     workflowBuilder: zhWorkflowBuilder,
   },

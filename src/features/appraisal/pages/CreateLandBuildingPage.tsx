@@ -27,6 +27,8 @@ import {
 } from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
 import BuildingDetailForm from '../forms/BuildingDetailForm';
+import LeaseAgreementForm from '../forms/LeaseAgreementForm';
+import RentalInfoForm from '../forms/RentalInfoForm';
 import {
   createLandAndBuildingForm,
   createLandAndBuildingFormDefault,
@@ -66,7 +68,12 @@ const CreateLandBuildingPage = () => {
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
-      return mapLandAndBuildingPropertyResponseToForm(propertyData);
+      return {
+        ...mapLandAndBuildingPropertyResponseToForm(propertyData),
+        isRentedOut: (propertyData as any).isRentedOut ?? false,
+        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+        rentalInfo: (propertyData as any).rentalInfo ?? null,
+      };
     }
     return createLandAndBuildingFormDefault;
   }, [isEditMode, propertyData]);
@@ -88,11 +95,16 @@ const CreateLandBuildingPage = () => {
   // Reset form when API data arrives or updates (edit mode only)
   useEffect(() => {
     if (isEditMode && propertyData) {
-      reset(mapLandAndBuildingPropertyResponseToForm(propertyData));
+      reset({
+        ...createLandAndBuildingFormDefault,
+        ...mapLandAndBuildingPropertyResponseToForm(propertyData),
+        isRentedOut: (propertyData as any).isRentedOut ?? false,
+        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+        rentalInfo: (propertyData as any).rentalInfo ?? null,
+      } as any);
     }
   }, [isEditMode, propertyData, reset]);
 
-  // const { mutate } = useCreateLandAndBuildingProperty();
   const { mutate: createLandAndBuildingProperties, isPending: isCreating } =
     useCreateLandAndBuildingProperty();
   const { mutate: updateLandAndBuildingProperties, isPending: isUpdating } =
@@ -104,7 +116,7 @@ const CreateLandBuildingPage = () => {
 
   const onSubmit: SubmitHandler<createLandAndBuildingFormType> = data => {
     setSaveAction('submit');
-    const payload = mapLandAndBuildingFormDataToApiPayload(data);
+    const payload = mapLandAndBuildingFormDataToApiPayload(data as any);
 
     if (isEditMode && propertyId) {
       updateLandAndBuildingProperties(
@@ -155,7 +167,7 @@ const CreateLandBuildingPage = () => {
     setSaveAction('draft');
 
     const data = getValues();
-    const payload = mapLandAndBuildingFormDataToApiPayload(data);
+    const payload = mapLandAndBuildingFormDataToApiPayload(data as any);
 
     if (isEditMode && propertyId) {
       updateLandAndBuildingProperties(
@@ -202,18 +214,28 @@ const CreateLandBuildingPage = () => {
     }
   };
 
-  // Tab selection state (Land, Building, or Construction)
+  // Tab selection state (Land, Building, Construction, or rented-out tabs)
   const isUnderConstruction = methods.watch('isUnderConstruction');
+  const isRentedOut = methods.watch('isRentedOut');
   const tabParam = searchParams.get('tab');
   const initialTab = tabParam === 'construction' ? 'construction' : 'land';
-  const [activeTab, setActiveTab] = useState<'land' | 'building' | 'construction'>(initialTab);
+  const [activeTab, setActiveTab] = useState<
+    'land' | 'building' | 'construction' | 'lease-agreement' | 'rental-info'
+  >(initialTab);
 
-  // Reset to default tab if construction tab is active but property is not under construction (CI appraisals always show it)
+  // Reset to default tab if construction tab is active but property is not under construction
   useEffect(() => {
     if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
       setActiveTab('land');
     }
   }, [isUnderConstruction, activeTab, isCiAppraisal]);
+
+  // Reset to land tab when isRentedOut is turned off and a rental tab is active
+  useEffect(() => {
+    if (!isRentedOut && (activeTab === 'lease-agreement' || activeTab === 'rental-info')) {
+      setActiveTab('land');
+    }
+  }, [isRentedOut, activeTab]);
 
   if (isLoading || (isEditMode && !propertyData)) {
     return (
@@ -250,6 +272,22 @@ const CreateLandBuildingPage = () => {
                     id: 'construction-section',
                     icon: 'helmet-safety',
                     onClick: () => setActiveTab('construction'),
+                  },
+                ]
+              : []),
+            ...(isRentedOut
+              ? [
+                  {
+                    label: 'Lease Agreement',
+                    id: 'lease-agreement-section',
+                    icon: 'file-contract',
+                    onClick: () => setActiveTab('lease-agreement'),
+                  },
+                  {
+                    label: 'Rental Info',
+                    id: 'rental-info-section',
+                    icon: 'calendar-days',
+                    onClick: () => setActiveTab('rental-info'),
                   },
                 ]
               : []),
@@ -379,6 +417,52 @@ const CreateLandBuildingPage = () => {
                               ciMode={isCiAppraisal}
                             />
                           </FormReadOnlyContext.Provider>
+                        </Section>
+                      </div>
+                    )}
+
+                    {/* Lease Agreement Tab Content */}
+                    {isRentedOut && (
+                      <div
+                        id="lease-agreement-section"
+                        className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                      >
+                        <Section anchor className="min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                              <Icon
+                                name="file-contract"
+                                style="solid"
+                                className="w-5 h-5 text-purple-600"
+                              />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
+                          </div>
+                          <div className="h-px bg-gray-200 mb-6" />
+                          <LeaseAgreementForm namePrefix="leaseAgreement" />
+                        </Section>
+                      </div>
+                    )}
+
+                    {/* Rental Info Tab Content */}
+                    {isRentedOut && (
+                      <div
+                        id="rental-info-section"
+                        className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                      >
+                        <Section anchor className="min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                              <Icon
+                                name="calendar-days"
+                                style="solid"
+                                className="w-5 h-5 text-teal-600"
+                              />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
+                          </div>
+                          <div className="h-px bg-gray-200 mb-6" />
+                          <RentalInfoForm namePrefix="rentalInfo" />
                         </Section>
                       </div>
                     )}

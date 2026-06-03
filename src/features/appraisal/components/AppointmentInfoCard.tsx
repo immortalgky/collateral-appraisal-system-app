@@ -8,6 +8,10 @@ interface AppointmentInfoCardProps {
   appointment: AppointmentDto2Type | null;
   onReschedule: () => void;
   onCancel?: () => void;
+  /** When true, shows "Needs approval" badge on the appointment */
+  approvalDraft?: boolean;
+  /** When true, shows "Pending approval" badge and disables reschedule */
+  approvalSubmitted?: boolean;
 }
 
 /**
@@ -18,6 +22,8 @@ export default function AppointmentInfoCard({
   appointment,
   onReschedule,
   onCancel,
+  approvalDraft = false,
+  approvalSubmitted = false,
 }: AppointmentInfoCardProps) {
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
@@ -32,23 +38,19 @@ export default function AppointmentInfoCard({
       }
     : null;
 
-  // Status badge colors
-  const getStatusBadge = (status: string | undefined) => {
-    switch ((status ?? '').toLowerCase()) {
-      case 'approved':
-        return 'bg-success/10 text-success border-success';
-      case 'pending':
-        return 'bg-warning/10 text-warning border-warning';
-      case 'pendingapproval':
-        return 'bg-amber-100 text-amber-700 border-amber-300';
-      case 'rejected':
-        return 'bg-danger/10 text-danger border-danger';
-      case 'cancelled':
-        return 'bg-danger/10 text-danger border-danger';
-      default:
-        return 'bg-gray-100 text-gray-600 border-gray-200';
-    }
-  };
+  // Previous (pre-reschedule) date — shown struck-through next to the proposed date while the
+  // reschedule awaits approval. Arrives via .passthrough(); only set when approval is pending.
+  const pendingApproval = approvalDraft || approvalSubmitted;
+  const previousDate =
+    (appointment as (AppointmentDto2Type & { previousDate?: string | null }) | null)
+      ?.previousDate ?? null;
+  const formattedPreviousDate =
+    pendingApproval && previousDate
+      ? {
+          fullDate: format(parseISO(previousDate), 'MMMM d, yyyy'),
+          time: format(parseISO(previousDate), 'h:mm a'),
+        }
+      : null;
 
   // Empty state when no appointment scheduled
   if (!hasAppointment || !appointment) {
@@ -92,6 +94,11 @@ export default function AppointmentInfoCard({
           {/* Date Time Display */}
           <div className="flex flex-col gap-1">
             <span className="text-xs text-accent font-normal">{formattedDate?.dayName}</span>
+            {formattedPreviousDate && (
+              <span className="text-xs text-gray-400 line-through">
+                {formattedPreviousDate.fullDate} · {formattedPreviousDate.time}
+              </span>
+            )}
             <span className="text-lg font-medium text-gray-800">{formattedDate?.fullDate}</span>
             <span className="text-xs text-gray-800">{formattedDate?.time}</span>
           </div>
@@ -120,16 +127,21 @@ export default function AppointmentInfoCard({
               </span>
             </div>
 
-            {/* Status & Reschedule Count */}
-            <div className="flex items-center gap-2 mt-1">
-              <span
-                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getStatusBadge(appointment.status)}`}
-              >
-                {appointment.status}
-              </span>
+            {/* Reschedule Count & Approval badges */}
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               {(appointment.rescheduleCount ?? 0) > 0 && (
                 <span className="text-xs text-gray-400">
                   {t('appointment.rescheduledCount', { n: appointment.rescheduleCount })}
+                </span>
+              )}
+              {approvalDraft && !approvalSubmitted && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-300">
+                  {t('approval.badge.needsApproval')}
+                </span>
+              )}
+              {approvalSubmitted && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-300">
+                  {t('approval.badge.awaiting')}
                 </span>
               )}
             </div>
@@ -151,8 +163,10 @@ export default function AppointmentInfoCard({
             )}
             <button
               type="button"
-              onClick={onReschedule}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-secondary bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors"
+              onClick={!approvalSubmitted ? onReschedule : undefined}
+              disabled={approvalSubmitted}
+              title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-secondary bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-secondary/20"
             >
               <Icon name="clock-rotate-left" style="solid" className="w-5 h-5" />
               <span className="text-sm font-medium uppercase tracking-wider">

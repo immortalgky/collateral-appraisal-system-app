@@ -48,15 +48,3 @@ export interface ResolveFeeAppointmentApprovalRequest {
   feeReason?: string;
 }
 
-export interface SubmitFeeAppointmentChangeRequest {
-  assignmentId: string;
-  appointmentId?: string;
-  newAppointmentDate?: string;
-  feeLines?: SubmitFeeLineInput[];
-}
-
-export interface SubmitFeeLineInput {
-  feeCode: string;
-  feeDescription: string;
-  feeAmount: number;
-}

@@ -53,6 +53,7 @@ interface DirectComparisonPanelProps {
   savedAppraisalPrice?: number | null;
   savedHasBuildingCost?: boolean | null;
   savedIncludeLandArea?: boolean | null;
+  manualSubject?: boolean;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -79,6 +80,7 @@ export function DirectComparisonPanel({
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
+  manualSubject,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -200,7 +202,7 @@ export function DirectComparisonPanel({
       methodId: methodId!,
       methodType: methodType!,
       comparativeSurveys,
-      property: property!,
+      property: property,
       template,
       allFactors,
       reset,
@@ -242,13 +244,13 @@ export function DirectComparisonPanel({
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
       restoreDirectComparisonFromSavedData({
         methodId,
-        property,
+        property: property ?? {},
         comparativeSurveys,
         allFactors,
         linkedComparables,
@@ -321,7 +323,7 @@ export function DirectComparisonPanel({
       methodId,
       methodType,
       comparativeSurveys,
-      property,
+      property: property,
       template: undefined,
       allFactors,
       reset,
@@ -349,7 +351,7 @@ export function DirectComparisonPanel({
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
     if (!isGenerated) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
@@ -427,7 +429,7 @@ export function DirectComparisonPanel({
             <div className="flex-1 min-h-0 overflow-auto">
               <DirectComparisonForm
                 {...methods}
-                property={property}
+                property={property ?? {}}
                 buildingCost={buildingCost}
                 isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
@@ -435,6 +437,7 @@ export function DirectComparisonPanel({
                 template={pricingTemplate}
                 allFactors={allFactors}
                 onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+                manualSubject={manualSubject}
               />
             </div>
             <MethodFooterActions

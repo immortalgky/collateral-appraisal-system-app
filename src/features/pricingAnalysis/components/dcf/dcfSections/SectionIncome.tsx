@@ -12,6 +12,9 @@ interface SectionIncomeProps {
   color: SectionColor;
   isReadOnly?: boolean;
   onStructuralChange?: () => void;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 
 export function SectionIncome({
@@ -23,6 +26,9 @@ export function SectionIncome({
   color,
   isReadOnly,
   onStructuralChange,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: SectionIncomeProps) {
   return (
     <DynamicSection
@@ -44,6 +50,9 @@ export function SectionIncome({
             color={color}
             isReadOnly={isReadOnly}
             onStructuralChange={onStructuralChange}
+            incomeAnalysisId={incomeAnalysisId}
+            hostMethodId={hostMethodId}
+            marketSurveys={marketSurveys}
           />
         );
       })}

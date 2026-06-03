@@ -1,7 +1,7 @@
 import { Icon } from '@/shared/components';
 import Badge from '@/shared/components/Badge';
 import clsx from 'clsx';
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PricingAnalysisApproachMethodSelector } from './PricingAnalysisApproachMethodSelector';
 import { PropertyCardContent } from '@features/appraisal/components/PropertyCardContent';
@@ -12,6 +12,8 @@ import type { PropertyGroupItemDto } from '@features/appraisal/api';
 import type { PricingAnalysisConfigType } from '../../schemas';
 import { mapGroupItemToPropertyItem } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
 import type { FlatContext, ProjectModelPricingContextDto } from '../../utils/flattenPricingContext';
+import { ServerDataCtx } from '../../store/selectionContext';
+import { GroupReferencesSection } from '../GroupReferencesSection';
 
 interface PricingAnalysisAccordionProps {
   state: SelectionState;
@@ -95,6 +97,7 @@ export const PricingAnalysisAccordion = ({
   onManualValueChange,
 }: PricingAnalysisAccordionProps) => {
   const { t } = useTranslation('pricingAnalysis');
+  const serverData = useContext(ServerDataCtx);
 
   /** Map group properties to PropertyItem for rendering */
   const propertyItems = useMemo(
@@ -104,6 +107,19 @@ export const PricingAnalysisAccordion = ({
         .sort((a, b) => (a.sequenceInGroup ?? 0) - (b.sequenceInGroup ?? 0))
         .map(mapGroupItemToPropertyItem),
     [group.properties],
+  );
+
+  /** Flatten all methods across all summary approaches for the references section label lookup */
+  const groupMethods = useMemo(
+    () =>
+      (state.summarySelected ?? []).flatMap(approach =>
+        (approach.methods ?? []).map(m => ({
+          id: m.id,
+          methodType: m.methodType,
+          label: m.label,
+        })),
+      ),
+    [state.summarySelected],
   );
 
   /** Find selected approach name for header badge */
@@ -263,6 +279,16 @@ export const PricingAnalysisAccordion = ({
               />
             </div>
           </div>
+
+          {/* References section — shown only for propertyGroup subjects (not model) */}
+          {!isModelSubject && state.pricingAnalysisId && (
+            <GroupReferencesSection
+              pricingAnalysisId={state.pricingAnalysisId}
+              groupMethods={groupMethods}
+              groupProperties={group.properties ?? []}
+              marketSurveys={serverData?.marketSurveyDetails ?? []}
+            />
+          )}
         </div>
       </div>
       <ConfirmDialog

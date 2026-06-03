@@ -18,7 +18,8 @@ interface SetSaleAdjustmentGridInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
-  property: Record<string, unknown>;
+  /** Optional for manual-subject references (room/profit-rent) with no backing property. */
+  property?: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
@@ -34,7 +35,7 @@ export function initializeSaleAdjustmentGridForm({
   allFactors,
   reset,
 }: SetSaleAdjustmentGridInitialValueProps) {
-  if (!collateralType || !methodId || !methodType || !property || !reset) return;
+  if (!collateralType || !methodId || !methodType || !reset) return;
 
   const factorIdMap = new Map<string, string>();
   for (const f of allFactors ?? []) {
@@ -101,10 +102,10 @@ export function initializeSaleAdjustmentGridForm({
         },
         saleAdjustmentGridAppraisalPrice: {
           includeLandArea: false,
-          landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-          usableArea: property.totalBuildingArea
+          landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+          usableArea: property?.totalBuildingArea
             ? Number(property.totalBuildingArea)
-            : property.usableArea
+            : property?.usableArea
               ? Number(property.usableArea)
               : undefined,
           appraisalPrice: 0,
@@ -200,10 +201,10 @@ export function initializeSaleAdjustmentGridForm({
       },
       saleAdjustmentGridAppraisalPrice: {
         includeLandArea: false,
-        landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-        usableArea: property.totalBuildingArea
+        landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        usableArea: property?.totalBuildingArea
           ? Number(property.totalBuildingArea)
-          : property.usableArea
+          : property?.usableArea
             ? Number(property.usableArea)
             : undefined,
         appraisalPrice: 0,

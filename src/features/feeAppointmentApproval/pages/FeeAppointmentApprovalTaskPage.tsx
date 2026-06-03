@@ -17,8 +17,13 @@ import {
   useResolveFeeAppointmentApproval,
 } from '../api/feeAppointmentApproval';
 import type { FeeAppointmentApprovalLine } from '../types/feeAppointmentApproval';
+import { FEE_ITEM_TYPE_OPTIONS } from '@/features/appraisal/types/appointmentAndFee';
 
 // ---- Helpers ----
+
+// Maps the fee code to its friendly type label (matches the Appointment & Fee page).
+const getFeeTypeLabel = (code: string | null | undefined) =>
+  FEE_ITEM_TYPE_OPTIONS.find(opt => opt.value === code)?.label ?? code ?? '—';
 
 const formatDate = (d: string | null | undefined) => {
   if (!d) return '—';
@@ -201,7 +206,7 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
-                {t('fee.columns.code')}
+                {t('fee.columns.type')}
               </th>
               <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
                 {t('fee.columns.description')}
@@ -214,7 +219,7 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
           <tbody className="divide-y divide-gray-100 bg-white">
             {feeLines.map(line => (
               <tr key={line.id}>
-                <td className="px-3 py-2.5 text-gray-600">{line.feeCode ?? '—'}</td>
+                <td className="px-3 py-2.5 text-gray-600">{getFeeTypeLabel(line.feeCode)}</td>
                 <td className="px-3 py-2.5 text-gray-700">{line.feeDescription ?? '—'}</td>
                 <td className="px-3 py-2.5 text-right text-gray-700">
                   {formatCurrency(line.feeAmount)}

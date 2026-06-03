@@ -5,9 +5,17 @@ import { Icon } from '@/shared/components';
 import { convertLandAreaToTotalSqWa } from '../../domain/convertLandAreaToTotalSqWa';
 import { useDerivedFields, type DerivedFieldRule } from '../../adapters/useDerivedFieldArray';
 import { floorToThousands, roundToThousand } from '../../domain/calculation';
+import { MarketReferenceButton } from '../MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../../api/references';
+import type { MarketComparableDetailType } from '../../schemas';
 
 interface DiscountedCashFlowHighestBestUsedProps {
   isReadOnly?: boolean;
+  /** Income analysis ID — used as anchorId for the IncomeLandRef market reference */
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  subjectProperty?: Record<string, unknown>;
 }
 
 const fmt = (n: number | null | undefined): string => {
@@ -17,6 +25,10 @@ const fmt = (n: number | null | undefined): string => {
 
 export function DiscountedCashFlowHighestBestUsed({
   isReadOnly,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
+  subjectProperty,
 }: DiscountedCashFlowHighestBestUsedProps) {
   const { control, getValues, setValue } = useFormContext();
   const isHighestBestUsed = useWatch({ control, name: 'isHighestBestUsed' });
@@ -224,6 +236,19 @@ export function DiscountedCashFlowHighestBestUsed({
               }}
             />
           </div>
+          {incomeAnalysisId && (
+            <div className="ml-2 self-end pb-1">
+              <MarketReferenceButton
+                subjectType={PricingAnalysisSubjectType.IncomeLandRef}
+                anchorId={incomeAnalysisId}
+                hostMethodId={hostMethodId}
+                marketSurveys={marketSurveys ?? []}
+                templateList={undefined}
+                subjectProperty={subjectProperty}
+                onApplyValue={v => setValue('highestBestUsed.pricePerSqWa', v, { shouldDirty: true })}
+              />
+            </div>
+          )}
         </div>
       )}
 
