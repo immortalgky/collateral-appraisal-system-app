@@ -16,7 +16,8 @@ interface WQSInitialValueOnSelectSurveyProps {
   collateralType: string;
   methodId: string;
   methodType: string;
-  property: Record<string, unknown>;
+  /** Optional for manual-subject references with no backing property. */
+  property?: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDetailType[];
   reset: UseFormReset<WQSFormType>;
@@ -26,13 +27,13 @@ export function syncWQSFormSurveys({
   collateralType,
   methodId,
   methodType,
-  property,
+  property: _property,
   template,
   comparativeSurveys,
   reset,
   getValues,
 }: WQSInitialValueOnSelectSurveyProps) {
-  if (!methodId || !methodType || !property || !comparativeSurveys || !reset) return;
+  if (!methodId || !methodType || !comparativeSurveys || !reset) return;
 
   const currentFormValue = getValues();
   if (!currentFormValue) return;

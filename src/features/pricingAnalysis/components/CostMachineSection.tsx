@@ -6,6 +6,13 @@ import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { ParameterDisplay } from '@/shared/components';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import axios from '@shared/api/axiosInstance';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { MarketReferenceButton } from './MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../api/references';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 export interface MachineryItem {
   appraisalPropertyId: string;
@@ -108,7 +115,19 @@ function useRowComputedValues(rowIndex: number) {
   };
 }
 
-function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: boolean }) {
+function MachineryRow({
+  rowIndex,
+  isReadOnly,
+  methodId,
+  marketSurveys,
+  templateList,
+}: {
+  rowIndex: number;
+  isReadOnly: boolean;
+  methodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
+}) {
   const { getValues } = useFormContext();
   const {
     durationInUse,
@@ -126,7 +145,24 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
   }, [fmv, rowIndex, setValue]);
 
   const machine: MachineryItem = getValues(`machineryCosts.${rowIndex}.machine`) ?? {};
+  const appraisalPropertyId: string | undefined = getValues(`machineryCosts.${rowIndex}.appraisalPropertyId`);
   const inputDisabled = isDisabled || isReadOnly;
+
+  // Fetch this row's machinery detail for the subject-property column of the reference panel.
+  // Mirrors the pattern in LeaseholdPanel — enabled only when both ids are available.
+  const appraisalId = useAppraisalId();
+  const { data: machineryDetail } = useQuery({
+    queryKey: ['appraisal', appraisalId, 'property', appraisalPropertyId, 'machinery-detail'],
+    queryFn: async (): Promise<Record<string, unknown>> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${appraisalPropertyId}/machinery-detail`,
+      );
+      return data as Record<string, unknown>;
+    },
+    enabled: !!appraisalId && !!appraisalPropertyId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
   const tdBase = 'px-2 py-1.5 border-b border-r border-gray-300 text-xs whitespace-nowrap';
 
   return (
@@ -155,13 +191,31 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
       </td>
 
       {/* RCN */}
-      <td className="border-b border-r border-gray-300 ">
-        <RHFInputCell
-          fieldName={costMachinePath.rcn(rowIndex)}
-          inputType="number"
-          disabled={inputDisabled}
-          number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
-        />
+      <td className="border-b border-r border-gray-300">
+        <div className="flex items-center gap-1 px-1">
+          <div className="flex-1">
+            <RHFInputCell
+              fieldName={costMachinePath.rcn(rowIndex)}
+              inputType="number"
+              disabled={inputDisabled}
+              number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+            />
+          </div>
+          {appraisalPropertyId && !isReadOnly && (
+            <MarketReferenceButton
+              subjectType={PricingAnalysisSubjectType.MachineryCostRef}
+              anchorId={appraisalPropertyId}
+              hostMethodId={methodId}
+              marketSurveys={marketSurveys ?? []}
+              templateList={templateList}
+              subjectProperty={machineryDetail}
+              onApplyValue={v =>
+                setValue(costMachinePath.rcn(rowIndex), v, { shouldDirty: true })
+              }
+              className="shrink-0 !px-1.5 !py-0.5 text-[10px]"
+            />
+          )}
+        </div>
       </td>
 
       <td className="border-b border-r border-gray-300">
@@ -240,9 +294,16 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
 
 export function CostMachineSection({
   isLoading = false,
+  methodId,
+  marketSurveys,
+  templateList,
 }: {
   machineryItems: MachineryItem[];
   isLoading?: boolean;
+  /** hostMethodId — used for market reference cleanup scoping */
+  methodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
 }) {
   const isReadOnly = usePageReadOnly();
   const { control } = useFormContext();
@@ -449,7 +510,14 @@ export function CostMachineSection({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {fields.map((_field, rowIndex) => (
-              <MachineryRow key={_field.id} rowIndex={rowIndex} isReadOnly={isReadOnly} />
+              <MachineryRow
+                key={_field.id}
+                rowIndex={rowIndex}
+                isReadOnly={isReadOnly}
+                methodId={methodId}
+                marketSurveys={marketSurveys}
+                templateList={templateList}
+              />
             ))}
             {fields.length === 0 && (
               <tr>

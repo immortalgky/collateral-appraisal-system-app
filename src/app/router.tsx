@@ -52,6 +52,7 @@ import ProvideDocumentsTaskPage from '@/features/document-followup/pages/Provide
 import FeeAppointmentApprovalTaskPage from '@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage';
 import FeeApprovalTierPage from '@/features/feeApprovalConfig/pages/FeeApprovalTierPage';
 import AppointmentApprovalRulePage from '@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage';
+import EvaluationConfigPage from '@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
 import MigrateInstancesPage from '@features/workflowBuilder/pages/MigrateInstancesPage';
 import PermissionListPage from '@features/userManagement/pages/PermissionListPage';
@@ -309,6 +310,7 @@ export const router = createBrowserRouter([
           { path: 'committees', element: <CommitteeAdminPage /> },
           { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
           { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
+          { path: 'evaluation-config', element: <EvaluationConfigPage /> },
           { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
           // Menu management — gated by MENU_MANAGE permission
           {

@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "Service Quality Evaluation Config",
+    "subtitle": "Configure evaluation criteria labels, weights, and guidance text per business segment."
+  },
+  "fields": {
+    "labelEn": "Label (EN)",
+    "labelTh": "Label (TH)",
+    "weight": "Weight (0–1)",
+    "maxScore": "Max Score",
+    "guidance": "Guidance Descriptions (per rating level)",
+    "ratingLevel": "Rating {{level}}",
+    "deliveryThresholds": "Delivery Day Thresholds (upper-bound days per rating)",
+    "thresholdRating": "Rating {{rating}} ≤",
+    "thresholdHint": "e.g. Rating 5 ≤ 2 days means delivery within 2 days earns a rating of 5."
+  },
+  "weightsSum": "Weights sum: {{sum}}",
+  "weightsSumWarning": "— should equal 1.00",
+  "noConfigs": "No configuration found for this segment.",
+  "errors": {
+    "invalidWeight": "Weight must be a number between 0 and 1.",
+    "invalidMaxScore": "Max score must be a positive integer."
+  },
+  "toasts": {
+    "saved": "Configuration saved.",
+    "saveFailed": "Failed to save configuration. Please try again."
+  }
+}

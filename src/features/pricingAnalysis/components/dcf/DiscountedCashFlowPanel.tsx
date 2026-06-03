@@ -50,6 +50,8 @@ interface DiscountedCashFlowPanelProps {
   };
   properties: Record<string, unknown>[] | undefined;
   templateList: unknown;
+  /** Passed through for the market-reference launcher on the HBU land price field */
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -61,6 +63,8 @@ interface DiscountedCashFlowPanelProps {
 export function DiscountedCashFlowPanel({
   activeMethod,
   properties,
+  marketSurveys,
+  templateList: _templateList,
   onCalculationSave,
   onCalculationMethodDirty: _onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -400,6 +404,9 @@ export function DiscountedCashFlowPanel({
                   properties={properties ?? []}
                   isReadOnly={isReadOnly}
                   onStructuralChange={requestImmediatePreview}
+                  incomeAnalysisId={incomeAnalysisQuery.data?.id}
+                  hostMethodId={activeMethod?.methodId}
+                  marketSurveys={marketSurveys}
                 />
               </div>
               {previewMutation.isPending && (
@@ -416,7 +423,17 @@ export function DiscountedCashFlowPanel({
               showAssumptionSummary={showAssumptionSummary}
               onShowAssumptionSummary={() => setShowAssumptionSummary(!showAssumptionSummary)}
             />
-            <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
+            <DiscountedCashFlowHighestBestUsed
+              isReadOnly={isReadOnly}
+              incomeAnalysisId={incomeAnalysisQuery.data?.id}
+              hostMethodId={activeMethod?.methodId}
+              marketSurveys={marketSurveys}
+              subjectProperty={
+                (properties ?? []).find(p =>
+                  ['LS', 'LSL', 'LSB'].includes(p.propertyType as string),
+                ) ?? properties?.[0]
+              }
+            />
 
             {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}
 

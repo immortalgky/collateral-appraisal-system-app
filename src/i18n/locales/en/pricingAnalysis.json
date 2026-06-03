@@ -309,5 +309,47 @@
     "loadFailed": "Failed to load data",
     "saveFailed": "Failed to save",
     "resetFailed": "Failed to reset"
+  },
+  "marketRef": {
+    "buttonLabel": "Market References",
+    "modalTitle": "Market References",
+    "addReference": "Add Reference",
+    "noReferences": "No references yet",
+    "noReferencesHint": "Click 'Add Reference' to create a comparable-driven analysis for this field.",
+    "openReference": "Open",
+    "deleteReference": "Delete",
+    "deleteConfirm": "Delete this reference? All comparables and scores will be permanently removed.",
+    "valuePerUnit": "Value/Unit",
+    "applyValue": "Use this value",
+    "applySuccess": "Value applied",
+    "methodLabel": "Method",
+    "finalValue": "Final Value",
+    "noValue": "Not calculated yet",
+    "unmatchedRoom": "Room type no longer matches — re-link",
+    "loadFailed": "Failed to load references",
+    "createFailed": "Failed to open reference",
+    "deleteFailed": "Failed to delete reference",
+    "backToList": "Back to list",
+    "status": {
+      "pending": "Pending",
+      "active": "Active"
+    }
+  },
+  "groupReferences": {
+    "sectionTitle": "References",
+    "openReference": "Open",
+    "deleteReference": "Delete",
+    "deleteConfirm": "Delete this reference? All comparables and scores will be permanently removed.",
+    "deleteFailed": "Failed to delete reference",
+    "noValue": "Not calculated yet",
+    "valuePerUnit": "Value/Unit",
+    "finalValue": "Final Value",
+    "subjects": {
+      "machineryCostRef": "Machine",
+      "incomeLandRef": "Land value (DCF)",
+      "leaseholdLandRef": "Land value (LH)",
+      "roomIncomeRef": "Room income",
+      "profitRentRef": "Rental fee"
+    }
   }
 }

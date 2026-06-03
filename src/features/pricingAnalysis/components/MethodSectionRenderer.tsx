@@ -126,7 +126,14 @@ export function MethodSectionRenderer({
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
-      return <CostMachinePanel {...panelProps} propertiesMap={serverData.propertiesMap} />;
+      return (
+        <CostMachinePanel
+          {...panelProps}
+          propertiesMap={serverData.propertiesMap}
+          marketSurveys={filteredMarketSurveys}
+          templateList={calculationMethodData.templateList}
+        />
+      );
     case 'WQS_COST':
       return (
         <WQSPanel
@@ -190,6 +197,8 @@ export function MethodSectionRenderer({
           propertiesMap={serverData.propertiesMap}
           firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
           firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
+          marketSurveys={filteredMarketSurveys}
+          templateList={calculationMethodData.templateList}
         />
       );
     case 'PR':
@@ -199,6 +208,8 @@ export function MethodSectionRenderer({
           propertiesMap={serverData.propertiesMap}
           firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
           firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
+          marketSurveys={filteredMarketSurveys}
+          templateList={calculationMethodData.templateList}
         />
       );
     case 'Hypothesis':

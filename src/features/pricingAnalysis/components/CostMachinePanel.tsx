@@ -16,6 +16,8 @@ import { useGetMachineCostItems, useResetMethod, useSaveMachineCostItems } from 
 import type { SaveMachineCostItemInput } from '../api';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 import DataErrorState from '@/shared/components/DataErrorState';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface CostMachinePanelProps {
   activeMethod?: {
@@ -27,6 +29,9 @@ interface CostMachinePanelProps {
   };
   propertiesMap?: Record<string, Record<string, unknown>>;
   savedMethodValue?: number | null;
+  /** Passed through for the market-reference launcher */
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -40,6 +45,8 @@ export function CostMachinePanel({
   activeMethod,
   propertiesMap,
   savedMethodValue,
+  marketSurveys,
+  templateList,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -196,7 +203,13 @@ export function CostMachinePanel({
             variant="inline"
           />
         ) : (
-          <CostMachineForm machineryItems={machineryItems} isLoading={isLoadingCostItems} />
+          <CostMachineForm
+            machineryItems={machineryItems}
+            isLoading={isLoadingCostItems}
+            methodId={methodId}
+            marketSurveys={marketSurveys}
+            templateList={templateList}
+          />
         )}
 
         {/* Footer save/cancel */}

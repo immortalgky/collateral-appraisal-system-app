@@ -309,5 +309,47 @@
     "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
     "saveFailed": "บันทึกไม่สำเร็จ",
     "resetFailed": "รีเซ็ตไม่สำเร็จ"
+  },
+  "marketRef": {
+    "buttonLabel": "ข้อมูลอ้างอิงตลาด",
+    "modalTitle": "ข้อมูลอ้างอิงตลาด",
+    "addReference": "เพิ่มข้อมูลอ้างอิง",
+    "noReferences": "ยังไม่มีข้อมูลอ้างอิง",
+    "noReferencesHint": "คลิก 'เพิ่มข้อมูลอ้างอิง' เพื่อสร้างการวิเคราะห์เปรียบเทียบสำหรับฟิลด์นี้",
+    "openReference": "เปิด",
+    "deleteReference": "ลบ",
+    "deleteConfirm": "ลบข้อมูลอ้างอิงนี้? ข้อมูลเปรียบเทียบและคะแนนทั้งหมดจะถูกลบถาวร",
+    "valuePerUnit": "มูลค่า/หน่วย",
+    "applyValue": "ใช้ค่านี้",
+    "applySuccess": "ใช้ค่าเรียบร้อย",
+    "methodLabel": "วิธีการ",
+    "finalValue": "มูลค่าสุดท้าย",
+    "noValue": "ยังไม่ได้คำนวณ",
+    "unmatchedRoom": "ประเภทห้องไม่ตรงอีกต่อไป — โปรดเชื่อมโยงใหม่",
+    "loadFailed": "โหลดข้อมูลอ้างอิงไม่สำเร็จ",
+    "createFailed": "เปิดข้อมูลอ้างอิงไม่สำเร็จ",
+    "deleteFailed": "ลบข้อมูลอ้างอิงไม่สำเร็จ",
+    "backToList": "กลับไปยังรายการ",
+    "status": {
+      "pending": "รอดำเนินการ",
+      "active": "ใช้งาน"
+    }
+  },
+  "groupReferences": {
+    "sectionTitle": "ข้อมูลอ้างอิง",
+    "openReference": "เปิด",
+    "deleteReference": "ลบ",
+    "deleteConfirm": "ลบข้อมูลอ้างอิงนี้? ข้อมูลเปรียบเทียบและคะแนนทั้งหมดจะถูกลบถาวร",
+    "deleteFailed": "ลบข้อมูลอ้างอิงไม่สำเร็จ",
+    "noValue": "ยังไม่ได้คำนวณ",
+    "valuePerUnit": "มูลค่า/หน่วย",
+    "finalValue": "มูลค่าสุดท้าย",
+    "subjects": {
+      "machineryCostRef": "เครื่องจักร",
+      "incomeLandRef": "มูลค่าที่ดิน (DCF)",
+      "leaseholdLandRef": "มูลค่าที่ดิน (เช่า)",
+      "roomIncomeRef": "รายได้ห้องพัก",
+      "profitRentRef": "ค่าเช่า"
+    }
   }
 }

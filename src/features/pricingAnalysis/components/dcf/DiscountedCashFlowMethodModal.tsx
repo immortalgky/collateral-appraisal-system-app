@@ -31,6 +31,10 @@ interface DiscountedCashFlowMethodModalProps {
   onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   isReadOnly?: boolean;
+  /** For market reference launcher on room-income rows */
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 export function DiscountedCashFlowMethodModal({
   editing,
@@ -41,6 +45,9 @@ export function DiscountedCashFlowMethodModal({
   onSaveEditMode,
   size,
   isReadOnly,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
@@ -252,6 +259,9 @@ export function DiscountedCashFlowMethodModal({
                 properties={properties}
                 getOuterFormValues={getOuterFormValues}
                 isReadOnly={isReadOnly}
+                incomeAnalysisId={incomeAnalysisId}
+                hostMethodId={hostMethodId}
+                marketSurveys={marketSurveys}
               />
             )}
 

@@ -21,6 +21,9 @@ interface DiscountedCashFlowModalRendererProps {
   properties: Record<string, unknown>[];
   getOuterFormValues: UseFormGetValues<FormValues>;
   isReadOnly?: boolean;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 export function DiscountedCashFlowModalRenderer({
   name,
@@ -28,13 +31,23 @@ export function DiscountedCashFlowModalRenderer({
   properties,
   getOuterFormValues,
   isReadOnly,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: DiscountedCashFlowModalRendererProps) {
   const props = { name, properties, getOuterFormValues, isReadOnly };
 
   switch (methodType) {
     // Method 01
     case 'specifiedRoomIncomePerDay': {
-      return <MethodSpecifyRoomIncomePerDayModal {...props} />;
+      return (
+        <MethodSpecifyRoomIncomePerDayModal
+          {...props}
+          incomeAnalysisId={incomeAnalysisId}
+          hostMethodId={hostMethodId}
+          marketSurveys={marketSurveys}
+        />
+      );
     }
     // Method 02
     case 'specifiedRoomIncomeBySeasonalRates':

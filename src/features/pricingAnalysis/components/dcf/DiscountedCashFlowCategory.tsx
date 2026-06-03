@@ -19,6 +19,9 @@ interface DiscountedCashFlowCategoryProps {
   baseStyles: { rowHeader: string; rowBody: string };
   isReadOnly?: boolean;
   onStructuralChange?: () => void;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 
 export function DiscountedCashFlowCategory({
@@ -31,6 +34,9 @@ export function DiscountedCashFlowCategory({
   baseStyles,
   isReadOnly,
   onStructuralChange,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: DiscountedCashFlowCategoryProps) {
   const { getValues, setValue, control } = useFormContext();
 
@@ -127,6 +133,9 @@ export function DiscountedCashFlowCategory({
               onSaveEditMode={handleOnSaveEditMode}
               size="2xl"
               isReadOnly={isReadOnly}
+              incomeAnalysisId={incomeAnalysisId}
+              hostMethodId={hostMethodId}
+              marketSurveys={marketSurveys}
             />
           )}
 

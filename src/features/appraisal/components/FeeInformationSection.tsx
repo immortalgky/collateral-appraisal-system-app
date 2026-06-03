@@ -31,6 +31,10 @@ interface FeeInformationSectionProps {
   onApproveFeeItem?: (feeId: string, itemId: string) => void;
   onRejectFeeItem?: (feeId: string, itemId: string, reason: string) => void;
   isFeePaymentTypeUpdating?: boolean;
+  /**
+   * When true, all add/edit/remove fee actions are disabled (approval is awaiting bank review).
+   */
+  editLocked?: boolean;
 
   /**
    * Show the Construction Inspection Fee input. Driven by the backend's
@@ -58,6 +62,7 @@ export default function FeeInformationSection({
   onApproveFeeItem,
   onRejectFeeItem,
   isFeePaymentTypeUpdating,
+  editLocked = false,
   showConstructionInspectionFee = false,
   constructionInspectionFeeAmount = null,
   onUpdateConstructionInspectionFee,
@@ -87,8 +92,15 @@ export default function FeeInformationSection({
     }
   };
 
-  // Calculate totals from API items
-  const subtotal = items.reduce((sum, item) => sum + (item.feeAmount || 0), 0);
+  // A fee counts toward the billable total only if it doesn't need approval or has been approved.
+  // Pending-approval and Rejected fees are excluded (mirrors the backend RecalculateFromItems).
+  const isBillable = (item: AppraisalFeeItemDtoType) =>
+    !item.requiresApproval || item.approvalStatus === 'Approved';
+
+  // Calculate totals from billable API items only
+  const subtotal = items
+    .filter(isBillable)
+    .reduce((sum, item) => sum + (item.feeAmount || 0), 0);
   const vatRate = vatRateProp ?? VAT_PERCENTAGE;
   const vat = subtotal * (vatRate / 100);
   const total = subtotal + vat;
@@ -154,8 +166,11 @@ export default function FeeInformationSection({
     const totalPaid = totalFeePaid;
 
     if (totalPaid > 0) {
-      const newSubtotal =
-        items.reduce((sum, i) => sum + (i.feeAmount || 0), 0) - (item.feeAmount || 0);
+      // Billable total after removing this item (pending/rejected fees never count — mirrors the
+      // displayed subtotal and the backend RecalculateFromItems).
+      const newSubtotal = items
+        .filter((i, idx) => idx !== deletingFeeIndex && isBillable(i))
+        .reduce((sum, i) => sum + (i.feeAmount || 0), 0);
       const newTotal = newSubtotal * (1 + vatRate / 100);
       if (totalPaid > newTotal) {
         toast.error(
@@ -202,21 +217,35 @@ export default function FeeInformationSection({
   };
 
   // Check if an item is editable (only type 01 is locked)
-  const isEditable = (item: AppraisalFeeItemDtoType) => item.feeCode !== '01';
+  // Base appraisal fee ('01') is never editable; neither is a fee whose approval is finalised
+  // (Approved/Rejected) — its amount is locked once the bank has decided.
+  const isEditable = (item: AppraisalFeeItemDtoType) =>
+    item.feeCode !== '01' &&
+    item.approvalStatus !== 'Approved' &&
+    item.approvalStatus !== 'Rejected';
+
+  // Delete is allowed for any non-base fee — including approved/rejected ones (the amount is
+  // locked from editing, but the line can still be removed).
+  const isDeletable = (item: AppraisalFeeItemDtoType) => item.feeCode !== '01';
 
   // Get approval info directly from API item
+  // New backend fields (approvalSubmittedAt) arrive via .passthrough()
   const getApprovalInfo = (item: AppraisalFeeItemDtoType) => {
     if (!item.requiresApproval) return null;
     const status = item.approvalStatus?.toLowerCase();
-    const colorClass =
-      status === 'approved'
-        ? 'bg-success/10 text-success'
-        : status === 'rejected'
-          ? 'bg-danger/10 text-danger'
-          : status === 'pendingapproval'
-            ? 'bg-amber-100 text-amber-700'
-            : 'bg-warning/10 text-warning';
-    return { label: item.approvalStatus || 'Pending', colorClass };
+    const submittedAt = (item as AppraisalFeeItemDtoType & { approvalSubmittedAt?: string | null }).approvalSubmittedAt;
+
+    if (status === 'approved') {
+      return { label: item.approvalStatus!, colorClass: 'bg-success/10 text-success' };
+    }
+    if (status === 'rejected') {
+      return { label: item.approvalStatus!, colorClass: 'bg-danger/10 text-danger' };
+    }
+    // Pending — distinguish draft (not yet submitted) from submitted (awaiting bank)
+    if (submittedAt) {
+      return { label: t('approval.badge.awaiting'), colorClass: 'bg-blue-100 text-blue-700' };
+    }
+    return { label: t('approval.badge.needsApproval'), colorClass: 'bg-amber-100 text-amber-700' };
   };
 
   return (
@@ -269,7 +298,13 @@ export default function FeeInformationSection({
 
         {/* Fee Rows */}
         {items.map((item, index) => {
+          // Rejected fees are hidden from the list (a history screen will surface them later).
+          // Return null rather than filtering so `index` still maps to the original items array
+          // used by edit/delete handlers.
+          if (item.approvalStatus === 'Rejected') return null;
+
           const editable = isEditable(item);
+          const deletable = isDeletable(item);
           const approval = getApprovalInfo(item);
 
           return (
@@ -298,29 +333,30 @@ export default function FeeInformationSection({
                   {formatCurrency(item.feeAmount)}
                 </span>
                 <div className="flex items-center justify-center gap-1">
-                  {!readOnly && editable ? (
+                  {!readOnly && !editLocked && (
                     <>
-                      <button
-                        type="button"
-                        onClick={() => openEditModal(index)}
-                        className="text-gray-400 hover:text-secondary transition-colors p-1"
-                        aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
-                        title={t('fee.aria.editFeeTitle')}
-                      >
-                        <Icon name="pen" style="regular" className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingFeeIndex(index)}
-                        className="text-gray-400 hover:text-danger transition-colors p-1"
-                        aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
-                        title={t('fee.aria.deleteFeeTitle')}
-                      >
-                        <Icon name="trash" style="regular" className="w-4 h-4" />
-                      </button>
-                    </>
-                  ) : !readOnly ? (
-                    <>
+                      {editable && (
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(index)}
+                          className="text-gray-400 hover:text-secondary transition-colors p-1"
+                          aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
+                          title={t('fee.aria.editFeeTitle')}
+                        >
+                          <Icon name="pen" style="regular" className="w-4 h-4" />
+                        </button>
+                      )}
+                      {deletable && (
+                        <button
+                          type="button"
+                          onClick={() => setDeletingFeeIndex(index)}
+                          className="text-gray-400 hover:text-danger transition-colors p-1"
+                          aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
+                          title={t('fee.aria.deleteFeeTitle')}
+                        >
+                          <Icon name="trash" style="regular" className="w-4 h-4" />
+                        </button>
+                      )}
                       {approval && !item.approvalStatus && (
                         <>
                           {onApproveFeeItem && (
@@ -350,7 +386,7 @@ export default function FeeInformationSection({
                         </>
                       )}
                     </>
-                  ) : null}
+                  )}
                 </div>
               </div>
 
@@ -370,25 +406,25 @@ export default function FeeInformationSection({
                         {approval.label}
                       </span>
                     )}
-                    {!readOnly && editable && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(index)}
-                          className="text-gray-400 hover:text-secondary transition-colors p-1"
-                          aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
-                        >
-                          <Icon name="pen" style="regular" className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingFeeIndex(index)}
-                          className="text-gray-400 hover:text-danger transition-colors p-1"
-                          aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
-                        >
-                          <Icon name="trash" style="regular" className="w-4 h-4" />
-                        </button>
-                      </>
+                    {!readOnly && !editLocked && editable && (
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(index)}
+                        className="text-gray-400 hover:text-secondary transition-colors p-1"
+                        aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
+                      >
+                        <Icon name="pen" style="regular" className="w-4 h-4" />
+                      </button>
+                    )}
+                    {!readOnly && !editLocked && deletable && (
+                      <button
+                        type="button"
+                        onClick={() => setDeletingFeeIndex(index)}
+                        className="text-gray-400 hover:text-danger transition-colors p-1"
+                        aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
+                      >
+                        <Icon name="trash" style="regular" className="w-4 h-4" />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -406,8 +442,10 @@ export default function FeeInformationSection({
           <div className="bg-white border-b border-gray-200 px-4 py-3">
             <button
               type="button"
-              onClick={() => setIsAddModalOpen(true)}
-              className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors"
+              onClick={!editLocked ? () => setIsAddModalOpen(true) : undefined}
+              disabled={editLocked}
+              title={editLocked ? t('approval.banner.awaiting') : undefined}
+              className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-emerald-300"
             >
               <Icon name="circle-plus" style="solid" className="w-5 h-5" />
               <span className="text-sm font-medium">{t('fee.addFee')}</span>

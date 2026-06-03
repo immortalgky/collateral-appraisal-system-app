@@ -82,6 +82,9 @@ interface DiscountedCashFlowTableProps {
   properties: Record<string, unknown>[];
   isReadOnly?: boolean;
   onStructuralChange?: () => void;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 
 export function DiscountedCashFlowTable({
@@ -89,6 +92,9 @@ export function DiscountedCashFlowTable({
   properties,
   isReadOnly,
   onStructuralChange,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: DiscountedCashFlowTableProps) {
   const { control } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
@@ -202,6 +208,9 @@ export function DiscountedCashFlowTable({
                   icon={getIconSection(section.identifier)}
                   isReadOnly={isReadOnly}
                   onStructuralChange={onStructuralChange}
+                  incomeAnalysisId={incomeAnalysisId}
+                  hostMethodId={hostMethodId}
+                  marketSurveys={marketSurveys}
                 />
               );
             })}

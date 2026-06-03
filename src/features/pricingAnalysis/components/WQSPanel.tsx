@@ -39,6 +39,7 @@ interface WQSPanelProps {
     methodType?: string;
   };
   properties: Record<string, unknown>[] | undefined;
+  manualSubject?: boolean;
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   templateList: TemplateDtoType[] | undefined;
@@ -79,6 +80,7 @@ export function WQSPanel({
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
+  manualSubject,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -196,7 +198,7 @@ export function WQSPanel({
       methodId: methodId!,
       methodType: methodType!,
       comparativeSurveys,
-      property: property!,
+      property: property,
       template,
       allFactors,
       reset,
@@ -238,13 +240,13 @@ export function WQSPanel({
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
       restoreWQSFromSavedData({
         methodId,
-        property,
+        property: property ?? {},
         comparativeSurveys,
         allFactors,
         linkedComparables,
@@ -307,7 +309,7 @@ export function WQSPanel({
       methodId,
       methodType,
       comparativeSurveys,
-      property,
+      property: property,
       template: undefined,
       allFactors,
       reset,
@@ -336,7 +338,7 @@ export function WQSPanel({
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
     if (!isGenerated) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
@@ -354,7 +356,7 @@ export function WQSPanel({
       methodId: methodId,
       methodType: methodType,
       comparativeSurveys: comparativeSurveys,
-      property: property,
+      property: property ?? {},
       template: pricingTemplate,
       reset: reset,
       getValues: getValues,
@@ -369,7 +371,7 @@ export function WQSPanel({
     setValue,
   ]);
 
-  const isLoading = !isGenerated || !property || !marketSurveys || !allFactors;
+  const isLoading = !isGenerated || (!manualSubject && !property) || !marketSurveys || !allFactors;
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {
@@ -419,7 +421,7 @@ export function WQSPanel({
             <div className="flex-1 min-h-0 overflow-auto">
               <WQSForm
                 {...methods}
-                property={property}
+                property={property ?? {}}
                 buildingCost={buildingCost}
                 isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
@@ -427,6 +429,7 @@ export function WQSPanel({
                 template={pricingTemplate}
                 allFactors={allFactors}
                 onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+                manualSubject={manualSubject}
               />
             </div>
             <MethodFooterActions

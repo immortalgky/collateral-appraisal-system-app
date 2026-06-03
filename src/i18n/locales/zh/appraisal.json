@@ -881,20 +881,25 @@
       "createFailed": "创建报价请求失败"
     }
   },
-  "changeRequest": {
-    "title": "提交变更请求",
-    "openButton": "打开变更请求",
-    "cancelButton": "取消",
-    "addDate": "暂存新日期",
-    "changeDate": "更改暂存日期",
-    "addFee": "添加费用行",
-    "submitButton": "提交变更请求",
-    "confirmTitle": "提交变更请求",
-    "confirmMessage": "提交暂存的预约和/或费用变更以供审批？这将把请求路由给相应的审批人。",
-    "confirmSubmit": "提交",
+  "approval": {
+    "banner": {
+      "needsApproval": "此变更需要银行审批 — 请提交以供审核后才能生效。",
+      "awaiting": "等待银行审批。在审批结束之前无法编辑。"
+    },
+    "badge": {
+      "needsApproval": "待提交审批",
+      "awaiting": "待审批"
+    },
+    "submitButton": "提交审批 — {{summary}}",
+    "submitConfirm": "提交",
+    "summary": {
+      "dateChange": "1次日期变更",
+      "fees_one": "{{count}}项费用",
+      "fees_other": "{{count}}项费用"
+    },
     "toasts": {
-      "submitted": "变更请求已提交审批",
-      "submitFailed": "提交变更请求失败"
+      "submitted": "已提交银行审批",
+      "submitFailed": "提交审批失败"
     }
   }
 }

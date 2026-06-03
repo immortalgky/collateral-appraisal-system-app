@@ -12,6 +12,9 @@ interface DiscountedCashFlowCategoryRendererProps {
   color: SectionColor;
   isReadOnly?: boolean;
   onStructuralChange?: () => void;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
 }
 export function DiscountedCashFlowCategoryRenderer({
   name,
@@ -22,6 +25,9 @@ export function DiscountedCashFlowCategoryRenderer({
   color,
   isReadOnly,
   onStructuralChange,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
 }: DiscountedCashFlowCategoryRendererProps) {
   const props = {
     name: name,
@@ -36,6 +42,9 @@ export function DiscountedCashFlowCategoryRenderer({
       rowBody: 'pl-8 px-1 py-1 h-9 text-xs text-right border-b border-gray-300',
     },
     onStructuralChange: onStructuralChange,
+    incomeAnalysisId,
+    hostMethodId,
+    marketSurveys,
   };
   switch (category.categoryType) {
     case 'income': {

@@ -13,6 +13,7 @@ interface SurveySelectionSectionProps {
   allFactors: FactorDataType[];
   fieldPath: Record<string, any>;
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
+  manualSubject?: boolean;
 }
 export function SurveySelectionSection({
   template,
@@ -22,6 +23,7 @@ export function SurveySelectionSection({
   comparativeMarketSurveys,
   fieldPath,
   onSelectComparativeMarketSurvey,
+  manualSubject,
 }: SurveySelectionSectionProps) {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
@@ -52,6 +54,7 @@ export function SurveySelectionSection({
             allFactors={allFactors}
             template={template}
             fieldPath={fieldPath}
+            manualSubject={manualSubject}
           />
         </div>
         <MarketSurveySelectionModal

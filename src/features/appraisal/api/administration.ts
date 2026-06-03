@@ -49,8 +49,8 @@ export const useGetCompanyById = (companyId: string | null) => {
         contactPerson: company.contactPerson ?? '',
         contactPhone: company.phone ?? '',
         contactEmail: company.email ?? '',
-        rating: 0,
-        activeAssignments: 0,
+        rating: company.averageRating ?? 0,
+        activeAssignments: company.activeAssignments ?? 0,
       };
     },
     enabled: !!companyId,
@@ -144,6 +144,8 @@ export const useGetEligibleCompanies = (bankingSegment: string | undefined, enab
           contactPerson?: string;
           phone?: string;
           email?: string;
+          averageRating?: number;
+          activeAssignments?: number;
         }) => ({
           id: c.id,
           companyName: c.name,
@@ -151,8 +153,8 @@ export const useGetEligibleCompanies = (bankingSegment: string | undefined, enab
           contactPerson: c.contactPerson ?? '',
           contactPhone: c.phone ?? '',
           contactEmail: c.email ?? '',
-          rating: 0,
-          activeAssignments: 0,
+          rating: c.averageRating ?? 0,
+          activeAssignments: c.activeAssignments ?? 0,
         }),
       );
     },

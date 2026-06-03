@@ -51,8 +51,11 @@ export default function PaymentInformationSection({
   const bankAbsorbAmount = fee?.bankAbsorbAmount ?? 0;
   const payments = fee?.paymentHistory ?? [];
 
-  // Calculate totals from items
-  const subtotal = items.reduce((sum, item) => sum + (item.feeAmount || 0), 0);
+  // Calculate totals from billable items only — pending-approval and rejected fees are excluded
+  // (mirrors the backend RecalculateFromItems and the Fee Information section).
+  const subtotal = items
+    .filter(item => !item.requiresApproval || item.approvalStatus === 'Approved')
+    .reduce((sum, item) => sum + (item.feeAmount || 0), 0);
   const vatRate = fee?.vatRate ?? VAT_PERCENTAGE;
   const vat = subtotal * (vatRate / 100);
   const totalFee = subtotal + vat;
