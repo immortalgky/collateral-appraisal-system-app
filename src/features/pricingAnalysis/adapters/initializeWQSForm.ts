@@ -26,10 +26,17 @@ function buildSurveyEntries(comparativeSurveys: MarketComparableDetailType[]) {
 function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQSCalculation[] {
   return comparativeSurveys.map(survey => {
     const surveyMap = new Map(
-      (survey.factorData ?? []).map((s: FactorDataType) => [
-        s.factorCode,
-        readFactorValue({ dataType: s.dataType as string, value: s.value, fieldDecimal: s.fieldDecimal }),
-      ] as [string, string | undefined]),
+      (survey.factorData ?? []).map(
+        (s: FactorDataType) =>
+          [
+            s.factorCode,
+            readFactorValue({
+              dataType: s.dataType as string,
+              value: s.value,
+              fieldDecimal: s.fieldDecimal,
+            }),
+          ] as [string, string | undefined],
+      ),
     );
     return {
       marketId: survey.id ?? '',
@@ -52,7 +59,9 @@ function buildFinalValue(property: Record<string, unknown>) {
       ? Number(property.totalBuildingArea)
       : property.usableArea
         ? Number(property.usableArea)
-        : undefined,
+        : property.standardUsableArea
+          ? Number(property.standardUsableArea)
+          : undefined,
     finalValue: 0,
     finalValueRounded: 0,
     coefficientOfDecision: 0,

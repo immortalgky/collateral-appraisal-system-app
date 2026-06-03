@@ -49,8 +49,7 @@ const applyLocationMethod = (
   }
 };
 
-const roundToNearest10000 = (value: number): number =>
-  Math.round(value / 10000) * 10000;
+const roundToNearest10000 = (value: number): number => Math.round(value / 10000) * 10000;
 
 export const recomputeUnitPrice = (
   unit: ProjectUnitPrice,
@@ -64,12 +63,12 @@ export const recomputeUnitPrice = (
  * (see Project.cs:CalculateCondoUnitPrices), so the area-based total is
  * standardPrice * usableArea.
  */
-const recomputeCondo = (
-  unit: ProjectUnitPrice,
-  a: AssumptionInputs,
-): ProjectUnitPrice => {
+const recomputeCondo = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPrice => {
   const usableArea = num(unit.usableArea);
-  const standardPriceTotal = num(unit.standardPrice) * usableArea;
+  const standardPriceTotal =
+    unit.standardPriceUnit === 'BahtPerUnit'
+      ? num(unit.standardPrice) // Baht — already a total, no multiplication
+      : num(unit.standardPrice) * usableArea; // Baht/sq.m (default) — multiply by area
 
   // adjustPriceLocation is stored as the raw flag-adjustment total. The
   // configured LocationMethod is only applied when folding it into the appraisal
@@ -115,10 +114,7 @@ const recomputeCondo = (
  * It is NOT multiplied by usable area — see Project.cs:CalculateLandAndBuildingUnitPrices.
  * Location adjustments scale by LandArea (Sq.Wa), not UsableArea.
  */
-const recomputeLB = (
-  unit: ProjectUnitPrice,
-  a: AssumptionInputs,
-): ProjectUnitPrice => {
+const recomputeLB = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPrice => {
   const landArea = num(unit.landArea);
   const standardPriceTotal = num(unit.standardPrice);
   const landIncreaseDecreaseAmount = num(unit.landIncreaseDecreaseAmount);
@@ -138,7 +134,8 @@ const recomputeLB = (
     landArea,
   );
 
-  const totalAppraisalValue = standardPriceTotal + landIncreaseDecreaseAmount + locationContribution;
+  const totalAppraisalValue =
+    standardPriceTotal + landIncreaseDecreaseAmount + locationContribution;
   const totalAppraisalValueRounded = roundToNearest10000(totalAppraisalValue);
   const forceSellingPrice =
     a.forceSalePercentage != null
