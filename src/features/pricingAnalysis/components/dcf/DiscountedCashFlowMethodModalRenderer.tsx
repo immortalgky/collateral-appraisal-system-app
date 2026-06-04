@@ -24,6 +24,7 @@ interface DiscountedCashFlowModalRendererProps {
   incomeAnalysisId?: string;
   hostMethodId?: string;
   marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }
 export function DiscountedCashFlowModalRenderer({
   name,
@@ -34,6 +35,7 @@ export function DiscountedCashFlowModalRenderer({
   incomeAnalysisId,
   hostMethodId,
   marketSurveys,
+  ensureIncomeAnalysisId,
 }: DiscountedCashFlowModalRendererProps) {
   const props = { name, properties, getOuterFormValues, isReadOnly };
 
@@ -46,6 +48,7 @@ export function DiscountedCashFlowModalRenderer({
           incomeAnalysisId={incomeAnalysisId}
           hostMethodId={hostMethodId}
           marketSurveys={marketSurveys}
+          ensureIncomeAnalysisId={ensureIncomeAnalysisId}
         />
       );
     }

@@ -15,6 +15,7 @@ interface SectionIncomeProps {
   incomeAnalysisId?: string;
   hostMethodId?: string;
   marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }
 
 export function SectionIncome({
@@ -29,6 +30,7 @@ export function SectionIncome({
   incomeAnalysisId,
   hostMethodId,
   marketSurveys,
+  ensureIncomeAnalysisId,
 }: SectionIncomeProps) {
   return (
     <DynamicSection
@@ -53,6 +55,7 @@ export function SectionIncome({
             incomeAnalysisId={incomeAnalysisId}
             hostMethodId={hostMethodId}
             marketSurveys={marketSurveys}
+            ensureIncomeAnalysisId={ensureIncomeAnalysisId}
           />
         );
       })}

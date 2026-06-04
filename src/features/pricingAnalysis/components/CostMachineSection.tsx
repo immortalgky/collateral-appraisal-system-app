@@ -192,29 +192,32 @@ function MachineryRow({
 
       {/* RCN */}
       <td className="border-b border-r border-gray-300">
-        <div className="flex items-center gap-1 px-1">
-          <div className="flex-1">
-            <RHFInputCell
-              fieldName={costMachinePath.rcn(rowIndex)}
-              inputType="number"
-              disabled={inputDisabled}
-              number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
-            />
-          </div>
-          {appraisalPropertyId && !isReadOnly && (
-            <MarketReferenceButton
-              subjectType={PricingAnalysisSubjectType.MachineryCostRef}
-              anchorId={appraisalPropertyId}
-              hostMethodId={methodId}
-              marketSurveys={marketSurveys ?? []}
-              templateList={templateList}
-              subjectProperty={machineryDetail}
-              onApplyValue={v =>
-                setValue(costMachinePath.rcn(rowIndex), v, { shouldDirty: true })
-              }
-              className="shrink-0 !px-1.5 !py-0.5 text-[10px]"
-            />
-          )}
+        <div className="px-1">
+          <RHFInputCell
+            fieldName={costMachinePath.rcn(rowIndex)}
+            inputType="number"
+            disabled={inputDisabled}
+            number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+            inputClassName={appraisalPropertyId && !isReadOnly ? '!pr-14' : undefined}
+            rightIcon={
+              appraisalPropertyId && !isReadOnly ? (
+                <MarketReferenceButton
+                  subjectType={PricingAnalysisSubjectType.MachineryCostRef}
+                  anchorId={appraisalPropertyId}
+                  hostMethodId={methodId}
+                  marketSurveys={marketSurveys ?? []}
+                  templateList={templateList}
+                  subjectProperty={machineryDetail}
+                  onApplyValue={v =>
+                    setValue(costMachinePath.rcn(rowIndex), v, { shouldDirty: true })
+                  }
+                  compact
+                  label="WQS"
+                  className="pointer-events-auto shrink-0"
+                />
+              ) : undefined
+            }
+          />
         </div>
       </td>
 

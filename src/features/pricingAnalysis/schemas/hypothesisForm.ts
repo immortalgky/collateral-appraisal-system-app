@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
+
+// Static type-inference stand-in (key-passthrough — never an object)
+const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
 
 // ─── Cost item row schema (shared by both variants) ───────────────────────────
 
@@ -40,29 +44,36 @@ export type HypothesisCostItemKindValue = z.infer<typeof HypothesisCostItemKindE
 
 // ─── Depreciation period sub-row ─────────────────────────────────────────────
 
-export const HypothesisDepreciationPeriodSchema = z
-  .object({
-    atYear: z.number().int().min(0),
-    toYear: z.number().int().min(0),
-    depreciationPerYear: z.number().min(0).max(100),
-  })
-  .refine(p => p.toYear >= p.atYear, { message: 'toYear must be >= atYear', path: ['toYear'] });
+export const makeHypothesisDepreciationPeriodSchema = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      atYear: z.number().int().min(0),
+      toYear: z.number().int().min(0),
+      depreciationPerYear: z.number().min(0).max(100),
+    })
+    .refine(p => p.toYear >= p.atYear, {
+      message: t('validation.toYearInvalid'),
+      path: ['toYear'],
+    });
+
+export const HypothesisDepreciationPeriodSchema = makeHypothesisDepreciationPeriodSchema(_t);
 
 export type HypothesisDepreciationPeriodFormRow = z.infer<
   typeof HypothesisDepreciationPeriodSchema
 >;
 
-export const HypothesisCostItemSchema = z.object({
-  /** Undefined for newly added rows (server assigns id on save) */
-  id: z.string().uuid().optional().nullable(),
-  category: HypothesisCostCategoryEnum,
-  /**
-   * Stable semantic key. Seeded rows get their kind from the server; ad-hoc rows must set 'Other' explicitly.
-   * Server ignores kind on UPDATE (uses id match). Kind is required on INSERT.
-   * Note: no `.default('Other')` here — Zod's input/output divergence with defaults breaks Resolver alignment with useForm. Factories set 'Other' explicitly.
-   */
-  kind: HypothesisCostItemKindEnum,
-  description: z.string().min(1, 'Description is required'),
+export const makeHypothesisCostItemSchema = (t: TFunction<'pricingAnalysis'>) =>
+  z.object({
+    /** Undefined for newly added rows (server assigns id on save) */
+    id: z.string().uuid().optional().nullable(),
+    category: HypothesisCostCategoryEnum,
+    /**
+     * Stable semantic key. Seeded rows get their kind from the server; ad-hoc rows must set 'Other' explicitly.
+     * Server ignores kind on UPDATE (uses id match). Kind is required on INSERT.
+     * Note: no `.default('Other')` here — Zod's input/output divergence with defaults breaks Resolver alignment with useForm. Factories set 'Other' explicitly.
+     */
+    kind: HypothesisCostItemKindEnum,
+    description: z.string().min(1, t('validation.descriptionRequired')),
   displaySequence: z.number().int().nonnegative(),
   amount: z.number().nonnegative(),
   rateAmount: z.number().optional().nullable(),
@@ -89,6 +100,9 @@ export const HypothesisCostItemSchema = z.object({
   /** Period sub-rows. Empty array unless method is Period. */
   depreciationPeriods: z.array(HypothesisDepreciationPeriodSchema),
 });
+
+// Static schema for type inference only
+export const HypothesisCostItemSchema = makeHypothesisCostItemSchema(_t);
 
 export type HypothesisCostItemFormRow = z.infer<typeof HypothesisCostItemSchema>;
 

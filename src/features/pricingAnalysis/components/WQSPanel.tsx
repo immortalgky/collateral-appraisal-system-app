@@ -3,7 +3,7 @@ import { useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelector';
 import { MethodFooterActions } from './MethodFooterActions';
-import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
+import { makeWQSDto, WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import { COLLATERAL_TYPE } from '../data/constants';
 import toast from 'react-hot-toast';
@@ -95,7 +95,7 @@ export function WQSPanel({
 
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
-    resolver: zodResolver(WQSDto),
+    resolver: zodResolver(makeWQSDto(t)),
   });
 
   const {
@@ -240,7 +240,11 @@ export function WQSPanel({
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || (!manualSubject && !property)) return;
+    // A saved reference (e.g. IncomeLandRef opened from the group References section)
+    // has no live subject `property` — but it DOES have saved data to restore. Only
+    // require a property for a fresh, manual-less generate; never block a restore.
+    const hasSavedData = !!(savedComparativeFactors && savedComparativeFactors.length > 0);
+    if (!methodId || !methodType || (!manualSubject && !property && !hasSavedData)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {

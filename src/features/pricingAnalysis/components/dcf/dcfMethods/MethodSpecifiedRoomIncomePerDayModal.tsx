@@ -1,7 +1,7 @@
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toDecimal, toNumber } from '../../../domain/calculation';
@@ -19,6 +19,7 @@ export function MethodSpecifyRoomIncomePerDayModal({
   hostMethodId,
   marketSurveys,
   templateList,
+  ensureIncomeAnalysisId,
 }: {
   name: string;
   isReadOnly?: boolean;
@@ -27,8 +28,12 @@ export function MethodSpecifyRoomIncomePerDayModal({
   hostMethodId?: string;
   marketSurveys?: MarketComparableDetailType[];
   templateList?: TemplateDtoType[] | undefined;
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }) {
   const { getValues, setValue } = useFormContext();
+  // Local state to cache the id obtained by ensureIncomeAnalysisId so the
+  // button can function before the first save.
+  const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -157,43 +162,60 @@ export function MethodSpecifyRoomIncomePerDayModal({
                       </div>
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <div className="flex items-center gap-1">
-                        <div className="flex-1">
+                      {(() => {
+                        const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
+                        const roomOther = getValues(`${name}.roomDetails.${index}.roomTypeOther`);
+                        const roomCode = String(roomType ?? '');
+                        const anchorRefKey =
+                          roomCode === '99' && roomOther
+                            ? String(roomOther)
+                            : roomCode;
+                        // The effective anchorId: already-saved id wins; fall back to locally ensured.
+                        // Read from ref for latest value without stale closure inside onBeforeOpen.
+                        const effectiveId = incomeAnalysisId ?? ensuredId;
+                        const refButton = !isReadOnly ? (
+                          <MarketReferenceButton
+                            compact
+                            label="WQS"
+                            subjectType={PricingAnalysisSubjectType.RoomIncomeRef}
+                            // Pass the live value; after onBeforeOpen resolves the state update
+                            // will have re-rendered with the new id, and the modal reads anchorId
+                            // from the prop at open time.
+                            anchorId={effectiveId ?? ''}
+                            anchorRefKey={anchorRefKey}
+                            hostMethodId={hostMethodId}
+                            marketSurveys={marketSurveys ?? []}
+                            templateList={templateList}
+                            currentAnchorLabel={anchorRefKey}
+                            onApplyValue={v =>
+                              setValue(`${name}.roomDetails.${index}.roomIncome`, v, { shouldDirty: true })
+                            }
+                            onBeforeOpen={
+                              effectiveId
+                                ? undefined
+                                : async () => {
+                                    const id = await ensureIncomeAnalysisId?.();
+                                    if (id) {
+                                      setEnsuredId(id);
+                                    }
+                                    // Throw to abort open if still no id (save failed, toast shown)
+                                    if (!id) throw new Error('no-id');
+                                  }
+                            }
+                            className="pointer-events-auto shrink-0"
+                          />
+                        ) : null;
+                        return (
                           <RHFInputCell
                             fieldName={`${name}.roomDetails.${index}.roomIncome`}
                             inputType="number"
                             disabled={isReadOnly}
                             number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                            rightIcon={refButton}
+                            inputClassName={refButton ? '!pr-14' : undefined}
                           />
-                        </div>
-                        {incomeAnalysisId && !isReadOnly && (() => {
-                          const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
-                          const roomOther = getValues(`${name}.roomDetails.${index}.roomTypeOther`);
-                          // M2 fix: use the raw room-type CODE as anchorRefKey so the backend
-                          // matches references by code, not by localized description.
-                          // For code "99" (other), use the raw roomTypeOther value as the key.
-                          const roomCode = String(roomType ?? '');
-                          const anchorRefKey =
-                            roomCode === '99' && roomOther
-                              ? String(roomOther)
-                              : roomCode;
-                          return (
-                            <MarketReferenceButton
-                              subjectType={PricingAnalysisSubjectType.RoomIncomeRef}
-                              anchorId={incomeAnalysisId}
-                              anchorRefKey={anchorRefKey}
-                              hostMethodId={hostMethodId}
-                              marketSurveys={marketSurveys ?? []}
-                              templateList={templateList}
-                              currentAnchorLabel={anchorRefKey}
-                              onApplyValue={v =>
-                                setValue(`${name}.roomDetails.${index}.roomIncome`, v, { shouldDirty: true })
-                              }
-                              className="shrink-0 !px-1 !py-0.5 text-[10px]"
-                            />
-                          );
-                        })()}
-                      </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell

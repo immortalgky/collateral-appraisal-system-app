@@ -38,6 +38,7 @@ import { SensitivityStrip } from '../SensitivityStrip';
 import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
 import toast from 'react-hot-toast';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { findLeaseProperty, isLeasePropertyType } from '../../utils/leaseProperty';
 import DataErrorState from '@/shared/components/DataErrorState';
 
 interface DiscountedCashFlowPanelProps {
@@ -97,9 +98,8 @@ export function DiscountedCashFlowPanel({
 
   const appraisalId = useAppraisalId() ?? '';
   const propertyId =
-    ((properties ?? []).find(p => ['LS', 'LSL', 'LSB'].includes(p.propertyType))
-      ?.propertyId as string) ??
-    properties?.[0].propertyId ??
+    (findLeaseProperty(properties)?.propertyId as string) ??
+    properties?.[0]?.propertyId ??
     '';
 
   const saveMutation = useSaveIncomeAnalysis();
@@ -344,6 +344,47 @@ export function DiscountedCashFlowPanel({
     }
   });
 
+  /**
+   * Ensures the income analysis exists (saved) and returns its id.
+   * If already saved, returns immediately. Otherwise performs a silent save
+   * so the room-income reference button can use the id as anchorId.
+   * Used as `onBeforeOpen` on the room MarketReferenceButton.
+   */
+  const ensureIncomeAnalysisId = useCallback(async (): Promise<string | undefined> => {
+    if (incomeAnalysisQuery.data?.id) return incomeAnalysisQuery.data.id;
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId) {
+      toast.error(t('toasts.missingIds'));
+      return undefined;
+    }
+    try {
+      const values = methods.getValues();
+      const request = mapDCFFormToSaveRequest(values);
+      const result = await saveMutation.mutateAsync({
+        pricingAnalysisId: activeMethod.pricingAnalysisId,
+        methodId: activeMethod.methodId,
+        appraisalId,
+        propertyId,
+        request,
+      });
+      reset(mapIncomeAnalysisToDCFForm(result));
+      return result.id;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('toasts.saveFailed');
+      toast.error(`${t('toasts.saveFailed')}: ${message}`);
+      return undefined;
+    }
+  }, [
+    incomeAnalysisQuery.data?.id,
+    activeMethod?.pricingAnalysisId,
+    activeMethod?.methodId,
+    appraisalId,
+    propertyId,
+    methods,
+    saveMutation,
+    reset,
+    t,
+  ]);
+
   if (isPricingTemplatesError || isTemplateDtoError) {
     const handleRetry = () => {
       if (isPricingTemplatesError) refetchPricingTemplates();
@@ -407,6 +448,7 @@ export function DiscountedCashFlowPanel({
                   incomeAnalysisId={incomeAnalysisQuery.data?.id}
                   hostMethodId={activeMethod?.methodId}
                   marketSurveys={marketSurveys}
+                  ensureIncomeAnalysisId={ensureIncomeAnalysisId}
                 />
               </div>
               {previewMutation.isPending && (
@@ -427,12 +469,13 @@ export function DiscountedCashFlowPanel({
               isReadOnly={isReadOnly}
               incomeAnalysisId={incomeAnalysisQuery.data?.id}
               hostMethodId={activeMethod?.methodId}
+              pricingAnalysisId={activeMethod?.pricingAnalysisId}
               marketSurveys={marketSurveys}
               subjectProperty={
-                (properties ?? []).find(p =>
-                  ['LS', 'LSL', 'LSB'].includes(p.propertyType as string),
-                ) ?? properties?.[0]
+                (properties ?? []).find(p => isLeasePropertyType(p.propertyType)) ??
+                properties?.[0]
               }
+              ensureIncomeAnalysisId={ensureIncomeAnalysisId}
             />
 
             {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}

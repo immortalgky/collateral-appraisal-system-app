@@ -83,7 +83,7 @@ export function UnitDetailsTab({
       { pricingAnalysisId, methodId, file },
       {
         onSuccess: result => {
-          toast.success(`Uploaded ${result.rowCount} rows`);
+          toast.success(t('toasts.uploadSuccess', { n: result.rowCount }));
         },
         onError: error => {
           const errors = extractParseErrors(error);

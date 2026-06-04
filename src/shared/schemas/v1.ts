@@ -2514,6 +2514,7 @@ const PropertyGroupItemDto = z
     location: z.string().nullable(),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
+    isRentedOut: z.boolean().nullable(),
     photos: z.array(PropertyPhotoDto).nullable(),
   })
   .partial()

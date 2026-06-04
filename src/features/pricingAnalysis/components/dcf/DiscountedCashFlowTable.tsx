@@ -85,6 +85,7 @@ interface DiscountedCashFlowTableProps {
   incomeAnalysisId?: string;
   hostMethodId?: string;
   marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }
 
 export function DiscountedCashFlowTable({
@@ -95,6 +96,7 @@ export function DiscountedCashFlowTable({
   incomeAnalysisId,
   hostMethodId,
   marketSurveys,
+  ensureIncomeAnalysisId,
 }: DiscountedCashFlowTableProps) {
   const { control } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
@@ -211,6 +213,7 @@ export function DiscountedCashFlowTable({
                   incomeAnalysisId={incomeAnalysisId}
                   hostMethodId={hostMethodId}
                   marketSurveys={marketSurveys}
+                  ensureIncomeAnalysisId={ensureIncomeAnalysisId}
                 />
               );
             })}

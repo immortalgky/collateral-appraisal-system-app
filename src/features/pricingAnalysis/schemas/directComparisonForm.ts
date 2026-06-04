@@ -1,69 +1,106 @@
 import { z } from 'zod';
-const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
-  required_error: `${fieldName} ${msg}`,
-  invalid_type_error: `${fieldName} ${msg}`,
-});
+import type { TFunction } from 'i18next';
 
-const ComparativeFactors = z
-  .object({
-    factorCode: z.string(requireMsg('Factor code')),
-  })
-  .passthrough();
+// Static type-inference export (uses key-passthrough function — never an object)
+const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
 
-const DirectComparisonQualitativeSurvey = z
-  .object({
-    qualitativeLevel: z.string(requireMsg('Qualitative level')),
-  })
-  .passthrough();
+const ComparativeFactors = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+    })
+    .passthrough();
 
-const DirectComparisonQualitative = z.object({
-  factorCode: z.string(requireMsg('Factor code')),
-  qualitatives: z.array(DirectComparisonQualitativeSurvey),
-});
+const DirectComparisonQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      qualitativeLevel: z.string({
+        required_error: t('validation.qualitativeLevelRequired'),
+        invalid_type_error: t('validation.qualitativeLevelRequired'),
+      }),
+    })
+    .passthrough();
 
-const DirectComparisonFinalValue = z
-  .object({
-    finalValueRounded: z.number(requireMsg('Final value (rounded)')),
-  })
-  .passthrough();
+const DirectComparisonQualitative = (t: TFunction<'pricingAnalysis'>) =>
+  z.object({
+    factorCode: z.string({
+      required_error: t('validation.factorCodeRequired'),
+      invalid_type_error: t('validation.factorCodeRequired'),
+    }),
+    qualitatives: z.array(DirectComparisonQualitativeSurvey(t)),
+  });
 
-const DirectComparisonAdjustmentPct = z
-  .object({
-    adjustPercent: z.number(requireMsg('Adjusted score pct')),
-  })
-  .passthrough();
+const DirectComparisonFinalValue = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      finalValueRounded: z.number({
+        required_error: t('validation.finalValueRoundedRequired'),
+        invalid_type_error: t('validation.finalValueRoundedRequired'),
+      }),
+    })
+    .passthrough();
 
-const DirectComparisonAdjustmentFactor = z
-  .object({
-    surveys: z.array(DirectComparisonAdjustmentPct),
-  })
-  .passthrough();
+const DirectComparisonAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      adjustPercent: z.number({
+        required_error: t('validation.adjustPercentRequired'),
+        invalid_type_error: t('validation.adjustPercentRequired'),
+      }),
+    })
+    .passthrough();
 
-const DirectComparisonAppraisalPrice = z
-  .object({
-    appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
-  })
-  .passthrough();
+const DirectComparisonAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      surveys: z.array(DirectComparisonAdjustmentPct(t)),
+    })
+    .passthrough();
 
-export const DirectComparisonDto = z
-  .object({
-    collateralType: z.string(requireMsg('Collateral type')),
-    pricingTemplateCode: z.string(requireMsg('Template')),
-    comparativeFactors: z.array(ComparativeFactors),
-    /** Qualitative section */
-    directComparisonQualitatives: z.array(DirectComparisonQualitative),
-    /** Adjustment Factors (adjust percentage) section */
-    directComparisonAdjustmentFactors: z.array(DirectComparisonAdjustmentFactor),
-    /** Final value section */
-    directComparisonFinalValue: DirectComparisonFinalValue,
-    /** Apprisal price section */
-    directComparisonAppraisalPrice: DirectComparisonAppraisalPrice,
-  })
-  .passthrough();
+const DirectComparisonAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      appraisalPriceRounded: z.number({
+        required_error: t('validation.appraisalPriceRoundedRequired'),
+        invalid_type_error: t('validation.appraisalPriceRoundedRequired'),
+      }),
+    })
+    .passthrough();
+
+export const makeDirectComparisonDto = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      collateralType: z.string({
+        required_error: t('validation.collateralTypeRequired'),
+        invalid_type_error: t('validation.collateralTypeRequired'),
+      }),
+      pricingTemplateCode: z.string({
+        required_error: t('validation.templateRequired'),
+        invalid_type_error: t('validation.templateRequired'),
+      }),
+      comparativeFactors: z.array(ComparativeFactors(t)),
+      /** Qualitative section */
+      directComparisonQualitatives: z.array(DirectComparisonQualitative(t)),
+      /** Adjustment Factors (adjust percentage) section */
+      directComparisonAdjustmentFactors: z.array(DirectComparisonAdjustmentFactor(t)),
+      /** Final value section */
+      directComparisonFinalValue: DirectComparisonFinalValue(t),
+      /** Apprisal price section */
+      directComparisonAppraisalPrice: DirectComparisonAppraisalPrice(t),
+    })
+    .passthrough();
+
+// Static schema for type inference only — no runtime messages
+export const DirectComparisonDto = makeDirectComparisonDto(_t);
 
 export type DirectComparisonQualitativeSurveyFormType = z.infer<
-  typeof DirectComparisonQualitativeSurvey
+  ReturnType<typeof DirectComparisonQualitativeSurvey>
 >;
-export type ComparativeFactorsFormType = z.infer<typeof ComparativeFactors>;
-export type DirectComparisonQualitativeFormType = z.infer<typeof DirectComparisonQualitative>;
+export type ComparativeFactorsFormType = z.infer<ReturnType<typeof ComparativeFactors>>;
+export type DirectComparisonQualitativeFormType = z.infer<
+  ReturnType<typeof DirectComparisonQualitative>
+>;
 export type DirectComparisonType = z.infer<typeof DirectComparisonDto>;

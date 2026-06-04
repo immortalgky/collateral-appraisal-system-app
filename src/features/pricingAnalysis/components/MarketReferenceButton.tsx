@@ -34,6 +34,16 @@ export type MarketReferenceButtonProps = Omit<
   readOnly?: boolean;
   /** Additional class names for the button */
   className?: string;
+  /** Icon-only compact mode (hides the text label; full label shown as tooltip). */
+  compact?: boolean;
+  /** Override the button label/tooltip (defaults to the generic "Market References"). */
+  label?: string;
+  /**
+   * Called async before the modal opens. Use this to ensure prerequisite state
+   * (e.g. auto-saving to obtain an incomeAnalysisId) before rendering the list.
+   * If it throws or returns a rejected promise, the modal does NOT open.
+   */
+  onBeforeOpen?: () => Promise<void> | void;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -50,11 +60,16 @@ export function MarketReferenceButton({
   currentAnchorLabel,
   readOnly: readOnlyProp,
   className,
+  compact = false,
+  label,
+  onBeforeOpen,
 }: MarketReferenceButtonProps) {
   const { t } = useTranslation('pricingAnalysis');
+  const buttonLabel = label ?? t('marketRef.buttonLabel');
   const isPageReadOnly = usePageReadOnly();
   const isReadOnly = readOnlyProp ?? isPageReadOnly;
   const [isOpen, setIsOpen] = useState(false);
+  const [isPending, setIsPending] = useState(false);
 
   // Badge: count saved references so user sees there is existing work
   const { data } = useGetReferences(
@@ -68,19 +83,47 @@ export function MarketReferenceButton({
     <>
       <button
         type="button"
-        onClick={() => setIsOpen(true)}
+        disabled={isPending}
+        onClick={async () => {
+          if (onBeforeOpen) {
+            setIsPending(true);
+            try {
+              await onBeforeOpen();
+            } catch {
+              // onBeforeOpen is responsible for showing its own toast
+              setIsPending(false);
+              return;
+            }
+            setIsPending(false);
+          }
+          setIsOpen(true);
+        }}
         className={clsx(
-          'relative inline-flex items-center gap-1 px-2 py-1 text-xs font-medium',
-          'text-primary border border-primary/20 rounded-lg',
+          'relative inline-flex items-center text-primary border border-primary/20 rounded-lg',
           'hover:bg-primary/5 hover:border-primary/40 transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+          compact
+            ? 'gap-0 px-1.5 py-0.5 text-[10px] font-semibold'
+            : 'gap-1 px-2 py-1 text-xs font-medium',
+          isPending && 'opacity-60 cursor-wait',
           className,
         )}
-        title={t('marketRef.buttonLabel')}
-        aria-label={t('marketRef.buttonLabel')}
+        title={buttonLabel}
+        aria-label={buttonLabel}
       >
-        <Icon name="chart-bar" className="size-3" />
-        <span>{t('marketRef.buttonLabel')}</span>
+        {isPending ? (
+          <span className="inline-flex items-center gap-1">
+            <span className="animate-spin size-3 rounded-full border-2 border-primary/30 border-t-primary" />
+            {!compact && <span>{buttonLabel}</span>}
+          </span>
+        ) : compact ? (
+          <span>{buttonLabel}</span>
+        ) : (
+          <>
+            <Icon name="chart-bar" className="size-3" />
+            <span>{buttonLabel}</span>
+          </>
+        )}
         {count > 0 && (
           <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center size-4 text-[9px] font-bold text-white bg-primary rounded-full">
             {count}
