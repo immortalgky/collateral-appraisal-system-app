@@ -17,6 +17,7 @@ export interface FeeAppointmentApprovalLine {
   lineType: LineType;
   targetId: string;
   newDate?: string | null;
+  previousDate?: string | null;
   rescheduleCount?: number | null;
   feeCode?: string | null;
   feeDescription?: string | null;

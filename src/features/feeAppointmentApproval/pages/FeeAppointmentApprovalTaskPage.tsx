@@ -2,7 +2,7 @@ import '@/features/feeAppointmentApproval/i18n';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
@@ -18,6 +18,7 @@ import {
 } from '../api/feeAppointmentApproval';
 import type { FeeAppointmentApprovalLine } from '../types/feeAppointmentApproval';
 import { FEE_ITEM_TYPE_OPTIONS } from '@/features/appraisal/types/appointmentAndFee';
+import { useGetAppraisalFees } from '@/features/appraisal/api/fee';
 
 // ---- Helpers ----
 
@@ -29,6 +30,16 @@ const formatDate = (d: string | null | undefined) => {
   if (!d) return '—';
   try {
     return format(new Date(d), 'dd/MM/yyyy HH:mm');
+  } catch {
+    return d;
+  }
+};
+
+// Includes the weekday (e.g. "Sat 04/04/2026 09:00") so the approver sees the day of the change.
+const formatDateWithDay = (d: string | null | undefined) => {
+  if (!d) return '—';
+  try {
+    return format(new Date(d), 'EEE dd/MM/yyyy HH:mm');
   } catch {
     return d;
   }
@@ -174,9 +185,22 @@ function AppointmentBlockContent({ line }: AppointmentBlockContentProps) {
         </div>
         <div>
           <p className="text-xs text-gray-500">{t('appointment.newDate')}</p>
-          <p className="text-sm font-semibold text-gray-800">
-            {line.newDate ? formatDate(line.newDate) : '—'}
-          </p>
+          {line.previousDate ? (
+            // Old date struck through → new proposed date, so the approver sees the change
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400 line-through decoration-gray-300 decoration-1">
+                {formatDateWithDay(line.previousDate)}
+              </span>
+              <Icon name="arrow-right" style="solid" className="size-3.5 text-amber-400 shrink-0" />
+              <span className="text-sm font-semibold text-gray-800">
+                {line.newDate ? formatDateWithDay(line.newDate) : '—'}
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm font-semibold text-gray-800">
+              {line.newDate ? formatDateWithDay(line.newDate) : '—'}
+            </p>
+          )}
         </div>
       </div>
       {(line.rescheduleCount ?? 0) > 0 && (
@@ -202,16 +226,16 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
   return (
     <div className="space-y-2">
       <div className="overflow-hidden rounded-lg border border-gray-100">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+              <th className="text-left px-3 py-2 text-xs font-medium text-gray-500 w-36">
                 {t('fee.columns.type')}
               </th>
               <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
                 {t('fee.columns.description')}
               </th>
-              <th className="text-right px-3 py-2 text-xs font-medium text-gray-500">
+              <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 w-32">
                 {t('fee.columns.amount')}
               </th>
             </tr>
@@ -248,7 +272,6 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
 
 function FeeAppointmentApprovalTaskPage() {
   const { t } = useTranslation(['feeAppointmentApproval', 'common']);
-  const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
@@ -257,6 +280,10 @@ function FeeAppointmentApprovalTaskPage() {
     workflowInstanceId,
   );
   const resolveMutation = useResolveFeeAppointmentApproval();
+
+  // The appraisal's existing fees — shown read-only so the approver sees the full fee picture,
+  // not just the fee(s) being requested for approval.
+  const { data: appraisalFees = [] } = useGetAppraisalFees(approval?.appraisalId ?? '');
 
   // Per-component decision state (controlled, not RHF — simpler for this two-decision UI)
   const [appointmentDecision, setAppointmentDecision] = useState<Decision>('');
@@ -290,6 +317,13 @@ function FeeAppointmentApprovalTaskPage() {
   const feeLines = approval.lines.filter(l => l.lineType === 'Fee');
   const hasAppointment = appointmentLines.length > 0;
   const hasFee = feeLines.length > 0;
+
+  // The appraisal's existing (billable) fee items — base appraisal fee + already-approved fees.
+  // Excludes the pending items being requested here (those appear in the decision block).
+  const otherFees = appraisalFees
+    .flatMap(f => f.items ?? [])
+    .filter(i => !i.requiresApproval || i.approvalStatus === 'Approved');
+  const otherFeesTotal = otherFees.reduce((sum, i) => sum + (i.feeAmount ?? 0), 0);
 
   const isResolved = approval.status !== 'Open';
 
@@ -388,21 +422,8 @@ function FeeAppointmentApprovalTaskPage() {
     );
   };
 
-  const parentHref = `/tasks/${taskId}`;
-
   return (
     <div className="flex flex-col gap-4">
-      {/* Back-link breadcrumb */}
-      <div className="flex items-center gap-2">
-        <Link
-          to={parentHref}
-          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors"
-        >
-          <Icon name="arrow-left" style="solid" className="size-3.5" />
-          {t('page.back')}
-        </Link>
-      </div>
-
       {/* Header card */}
       <FormCard title={t('page.title')} icon="clipboard-check" iconColor="primary">
         {/* Info banner */}
@@ -422,6 +443,55 @@ function FeeAppointmentApprovalTaskPage() {
           <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-green-50 border border-green-100">
             <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
             <p className="text-sm text-green-700 font-medium">{t('page.alreadyResolved')}</p>
+          </div>
+        )}
+
+        {/* Existing fees context — read-only, so the approver sees the full fee picture.
+            Only shown when a fee is actually being requested (appointment-only approvals hide it). */}
+        {hasFee && otherFees.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <Icon name="receipt" style="solid" className="size-3.5 text-gray-400" />
+              <span className="text-xs font-semibold text-gray-500">{t('fee.currentFeesTitle')}</span>
+            </div>
+            <div className="overflow-hidden rounded-lg border border-gray-100">
+              <table className="w-full text-sm table-fixed">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500 w-36">
+                      {t('fee.columns.type')}
+                    </th>
+                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+                      {t('fee.columns.description')}
+                    </th>
+                    <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 w-32">
+                      {t('fee.columns.amount')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 bg-white">
+                  {otherFees.map((item, idx) => (
+                    <tr key={item.id ?? idx}>
+                      <td className="px-3 py-2.5 text-gray-600">{getFeeTypeLabel(item.feeCode)}</td>
+                      <td className="px-3 py-2.5 text-gray-700">{item.feeDescription ?? '—'}</td>
+                      <td className="px-3 py-2.5 text-right text-gray-700">
+                        {formatCurrency(item.feeAmount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-gray-50">
+                    <td colSpan={2} className="px-3 py-2.5 text-sm font-semibold text-gray-700">
+                      {t('fee.currentFeesTotal')}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-base font-bold text-gray-700">
+                      {formatCurrency(otherFeesTotal)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
           </div>
         )}
 
