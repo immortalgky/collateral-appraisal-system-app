@@ -56,7 +56,7 @@ const ChangesCell = ({ changesJson }: { changesJson: string | null }) => {
           </span>
         ))}
         {added.length === 0 && removed.length === 0 && (
-          <span className="text-gray-400 text-xs">no changes</span>
+          <span className="text-gray-400 text-xs">—</span>
         )}
       </div>
     );
