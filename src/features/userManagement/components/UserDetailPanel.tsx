@@ -237,8 +237,6 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   const initials =
     (user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || user.username[0].toUpperCase();
 
-  const isCompanyUser = !!user.companyId;
-
   return (
     <div className="flex flex-col gap-4 p-6">
       {/* Status Section */}
@@ -540,19 +538,19 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
             }}
             placeholder={t('placeholders.department')}
           />
-          {/* Company selector — only for company-scope users */}
-          {isCompanyUser && (
-            <div className="sm:col-span-2">
-              <Dropdown
-                label={t('fields.company')}
-                value={editForm.companyId ?? ''}
-                onChange={(val: string | null) =>
-                  setEditForm(prev => ({ ...prev, companyId: val || null }))
-                }
-                options={companyOptions}
-              />
-            </div>
-          )}
+          {/* Company selector — always available; empty = bank/internal staff.
+              Scope is defined by CompanyId, so gating on it would make a company
+              impossible to assign to a user who doesn't yet have one. */}
+          <div className="sm:col-span-2">
+            <Dropdown
+              label={t('fields.company')}
+              value={editForm.companyId ?? ''}
+              onChange={(val: string | null) =>
+                setEditForm(prev => ({ ...prev, companyId: val || null }))
+              }
+              options={companyOptions}
+            />
+          </div>
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>

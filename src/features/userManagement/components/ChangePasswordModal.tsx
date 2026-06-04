@@ -28,7 +28,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
   const schema = z
     .object({
       currentPassword: z.string().min(1, t('validation.currentPasswordRequired')),
-      newPassword: z.string().min(minLength, t('validation.newPasswordMinLength')),
+      newPassword: z.string().min(minLength, t('passwordPolicy.minLength', { count: minLength })),
       confirmPassword: z.string().min(1, t('validation.confirmPasswordRequired')),
     })
     .refine(data => data.newPassword === data.confirmPassword, {

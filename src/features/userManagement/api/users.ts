@@ -208,6 +208,8 @@ export const useUnlockUser = () => {
     },
     onSuccess: (_data, id) => {
       queryClient.invalidateQueries({ queryKey: [USERS_KEY, id] });
+      // The user list renders the lock icon, so refresh it too.
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
     },
   });
 };
