@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
-import { TableRowSkeleton } from '@/shared/components/Skeleton';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatLocaleDate } from '@/shared/utils/dateUtils';
 import { SoldDonut } from '@/features/blockUnitMaintenance/components/SoldDonut';
 import { ModelBreakdown } from '@/features/blockUnitMaintenance/components/ModelBreakdown';
@@ -41,31 +41,6 @@ function groupByModel(
 
 // ─── Create confirm modal ─────────────────────────────────────────────────────
 
-interface CreateConfirmModalProps {
-  open: boolean;
-  isPending: boolean;
-  onConfirm: () => void;
-  onClose: () => void;
-}
-
-function CreateConfirmModal({ open, isPending, onConfirm, onClose }: CreateConfirmModalProps) {
-  const { t } = useTranslation(['blockReappraisal', 'common']);
-  return (
-    <Modal isOpen={open} onClose={onClose} title={t('detail.createModal.title')} size="sm">
-      <div className="space-y-4">
-        <p className="text-sm text-gray-700">{t('detail.createModal.body')}</p>
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
-            {t('common:actions.cancel')}
-          </Button>
-          <Button variant="primary" size="sm" onClick={onConfirm} isLoading={isPending}>
-            {t('common:actions.confirm')}
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
 
 // ─── Create success modal ─────────────────────────────────────────────────────
 
@@ -115,34 +90,6 @@ function CreateSuccessModal({ open, result, onClose }: CreateSuccessModalProps) 
         <div className="flex justify-end pt-2 border-t border-gray-100">
           <Button variant="primary" size="sm" onClick={onClose}>
             {t('common:actions.close')}
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-// ─── Opt-out confirm modal ────────────────────────────────────────────────────
-
-interface OptOutConfirmModalProps {
-  open: boolean;
-  isPending: boolean;
-  onConfirm: () => void;
-  onClose: () => void;
-}
-
-function OptOutConfirmModal({ open, isPending, onConfirm, onClose }: OptOutConfirmModalProps) {
-  const { t } = useTranslation(['blockReappraisal', 'common']);
-  return (
-    <Modal isOpen={open} onClose={onClose} title={t('detail.optOutModal.title')} size="sm">
-      <div className="space-y-4">
-        <p className="text-sm text-gray-700">{t('detail.optOutModal.body')}</p>
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
-            {t('common:actions.cancel')}
-          </Button>
-          <Button variant="danger" size="sm" onClick={onConfirm} isLoading={isPending}>
-            {t('detail.optOutModal.confirm')}
           </Button>
         </div>
       </div>
@@ -427,9 +374,10 @@ function BlockReappraisalDetailPage() {
         {/* Action buttons */}
         <div className="flex items-center gap-2 shrink-0">
           <Button
-            variant="outline"
+            variant="danger"
             size="sm"
             onClick={() => setOptOutConfirmOpen(true)}
+            leftIcon={<Icon style="solid" name="ban" className="size-3" />}
           >
             {t('actions.notRequired')}
           </Button>
@@ -437,7 +385,7 @@ function BlockReappraisalDetailPage() {
             variant="primary"
             size="sm"
             onClick={() => setCreateConfirmOpen(true)}
-            leftIcon={<Icon style="solid" name="plus" className="size-3" />}
+            leftIcon={<Icon style="solid" name="play" className="size-3" />}
           >
             {t('actions.createRequest')}
           </Button>
@@ -507,12 +455,6 @@ function BlockReappraisalDetailPage() {
               <Icon style="regular" name="folder-open" className="size-8 text-gray-300" />
               <p className="text-xs text-gray-400">{t('detail.units.empty')}</p>
             </div>
-          ) : isLoading ? (
-            <table className="w-full text-xs">
-              <tbody>
-                <TableRowSkeleton columns={Array(9).fill({ width: 'w-16' })} rows={6} />
-              </tbody>
-            </table>
           ) : isCondo ? (
             <CondoUnitsTable units={detail.structure.units} />
           ) : (
@@ -522,11 +464,16 @@ function BlockReappraisalDetailPage() {
       </section>
 
       {/* ── Modals ── */}
-      <CreateConfirmModal
-        open={createConfirmOpen}
-        isPending={createMutation.isPending}
-        onConfirm={handleCreateConfirm}
+      <ConfirmDialog
+        isOpen={createConfirmOpen}
         onClose={() => setCreateConfirmOpen(false)}
+        onConfirm={handleCreateConfirm}
+        title={t('detail.createModal.title')}
+        message={t('detail.createModal.body')}
+        confirmText={t('common:actions.confirm')}
+        cancelText={t('common:actions.cancel')}
+        variant="primary"
+        isLoading={createMutation.isPending}
       />
 
       {successResult && (
@@ -540,11 +487,16 @@ function BlockReappraisalDetailPage() {
         />
       )}
 
-      <OptOutConfirmModal
-        open={optOutConfirmOpen}
-        isPending={optOutMutation.isPending}
-        onConfirm={handleOptOutConfirm}
+      <ConfirmDialog
+        isOpen={optOutConfirmOpen}
         onClose={() => setOptOutConfirmOpen(false)}
+        onConfirm={handleOptOutConfirm}
+        title={t('detail.optOutModal.title')}
+        message={t('detail.optOutModal.body')}
+        confirmText={t('detail.optOutModal.confirm')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+        isLoading={optOutMutation.isPending}
       />
     </div>
   );
