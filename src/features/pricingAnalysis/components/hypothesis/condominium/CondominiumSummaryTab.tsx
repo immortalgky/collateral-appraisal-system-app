@@ -7,6 +7,7 @@
  * using the shared atoms in `_shared/summaryAtoms.tsx`.
  */
 import { useFormContext, Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import type { CondominiumFormValues } from '../../../schemas/hypothesisForm';
 import type { CondominiumSummaryDto } from '../../../types/hypothesis';
 import { fmt } from '../../../domain/formatters';
@@ -23,7 +24,7 @@ import {
 } from '../_shared/summaryAtoms';
 import { HypothesisResidualWaterfall } from '../../viz/HypothesisResidualWaterfall';
 import { HypothesisCostDonut } from '../../viz/HypothesisCostDonut';
-import { CONDO_TIPS } from '../_shared/hypothesisTooltips';
+import { getCondoTooltips } from '../_shared/hypothesisTooltips';
 
 interface CondominiumSummaryTabProps {
   previewSummary?: CondominiumSummaryDto | null;
@@ -37,6 +38,8 @@ export function CondominiumSummaryTab({
   totalLandAreaFromTitles,
   isCalculating,
 }: CondominiumSummaryTabProps) {
+  const { t } = useTranslation('pricingAnalysis');
+  const CONDO_TIPS = getCondoTooltips(t);
   const { control } = useFormContext<CondominiumFormValues>();
   // E01 prefers the live title-sum; fall back to the snapshot's persisted value.
   const areaTitleDeedSqWa = totalLandAreaFromTitles ?? s?.areaTitleDeed ?? null;

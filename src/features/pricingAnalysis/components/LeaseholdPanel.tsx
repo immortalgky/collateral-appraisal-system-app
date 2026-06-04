@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import {
-  LeaseholdFormSchema,
+  useLeaseholdFormSchema,
   leaseholdFormDefaults,
   type LeaseholdFormType,
 } from '../schemas/leaseholdForm';
@@ -176,9 +176,10 @@ export function LeaseholdPanel({
     refetch: refetchLeaseAgreement,
   } = useGetLeaseAgreement(appraisalId ?? '', firstPropertyId);
 
+  const leaseholdSchema = useLeaseholdFormSchema();
   const methods = useForm<LeaseholdFormType>({
     mode: 'onSubmit',
-    resolver: zodResolver(LeaseholdFormSchema),
+    resolver: zodResolver(leaseholdSchema),
     defaultValues: leaseholdFormDefaults,
   });
 
@@ -408,7 +409,10 @@ export function LeaseholdPanel({
   // so the WQS button is available even before the user has saved the form.
   const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
 
-  const handleOnSubmit = async () => {
+  // `silent` mode persists (to obtain an analysis id) without the user-facing
+  // "saved" toast or onCalculationSave side-effect — used by ensureAnalysisId
+  // when opening the in-field market-reference control.
+  const persistAnalysis = async ({ silent = false }: { silent?: boolean } = {}) => {
     if (readOnly || !pricingAnalysisId || !methodId) return;
 
     const data = getValues();
@@ -445,23 +449,26 @@ export function LeaseholdPanel({
         request,
       });
 
-      if (activeMethod?.approachType && activeMethod?.methodType) {
+      if (!silent && activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
           appraisalValue: data.estimatePriceRounded ?? result.finalValueRounded,
         });
       }
-      toast.success(t('toasts.saved'));
+      if (!silent) toast.success(t('toasts.saved'));
     } catch {
+      // Surface failures even in silent mode so the user isn't left guessing.
       toast.error(t('toasts.saveFailed'));
     }
   };
 
+  const handleOnSubmit = () => persistAnalysis();
+
   const ensureAnalysisId = async (): Promise<string | undefined> => {
     if (savedData?.analysis?.id) return savedData.analysis.id;
     if (readOnly || !pricingAnalysisId || !methodId) return undefined;
-    await handleOnSubmit();
+    await persistAnalysis({ silent: true });
     const res = await refetchSavedData();
     return res.data?.analysis?.id;
   };
@@ -577,7 +584,7 @@ export function LeaseholdPanel({
   }
 
   return (
-    <FormProvider methods={methods} schema={LeaseholdFormSchema}>
+    <FormProvider methods={methods} schema={leaseholdSchema}>
       <form
         onSubmit={e => {
           e.preventDefault();

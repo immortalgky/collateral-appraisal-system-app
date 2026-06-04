@@ -64,7 +64,9 @@ export function MarketReferenceModal({
   // comparative template list down to here and pass `undefined`, leaving the in-panel Template
   // dropdown permanently empty. Fall back to fetching it directly — same cached query, so callers
   // that already provide it pay nothing extra.
-  const { data: fetchedTemplateList = [] } = useGetComparativeAnalysisTemplates();
+  const { data: fetchedTemplateList = [] } = useGetComparativeAnalysisTemplates(
+    isOpen && !(templateList && templateList.length > 0),
+  );
   const resolvedTemplateList =
     templateList && templateList.length > 0 ? templateList : fetchedTemplateList;
 

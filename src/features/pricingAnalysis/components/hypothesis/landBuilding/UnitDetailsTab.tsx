@@ -146,13 +146,13 @@ export function UnitDetailsTab({
         {uploadMutation.isPending ? (
           <div className="flex flex-col items-center gap-2">
             <Icon name="spinner" className="size-8 text-primary animate-spin" />
-            <p className="text-sm text-gray-500">Uploading…</p>
+            <p className="text-sm text-gray-500">{t('upload.uploading')}</p>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2">
             <Icon name="file-excel" style="regular" className="size-8 text-gray-400" />
             <p className="text-sm font-medium text-gray-700">
-              Drop an Excel file here or <span className="text-primary underline">browse</span>
+              {t('upload.dropOrBrowse')} <span className="text-primary underline">{t('upload.browseLink')}</span>
             </p>
             <p className="text-xs text-gray-400">
               .xlsx only · max 5 MB · Columns: Plan No, House No, Model Name, Location, Floor No,
@@ -172,17 +172,17 @@ export function UnitDetailsTab({
               className="size-3.5 text-red-600 shrink-0"
             />
             <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wide">
-              Excel Parse Errors — fix these rows and re-upload
+              {t('upload.parseErrors')}
             </h4>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs min-w-[400px]">
               <thead>
                 <tr className="bg-red-50 border-b border-red-100">
-                  <th className="text-left px-4 py-2 font-medium text-red-600">Row</th>
-                  <th className="text-left px-4 py-2 font-medium text-red-600">Field</th>
-                  <th className="text-left px-4 py-2 font-medium text-red-600">Value</th>
-                  <th className="text-left px-4 py-2 font-medium text-red-600">Reason</th>
+                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorRow')}</th>
+                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorField')}</th>
+                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorValue')}</th>
+                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorReason')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-red-50">
@@ -205,16 +205,16 @@ export function UnitDetailsTab({
         <div className="rounded-lg border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
             <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              Upload History
+              {t('upload.uploadHistory')}
             </h4>
           </div>
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-2 font-medium text-gray-500">File</th>
-                <th className="text-left px-4 py-2 font-medium text-gray-500">Uploaded</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">Rows</th>
-                <th className="text-center px-4 py-2 font-medium text-gray-500">Status</th>
+                <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.fileCol')}</th>
+                <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.uploadedCol')}</th>
+                <th className="text-right px-4 py-2 font-medium text-gray-500">{t('upload.rowsCol')}</th>
+                <th className="text-center px-4 py-2 font-medium text-gray-500">{t('upload.statusCol')}</th>
                 <th className="px-4 py-2" />
               </tr>
             </thead>
@@ -243,7 +243,7 @@ export function UnitDetailsTab({
                         u.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
                       }`}
                     >
-                      {u.isActive ? 'Present' : 'Historic'}
+                      {u.isActive ? t('upload.statusPresent') : t('upload.statusHistoric')}
                     </span>
                   </td>
                   <td className="px-4 py-2 text-right">
@@ -269,7 +269,7 @@ export function UnitDetailsTab({
         <div className="rounded-lg border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
             <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              Unit Listing ({rows.length} units)
+              {t('upload.unitListing', { n: rows.length })}
             </h4>
           </div>
           <div className="overflow-x-auto max-h-[480px]">
@@ -334,7 +334,7 @@ export function UnitDetailsTab({
         <div className="rounded-lg border border-gray-200 overflow-hidden">
           <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
             <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              Model Analysis
+              {t('upload.modelAnalysis')}
             </h4>
           </div>
           <div className="overflow-x-auto">
@@ -396,13 +396,13 @@ export function UnitDetailsTab({
           return (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <AggCard
-                label="Total Land Area from Title"
+                label={t('upload.aggTotalLandAreaFromTitle')}
                 value={fmt(totalLandAreaFromTitles)}
                 unit="Sq.Wa"
               />
-              <AggCard label="Total Selling Area" value={fmt(totalSellingArea)} unit="Sq.Wa" />
-              <AggCard label="Total Units" value={totalUnits.toLocaleString()} />
-              <AggCard label="Total Revenue" value={fmt(totalRevenue)} unit="Baht" highlight />
+              <AggCard label={t('upload.aggTotalSellingArea')} value={fmt(totalSellingArea)} unit="Sq.Wa" />
+              <AggCard label={t('upload.aggTotalUnits')} value={totalUnits.toLocaleString()} />
+              <AggCard label={t('upload.aggTotalRevenue')} value={fmt(totalRevenue)} unit="Baht" highlight />
             </div>
           );
         })()}

@@ -330,7 +330,10 @@ export function ProfitRentPanel({
     [appointment, rentalScheduleData, landAreaSqWa],
   );
 
-  const handleOnSubmit = async () => {
+  // `silent` mode persists (to obtain an analysis id) without the user-facing
+  // "saved" toast or onCalculationSave side-effect — used by ensureAnalysisId
+  // when opening the in-field market-reference control.
+  const persistAnalysis = async ({ silent = false }: { silent?: boolean } = {}) => {
     if (readOnly || !pricingAnalysisId || !methodId) return;
 
     const data = getValues();
@@ -377,28 +380,31 @@ export function ProfitRentPanel({
           ? result.appraisalPriceWithBuildingRounded
           : (data.estimatePriceRounded ?? result.finalValueRounded);
 
-      if (activeMethod?.approachType && activeMethod?.methodType) {
+      if (!silent && activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
           appraisalValue,
         });
       }
-      toast.success(t('toasts.saved'));
+      if (!silent) toast.success(t('toasts.saved'));
 
       isInitialized.current = false;
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
       });
     } catch {
+      // Surface failures even in silent mode so the user isn't left guessing.
       toast.error(t('toasts.saveFailed'));
     }
   };
 
+  const handleOnSubmit = () => persistAnalysis();
+
   const ensureAnalysisId = async (): Promise<string | undefined> => {
     if (savedData?.analysis?.id) return savedData.analysis.id;
     if (readOnly || !pricingAnalysisId || !methodId) return undefined;
-    await handleOnSubmit();
+    await persistAnalysis({ silent: true });
     const res = await refetchSavedData();
     return res.data?.analysis?.id;
   };
