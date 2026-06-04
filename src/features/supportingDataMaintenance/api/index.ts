@@ -389,7 +389,6 @@ export const useRemoveSupportingDetailImage = () => {
 };
 
 export interface BulkUploadSupportingDetailsResponse {
-  supportingId: string;
   insertedCount: number;
 }
 

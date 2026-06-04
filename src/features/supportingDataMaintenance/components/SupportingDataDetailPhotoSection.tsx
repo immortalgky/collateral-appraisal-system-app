@@ -29,6 +29,7 @@ export interface SupportingDataDetailPhotoSectionRef {
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface SupportingDataDetailPhotoSectionProps {
   supportingId: string;
+  disabled: boolean;
   /** Undefined in create mode (entity doesn't exist yet). */
   detailId?: string;
   /** Images loaded from GET response in edit mode. */
@@ -46,7 +47,7 @@ interface PendingImage {
 const SupportingDataDetailPhotoSection = forwardRef<
   SupportingDataDetailPhotoSectionRef,
   SupportingDataDetailPhotoSectionProps
->(({ supportingId, detailId, images }, ref) => {
+>(({ supportingId, disabled, detailId, images }, ref) => {
   const isCreateMode = !detailId;
 
   // Photos collected in create mode, not yet persisted
@@ -291,6 +292,7 @@ const SupportingDataDetailPhotoSection = forwardRef<
         onSetThumbnail={() => {}} // no thumbnail concept for supporting data
         onPreview={handlePreview}
         thumbnailId={null} // no cover photo
+        disabled={disabled}
       />
 
       <PhotoSourceModal

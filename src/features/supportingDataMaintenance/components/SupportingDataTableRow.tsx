@@ -1,6 +1,8 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { Icon } from '@/shared/components';
 import { getCollateralTypeLabel } from '../utils/getLabel';
+import { getParameterDescription } from '@/shared/utils/parameterUtils';
+import { formatAddressNames } from '@/features/common/historySearch/utils';
 
 interface SupportingDataTableRowProps {
   index: number;
@@ -21,14 +23,13 @@ export const SupportingDataTableRow = ({
     onEdit(index);
   };
 
-  const address = [data?.houseNo, data?.subDistrictName, data?.districtName, data?.provinceName]
-    .filter(Boolean)
-    .join(', ');
-
   const hasCoordinates =
     data?.latitude != null &&
     data?.longitude != null &&
     !(data.latitude === 0 && data.longitude === 0);
+
+  const address = formatAddressNames(data?.subDistrict, data?.district, data?.province);
+  console.log(address, data?.subDistrict, data?.district, data?.province);
 
   return (
     <tr

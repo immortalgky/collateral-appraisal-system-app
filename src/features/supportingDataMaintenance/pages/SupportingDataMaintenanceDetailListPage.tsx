@@ -143,7 +143,6 @@ export function SupportingDataMaintenanceDetailListPage() {
 
   const status = supportingData?.status ?? '';
 
-  const isArchived = ARCHIVED_STATUSES.has(status); // To check disable action panel when status contains in Archived
   const hasSupportingId = Boolean(supportingId); // To check allow to edit when path is /supporting-data-maintenance/new
   const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false; // To check disable detail form by permissions
   const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // To check disable decision form by permissions
@@ -199,7 +198,6 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
-  const isPending = isCreatingDraft || isUpdating || isSubmitting || isDeleting;
 
   // File management (Excel bulk upload of supporting details)
   const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
@@ -207,6 +205,8 @@ export function SupportingDataMaintenanceDetailListPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { mutateAsync: bulkUpload, isPending: isUploading } = useBulkUploadSupportingDetails();
+
+  const isPending = isCreatingDraft || isUpdating || isSubmitting || isDeleting || isUploading;
 
   const handleFile = async (file: File) => {
     // Client-side guards (mirrors the server-side checks)
@@ -219,19 +219,31 @@ export function SupportingDataMaintenanceDetailListPage() {
       return;
     }
 
-    if (!supportingId) {
-      toast.error('Please save the form first before uploading.');
-      return;
-    }
-
     try {
-      setParseErrors(null);
-      const result = await bulkUpload({ supportingId, file });
-
-      toast.success(`${result.insertedCount} row(s) imported successfully`);
-
       if (!hasSupportingId) {
-        navigate(`/standalone/supporting-data-maintenance/${result.supportingId}`);
+        const supportingData = getSupportingValues();
+        const { supportingId: newSupportingId } = await createDraftSupportingData(
+          { data: supportingData as any },
+          {
+            onError: (error: any) => {
+              toast.error(
+                error.apiError?.detail ||
+                  'Failed to create draft supporting data. Please try again.',
+              );
+              setSaveAction(null);
+            },
+          },
+        );
+        const result = await bulkUpload({ supportingId: newSupportingId, file });
+        setParseErrors(null);
+
+        toast.success(`${result.insertedCount} row(s) imported successfully`);
+        navigate(`/standalone/supporting-data-maintenance/${newSupportingId}`);
+      } else {
+        const result = await bulkUpload({ supportingId, file });
+        setParseErrors(null);
+
+        toast.success(`${result.insertedCount} row(s) imported successfully`);
       }
     } catch (err: any) {
       // The server returns row-level errors in ProblemDetails.extensions.rowErrors
@@ -505,7 +517,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             <div className="w-full">
               <SupportingDataTable
                 supportingId={supportingId}
-                isReadOnly={isArchived || !hasAuthorityToEdit}
+                isReadOnly={!hasAuthorityToEdit}
                 onSelectSupportingData={handleSelectSupportingData}
                 onDeleteSupportingData={handleDeleteSupportingData}
               />
@@ -515,7 +527,7 @@ export function SupportingDataMaintenanceDetailListPage() {
       </FormProvider>
 
       {/* Decision Detail */}
-      {hasAuthorityToDecision && !ARCHIVED_STATUSES.has(status) && (
+      {hasAuthorityToDecision && (
         <FormProvider {...decisionMethods}>
           <div className="flex flex-col gap-4 pr-2">
             <Section id="supporting-data-decision">
@@ -536,7 +548,7 @@ export function SupportingDataMaintenanceDetailListPage() {
         <ActionBar.Left>
           <CancelButton fallbackPath="/standalone/supporting-data-maintenance" />
         </ActionBar.Left>
-        {!isArchived && (
+        {(hasAuthorityToEdit || hasAuthorityToDecision || !hasSupportingId) && (
           <ActionBar.Right>
             <Button
               variant="ghost"

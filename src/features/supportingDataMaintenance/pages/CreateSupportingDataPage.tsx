@@ -173,6 +173,7 @@ export function CreateSupportingDataPage() {
                 <SupportingDataDetailPhotoSection
                   ref={photoSectionRef}
                   supportingId={supportingId!}
+                  disabled={!hasAuthorityToEdit && hasSupportingId}
                   detailId={id}
                   images={supportingData?.images}
                 />
