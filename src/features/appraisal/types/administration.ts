@@ -198,4 +198,3 @@ export interface AppraisalActiveQuotation {
   quotationNumber: string;
   status: string;
 }
-

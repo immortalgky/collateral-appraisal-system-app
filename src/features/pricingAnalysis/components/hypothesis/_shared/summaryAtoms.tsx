@@ -27,11 +27,7 @@ export function IsCalculatingProvider({
   value: boolean;
   children: ReactNode;
 }) {
-  return (
-    <IsCalculatingContext.Provider value={value}>
-      {children}
-    </IsCalculatingContext.Provider>
-  );
+  return <IsCalculatingContext.Provider value={value}>{children}</IsCalculatingContext.Provider>;
 }
 
 function CalcPlaceholder({ wide }: { wide?: boolean }) {
@@ -49,13 +45,13 @@ function CalcPlaceholder({ wide }: { wide?: boolean }) {
 // (16px ≈ "%" glyph width remains visible). If rateUnit width changes, recompute the
 // negative margin to keep alignment.
 export const COL = {
-  rate: 'w-[140px]',                // rate value (number or input) — right-aligned
-  rateUnit: 'w-[80px]',             // "Baht/Unit", "Baht/Sq.Wa", "%"
-  suffix: 'w-[140px] -ml-16',       // italic descriptive text; -ml-16 paired with rateUnit=80px
-  mid: 'w-[112px]',                 // qty (60) + qtyUnit (44) + gap (8)
-  total: 'w-[140px]',               // derived total — right-aligned
-  totalUnit: 'w-[40px]',            // "Baht"
-  ratio: 'w-[68px]',                // ratio %
+  rate: 'w-[140px]', // rate value (number or input) — right-aligned
+  rateUnit: 'w-[80px]', // "Baht/Unit", "Baht/Sq.Wa", "%"
+  suffix: 'w-[140px] -ml-16', // italic descriptive text; -ml-16 paired with rateUnit=80px
+  mid: 'w-[112px]', // qty (60) + qtyUnit (44) + gap (8)
+  total: 'w-[140px]', // derived total — right-aligned
+  totalUnit: 'w-[40px]', // "Baht"
+  ratio: 'w-[68px]', // ratio %
   remove: 'w-[20px]',
 } as const;
 
@@ -107,9 +103,7 @@ export function FieldRow({
 }) {
   return (
     <div
-      className={`grid grid-cols-12 gap-3 px-5 py-3 ${
-        alignTop ? 'items-start' : 'items-center'
-      }`}
+      className={`grid grid-cols-12 gap-3 px-5 py-3 ${alignTop ? 'items-start' : 'items-center'}`}
     >
       <div className="col-span-2 text-xs font-medium text-gray-700 flex items-center gap-0.5">
         {label}
@@ -208,17 +202,13 @@ export function PdcDerivedRow({
       <span className={`${COL.rateUnit} text-[11px] text-gray-500 shrink-0`}>{rateUnit}</span>
       <div className={`${COL.suffix} shrink-0`}>
         {rateSuffix && (
-          <span className="text-[11px] text-gray-400 italic leading-tight block">
-            {rateSuffix}
-          </span>
+          <span className="text-[11px] text-gray-400 italic leading-tight block">{rateSuffix}</span>
         )}
       </div>
       <div className={`${COL.mid} flex items-center justify-end gap-2 shrink-0`}>
         {!rateSuffix && qtyValue !== null && qtyValue !== undefined && (
           <>
-            {qtyLabel && (
-              <span className="text-[11px] text-gray-500">{qtyLabel}</span>
-            )}
+            {qtyLabel && <span className="text-[11px] text-gray-500">{qtyLabel}</span>}
             <span className="text-right tabular-nums text-xs font-medium text-gray-800">
               {fmt(qtyValue)}
             </span>
@@ -226,16 +216,32 @@ export function PdcDerivedRow({
           </>
         )}
       </div>
-      <span className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}>
-        {isCalculating ? <CalcPlaceholder /> : (total !== null && total !== undefined ? fmt(total) : '')}
+      <span
+        className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
+      >
+        {isCalculating ? (
+          <CalcPlaceholder />
+        ) : total !== null && total !== undefined ? (
+          fmt(total)
+        ) : (
+          ''
+        )}
       </span>
       <span className={`${COL.totalUnit} text-[11px] text-gray-500 shrink-0`}>
         {total !== null && total !== undefined ? 'Baht' : ''}
       </span>
       {!compact && (
         <>
-          <span className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}>
-            {isCalculating ? <CalcPlaceholder /> : (ratioPercent !== null && ratioPercent !== undefined ? `${Number(ratioPercent).toFixed(2)} %` : '')}
+          <span
+            className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
+          >
+            {isCalculating ? (
+              <CalcPlaceholder />
+            ) : ratioPercent !== null && ratioPercent !== undefined ? (
+              `${Number(ratioPercent).toFixed(2)} %`
+            ) : (
+              ''
+            )}
           </span>
           <span className={`${COL.remove} shrink-0`} />
         </>
@@ -310,11 +316,15 @@ export function UserAddedRow({
       <span className={`${COL.rateUnit} text-[11px] text-gray-500 shrink-0`}>Baht</span>
       <span className={`${COL.suffix} shrink-0`} />
       <span className={`${COL.mid} shrink-0`} />
-      <span className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}>
+      <span
+        className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
+      >
         {fmt(amountValue)}
       </span>
       <span className={`${COL.totalUnit} text-[11px] text-gray-500 shrink-0`}>Baht</span>
-      <span className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}>
+      <span
+        className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
+      >
         {ratio !== null && ratio !== undefined ? `${Number(ratio).toFixed(2)} %` : '-'}
       </span>
       <button
@@ -346,11 +356,7 @@ export function FvDerivedRow({
 }) {
   const isCalculating = useContext(IsCalculatingContext);
   return (
-    <div
-      className={`flex items-center px-5 py-2.5 gap-2 ${
-        emphasize ? 'bg-primary/5' : ''
-      }`}
-    >
+    <div className={`flex items-center px-5 py-2.5 gap-2 ${emphasize ? 'bg-primary/5' : ''}`}>
       <div
         className={`flex-1 text-xs min-w-0 flex items-center gap-0.5 ${
           emphasize ? 'font-semibold text-primary' : 'font-medium text-gray-700'
@@ -431,7 +437,7 @@ export function InlineNumberInput({
       render={({ field }) => (
         <NumberInput
           value={field.value}
-          onChange={(e) => field.onChange(e.target.value)}
+          onChange={e => field.onChange(e.target.value)}
           onBlur={field.onBlur}
           decimalPlaces={decimalPlaces}
           fullWidth={fillSlot}

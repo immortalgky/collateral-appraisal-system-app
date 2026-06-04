@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import { CostMachineFormSchema, type CostMachineFormType } from '../schemas/costMachineForm';
@@ -15,6 +16,8 @@ import { useGetMachineCostItems, useResetMethod, useSaveMachineCostItems } from 
 import type { SaveMachineCostItemInput } from '../api';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 import DataErrorState from '@/shared/components/DataErrorState';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface CostMachinePanelProps {
   activeMethod?: {
@@ -26,6 +29,9 @@ interface CostMachinePanelProps {
   };
   propertiesMap?: Record<string, Record<string, unknown>>;
   savedMethodValue?: number | null;
+  /** Passed through for the market-reference launcher */
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -39,10 +45,13 @@ export function CostMachinePanel({
   activeMethod,
   propertiesMap,
   savedMethodValue,
+  marketSurveys,
+  templateList,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: CostMachinePanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
   const queryClient = useQueryClient();
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
@@ -141,9 +150,9 @@ export function CostMachinePanel({
           appraisalValue: result.totalFmv,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('toasts.saveFailed'));
     }
   };
 
@@ -163,9 +172,9 @@ export function CostMachinePanel({
       });
       isInitialized.current = false;
       initializeCostMachineForm({ machineryItems, reset });
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
@@ -183,18 +192,24 @@ export function CostMachinePanel({
           <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
             <Icon name="gear" className="size-4" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Cost Machine</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('costMachine.title')}</h2>
         </div>
 
         {/* Content */}
         {isCostItemsError ? (
           <DataErrorState
-            title="Failed to load machine cost items"
+            title={t('costMachine.loadFailed')}
             onRetry={refetchCostItems}
             variant="inline"
           />
         ) : (
-          <CostMachineForm machineryItems={machineryItems} isLoading={isLoadingCostItems} />
+          <CostMachineForm
+            machineryItems={machineryItems}
+            isLoading={isLoadingCostItems}
+            methodId={methodId}
+            marketSurveys={marketSurveys}
+            templateList={templateList}
+          />
         )}
 
         {/* Footer save/cancel */}
@@ -208,7 +223,7 @@ export function CostMachinePanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>

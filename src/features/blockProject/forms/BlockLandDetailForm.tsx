@@ -2,6 +2,7 @@ import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import BoundaryFields from '@/features/appraisal/components/BoundaryFields';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useTranslation } from 'react-i18next';
 import {
   allocationField,
   anticipationProsperityField,
@@ -68,91 +69,92 @@ const Card = ({ children }: { children: React.ReactNode }) => (
 );
 
 const BlockLandDetailForm = () => {
+  const { t } = useTranslation('blockProject');
   const readOnly = usePageReadOnly();
   return (
-  <div className="w-full max-w-full overflow-hidden">
-    <h2 className="text-lg font-semibold text-gray-900 mb-6">Land Detail</h2>
-    <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-      <SectionRow title="Land Information" icon="info-circle">
-        <FormFields fields={projectLandInfoFields} />
-      </SectionRow>
+    <div className="w-full max-w-full overflow-hidden">
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('landDetail.title')}</h2>
+      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
+        <SectionRow title={t('landDetail.sections.landInformation')} icon="info-circle">
+          <FormFields fields={projectLandInfoFields} />
+        </SectionRow>
 
-      <SectionRow title="Land Location" icon="map-location-dot">
-        <FormFields fields={landLocationField} />
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.landLocation')} icon="map-location-dot">
+          <FormFields fields={landLocationField} />
+        </SectionRow>
 
-      <SectionRow title="Plot Location" icon="location-dot">
-        <FormFields fields={plotLocationField} />
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.plotLocation')} icon="location-dot">
+          <FormFields fields={plotLocationField} />
+        </SectionRow>
 
-      <SectionRow title="Landfill" icon="mountain">
-        <FormFields fields={landFillField} />
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.landfill')} icon="mountain">
+          <FormFields fields={landFillField} />
+        </SectionRow>
 
-      <SectionRow title="Road & Surface" icon="road">
-        <Card>
-          <FormFields fields={roadField} />
-        </Card>
-        <Card>
-          <FormFields fields={roadSurfaceField} />
-        </Card>
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.roadSurface')} icon="road">
+          <Card>
+            <FormFields fields={roadField} />
+          </Card>
+          <Card>
+            <FormFields fields={roadSurfaceField} />
+          </Card>
+        </SectionRow>
 
-      <SectionRow title="Land Access & Utilities" icon="bolt">
-        <Card>
-          <FormFields fields={publicUtilityField} />
-        </Card>
-        <Card>
-          <FormFields fields={landUseField} />
-        </Card>
-        <Card>
-          <FormFields fields={landEntranceField} />
-        </Card>
-        <Card>
-          <FormFields fields={transpotationField} />
-        </Card>
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.landAccessUtilities')} icon="bolt">
+          <Card>
+            <FormFields fields={publicUtilityField} />
+          </Card>
+          <Card>
+            <FormFields fields={landUseField} />
+          </Card>
+          <Card>
+            <FormFields fields={landEntranceField} />
+          </Card>
+          <Card>
+            <FormFields fields={transpotationField} />
+          </Card>
+        </SectionRow>
 
-      <SectionRow title="Limitation" icon="triangle-exclamation">
-        <Card>
-          <FormFields fields={expropriateField} />
-        </Card>
-        <Card>
-          <FormFields fields={encroachedField} />
-        </Card>
-        <Card>
-          <FormFields fields={electricityField} />
-        </Card>
-        <Card>
-          <FormFields fields={landBoundaryField} />
-        </Card>
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.limitation')} icon="triangle-exclamation">
+          <Card>
+            <FormFields fields={expropriateField} />
+          </Card>
+          <Card>
+            <FormFields fields={encroachedField} />
+          </Card>
+          <Card>
+            <FormFields fields={electricityField} />
+          </Card>
+          <Card>
+            <FormFields fields={landBoundaryField} />
+          </Card>
+        </SectionRow>
 
-      <SectionRow title="Assessment" icon="chart-line">
-        <Card>
-          <FormFields fields={anticipationProsperityField} />
-        </Card>
-        <Card>
-          <FormFields fields={evictionField} />
-        </Card>
-        <Card>
-          <FormFields fields={allocationField} />
-        </Card>
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.assessment')} icon="chart-line">
+          <Card>
+            <FormFields fields={anticipationProsperityField} />
+          </Card>
+          <Card>
+            <FormFields fields={evictionField} />
+          </Card>
+          <Card>
+            <FormFields fields={allocationField} />
+          </Card>
+        </SectionRow>
 
-      <SectionRow title="Size and Boundary" icon="ruler-combined">
-        <BoundaryFields readOnly={readOnly} />
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.sizeAndBoundary')} icon="ruler-combined">
+          <BoundaryFields readOnly={readOnly} />
+        </SectionRow>
 
-      <SectionRow title="Other Information" icon="circle-info">
-        <FormFields fields={otherInformationField} />
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.otherInformation')} icon="circle-info">
+          <FormFields fields={otherInformationField} />
+        </SectionRow>
 
-      <SectionRow title="Remark" icon="comment" isLast>
-        <FormFields fields={remarkLandField} />
-      </SectionRow>
+        <SectionRow title={t('landDetail.sections.remark')} icon="comment" isLast>
+          <FormFields fields={remarkLandField} />
+        </SectionRow>
+      </div>
     </div>
-  </div>
   );
 };
 

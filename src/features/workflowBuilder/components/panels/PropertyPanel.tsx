@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import { StartForm } from './StartForm';
@@ -20,20 +21,17 @@ import { AdminReviewActivityForm } from './AdminReviewActivityForm';
 import { TimerForm } from './TimerForm';
 
 export function PropertyPanel() {
-  const selectedNodeId = useWorkflowStore((s) => s.selectedNodeId);
-  const selectedEdgeId = useWorkflowStore((s) => s.selectedEdgeId);
-  const nodes = useWorkflowStore((s) => s.nodes);
-  const edges = useWorkflowStore((s) => s.edges);
-  const clearSelection = useWorkflowStore((s) => s.clearSelection);
-  const removeActivity = useWorkflowStore((s) => s.removeActivity);
-  const removeTransition = useWorkflowStore((s) => s.removeTransition);
+  const { t } = useTranslation('workflowBuilder');
+  const selectedNodeId = useWorkflowStore(s => s.selectedNodeId);
+  const selectedEdgeId = useWorkflowStore(s => s.selectedEdgeId);
+  const nodes = useWorkflowStore(s => s.nodes);
+  const edges = useWorkflowStore(s => s.edges);
+  const clearSelection = useWorkflowStore(s => s.clearSelection);
+  const removeActivity = useWorkflowStore(s => s.removeActivity);
+  const removeTransition = useWorkflowStore(s => s.removeTransition);
 
-  const selectedNode = selectedNodeId
-    ? nodes.find((n) => n.id === selectedNodeId)
-    : null;
-  const selectedEdge = selectedEdgeId
-    ? edges.find((e) => e.id === selectedEdgeId)
-    : null;
+  const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
+  const selectedEdge = selectedEdgeId ? edges.find(e => e.id === selectedEdgeId) : null;
 
   if (!selectedNode && !selectedEdge) return null;
 
@@ -44,12 +42,9 @@ export function PropertyPanel() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-base-300 px-4 py-3">
         <h3 className="text-sm font-semibold text-base-content">
-          {selectedNode ? 'Activity Properties' : 'Transition Properties'}
+          {selectedNode ? t('panel.activityProperties') : t('panel.transitionProperties')}
         </h3>
-        <button
-          onClick={clearSelection}
-          className="btn btn-ghost btn-xs"
-        >
+        <button onClick={clearSelection} className="btn btn-ghost btn-xs" aria-label="close">
           ✕
         </button>
       </div>
@@ -68,7 +63,7 @@ export function PropertyPanel() {
                   }}
                   className="btn btn-error btn-outline btn-sm w-full"
                 >
-                  Delete Activity
+                  {t('panel.deleteActivity')}
                 </button>
               </div>
             )}
@@ -86,7 +81,7 @@ export function PropertyPanel() {
                 }}
                 className="btn btn-error btn-outline btn-sm w-full"
               >
-                Delete Transition
+                {t('panel.deleteTransition')}
               </button>
             </div>
           </>

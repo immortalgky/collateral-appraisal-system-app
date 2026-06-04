@@ -40,6 +40,10 @@ interface EvaluationCriteriaRowProps {
   deliveryAutoDetected?: boolean;
   /** Detected business-days value (only meaningful when deliveryAutoDetected). */
   deliveryDetectedDays?: number | null;
+  /** Override weight from config (falls back to CRITERIA_WEIGHTS[index]). */
+  weight?: number;
+  /** Override guidance from config keyed by rating level string. */
+  guidance?: Record<string, { en: string; th: string }>;
 }
 
 const RATING_KEYS: readonly [
@@ -63,10 +67,14 @@ function EvaluationCriteriaRow({
   forceDisabled = false,
   deliveryAutoDetected = false,
   deliveryDetectedDays = null,
+  weight: weightProp,
+  guidance: guidanceProp,
 }: EvaluationCriteriaRowProps) {
-  const { t } = useTranslation('serviceQualityEvaluation');
+  const { t, i18n } = useTranslation('serviceQualityEvaluation');
   const { control } = useFormContext<EvaluationFormValues>();
-  const weight = CRITERIA_WEIGHTS[index];
+
+  // Use config weight if provided, else fall back to hardcoded constant.
+  const weight = weightProp ?? CRITERIA_WEIGHTS[index];
 
   const ratingName = RATING_KEYS[index];
 
@@ -76,7 +84,18 @@ function EvaluationCriteriaRow({
   const hasRating = rating != null && rating >= 1 && rating <= 5;
   const clampedRating = hasRating ? (rating as 1 | 2 | 3 | 4 | 5) : null;
   const score = hasRating ? weight * (rating as number) : null;
-  const description = clampedRating ? GUIDELINE_DESCRIPTIONS[index][clampedRating] : '—';
+
+  // Resolve description: config guidance (locale-aware) → hardcoded fallback.
+  const description = (() => {
+    if (!clampedRating) return '—';
+    if (guidanceProp) {
+      const entry = guidanceProp[String(clampedRating)];
+      if (entry) {
+        return i18n.language.startsWith('th') ? (entry.th || entry.en) : entry.en;
+      }
+    }
+    return GUIDELINE_DESCRIPTIONS[index][clampedRating] ?? '—';
+  })();
 
   const isSelectDisabled = disabled || forceDisabled;
 

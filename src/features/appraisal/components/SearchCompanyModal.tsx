@@ -56,23 +56,13 @@ const SearchCompanyModal = ({
     return (
       <div className="flex items-center gap-0.5">
         {[...Array(fullStars)].map((_, i) => (
-          <Icon
-            key={`full-${i}`}
-            name="star"
-            style="solid"
-            className="w-3 h-3 text-amber-400"
-          />
+          <Icon key={`full-${i}`} name="star" style="solid" className="w-3 h-3 text-amber-400" />
         ))}
         {hasHalfStar && (
           <Icon name="star-half-stroke" style="solid" className="w-3 h-3 text-amber-400" />
         )}
         {[...Array(emptyStars)].map((_, i) => (
-          <Icon
-            key={`empty-${i}`}
-            name="star"
-            style="regular"
-            className="w-3 h-3 text-gray-300"
-          />
+          <Icon key={`empty-${i}`} name="star" style="regular" className="w-3 h-3 text-gray-300" />
         ))}
         <span className="text-xs text-gray-500 ml-1">({rating.toFixed(1)})</span>
       </div>

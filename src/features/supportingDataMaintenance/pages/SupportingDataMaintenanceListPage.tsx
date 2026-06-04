@@ -3,7 +3,7 @@ import Badge from '@/shared/components/Badge';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import { format } from 'date-fns';
+import { formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDeleteSupportingData, useGetSupportingDataMaintenanceList } from '../api';
@@ -19,6 +19,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { getImportChannelLabel, getSourceOfDataLabel, getStatusLabel } from '../utils/getLabel';
 import { ARCHIVED_STATUSES, REMOVABLE_STATUSES } from '../constants/parameters';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface ContextMenuState {
   visible: boolean;
@@ -57,101 +58,85 @@ const readFiltersFromSearchParams = (
   return out;
 };
 
-const formatDateTime = (dateString?: string | null): string => {
-  if (!dateString) return '-';
-  try {
-    return format(new Date(dateString), 'dd/MM/yyyy HH:mm');
-  } catch {
-    return dateString;
-  }
-};
-
-// ── Column config (local to this page, mirrors task/columnDefs pattern) ──
-type ColumnDef = {
-  key: string;
-  label: string;
-  sortField?: string;
-  tdClassName?: string;
-  render: (item: SupportingDataMaintenance) => React.ReactNode;
-};
-
-const columns: ColumnDef[] = [
-  {
-    key: 'supportingNumber',
-    label: 'Supporting No.',
-    sortField: 'supportingNumber',
-    render: item => (
-      <Link
-        to={`/standalone/supporting-data-maintenance/${item.id}`}
-        onClick={e => e.stopPropagation()}
-        className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
-      >
-        {item.supportingNumber ?? '-'}
-      </Link>
-    ),
-  },
-  {
-    key: 'createdDate',
-    label: 'Created Date',
-    sortField: 'createdDate',
-    render: item => formatDateTime(item.createdDate),
-  },
-  {
-    key: 'importChannel',
-    label: 'Import Channel',
-    render: item => (item.importChannel ? getImportChannelLabel(item.importChannel) : '-'),
-  },
-  {
-    key: 'sourceOfData',
-    label: 'Source of Data',
-    render: item => (item.sourceOfData ? getSourceOfDataLabel(item.sourceOfData) : '-'),
-  },
-  {
-    key: 'lastModifiedBy',
-    label: 'Last Modified By',
-    render: item => item.lastModifiedBy ?? '-',
-  },
-  {
-    key: 'lastModifiedDate',
-    label: 'Last Modified Date',
-    render: item => formatDateTime(item.lastModifiedDate),
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    sortField: 'status',
-    tdClassName: 'px-4 py-3',
-    render: item => (
-      <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
-    ),
-  },
-];
-
-const STICKY_COLUMN_KEY = 'supportingNumber';
-
-const FILTER_LABELS: Record<keyof SupportingDataParams, string> = {
-  supportingNumber: 'Supporting No.',
-  dateType: 'Date Type',
-  dateFrom: 'Date From',
-  dateTo: 'Date To',
-  status: 'Status',
-  importChannel: 'Import Channel',
-};
-
-const formatChipValue = (key: keyof SupportingDataParams, value: string): string => {
-  if (key === 'dateFrom' || key === 'dateTo') {
-    try {
-      return format(new Date(value), 'dd/MM/yyyy');
-    } catch {
-      return value;
-    }
-  }
-  return value;
-};
-
 export function SupportingDataMaintenanceListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { t, i18n } = useTranslation(['supportingDataMaintenance', 'common']);
+
+  // ── Column config (local to this page, mirrors task/columnDefs pattern) ──
+  type ColumnDef = {
+    key: string;
+    label: string;
+    sortField?: string;
+    tdClassName?: string;
+    render: (item: SupportingDataMaintenance) => React.ReactNode;
+  };
+
+  const columns: ColumnDef[] = useMemo(
+    () => [
+      {
+        key: 'supportingNumber',
+        label: t('columns.supportingNumber'),
+        sortField: 'supportingNumber',
+        render: item => (
+          <Link
+            to={`/standalone/supporting-data-maintenance/${item.id}`}
+            onClick={e => e.stopPropagation()}
+            className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+          >
+            {item.supportingNumber ?? '-'}
+          </Link>
+        ),
+      },
+      {
+        key: 'createdDate',
+        label: t('columns.createdDate'),
+        sortField: 'createdDate',
+        render: item => formatLocaleDateTime(item.createdDate, i18n.language),
+      },
+      {
+        key: 'importChannel',
+        label: t('columns.importChannel'),
+        render: item => (item.importChannel ? getImportChannelLabel(item.importChannel) : '-'),
+      },
+      {
+        key: 'sourceOfData',
+        label: t('columns.sourceOfData'),
+        render: item => (item.sourceOfData ? getSourceOfDataLabel(item.sourceOfData) : '-'),
+      },
+      {
+        key: 'lastModifiedBy',
+        label: t('columns.lastModifiedBy'),
+        render: item => item.lastModifiedBy ?? '-',
+      },
+      {
+        key: 'lastModifiedDate',
+        label: t('columns.lastModifiedDate'),
+        render: item => formatLocaleDateTime(item.lastModifiedDate, i18n.language),
+      },
+      {
+        key: 'status',
+        label: t('columns.status'),
+        sortField: 'status',
+        tdClassName: 'px-4 py-3',
+        render: item => (
+          <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
+        ),
+      },
+    ],
+    [t, i18n.language],
+  );
+
+  const STICKY_COLUMN_KEY = 'supportingNumber';
+
+  const FILTER_LABELS: Record<keyof SupportingDataParams, string> = {
+    supportingNumber: t('filterLabels.supportingNumber'),
+    dateType: t('filterLabels.dateType'),
+    dateFrom: t('filterLabels.dateFrom'),
+    dateTo: t('filterLabels.dateTo'),
+    status: t('filterLabels.status'),
+    importChannel: t('filterLabels.importChannel'),
+  };
 
   // Hydrate from URL on mount
   const initRef = useRef({
@@ -322,13 +307,11 @@ export function SupportingDataMaintenanceListPage() {
       {
         onSuccess: () => {
           setDeleteConfirm({ isOpen: false, id: null });
-          toast.success('Supporting data deleted successfully');
+          toast.success(t('toasts.deletedSuccess'));
         },
         onError: (error: any) => {
           setDeleteConfirm({ isOpen: false, id: null });
-          toast.error(
-            error.apiError?.detail || 'Failed to delete supporting data. Please try again.',
-          );
+          toast.error(error.apiError?.detail || t('toasts.deleteFailed'));
         },
       },
     );
@@ -345,7 +328,7 @@ export function SupportingDataMaintenanceListPage() {
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">Failed to load supporting data</p>
+          <p className="text-sm font-medium text-gray-800">{t('errors.failedToLoad')}</p>
           <p className="text-xs text-gray-400 mt-0.5">{(listError as Error)?.message}</p>
         </div>
       </div>
@@ -358,14 +341,14 @@ export function SupportingDataMaintenanceListPage() {
       <div className="shrink-0 mb-3 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-gray-900">Supporting Data Maintenance</h2>
+            <h2 className="text-sm font-semibold text-gray-900">{t('page.listTitle')}</h2>
             {!isListLoading && totalCount > 0 && (
               <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
                 {totalCount}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">Manage imported supporting data requests</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
         </div>
       </div>
 
@@ -378,7 +361,7 @@ export function SupportingDataMaintenanceListPage() {
           }`}
         >
           <Icon style="solid" name="user" className="size-3" />
-          Importing
+          {t('tabs.importing')}
           {!isListLoading && importingCount > 0 && (
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
@@ -401,7 +384,7 @@ export function SupportingDataMaintenanceListPage() {
           }`}
         >
           <Icon style="solid" name="users" className="size-3" />
-          Archived
+          {t('tabs.archived')}
           {archivedCount > 0 && (
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
@@ -438,7 +421,7 @@ export function SupportingDataMaintenanceListPage() {
           )}
           <input
             type="text"
-            placeholder="Search supporting data..."
+            placeholder={t('search.placeholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
@@ -446,6 +429,7 @@ export function SupportingDataMaintenanceListPage() {
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
+              aria-label={t('aria.clearSearch')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <Icon style="solid" name="xmark" className="size-3.5" />
@@ -456,7 +440,7 @@ export function SupportingDataMaintenanceListPage() {
         {/* Filter */}
         <button
           onClick={() => setFilterDialogOpen(true)}
-          title="Filters"
+          title={t('actions.filters')}
           className={`mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all cursor-pointer ${
             activeFilterChips.length > 0
               ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
@@ -464,7 +448,7 @@ export function SupportingDataMaintenanceListPage() {
           }`}
         >
           <Icon style="solid" name="sliders" className="size-3.5" />
-          Filters
+          {t('actions.filters')}
           {activeFilterChips.length > 0 && (
             <span className="inline-flex items-center justify-center size-4 rounded-full bg-primary text-white text-[10px] font-semibold">
               {activeFilterChips.length}
@@ -478,7 +462,7 @@ export function SupportingDataMaintenanceListPage() {
             className="mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm cursor-pointer"
           >
             <Icon style="solid" name="plus" className="size-3.5" />
-            Create
+            {t('actions.create')}
           </button>
         )}
       </div>
@@ -499,7 +483,9 @@ export function SupportingDataMaintenanceListPage() {
               className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
             >
               <span className="text-primary/60">{FILTER_LABELS[key]}:</span>{' '}
-              {formatChipValue(key, value)}
+              {key === 'dateFrom' || key === 'dateTo'
+                ? formatLocaleDate(value, i18n.language)
+                : value}
               <button onClick={() => removeFilter(key)} className="hover:text-primary/60 ml-0.5">
                 <Icon style="solid" name="xmark" className="size-2.5" />
               </button>
@@ -509,7 +495,7 @@ export function SupportingDataMaintenanceListPage() {
             onClick={() => setFilters({})}
             className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
           >
-            Clear all
+            {t('actions.clearAll')}
           </button>
         </div>
       )}
@@ -562,14 +548,14 @@ export function SupportingDataMaintenanceListPage() {
                       </div>
                       <div className="text-center">
                         <p className="text-sm font-semibold text-gray-700">
-                          {hasFilters ? 'No matching records' : 'No supporting data'}
+                          {hasFilters ? t('empty.noMatchingRecords') : t('empty.noSupportingData')}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                           {hasFilters
-                            ? 'Try adjusting your search.'
+                            ? t('empty.tryAdjusting')
                             : activeTab === 'archived'
-                              ? 'Archived items will appear here.'
-                              : 'Imported supporting data will appear here.'}
+                              ? t('empty.archivedItems')
+                              : t('empty.importedItems')}
                         </p>
                       </div>
                       {hasFilters && (
@@ -577,7 +563,7 @@ export function SupportingDataMaintenanceListPage() {
                           onClick={() => setSearchTerm('')}
                           className="text-xs text-primary hover:underline font-medium"
                         >
-                          Clear search
+                          {t('actions.clearSearch')}
                         </button>
                       )}
                     </div>
@@ -663,7 +649,7 @@ export function SupportingDataMaintenanceListPage() {
                 name="arrow-up-right-from-square"
                 className="size-3.5 text-gray-400"
               />
-              Open
+              {t('actions.open')}
             </button>
             {hasAuthorityToRemove && REMOVABLE_STATUSES.has(contextMenu.status ?? '') && (
               <button
@@ -676,7 +662,7 @@ export function SupportingDataMaintenanceListPage() {
                 style={{ width: 'calc(100% - 8px)' }}
               >
                 <Icon style="regular" name="trash" className="size-3.5 text-gray-400" />
-                Delete
+                {t('common:actions.delete')}
               </button>
             )}
           </div>
@@ -687,10 +673,10 @@ export function SupportingDataMaintenanceListPage() {
           isOpen={deleteConfirm.isOpen}
           onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
           onConfirm={confirmDelete}
-          title="Delete Supporting Detail"
-          message="Are you sure you want to delete this item? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
+          title={t('confirm.deleteTitle')}
+          message={t('confirm.deleteMessage')}
+          confirmText={t('common:actions.delete')}
+          cancelText={t('common:actions.cancel')}
           variant="danger"
         />
       </div>

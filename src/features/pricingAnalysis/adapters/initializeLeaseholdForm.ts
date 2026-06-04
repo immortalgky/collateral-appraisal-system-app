@@ -24,7 +24,7 @@ export function initializeLeaseholdForm(
       depreciationIntervalYears: analysis.depreciationIntervalYears,
       buildingCalcStartYear: analysis.buildingCalcStartYear,
       discountRate: analysis.discountRate,
-      landGrowthPeriods: (analysis.landGrowthPeriods ?? []).map((p) => ({
+      landGrowthPeriods: (analysis.landGrowthPeriods ?? []).map(p => ({
         id: p.id,
         fromYear: p.fromYear,
         toYear: p.toYear,

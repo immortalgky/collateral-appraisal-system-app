@@ -1,4 +1,4 @@
-import { FormProvider, useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, FormProvider, type SubmitHandler } from 'react-hook-form';
 import {
   createSupportingDataForm,
   decisionForm,
@@ -19,7 +19,7 @@ import {
 } from '@/shared/components';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { FormFields } from '@/shared/components/form';
-import { decisionFields, supportingDataFields } from '../configs/fields';
+import { getDecisionFields, getSupportingDataFields } from '../configs/fields';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { SupportingDataTable } from '../components/SupportingDataTable';
@@ -35,6 +35,7 @@ import {
 import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
 import { ARCHIVED_STATUSES } from '../constants/parameters';
+import { useTranslation } from 'react-i18next';
 
 function SupportingDataMaintenanceDetailListPageSkeleton() {
   return (
@@ -125,6 +126,7 @@ function SupportingDataMaintenanceDetailListPageSkeleton() {
 export function SupportingDataMaintenanceDetailListPage() {
   const navigate = useNavigate();
   const { supportingId } = useParams<{ supportingId: string }>();
+  const { t } = useTranslation(['supportingDataMaintenance', 'common']);
 
   // getAPI
   const {
@@ -211,11 +213,11 @@ export function SupportingDataMaintenanceDetailListPage() {
   const handleFile = async (file: File) => {
     // Client-side guards (mirrors the server-side checks)
     if (!file.name.endsWith('.xlsx')) {
-      toast.error('Only .xlsx files are accepted');
+      toast.error(t('toasts.fileTypeError'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be ≤ 5 MB');
+      toast.error(t('toasts.fileSizeError'));
       return;
     }
 
@@ -252,7 +254,7 @@ export function SupportingDataMaintenanceDetailListPage() {
         setParseErrors(rowErrors);
         setShowErrorDialog(true);
       } else {
-        toast.error(err?.response?.data?.detail ?? 'Upload failed. Please try again.');
+        toast.error(err?.response?.data?.detail ?? t('toasts.uploadFailed'));
       }
     }
   };
@@ -277,13 +279,13 @@ export function SupportingDataMaintenanceDetailListPage() {
       { supportingId: supportingId, data: data as any },
       {
         onSuccess: () => {
-          toast.success('Supporting data submitted successfully');
+          toast.success(t('toasts.updatedSuccess'));
           setSaveAction(null);
           navigate(`/standalone/supporting-data-maintenance`);
         },
         onError: (error: any) => {
           toast.error(
-            error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
+            error.apiError?.detail || t('toasts.updateFailed')
           );
           setSaveAction(null);
         },
@@ -300,13 +302,13 @@ export function SupportingDataMaintenanceDetailListPage() {
         { supportingId: supportingId!, data: data as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data submitted successfully');
+            toast.success(t('toasts.updatedSuccess'));
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to submit supporting data. Please try again.',
+              error.apiError?.detail || t('toasts.updateFailed'),
             );
             setSaveAction(null);
           },
@@ -331,13 +333,11 @@ export function SupportingDataMaintenanceDetailListPage() {
         { data: values },
         {
           onSuccess: () => {
-            toast.success('Property supporting data created successfully');
+            toast.success(t('toasts.propertyCreatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
-            );
+            toast.error(error.apiError?.detail || t('toasts.propertyCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -355,8 +355,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   };
 
   const handleSaveDraft = async () => {
-    // Save draft skips validation by reading values directly.
-    const supportingData = getSupportingValues();
+    const supportingDataValues = getSupportingValues();
     const decisionData = hasAuthorityToDecision ? decisionMethods.getValues() : null;
     console.log('Save draft:', { supportingData, decisionData });
     if (hasSupportingId) {
@@ -364,12 +363,12 @@ export function SupportingDataMaintenanceDetailListPage() {
         { supportingId: supportingId!, data: supportingData as any },
         {
           onSuccess: () => {
-            toast.success('Draft supporting data updated successfully');
+            toast.success(t('toasts.updatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to update draft supporting data. Please try again.',
+              error.apiError?.detail || t('toasts.updateFailed'),
             );
             setSaveAction(null);
           },
@@ -380,13 +379,13 @@ export function SupportingDataMaintenanceDetailListPage() {
         { data: supportingData as any },
         {
           onSuccess: data => {
-            toast.success('Draft supporting data created successfully');
+            toast.success(t('toasts.createdSuccess'));
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance/${data.supportingId}`);
           },
           onError: (error: any) => {
             toast.error(
-              error.apiError?.detail || 'Failed to create draft supporting data. Please try again.',
+              error.apiError?.detail || t('toasts.createFailed'),
             );
             setSaveAction(null);
           },
@@ -407,13 +406,10 @@ export function SupportingDataMaintenanceDetailListPage() {
         { supportingId: supportingId!, id: id },
         {
           onSuccess: () => {
-            toast.success('Supporting data detail deleted successfully');
+            toast.success(t('toasts.detailDeletedSuccess'));
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail ||
-                'Failed to delete supporting data detail. Please try again.',
-            );
+            toast.error(error.apiError?.detail || t('toasts.detailDeleteFailed'));
             setSaveAction(null);
           },
         },
@@ -435,17 +431,14 @@ export function SupportingDataMaintenanceDetailListPage() {
           {/* Supporting Data Maintenance (general info) */}
           <Section id="supporting-data">
             <FormCard
-              title="Supporting Data Maintenance"
-              subtitle="General information for this batch of supporting data"
+              title={t('formSections.supportingDataTitle')}
+              subtitle={t('formSections.supportingDataSubtitle')}
               icon="clipboard-list"
               iconColor="blue"
             >
               <div className="flex-1 flex flex-col gap-6">
                 <div className="grid grid-cols-12 gap-4">
-                  <FormFields
-                    fields={supportingDataFields}
-                    disabled={!hasAuthorityToEdit && hasSupportingId}
-                  />
+                  <FormFields fields={getSupportingDataFields(t)} disabled={!hasAuthorityToEdit && hasSupportingId}/>
                 </div>
               </div>
             </FormCard>
@@ -466,7 +459,7 @@ export function SupportingDataMaintenanceDetailListPage() {
 
           {/* Supporting Data Details (list + card) */}
           <FormCard
-            title="Supporting Data Details"
+            title={t('formSections.supportingDataDetailsTitle')}
             subtitle={supportingData?.remark ? `Remark: ${supportingData.remark}` : ''} // show remark when route back
             icon="file-certificate"
             iconColor="purple"
@@ -507,8 +500,8 @@ export function SupportingDataMaintenanceDetailListPage() {
                       className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors cursor-pointer"
                     >
                       <Icon style="solid" name="plus" className="size-4" />
-                      Add Item
-                    </Button>
+                      {t('actions.addItem')}
+                    </button>
                   </>
                 )}
               </div>
@@ -531,10 +524,10 @@ export function SupportingDataMaintenanceDetailListPage() {
         <FormProvider {...decisionMethods}>
           <div className="flex flex-col gap-4 pr-2">
             <Section id="supporting-data-decision">
-              <FormCard title="Decision" subtitle="" icon="paper-plane" iconColor="blue">
+              <FormCard title={t('formSections.decisionTitle')} subtitle="" icon="paper-plane" iconColor="blue">
                 <div className="flex-1 flex flex-col gap-6">
                   <div className="grid grid-cols-12 gap-4">
-                    <FormFields fields={decisionFields} />
+                    <FormFields fields={getDecisionFields(t)} />
                   </div>
                 </div>
               </FormCard>
@@ -558,7 +551,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               disabled={isPending}
             >
               <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-              Save draft
+              {t('actions.saveDraft')}
             </Button>
             <Button
               type="button"
@@ -567,7 +560,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               leftIcon={<Icon name="check" style="solid" className="size-4" />}
               disabled={isPending}
             >
-              Submit
+              {t('actions.submit')}
             </Button>
           </ActionBar.Right>
         )}
@@ -578,10 +571,10 @@ export function SupportingDataMaintenanceDetailListPage() {
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
         onConfirm={confirmDelete}
-        title="Delete Supporting Detail"
-        message="Are you sure you want to delete this item? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('confirm.deleteTitle')}
+        message={t('confirm.deleteMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
 

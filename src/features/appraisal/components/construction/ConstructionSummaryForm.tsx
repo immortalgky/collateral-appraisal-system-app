@@ -2,7 +2,11 @@ import { useRef, useState } from 'react';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import Icon from '@shared/components/Icon';
 import { formatNumber } from '@shared/utils/formatUtils';
-import { createUploadSession, useUploadDocument, useDownloadDocument } from '@features/request/api/documents';
+import {
+  createUploadSession,
+  useUploadDocument,
+  useDownloadDocument,
+} from '@features/request/api/documents';
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B';
@@ -74,7 +78,9 @@ export function ConstructionSummaryForm({
       onUpdateSummary('fileName', result.fileName);
       onUpdateSummary('filePath', result.storageUrl);
       onUpdateSummary('fileSizeBytes', result.fileSize);
-      const ext = file.name.includes('.') ? file.name.split('.').pop()?.toLowerCase() ?? null : null;
+      const ext = file.name.includes('.')
+        ? (file.name.split('.').pop()?.toLowerCase() ?? null)
+        : null;
       onUpdateSummary('fileExtension', ext);
       onUpdateSummary('mimeType', file.type || null);
     } catch {
@@ -117,18 +123,32 @@ export function ConstructionSummaryForm({
               <th className="text-left px-4 py-2.5 font-semibold min-w-[220px]" rowSpan={2}>
                 Detail
               </th>
-              <th className="text-center px-3 py-1.5 font-semibold border-l border-white/20" colSpan={2}>
+              <th
+                className="text-center px-3 py-1.5 font-semibold border-l border-white/20"
+                colSpan={2}
+              >
                 Previous Progress
               </th>
-              <th className="text-center px-3 py-1.5 font-semibold border-l border-white/20" colSpan={2}>
+              <th
+                className="text-center px-3 py-1.5 font-semibold border-l border-white/20"
+                colSpan={2}
+              >
                 Current Progress
               </th>
             </tr>
             <tr className="bg-primary text-white/90">
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[100px] border-l border-white/10">(%)</th>
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[130px]">Value (Baht)</th>
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[100px] border-l border-white/10">(%)</th>
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[130px]">Value (Baht)</th>
+              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[100px] border-l border-white/10">
+                (%)
+              </th>
+              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[130px]">
+                Value (Baht)
+              </th>
+              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[100px] border-l border-white/10">
+                (%)
+              </th>
+              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[130px]">
+                Value (Baht)
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -185,7 +205,10 @@ export function ConstructionSummaryForm({
               accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png"
             />
             <div
-              onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
+              onDragOver={e => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
               onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
               onClick={() => !isUploading && fileInputRef.current?.click()}
@@ -197,13 +220,19 @@ export function ConstructionSummaryForm({
                     : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 cursor-pointer'
               }`}
             >
-              <div className={`size-9 rounded-full flex items-center justify-center transition-colors ${
-                isDragOver || isUploading ? 'bg-primary/10' : 'bg-primary-50'
-              }`}>
+              <div
+                className={`size-9 rounded-full flex items-center justify-center transition-colors ${
+                  isDragOver || isUploading ? 'bg-primary/10' : 'bg-primary-50'
+                }`}
+              >
                 {isUploading ? (
                   <Icon name="spinner" style="solid" className="size-4 text-primary animate-spin" />
                 ) : (
-                  <Icon name="cloud-arrow-up" style="solid" className={`size-4 ${isDragOver ? 'text-primary' : 'text-gray-400'}`} />
+                  <Icon
+                    name="cloud-arrow-up"
+                    style="solid"
+                    className={`size-4 ${isDragOver ? 'text-primary' : 'text-gray-400'}`}
+                  />
                 )}
               </div>
               <div className="text-center">
@@ -241,7 +270,9 @@ export function ConstructionSummaryForm({
                   {[
                     summary?.fileExtension?.toUpperCase(),
                     summary?.fileSizeBytes != null ? formatFileSize(summary.fileSizeBytes) : null,
-                  ].filter(Boolean).join(' · ') || null}
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') || null}
                 </p>
               </div>
             </button>

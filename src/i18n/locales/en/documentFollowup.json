@@ -1,0 +1,131 @@
+{
+  "banner": {
+    "title": "Open Document Request",
+    "pendingItems": "{{n}} item(s) pending from the request maker — submission is blocked until resolved",
+    "loadingDetails": "Loading details...",
+    "raised": "Raised",
+    "raisedBy": "by {{name}}",
+    "cancelAll": "Cancel all"
+  },
+  "columns": {
+    "documentType": "Document Type",
+    "notes": "Notes",
+    "status": "Status"
+  },
+  "status": {
+    "Pending": "Pending",
+    "Uploaded": "Uploaded",
+    "Declined": "Declined",
+    "Cancelled": "Cancelled"
+  },
+  "raiseDialog": {
+    "title": "Request Additional Documents",
+    "subtitle": "Specify the documents needed from the request maker",
+    "requestLabel": "Document Request #{{number}}",
+    "documentTypeLabel": "Document Type",
+    "documentTypePlaceholder": "Select document type...",
+    "notesLabel": "Notes / Instructions",
+    "notesPlaceholder": "Describe what is needed and why...",
+    "addAnother": "Add another document request",
+    "submitting": "Submitting...",
+    "sendRequest": "Send Request"
+  },
+  "uploadDialog": {
+    "title": "Upload Document",
+    "fulfilling": "Fulfilling:",
+    "attachToLabel": "Attach to",
+    "loadingTitles": "Loading titles...",
+    "applicationLevel": "Application level (request)",
+    "fileLabel": "File",
+    "selectedFile": "Selected:",
+    "deferredNotePre": "The file is uploaded to storage now but",
+    "deferredNoteNot": "not",
+    "deferredNotePost": "attached to the request yet. Attachments happen atomically when you click",
+    "deferredNoteAction": "Submit Response",
+    "deferredNoteEnd": ".",
+    "titleFallback": "Title",
+    "uploading": "Uploading...",
+    "stageFile": "Stage file",
+    "loadError": "Failed to load upload form"
+  },
+  "cancelReasonModal": {
+    "reasonPlaceholder": "Enter reason...",
+    "cancelFollowupTitle": "Cancel Document Request",
+    "cancelLineItemTitle": "Cancel Line Item",
+    "cancelReasonSubtitle": "Please provide a reason for cancellation.",
+    "confirm": "Confirm"
+  },
+  "declineModal": {
+    "title": "Decline Document Request",
+    "youAreDeclining": "You are declining:",
+    "reasonRequired": "A reason is required to decline this request.",
+    "reasonLabel": "Reason for declining",
+    "reasonPlaceholder": "Enter reason for declining...",
+    "decline": "Decline"
+  },
+  "bulkDeclineModal": {
+    "title": "Decline All Remaining",
+    "youAreDeclining_one": "You are declining {{count}} pending request.",
+    "youAreDeclining_other": "You are declining {{count}} pending requests.",
+    "reasonRequired": "A reason is required to decline all requests.",
+    "reasonLabel": "Reason for declining",
+    "reasonPlaceholder": "Enter reason for declining all remaining requests...",
+    "declineAll": "Decline All"
+  },
+  "page": {
+    "back": "Back to appraisal",
+    "title": "Provide Additional Documents",
+    "infoTitle": "The checker has requested additional documents.",
+    "infoBody": "Please provide or decline each requested document below. The checker's task will proceed once all items are resolved.",
+    "requestedBy": "Requested by {{name}} on {{date}}",
+    "pendingRequests": "Pending Requests ({{count}})",
+    "declineAllRemaining": "Decline All Remaining",
+    "resolved": "Resolved ({{count}})",
+    "reasonPrefix": "Reason:",
+    "replaceStagedFile": "Replace",
+    "removeStagedFile": "Remove",
+    "declineButton": "Decline",
+    "uploadButton": "Upload",
+    "uploadUnavailableTitle": "Request context not available — cannot upload.",
+    "allStagedBanner": "All pending requests have a file staged. Submit Response to send them.",
+    "allResolvedBanner": "All document requests have been resolved.",
+    "submitResponse": "Submit Response",
+    "stageHint": "Stage a file (or decline) for every pending item to enable submit.",
+    "documentChecklist": "Document Checklist",
+    "checklistHint": "Read-only view of documents already attached to the request. Staged files above are attached atomically when you click Submit Response.",
+    "loadingRequests": "Loading document requests...",
+    "loadError": "Failed to load document requests",
+    "loadErrorDetail": "This task may no longer be active.",
+    "confirmSubmitTitle": "Submit Response",
+    "confirmSubmitMessage": "Submit your response to the checker? This will mark all items as resolved and allow the checker to proceed.",
+    "confirmSubmit": "Submit"
+  },
+  "toasts": {
+    "submitSuccess": "Response submitted successfully",
+    "submitAlreadyDone": "This followup has already been submitted.",
+    "submitItemsRequired": "All items must be provided or declined before submitting.",
+    "submitFailed": "Failed to submit response",
+    "raiseSuccess": "Document request raised successfully",
+    "raiseFailed": "Failed to raise document request",
+    "cancelSuccess": "Document request cancelled",
+    "cancelFailed": "Failed to cancel document request",
+    "cancelLineItemSuccess": "Line item cancelled",
+    "cancelLineItemFailed": "Failed to cancel line item",
+    "declineSuccess": "Document request declined",
+    "declineFailed": "Failed to decline document request",
+    "bulkDeclineFailed": "Failed to decline some items. Please try again.",
+    "fileChooseRequired": "Please choose a file to upload.",
+    "fileStaged": "File staged. It will be attached when you submit.",
+    "uploadFailed": "Upload failed. Please try again."
+  },
+  "validation": {
+    "documentTypeRequired": "Document type is required",
+    "notesRequired": "Notes are required",
+    "reasonRequired": "Reason is required",
+    "atLeastOneItem": "At least one document request is required"
+  },
+  "aria": {
+    "cancelLineItem": "Cancel this line item",
+    "closeDialog": "Close"
+  }
+}

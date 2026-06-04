@@ -16,8 +16,14 @@ export const projectModelKeys = {
 
 // ==================== Request Types ====================
 
-type CreateProjectModelRequest = Omit<ProjectModel, 'id' | 'projectId' | 'pricingAnalysisId' | 'pricingAnalysisStatus' | 'finalAppraisedValue'>;
-type UpdateProjectModelRequest = Omit<ProjectModel, 'id' | 'projectId' | 'pricingAnalysisId' | 'pricingAnalysisStatus' | 'finalAppraisedValue'>;
+type CreateProjectModelRequest = Omit<
+  ProjectModel,
+  'id' | 'projectId' | 'pricingAnalysisId' | 'pricingAnalysisStatus' | 'finalAppraisedValue'
+>;
+type UpdateProjectModelRequest = Omit<
+  ProjectModel,
+  'id' | 'projectId' | 'pricingAnalysisId' | 'pricingAnalysisStatus' | 'finalAppraisedValue'
+>;
 
 // ==================== Hooks ====================
 
@@ -45,9 +51,7 @@ export const useGetProjectModelById = (appraisalId: string, modelId?: string) =>
   return useQuery({
     queryKey: projectModelKeys.detail(appraisalId, modelId!),
     queryFn: async (): Promise<ProjectModel> => {
-      const { data } = await axios.get(
-        `/appraisals/${appraisalId}/project/models/${modelId}`,
-      );
+      const { data } = await axios.get(`/appraisals/${appraisalId}/project/models/${modelId}`);
       return data;
     },
     enabled: !!appraisalId && !!modelId,
@@ -127,13 +131,8 @@ export const useDeleteProjectModel = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (params: {
-      appraisalId: string;
-      modelId: string;
-    }): Promise<void> => {
-      await axios.delete(
-        `/appraisals/${params.appraisalId}/project/models/${params.modelId}`,
-      );
+    mutationFn: async (params: { appraisalId: string; modelId: string }): Promise<void> => {
+      await axios.delete(`/appraisals/${params.appraisalId}/project/models/${params.modelId}`);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -206,9 +205,7 @@ export const useRemoveProjectModelImage = () => {
       imageId: string;
       appraisalId: string;
     }): Promise<void> => {
-      await axios.delete(
-        `/appraisals/${appraisalId}/project/models/${entityId}/images/${imageId}`,
-      );
+      await axios.delete(`/appraisals/${appraisalId}/project/models/${entityId}/images/${imageId}`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

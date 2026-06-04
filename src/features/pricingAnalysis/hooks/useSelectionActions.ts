@@ -4,6 +4,9 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useNavigate } from 'react-router-dom';
 import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
+import i18n from '@/i18n';
+
+const tp = (key: string) => i18n.t(`pricingAnalysis:${key}`);
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
 import type { Approach, Method } from '../types/selection';
@@ -130,9 +133,9 @@ export function useSelectionActions({
         queryKey: pricingAnalysisKeys.detail(result.pricingAnalysisId ?? pricingAnalysisId),
       });
 
-      toast.success('Selection saved');
+      toast.success(tp('toasts.selectionSaved'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? 'Failed to save selection');
+      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
     }
   };
 
@@ -144,7 +147,7 @@ export function useSelectionActions({
     const appraisalValue = method?.appraisalValue ?? 0;
 
     if (appraisalValue <= 0) {
-      toast.error('Please calculate appraisal value.');
+      toast.error(tp('toasts.calculateFirst'));
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_METHOD', payload: arg });
@@ -155,7 +158,7 @@ export function useSelectionActions({
         { pricingAnalysisId, methodId: method.id },
         {
           onError: (err: any) => {
-            toast.error(err?.apiError?.detail ?? 'Failed to select method');
+            toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
           },
         },
       );
@@ -167,7 +170,7 @@ export function useSelectionActions({
     const method = appr?.methods.some((m: Method) => m.isSelected);
 
     if (!method) {
-      toast.error('Method does not select');
+      toast.error(tp('toasts.methodNotSelected'));
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_APPROACH', payload: { approachType } });
@@ -181,9 +184,9 @@ export function useSelectionActions({
         queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
       });
 
-      toast.success('Selection saved');
+      toast.success(tp('toasts.selectionSaved'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? 'Failed to save selection');
+      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
     }
   };
 
@@ -222,16 +225,18 @@ export function useSelectionActions({
         request: { methodType: mapToServerMethodType(arg.methodType), status: null },
       });
 
-      toast.success('Method added');
+      toast.success(tp('toasts.methodAdded'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? 'Failed to add method');
+      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
     }
   };
 
   // ==================== Delete Method ====================
   const deleteMethodMutation = useDeletePricingAnalysisMethod();
   const { isOpen: isDeleteOpen, onOpen: openDelete, onClose: closeDelete } = useDisclosure();
-  const [pendingDelete, setPendingDelete] = useState<(MethodKey & { methodId: string; hasData: boolean }) | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<
+    (MethodKey & { methodId: string; hasData: boolean }) | null
+  >(null);
 
   const requestDeleteMethod = (arg: MethodKey) => {
     const appr = state.editDraft.find((a: Approach) => a.approachType === arg.approachType);
@@ -249,7 +254,9 @@ export function useSelectionActions({
   const confirmDelete = async () => {
     if (!pendingDelete) return;
 
-    const appr = state.editDraft.find((a: Approach) => a.approachType === pendingDelete.approachType);
+    const appr = state.editDraft.find(
+      (a: Approach) => a.approachType === pendingDelete.approachType,
+    );
     if (!appr?.id || !isServerId(appr.id)) return;
 
     try {
@@ -258,11 +265,11 @@ export function useSelectionActions({
         approachId: appr.id,
         methodId: pendingDelete.methodId,
       });
-      toast.success('Method deleted');
+      toast.success(tp('toasts.methodDeleted'));
       setPendingDelete(null);
       closeDelete();
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? 'Failed to delete method');
+      toast.error(err?.apiError?.detail ?? tp('toasts.failedReset'));
     }
   };
 

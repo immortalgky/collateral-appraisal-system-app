@@ -9,8 +9,12 @@ interface ScrollableTableContainerProps {
   maxHeight?: string;
 }
 
-export function ScrollableTableContainer({ children, className, maxHeight }: ScrollableTableContainerProps) {
-  const { t } = useTranslation('common');
+export function ScrollableTableContainer({
+  children,
+  className,
+  maxHeight,
+}: ScrollableTableContainerProps) {
+  const { t } = useTranslation(['common', 'pricingAnalysis']);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -69,8 +73,12 @@ export function ScrollableTableContainer({ children, className, maxHeight }: Scr
       {hasOverflow && (
         <div className="flex justify-end px-2 py-1">
           <span className="text-xs text-gray-400 flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded border border-gray-300 bg-gray-50 text-[10px] font-mono">←</kbd>
-            <kbd className="px-1 py-0.5 rounded border border-gray-300 bg-gray-50 text-[10px] font-mono">→</kbd>
+            <kbd className="px-1 py-0.5 rounded border border-gray-300 bg-gray-50 text-[10px] font-mono">
+              ←
+            </kbd>
+            <kbd className="px-1 py-0.5 rounded border border-gray-300 bg-gray-50 text-[10px] font-mono">
+              →
+            </kbd>
             <span className="ml-0.5">{t('hint.scrollWithArrowKeys')}</span>
           </span>
         </div>
@@ -92,7 +100,7 @@ export function ScrollableTableContainer({ children, className, maxHeight }: Scr
           type="button"
           onClick={() => scroll('left')}
           className="absolute left-2 top-1/2 -translate-y-1/2 z-40 size-8 rounded-full bg-white/80 shadow-md border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-white hover:shadow-lg transition-all"
-          aria-label="Scroll left"
+          aria-label={t('pricingAnalysis:aria.scrollLeft')}
         >
           <Icon name="chevron-left" className="size-4 text-gray-600" />
         </button>
@@ -103,7 +111,7 @@ export function ScrollableTableContainer({ children, className, maxHeight }: Scr
           type="button"
           onClick={() => scroll('right')}
           className="absolute right-2 top-1/2 -translate-y-1/2 z-40 size-8 rounded-full bg-white/80 shadow-md border border-gray-200 flex items-center justify-center cursor-pointer hover:bg-white hover:shadow-lg transition-all"
-          aria-label="Scroll right"
+          aria-label={t('pricingAnalysis:aria.scrollRight')}
         >
           <Icon name="chevron-right" className="size-4 text-gray-600" />
         </button>

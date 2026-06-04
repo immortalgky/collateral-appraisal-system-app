@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
@@ -66,11 +67,10 @@ interface ModelAssumptionsTableProps {
 }
 
 function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTableProps) {
+  const { t } = useTranslation('blockProject');
   if (assumptions.length === 0) {
     return (
-      <p className="text-xs text-gray-400 text-center py-6">
-        No model assumptions — add models first
-      </p>
+      <p className="text-xs text-gray-400 text-center py-6">{t('unitPrice.noModelAssumptions')}</p>
     );
   }
 
@@ -80,27 +80,27 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
         <thead className="bg-gray-50">
           <tr>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[160px]">
-              Model
+              {t('unitPrice.cols.model')}
             </th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium w-full min-w-[200px]">
-              Description
+              {t('unitPrice.cols.description')}
             </th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Usable Area (sq.m.)
+              {t('unitPrice.cols.usableAreaSqm2')}
             </th>
             {isLandAndBuildingLike(projectType) && (
               <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                Standard Land (Sq.Wa)
+                {t('unitPrice.cols.standardLandSqWa')}
               </th>
             )}
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Standard Price (Baht/sq.m)
+              {t('unitPrice.cols.standardPriceBahtSqm')}
             </th>
             <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Coverage Amount (Baht/Sq.m)
+              {t('unitPrice.cols.coverageAmountBahtSqm')}
             </th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              Fire Insurance Condition
+              {t('unitPrice.cols.fireInsuranceCondition')}
             </th>
           </tr>
         </thead>
@@ -112,9 +112,11 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
               <td className="py-2 px-3 text-right text-gray-800 whitespace-nowrap">
                 {m.usableAreaFrom == null && m.usableAreaTo == null
                   ? '-'
-                  : m.usableAreaFrom != null && m.usableAreaTo != null && m.usableAreaFrom !== m.usableAreaTo
+                  : m.usableAreaFrom != null &&
+                      m.usableAreaTo != null &&
+                      m.usableAreaFrom !== m.usableAreaTo
                     ? `${m.usableAreaFrom.toLocaleString()} - ${m.usableAreaTo.toLocaleString()}`
-                    : (m.usableAreaFrom ?? m.usableAreaTo)?.toLocaleString() ?? '-'}
+                    : ((m.usableAreaFrom ?? m.usableAreaTo)?.toLocaleString() ?? '-')}
               </td>
               {isLandAndBuildingLike(projectType) && (
                 <td className="py-2 px-3 text-right text-gray-800">
@@ -129,10 +131,10 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
               </td>
               <td className="py-2 px-3 text-gray-600">
                 {m.fireInsuranceCondition
-                  ? (isCondo(projectType)
+                  ? ((isCondo(projectType)
                       ? CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE[m.fireInsuranceCondition]
                       : LB_FIRE_INSURANCE_LABEL_BY_VALUE[m.fireInsuranceCondition]) ??
-                    m.fireInsuranceCondition
+                    m.fireInsuranceCondition)
                   : '-'}
               </td>
             </tr>
@@ -179,21 +181,23 @@ function FlagCell({
   );
 }
 
-
 type CondoFlag = 'isCorner' | 'isEdge' | 'isPoolView' | 'isSouth' | 'isOther' | 'isNearGarden';
 
 interface UnitPriceResultTableProps {
   unitPrices: ProjectUnitPrice[];
   projectType: ProjectType;
   isLoading: boolean;
-  pricingAssumption: {
-    cornerAdjustment?: number | null;
-    edgeAdjustment?: number | null;
-    poolViewAdjustment?: number | null;
-    southAdjustment?: number | null;
-    otherAdjustment?: number | null;
-    nearGardenAdjustment?: number | null;
-  } | null | undefined;
+  pricingAssumption:
+    | {
+        cornerAdjustment?: number | null;
+        edgeAdjustment?: number | null;
+        poolViewAdjustment?: number | null;
+        southAdjustment?: number | null;
+        otherAdjustment?: number | null;
+        nearGardenAdjustment?: number | null;
+      }
+    | null
+    | undefined;
   onToggleFlag: (unitId: string, flag: CondoFlag, value: boolean) => void;
   isDisabled: boolean;
 }
@@ -206,9 +210,13 @@ function UnitPriceResultTable({
   onToggleFlag,
   isDisabled,
 }: UnitPriceResultTableProps) {
+  const { t } = useTranslation('blockProject');
   const totals = useMemo(() => {
     const sum = (fn: (up: ProjectUnitPrice) => number | null | undefined): number =>
-      unitPrices.reduce((acc, up) => { const v = fn(up); return v != null ? acc + v : acc; }, 0);
+      unitPrices.reduce((acc, up) => {
+        const v = fn(up);
+        return v != null ? acc + v : acc;
+      }, 0);
     const adj = pricingAssumption;
     const cornerCount = unitPrices.filter(up => up.isCorner).length;
     const edgeCount = unitPrices.filter(up => up.isEdge).length;
@@ -221,12 +229,19 @@ function UnitPriceResultTable({
       usableArea: sum(up => up.usableArea),
       sellingPrice: sum(up => up.sellingPrice),
       landArea: sum(up => up.landArea),
-      cornerCount, cornerAmount: cornerCount > 0 ? cornerCount * (adj?.cornerAdjustment ?? 0) : null,
-      edgeCount, edgeAmount: edgeCount > 0 ? edgeCount * (adj?.edgeAdjustment ?? 0) : null,
-      poolViewCount, poolViewAmount: poolViewCount > 0 ? poolViewCount * (adj?.poolViewAdjustment ?? 0) : null,
-      southCount, southAmount: southCount > 0 ? southCount * (adj?.southAdjustment ?? 0) : null,
-      otherCount, otherAmount: otherCount > 0 ? otherCount * (adj?.otherAdjustment ?? 0) : null,
-      nearGardenCount, nearGardenAmount: nearGardenCount > 0 ? nearGardenCount * (adj?.nearGardenAdjustment ?? 0) : null,
+      cornerCount,
+      cornerAmount: cornerCount > 0 ? cornerCount * (adj?.cornerAdjustment ?? 0) : null,
+      edgeCount,
+      edgeAmount: edgeCount > 0 ? edgeCount * (adj?.edgeAdjustment ?? 0) : null,
+      poolViewCount,
+      poolViewAmount: poolViewCount > 0 ? poolViewCount * (adj?.poolViewAdjustment ?? 0) : null,
+      southCount,
+      southAmount: southCount > 0 ? southCount * (adj?.southAdjustment ?? 0) : null,
+      otherCount,
+      otherAmount: otherCount > 0 ? otherCount * (adj?.otherAdjustment ?? 0) : null,
+      nearGardenCount,
+      nearGardenAmount:
+        nearGardenCount > 0 ? nearGardenCount * (adj?.nearGardenAdjustment ?? 0) : null,
       adjustPriceLocation: sum(up => up.adjustPriceLocation),
       landAreaDifference: sum(up => up.landAreaDifference),
       landIncreaseDecreaseAmount: sum(up => up.landIncreaseDecreaseAmount),
@@ -234,7 +249,9 @@ function UnitPriceResultTable({
       totalAppraisalValueRounded: sum(up => up.totalAppraisalValueRounded),
       forceSellingPrice: sum(up => up.forceSellingPrice),
       coverageAmount: sum(up =>
-        up.coverageAmount != null && up.usableArea != null ? up.coverageAmount * up.usableArea : null,
+        up.coverageAmount != null && up.usableArea != null
+          ? up.coverageAmount * up.usableArea
+          : null,
       ),
     };
   }, [unitPrices, pricingAssumption]);
@@ -253,7 +270,7 @@ function UnitPriceResultTable({
     return (
       <div className="flex flex-col items-center justify-center py-10 text-gray-400">
         <Icon name="calculator" className="text-3xl mb-2" />
-        <p className="text-sm">No units uploaded yet — upload a unit list first</p>
+        <p className="text-sm">{t('unitPrice.noUnitsUploaded')}</p>
       </div>
     );
   }
@@ -263,57 +280,123 @@ function UnitPriceResultTable({
       <table className="w-full text-xs">
         <thead className="bg-gray-50">
           <tr>
-            <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Seq No</th>
+            <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.seqNo')}
+            </th>
             {isCondo(projectType) && (
               <>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium">Floor</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Tower Name</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Reg Number</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Room No.</th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.floor')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.towerName')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.regNumber')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.roomNo')}
+                </th>
               </>
             )}
             {isLandAndBuildingLike(projectType) && (
               <>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Plot No</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">House No</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">No. of Floors</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (Sq.Wa)</th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.plotNo')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.houseNo')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.model')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.numberOfFloors')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.landAreaSqWa')}
+                </th>
               </>
             )}
             {isCondo(projectType) && (
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model</th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.model')}
+              </th>
             )}
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m)</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price</th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.usableAreaSqm')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.sellingPrice')}
+            </th>
             {/* Common flags */}
             {isCondo(projectType) ? (
               <>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Corner</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Edge</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Pool View</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">South</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Other</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Adjust Price / Location</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Standard Price</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Price Increment/Floor</th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.corner')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.edge')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.poolView')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.south')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.other')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.adjustPriceLocation')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.standardPrice')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.priceIncrementFloor')}
+                </th>
               </>
             ) : (
               <>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Corner</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Edge</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Near Garden/Clubhouse</th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Other</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Diff (Sq.Wa)</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land +/- (Baht)</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Location Adj.</th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Standard Price</th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.corner')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.edge')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.nearGardenClubhouse')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitPrice.cols.other')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.landDiffSqWa')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.landPlusMinus')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.locationAdj')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.standardPrice')}
+                </th>
               </>
             )}
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Appraisal Value</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Rounded Value</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Force Sale Price</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Coverage Amount</th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.appraisalValue')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.roundedValue')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.forceSalePrice')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitPrice.cols.coverageAmount')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -374,9 +457,13 @@ function UnitPriceResultTable({
                     onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
                     disabled={isDisabled}
                   />
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.adjustPriceLocation)}</td>
+                  <td className="py-2 px-3 text-right text-gray-800">
+                    {fmt(up.adjustPriceLocation)}
+                  </td>
                   <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.priceIncrementPerFloor)}</td>
+                  <td className="py-2 px-3 text-right text-gray-800">
+                    {fmt(up.priceIncrementPerFloor)}
+                  </td>
                 </>
               ) : (
                 <>
@@ -410,7 +497,9 @@ function UnitPriceResultTable({
                   <td className="py-2 px-3 text-right text-gray-800">
                     {up.landIncreaseDecreaseAmount?.toLocaleString() ?? '-'}
                   </td>
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.adjustPriceLocation)}</td>
+                  <td className="py-2 px-3 text-right text-gray-800">
+                    {fmt(up.adjustPriceLocation)}
+                  </td>
                   <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
                 </>
               )}
@@ -420,9 +509,7 @@ function UnitPriceResultTable({
               <td className="py-2 px-3 text-right font-medium text-gray-900">
                 {fmt(up.totalAppraisalValueRounded)}
               </td>
-              <td className="py-2 px-3 text-right text-gray-800">
-                {fmt(up.forceSellingPrice)}
-              </td>
+              <td className="py-2 px-3 text-right text-gray-800">{fmt(up.forceSellingPrice)}</td>
               <td className="py-2 px-3 text-right text-gray-800">
                 {fmt(
                   up.coverageAmount != null && up.usableArea != null
@@ -437,72 +524,120 @@ function UnitPriceResultTable({
           <tfoot>
             <tr className="bg-primary/5 border-t-2 border-primary/20">
               {isCondo(projectType) ? (
-                <td colSpan={6} className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap">
-                  Total — {totals.unitCount.toLocaleString()} units
+                <td
+                  colSpan={6}
+                  className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
+                >
+                  {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
                 </td>
               ) : (
-                <td colSpan={5} className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap">
-                  Total — {totals.unitCount.toLocaleString()} units
+                <td
+                  colSpan={5}
+                  className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
+                >
+                  {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
                 </td>
               )}
               {isLandAndBuildingLike(projectType) && (
-                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.landArea)}</td>
+                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                  {fmt(totals.landArea)}
+                </td>
               )}
               <td className="py-2.5 px-3" />
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.sellingPrice)}</td>
+              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                {fmt(totals.sellingPrice)}
+              </td>
               {/* Flag totals */}
               <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                {totals.cornerCount > 0
-                  ? <>{totals.cornerCount} · {fmt(totals.cornerAmount)}</>
-                  : <span className="text-gray-400">-</span>}
+                {totals.cornerCount > 0 ? (
+                  <>
+                    {totals.cornerCount} · {fmt(totals.cornerAmount)}
+                  </>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
               </td>
               <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                {totals.edgeCount > 0
-                  ? <>{totals.edgeCount} · {fmt(totals.edgeAmount)}</>
-                  : <span className="text-gray-400">-</span>}
+                {totals.edgeCount > 0 ? (
+                  <>
+                    {totals.edgeCount} · {fmt(totals.edgeAmount)}
+                  </>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
               </td>
               {isCondo(projectType) ? (
                 <>
                   <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                    {totals.poolViewCount > 0
-                      ? <>{totals.poolViewCount} · {fmt(totals.poolViewAmount)}</>
-                      : <span className="text-gray-400">-</span>}
+                    {totals.poolViewCount > 0 ? (
+                      <>
+                        {totals.poolViewCount} · {fmt(totals.poolViewAmount)}
+                      </>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                    {totals.southCount > 0
-                      ? <>{totals.southCount} · {fmt(totals.southAmount)}</>
-                      : <span className="text-gray-400">-</span>}
+                    {totals.southCount > 0 ? (
+                      <>
+                        {totals.southCount} · {fmt(totals.southAmount)}
+                      </>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </td>
                 </>
               ) : (
                 <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                  {totals.nearGardenCount > 0
-                    ? <>{totals.nearGardenCount} · {fmt(totals.nearGardenAmount)}</>
-                    : <span className="text-gray-400">-</span>}
+                  {totals.nearGardenCount > 0 ? (
+                    <>
+                      {totals.nearGardenCount} · {fmt(totals.nearGardenAmount)}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
                 </td>
               )}
               <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                {totals.otherCount > 0
-                  ? <>{totals.otherCount} · {fmt(totals.otherAmount)}</>
-                  : <span className="text-gray-400">-</span>}
+                {totals.otherCount > 0 ? (
+                  <>
+                    {totals.otherCount} · {fmt(totals.otherAmount)}
+                  </>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
               </td>
               {isLandAndBuildingLike(projectType) && (
                 <>
-                  <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">{fmt(totals.landAreaDifference)}</td>
-                  <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">{fmt(totals.landIncreaseDecreaseAmount)}</td>
+                  <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
+                    {fmt(totals.landAreaDifference)}
+                  </td>
+                  <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
+                    {fmt(totals.landIncreaseDecreaseAmount)}
+                  </td>
                 </>
               )}
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.adjustPriceLocation)}</td>
+              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                {fmt(totals.adjustPriceLocation)}
+              </td>
               {/* Standard Price — skip (per-sqm rate, not summable) */}
               <td className="py-2.5 px-3" />
               {isCondo(projectType) && (
                 /* Price Increment/Floor — not summable */
                 <td className="py-2.5 px-3" />
               )}
-              <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">{fmt(totals.totalAppraisalValue)}</td>
-              <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">{fmt(totals.totalAppraisalValueRounded)}</td>
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.forceSellingPrice)}</td>
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">{fmt(totals.coverageAmount)}</td>
+              <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
+                {fmt(totals.totalAppraisalValue)}
+              </td>
+              <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
+                {fmt(totals.totalAppraisalValueRounded)}
+              </td>
+              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                {fmt(totals.forceSellingPrice)}
+              </td>
+              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                {fmt(totals.coverageAmount)}
+              </td>
             </tr>
           </tfoot>
         )}
@@ -518,15 +653,18 @@ interface UnitPriceTabProps {
 }
 
 export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
+  const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const isReadOnly = usePageReadOnly();
 
   const schema = projectPricingAssumptionForm(projectType);
-  const defaults =
-    isCondo(projectType) ? condoPricingAssumptionFormDefaults : lbPricingAssumptionFormDefaults;
+  const defaults = isCondo(projectType)
+    ? condoPricingAssumptionFormDefaults
+    : lbPricingAssumptionFormDefaults;
 
-  const { data: pricingAssumption, isLoading: assumptionLoading } =
-    useGetProjectPricingAssumptions(appraisalId ?? '');
+  const { data: pricingAssumption, isLoading: assumptionLoading } = useGetProjectPricingAssumptions(
+    appraisalId ?? '',
+  );
 
   const { data: unitPricesData, isLoading: pricesLoading } = useGetProjectUnitPrices(
     appraisalId ?? '',
@@ -548,8 +686,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
     useSaveProjectPricingAssumptions();
   const { mutateAsync: calculatePricesAsync, isPending: isCalculating } =
     useCalculateProjectUnitPrices();
-  const { mutateAsync: saveUnitFlagsAsync, isPending: isSavingFlags } =
-    useSaveProjectUnitPrices();
+  const { mutateAsync: saveUnitFlagsAsync, isPending: isSavingFlags } = useSaveProjectUnitPrices();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const methods = useForm<any>({
@@ -621,13 +758,13 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
       if (withCalculate) {
         await calculatePricesAsync({ appraisalId });
-        toast.success('Pricing assumptions saved and unit prices recalculated');
+        toast.success(t('toasts.pricing.saveSuccess'));
       } else {
-        toast.success('Pricing assumptions saved as draft');
+        toast.success(t('toasts.pricing.saveDraftSuccess'));
       }
     } catch (err) {
       const error = err as AppError;
-      toast.error(error?.apiError?.detail ?? 'Failed to save assumptions');
+      toast.error(error?.apiError?.detail ?? t('toasts.pricing.saveFailed'));
     } finally {
       setSaveIntent(null);
     }
@@ -648,48 +785,50 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
   // Lookup: modelType → model assumption fields needed for LB preview enrichment.
   const modelLookup = useMemo(
-    () => new Map(
-      modelAssumptions.map(m => [
-        m.modelType ?? '',
-        {
-          standardPrice: m.finalAppraisedValue,
-          coverageAmount: m.coverageAmount,
-          // standardLandPrice holds the standard land AREA (Sq.Wa) — see DeriveFromModels
-          standardLandArea: m.standardLandPrice,
-        },
-      ]),
-    ),
+    () =>
+      new Map(
+        modelAssumptions.map(m => [
+          m.modelType ?? '',
+          {
+            standardPrice: m.finalAppraisedValue,
+            coverageAmount: m.coverageAmount,
+            // standardLandPrice holds the standard land AREA (Sq.Wa) — see DeriveFromModels
+            standardLandArea: m.standardLandPrice,
+          },
+        ]),
+      ),
     [modelAssumptions],
   );
 
   // Derived display rows: re-run the preview calc whenever the local flag set
   // OR the watched assumption form values change.
   const displayedUnitPrices = useMemo(
-    () => localUnitPrices.map(up => {
-      const lookup = modelLookup.get(up.modelType ?? '');
-      // For LB: compute land area diff and land +/- live from model standard land area.
-      // Always recompute so it responds to rate / assumption changes in the form.
-      const landAreaDifference =
-        isLandAndBuildingLike(projectType) &&
-        up.landArea != null &&
-        lookup?.standardLandArea != null
-          ? up.landArea - lookup.standardLandArea
-          : up.landAreaDifference;
-      const landIncreaseDecreaseAmount =
-        landAreaDifference != null &&
-        (watchedAssumption as AssumptionInputs).landIncreaseDecreaseRate != null
-          ? landAreaDifference *
-            ((watchedAssumption as AssumptionInputs).landIncreaseDecreaseRate as number)
-          : up.landIncreaseDecreaseAmount;
-      const enriched: typeof up = {
-        ...up,
-        standardPrice: lookup?.standardPrice ?? up.standardPrice ?? undefined,
-        coverageAmount: lookup?.coverageAmount ?? up.coverageAmount ?? undefined,
-        landAreaDifference,
-        landIncreaseDecreaseAmount,
-      };
-      return recomputeUnitPrice(enriched, watchedAssumption, projectType);
-    }),
+    () =>
+      localUnitPrices.map(up => {
+        const lookup = modelLookup.get(up.modelType ?? '');
+        // For LB: compute land area diff and land +/- live from model standard land area.
+        // Always recompute so it responds to rate / assumption changes in the form.
+        const landAreaDifference =
+          isLandAndBuildingLike(projectType) &&
+          up.landArea != null &&
+          lookup?.standardLandArea != null
+            ? up.landArea - lookup.standardLandArea
+            : up.landAreaDifference;
+        const landIncreaseDecreaseAmount =
+          landAreaDifference != null &&
+          (watchedAssumption as AssumptionInputs).landIncreaseDecreaseRate != null
+            ? landAreaDifference *
+              ((watchedAssumption as AssumptionInputs).landIncreaseDecreaseRate as number)
+            : up.landIncreaseDecreaseAmount;
+        const enriched: typeof up = {
+          ...up,
+          standardPrice: lookup?.standardPrice ?? up.standardPrice ?? undefined,
+          coverageAmount: lookup?.coverageAmount ?? up.coverageAmount ?? undefined,
+          landAreaDifference,
+          landIncreaseDecreaseAmount,
+        };
+        return recomputeUnitPrice(enriched, watchedAssumption, projectType);
+      }),
     [localUnitPrices, watchedAssumption, projectType, modelLookup],
   );
   const isBusy = isSaving || isSavingFlags || isCalculating;
@@ -706,7 +845,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
             <div className="bg-white rounded-xl border border-gray-100 p-6">
               <SectionHeader
                 icon="layer-group"
-                label="Model Assumptions"
+                label={t('unitPrice.modelAssumptions')}
                 color="bg-blue-50 text-blue-600"
               />
               <div className="h-px bg-gray-100 mb-4" />
@@ -731,12 +870,12 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
               <div className="flex items-center justify-between mb-4">
                 <SectionHeader
                   icon="tags"
-                  label="Calculated Unit Prices"
+                  label={t('unitPrice.calculatedUnitPrices')}
                   color="bg-violet-50 text-violet-600"
                 />
                 {displayedUnitPrices.length > 0 && (
                   <span className="text-xs text-gray-500 self-start mt-0.5">
-                    {displayedUnitPrices.length.toLocaleString()} units
+                    {t('unitPrice.totalUnits', { n: displayedUnitPrices.length.toLocaleString() })}
                   </span>
                 )}
               </div>

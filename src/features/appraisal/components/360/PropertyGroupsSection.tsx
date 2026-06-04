@@ -39,11 +39,7 @@ const PropertyGroupsSection = ({
         </h2>
       </div>
       {groups.map(group => (
-        <PropertyGroupCard
-          key={group.id}
-          group={group}
-          onPropertyClick={onPropertyClick}
-        />
+        <PropertyGroupCard key={group.id} group={group} onPropertyClick={onPropertyClick} />
       ))}
     </div>
   );

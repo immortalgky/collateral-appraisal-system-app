@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import clsx from 'clsx';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/components';
 import { MethodFooterActions } from '../../MethodFooterActions';
 import { FormProvider } from '@/shared/components/form/FormProvider';
@@ -25,9 +26,9 @@ import toast from 'react-hot-toast';
 
 type CondoTabId = 'unitDetails' | 'summary';
 
-const TABS = [
-  { id: 'unitDetails' as const, label: 'Unit Details', icon: 'table' },
-  { id: 'summary' as const, label: 'Summary', icon: 'chart-bar' },
+const TABS_CONFIG = [
+  { id: 'unitDetails' as const, labelKey: 'hypothesis.tabs.unitDetails', icon: 'table' },
+  { id: 'summary' as const, labelKey: 'hypothesis.tabs.summary', icon: 'chart-bar' },
 ];
 
 function mapSavedToFormValues(savedData: GetHypothesisAnalysisResult): CondominiumFormValues {
@@ -94,9 +95,12 @@ export function CondominiumTabs({
   onReset,
   onCancel,
 }: CondominiumTabsProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const [activeTab, setActiveTab] = useState<CondoTabId>('unitDetails');
   const [previewSummary, setPreviewSummary] = useState<CondominiumSummaryDto | null>(null);
-  const [previewTotalLandAreaFromTitles, setPreviewTotalLandAreaFromTitles] = useState<number | null>(null);
+  const [previewTotalLandAreaFromTitles, setPreviewTotalLandAreaFromTitles] = useState<
+    number | null
+  >(null);
 
   const isInitialized = useRef(false);
 
@@ -163,7 +167,7 @@ export function CondominiumTabs({
     previewMutation.mutate(
       { pricingAnalysisId, methodId, request },
       {
-        onSuccess: (result) => {
+        onSuccess: result => {
           if (result.condominiumSummary) setPreviewSummary(result.condominiumSummary);
           if (result.totalLandAreaFromTitles !== undefined)
             setPreviewTotalLandAreaFromTitles(result.totalLandAreaFromTitles ?? null);
@@ -175,7 +179,10 @@ export function CondominiumTabs({
 
   useEffect(() => {
     const key = JSON.stringify(watchedFields);
-    if (prevWatchKey.current === null) { prevWatchKey.current = key; return; }
+    if (prevWatchKey.current === null) {
+      prevWatchKey.current = key;
+      return;
+    }
     if (key === prevWatchKey.current) return;
     prevWatchKey.current = key;
 
@@ -185,7 +192,12 @@ export function CondominiumTabs({
       runPreviewRef.current();
     }, 400);
   }, [watchedFields]);
-  useEffect(() => () => { if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current); }, []);
+  useEffect(
+    () => () => {
+      if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current);
+    },
+    [],
+  );
 
   // Single-shot init: reset the form from saved data, then immediately fire the
   // initial preview so Summary tab populates even when navigating in via React
@@ -251,13 +263,15 @@ export function CondominiumTabs({
     try {
       const result = await saveMutation.mutateAsync({ pricingAnalysisId, methodId, request });
       const finalValue = result.condominiumSummary?.totalAssetValueRounded ?? 0;
-      reset(mapSavedToFormValues({
-        ...savedData,
-        condominiumSummary: result.condominiumSummary ?? savedData.condominiumSummary,
-      }));
+      reset(
+        mapSavedToFormValues({
+          ...savedData,
+          condominiumSummary: result.condominiumSummary ?? savedData.condominiumSummary,
+        }),
+      );
       onSaveSuccess(finalValue);
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('hypothesis.toasts.saveFailed'));
     }
   };
 
@@ -268,7 +282,7 @@ export function CondominiumTabs({
   return (
     <FormProvider methods={methods} schema={CondominiumFormSchema}>
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
@@ -276,7 +290,7 @@ export function CondominiumTabs({
       >
         {/* Tab bar */}
         <nav className="shrink-0 flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100 self-start">
-          {TABS.map(tab => {
+          {TABS_CONFIG.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -295,7 +309,7 @@ export function CondominiumTabs({
                   style="solid"
                   className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
                 />
-                {tab.label}
+                {t(tab.labelKey as Parameters<typeof t>[0])}
               </button>
             );
           })}

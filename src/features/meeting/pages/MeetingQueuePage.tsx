@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -9,7 +10,12 @@ import Pagination from '@/shared/components/Pagination';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useHasPermission } from '@/shared/hooks/useHasPermission';
 
-import { useGetMeetingQueue, useAddMeetingItems, useCreateMeeting, useGetMeetings } from '../api/meetings';
+import {
+  useGetMeetingQueue,
+  useAddMeetingItems,
+  useCreateMeeting,
+  useGetMeetings,
+} from '../api/meetings';
 import MeetingFormDialog from '../components/MeetingFormDialog';
 import { MEETING_PERMISSIONS } from '../constants';
 
@@ -30,17 +36,14 @@ const AddToExistingMeetingModal = ({
   onConfirm,
   isBusy,
 }: AddToExistingMeetingModalProps) => {
+  const { t } = useTranslation('meeting');
   const [pickedId, setPickedId] = useState('');
 
   // Fetch New and InvitationSent meetings to allow selection.
-  // This modal is only rendered when the parent page has already confirmed the user is MeetingAdmin.
   const { data: newData } = useGetMeetings({ status: 'New', pageSize: 100 });
   const { data: invitationSentData } = useGetMeetings({ status: 'InvitationSent', pageSize: 100 });
 
-  const openMeetings = [
-    ...(newData?.items ?? []),
-    ...(invitationSentData?.items ?? []),
-  ];
+  const openMeetings = [...(newData?.items ?? []), ...(invitationSentData?.items ?? [])];
 
   const handleClose = () => {
     if (!isBusy) {
@@ -51,24 +54,28 @@ const AddToExistingMeetingModal = ({
 
   const handleConfirm = () => {
     if (!pickedId) {
-      toast.error('Select a meeting first');
+      toast.error(t('queue.selectMeetingFirst'));
       return;
     }
     onConfirm(pickedId);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add to Existing Meeting" size="sm">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={t('dialogs.addToExistingMeeting')}
+      size="sm"
+    >
       <div className="space-y-4">
         <p className="text-sm text-gray-600">
-          Select an open (New or Invitation Sent) meeting to add the{' '}
-          <strong>{selectedCount}</strong> selected appraisal{selectedCount === 1 ? '' : 's'} to.
+          {selectedCount === 1
+            ? t('addToExisting.description', { count: selectedCount })
+            : t('addToExisting.descriptionPlural', { count: selectedCount })}
         </p>
 
         {openMeetings.length === 0 ? (
-          <p className="text-sm text-gray-500 italic py-2">
-            No open meetings available. Create a new meeting first.
-          </p>
+          <p className="text-sm text-gray-500 italic py-2">{t('empty.noOpenMeetings')}</p>
         ) : (
           // TODO: replace with a richer meeting picker when design spec is finalised
           <select
@@ -76,7 +83,7 @@ const AddToExistingMeetingModal = ({
             onChange={e => setPickedId(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           >
-            <option value="">— Select meeting —</option>
+            <option value="">{t('addToExisting.selectMeeting')}</option>
             {openMeetings.map(m => (
               <option key={m.id} value={m.id}>
                 {m.title} [{m.status}]
@@ -94,14 +101,14 @@ const AddToExistingMeetingModal = ({
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" type="button" onClick={handleClose} disabled={isBusy}>
-            Cancel
+            {t('buttons.cancel')}
           </Button>
           <Button
             type="button"
             onClick={handleConfirm}
             disabled={!pickedId || isBusy || openMeetings.length === 0}
           >
-            {isBusy ? 'Adding...' : 'Add to Meeting'}
+            {isBusy ? t('addToExisting.adding') : t('addToExisting.addToMeeting')}
           </Button>
         </div>
       </div>
@@ -117,6 +124,7 @@ const formatCurrency = (value: number) =>
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const MeetingQueuePage = () => {
+  const { t } = useTranslation('meeting');
   const navigate = useNavigate();
   const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
   const [pageNumber, setPageNumber] = useState(0);
@@ -170,13 +178,14 @@ const MeetingQueuePage = () => {
       { id: meetingId, body: { queueItemIds: Array.from(selected) } },
       {
         onSuccess: () => {
-          toast.success(`Added ${selected.size} appraisal${selected.size === 1 ? '' : 's'}`);
+          const key = selected.size === 1 ? 'toasts.itemsAdded' : 'toasts.itemsAddedPlural';
+          toast.success(t(key, { count: selected.size }));
           setSelected(new Set());
           navigate(`/meetings/${meetingId}`);
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Meeting created but failed to add items');
+          toast.error(detail || t('toasts.meetingCreatedButItemsFailed'));
           navigate(`/meetings/${meetingId}`);
         },
       },
@@ -193,14 +202,15 @@ const MeetingQueuePage = () => {
       { id: meetingId, body: { queueItemIds: Array.from(selected) } },
       {
         onSuccess: () => {
-          toast.success(`Added ${selected.size} appraisal${selected.size === 1 ? '' : 's'}`);
+          const key = selected.size === 1 ? 'toasts.itemsAdded' : 'toasts.itemsAddedPlural';
+          toast.success(t(key, { count: selected.size }));
           setSelected(new Set());
           existingMeetingDialog.onClose();
           navigate(`/meetings/${meetingId}`);
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to add items to meeting');
+          toast.error(detail || t('toasts.itemsAddToExistingFailed'));
         },
       },
     );
@@ -214,19 +224,17 @@ const MeetingQueuePage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Awaiting Meeting Queue</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.queue.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Tier-3 appraisals (facility limit &gt; 30M) waiting to be assigned to a meeting
-          </p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.queue.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={() => navigate('/meetings')}>
             <Icon name="list" style="solid" className="size-3.5 mr-1.5" />
-            All Meetings
+            {t('buttons.allMeetings')}
           </Button>
           {hasAdmin && (
             <Button
@@ -236,13 +244,21 @@ const MeetingQueuePage = () => {
               onClick={existingMeetingDialog.onOpen}
             >
               <Icon name="arrow-right-to-bracket" style="solid" className="size-3.5 mr-1.5" />
-              Add to Existing{selected.size > 0 ? ` (${selected.size})` : ''}
+              {selected.size > 0
+                ? t('buttons.addToExistingCount', { n: selected.size })
+                : t('buttons.addToExisting')}
             </Button>
           )}
           {hasAdmin && (
-            <Button size="sm" disabled={selected.size === 0 || isBusy} onClick={newMeetingDialog.onOpen}>
+            <Button
+              size="sm"
+              disabled={selected.size === 0 || isBusy}
+              onClick={newMeetingDialog.onOpen}
+            >
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-              Add to New Meeting{selected.size > 0 ? ` (${selected.size})` : ''}
+              {selected.size > 0
+                ? t('buttons.addToNewMeetingCount', { n: selected.size })
+                : t('buttons.addToNewMeeting')}
             </Button>
           )}
         </div>
@@ -259,12 +275,18 @@ const MeetingQueuePage = () => {
                     type="checkbox"
                     checked={selected.size === items.length && items.length > 0}
                     onChange={toggleAll}
-                    aria-label="Select all"
+                    aria-label={t('aria.selectAll')}
                   />
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Appraisal #</th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5">Facility Limit</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Enqueued</th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.appraisalNo')}
+                </th>
+                <th className="text-right font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.facilityLimit')}
+                </th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.enqueued')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -281,7 +303,7 @@ const MeetingQueuePage = () => {
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
-                    No appraisals waiting in the queue.
+                    {t('empty.noQueue')}
                   </td>
                 </tr>
               ) : (
@@ -299,7 +321,7 @@ const MeetingQueuePage = () => {
                           type="checkbox"
                           checked={selected.has(item.id)}
                           onChange={() => toggle(item.id)}
-                          aria-label={`Select ${label}`}
+                          aria-label={t('aria.selectItem', { label })}
                         />
                       </td>
                       <td className="px-4 py-3 text-gray-900 font-medium">

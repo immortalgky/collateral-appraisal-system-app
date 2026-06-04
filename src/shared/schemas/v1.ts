@@ -1997,6 +1997,7 @@ const PaymentHistoryDto = z
     appraisalFeeId: z.string().uuid(),
     paymentAmount: z.number(),
     paymentDate: z.string().datetime({ offset: true }),
+    source: z.string().optional(),
   })
   .partial()
   .passthrough();
@@ -2513,6 +2514,7 @@ const PropertyGroupItemDto = z
     location: z.string().nullable(),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
+    isRentedOut: z.boolean().nullable(),
     photos: z.array(PropertyPhotoDto).nullable(),
   })
   .partial()

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import type { CompanyQuotationDto, InvitedCompanyDto } from '../schemas/quotation';
@@ -8,6 +9,8 @@ interface InvitedCompaniesTableProps {
 }
 
 const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompaniesTableProps) => {
+  const { t } = useTranslation('quotation');
+
   return (
     <div className="rounded-xl border border-gray-200 overflow-hidden">
       <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
@@ -15,13 +18,13 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
           <Icon name="building" style="solid" className="size-3.5 text-teal-600" />
         </div>
         <h2 className="text-sm font-semibold text-gray-700">
-          Invited Companies ({companies.length})
+          {t('invitedCompanies.title')} ({companies.length})
         </h2>
       </div>
 
       {companies.length === 0 ? (
         <div className="px-4 py-8 text-center">
-          <p className="text-sm text-gray-500">No companies invited yet.</p>
+          <p className="text-sm text-gray-500">{t('empty.noCompaniesInvited')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -32,13 +35,13 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
                   #
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company Name
+                  {t('columns.companyName')}
                 </th>
                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Email
+                  {t('columns.email')}
                 </th>
                 <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('columns.status')}
                 </th>
               </tr>
             </thead>
@@ -61,7 +64,7 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
                         <QuotationStatusBadge status={cq.status} />
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                          Pending
+                          {t('invitedCompanies.pending')}
                         </span>
                       )}
                     </td>

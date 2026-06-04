@@ -1,0 +1,180 @@
+{
+  "page": {
+    "title": "Supporting Data Maintenance",
+    "subtitle": "Manage imported supporting data requests",
+    "listTitle": "Supporting Data Maintenance"
+  },
+  "tabs": {
+    "importing": "Importing",
+    "archived": "Archived"
+  },
+  "columns": {
+    "supportingNumber": "Supporting No.",
+    "createdDate": "Created Date",
+    "importChannel": "Import Channel",
+    "sourceOfData": "Source of Data",
+    "lastModifiedBy": "Last Modified By",
+    "lastModifiedDate": "Last Modified Date",
+    "movement": "Movement",
+    "status": "Status",
+    "no": "No.",
+    "propertyName": "Property Name",
+    "type": "Type",
+    "address": "Address",
+    "coordinates": "Coordinates"
+  },
+  "filterLabels": {
+    "supportingNumber": "Supporting No.",
+    "createdDate": "Created Date",
+    "status": "Status",
+    "importChannel": "Import Channel",
+    "dateType": "Date Type",
+    "dateFrom": "Date From",
+    "dateTo": "Date To"
+  },
+  "actions": {
+    "create": "Create",
+    "filters": "Filters",
+    "clearSearch": "Clear search",
+    "clearAll": "Clear all",
+    "open": "Open",
+    "importExcel": "Import Excel",
+    "addItem": "Add Item",
+    "saveDraft": "Save draft",
+    "submit": "Submit",
+    "save": "Save"
+  },
+  "search": {
+    "placeholder": "Search supporting data..."
+  },
+  "filterDialog": {
+    "title": "Filter",
+    "supportingNumber": "Supporting No.",
+    "supportingNumberPlaceholder": "Enter supporting no.",
+    "status": "Supporting Data Status",
+    "statusPlaceholder": "Please select",
+    "createdDate": "Created Date",
+    "dateRange": "Date Range",
+    "clearDates": "Clear dates",
+    "dateType": "Date Type",
+    "fromLabel": "From",
+    "toLabel": "To",
+    "dateRangeError": "\"From\" date cannot be after \"To\" date.",
+    "statusOptions": {
+      "Draft": "Draft",
+      "Pending": "Pending",
+      "Approved": "Approved",
+      "Cancelled": "Cancelled",
+      "Reject": "Reject"
+    }
+  },
+  "formSections": {
+    "supportingDataTitle": "Supporting Data Maintenance",
+    "supportingDataSubtitle": "General information for this batch of supporting data",
+    "supportingDataDetailsTitle": "Supporting Data Details",
+    "decisionTitle": "Decision",
+    "photos": "Photos",
+    "supportingDataDetailHeader": "Supporting Data Detail",
+    "propertyInformation": "Property Information",
+    "locationDetails": "Location Details",
+    "financialDetails": "Financial Details",
+    "contactInformation": "Contact Information",
+    "sourceAndReference": "Source & Reference Information"
+  },
+  "fields": {
+    "importChannel": "Import Channel",
+    "importDate": "Import Date",
+    "sourceOfData": "Source of Data",
+    "appraisalCompany": "Appraisal Company",
+    "description": "Description",
+    "decision": "Decision",
+    "remark": "Remark",
+    "propertyName": "Property Name",
+    "collateralType": "Collateral Type",
+    "buildingType": "Building Type",
+    "developer": "Developer",
+    "modelName": "Model",
+    "landArea": "Land Area (Sq.Wa)",
+    "usableArea": "Usage Area (Sq.M)",
+    "projectName": "Project Name/ Village Name",
+    "roomFloor": "Room Floor",
+    "houseNo": "House Number",
+    "subDistrict": "Sub District",
+    "district": "District",
+    "province": "Province",
+    "postcode": "Postcode",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "plotLocation": "Plot Location",
+    "other": "Other",
+    "pricePerUnit": "Price per Unit",
+    "offeringPrice": "Offering Price",
+    "sellingPrice": "Selling Price",
+    "phoneNo": "Phone No",
+    "informationDate": "Information Date",
+    "website": "Website",
+    "sourceUrl": "Source URL",
+    "remarkDetail": "Remark"
+  },
+  "empty": {
+    "noSupportingData": "No supporting data",
+    "noMatchingRecords": "No matching records",
+    "noItemsAdded": "No items have been added yet.",
+    "addItemPrompt": "Click \"Add Item\" or \"Import Excel\" to add supporting data.",
+    "archivedItems": "Archived items will appear here.",
+    "importedItems": "Imported supporting data will appear here.",
+    "tryAdjusting": "Try adjusting your search."
+  },
+  "errors": {
+    "failedToLoad": "Failed to load supporting data"
+  },
+  "toasts": {
+    "createdSuccess": "Supporting data created successfully",
+    "createFailed": "Failed to create supporting data. Please try again.",
+    "updatedSuccess": "Supporting data updated successfully",
+    "updateFailed": "Failed to update supporting data. Please try again.",
+    "draftSavedSuccess": "Draft saved successfully",
+    "draftSaveFailed": "Failed to save draft. Please try again.",
+    "detailCreatedSuccess": "Supporting data created successfully",
+    "detailCreateFailed": "Failed to create data. Please try again.",
+    "detailUpdatedSuccess": "Supporting data updated successfully",
+    "detailUpdateFailed": "Failed to update data. Please try again.",
+    "detailDraftSavedSuccess": "Draft saved successfully",
+    "detailDraftSaveFailed": "Failed to save draft. Please try again.",
+    "propertyCreatedSuccess": "Property supporting data created successfully",
+    "propertyCreateFailed": "Failed to create supporting data. Please try again.",
+    "fileTypeError": "Only .xlsx files are accepted",
+    "fileSizeError": "File must be ≤ 5 MB",
+    "deletedSuccess": "Supporting data deleted successfully",
+    "deleteFailed": "Failed to delete supporting data. Please try again.",
+    "detailDeletedSuccess": "Supporting data detail deleted successfully",
+    "detailDeleteFailed": "Failed to delete supporting data detail. Please try again.",
+    "photoUploaded": "Photo uploaded successfully",
+    "photoUploadFailed": "Failed to upload photo",
+    "uploadInProgress": "Upload in progress. Please wait.",
+    "photoRemoved": "Photo removed",
+    "missingImageId": "Cannot remove: missing image ID",
+    "photoRemoveFailed": "Failed to remove photo",
+    "photoLinkFailed": "Failed to link photo {{n}}",
+    "rowsImported": "{{count}} row(s) imported successfully",
+    "uploadFailed": "Upload failed. Please try again.",
+    "saveFormFirst": "Please save the form first before uploading."
+  },
+  "confirm": {
+    "deleteTitle": "Delete Supporting Detail",
+    "deleteMessage": "Are you sure you want to delete this item? This action cannot be undone."
+  },
+  "placeholders": {
+    "untitled": "Untitled",
+    "notSet": "Not set"
+  },
+  "aria": {
+    "deleteItem": "Delete item",
+    "openContextMenu": "Open context menu",
+    "clearSearch": "Clear search"
+  },
+  "nav": {
+    "photos": "Photos",
+    "supportingDataDetail": "Supporting Data Detail"
+  }
+}

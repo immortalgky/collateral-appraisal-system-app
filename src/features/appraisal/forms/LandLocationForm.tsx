@@ -95,17 +95,10 @@ export default function LandLocationForm() {
       {/* Form Fields */}
       <div className="flex-1 flex flex-col gap-6">
         {/* Correct/Incorrect */}
-        <RadioGroup
-          name="landLocationCorrect"
-          options={landLocationCorrectOptions}
-        />
+        <RadioGroup name="landLocationCorrect" options={landLocationCorrectOptions} />
 
         {/* Check By */}
-        <CheckboxGroup
-          name="checkBy"
-          label="Check by"
-          options={checkByOptions}
-        />
+        <CheckboxGroup name="checkBy" label="Check by" options={checkByOptions} />
 
         {/* Address Fields */}
         <div className="grid grid-cols-6 gap-4">
@@ -113,11 +106,7 @@ export default function LandLocationForm() {
         </div>
 
         {/* Location Checkboxes */}
-        <CheckboxGroup
-          name="location"
-          label="Location"
-          options={locationOptions}
-        />
+        <CheckboxGroup name="location" label="Location" options={locationOptions} />
       </div>
     </div>
   );

@@ -41,19 +41,12 @@ export const PricingAnalysisApproachCard = ({
           )}
         >
           <div className="flex items-center gap-3 h-12 px-4">
-            <Icon
-              name={approach.icon}
-              style="solid"
-              className="size-4 shrink-0"
-            />
+            <Icon name={approach.icon} style="solid" className="size-4 shrink-0" />
             <span className="flex-1 text-left font-medium">{approach.label}</span>
             <Icon
               name="chevron-down"
               style="solid"
-              className={clsx(
-                'size-2 shrink-0',
-                isOpen ? 'rotate-180' : '',
-              )}
+              className={clsx('size-2 shrink-0', isOpen ? 'rotate-180' : '')}
             />
           </div>
         </button>
@@ -75,9 +68,7 @@ export const PricingAnalysisApproachCard = ({
           <div
             className={clsx(
               'size-5 rounded border-2 flex items-center justify-center shrink-0',
-              approach.isSelected
-                ? 'bg-primary border-primary'
-                : 'border-gray-300',
+              approach.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
             )}
           >
             {approach.isSelected && (
@@ -135,10 +126,15 @@ export const PricingAnalysisApproachCard = ({
           <div className="flex items-center gap-0.5 ml-1 border-l border-gray-200 pl-2">
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onViewLayoutChange('grid'); }}
+              onClick={e => {
+                e.stopPropagation();
+                onViewLayoutChange('grid');
+              }}
               className={clsx(
                 'p-1 rounded transition-colors cursor-pointer',
-                viewLayout === 'grid' ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-gray-600',
+                viewLayout === 'grid'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-gray-400 hover:text-gray-600',
               )}
               title="Grid view"
             >
@@ -146,10 +142,15 @@ export const PricingAnalysisApproachCard = ({
             </button>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); onViewLayoutChange('list'); }}
+              onClick={e => {
+                e.stopPropagation();
+                onViewLayoutChange('list');
+              }}
               className={clsx(
                 'p-1 rounded transition-colors cursor-pointer',
-                viewLayout === 'list' ? 'bg-primary/10 text-primary' : 'text-gray-400 hover:text-gray-600',
+                viewLayout === 'list'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-gray-400 hover:text-gray-600',
               )}
               title="List view"
             >

@@ -13,7 +13,8 @@ export function JoinNode({ id, data, selected }: NodeProps) {
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Join'}
       selected={selected}

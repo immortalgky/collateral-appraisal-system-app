@@ -13,6 +13,7 @@ import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
+import { ActivityProgressHubBootstrap } from '@features/appraisal/components/ActivityProgressHubBootstrap';
 import {
   RightMenuPortalProvider,
   useRightMenuPortal,
@@ -132,6 +133,7 @@ function Layout() {
       <ParameterLoader />
       <AddressLoader />
       <CompanyLoader />
+      <ActivityProgressHubBootstrap />
       <div className="h-screen flex flex-col">
         <MobileSidebar navigation={navigation} logo={Logo} />
         <Sidebar navigation={navigation} logo={Logo} />

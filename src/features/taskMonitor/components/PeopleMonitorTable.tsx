@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Avatar from '@shared/components/Avatar';
@@ -13,14 +14,6 @@ interface PeopleMonitorTableProps {
   onSortChange?: (sortKey: string | undefined, sortDir: SortDir | undefined) => void;
 }
 
-const COLUMNS: { key: string; label: string; sortKey?: string; numeric?: boolean }[] = [
-  { key: 'userName', label: 'User code', sortKey: 'UserName' },
-  { key: 'displayName', label: 'User name', sortKey: 'DisplayName' },
-  { key: 'openTasks', label: 'Open Tasks', sortKey: 'OpenTasks', numeric: true },
-  { key: 'availableTasks', label: 'Available Tasks', sortKey: 'AvailableTasks', numeric: true },
-  { key: 'totalTasks', label: 'Total Tasks', sortKey: 'TotalTasks', numeric: true },
-];
-
 function PeopleMonitorTable({
   people,
   isLoading,
@@ -29,6 +22,25 @@ function PeopleMonitorTable({
   onSortChange,
 }: PeopleMonitorTableProps) {
   const navigate = useNavigate();
+  const { t } = useTranslation('taskMonitor');
+
+  const COLUMNS: { key: string; label: string; sortKey?: string; numeric?: boolean }[] = [
+    { key: 'userName', label: t('peopleColumns.userCode'), sortKey: 'UserName' },
+    { key: 'displayName', label: t('peopleColumns.userName'), sortKey: 'DisplayName' },
+    { key: 'openTasks', label: t('peopleColumns.openTasks'), sortKey: 'OpenTasks', numeric: true },
+    {
+      key: 'availableTasks',
+      label: t('peopleColumns.availableTasks'),
+      sortKey: 'AvailableTasks',
+      numeric: true,
+    },
+    {
+      key: 'totalTasks',
+      label: t('peopleColumns.totalTasks'),
+      sortKey: 'TotalTasks',
+      numeric: true,
+    },
+  ];
 
   if (!isLoading && people.length === 0) {
     return (
@@ -37,10 +49,8 @@ function PeopleMonitorTable({
           <Icon style="regular" name="users" className="size-7 text-gray-300" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-gray-700">No people to monitor</p>
-          <p className="text-xs text-gray-400 mt-1">
-            Nobody in the groups you monitor has any active tasks right now.
-          </p>
+          <p className="text-sm font-semibold text-gray-700">{t('empty.peopleTitle')}</p>
+          <p className="text-xs text-gray-400 mt-1">{t('empty.peopleDesc')}</p>
         </div>
       </div>
     );

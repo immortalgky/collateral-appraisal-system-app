@@ -35,7 +35,7 @@ const CollateralAssignmentModal = ({
     group.items.map(item => ({
       ...item,
       groupName: group.name,
-    }))
+    })),
   );
 
   const handleAssign = () => {
@@ -47,10 +47,7 @@ const CollateralAssignmentModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
@@ -61,9 +58,7 @@ const CollateralAssignmentModal = ({
               <Icon name="link" className="text-primary" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Assign to Collateral
-              </h3>
+              <h3 className="text-lg font-semibold text-gray-900">Assign to Collateral</h3>
               <p className="text-sm text-gray-500">
                 {selectedCount} photo{selectedCount !== 1 ? 's' : ''} selected
               </p>
@@ -101,7 +96,7 @@ const CollateralAssignmentModal = ({
                     'w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4',
                     selectedCollateralId === property.id
                       ? 'border-primary bg-primary/5'
-                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50'
+                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50',
                   )}
                 >
                   {/* Property Image */}
@@ -127,9 +122,7 @@ const CollateralAssignmentModal = ({
                       </span>
                       <span className="text-xs text-gray-400">{property.groupName}</span>
                     </div>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {property.address}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{property.address}</p>
                   </div>
 
                   {/* Selection indicator */}
@@ -138,7 +131,7 @@ const CollateralAssignmentModal = ({
                       'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
                       selectedCollateralId === property.id
                         ? 'bg-primary border-primary'
-                        : 'border-gray-300'
+                        : 'border-gray-300',
                     )}
                   >
                     {selectedCollateralId === property.id && (

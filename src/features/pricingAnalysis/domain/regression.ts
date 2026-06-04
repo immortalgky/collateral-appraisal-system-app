@@ -99,7 +99,7 @@ function collectPairs(
 }
 
 function sums(xs: number[], ys: number[]) {
-  let n = xs.length;
+  const n = xs.length;
   let sumX = 0;
   let sumY = 0;
   let sumXX = 0;

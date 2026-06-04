@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { FormFields } from '@/shared/components/form';
 import { isCondo } from '../types';
@@ -39,20 +40,21 @@ const ProjectInfoForm = ({
   hasExistingProject,
   onProjectTypeChange,
 }: ProjectInfoFormProps) => {
+  const { t } = useTranslation('blockProject');
   const { control } = useFormContext();
-  const typeSpecificInfoFields =
-    isCondo(projectType) ? condoProjectInfoFields : lbProjectInfoFields;
+  const typeSpecificInfoFields = isCondo(projectType)
+    ? condoProjectInfoFields
+    : lbProjectInfoFields;
 
   // Two custom inputs sit inside `projectInformationFields` and need bespoke
   // rendering: ProjectType (dropdown that opens a confirmation dialog, placed
   // inline next to Project Name) and ProjectSaleLaunchDate (segmented partial-
   // date input). Slice the auto-rendered list around them while preserving order.
   const projectNameIdx = projectInformationFields.findIndex(f => f.name === 'projectName');
-  const launchDateIdx = projectInformationFields.findIndex(
-    f => f.name === 'projectSaleLaunchDate',
-  );
+  const launchDateIdx = projectInformationFields.findIndex(f => f.name === 'projectSaleLaunchDate');
   const projectNameField = useMemo(
-    () => (projectNameIdx >= 0 ? projectInformationFields.slice(projectNameIdx, projectNameIdx + 1) : []),
+    () =>
+      projectNameIdx >= 0 ? projectInformationFields.slice(projectNameIdx, projectNameIdx + 1) : [],
     [projectNameIdx],
   );
   const beforeLaunchDate = useMemo(
@@ -70,9 +72,9 @@ const ProjectInfoForm = ({
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Project Information</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('projectInfo.title')}</h2>
       <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow title="Project Information" icon="building-columns">
+        <SectionRow title={t('projectInfo.sections.projectInformation')} icon="building-columns">
           <FormFields fields={projectNameField} />
           <div className="col-span-4">
             <ProjectTypePill
@@ -89,7 +91,7 @@ const ProjectInfoForm = ({
               name="projectSaleLaunchDate"
               render={({ field, fieldState }) => (
                 <PartialDateInput
-                  label="Project Sale Launch Date"
+                  label={t('fields.projectInfo.projectSaleLaunchDate')}
                   value={field.value ?? null}
                   onChange={field.onChange}
                   error={fieldState.error?.message}
@@ -102,11 +104,11 @@ const ProjectInfoForm = ({
           <FormFields fields={typeSpecificInfoFields} />
         </SectionRow>
 
-        <SectionRow title="Project Location" icon="location-dot">
+        <SectionRow title={t('projectInfo.sections.projectLocation')} icon="location-dot">
           <FormFields fields={projectLocationFields} />
         </SectionRow>
 
-        <SectionRow title="Project Detail" icon="list-check" isLast>
+        <SectionRow title={t('projectInfo.sections.projectDetail')} icon="list-check" isLast>
           <FormFields fields={projectDetailFields} />
         </SectionRow>
       </div>

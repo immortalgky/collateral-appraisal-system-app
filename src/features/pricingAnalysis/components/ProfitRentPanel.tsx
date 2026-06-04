@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useController, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import {
@@ -39,6 +40,10 @@ import {
 import { fmt, formatDateOnly, toNum } from '../domain/formatters';
 import { roundToThousand } from '../domain/calculation';
 import DataErrorState from '@/shared/components/DataErrorState';
+import { MarketReferenceButton } from './MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../api/references';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface ProfitRentPanelProps {
   activeMethod?: {
@@ -51,6 +56,9 @@ interface ProfitRentPanelProps {
   propertiesMap?: Record<string, Record<string, unknown>>;
   firstPropertyId?: string;
   firstPropertyType?: string;
+  /** Passed through for the market-reference launcher */
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -65,11 +73,14 @@ export function ProfitRentPanel({
   propertiesMap,
   firstPropertyId,
   firstPropertyType,
+  marketSurveys,
+  templateList,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: ProfitRentPanelProps) {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -78,6 +89,9 @@ export function ProfitRentPanel({
   const [isRentalInfoModalOpen, setIsRentalInfoModalOpen] = useState(false);
   const [tableResult, setTableResult] = useState<ProfitRentTableResult | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+  // Local state: caches the analysis id obtained by an auto-save on button open,
+  // so the WQS button is available even before the user has saved the form.
+  const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
 
   const resetMutation = useResetMethod();
   const saveMutation = useSaveProfitRentAnalysis();
@@ -370,15 +384,23 @@ export function ProfitRentPanel({
           appraisalValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
 
       isInitialized.current = false;
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
       });
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('toasts.saveFailed'));
     }
+  };
+
+  const ensureAnalysisId = async (): Promise<string | undefined> => {
+    if (savedData?.analysis?.id) return savedData.analysis.id;
+    if (readOnly || !pricingAnalysisId || !methodId) return undefined;
+    await handleOnSubmit();
+    const res = await refetchSavedData();
+    return res.data?.analysis?.id;
   };
 
   const handleOnReset = () => setIsShowResetDialog(true);
@@ -396,9 +418,9 @@ export function ProfitRentPanel({
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.profitRentAnalysis(pricingAnalysisId, methodId),
       });
-      toast.success('Reset successful');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
@@ -489,7 +511,7 @@ export function ProfitRentPanel({
 
   if (isSavedDataError) {
     return (
-      <DataErrorState title="Failed to load profit rent analysis" onRetry={refetchSavedData} />
+      <DataErrorState title={t('profitRent.loadError')} onRetry={refetchSavedData} />
     );
   }
 
@@ -507,7 +529,7 @@ export function ProfitRentPanel({
           <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
             <Icon name="file-signature" className="size-4" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Profit Rent</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('profitRent.headerTitle')}</h2>
         </div>
 
         {/* Lease Info Cards — matches Leasehold layout */}
@@ -517,7 +539,7 @@ export function ProfitRentPanel({
               <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
               <div>
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  Appraisal Date
+                  {t('profitRent.appraisalDate')}
                 </div>
                 <div className="text-sm font-medium text-gray-900">
                   {appointment?.appointmentDateTime
@@ -529,7 +551,7 @@ export function ProfitRentPanel({
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-green-500 shrink-0" />
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">Lease Start</div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide">{t('profitRent.leaseStart')}</div>
                 <div className="text-sm font-medium text-gray-900">
                   {leaseAgreement?.leaseStartDate
                     ? formatDateOnly(leaseAgreement.leaseStartDate)
@@ -540,7 +562,7 @@ export function ProfitRentPanel({
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-red-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">Lease End</div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide">{t('profitRent.leaseEnd')}</div>
                 <div className="text-sm font-medium text-gray-900">
                   {leaseAgreement?.leaseEndDate ? formatDateOnly(leaseAgreement.leaseEndDate) : '-'}
                 </div>
@@ -553,8 +575,8 @@ export function ProfitRentPanel({
             >
               <Icon name="receipt" className="size-4 text-primary shrink-0" />
               <div className="text-left">
-                <div className="text-[11px] text-primary/60 uppercase tracking-wide">View</div>
-                <div className="text-sm font-medium text-primary">Rental Information</div>
+                <div className="text-[11px] text-primary/60 uppercase tracking-wide">{t('profitRent.viewRentalInfoShort')}</div>
+                <div className="text-sm font-medium text-primary">{t('profitRent.viewRentalInfo')}</div>
               </div>
             </button>
           </div>
@@ -572,7 +594,7 @@ export function ProfitRentPanel({
             {/* Land Area — read-only */}
             <div className="rounded-md bg-gray-50 px-3 py-2">
               <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
-                Land Area
+                {t('profitRent.landArea')}
               </div>
               <div className="flex items-baseline gap-1">
                 <Icon
@@ -580,17 +602,19 @@ export function ProfitRentPanel({
                   className="size-3 text-gray-400 shrink-0 relative top-0.5"
                 />
                 <span className="text-sm font-semibold text-gray-900">{fmt(landAreaSqWa)}</span>
-                <span className="text-[10px] text-gray-500">Sq. Wa</span>
+                <span className="text-[10px] text-gray-500">{t('profitRent.unitSqWa')}</span>
               </div>
             </div>
 
             {/* Market Rental Fee — input */}
             <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Market Rental Fee <span className="text-red-400">*</span>
-              </label>
+              <div className="mb-0.5">
+                <label className="text-[10px] text-gray-400 uppercase tracking-wide block">
+                  {t('profitRent.marketRentalFee')} <span className="text-red-400">*</span>
+                </label>
+              </div>
               <div className="flex items-baseline gap-1">
-                <div className="w-24">
+                <div className="w-44">
                   <NumberInput
                     name={marketFeeField.name}
                     ref={marketFeeField.ref}
@@ -601,29 +625,56 @@ export function ProfitRentPanel({
                     maxIntegerDigits={15}
                     required={true}
                     disabled={readOnly}
+                    className={!readOnly ? '!pr-14' : undefined}
+                    rightIcon={(() => {
+                      if (readOnly) return undefined;
+                      const effectiveId = savedData?.analysis?.id ?? ensuredId;
+                      return (
+                        <MarketReferenceButton
+                          compact
+                          label="WQS"
+                          subjectType={PricingAnalysisSubjectType.ProfitRentRef}
+                          anchorId={effectiveId ?? ''}
+                          hostMethodId={methodId}
+                          marketSurveys={marketSurveys ?? []}
+                          templateList={templateList}
+                          onApplyValue={v => marketFeeField.onChange(v)}
+                          onBeforeOpen={
+                            effectiveId
+                              ? undefined
+                              : async () => {
+                                  const id = await ensureAnalysisId();
+                                  if (id) setEnsuredId(id);
+                                  if (!id) throw new Error('no-id');
+                                }
+                          }
+                          className="pointer-events-auto shrink-0"
+                        />
+                      );
+                    })()}
                   />
                 </div>
-                <span className="text-[10px] text-gray-500">Baht/Sq.Wa/Mo</span>
+                <span className="text-[10px] text-gray-500">{t('profitRent.unitBahtPerSqWaPerMonth')}</span>
               </div>
             </div>
 
             {/* Monthly Total — computed */}
             <div className="rounded-md bg-primary/5 border border-primary/10 px-3 py-2">
               <div className="text-[10px] text-primary/60 uppercase tracking-wide mb-0.5">
-                Monthly Total
+                {t('profitRent.monthlyTotal')}
               </div>
               <div className="flex items-baseline gap-1">
                 <span className="text-sm font-semibold text-primary">
                   {fmt((marketFeeField.value ?? 0) * landAreaSqWa)}
                 </span>
-                <span className="text-[10px] text-primary/60">Baht/Mo</span>
+                <span className="text-[10px] text-primary/60">{t('profitRent.unitBahtPerMonth')}</span>
               </div>
             </div>
 
             {/* Discounted Rate — input */}
             <div className="rounded-md bg-gray-50 px-3 py-2">
               <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Discounted Rate
+                {t('profitRent.discountedRate')}
               </label>
               <div className="w-24">
                 <NumberInput
@@ -647,7 +698,7 @@ export function ProfitRentPanel({
           {/* Market Rental Fee Increase */}
           <div className="space-y-2">
             <Toggle
-              label="Market Rental Fee Increase"
+              label={t('profitRent.marketRentalFeeIncrease')}
               options={['Frequency', 'Period']}
               checked={growthRateType === 'Period'}
               onChange={checked => {
@@ -662,7 +713,7 @@ export function ProfitRentPanel({
               <div className="flex gap-3 items-end">
                 <div className="flex-1">
                   <NumberInput
-                    label="Rate"
+                    label={t('profitRent.rate')}
                     name={growthPercentField.name}
                     ref={growthPercentField.ref}
                     value={growthPercentField.value}
@@ -674,10 +725,10 @@ export function ProfitRentPanel({
                     disabled={readOnly}
                   />
                 </div>
-                <span className="text-sm text-gray-500 pb-2">Every</span>
+                <span className="text-sm text-gray-500 pb-2">{t('profitRent.every')}</span>
                 <div className="flex-1">
                   <NumberInput
-                    label="Interval"
+                    label={t('profitRent.interval')}
                     name={intervalField.name}
                     ref={intervalField.ref}
                     value={intervalField.value}
@@ -685,7 +736,7 @@ export function ProfitRentPanel({
                     onBlur={intervalField.onBlur}
                     decimalPlaces={0}
                     maxIntegerDigits={3}
-                    rightIcon={<span className="text-xs text-gray-400">Year</span>}
+                    rightIcon={<span className="text-xs text-gray-400">{t('profitRent.unitYear')}</span>}
                     disabled={readOnly}
                   />
                 </div>
@@ -693,9 +744,9 @@ export function ProfitRentPanel({
             ) : (
               <div className="space-y-2">
                 <div className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 text-xs text-gray-500 font-medium">
-                  <span>From Year</span>
-                  <span>To Year</span>
-                  <span>Growth Rate (%)</span>
+                  <span>{t('profitRent.fromYear')}</span>
+                  <span>{t('profitRent.toYear')}</span>
+                  <span>{t('profitRent.growthRatePercent')}</span>
                   <span />
                 </div>
                 {growthPeriodFields.map((field, index) => (
@@ -755,7 +806,7 @@ export function ProfitRentPanel({
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <Icon name="plus" className="size-3" />
-                    Add Periods
+                    {t('profitRent.addPeriods')}
                   </button>
                 )}
               </div>
@@ -769,25 +820,25 @@ export function ProfitRentPanel({
             cards={
               [
                 {
-                  label: 'Total Market Rental',
+                  label: t('profitRent.kpi.totalMarketRental'),
                   value: tableResult.totalMarketRentalFee,
                   icon: 'chart-bar',
                   color: 'blue',
                 },
                 {
-                  label: 'Total Contract Rental',
+                  label: t('profitRent.kpi.totalContractRental'),
                   value: tableResult.totalContractRentalFee,
                   icon: 'file-contract',
                   color: 'gray',
                 },
                 {
-                  label: 'Total Returns',
+                  label: t('profitRent.kpi.totalReturns'),
                   value: tableResult.totalReturnsFromLease,
                   icon: 'arrow-trend-up',
                   color: 'amber',
                 },
                 {
-                  label: 'Present Value',
+                  label: t('profitRent.kpi.presentValue'),
                   value: tableResult.totalPresentValue,
                   icon: 'circle-check',
                   color: 'green',
@@ -825,7 +876,7 @@ export function ProfitRentPanel({
         {/* Include building cost section */}
         <div className="border-t border-gray-200 pt-2 space-y-3">
           <Toggle
-            label="Include building cost"
+            label={t('profitRent.includeBuildingCost')}
             options={['No', 'Yes']}
             size="sm"
             checked={isBuildingCostIncluded}
@@ -844,7 +895,7 @@ export function ProfitRentPanel({
               {/* Formula rows */}
               <div className="text-sm divide-y divide-gray-100">
                 <div className="flex items-center justify-between py-1.5">
-                  <span className="text-xs text-gray-600">Estimate Price (from PV)</span>
+                  <span className="text-xs text-gray-600">{t('profitRent.estimatePriceFromPv')}</span>
                   <span className="text-xs font-medium text-gray-800 tabular-nums">
                     {fmt(Number(estimatePrice) || 0)}
                   </span>
@@ -852,7 +903,7 @@ export function ProfitRentPanel({
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-gray-600">
                     <span className="font-bold mr-1">+</span>
-                    Building Cost (after depre.)
+                    {t('profitRent.buildingCostAfterDepre')}
                   </span>
                   <span className="text-xs font-medium text-gray-800 tabular-nums">
                     {fmt(Number(watch('totalBuildingCost')) || 0)}
@@ -861,7 +912,7 @@ export function ProfitRentPanel({
                 <div className="flex items-center justify-between py-1.5">
                   <span className="text-xs text-gray-700 font-medium">
                     <span className="font-bold mr-1">=</span>
-                    Appraisal Price w/ Building
+                    {t('profitRent.appraisalPriceWithBuilding')}
                   </span>
                   <span className="text-xs font-semibold text-gray-900 tabular-nums">
                     {fmt(Number(watch('appraisalPriceWithBuilding')) || 0)}
@@ -869,7 +920,7 @@ export function ProfitRentPanel({
                 </div>
                 {/* Appraisal Price */}
                 <div className="flex items-center justify-between py-2">
-                  <span className="text-xs font-semibold text-gray-900">Appraisal Price</span>
+                  <span className="text-xs font-semibold text-gray-900">{t('profitRent.appraisalPrice')}</span>
                   <div className="flex items-center gap-2">
                     {(() => {
                       const rounded = Number(watch('appraisalPriceWithBuildingRounded')) || 0;
@@ -922,13 +973,13 @@ export function ProfitRentPanel({
         {!isBuildingCostIncluded && (
           <div className="text-sm divide-y divide-gray-100 border-t border-gray-200">
             <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-gray-600">Estimate Price (from PV)</span>
+              <span className="text-xs text-gray-600">{t('profitRent.estimatePriceFromPv')}</span>
               <span className="text-xs font-medium text-gray-800 tabular-nums">
                 {fmt(tableResult?.finalValueRounded ?? 0)}
               </span>
             </div>
             <div className="flex items-center justify-between py-2">
-              <span className="text-xs font-semibold text-gray-900 shrink-0">Appraisal Price</span>
+              <span className="text-xs font-semibold text-gray-900 shrink-0">{t('profitRent.appraisalPrice')}</span>
               <div className="flex items-center gap-2">
                 {(() => {
                   const rounded = Number(estimateField.value) || 0;
@@ -982,7 +1033,7 @@ export function ProfitRentPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('profitRent.resetConfirmMessage')}
         />
 
         <LeaseholdRentalInfoModal
@@ -1008,6 +1059,7 @@ function ProfitRentTable({
   hoveredCol: number | null;
   onColHover: (col: number | null) => void;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   const colHl = 'bg-blue-50/60';
 
   // Sticky columns: 0=Year, 1=Start, 2=End (pinned left)
@@ -1049,17 +1101,17 @@ function ProfitRentTable({
   });
 
   const headers = [
-    { label: 'Year', align: 'text-left' },
-    { label: 'Period Start Date', align: 'text-left' },
-    { label: 'Period End Date', align: 'text-left' },
-    { label: 'Number of Month', minW: 'min-w-[80px]' },
-    { label: 'Market Rental Fee (Baht/Sq.Wa/Month)', minW: 'min-w-[130px]' },
-    { label: 'Market Rental Fee (Baht/month)', minW: 'min-w-[120px]' },
-    { label: 'Market Rental Fee (Baht/year)', minW: 'min-w-[120px]' },
-    { label: 'Contract Rental Fee (Baht/year)', minW: 'min-w-[120px]' },
-    { label: 'Returns from Lease (Baht)', minW: 'min-w-[120px]' },
-    { label: 'Discounted Rate', minW: 'min-w-[100px]' },
-    { label: 'Present Value (Baht)', minW: 'min-w-[120px]' },
+    { label: t('profitRent.tableHeaders.year'), align: 'text-left' },
+    { label: t('profitRent.tableHeaders.periodStart'), align: 'text-left' },
+    { label: t('profitRent.tableHeaders.periodEnd'), align: 'text-left' },
+    { label: t('profitRent.tableHeaders.numberOfMonth'), minW: 'min-w-[80px]' },
+    { label: t('profitRent.tableHeaders.marketRentalFeePerSqWaMonth'), minW: 'min-w-[130px]' },
+    { label: t('profitRent.tableHeaders.marketRentalFeePerMonth'), minW: 'min-w-[120px]' },
+    { label: t('profitRent.tableHeaders.marketRentalFeePerYear'), minW: 'min-w-[120px]' },
+    { label: t('profitRent.tableHeaders.contractRentalFeePerYear'), minW: 'min-w-[120px]' },
+    { label: t('profitRent.tableHeaders.returnsFromLease'), minW: 'min-w-[120px]' },
+    { label: t('profitRent.tableHeaders.discountedRate'), minW: 'min-w-[100px]' },
+    { label: t('profitRent.tableHeaders.presentValue'), minW: 'min-w-[120px]' },
   ];
 
   return (
@@ -1118,7 +1170,7 @@ function ProfitRentTable({
       <tfoot className="sticky bottom-0 z-20">
         <tr className="bg-gray-100 font-semibold border-t-2 border-gray-300">
           <td className={`sticky left-0 z-30 ${totalBg} px-3 py-2 text-gray-800`} colSpan={3}>
-            Total
+            {t('profitRent.total')}
           </td>
           <td className={`${totalBg} ${totalTdCls(3)}`} {...cellProps(3)}></td>
           <td className={`${totalBg} ${totalTdCls(4)}`} {...cellProps(4)}></td>
@@ -1144,6 +1196,7 @@ function ProfitRentTable({
 
 /** 11b: Compact building cost summary with expand/collapse */
 function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string, unknown>[] }) {
+  const { t } = useTranslation('pricingAnalysis');
   const [expanded, setExpanded] = useState(false);
 
   // Compute summary per building
@@ -1186,14 +1239,14 @@ function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string
       >
         <div className="flex items-center gap-2">
           <Icon name="building" className="size-3.5 text-gray-500" />
-          <span className="text-xs font-semibold text-gray-700">Building Cost Summary</span>
+          <span className="text-xs font-semibold text-gray-700">{t('profitRent.buildingCostSummary')}</span>
           <span className="text-[10px] text-gray-400">
             ({summaries.reduce((s, b) => s + b.itemCount, 0)} items)
           </span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-gray-600 tabular-nums">
-            After Depre.{' '}
+            {t('profitRent.afterDepre')}{' '}
             {grandAfter.toLocaleString('en-US', {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
@@ -1211,11 +1264,11 @@ function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string
         <div className="border-t border-gray-100">
           {/* Column headers */}
           <div className="flex items-center justify-between px-4 py-1 text-[10px] text-gray-400 uppercase tracking-wide border-b border-gray-100">
-            <span>Property</span>
+            <span>{t('profitRent.propertyCol')}</span>
             <div className="flex gap-6">
-              <span className="w-20 text-right">Area</span>
-              <span className="w-28 text-right">Before Depre.</span>
-              <span className="w-28 text-right">After Depre.</span>
+              <span className="w-20 text-right">{t('profitRent.areaCol')}</span>
+              <span className="w-28 text-right">{t('profitRent.beforeDepre')}</span>
+              <span className="w-28 text-right">{t('profitRent.afterDepre')}</span>
             </div>
           </div>
           {summaries.map((s, i) => (

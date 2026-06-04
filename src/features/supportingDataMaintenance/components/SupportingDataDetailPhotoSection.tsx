@@ -1,5 +1,6 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PhotoGallery, { type Photo } from '@features/appraisal/components/PhotoGallery';
 import PhotoSourceModal from '@features/appraisal/components/PhotoSourceModal';
 import PhotoDeleteConfirmModal from '@features/appraisal/components/PhotoDeleteConfirmModal';
@@ -48,6 +49,7 @@ const SupportingDataDetailPhotoSection = forwardRef<
   SupportingDataDetailPhotoSectionRef,
   SupportingDataDetailPhotoSectionProps
 >(({ supportingId, disabled, detailId, images }, ref) => {
+  const { t } = useTranslation(['supportingDataMaintenance', 'common']);
   const isCreateMode = !detailId;
 
   // Photos collected in create mode, not yet persisted
@@ -162,9 +164,9 @@ const SupportingDataDetailPhotoSection = forwardRef<
           });
         }
 
-        toast.success('Photo uploaded successfully');
+        toast.success(t('toasts.photoUploaded'));
       } catch {
-        toast.error('Failed to upload photo');
+        toast.error(t('toasts.photoUploadFailed'));
       } finally {
         setUploadingPhotos(prev => prev.filter(p => p.id !== tempId));
         URL.revokeObjectURL(previewUrl);
@@ -177,6 +179,7 @@ const SupportingDataDetailPhotoSection = forwardRef<
       getUploadSessionId,
       uploadDocumentMutation,
       addImageMutation,
+      t,
     ],
   );
 
@@ -195,24 +198,24 @@ const SupportingDataDetailPhotoSection = forwardRef<
   const handleDeleteRequest = useCallback(
     (photoId: string) => {
       if (uploadingPhotos.some(p => p.id === photoId)) {
-        toast.error('Upload in progress. Please wait.');
+        toast.error(t('toasts.uploadInProgress'));
         return;
       }
       if (isCreateMode) {
         // In create mode photoId === documentId
         setPendingImages(prev => prev.filter(img => img.documentId !== photoId));
-        toast.success('Photo removed');
+        toast.success(t('toasts.photoRemoved'));
         return;
       }
       setDeleteTargetId(photoId);
     },
-    [isCreateMode, uploadingPhotos],
+    [isCreateMode, uploadingPhotos, t],
   );
 
   // "Unlink" = remove from this detail (our only remove action)
   const handleUnlink = useCallback(async () => {
     if (!deleteTargetId || !detailId) {
-      toast.error('Cannot remove: missing image ID');
+      toast.error(t('toasts.missingImageId'));
       setDeleteTargetId(null);
       return;
     }
@@ -223,14 +226,14 @@ const SupportingDataDetailPhotoSection = forwardRef<
         detailId,
         imageId: deleteTargetId,
       });
-      toast.success('Photo removed');
+      toast.success(t('toasts.photoRemoved'));
     } catch {
-      toast.error('Failed to remove photo');
+      toast.error(t('toasts.photoRemoveFailed'));
     } finally {
       setIsDeleteLoading(false);
       setDeleteTargetId(null);
     }
-  }, [supportingId, detailId, deleteTargetId, removeImageMutation]);
+  }, [supportingId, detailId, deleteTargetId, removeImageMutation, t]);
 
   // No "delete permanently" concept for standalone photos — the document storage
   // handles cleanup separately. We just show the unlink action.
@@ -276,7 +279,7 @@ const SupportingDataDetailPhotoSection = forwardRef<
             fileName: img.fileName,
           });
         } catch {
-          toast.error(`Failed to link photo ${i + 1}`);
+          toast.error(t('toasts.photoLinkFailed', { n: i + 1 }));
         }
       }
       setPendingImages([]);

@@ -3,6 +3,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import PhotoSourceModal from '../PhotoSourceModal';
@@ -64,7 +65,7 @@ const TopicItem = ({
         'group relative rounded-xl transition-all duration-200',
         isSelected
           ? 'bg-primary shadow-lg shadow-primary/25'
-          : 'bg-white border border-gray-100 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5'
+          : 'bg-white border border-gray-100 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5',
       )}
     >
       {isEditing ? (
@@ -91,7 +92,7 @@ const TopicItem = ({
                 'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors',
                 isSelected
                   ? 'bg-white/20 text-white'
-                  : 'bg-primary/10 text-primary group-hover:bg-primary/20'
+                  : 'bg-primary/10 text-primary group-hover:bg-primary/20',
               )}
             >
               <Icon name="images" style="solid" className="text-sm" />
@@ -102,18 +103,13 @@ const TopicItem = ({
               <p
                 className={clsx(
                   'text-sm font-medium truncate',
-                  isSelected ? 'text-white' : 'text-gray-800'
+                  isSelected ? 'text-white' : 'text-gray-800',
                 )}
               >
                 {topic.topicName}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
-                <span
-                  className={clsx(
-                    'text-xs',
-                    isSelected ? 'text-white/70' : 'text-gray-400'
-                  )}
-                >
+                <span className={clsx('text-xs', isSelected ? 'text-white/70' : 'text-gray-400')}>
                   {topic.photoCount} {topic.photoCount === 1 ? 'photo' : 'photos'}
                 </span>
               </div>
@@ -124,9 +120,7 @@ const TopicItem = ({
               <div
                 className={clsx(
                   'px-2 py-0.5 rounded-full text-xs font-medium',
-                  isSelected
-                    ? 'bg-white/20 text-white'
-                    : 'bg-primary/10 text-primary'
+                  isSelected ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary',
                 )}
               >
                 {topic.photoCount}
@@ -138,7 +132,7 @@ const TopicItem = ({
               <div
                 className={clsx(
                   'flex items-center gap-0.5 transition-opacity',
-                  isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                  isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
                 )}
               >
                 <button
@@ -152,7 +146,7 @@ const TopicItem = ({
                     'p-1.5 rounded-lg transition-colors',
                     isSelected
                       ? 'text-white/70 hover:text-white hover:bg-white/10'
-                      : 'text-gray-400 hover:text-primary hover:bg-primary/10'
+                      : 'text-gray-400 hover:text-primary hover:bg-primary/10',
                   )}
                 >
                   <Icon name="pen" className="text-xs" />
@@ -167,7 +161,7 @@ const TopicItem = ({
                     'p-1.5 rounded-lg transition-colors',
                     isSelected
                       ? 'text-white/70 hover:text-white hover:bg-red-500/20'
-                      : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                      : 'text-gray-400 hover:text-red-500 hover:bg-red-50',
                   )}
                 >
                   <Icon name="trash" className="text-xs" />
@@ -195,7 +189,7 @@ const UploadPlaceholder = ({
       'aspect-[4/3] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300',
       isDragging
         ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg shadow-primary/20'
-        : 'border-gray-200 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md'
+        : 'border-gray-200 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md',
     )}
   >
     <div
@@ -203,21 +197,25 @@ const UploadPlaceholder = ({
         'w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300',
         isDragging
           ? 'bg-primary/20 text-primary scale-110'
-          : 'bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary'
+          : 'bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary',
       )}
     >
       <Icon name={isDragging ? 'cloud-arrow-down' : 'plus'} className="text-2xl" />
     </div>
-    <p className={clsx(
-      'text-sm font-medium transition-colors',
-      isDragging ? 'text-primary' : 'text-gray-600'
-    )}>
+    <p
+      className={clsx(
+        'text-sm font-medium transition-colors',
+        isDragging ? 'text-primary' : 'text-gray-600',
+      )}
+    >
       {isDragging ? 'Drop photos here' : 'Add photos'}
     </p>
-    <p className={clsx(
-      'text-xs mt-1 transition-colors',
-      isDragging ? 'text-primary/70' : 'text-gray-400'
-    )}>
+    <p
+      className={clsx(
+        'text-xs mt-1 transition-colors',
+        isDragging ? 'text-primary/70' : 'text-gray-400',
+      )}
+    >
       Click or drag & drop
     </p>
   </div>
@@ -225,21 +223,34 @@ const UploadPlaceholder = ({
 
 export const PhotosTab = () => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   // Get appraisalId from URL params
   const appraisalId = useAppraisalId();
 
   // API hooks for topics
-  const { data: topicsData, isLoading: isLoadingTopics, isError: isTopicsError, error: topicsError, refetch: refetchTopics } = useGetPhotoTopics(appraisalId);
+  const {
+    data: topicsData,
+    isLoading: isLoadingTopics,
+    isError: isTopicsError,
+    error: topicsError,
+    refetch: refetchTopics,
+  } = useGetPhotoTopics(appraisalId);
   const { mutate: createTopic } = useCreatePhotoTopic();
   const { mutate: updateTopic } = useUpdatePhotoTopic();
   const { mutate: deleteTopic, isPending: isDeletingTopic } = useDeletePhotoTopic();
   const { mutateAsync: assignPhotoToTopic, isPending: isAssigningPhoto } = useAssignPhotoToTopic();
 
   // API hooks for gallery (upload flow)
-  const { data: galleryData, isError: isGalleryError, error: galleryError, refetch: refetchGallery } = useGetGalleryPhotos(appraisalId);
+  const {
+    data: galleryData,
+    isError: isGalleryError,
+    error: galleryError,
+    refetch: refetchGallery,
+  } = useGetGalleryPhotos(appraisalId);
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
   const { mutateAsync: uploadDocument } = useUploadDocument();
-  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } = useUpdateGalleryPhoto();
+  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } =
+    useUpdateGalleryPhoto();
 
   // Build a lookup from documentId → GalleryPhotoDtoType for description editing
   const galleryPhotoByDocId = useMemo(() => {
@@ -260,7 +271,9 @@ export const PhotosTab = () => {
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
   const [isDragging, setIsDragging] = useState(false);
-  const [previewPhoto, setPreviewPhoto] = useState<(PreviewablePhoto & { documentId?: string }) | null>(null);
+  const [previewPhoto, setPreviewPhoto] = useState<
+    (PreviewablePhoto & { documentId?: string }) | null
+  >(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     type: 'topic' | 'photo';
     id: string;
@@ -281,19 +294,22 @@ export const PhotosTab = () => {
   const selectedTopicRaw = topics.find(t => t.id === selectedTopicId);
   // Merge local layout state with topic data
   const selectedTopic = selectedTopicRaw
-    ? { ...selectedTopicRaw, displayColumns: localLayouts[selectedTopicRaw.id] ?? selectedTopicRaw.displayColumns }
+    ? {
+        ...selectedTopicRaw,
+        displayColumns: localLayouts[selectedTopicRaw.id] ?? selectedTopicRaw.displayColumns,
+      }
     : undefined;
 
   // Photos come from the selected topic's embedded photos array
   const topicPhotos: TopicPhotoDisplay[] = useMemo(
     () => (selectedTopic?.photos ?? []).map(toTopicPhotoDisplay),
-    [selectedTopic?.photos]
+    [selectedTopic?.photos],
   );
 
   // Get gallery images for "Choose from Gallery" modal
   const galleryImages: GalleryImage[] = useMemo(
     () => (galleryData?.photos ?? []).map(toGalleryImage),
-    [galleryData]
+    [galleryData],
   );
 
   // Map topic photos → GalleryImage[] for PhotoGridView
@@ -362,7 +378,7 @@ export const PhotosTab = () => {
       });
       setNewTopicName('');
       setIsAddingTopic(false);
-      toast.success('Topic created');
+      toast.success(t('toasts.topicCreated'));
     }
   };
 
@@ -391,11 +407,11 @@ export const PhotosTab = () => {
                 appraisalId,
                 photoId: photo.id,
                 photoTopicIds: [],
-              })
-            )
+              }),
+            ),
           );
         } catch {
-          toast.error('Failed to unassign photos from topic');
+          toast.error(t('toasts.topicUnassignFailed'));
           setDeleteConfirm(null);
           return;
         }
@@ -427,17 +443,17 @@ export const PhotosTab = () => {
   const handleFileSelect = useCallback(
     async (files: FileList) => {
       if (!selectedTopicId || !appraisalId) {
-        toast.error('Please select a topic first');
+        toast.error(t('toasts.photoSelectTopicFirst'));
         return;
       }
 
       const imageFiles = Array.from(files).filter(file => /\.(jpg|jpeg|png)$/i.test(file.name));
       if (imageFiles.length === 0) {
-        toast.error('Please select supported image files only (JPG, JPEG, PNG)');
+        toast.error(t('toasts.photoUnsupportedFormat'));
         return;
       }
 
-      toast.success(`Uploading ${imageFiles.length} file(s)...`);
+      toast.success(t('toasts.uploading', { count: imageFiles.length }));
 
       try {
         const sessionId = await getOrCreateSession();
@@ -466,16 +482,16 @@ export const PhotosTab = () => {
               photoTopicIds: [selectedTopicId],
             });
 
-            toast.success(`Uploaded ${file.name}`);
+            toast.success(t('toasts.uploadedFile', { name: file.name }));
           } catch {
-            toast.error(`Failed to upload ${file.name}`);
+            toast.error(t('toasts.uploadFileFailed', { name: file.name }));
           }
         }
       } catch {
-        toast.error('Failed to create upload session');
+        toast.error(t('toasts.uploadSessionFailed'));
       }
     },
-    [selectedTopicId, appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto]
+    [selectedTopicId, appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto],
   );
 
   const handleUploadFromDevice = (files: FileList) => {
@@ -499,12 +515,12 @@ export const PhotosTab = () => {
         });
         successCount++;
       } catch {
-        toast.error(`Failed to assign photo`);
+        toast.error(t('toasts.photoAssignFailed'));
       }
     }
 
     if (successCount > 0) {
-      toast.success(`Added ${successCount} photo${successCount !== 1 ? 's' : ''}`);
+      toast.success(t('toasts.photoAddedCount', { count: successCount }));
     }
   };
 
@@ -517,7 +533,7 @@ export const PhotosTab = () => {
           photoTopicIds: [],
         });
       } catch {
-        toast.error('Failed to remove photo from topic');
+        toast.error(t('toasts.photoRemoveFromTopicFailed'));
       }
       setDeleteConfirm(null);
     }
@@ -563,7 +579,10 @@ export const PhotosTab = () => {
         variant="inline"
         title="Failed to load photos"
         message={(topicsError as Error)?.message}
-        onRetry={() => { void refetchTopics(); void refetchGallery(); }}
+        onRetry={() => {
+          void refetchTopics();
+          void refetchGallery();
+        }}
       />
     );
   }
@@ -581,7 +600,8 @@ export const PhotosTab = () => {
             <div>
               <h3 className="text-white font-semibold">Photo Topics</h3>
               <p className="text-white/70 text-xs mt-0.5">
-                {topics.length} topic{topics.length !== 1 ? 's' : ''} · {totalPhotos} photo{totalPhotos !== 1 ? 's' : ''}
+                {topics.length} topic{topics.length !== 1 ? 's' : ''} · {totalPhotos} photo
+                {totalPhotos !== 1 ? 's' : ''}
               </p>
             </div>
           </div>
@@ -713,7 +733,7 @@ export const PhotosTab = () => {
                       'w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200',
                       selectedTopic?.displayColumns === option.value
                         ? 'bg-white text-primary shadow-sm'
-                        : 'text-gray-400 hover:text-gray-600'
+                        : 'text-gray-400 hover:text-gray-600',
                     )}
                     title={`${option.value} column${option.value > 1 ? 's' : ''}`}
                   >
@@ -765,7 +785,9 @@ export const PhotosTab = () => {
                   <Icon name="cloud-arrow-down" className="text-3xl text-primary" />
                 </div>
                 <p className="text-xl font-semibold text-primary">Drop photos here</p>
-                <p className="text-sm text-primary/70 mt-1">Release to upload to "{selectedTopic?.topicName}"</p>
+                <p className="text-sm text-primary/70 mt-1">
+                  Release to upload to "{selectedTopic?.topicName}"
+                </p>
               </div>
             </div>
           ) : (
@@ -774,7 +796,11 @@ export const PhotosTab = () => {
                 images={gridImages}
                 onImageClick={image => setPreviewPhoto(image)}
                 onImageDelete={image =>
-                  setDeleteConfirm({ type: 'photo', id: image.id, name: image.fileName || image.alt })
+                  setDeleteConfirm({
+                    type: 'photo',
+                    id: image.id,
+                    name: image.fileName || image.alt,
+                  })
                 }
                 showUsedBadge={false}
                 prepend={
@@ -846,7 +872,11 @@ export const PhotosTab = () => {
           onNavigate={setPreviewPhoto}
           showInUseStatus={false}
           onDelete={() => {
-            setDeleteConfirm({ type: 'photo', id: previewPhoto.id, name: previewPhoto.caption || previewPhoto.fileName || 'Photo' });
+            setDeleteConfirm({
+              type: 'photo',
+              id: previewPhoto.id,
+              name: previewPhoto.caption || previewPhoto.fileName || 'Photo',
+            });
             setPreviewPhoto(null);
           }}
           onSaveDescription={async (caption: string) => {
@@ -854,7 +884,7 @@ export const PhotosTab = () => {
             try {
               const dto = galleryPhotoByDocId.get(previewPhoto.documentId);
               if (!dto) {
-                toast.error('Gallery photo not found');
+                toast.error(t('toasts.galleryPhotoNotFound'));
                 return;
               }
               await updateGalleryPhotoApi({
@@ -866,12 +896,10 @@ export const PhotosTab = () => {
                 longitude: dto.longitude ?? null,
                 capturedAt: dto.capturedAt ?? null,
               });
-              setPreviewPhoto(prev =>
-                prev ? { ...prev, caption: caption || null } : null,
-              );
-              toast.success('Description updated');
+              setPreviewPhoto(prev => (prev ? { ...prev, caption: caption || null } : null));
+              toast.success(t('toasts.descriptionUpdated'));
             } catch {
-              toast.error('Failed to update description');
+              toast.error(t('toasts.descriptionUpdateFailed'));
             }
           }}
           isSavingDescription={isUpdatingDescription}

@@ -2,6 +2,7 @@ import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState
 import { useMutation } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PhotoGallery, { type Photo } from './PhotoGallery';
 import PhotoPreviewModal, { type PreviewablePhoto } from './PhotoPreviewModal';
 import PhotoSourceModal from './PhotoSourceModal';
@@ -90,6 +91,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
     ref,
   ) => {
     const readOnly = usePageReadOnly();
+    const { t } = useTranslation('appraisal');
     const isCreateMode = !entityId;
     const hasThumbnailSupport = Boolean(useSetThumbnail && useUnsetThumbnail);
 
@@ -110,9 +112,9 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
     const removeImageMutation = useRemoveImage();
     // Always call both hooks unconditionally (Rules of Hooks).
     // useSetThumbnail/useUnsetThumbnail may be the no-op fallback when not provided.
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+
     const setThumbnailMutation = (useSetThumbnail ?? useNoOpMutation)();
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+
     const unsetThumbnailMutation = (useUnsetThumbnail ?? useNoOpMutation)();
     const uploadDocumentMutation = useUploadDocument();
     const { mutateAsync: updateGalleryPhoto, isPending: isUpdatingDescription } =
@@ -242,7 +244,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             photoTopicIds: null,
             fileName: uploadResult.fileName,
             filePath: uploadResult.storageUrl,
-            fileExtension: file.name.includes('.') ? file.name.split('.').pop() ?? null : null,
+            fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
             mimeType: file.type || null,
             fileSizeBytes: uploadResult.fileSize,
             uploadedByName: null,
@@ -260,9 +262,9 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             });
           }
 
-          toast.success('Photo uploaded successfully');
+          toast.success(t('toasts.photoUploaded'));
         } catch {
-          toast.error('Failed to upload photo');
+          toast.error(t('toasts.photoUploadFailed'));
         } finally {
           setUploadingPhotos(prev => prev.filter(p => p.id !== tempId));
           URL.revokeObjectURL(previewUrl);
@@ -304,19 +306,19 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
                 galleryPhotoId: image.id,
               });
             } catch {
-              toast.error('Failed to link photo');
+              toast.error(t('toasts.photoLinkFailed'));
             }
           }
         }
         if (selectedImages.length > 0) {
           toast.success(
             selectedImages.length === 1
-              ? 'Photo linked successfully'
-              : `${selectedImages.length} photos linked successfully`,
+              ? t('toasts.photoLinked')
+              : t('toasts.photosLinked', { count: selectedImages.length }),
           );
         }
       },
-      [entityId, isCreateMode, addImageMutation, appraisalId],
+      [entityId, isCreateMode, addImageMutation, appraisalId, t],
     );
 
     const handleDeleteRequest = useCallback(
@@ -324,7 +326,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
         if (readOnly) return;
         if (isCreateMode) {
           setPendingPhotoIds(prev => prev.filter(id => id !== photoId));
-          toast.success('Photo removed');
+          toast.success(t('toasts.photoRemoved'));
           return;
         }
         setDeleteTarget({
@@ -337,7 +339,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
 
     const handleUnlink = useCallback(async () => {
       if (!deleteTarget?.imageId || !entityId) {
-        toast.error('Cannot unlink: missing image ID');
+        toast.error(t('toasts.photoUnlinkMissingId'));
         setDeleteTarget(null);
         return;
       }
@@ -348,9 +350,9 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
           imageId: deleteTarget.imageId,
           appraisalId,
         });
-        toast.success('Photo removed');
+        toast.success(t('toasts.photoRemoved'));
       } catch {
-        toast.error('Failed to remove photo');
+        toast.error(t('toasts.photoRemoveFailed'));
       } finally {
         setIsDeleteLoading(false);
         setDeleteTarget(null);
@@ -365,9 +367,9 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
           appraisalId,
           photoId: deleteTarget.photoId,
         });
-        toast.success('Photo deleted permanently');
+        toast.success(t('toasts.photoDeletedPermanently'));
       } catch {
-        toast.error('Failed to delete photo');
+        toast.error(t('toasts.photoDeleteFailed'));
       } finally {
         setIsDeleteLoading(false);
         setDeleteTarget(null);
@@ -429,12 +431,12 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
           // Currently thumbnail — unset it
           unsetThumbnailMutation.mutate(
             { entityId, imageId, appraisalId },
-            { onError: () => toast.error('Failed to remove cover photo') },
+            { onError: () => toast.error(t('toasts.photoThumbnailUnsetFailed')) },
           );
         } else {
           setThumbnailMutation.mutate(
             { entityId, imageId, appraisalId },
-            { onError: () => toast.error('Failed to set cover photo') },
+            { onError: () => toast.error(t('toasts.photoThumbnailSetFailed')) },
           );
         }
       },
@@ -466,7 +468,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
               galleryPhotoId,
             });
           } catch {
-            toast.error(`Failed to link photo ${i + 1}`);
+            toast.error(t('toasts.photoLinkIndexFailed', { index: i + 1 }));
           }
         }
         setPendingPhotoIds([]);
@@ -515,7 +517,9 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             onClose={() => setPreviewPhoto(null)}
             onNavigate={setPreviewPhoto}
             onSetThumbnail={
-              !readOnly && hasThumbnailSupport && !isCreateMode ? handlePreviewSetThumbnail : undefined
+              !readOnly && hasThumbnailSupport && !isCreateMode
+                ? handlePreviewSetThumbnail
+                : undefined
             }
             onDelete={
               readOnly
@@ -538,9 +542,9 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
                   capturedAt: dto?.capturedAt ?? null,
                 });
                 setPreviewPhoto(prev => (prev ? { ...prev, caption: caption || null } : null));
-                toast.success('Description updated');
+                toast.success(t('toasts.descriptionUpdated'));
               } catch {
-                toast.error('Failed to update description');
+                toast.error(t('toasts.descriptionUpdateFailed'));
               }
             }}
             isSavingDescription={isUpdatingDescription}

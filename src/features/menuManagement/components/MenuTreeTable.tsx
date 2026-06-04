@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   DndContext,
   closestCenter,
@@ -81,6 +82,7 @@ interface SortableRowProps {
 }
 
 function SortableRow({ flatItem, onDelete }: SortableRowProps) {
+  const { t } = useTranslation('menuManagement');
   const { data: item, depth } = flatItem;
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: flatItem.id,
@@ -104,7 +106,7 @@ function SortableRow({ flatItem, onDelete }: SortableRowProps) {
           {...attributes}
           {...listeners}
           className="cursor-grab text-gray-300 hover:text-gray-500 active:cursor-grabbing"
-          aria-label="Drag to reorder"
+          aria-label={t('aria.dragToReorder')}
         >
           <Icon name="grip-vertical" style="solid" className="size-4" />
         </button>
@@ -121,7 +123,7 @@ function SortableRow({ flatItem, onDelete }: SortableRowProps) {
           </span>
           {item.isSystem && (
             <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
-              system
+              {t('table.systemBadge')}
             </span>
           )}
         </div>
@@ -135,7 +137,7 @@ function SortableRow({ flatItem, onDelete }: SortableRowProps) {
             to={`/admin/menus/${item.id}`}
             className="text-xs text-primary hover:underline font-medium"
           >
-            Edit
+            {t('table.actions.edit')}
           </Link>
           {!item.isSystem && (
             <button
@@ -143,7 +145,7 @@ function SortableRow({ flatItem, onDelete }: SortableRowProps) {
               onClick={() => onDelete(item.id, item.isSystem)}
               className="text-xs text-red-500 hover:underline"
             >
-              Delete
+              {t('table.actions.delete')}
             </button>
           )}
         </div>
@@ -167,6 +169,7 @@ function SortableRow({ flatItem, onDelete }: SortableRowProps) {
  *   - Cannot be shallower than nextItem.depth (would orphan the following item).
  */
 export function MenuTreeTable({ items, onReordered }: MenuTreeTableProps) {
+  const { t } = useTranslation('menuManagement');
   const { mutate: reorder } = useReorderMenuItems();
   const { mutate: deleteItem } = useDeleteMenuItem();
   const [flatItems, setFlatItems] = useState<FlatItem[]>(() => flattenTree(items));
@@ -253,7 +256,7 @@ export function MenuTreeTable({ items, onReordered }: MenuTreeTableProps) {
 
   const handleDelete = (id: string, isSystem: boolean) => {
     if (isSystem) return;
-    if (!confirm('Delete this menu item? This cannot be undone.')) return;
+    if (!confirm(t('confirm.deleteItem'))) return;
     deleteItem(id, { onSuccess: () => onReordered?.() });
   };
 
@@ -261,19 +264,16 @@ export function MenuTreeTable({ items, onReordered }: MenuTreeTableProps) {
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <p className="px-4 py-2 text-xs text-gray-400">
-            Drag vertically to reorder. Drag right to nest under the item above; drag left to
-            promote to a higher level.
-          </p>
+          <p className="px-4 py-2 text-xs text-gray-400">{t('table.dragHint')}</p>
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
               <tr>
                 <th className="px-4 py-3 w-8" />
-                <th className="px-4 py-3">Name</th>
-                <th className="px-4 py-3">Item Key</th>
-                <th className="px-4 py-3">Scope</th>
-                <th className="px-4 py-3">View Permission</th>
-                <th className="px-4 py-3">Actions</th>
+                <th className="px-4 py-3">{t('table.columns.name')}</th>
+                <th className="px-4 py-3">{t('table.columns.itemKey')}</th>
+                <th className="px-4 py-3">{t('table.columns.scope')}</th>
+                <th className="px-4 py-3">{t('table.columns.viewPermission')}</th>
+                <th className="px-4 py-3">{t('table.columns.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">

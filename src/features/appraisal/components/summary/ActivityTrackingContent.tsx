@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useGetWorkflowProgress } from '@/features/appraisal/api/workflow';
@@ -42,6 +43,7 @@ interface ActivityTrackingContentProps {
 }
 
 const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) => {
+  const { t } = useTranslation(['appraisal', 'common']);
   const location = useLocation();
   const { data, isLoading, isError } = useGetWorkflowProgress(appraisalId);
   const { data: appraisal } = useGetAppraisalById(appraisalId);
@@ -62,7 +64,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-10 h-10 text-red-400" />
-        <p className="text-sm text-gray-500">Failed to load workflow progress</p>
+        <p className="text-sm text-gray-500">{t('common:status.failedToLoad')}</p>
       </div>
     );
   }
@@ -71,7 +73,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="diagram-project" style="regular" className="w-10 h-10 text-gray-300" />
-        <p className="text-sm text-gray-500">No workflow data available</p>
+        <p className="text-sm text-gray-500">{t('activityTracking.empty')}</p>
       </div>
     );
   }
@@ -93,25 +95,25 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
   return (
     <div className="flex flex-col gap-6 pb-6">
       {/* Detail section */}
-      <FormCard title="Appraisal Detail" icon="square-info" iconColor="emerald">
+      <FormCard title={t('activityTracking.pageTitle')} icon="square-info" iconColor="emerald">
         <table className="w-full">
           <tbody>
-            <DetailRow label="Appraisal Number" value={appraisal?.appraisalNumber} />
+            <DetailRow label={t('pageHeader.appraisalNumber')} value={appraisal?.appraisalNumber} />
             <DetailRow label="Ref Appraisal Number" value={null} />
             <DetailRow label="Customer Name" value={customer?.name} />
             <DetailRow
               label="Loan Limit"
-              value={loanDetail?.facilityLimit != null ? formatCurrency(loanDetail.facilityLimit) : null}
+              value={
+                loanDetail?.facilityLimit != null ? formatCurrency(loanDetail.facilityLimit) : null
+              }
             />
             <DetailRow
-              label="Appointment Date"
+              label={t('appointment.sectionTitle')}
               value={formatDateTime(appointment?.appointmentDateTime)}
             />
-            {appraiserDisplay && (
-              <DetailRow label="Appraiser" value={appraiserDisplay} />
-            )}
+            {appraiserDisplay && <DetailRow label="Appraiser" value={appraiserDisplay} />}
             <DetailRow label="Flow" value={flowType} />
-            <DetailRow label="Status" value={appraisal?.status} />
+            <DetailRow label={t('common.status')} value={appraisal?.status} />
           </tbody>
         </table>
         {/* View Full Detail link inside the appraisal detail card */}
@@ -122,7 +124,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
             className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
           >
             <Icon name="arrow-up-right-from-square" style="solid" className="w-3.5 h-3.5" />
-            View Full Detail
+            {t('common:actions.viewDetails')}
           </Link>
         </div>
       </FormCard>
@@ -137,7 +139,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
       </FormCard>
 
       {/* Activity Log */}
-      <FormCard title="Activity Log" icon="clock-rotate-left" iconColor="teal">
+      <FormCard title={t('activityTracking.tabs.log')} icon="clock-rotate-left" iconColor="teal">
         <ActivityLogTable activityLog={data.activityLog} />
       </FormCard>
     </div>

@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import Icon from '@/shared/components/Icon';
 import { FormProvider } from '@/shared/components/form/FormProvider';
@@ -32,6 +33,7 @@ import { mapMachineryPropertyResponseToForm } from '../utils/mappers';
 import MachineryDetailForm from '../forms/MachineryDetailForm';
 
 const CreateMachineryPage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -93,7 +95,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Property Machinery updated successfully');
+            toast.success(t('toasts.propertyMachineryUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -112,7 +114,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Property Machinery created successfully');
+            toast.success(t('toasts.propertyMachineryCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/machinery/${response.propertyId}`);
@@ -142,7 +144,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -161,7 +163,7 @@ const CreateMachineryPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
@@ -192,8 +194,8 @@ const CreateMachineryPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
-            { label: 'Machinery', id: 'properties-section', icon: 'tractor' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
+            { label: t('createPage.navMachinery'), id: 'properties-section', icon: 'tractor' },
           ]}
         />
       </div>
@@ -219,7 +221,7 @@ const CreateMachineryPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                     {appraisalId && (
@@ -241,7 +243,7 @@ const CreateMachineryPage = () => {
                           className="w-5 h-5 text-amber-600"
                         />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Machinery Information</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.machinerySection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200" />
                   </Section>
@@ -280,7 +282,7 @@ const CreateMachineryPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
+                  {t('createPage.saveDraft')}
                 </Button>
                 <Button
                   type="submit"
@@ -288,7 +290,7 @@ const CreateMachineryPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('createPage.save')}
                 </Button>
               </ActionBar.Right>
             )}

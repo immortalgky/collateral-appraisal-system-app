@@ -8,12 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import CollateralSelectModal from '../components/CollateralSelectModal';
 import Icon from '@/shared/components/Icon';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 import DataErrorState from '@/shared/components/DataErrorState';
 
 const MarketComparableListingPage = () => {
+  const { t } = useTranslation('appraisal');
   const _baseReadOnly = usePageReadOnly();
   const isCiAppraisal = useIsCiAppraisal();
   const isReadOnly = _baseReadOnly || isCiAppraisal;
@@ -65,10 +67,10 @@ const MarketComparableListingPage = () => {
   const handleDelete = (id: string) => {
     deleteComparable(id, {
       onSuccess: () => {
-        toast.success('Market comparable deleted successfully');
+        toast.success(t('toasts.marketComparableDeleted'));
       },
       onError: () => {
-        toast.error('Failed to delete market comparable');
+        toast.error(t('toasts.marketComparableDeleteFailed'));
       },
     });
   };
@@ -99,60 +101,60 @@ const MarketComparableListingPage = () => {
 
   return (
     <PageReadOnlyContext.Provider value={isReadOnly}>
-    <div>
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
-        <p className="text-xs text-gray-500 mt-0.5">
-          {items.length} comparable{items.length !== 1 ? 's' : ''} linked to this appraisal
-        </p>
-      </div>
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {items.length} comparable{items.length !== 1 ? 's' : ''} linked to this appraisal
+          </p>
+        </div>
 
-      <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
-        <ResizableSidebar
-          isOpen={isOpen}
-          onToggle={onToggle}
-          openedWidth="w-1/5"
-          closedWidth="w-1/50"
-        >
-          <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden pt-3">
-            <div className="flex-auto flex flex-col gap-6">
-              <Section anchor className="flex flex-col gap-6">
-                <MarketComparableTable
-                  headers={headers}
-                  data={items}
-                  onSelect={handleEditSelect}
-                  onDelete={isReadOnly ? undefined : handleDelete}
-                />
-              </Section>
-            </div>
-            {!isReadOnly && (
-              <div className="border-t border-gray-100 sticky bottom-0 pt-3">
-                <button
-                  type="button"
-                  onClick={handleOpenModal}
-                  className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
+        <div className="flex flex-col gap-6 overflow-y-auto h-[calc(100dvh-15rem)] scroll-smooth">
+          <ResizableSidebar
+            isOpen={isOpen}
+            onToggle={onToggle}
+            openedWidth="w-1/5"
+            closedWidth="w-1/50"
+          >
+            <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden pt-3">
+              <div className="flex-auto flex flex-col gap-6">
+                <Section anchor className="flex flex-col gap-6">
+                  <MarketComparableTable
+                    headers={headers}
+                    data={items}
+                    onSelect={handleEditSelect}
+                    onDelete={isReadOnly ? undefined : handleDelete}
+                  />
+                </Section>
+              </div>
+              {!isReadOnly && (
+                <div className="border-t border-gray-100 sticky bottom-0 pt-3">
+                  <button
+                    type="button"
+                    onClick={handleOpenModal}
+                    className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
                       border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1
                       transition-colors rounded-lg"
-                >
-                  <div className="w-6 h-6 rounded-full bg-neutral-5 flex items-center justify-center">
-                    <Icon style="solid" name="circle-plus" className="size-3 text-neutral-5" />
-                  </div>
-                  Add market comparable
-                </button>
-              </div>
-            )}
-            {isOpenModal && (
-              <CollateralSelectModal
-                items={collateralItems}
-                position={modalPosition || { x: 0, y: 0 }}
-                onSelect={handleCreateSelect}
-                onCancel={() => setIsOpenModal(false)}
-              />
-            )}
-          </div>
-        </ResizableSidebar>
+                  >
+                    <div className="w-6 h-6 rounded-full bg-neutral-5 flex items-center justify-center">
+                      <Icon style="solid" name="circle-plus" className="size-3 text-neutral-5" />
+                    </div>
+                    Add market comparable
+                  </button>
+                </div>
+              )}
+              {isOpenModal && (
+                <CollateralSelectModal
+                  items={collateralItems}
+                  position={modalPosition || { x: 0, y: 0 }}
+                  onSelect={handleCreateSelect}
+                  onCancel={() => setIsOpenModal(false)}
+                />
+              )}
+            </div>
+          </ResizableSidebar>
+        </div>
       </div>
-    </div>
     </PageReadOnlyContext.Provider>
   );
 };

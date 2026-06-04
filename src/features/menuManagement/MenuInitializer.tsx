@@ -1,8 +1,11 @@
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import i18n from '@/i18n';
 import { useAuthStore } from '@features/auth/store';
 import { fetchMyMenu } from './api/menus';
 import { useMenuStore } from './store';
+
+const t = i18n.getFixedT(null, 'menuManagement');
 
 /**
  * Fetches /auth/me/menu once after the user is authenticated.
@@ -30,8 +33,8 @@ export function MenuInitializer({ children }: { children: React.ReactNode }) {
         setMenu(main, appraisal);
       })
       .catch(() => {
-        setError('Failed to load navigation');
-        toast.error('Failed to load navigation. The sidebar may be empty.', {
+        setError(t('toasts.loadNavFailed'));
+        toast.error(t('toasts.loadNavFailedDetail'), {
           id: 'menu-load-error',
           duration: 6000,
         });
@@ -54,7 +57,7 @@ export function MenuInitializer({ children }: { children: React.ReactNode }) {
         <div
           className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
           role="status"
-          aria-label="Loading navigation"
+          aria-label={t('aria.loadingNavigation')}
         />
       </div>
     );

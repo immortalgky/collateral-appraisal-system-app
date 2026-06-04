@@ -109,8 +109,10 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
                         className={clsx(
                           'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
                           staff.currentWorkload <= 2 && 'bg-green-50 text-green-700',
-                          staff.currentWorkload > 2 && staff.currentWorkload <= 4 && 'bg-amber-50 text-amber-700',
-                          staff.currentWorkload > 4 && 'bg-red-50 text-red-700'
+                          staff.currentWorkload > 2 &&
+                            staff.currentWorkload <= 4 &&
+                            'bg-amber-50 text-amber-700',
+                          staff.currentWorkload > 4 && 'bg-red-50 text-red-700',
                         )}
                       >
                         {staff.currentWorkload} tasks
@@ -119,7 +121,11 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
 
                     {/* Selected Indicator */}
                     {selectedStaff?.id === staff.id && (
-                      <Icon name="circle-check" style="solid" className="w-5 h-5 text-primary-600" />
+                      <Icon
+                        name="circle-check"
+                        style="solid"
+                        className="w-5 h-5 text-primary-600"
+                      />
                     )}
                   </button>
                 ))}

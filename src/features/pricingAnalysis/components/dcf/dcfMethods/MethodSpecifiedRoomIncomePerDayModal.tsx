@@ -1,22 +1,39 @@
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toDecimal, toNumber } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
+import { MarketReferenceButton } from '../../MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../../../api/references';
+import type { MarketComparableDetailType } from '../../../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 export function MethodSpecifyRoomIncomePerDayModal({
   name = '',
   isReadOnly,
   getOuterFormValues,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
+  templateList,
+  ensureIncomeAnalysisId,
 }: {
   name: string;
   isReadOnly?: boolean;
   getOuterFormValues: UseFormGetValues<any>;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }) {
-  const { getValues } = useFormContext();
+  const { getValues, setValue } = useFormContext();
+  // Local state to cache the id obtained by ensureIncomeAnalysisId so the
+  // button can function before the first save.
+  const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -145,12 +162,60 @@ export function MethodSpecifyRoomIncomePerDayModal({
                       </div>
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
-                      <RHFInputCell
-                        fieldName={`${name}.roomDetails.${index}.roomIncome`}
-                        inputType="number"
-                        disabled={isReadOnly}
-                        number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
-                      />
+                      {(() => {
+                        const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
+                        const roomOther = getValues(`${name}.roomDetails.${index}.roomTypeOther`);
+                        const roomCode = String(roomType ?? '');
+                        const anchorRefKey =
+                          roomCode === '99' && roomOther
+                            ? String(roomOther)
+                            : roomCode;
+                        // The effective anchorId: already-saved id wins; fall back to locally ensured.
+                        // Read from ref for latest value without stale closure inside onBeforeOpen.
+                        const effectiveId = incomeAnalysisId ?? ensuredId;
+                        const refButton = !isReadOnly ? (
+                          <MarketReferenceButton
+                            compact
+                            label="WQS"
+                            subjectType={PricingAnalysisSubjectType.RoomIncomeRef}
+                            // Pass the live value; after onBeforeOpen resolves the state update
+                            // will have re-rendered with the new id, and the modal reads anchorId
+                            // from the prop at open time.
+                            anchorId={effectiveId ?? ''}
+                            anchorRefKey={anchorRefKey}
+                            hostMethodId={hostMethodId}
+                            marketSurveys={marketSurveys ?? []}
+                            templateList={templateList}
+                            currentAnchorLabel={anchorRefKey}
+                            onApplyValue={v =>
+                              setValue(`${name}.roomDetails.${index}.roomIncome`, v, { shouldDirty: true })
+                            }
+                            onBeforeOpen={
+                              effectiveId
+                                ? undefined
+                                : async () => {
+                                    const id = await ensureIncomeAnalysisId?.();
+                                    if (id) {
+                                      setEnsuredId(id);
+                                    }
+                                    // Throw to abort open if still no id (save failed, toast shown)
+                                    if (!id) throw new Error('no-id');
+                                  }
+                            }
+                            className="pointer-events-auto shrink-0"
+                          />
+                        ) : null;
+                        return (
+                          <RHFInputCell
+                            fieldName={`${name}.roomDetails.${index}.roomIncome`}
+                            inputType="number"
+                            disabled={isReadOnly}
+                            number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                            rightIcon={refButton}
+                            inputClassName={refButton ? '!pr-14' : undefined}
+                          />
+                        );
+                      })()}
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">
                       <RHFInputCell

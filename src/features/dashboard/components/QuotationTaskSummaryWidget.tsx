@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
@@ -12,10 +13,20 @@ type KpiCardProps = {
   iconColor: string;
   iconBg: string;
   cardBg: string;
+  openListLabel: string;
   onClick: () => void;
 };
 
-function KpiCard({ label, count, icon, iconColor, iconBg, cardBg, onClick }: KpiCardProps) {
+function KpiCard({
+  label,
+  count,
+  icon,
+  iconColor,
+  iconBg,
+  cardBg,
+  openListLabel,
+  onClick,
+}: KpiCardProps) {
   return (
     <button
       type="button"
@@ -31,7 +42,7 @@ function KpiCard({ label, count, icon, iconColor, iconBg, cardBg, onClick }: Kpi
         <p className="text-sm font-medium text-gray-500 mt-1">{label}</p>
       </div>
       <span className="text-[11px] text-blue-600 inline-flex items-center gap-0.5 mt-auto">
-        Open list
+        {openListLabel}
         <Icon name="arrow-right" style="solid" className="size-2.5" />
       </span>
     </button>
@@ -52,6 +63,7 @@ function KpiCardSkeleton() {
 }
 
 function QuotationTaskSummaryWidget() {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useQuotationTaskSummary();
 
@@ -59,11 +71,11 @@ function QuotationTaskSummaryWidget() {
     <WidgetWrapper id="quotation-task-summary">
       <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-800">Quotation Task Summary</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t('quotationSummary.title')}</h3>
         </div>
 
         {isError ? (
-          <WidgetError message="Unable to load quotation task summary" onRetry={() => refetch()} />
+          <WidgetError message={t('quotationSummary.error')} onRetry={() => refetch()} />
         ) : isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -73,30 +85,33 @@ function QuotationTaskSummaryWidget() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <KpiCard
-              label="Pending Quotation Creation"
+              label={t('quotationSummary.pendingCreation')}
               count={data?.pendingQuotationCreation ?? 0}
               icon="file-circle-plus"
               iconColor="text-amber-500"
               iconBg="bg-amber-50"
               cardBg="bg-white"
+              openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/appraisals/list?status=Pending')}
             />
             <KpiCard
-              label="Waiting Company Submission"
+              label={t('quotationSummary.waitingSubmission')}
               count={data?.waitingCompanySubmission ?? 0}
               icon="paper-plane"
               iconColor="text-blue-500"
               iconBg="bg-blue-50"
               cardBg="bg-white"
+              openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/quotations?status=Sent')}
             />
             <KpiCard
-              label="Waiting RM Selection"
+              label={t('quotationSummary.waitingRm')}
               count={data?.waitingRmSelection ?? 0}
               icon="user-check"
               iconColor="text-purple-500"
               iconBg="bg-purple-50"
               cardBg="bg-white"
+              openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/quotations?status=PendingRmSelection')}
             />
           </div>

@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
@@ -55,6 +56,7 @@ interface ModelDetailPageProps {
  * depending on projectType.
  */
 export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
+  const { t } = useTranslation('blockProject');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -72,9 +74,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   // Only push the dynamic model name here; "New Model" is handled by the layout.
   const modelLeafLabel = isEditMode ? modelData?.modelName?.trim() || '...' : null;
   useBreadcrumbExtras(
-    modelLeafLabel
-      ? [{ label: modelLeafLabel, href: location.pathname, icon: 'layer-group' }]
-      : [],
+    modelLeafLabel ? [{ label: modelLeafLabel, href: location.pathname, icon: 'layer-group' }] : [],
     [modelLeafLabel, location.pathname],
   );
   // Condo: fetch towers for the tower selector on the model form
@@ -178,7 +178,12 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
     resolver: zodResolver(schema),
   });
 
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
   const { isOpen, onToggle } = useDisclosure();
@@ -199,13 +204,13 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
       { appraisalId, modelId },
       {
         onSuccess: () => {
-          toast.success('Model deleted successfully');
+          toast.success(t('toasts.model.deleteSuccess'));
           skipWarning();
           navigate(`${basePath}/${routeSegment}?tab=models`);
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to delete model');
+          toast.error(error?.apiError?.detail ?? t('toasts.model.deleteFailed'));
           setIsDeleteDialogOpen(false);
         },
       },
@@ -221,14 +226,16 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success(isDraft ? 'Draft saved successfully' : 'Model updated successfully');
+            toast.success(
+              isDraft ? t('toasts.model.saveDraftSuccess') : t('toasts.model.updateSuccess'),
+            );
             setSaveAction(null);
           },
           onError: (err: unknown) => {
             const error = err as AppError;
             toast.error(
               error?.apiError?.detail ??
-                (isDraft ? 'Failed to save draft' : 'Failed to update model'),
+                (isDraft ? t('toasts.model.saveDraftFailed') : t('toasts.model.updateFailed')),
             );
             setSaveAction(null);
           },
@@ -240,7 +247,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         {
           onSuccess: async response => {
             await photoSectionRef.current?.linkImagesToModel(response.id);
-            toast.success(isDraft ? 'Draft saved successfully' : 'Model saved successfully');
+            toast.success(
+              isDraft ? t('toasts.model.saveDraftSuccess') : t('toasts.model.saveSuccess'),
+            );
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/${routeSegment}/model/${response.id}`);
@@ -249,7 +258,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
             const error = err as AppError;
             toast.error(
               error?.apiError?.detail ??
-                (isDraft ? 'Failed to save draft' : 'Failed to create model'),
+                (isDraft ? t('toasts.model.saveDraftFailed') : t('toasts.model.createFailed')),
             );
             setSaveAction(null);
           },
@@ -283,8 +292,8 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         <NavAnchors
           containerId="model-form-scroll"
           anchors={[
-            { label: 'Images', id: 'model-images', icon: 'images' },
-            { label: 'Model Info', id: 'model-info', icon: 'layer-group' },
+            { label: t('modelDetail.navAnchors.images'), id: 'model-images', icon: 'images' },
+            { label: t('modelDetail.navAnchors.modelInfo'), id: 'model-info', icon: 'layer-group' },
           ]}
         />
       </div>
@@ -329,7 +338,10 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
                 Cancel
               </Button>
               {isEditMode && !isReadOnly && (
-                <DeleteButton onClick={() => setIsDeleteDialogOpen(true)} disabled={isPending || isDeleting} />
+                <DeleteButton
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isPending || isDeleting}
+                />
               )}
               {!isReadOnly && (
                 <>
@@ -366,9 +378,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
             isOpen={isDeleteDialogOpen}
             onClose={() => setIsDeleteDialogOpen(false)}
             onConfirm={handleDelete}
-            title="Delete Model"
-            message="Are you sure you want to delete this model? This action cannot be undone."
-            confirmText="Delete"
+            title={t('dialogs.deleteModel.title')}
+            message={t('dialogs.deleteModel.message')}
+            confirmText={t('dialogs.deleteModel.confirm')}
             isLoading={isDeleting}
           />
           <UnsavedChangesDialog blocker={blocker} />

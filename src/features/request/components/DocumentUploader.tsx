@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
@@ -7,10 +8,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DocumentActionMenu from './DocumentActionMenu';
 import DocumentEditModal from './DocumentEditModal';
 import { useDownloadDocument, useUploadDocument } from '../api';
-import {
-  getDocumentCategory,
-  type UploadedDocument,
-} from '../types/document';
+import { getDocumentCategory, type UploadedDocument } from '../types/document';
 import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
@@ -43,6 +41,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   readOnly,
   getDocTypeName,
 }) => {
+  const { t } = useTranslation('request');
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '';
     const mb = bytes / (1024 * 1024);
@@ -52,8 +51,11 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   const formatDate = (dateString?: string) => {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    return (
+      date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+      ' ' +
+      date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+    );
   };
 
   const getFileIcon = (fileName?: string | null) => {
@@ -70,7 +72,9 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   };
 
   const isUploading = document?.isUploading || false;
-  const displayName = document.displayName || (document.documentType ? getDocTypeName(document.documentType) : 'Unknown');
+  const displayName =
+    document.displayName ||
+    (document.documentType ? getDocTypeName(document.documentType) : 'Unknown');
   const isRequired = document.isRequired;
   const hasFile = !!document.fileName;
   const isEmpty = !hasFile;
@@ -103,17 +107,11 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
             <span
               className={clsx(
                 'inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0',
-                hasFile
-                  ? 'bg-success/10 text-success'
-                  : 'bg-amber-100 text-amber-700',
+                hasFile ? 'bg-success/10 text-success' : 'bg-amber-100 text-amber-700',
               )}
             >
-              <Icon
-                name={hasFile ? 'check' : 'asterisk'}
-                style="solid"
-                className="w-2.5 h-2.5"
-              />
-              Required
+              <Icon name={hasFile ? 'check' : 'asterisk'} style="solid" className="w-2.5 h-2.5" />
+              {t('documents.requiredBadge')}
             </span>
           )}
         </div>
@@ -126,17 +124,34 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
             disabled={readOnly}
             className={clsx('flex items-center gap-2', !readOnly && 'cursor-pointer group')}
           >
-            <div className={clsx(
-              'w-10 h-10 rounded border-2 border-dashed flex items-center justify-center shrink-0 transition-colors',
-              isRequiredEmpty ? 'border-amber-300 bg-amber-50 group-hover:border-amber-400 group-hover:bg-amber-100' : 'border-gray-300 bg-gray-50 group-hover:border-gray-400 group-hover:bg-gray-100',
-            )}>
-              <Icon name="cloud-arrow-up" style="solid" className={clsx('w-4 h-4', isRequiredEmpty ? 'text-amber-400' : 'text-gray-400')} />
+            <div
+              className={clsx(
+                'w-10 h-10 rounded border-2 border-dashed flex items-center justify-center shrink-0 transition-colors',
+                isRequiredEmpty
+                  ? 'border-amber-300 bg-amber-50 group-hover:border-amber-400 group-hover:bg-amber-100'
+                  : 'border-gray-300 bg-gray-50 group-hover:border-gray-400 group-hover:bg-gray-100',
+              )}
+            >
+              <Icon
+                name="cloud-arrow-up"
+                style="solid"
+                className={clsx('w-4 h-4', isRequiredEmpty ? 'text-amber-400' : 'text-gray-400')}
+              />
             </div>
             <div className="flex flex-col min-w-0 text-left">
-              <span className={clsx('text-sm font-medium', isRequiredEmpty ? 'text-amber-700' : 'text-gray-500')}>
-                {isRequiredEmpty ? 'Awaiting upload' : 'Optional'}
+              <span
+                className={clsx(
+                  'text-sm font-medium',
+                  isRequiredEmpty ? 'text-amber-700' : 'text-gray-500',
+                )}
+              >
+                {isRequiredEmpty ? t('documents.awaitingUpload') : t('documents.optional')}
               </span>
-              <span className={clsx('text-xs', isRequiredEmpty ? 'text-amber-500' : 'text-gray-400')}>Click to upload</span>
+              <span
+                className={clsx('text-xs', isRequiredEmpty ? 'text-amber-500' : 'text-gray-400')}
+              >
+                {t('documents.clickToUpload')}
+              </span>
             </div>
           </button>
         ) : (
@@ -154,7 +169,9 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
             )}
             <div className="flex flex-col min-w-0">
               {isUploading ? (
-                <span className="text-sm font-medium text-gray-900 truncate">{document.fileName}</span>
+                <span className="text-sm font-medium text-gray-900 truncate">
+                  {document.fileName}
+                </span>
               ) : (
                 <button
                   type="button"
@@ -165,7 +182,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
                 </button>
               )}
               <span className="text-xs text-gray-500">
-                {isUploading ? 'Uploading...' : formatFileSize(document.file?.size)}
+                {isUploading ? t('documents.uploading') : formatFileSize(document.file?.size)}
               </span>
             </div>
           </div>
@@ -176,15 +193,12 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
       </td>
       <td className="px-4 py-3 w-20 text-center">
         {isUploading ? (
-          <span className="text-xs text-gray-500">Processing...</span>
+          <span className="text-xs text-gray-500">{t('documents.processing')}</span>
         ) : readOnly ? (
           isEmpty ? (
             <span className="text-sm text-gray-400">-</span>
           ) : (
-            <DocumentActionMenu
-              document={document}
-              onView={onView}
-            />
+            <DocumentActionMenu document={document} onView={onView} />
           )
         ) : isEmpty ? (
           <span className="text-sm text-gray-400">-</span>
@@ -209,6 +223,7 @@ interface DocumentUploaderProps {
 const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   getOrCreateSession,
 }) => {
+  const { t } = useTranslation(['request', 'common']);
   const isReadOnly = useFormReadOnly();
   const currentUser = useAuthStore(state => state.user);
   const { data: documentTypes = [] } = useGetDocumentTypes();
@@ -273,7 +288,12 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
   // Helper to create unique document identifier (includes set for uniqueness)
   // Uses | as separator to avoid issues with negative entityIndex (-1)
-  const getDocumentId = (entityType: 'request' | 'title', entityIndex: number, docType: string, set: number) => {
+  const getDocumentId = (
+    entityType: 'request' | 'title',
+    entityIndex: number,
+    docType: string,
+    set: number,
+  ) => {
     return `${entityType}|${entityIndex}|${docType}|${set}`;
   };
 
@@ -387,7 +407,6 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     }
   };
 
-
   const handleDelete = (
     document: UploadedDocument,
     entityType: 'request' | 'title',
@@ -424,13 +443,13 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
             : doc,
         ),
       );
-      toast.success('File removed. Required document placeholder retained.');
+      toast.success(t('toasts.documentFileRemoved'));
     } else {
       // For non-required documents: remove entire record
       updateDocument(entityType, entityIndex, document.documentType || '', docs =>
         docs.filter(doc => !isTargetDoc(doc)),
       );
-      toast.success('Document deleted');
+      toast.success(t('toasts.documentDeleted'));
     }
 
     setDeleteConfirm({ isOpen: false, document: null, entityType: 'request', entityIndex: -1 });
@@ -454,7 +473,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     );
 
     setEditingDocument(null);
-    toast.success('Document details updated');
+    toast.success(t('toasts.documentDetailsUpdated'));
   };
 
   const handleReplace = (
@@ -534,7 +553,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               return [...docs];
             });
 
-            toast.success('Document replaced successfully');
+            toast.success(t('toasts.documentReplaced'));
           },
           onError: (error: any) => {
             // Revert to an original document on error
@@ -544,7 +563,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               );
             }
 
-            toast.error(error.apiError?.detail || 'Replace failed. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.documentReplaceFailed'));
           },
         },
       );
@@ -555,7 +574,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
         );
       }
-      toast.error(error.apiError?.detail || 'Failed to create upload session. Please try again.');
+      toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
     }
   };
 
@@ -638,7 +657,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               ),
             );
 
-            toast.success('Document uploaded successfully');
+            toast.success(t('toasts.documentUploaded'));
           },
           onError: (error: any) => {
             // Revert to placeholder on error
@@ -648,7 +667,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               );
             }
 
-            toast.error(error.apiError?.detail || 'Upload failed. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.documentUploadFailed'));
           },
         },
       );
@@ -659,7 +678,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
         );
       }
-      toast.error(error.apiError?.detail || 'Failed to create upload session. Please try again.');
+      toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
     }
   };
 
@@ -676,7 +695,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           window.open(url, '_blank');
         },
         onError: (error: any) => {
-          toast.error(error.apiError?.detail || 'Failed to download document');
+          toast.error(error.apiError?.detail || t('toasts.documentDownloadFailed'));
         },
       });
     } else if (document.filePath) {
@@ -712,7 +731,9 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       sections.forEach(section => {
         section.documents.forEach(doc => {
           if (!doc.isUploading && doc.documentType && doc.fileName) {
-            allDocIds.add(getDocumentId(section.entityType, section.entityIndex, doc.documentType, doc.set));
+            allDocIds.add(
+              getDocumentId(section.entityType, section.entityIndex, doc.documentType, doc.set),
+            );
           }
         });
       });
@@ -738,9 +759,8 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       const set = parseInt(setStr);
 
       // Get the document to check if it's required
-      const docs = entityType === 'request'
-        ? getRequestDocuments()
-        : getTitleDocuments(entityIndex);
+      const docs =
+        entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex);
       const targetDoc = docs.find(doc => doc.documentType === docType && doc.set === set);
 
       if (targetDoc?.isRequired) {
@@ -776,11 +796,11 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
     // Show appropriate message
     if (clearedCount > 0 && deletedCount > 0) {
-      toast.success(`Deleted ${deletedCount} document(s), cleared ${clearedCount} required document(s)`);
+      toast.success(t('toasts.bulkDeleted', { deleted: deletedCount, cleared: clearedCount }));
     } else if (clearedCount > 0) {
-      toast.success(`Cleared ${clearedCount} required document(s). Placeholders retained.`);
+      toast.success(t('toasts.bulkCleared', { n: clearedCount }));
     } else {
-      toast.success(`Deleted ${deletedCount} document(s)`);
+      toast.success(t('toasts.bulkDeletedSimple', { n: deletedCount }));
     }
   };
 
@@ -812,10 +832,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <Icon name="file-lines" style="solid" className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-gray-700">Uploaded Documents</span>
-              <span className="text-sm font-semibold text-primary">
-                {totalUploadedCount}
+              <span className="text-sm font-medium text-gray-700">
+                {t('documents.uploadedDocuments')}
               </span>
+              <span className="text-sm font-semibold text-primary">{totalUploadedCount}</span>
             </div>
             {requiredStats.total > 0 && (
               <>
@@ -831,7 +851,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                         : 'text-amber-500',
                     )}
                   />
-                  <span className="text-sm text-gray-600">Required:</span>
+                  <span className="text-sm text-gray-600">{t('documents.required')}</span>
                   <span
                     className={clsx(
                       'text-sm font-semibold',
@@ -853,13 +873,13 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         {totalUploadedCount === 0 && requiredStats.total === 0 && (
           <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
             <Icon name="info-circle" style="solid" className="w-3 h-3" />
-            No documents uploaded yet. Use the file input above to upload documents.
+            {t('documents.noDocsYet')}
           </p>
         )}
         {requiredStats.total > 0 && requiredStats.completed < requiredStats.total && (
           <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
             <Icon name="exclamation-triangle" style="solid" className="w-3 h-3" />
-            {requiredStats.total - requiredStats.completed} required document(s) still need to be uploaded.
+            {t('documents.pendingRequired', { n: requiredStats.total - requiredStats.completed })}
           </p>
         )}
       </div>
@@ -873,7 +893,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
             className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
           >
             <Icon name="angles-down" style="solid" className="w-3 h-3" />
-            Expand all
+            {t('documents.expandAll')}
           </button>
           <span className="text-gray-300">|</span>
           <button
@@ -882,7 +902,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
             className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
           >
             <Icon name="angles-up" style="solid" className="w-3 h-3" />
-            Collapse all
+            {t('documents.collapseAll')}
           </button>
         </div>
       )}
@@ -893,7 +913,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           <div className="flex items-center gap-3">
             <Icon name="circle-check" style="solid" className="w-5 h-5 text-primary" />
             <span className="text-sm font-medium text-primary">
-              {selectedDocuments.size} document(s) selected
+              {t('documents.selectedCount', { n: selectedDocuments.size })}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -902,7 +922,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               onClick={() => setSelectedDocuments(new Set())}
               className="px-3 py-1.5 text-sm font-medium text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors"
             >
-              Clear selection
+              {t('documents.clearSelection')}
             </button>
             <button
               type="button"
@@ -910,7 +930,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               className="px-3 py-1.5 text-sm font-medium text-white bg-danger-600 hover:bg-danger-700 rounded transition-colors flex items-center gap-2"
             >
               <Icon name="trash" style="solid" className="w-4 h-4" />
-              Delete selected
+              {t('documents.deleteSelected')}
             </button>
           </div>
         </div>
@@ -920,11 +940,8 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       {totalUploadedCount === 0 && requiredStats.total === 0 ? (
         <div className="h-96 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
           <Icon name="folder-open" style="regular" className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">No documents yet</h3>
-          <p className="text-sm text-gray-500 text-center max-w-md">
-            Upload documents using the file input above. Select files and assign them to the
-            appropriate document type in the assignment modal.
-          </p>
+          <h3 className="text-lg font-medium text-gray-600 mb-2">{t('empty.noDocuments')}</h3>
+          <p className="text-sm text-gray-500 text-center max-w-md">{t('empty.noDocumentsDesc')}</p>
         </div>
       ) : (
         <div className="h-96 overflow-auto rounded-lg">
@@ -948,13 +965,13 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                   )}
                 </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-[25%]">
-                  Document type
+                  {t('documents.columnDocumentType')}
                 </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-[37%]">
-                  File name
+                  {t('documents.columnFileName')}
                 </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-44">
-                  Uploaded at
+                  {t('documents.columnUploadedAt')}
                 </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-20"></th>
               </tr>
@@ -996,7 +1013,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                             {section.entityKey}
                           </span>
                           <span className="text-xs text-gray-400">
-                            ({uploadedCount} uploaded)
+                            {t('documents.uploaded', { n: uploadedCount })}
                           </span>
                           {requiredCount > 0 && (
                             <span
@@ -1007,7 +1024,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                                   : 'bg-amber-100 text-amber-700',
                               )}
                             >
-                              Required: {requiredCompleted}/{requiredCount}
+                              {t('documents.requiredProgress', {
+                                done: requiredCompleted,
+                                total: requiredCount,
+                              })}
                             </span>
                           )}
                         </div>
@@ -1051,14 +1071,16 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                               handleUploadToSlot(d, section.entityType, section.entityIndex)
                             }
                             readOnly={isReadOnly}
-                            getDocTypeName={(code) => getDocumentTypeName(documentTypes, code)}
+                            getDocTypeName={code => getDocumentTypeName(documentTypes, code)}
                           />
                         );
                       })
                     ) : (
                       <tr>
                         <td colSpan={6} className="px-4 py-6 text-center">
-                          <span className="text-sm text-gray-400">No documents in this section</span>
+                          <span className="text-sm text-gray-400">
+                            {t('empty.noDocumentsSection')}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -1113,10 +1135,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           })
         }
         onConfirm={confirmDelete}
-        title="Delete Document"
-        message="Are you sure you want to delete this document? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('confirm.deleteDocumentTitle')}
+        message={t('confirm.deleteDocumentMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
 
@@ -1125,10 +1147,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         isOpen={bulkDeleteConfirm}
         onClose={() => setBulkDeleteConfirm(false)}
         onConfirm={confirmBulkDelete}
-        title="Delete Selected Documents"
-        message={`Are you sure you want to delete ${selectedDocuments.size} selected document(s)? This action cannot be undone.`}
-        confirmText="Delete All"
-        cancelText="Cancel"
+        title={t('confirm.bulkDeleteTitle')}
+        message={t('confirm.bulkDeleteMessage', { n: selectedDocuments.size })}
+        confirmText={t('confirm.bulkDeleteConfirm')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
     </>

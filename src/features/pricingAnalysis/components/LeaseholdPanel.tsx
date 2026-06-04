@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch, useController, useFieldArray } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { MethodFooterActions } from './MethodFooterActions';
 import {
@@ -44,6 +45,10 @@ import toast from 'react-hot-toast';
 import { formatDateOnly } from '../domain/formatters';
 import clsx from 'clsx';
 import DataErrorState from '@/shared/components/DataErrorState';
+import { MarketReferenceButton } from './MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../api/references';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 interface LeaseholdPanelProps {
   activeMethod?: {
@@ -56,6 +61,9 @@ interface LeaseholdPanelProps {
   firstPropertyId?: string;
   firstPropertyType?: string;
   propertiesMap?: Record<string, Record<string, unknown>>;
+  /** Passed through for the market-reference launcher */
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -70,11 +78,14 @@ export function LeaseholdPanel({
   firstPropertyId,
   firstPropertyType,
   propertiesMap,
+  marketSurveys,
+  templateList,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: LeaseholdPanelProps) {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -393,6 +404,10 @@ export function LeaseholdPanel({
     [appointment, rentalScheduleData, propertyData, isPartialUsage],
   );
 
+  // Local state: caches the analysis id obtained by an auto-save on button open,
+  // so the WQS button is available even before the user has saved the form.
+  const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
+
   const handleOnSubmit = async () => {
     if (readOnly || !pricingAnalysisId || !methodId) return;
 
@@ -437,10 +452,18 @@ export function LeaseholdPanel({
           appraisalValue: data.estimatePriceRounded ?? result.finalValueRounded,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('toasts.saveFailed'));
     }
+  };
+
+  const ensureAnalysisId = async (): Promise<string | undefined> => {
+    if (savedData?.analysis?.id) return savedData.analysis.id;
+    if (readOnly || !pricingAnalysisId || !methodId) return undefined;
+    await handleOnSubmit();
+    const res = await refetchSavedData();
+    return res.data?.analysis?.id;
   };
 
   const handleOnReset = () => setIsShowResetDialog(true);
@@ -456,9 +479,9 @@ export function LeaseholdPanel({
       tableResultRef.current = null;
       initializeLeaseholdForm(null, null, reset);
       setTableResult(null);
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
@@ -470,7 +493,7 @@ export function LeaseholdPanel({
     name: 'landGrowthRatePercent',
   });
   const { field: landIntervalField } = useController({ control, name: 'landGrowthIntervalYears' });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const {
     fields: landPeriodFields,
     append: appendLandPeriod,
@@ -550,7 +573,7 @@ export function LeaseholdPanel({
       if (isRentalScheduleError) refetchRentalSchedule();
       if (isLeaseAgreementError) refetchLeaseAgreement();
     };
-    return <DataErrorState title="Failed to load leasehold analysis" onRetry={handleRetry} />;
+    return <DataErrorState title={t('toasts.loadLeaseholdFailed')} onRetry={handleRetry} />;
   }
 
   return (
@@ -567,7 +590,7 @@ export function LeaseholdPanel({
           <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
             <Icon name="file-contract" className="size-4" />
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Leasehold Analysis</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('leasehold.title')}</h2>
         </div>
 
         {/* Lease Info */}
@@ -577,7 +600,7 @@ export function LeaseholdPanel({
               <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
               <div>
                 <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  Appraisal Date
+                  {t('leasehold.appraisalDate')}
                 </div>
                 <div className="text-sm font-medium text-gray-900">
                   {appointment?.appointmentDateTime
@@ -589,7 +612,9 @@ export function LeaseholdPanel({
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-green-500 shrink-0" />
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">Lease Start</div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
+                  {t('leasehold.leaseStart')}
+                </div>
                 <div className="text-sm font-medium text-gray-900">
                   {leaseAgreement?.leaseStartDate
                     ? formatDateOnly(leaseAgreement.leaseStartDate)
@@ -600,7 +625,9 @@ export function LeaseholdPanel({
             <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
               <Icon name="calendar" className="size-4 text-red-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">Lease End</div>
+                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
+                  {t('leasehold.leaseEnd')}
+                </div>
                 <div className="text-sm font-medium text-gray-900">
                   {leaseAgreement?.leaseEndDate ? formatDateOnly(leaseAgreement.leaseEndDate) : '-'}
                 </div>
@@ -613,8 +640,12 @@ export function LeaseholdPanel({
             >
               <Icon name="receipt" className="size-4 text-primary shrink-0" />
               <div className="text-left">
-                <div className="text-[11px] text-primary/60 uppercase tracking-wide">View</div>
-                <div className="text-sm font-medium text-primary">Rental Information</div>
+                <div className="text-[11px] text-primary/60 uppercase tracking-wide">
+                  {t('leasehold.viewRental')}
+                </div>
+                <div className="text-sm font-medium text-primary">
+                  {t('leasehold.rentalInformation')}
+                </div>
               </div>
             </button>
           </div>
@@ -632,7 +663,7 @@ export function LeaseholdPanel({
           >
             <div className="rounded-md bg-gray-50 px-4 py-3">
               <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                Land Area
+                {t('leasehold.landArea')}
               </div>
               <div className="flex items-baseline gap-1.5">
                 <div className="flex items-baseline gap-1.5">
@@ -646,17 +677,17 @@ export function LeaseholdPanel({
                       maximumFractionDigits: 2,
                     })}
                   </span>
-                  <span className="text-xs text-gray-500">Sq. Wa</span>
+                  <span className="text-xs text-gray-500">{t('leasehold.units.sqWa')}</span>
                 </div>
               </div>
             </div>
             <div className="rounded-md bg-gray-50 px-4 py-3">
               <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                Patial Usage
+                {t('leasehold.partialUsage')}
               </div>
               <div className="flex items-baseline gap-1.5">
                 <Toggle
-                  options={['No', 'Yes']}
+                  options={[t('leasehold.toggle.no'), t('leasehold.toggle.yes')]}
                   size="sm"
                   checked={isPartialUsage}
                   onChange={checked => {
@@ -681,7 +712,7 @@ export function LeaseholdPanel({
                   )}
                 >
                   <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    Lease Land Area
+                    {t('leasehold.leaseLandArea')}
                   </div>
                   <div className="flex items-baseline gap-1.5">
                     <div className="w-28">
@@ -693,7 +724,7 @@ export function LeaseholdPanel({
                         disabled={readOnly}
                       />
                     </div>
-                    <span className="text-xs text-gray-500">Rai</span>
+                    <span className="text-xs text-gray-500">{t('leasehold.units.rai')}</span>
                     <div className="w-28">
                       <NumberInput
                         name="partialNgan"
@@ -703,7 +734,7 @@ export function LeaseholdPanel({
                         disabled={readOnly}
                       />
                     </div>
-                    <span className="text-xs text-gray-500">Ngan</span>
+                    <span className="text-xs text-gray-500">{t('leasehold.units.ngan')}</span>
                     <div className="w-28">
                       <NumberInput
                         name="partialWa"
@@ -713,7 +744,7 @@ export function LeaseholdPanel({
                         disabled={readOnly}
                       />
                     </div>
-                    <span className="text-xs text-gray-500">Sq.Wa</span>
+                    <span className="text-xs text-gray-500">{t('leasehold.units.sqWaShort')}</span>
                   </div>
                 </div>
                 <div
@@ -723,7 +754,7 @@ export function LeaseholdPanel({
                   )}
                 >
                   <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    Total Lease Land Area
+                    {t('leasehold.totalLeaseLandArea')}
                   </div>
                   <div className="flex items-baseline gap-1.5">
                     <div className="flex items-baseline gap-1.5">
@@ -740,7 +771,7 @@ export function LeaseholdPanel({
                           maximumFractionDigits: 2,
                         })}
                       </span>
-                      <span className="text-xs text-gray-500">Sq. Wa</span>
+                      <span className="text-xs text-gray-500">{t('leasehold.units.sqWa')}</span>
                     </div>
                   </div>
                 </div>
@@ -752,11 +783,13 @@ export function LeaseholdPanel({
                 'rounded-md bg-gray-50 px-4 py-3',
               )}
             >
-              <label className="text-[11px] text-gray-400 uppercase tracking-wide mb-1 block">
-                Land Value <span className="text-red-400">*</span>
-              </label>
+              <div className="mb-1">
+                <label className="text-[11px] text-gray-400 uppercase tracking-wide block">
+                  {t('leasehold.landValue')} <span className="text-red-400">*</span>
+                </label>
+              </div>
               <div className="flex items-baseline gap-1.5">
-                <div className="w-28">
+                <div className="w-44">
                   <NumberInput
                     name={landValueField.name}
                     ref={landValueField.ref}
@@ -765,9 +798,37 @@ export function LeaseholdPanel({
                     onBlur={landValueField.onBlur}
                     decimalPlaces={2}
                     disabled={readOnly}
+                    className={!readOnly ? '!pr-14' : undefined}
+                    rightIcon={(() => {
+                      if (readOnly) return undefined;
+                      const effectiveId = savedData?.analysis?.id ?? ensuredId;
+                      return (
+                        <MarketReferenceButton
+                          compact
+                          label="WQS"
+                          subjectType={PricingAnalysisSubjectType.LeaseholdLandRef}
+                          anchorId={effectiveId ?? ''}
+                          hostMethodId={methodId}
+                          marketSurveys={marketSurveys ?? []}
+                          templateList={templateList}
+                          subjectProperty={propertyDetail as Record<string, unknown> | undefined}
+                          onApplyValue={v => landValueField.onChange(v)}
+                          onBeforeOpen={
+                            effectiveId
+                              ? undefined
+                              : async () => {
+                                  const id = await ensureAnalysisId();
+                                  if (id) setEnsuredId(id);
+                                  if (!id) throw new Error('no-id');
+                                }
+                          }
+                          className="pointer-events-auto shrink-0"
+                        />
+                      );
+                    })()}
                   />
                 </div>
-                <span className="text-xs text-gray-500">Baht/Sq.Wa</span>
+                <span className="text-xs text-gray-500">{t('leasehold.units.bahtPerSqWa')}</span>
               </div>
             </div>
             <div
@@ -777,7 +838,7 @@ export function LeaseholdPanel({
               )}
             >
               <div className="text-[11px] text-primary/60 uppercase tracking-wide mb-1">
-                Total Land Value
+                {t('leasehold.totalLandValue')}
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-lg font-semibold text-primary">
@@ -788,7 +849,7 @@ export function LeaseholdPanel({
                       : (propertyData?.totalLandAreaInSqWa ?? 0))
                   ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
-                <span className="text-xs text-primary/60">Baht</span>
+                <span className="text-xs text-primary/60">{t('leasehold.units.baht')}</span>
               </div>
             </div>
           </div>
@@ -798,8 +859,8 @@ export function LeaseholdPanel({
           {/* Growth Rate Config */}
           <div className="space-y-3">
             <Toggle
-              label="Land Value Growth Rate"
-              options={['Frequency', 'Period']}
+              label={t('leasehold.landValueGrowthRate')}
+              options={[t('leasehold.growthTypes.frequency'), t('leasehold.growthTypes.period')]}
               checked={landGrowthRateType === 'Period'}
               onChange={checked => {
                 if (readOnly) return;
@@ -815,28 +876,32 @@ export function LeaseholdPanel({
               <div className="flex gap-3 items-end">
                 <div className="flex-1">
                   <NumberInput
-                    label="Rate"
+                    label={t('leasehold.rate')}
                     name={landGrowthPercentField.name}
                     ref={landGrowthPercentField.ref}
                     value={landGrowthPercentField.value}
                     onChange={e => landGrowthPercentField.onChange(e.target.value)}
                     onBlur={landGrowthPercentField.onBlur}
                     decimalPlaces={2}
-                    rightIcon={<span className="text-xs text-gray-400">%</span>}
+                    rightIcon={
+                      <span className="text-xs text-gray-400">{t('leasehold.units.percent')}</span>
+                    }
                     disabled={readOnly}
                   />
                 </div>
-                <span className="text-sm text-gray-500 pb-2">Every</span>
+                <span className="text-sm text-gray-500 pb-2">{t('leasehold.every')}</span>
                 <div className="flex-1">
                   <NumberInput
-                    label="Interval"
+                    label={t('leasehold.interval')}
                     name={landIntervalField.name}
                     ref={landIntervalField.ref}
                     value={landIntervalField.value}
                     onChange={e => landIntervalField.onChange(e.target.value)}
                     onBlur={landIntervalField.onBlur}
                     decimalPlaces={0}
-                    rightIcon={<span className="text-xs text-gray-400">Year</span>}
+                    rightIcon={
+                      <span className="text-xs text-gray-400">{t('leasehold.units.yr')}</span>
+                    }
                     disabled={readOnly}
                   />
                 </div>
@@ -844,9 +909,9 @@ export function LeaseholdPanel({
             ) : (
               <div className="space-y-2">
                 <div className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 text-xs text-gray-500 font-medium">
-                  <span>From Year</span>
-                  <span>To Year</span>
-                  <span>Growth Rate (%)</span>
+                  <span>{t('leasehold.fromYear')}</span>
+                  <span>{t('leasehold.toYear')}</span>
+                  <span>{t('leasehold.growthRatePercent')}</span>
                   <span />
                 </div>
                 {landPeriodFields.map((field, index) => (
@@ -901,11 +966,13 @@ export function LeaseholdPanel({
                 {!readOnly && (
                   <button
                     type="button"
-                    onClick={() => appendLandPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
+                    onClick={() =>
+                      appendLandPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })
+                    }
                     className="text-xs text-primary hover:underline flex items-center gap-1"
                   >
                     <Icon name="plus" className="size-3" />
-                    Add Periods
+                    {t('leasehold.addPeriods')}
                   </button>
                 )}
               </div>
@@ -918,7 +985,7 @@ export function LeaseholdPanel({
           <div className="grid grid-cols-4 gap-3">
             <div className="rounded-md bg-gray-50 px-3 py-2">
               <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Construction Cost Index
+                {t('leasehold.constructionCostIndex')}
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-20">
@@ -934,7 +1001,7 @@ export function LeaseholdPanel({
             </div>
             <div className="rounded-md bg-gray-50 px-3 py-2">
               <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Building Calc Start
+                {t('leasehold.buildingCalcStart')}
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-14">
@@ -945,12 +1012,12 @@ export function LeaseholdPanel({
                     disabled={readOnly}
                   />
                 </div>
-                <span className="text-[10px] text-gray-400">year(s)</span>
+                <span className="text-[10px] text-gray-400">{t('leasehold.units.years')}</span>
               </div>
             </div>
             <div className="rounded-md bg-gray-50 px-3 py-2">
               <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Depreciation Rate
+                {t('leasehold.depreciationRate')}
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-16">
@@ -961,7 +1028,9 @@ export function LeaseholdPanel({
                     disabled={readOnly}
                   />
                 </div>
-                <span className="text-[10px] text-gray-400">% every</span>
+                <span className="text-[10px] text-gray-400">
+                  {t('leasehold.units.percentEvery')}
+                </span>
                 <div className="w-10">
                   <RHFInputCell
                     fieldName="depreciationIntervalYears"
@@ -975,7 +1044,7 @@ export function LeaseholdPanel({
             </div>
             <div className="rounded-md bg-gray-50 px-3 py-2">
               <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                Discounted Rate
+                {t('leasehold.discountedRate')}
               </label>
               <div className="flex items-center gap-1">
                 <div className="w-20">
@@ -997,19 +1066,19 @@ export function LeaseholdPanel({
             cards={
               [
                 {
-                  label: 'Total Income',
+                  label: t('leasehold.totalIncome'),
                   value: tableResult.totalIncomeOverLeaseTerm,
                   icon: 'coins',
                   color: 'blue',
                 },
                 {
-                  label: 'Value at Expiry',
+                  label: t('leasehold.valueAtExpiry'),
                   value: tableResult.valueAtLeaseExpiry,
                   icon: 'building',
                   color: 'gray',
                 },
                 {
-                  label: 'Final Value',
+                  label: t('leasehold.finalValue'),
                   value: tableResult.finalValueRounded,
                   icon: 'circle-check',
                   color: 'green',
@@ -1055,7 +1124,7 @@ export function LeaseholdPanel({
         {/* Estimate Price */}
         <div className="text-sm divide-y divide-gray-100 border-t border-gray-200 pt-3">
           <div className="flex items-center justify-between py-1.5">
-            <span className="text-xs text-gray-600">Estimate Price (from PV)</span>
+            <span className="text-xs text-gray-600">{t('leasehold.estimatePriceFromPv')}</span>
             <span className="text-xs font-medium text-gray-800 tabular-nums">
               {finalValueRounded.toLocaleString('en-US', {
                 minimumFractionDigits: 2,
@@ -1068,7 +1137,7 @@ export function LeaseholdPanel({
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-xs text-gray-600">
                   <span className="font-bold mr-1">+</span>
-                  Land price of the area not covered by the lease agreement
+                  {t('leasehold.landPriceNotCovered')}
                 </span>
                 <span className="text-xs font-medium text-gray-800 tabular-nums">
                   {((estimateNetPrice ?? finalValueRounded) - finalValueRounded).toLocaleString(
@@ -1080,7 +1149,7 @@ export function LeaseholdPanel({
               <div className="flex items-center justify-between py-1.5">
                 <span className="text-xs text-gray-700 font-medium">
                   <span className="font-bold mr-1">=</span>
-                  Appraisal Price w/ Partial Land
+                  {t('leasehold.appraisalPriceWithPartialLand')}
                 </span>
                 <span className="text-xs font-semibold text-gray-900 tabular-nums">
                   {(estimateNetPrice ?? finalValueRounded).toLocaleString('en-US', {
@@ -1092,7 +1161,9 @@ export function LeaseholdPanel({
             </>
           )}
           <div className="flex items-center justify-between py-2">
-            <span className="text-xs font-semibold text-gray-900 shrink-0">Appraisal Price</span>
+            <span className="text-xs font-semibold text-gray-900 shrink-0">
+              {t('leasehold.appraisalPrice')}
+            </span>
             <div className="flex items-center gap-2">
               {(() => {
                 const rounded = Number(estimateField.value) || 0;
@@ -1147,7 +1218,7 @@ export function LeaseholdPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
 
         <LeaseholdRentalInfoModal

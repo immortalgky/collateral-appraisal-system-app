@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
@@ -26,6 +27,7 @@ const GroupMonitoringModal = ({
   scope,
   isSaving,
 }: GroupMonitoringModalProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Set<string>>(
     () => new Set(currentMonitoredGroups.map(g => g.groupId)),
@@ -39,9 +41,7 @@ const GroupMonitoringModal = ({
     const q = search.toLowerCase();
     if (!q) return allGroups;
     return allGroups.filter(
-      g =>
-        g.name.toLowerCase().includes(q) ||
-        g.description?.toLowerCase().includes(q),
+      g => g.name.toLowerCase().includes(q) || g.description?.toLowerCase().includes(q),
     );
   }, [allGroups, search]);
 
@@ -56,11 +56,16 @@ const GroupMonitoringModal = ({
 
   const handleSave = () => onSave(Array.from(selected));
 
+  const selectionLabel = t(
+    selected.size === 1 ? 'selectionCount.groups' : 'selectionCount.groups_other',
+    { count: selected.size },
+  );
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Select Monitored Groups"
+      title={t('dialogs.selectMonitoredGroups.title')}
       size="md"
       key={isOpen ? 'open' : 'closed'}
     >
@@ -76,24 +81,24 @@ const GroupMonitoringModal = ({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search groups..."
+            placeholder={t('placeholders.searchGroupsShort')}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
 
-        <div className="text-xs text-gray-400">
-          {selected.size} group{selected.size !== 1 ? 's' : ''} selected
-        </div>
+        <div className="text-xs text-gray-400">{selectionLabel}</div>
 
         {/* Group list */}
         <div className="max-h-80 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
           {isLoading ? (
             <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
               <Icon name="spinner" style="solid" className="size-4 animate-spin mr-2" />
-              Loading groups...
+              {t('loading.groups')}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">No other groups found</div>
+            <div className="text-center py-8 text-gray-400 text-sm">
+              {t('empty.noOtherGroupsFound')}
+            </div>
           ) : (
             filtered.map(g => (
               <label
@@ -119,10 +124,10 @@ const GroupMonitoringModal = ({
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSave}>
-            Save
+            {t('common:actions.save')}
           </Button>
         </div>
       </div>

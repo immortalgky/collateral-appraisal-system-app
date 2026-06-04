@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import DatePickerInput from '@shared/components/inputs/DatePickerInput';
 import {
-  PERIOD_LABELS,
   type PeriodPresetKey,
   type CustomRange,
   toIsoDate,
@@ -18,6 +18,7 @@ type PeriodSelectProps = {
 const PRESETS: PeriodPresetKey[] = ['MTD', 'QTD', 'YTD', 'LAST_12M', 'CUSTOM'];
 
 function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
+  const { t } = useTranslation('dashboard');
   const [open, setOpen] = useState(false);
   const [fromStr, setFromStr] = useState(custom ? toIsoDate(custom.from) : '');
   const [toStr, setToStr] = useState(custom ? toIsoDate(custom.to) : '');
@@ -46,10 +47,10 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
       if (!fromStr || !toStr) {
         const y = new Date().getFullYear();
         const f = `${y}-01-01`;
-        const t = toIsoDate(new Date());
+        const t2 = toIsoDate(new Date());
         setFromStr(f);
-        setToStr(t);
-        onChange('CUSTOM', { from: fromIsoDate(f), to: fromIsoDate(t) });
+        setToStr(t2);
+        onChange('CUSTOM', { from: fromIsoDate(f), to: fromIsoDate(t2) });
       } else {
         onChange('CUSTOM', { from: fromIsoDate(fromStr), to: fromIsoDate(toStr) });
       }
@@ -72,7 +73,7 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
         onClick={() => setOpen(o => !o)}
         className="inline-flex items-center gap-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <span>{PERIOD_LABELS[value]}</span>
+        <span>{t(`period.${value}`)}</span>
         <Icon name="chevron-down" style="solid" className="size-3 text-gray-400" />
       </button>
 
@@ -88,7 +89,7 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
                     value === p ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                   }`}
                 >
-                  {PERIOD_LABELS[p]}
+                  {t(`period.${p}`)}
                 </button>
               </li>
             ))}
@@ -97,14 +98,18 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
           {value === 'CUSTOM' && (
             <div className="mt-2 border-t border-gray-100 pt-2 flex flex-col gap-2">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {t('period.customFrom')}
+                </label>
                 <DatePickerInput
                   value={fromStr ? fromIsoDate(fromStr) : null}
                   onChange={iso => setFromStr(iso ? toIsoDate(new Date(iso)) : '')}
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  {t('period.customTo')}
+                </label>
                 <DatePickerInput
                   value={toStr ? fromIsoDate(toStr) : null}
                   onChange={iso => setToStr(iso ? toIsoDate(new Date(iso)) : '')}
@@ -116,7 +121,7 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
                 disabled={!fromStr || !toStr || fromIsoDate(fromStr) > fromIsoDate(toStr)}
                 className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
               >
-                Apply
+                {t('period.apply')}
               </button>
             </div>
           )}

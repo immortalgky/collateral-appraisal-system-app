@@ -9,7 +9,9 @@ import { PropertyTable } from './PropertyTable';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
-import PropertyTypeDropdown, { PROPERTY_TYPES } from '@features/appraisal/components/PropertyTypeDropdown.tsx';
+import PropertyTypeDropdown, {
+  PROPERTY_TYPES,
+} from '@features/appraisal/components/PropertyTypeDropdown.tsx';
 
 /** Look up the icon name for a given property type */
 const getPropertyTypeIcon = (type: string): string => {
@@ -166,7 +168,9 @@ export const GroupContainer = React.memo(
         if (sqm) buildingSqm += parseFloat(sqm[1]);
       }
       const fmt = (n: number) =>
-        Number.isInteger(n) ? n.toLocaleString() : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+        Number.isInteger(n)
+          ? n.toLocaleString()
+          : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
       const segments: string[] = [];
       if (landWa > 0) segments.push(`${fmt(landWa)} Sq.Wa land`);
       if (buildingSqm > 0) segments.push(`${fmt(buildingSqm)} Sq.M building`);
@@ -206,13 +210,9 @@ export const GroupContainer = React.memo(
                       {group.name}
                     </h2>
                   )}
-                  <span className="text-[11px] text-gray-400">
-                    ({group.items.length})
-                  </span>
+                  <span className="text-[11px] text-gray-400">({group.items.length})</span>
                   {areaTotals.length > 0 && (
-                    <span className="text-[11px] text-gray-500">
-                      · {areaTotals.join(' · ')}
-                    </span>
+                    <span className="text-[11px] text-gray-500">· {areaTotals.join(' · ')}</span>
                   )}
                   {/* Inline type breakdown badges */}
                   {typeBreakdown.length > 0 && (
@@ -220,7 +220,8 @@ export const GroupContainer = React.memo(
                       <span className="text-gray-300">|</span>
                       {typeBreakdown.map(({ type, count }) => (
                         <Badge key={type} type="property" value={type} size="xs" dot={false}>
-                          {count} <ParameterDisplay group="PropertyType" code={type} fallback={type} />
+                          {count}{' '}
+                          <ParameterDisplay group="PropertyType" code={type} fallback={type} />
                         </Badge>
                       ))}
                     </>
@@ -265,12 +266,13 @@ export const GroupContainer = React.memo(
                     <div
                       ref={setNodeRef}
                       className={`min-h-[40px] rounded-lg p-1.5 transition-all duration-200 ${
-                        isOver
-                          ? 'border-2 border-primary bg-primary/5'
-                          : 'bg-gray-50/50'
+                        isOver ? 'border-2 border-primary bg-primary/5' : 'bg-gray-50/50'
                       }`}
                     >
-                      <SortableContext items={sortableItemIds} strategy={verticalListSortingStrategy}>
+                      <SortableContext
+                        items={sortableItemIds}
+                        strategy={verticalListSortingStrategy}
+                      >
                         <div className="space-y-1">
                           {group.items.map((property, index) => {
                             const info = stackInfo?.[index];
@@ -291,7 +293,10 @@ export const GroupContainer = React.memo(
                             // Expanded + first → render collapse header + ALL cards of this type grouped together
                             if (isExpanded && info.isFirst) {
                               return (
-                                <div key={property.id} className="rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-1.5 space-y-1">
+                                <div
+                                  key={property.id}
+                                  className="rounded-lg border border-dashed border-gray-300 bg-gray-50/50 p-1.5 space-y-1"
+                                >
                                   <button
                                     type="button"
                                     onClick={() => toggleTypeExpansion(property.type)}
@@ -303,11 +308,19 @@ export const GroupContainer = React.memo(
                                       style="solid"
                                     />
                                     <span className="text-xs font-semibold text-gray-700 flex-1">
-                                      <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
-                                      {' '}List ( {info.count} )
+                                      <ParameterDisplay
+                                        group="PropertyType"
+                                        code={property.type}
+                                        fallback={property.type}
+                                      />{' '}
+                                      List ( {info.count} )
                                     </span>
                                     <span className="text-[10px] text-gray-400">Collapse</span>
-                                    <Icon name="chevron-up" className="text-xs text-gray-400" style="solid" />
+                                    <Icon
+                                      name="chevron-up"
+                                      className="text-xs text-gray-400"
+                                      style="solid"
+                                    />
                                   </button>
                                   {info.typeItems.map(p => (
                                     <PropertyCard
@@ -345,9 +358,7 @@ export const GroupContainer = React.memo(
                                 .filter(Boolean)
                                 .slice(0, 3);
                               // Sum up areas
-                              const areas = items
-                                .map(p => p.area)
-                                .filter(Boolean);
+                              const areas = items.map(p => p.area).filter(Boolean);
                               return (
                                 <div key={property.id}>
                                   {/* Stack placeholder card */}
@@ -359,13 +370,15 @@ export const GroupContainer = React.memo(
                                     {/* Thumbnail area — show property images or fallback icon */}
                                     <div className="w-24 h-16 bg-gray-50 flex-shrink-0 border-r border-gray-100 overflow-hidden">
                                       {items.some(p => p.image) ? (
-                                        <div className={`w-full h-full grid ${
-                                          items.filter(p => p.image).length === 1
-                                            ? 'grid-cols-1'
-                                            : items.filter(p => p.image).length <= 4
-                                              ? 'grid-cols-2 grid-rows-2'
-                                              : 'grid-cols-3 grid-rows-2'
-                                        }`}>
+                                        <div
+                                          className={`w-full h-full grid ${
+                                            items.filter(p => p.image).length === 1
+                                              ? 'grid-cols-1'
+                                              : items.filter(p => p.image).length <= 4
+                                                ? 'grid-cols-2 grid-rows-2'
+                                                : 'grid-cols-3 grid-rows-2'
+                                          }`}
+                                        >
                                           {items
                                             .filter(p => p.image)
                                             .slice(0, 6)
@@ -397,8 +410,12 @@ export const GroupContainer = React.memo(
                                     <div className="flex-1 px-3 py-2 min-w-0">
                                       <div className="flex items-center gap-2">
                                         <h3 className="text-xs font-semibold text-gray-900">
-                                          <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
-                                          {' '}List
+                                          <ParameterDisplay
+                                            group="PropertyType"
+                                            code={property.type}
+                                            fallback={property.type}
+                                          />{' '}
+                                          List
                                         </h3>
                                         <span className="text-xs font-semibold text-gray-500">
                                           ( {info.count} )
@@ -409,14 +426,22 @@ export const GroupContainer = React.memo(
                                       <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                         {addresses.length > 0 && (
                                           <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5 truncate max-w-[260px]">
-                                            <Icon name="location-dot" className="text-[9px] text-gray-400" style="solid" />
+                                            <Icon
+                                              name="location-dot"
+                                              className="text-[9px] text-gray-400"
+                                              style="solid"
+                                            />
                                             {addresses[0]}
                                             {addresses.length > 1 && ` +${addresses.length - 1}`}
                                           </span>
                                         )}
                                         {areas.length > 0 && (
                                           <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5">
-                                            <Icon name="ruler-combined" className="text-[9px] text-gray-400" style="solid" />
+                                            <Icon
+                                              name="ruler-combined"
+                                              className="text-[9px] text-gray-400"
+                                              style="solid"
+                                            />
                                             {areas.join(', ')}
                                           </span>
                                         )}
@@ -425,7 +450,11 @@ export const GroupContainer = React.memo(
 
                                     {/* Chevron */}
                                     <div className="pr-4 flex flex-col items-center gap-1">
-                                      <Icon name="chevron-down" className="text-sm text-gray-400 group-hover:text-gray-600 transition-colors" style="solid" />
+                                      <Icon
+                                        name="chevron-down"
+                                        className="text-sm text-gray-400 group-hover:text-gray-600 transition-colors"
+                                        style="solid"
+                                      />
                                     </div>
                                   </button>
 
@@ -445,10 +474,7 @@ export const GroupContainer = React.memo(
 
                             // Non-first card, collapsed → hidden but kept in DOM for dnd-kit
                             return (
-                              <div
-                                key={property.id}
-                                className="h-0 overflow-hidden"
-                              >
+                              <div key={property.id} className="h-0 overflow-hidden">
                                 <div className="opacity-0 pointer-events-none">
                                   <PropertyCard
                                     property={property}

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -22,6 +23,7 @@ const mockUsers: UserDtoType[] = [
 ];
 
 const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) => {
+  const { t } = useTranslation(['request', 'common']);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUser, setSelectedUser] = useState<UserDtoType | null>(null);
 
@@ -45,7 +47,7 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Select User" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('searchUser.modalTitle')} size="lg">
       <div className="flex flex-col gap-4">
         {/* Search Input */}
         <div className="relative">
@@ -56,7 +58,7 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
           />
           <input
             type="text"
-            placeholder="Search by name or email..."
+            placeholder={t('searchUser.searchPlaceholder')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -67,9 +69,7 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <div className="max-h-80 overflow-y-auto">
             {filteredUsers.length === 0 ? (
-              <div className="px-4 py-8 text-center text-gray-500">
-                No users found matching your search.
-              </div>
+              <div className="px-4 py-8 text-center text-gray-500">{t('searchUser.noResults')}</div>
             ) : (
               <div className="divide-y divide-gray-100">
                 {filteredUsers.map(user => (
@@ -111,11 +111,11 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
         {/* Footer */}
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" onClick={handleClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button onClick={handleSelect} disabled={!selectedUser}>
             <Icon name="check" style="solid" className="w-4 h-4 mr-2" />
-            Select
+            {t('common:actions.confirm')}
           </Button>
         </div>
       </div>

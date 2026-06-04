@@ -47,18 +47,20 @@ const DCFCategoryForm = z.object({
 // Sections may carry summary-only fields (contractRentalFee, grossRevenue, etc.) on
 // the synthesized summary row — passthrough lets SectionSummaryDCF read them via RHF
 // without forcing every consumer to know the union shape.
-const DCFSectionForm = z.object({
-  templateId: z.string().nullable().optional(),
-  id: z.string().nullable().optional(),
-  clientId: z.string().nullable().optional(),
-  dbId: z.string().nullable().optional(),
-  sectionType: z.string(), // income, expense, dcf_final, direct_final
-  sectionName: z.string(),
-  displaySeq: z.number(),
-  identifier: z.string(),
-  totalSectionValues: DerivedArray,
-  categories: z.array(DCFCategoryForm),
-}).passthrough();
+const DCFSectionForm = z
+  .object({
+    templateId: z.string().nullable().optional(),
+    id: z.string().nullable().optional(),
+    clientId: z.string().nullable().optional(),
+    dbId: z.string().nullable().optional(),
+    sectionType: z.string(), // income, expense, dcf_final, direct_final
+    sectionName: z.string(),
+    displaySeq: z.number(),
+    identifier: z.string(),
+    totalSectionValues: DerivedArray,
+    categories: z.array(DCFCategoryForm),
+  })
+  .passthrough();
 
 const HighestBestUsedForm = z.object({
   areaRai: z.number().nullable().optional(),

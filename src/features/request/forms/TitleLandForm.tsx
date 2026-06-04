@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
-import { titleLandFields } from '../configs/fields';
+import { makeTitleLandFields } from '../configs/fields';
 
 interface TitleLandFormProps {
   index: number;
@@ -7,7 +9,10 @@ interface TitleLandFormProps {
 }
 
 const TitleLandForm = ({ index }: TitleLandFormProps) => {
-  return <FormFields fields={titleLandFields} namePrefix={'titles'} index={index} />;
+  const { t } = useTranslation('request');
+  const fields = useMemo(() => makeTitleLandFields(t), [t]);
+
+  return <FormFields fields={fields} namePrefix={'titles'} index={index} />;
 };
 
 export default TitleLandForm;

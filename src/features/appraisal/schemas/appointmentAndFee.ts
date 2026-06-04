@@ -1,8 +1,17 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 
 /**
  * Fee item schema
  */
+export const makeFeeItemSchema = (t: TFunction<'appraisal'>) =>
+  z.object({
+    id: z.string(),
+    type: z.enum(['01', '02', '99']),
+    description: z.string().min(1, t('validation.descriptionRequired')),
+    amount: z.number().min(0, t('validation.amountNonNegative')),
+  });
+
 export const FeeItemSchema = z.object({
   id: z.string(),
   type: z.enum(['01', '02', '99']),
@@ -69,6 +78,13 @@ export const appointmentAndFeeFormDefaults = {
 /**
  * Schema for reschedule modal
  */
+export const makeRescheduleFormSchema = (t: TFunction<'appraisal'>) =>
+  z.object({
+    dateTime: z.string().min(1, t('validation.dateTimeRequired')),
+    location: z.string().min(1, t('validation.locationRequired')),
+    reason: z.string().optional(),
+  });
+
 export const RescheduleFormSchema = z.object({
   dateTime: z.string().min(1, 'Date and time is required'),
   location: z.string().min(1, 'Location is required'),
@@ -78,6 +94,13 @@ export const RescheduleFormSchema = z.object({
 /**
  * Schema for add fee modal
  */
+export const makeAddFeeFormSchema = (t: TFunction<'appraisal'>) =>
+  z.object({
+    type: z.enum(['01', '02', '99']),
+    description: z.string().min(1, t('validation.descriptionRequired')),
+    amount: z.number().min(0, t('validation.amountNonNegative')),
+  });
+
 export const AddFeeFormSchema = z.object({
   type: z.enum(['01', '02', '99']),
   description: z.string().min(1, 'Description is required'),
@@ -87,6 +110,12 @@ export const AddFeeFormSchema = z.object({
 /**
  * Schema for add payment modal
  */
+export const makeAddPaymentFormSchema = (t: TFunction<'appraisal'>) =>
+  z.object({
+    paymentDate: z.string().min(1, t('validation.paymentDateRequired')),
+    amount: z.number().min(0.01, t('validation.amountPositive')),
+  });
+
 export const AddPaymentFormSchema = z.object({
   paymentDate: z.string().min(1, 'Payment date is required'),
   amount: z.number().min(0.01, 'Amount must be greater than 0'),

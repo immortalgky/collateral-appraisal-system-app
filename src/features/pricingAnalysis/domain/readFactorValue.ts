@@ -17,7 +17,9 @@ export function readFactorValue(s: {
         try {
           const arr = JSON.parse(s.value);
           if (Array.isArray(arr)) return arr.join(',');
-        } catch { /* not valid JSON, return as-is */ }
+        } catch {
+          /* not valid JSON, return as-is */
+        }
       }
       return s.value;
     }
@@ -36,7 +38,6 @@ export function yearDiffFromToday(dateStr: string | null | undefined): number | 
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return 0;
   const now = new Date();
-  const monthDiff =
-    (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+  const monthDiff = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
   return Math.max(0, Math.round(monthDiff / 12));
 }

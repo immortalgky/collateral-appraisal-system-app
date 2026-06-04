@@ -1,0 +1,296 @@
+{
+  "page": {
+    "meetings": {
+      "title": "Meetings",
+      "subtitle": "Schedule tier-3 committee meetings and release appraisals for voting"
+    },
+    "queue": {
+      "title": "Awaiting Meeting Queue",
+      "subtitle": "Tier-3 appraisals (facility limit > 30M) waiting to be assigned to a meeting"
+    }
+  },
+  "tabs": {
+    "active": "Active",
+    "history": "History"
+  },
+  "columns": {
+    "meetingNo": "Meeting No.",
+    "title": "Title",
+    "status": "Status",
+    "start": "Start",
+    "end": "End",
+    "cutOff": "Cut-off",
+    "items": "Items",
+    "appraisalNo": "Appraisal #",
+    "facilityLimit": "Facility Limit",
+    "enqueued": "Enqueued",
+    "memberNo": "No.",
+    "memberName": "Member Name",
+    "position": "Position",
+    "actions": "Actions",
+    "appraisalNumber": "Appraisal Number",
+    "customerName": "Customer Name",
+    "appraisalStaff": "Appraisal Staff",
+    "appraisalValue": "Appraisal Value",
+    "decision": "Decision",
+    "no": "No"
+  },
+  "filters": {
+    "searchPlaceholder": "Search meeting no. or customer name",
+    "allStatus": "All Status",
+    "from": "From",
+    "to": "To"
+  },
+  "buttons": {
+    "viewQueue": "View Queue",
+    "bulkCreate": "Bulk Create",
+    "newMeeting": "New Meeting",
+    "allMeetings": "All Meetings",
+    "addToExisting": "Add to Existing",
+    "addToNewMeeting": "Add to New Meeting",
+    "addToExistingCount": "Add to Existing ({{n}})",
+    "addToNewMeetingCount": "Add to New Meeting ({{n}})",
+    "addAppraisals": "Add Appraisals",
+    "addMember": "Add Member",
+    "clear": "Clear",
+    "edit": "Edit",
+    "cutOff": "Cut Off",
+    "sendInvitation": "Send Invitation",
+    "resendInvitation": "Resend Invitation",
+    "cancel": "Cancel",
+    "back": "Back",
+    "release": "Release",
+    "routeBack": "Route Back",
+    "remove": "Remove",
+    "saveAgenda": "Save Agenda",
+    "saveChanges": "Save Changes",
+    "createMeeting": "Create Meeting",
+    "create": "Create",
+    "keepMeeting": "Keep Meeting",
+    "cancelMeeting": "Cancel Meeting",
+    "confirmCutOff": "Confirm Cut-Off",
+    "addMemberSubmit": "Add Member",
+    "cancelMemberAdd": "Cancel"
+  },
+  "actions": {
+    "cutOff": "Cut Off",
+    "sendInvitation": "Send Invitation",
+    "resendInvitation": "Resend Invitation",
+    "cancel": "Cancel"
+  },
+  "status": {
+    "New": "New",
+    "InvitationSent": "Invitation Sent",
+    "InProgress": "In Progress",
+    "RoutedBack": "Routed Back",
+    "Ended": "Ended",
+    "Cancelled": "Cancelled"
+  },
+  "position": {
+    "Chairman": "Chairman",
+    "Director": "Director",
+    "Secretary": "Secretary",
+    "UW": "UW",
+    "Risk": "Risk",
+    "Appraisal": "Appraisal",
+    "Credit": "Credit",
+    "Member": "Member"
+  },
+  "decision": {
+    "Pending": "Pending",
+    "Released": "Released",
+    "RoutedBack": "Routed Back"
+  },
+  "decisionGroups": {
+    "New": "New Appraisals",
+    "ReAppraisal": "Re-Appraisals",
+    "Progressive": "Progressive Appraisals",
+    "PreAppraisal": "Pre-Appraisals"
+  },
+  "ackGroups": {
+    "urgent": "Acknowledge for Urgent Approval (Group 2)",
+    "standard": "Acknowledge (Group 1)"
+  },
+  "sections": {
+    "decisionItems": "Decision Items ({{n}})",
+    "acknowledgementItems": "Acknowledgement Items ({{n}})",
+    "appraisals": "Appraisals ({{n}})",
+    "queuedItemsToInclude": "Queued Items to be Included",
+    "schedule": "Meeting Schedule",
+    "committeeMembers": "Committee Members",
+    "agenda": "Agenda"
+  },
+  "fields": {
+    "title": "Title",
+    "titlePlaceholder": "e.g. Committee meeting — Week 14",
+    "start": "Start",
+    "end": "End",
+    "from": "From",
+    "to": "To",
+    "location": "Location",
+    "optionalPlaceholder": "Optional",
+    "reason": "Reason",
+    "reasonRequired": "Reason",
+    "cancelReasonPlaceholder": "Why is this meeting being cancelled?",
+    "routeBackReasonPlaceholder": "Describe why this appraisal is being routed back...",
+    "user": "User",
+    "agendaCertifyMinutes": "Certify the Minutes of the Previous Meeting",
+    "agendaCertifyMinutesWithNo": "Certify the Minutes of the Meeting No. {{no}}",
+    "agendaCertifyMinutesPlaceholder": "Minutes certification text...",
+    "agendaChairmanInformed": "Chairman Informed",
+    "agendaChairmanInformedPlaceholder": "Information to chairman...",
+    "agendaOthers": "Others",
+    "agendaOthersPlaceholder": "Any other agenda items...",
+    "subjectLabel": "Title"
+  },
+  "dialogs": {
+    "newMeeting": "New Meeting",
+    "editMeeting": "Edit Meeting",
+    "cancelMeeting": "Cancel Meeting",
+    "confirmCutOff": "Confirm Cut-Off",
+    "releaseAppraisal": "Release Appraisal",
+    "removeAppraisal": "Remove Appraisal",
+    "routeBackAppraisal": "Route Back Appraisal",
+    "addAppraisalsFromQueue": "Add Appraisals from Queue",
+    "addMember": "Add Member",
+    "addToExistingMeeting": "Add to Existing Meeting",
+    "bulkCreateMeetings": "Bulk Create Meetings",
+    "resendInvitation": "Resend Invitation",
+    "newEmail": "New Email"
+  },
+  "banners": {
+    "ended": "Meeting ended",
+    "endedAt": "Meeting ended on {{date}}.",
+    "inProgress": "Meeting is in progress. Release decision items to approval, or route them back to staff.",
+    "routedBack": "One or more items have been routed back. Release all decision items to close the meeting.",
+    "cancelled": "Meeting cancelled. Items returned to the queue.",
+    "cancelReason": "Reason: {{reason}}"
+  },
+  "detail": {
+    "start": "Start",
+    "end": "End",
+    "from": "From",
+    "to": "To",
+    "location": "Location",
+    "cutOffAt": "Cut-Off At",
+    "invitationSent": "Invitation Sent",
+    "notes": "Notes",
+    "previousMeeting": "Previous Meeting"
+  },
+  "empty": {
+    "noMeetings": "No meetings found.",
+    "noQueue": "No appraisals waiting in the queue.",
+    "noItems": "No items",
+    "noQueuedItems": "No queued items at this time.",
+    "noQueuedAppraisals": "No appraisals are currently waiting in the queue.",
+    "noOpenMeetings": "No open meetings available. Create a new meeting first.",
+    "noMembers": "No members in this meeting snapshot."
+  },
+  "addToExisting": {
+    "description": "Select an open (New or Invitation Sent) meeting to add the {{count}} selected appraisal to.",
+    "descriptionPlural": "Select an open (New or Invitation Sent) meeting to add the {{count}} selected appraisals to.",
+    "selectMeeting": "— Select meeting —",
+    "addToMeeting": "Add to Meeting",
+    "adding": "Adding..."
+  },
+  "cancelDialog": {
+    "description": "Cancelling will return all assigned appraisals back to the queue. The original workflows remain paused and can be re-assigned to a new meeting.",
+    "cancelling": "Cancelling..."
+  },
+  "cutOffDialog": {
+    "description": "Pulls any newly queued items into this meeting. Items already on the meeting are skipped. You may run cut-off again after sending the invitation if new items arrive.",
+    "ackNote": "Acknowledgement items (sub-committee approvals pending since last meeting) are auto-included by the backend.",
+    "processing": "Processing..."
+  },
+  "releaseDialog": {
+    "confirm": "Release {{label}} to all meeting members for approval? Each member will receive it as a parallel approval task.",
+    "releasing": "Releasing..."
+  },
+  "removeDialog": {
+    "confirm": "Remove {{label}} from this meeting? It will be returned to the meeting queue and can be added to another meeting later.",
+    "removing": "Removing..."
+  },
+  "routeBackDialog": {
+    "description": "Route {{label}} back to the appraisal team for revision. A reason is required.",
+    "routingBack": "Routing Back..."
+  },
+  "bulkCreateDialog": {
+    "description": "Select one or more dates. A New meeting will be created for each selected date. Members can be added to each meeting afterwards.",
+    "datesSelected": "{{n}} date selected",
+    "datesSelectedPlural": "{{n}} dates selected",
+    "creating": "Creating...",
+    "overflow": "+{{n}} more"
+  },
+  "addItemsDialog": {
+    "selectedCount": "{{selected}} of {{total}} selected",
+    "adding": "Adding..."
+  },
+  "addMemberDialog": {
+    "loadingUsers": "Loading users...",
+    "noUsers": "No users with AppraisalCommittee role",
+    "selectUser": "Select a user",
+    "adding": "Adding..."
+  },
+  "queue": {
+    "description": "Tier-3 appraisals (facility limit > 30M) waiting to be assigned to a meeting",
+    "selectMeetingFirst": "Select a meeting first"
+  },
+  "toasts": {
+    "meetingCreated": "Meeting {{no}} created",
+    "meetingCreateFailed": "Failed to create meeting",
+    "meetingUpdated": "Meeting updated",
+    "meetingUpdateFailed": "Failed to update meeting",
+    "meetingCancelled": "Meeting cancelled. Items returned to the queue.",
+    "meetingCancelFailed": "Failed to cancel meeting",
+    "cutOffCompleted": "Cut-off completed — new queued items added to this meeting",
+    "cutOffFailed": "Failed to perform cut-off",
+    "invitationSent": "Invitation emailed — Meeting No. {{no}}",
+    "invitationResent": "Invitation re-sent — Meeting No. {{no}}",
+    "invitationFailed": "Failed to send invitation",
+    "invitationResendFailed": "Failed to re-send invitation",
+    "itemsAdded": "Added {{count}} appraisal",
+    "itemsAddedPlural": "Added {{count}} appraisals",
+    "itemsAddFailed": "Failed to add appraisals",
+    "meetingCreatedButItemsFailed": "Meeting created but failed to add items",
+    "itemsAddToExistingFailed": "Failed to add items to meeting",
+    "itemReleased": "Appraisal released to all meeting members for approval",
+    "itemReleaseFailed": "Failed to release appraisal",
+    "itemRoutedBack": "Appraisal routed back to appraisal team",
+    "itemRouteBackFailed": "Failed to route back appraisal",
+    "itemRemoved": "Appraisal {{label}} returned to the queue",
+    "itemRemoveFailed": "Failed to remove appraisal",
+    "memberAdded": "Member added",
+    "memberAddFailed": "Failed to add member",
+    "memberRemoved": "Member removed",
+    "memberRemoveFailed": "Failed to remove member",
+    "positionUpdateFailed": "Failed to update position",
+    "agendaSaved": "Agenda saved",
+    "agendaSaveFailed": "Failed to save agenda",
+    "bulkCreated": "{{count}} meeting draft created",
+    "bulkCreatedPlural": "{{count}} meeting drafts created",
+    "bulkCreateFailed": "Failed to create meetings",
+    "pickAtLeastOneDate": "Pick at least one date"
+  },
+  "validation": {
+    "titleRequired": "Title is required",
+    "titleMax": "Title must be 200 characters or fewer",
+    "locationMax": "Location must be 200 characters or fewer",
+    "fromToMax": "Must be 200 characters or fewer",
+    "startRequired": "Start date is required",
+    "endRequired": "End date is required",
+    "endAfterStart": "End must be after start",
+    "reasonRequired": "Reason is required",
+    "reasonMax": "Reason must be 500 characters or fewer",
+    "pickAtLeastOneDate": "Pick at least one date"
+  },
+  "aria": {
+    "rowActions": "Row actions",
+    "selectAll": "Select all",
+    "selectItem": "Select {{label}}",
+    "removeDate": "Remove {{date}}",
+    "removeFromMeeting": "Remove {{label}} from meeting"
+  },
+  "confirm": {
+    "removeMember": "Remove {{name}} from this meeting?"
+  }
+}

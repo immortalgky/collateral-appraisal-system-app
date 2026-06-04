@@ -26,7 +26,6 @@ function useDebounce<T>(value: T, ms: number): T {
   return debounced;
 }
 
-
 // ─── SortableTh ───────────────────────────────────────────────────────────────
 
 const SortableTh = ({
@@ -98,8 +97,7 @@ const BlockUnitMaintenancePage = () => {
     ...(sortBy && { sortDir }),
   };
 
-  const { data, isLoading, isFetching, isError, error } =
-    useGetBlockUnitMaintenanceList(params);
+  const { data, isLoading, isFetching, isError, error } = useGetBlockUnitMaintenanceList(params);
 
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
@@ -243,36 +241,16 @@ const BlockUnitMaintenancePage = () => {
                 <th className="font-medium px-4 py-2.5 text-gray-600 text-left whitespace-nowrap">
                   {t('list.col.projectType')}
                 </th>
-                <SortableTh
-                  field="developer"
-                  sortBy={sortBy}
-                  sortDir={sortDir}
-                  onSort={toggleSort}
-                >
+                <SortableTh field="developer" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.developer')}
                 </SortableTh>
-                <SortableTh
-                  field="soldUnits"
-                  sortBy={sortBy}
-                  sortDir={sortDir}
-                  onSort={toggleSort}
-                >
+                <SortableTh field="soldUnits" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.salesProgress')}
                 </SortableTh>
-                <SortableTh
-                  field="updatedOn"
-                  sortBy={sortBy}
-                  sortDir={sortDir}
-                  onSort={toggleSort}
-                >
+                <SortableTh field="updatedOn" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.updatedOn')}
                 </SortableTh>
-                <SortableTh
-                  field="updatedBy"
-                  sortBy={sortBy}
-                  sortDir={sortDir}
-                  onSort={toggleSort}
-                >
+                <SortableTh field="updatedBy" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.updatedBy')}
                 </SortableTh>
               </tr>

@@ -17,7 +17,7 @@ import type { GetMonitoredTasksParams, MonitoredTask, SortDir } from '../types';
 function PersonTasksPage() {
   const { username = '' } = useParams<{ username: string }>();
   const location = useLocation();
-  const { t } = useTranslation('nav');
+  const { t } = useTranslation(['taskMonitor', 'nav']);
 
   // Initial display name preference: location.state (set by PeopleMonitorTable link),
   // falling back to the username from the URL. We then upgrade this when task rows
@@ -75,7 +75,7 @@ function PersonTasksPage() {
   // so soft-nav from `/task-monitor` doesn't double-render.
   useBreadcrumbExtras(
     [
-      { label: t('taskMonitor.title'), href: '/task-monitor', icon: 'people-arrows' },
+      { label: t('nav:taskMonitor.title'), href: '/task-monitor', icon: 'people-arrows' },
       { label: displayName, href: location.pathname, icon: 'user' },
     ],
     [displayName, location.pathname],
@@ -124,7 +124,7 @@ function PersonTasksPage() {
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-800">Failed to load tasks</p>
+            <p className="text-sm font-medium text-gray-800">{t('errors.loadTasksFailed')}</p>
             <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
           </div>
         </div>

@@ -7,11 +7,7 @@ interface StickyLabelTableProps {
   maxHeight?: string;
 }
 
-export function StickyLabelTable({
-  children,
-  className,
-  maxHeight,
-}: StickyLabelTableProps) {
+export function StickyLabelTable({ children, className, maxHeight }: StickyLabelTableProps) {
   const rawId = useId();
   const safeId = rawId.replace(/:/g, '');
   const scopeClass = `sticky-table-${safeId}`;

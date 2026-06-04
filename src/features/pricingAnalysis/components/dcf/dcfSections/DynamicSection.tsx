@@ -16,10 +16,7 @@ function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeader
       <td className={clsx('border-b border-gray-200', color.bg)}>
         <div className={clsx('flex items-center gap-2 px-1 py-0.5')}>
           <div
-            className={clsx(
-              'flex items-center justify-center w-5 h-5 rounded-md',
-              color.bgAccent,
-            )}
+            className={clsx('flex items-center justify-center w-5 h-5 rounded-md', color.bgAccent)}
           >
             <Icon name={icon} style="solid" className={clsx('size-3 shrink-0', color.textLight)} />
           </div>

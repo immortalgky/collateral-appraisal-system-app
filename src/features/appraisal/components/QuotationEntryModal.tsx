@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CreateQuotationModal from './CreateQuotationModal';
 import ExistingDraftPicker from '@/features/quotation/components/ExistingDraftPicker';
-import { useGetMyDraftsForAssembly, useStartQuotationFromTask } from '@/features/quotation/api/quotation';
+import {
+  useGetMyDraftsForAssembly,
+  useStartQuotationFromTask,
+} from '@/features/quotation/api/quotation';
 import type { QuotationDraftSummaryDto } from '@/features/quotation/schemas/quotation';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
@@ -43,6 +47,7 @@ const QuotationEntryModal = ({
   internalFollowupAssignmentMethod,
 }: QuotationEntryModalProps) => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const [activeTab, setActiveTab] = useState<Tab>('new');
   const [selectedDraft, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
 
@@ -62,7 +67,7 @@ const QuotationEntryModal = ({
 
   const handleAddToExisting = () => {
     if (!selectedDraft || !appraisalId || !requestId || !workflowInstanceId) {
-      toast.error('Please select a Draft quotation to add to');
+      toast.error(t('toasts.quotationAddSelectDraft'));
       return;
     }
 
@@ -80,7 +85,7 @@ const QuotationEntryModal = ({
       {
         onSuccess: () => {
           toast.success(
-            `Appraisal added to ${selectedDraft.quotationNumber}`,
+            t('toasts.quotationAddedToDraft', { quotationNumber: selectedDraft.quotationNumber }),
           );
           handleClose();
           onSuccess?.();
@@ -102,12 +107,7 @@ const QuotationEntryModal = ({
     <>
       {/* Outer modal — only for the tab switcher + "existing" tab content */}
       {activeTab === 'existing' && (
-        <Modal
-          isOpen={isOpen}
-          onClose={handleClose}
-          title="Request Quotation"
-          size="xl"
-        >
+        <Modal isOpen={isOpen} onClose={handleClose} title="Request Quotation" size="xl">
           <div className="flex flex-col gap-4">
             {/* Tab bar */}
             <div className="flex border-b border-gray-200 -mt-1">
@@ -149,11 +149,14 @@ const QuotationEntryModal = ({
             {/* Selected draft confirmation */}
             {selectedDraft && (
               <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 flex items-start gap-2">
-                <Icon name="circle-check" style="solid" className="size-4 text-purple-500 shrink-0 mt-0.5" />
+                <Icon
+                  name="circle-check"
+                  style="solid"
+                  className="size-4 text-purple-500 shrink-0 mt-0.5"
+                />
                 <p className="text-sm text-purple-700">
-                  Appraisal will be added to{' '}
-                  <strong>{selectedDraft.quotationNumber}</strong>{' '}
-                  ({selectedDraft.totalAppraisals} existing appraisal
+                  Appraisal will be added to <strong>{selectedDraft.quotationNumber}</strong> (
+                  {selectedDraft.totalAppraisals} existing appraisal
                   {selectedDraft.totalAppraisals !== 1 ? 's' : ''})
                 </p>
               </div>
@@ -166,7 +169,9 @@ const QuotationEntryModal = ({
               </Button>
               <Button
                 onClick={handleAddToExisting}
-                disabled={readOnly || !selectedDraft || isAdding || !requestId || !workflowInstanceId}
+                disabled={
+                  readOnly || !selectedDraft || isAdding || !requestId || !workflowInstanceId
+                }
               >
                 {isAdding ? (
                   <>

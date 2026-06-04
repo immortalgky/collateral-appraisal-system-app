@@ -19,15 +19,13 @@ export function TaskNode({ id, data, selected }: NodeProps) {
   const props = nodeData.properties as TaskProperties;
   const decisions = Object.keys(props?.decisionConditions ?? {});
 
-  const outputs =
-    decisions.length > 0
-      ? decisions.map((d) => ({ id: d, label: d }))
-      : undefined;
+  const outputs = decisions.length > 0 ? decisions.map(d => ({ id: d, label: d })) : undefined;
 
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Task'}
       subtitle={props?.assigneeRole || undefined}
@@ -36,9 +34,7 @@ export function TaskNode({ id, data, selected }: NodeProps) {
     >
       <div className="flex flex-wrap gap-1">
         {props?.assigneeRole && (
-          <span className="badge badge-primary badge-sm badge-outline">
-            {props.assigneeRole}
-          </span>
+          <span className="badge badge-primary badge-sm badge-outline">{props.assigneeRole}</span>
         )}
         {props?.timeoutDuration && (
           <span className="badge badge-secondary badge-sm badge-outline">

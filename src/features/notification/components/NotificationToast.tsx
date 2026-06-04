@@ -1,10 +1,13 @@
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
+import i18n from '@/i18n';
 import { notificationTypeConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
 import type { Notification } from '../types';
 
 export function showNotificationToast(notification: Notification) {
+  // Non-component caller: resolve a notification-namespace-bound t from the i18n instance.
+  const tr = i18n.getFixedT(null, 'notification');
   const config = notificationTypeConfig[notification.type] ?? {
     icon: 'bell',
     iconStyle: 'regular' as const,
@@ -28,13 +31,15 @@ export function showNotificationToast(notification: Notification) {
           }
         }}
       >
-        <div className={`mt-0.5 flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${config.color}`}>
+        <div
+          className={`mt-0.5 flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${config.color}`}
+        >
           <Icon name={config.icon} style={config.iconStyle} className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
           <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{notification.message}</p>
-          <p className="text-[11px] text-gray-400 mt-1">{timeAgo(notification.createdAt)}</p>
+          <p className="text-[11px] text-gray-400 mt-1">{timeAgo(notification.createdAt, tr)}</p>
         </div>
       </div>
     ),

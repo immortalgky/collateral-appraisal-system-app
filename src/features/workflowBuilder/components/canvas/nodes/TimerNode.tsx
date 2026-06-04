@@ -25,7 +25,8 @@ export function TimerNode({ id, data, selected }: NodeProps) {
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Timer'}
       subtitle={props?.timerName || 'Timed delay'}
@@ -38,9 +39,7 @@ export function TimerNode({ id, data, selected }: NodeProps) {
           </span>
         )}
         {props?.allowEarlyCancellation && (
-          <span className="badge badge-ghost badge-sm badge-outline">
-            cancellable
-          </span>
+          <span className="badge badge-ghost badge-sm badge-outline">cancellable</span>
         )}
       </div>
     </BaseNode>

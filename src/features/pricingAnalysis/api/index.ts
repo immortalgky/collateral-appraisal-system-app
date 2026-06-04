@@ -224,6 +224,14 @@ export function useSaveComparativeAnalysis() {
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.detail(variables.id),
       });
+      // When the saved method is a market REFERENCE (the panel hosted inside
+      // MarketReferenceModal saves through this same mutation), the reference
+      // list/apply value (valuePerUnit = FinalValueAdjusted) must refresh too —
+      // otherwise the list keeps showing the pre-edit (copied source) value.
+      // The save mutation is generic and doesn't know the anchor, so invalidate
+      // both reference query prefixes (only mounted lists refetch — cheap).
+      queryClient.invalidateQueries({ queryKey: ['price-analysis-references'] });
+      queryClient.invalidateQueries({ queryKey: ['price-analysis-group-references'] });
     },
   });
 }

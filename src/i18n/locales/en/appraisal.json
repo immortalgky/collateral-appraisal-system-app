@@ -1,0 +1,1182 @@
+{
+  "completionChecklist": {
+    "title": "Validation checks",
+    "submitting": "Submitting…",
+    "allPassed": "All checks passed"
+  },
+  "completionErrors": {
+    "defaultTitle": "Validation failed"
+  },
+  "list": {
+    "title": "Appraisals",
+    "countFound": "{{count}} appraisals found",
+    "browseHint": "Browse and search appraisals",
+    "searchPlaceholder": "Search by appraisal number, customer name, or request number...",
+    "export": "Export",
+    "exportXlsx": "Excel (.xlsx)",
+    "exportCsv": "CSV (.csv)",
+    "empty": "No appraisals found",
+    "emptyHint": "Try adjusting your search or filters",
+    "columns": {
+      "appraisalNumber": "Appraisal No.",
+      "customer": "Customer",
+      "status": "Status",
+      "priority": "Priority",
+      "sla": "SLA",
+      "province": "Province",
+      "assignment": "Assignment",
+      "company": "Company",
+      "appointment": "Appointment",
+      "created": "Created"
+    },
+    "filters": {
+      "statusLabel": "Status",
+      "statusPlaceholder": "All statuses",
+      "priorityLabel": "Priority",
+      "priorityPlaceholder": "All priorities",
+      "slaStatusLabel": "SLA Status",
+      "slaStatusPlaceholder": "All SLA",
+      "typeLabel": "Type",
+      "typePlaceholder": "All types",
+      "assignmentLabel": "Assignment",
+      "assignmentPlaceholder": "All assignments",
+      "provincePlaceholder": "All provinces",
+      "companyPlaceholder": "Search company...",
+      "createdFrom": "Created From",
+      "createdTo": "Created To",
+      "slaDueFrom": "SLA Due From",
+      "slaDueTo": "SLA Due To"
+    },
+    "status": {
+      "Pending": "Pending",
+      "Assigned": "Assigned",
+      "InProgress": "In Progress",
+      "UnderReview": "Under Review",
+      "Completed": "Completed",
+      "Cancelled": "Cancelled"
+    },
+    "priority": {
+      "Normal": "Normal",
+      "High": "High"
+    },
+    "sla": {
+      "OnTrack": "On Track",
+      "AtRisk": "At Risk",
+      "Breached": "Breached",
+      "overdue": "Overdue {{time}}",
+      "left": "{{time}} left"
+    },
+    "assignmentType": {
+      "Internal": "Internal",
+      "External": "External"
+    },
+    "appraisalType": {
+      "New": "New",
+      "Revaluation": "Revaluation"
+    }
+  },
+  "appointment": {
+    "sectionTitle": "Appointment Information",
+    "noAppointment": "No appointment scheduled",
+    "noAppointmentHint": "Schedule an appointment to proceed with the appraisal",
+    "scheduleButton": "Schedule Appointment",
+    "rescheduleButton": "Re-Schedule",
+    "cancelButton": "Cancel",
+    "locationNotSpecified": "Location not specified",
+    "contactNotSpecified": "Contact not specified",
+    "rescheduledCount": "Rescheduled {{n}}x",
+    "scheduleModal": {
+      "titleNew": "Schedule Appointment",
+      "titleReschedule": "Reschedule Appointment",
+      "submitNew": "Schedule",
+      "submitReschedule": "Save",
+      "dateTimeLabel": "Appointment Date & Time",
+      "locationLabel": "Location",
+      "locationPlaceholder": "Enter appointment location details",
+      "reasonLabel": "Reason for Rescheduling",
+      "reasonPlaceholder": "Enter reason for rescheduling (optional)"
+    },
+    "cancelDialog": {
+      "title": "Cancel Appointment?",
+      "message": "Are you sure you want to cancel this appointment? This action cannot be undone.",
+      "confirm": "Cancel Appointment",
+      "cancel": "Keep Appointment"
+    },
+    "toasts": {
+      "scheduled": "Appointment scheduled",
+      "rescheduled": "Appointment rescheduled",
+      "cancelled": "Appointment cancelled",
+      "scheduleFailed": "Failed to update appointment. Please try again.",
+      "cancelFailed": "Failed to cancel appointment. Please try again."
+    }
+  },
+  "fee": {
+    "sectionTitle": "Fee Information",
+    "feePaymentTypeLabel": "Fee Payment Type",
+    "columns": {
+      "type": "Type",
+      "description": "Description",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "empty": "No fees added yet",
+    "emptyHint": "Add your first fee to get started",
+    "addFee": "Add additional fee",
+    "subtotal": "Subtotal",
+    "vat": "VAT ({{rate}}%)",
+    "vatTooltip": "Value Added Tax calculated on subtotal",
+    "total": "Total",
+    "constructionInspectionFee": "Construction Inspection Fee",
+    "constructionInspectionFeeHint": "This fee is reused as the appraisal fee on the next Construction Inspection application for this collateral.",
+    "bankAbsorbAmount": "Bank Absorb Amount",
+    "bankAbsorbAmountHint": "Amount the bank absorbs; the customer is charged the remainder.",
+    "addFeeModal": {
+      "titleAdd": "Add Fee",
+      "titleEdit": "Edit Fee",
+      "typeLabel": "Fee Type",
+      "descriptionLabel": "Description",
+      "amountLabel": "Amount"
+    },
+    "deleteFeeDialog": {
+      "title": "Delete Fee",
+      "message": "Are you sure you want to delete {{description}}? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "aria": {
+      "editFee": "Edit fee: {{description}}",
+      "editFeeTitle": "Edit fee",
+      "deleteFee": "Delete fee: {{description}}",
+      "deleteFeeTitle": "Delete fee",
+      "approveFee": "Approve",
+      "rejectFee": "Reject"
+    },
+    "cannotDeleteFee": "Cannot delete this fee item. The total fee ({{newTotal}}) would be less than the amount already paid ({{totalPaid}}).",
+    "toasts": {
+      "feeAdded": "Fee added successfully",
+      "feeAddFailed": "Failed to add fee item.",
+      "feeUpdated": "Fee updated successfully",
+      "feeUpdateFailed": "Failed to update fee item.",
+      "feeDeleted": "Fee deleted successfully",
+      "feeDeleteFailed": "Failed to delete fee item.",
+      "feeTypeUpdated": "Fee type updated",
+      "feeTypeUpdateFailed": "Failed to update fee type.",
+      "feeApproved": "Fee item approved",
+      "feeApproveFailed": "Failed to approve fee item.",
+      "feeRejected": "Fee item rejected",
+      "feeRejectFailed": "Failed to reject fee item.",
+      "ciFeesSaved": "Construction inspection fee saved",
+      "ciFeesFailed": "Failed to save construction inspection fee.",
+      "absorbAmountSaved": "Bank absorb amount saved",
+      "absorbAmountFailed": "Failed to save bank absorb amount."
+    }
+  },
+  "payment": {
+    "sectionTitle": "Payment Information",
+    "paymentDate": "Payment date",
+    "paidAmount": "Paid amount",
+    "bankAbsorbAmount": "Bank absorb amount",
+    "bankAbsorbTooltip": "Amount absorbed by the bank, reducing the customer's payment obligation",
+    "customerPayable": "Customer payable",
+    "remaining": "Remaining",
+    "noPayments": "No payments recorded",
+    "addPayment": "Add Payment",
+    "bankAbsorbed": "Bank absorbed",
+    "paidPercent": "{{n}}% paid",
+    "aria": {
+      "expandHistory": "Expand payment history",
+      "collapseHistory": "Collapse payment history",
+      "editPayment": "Edit payment of {{amount}}",
+      "editPaymentTitle": "Edit payment",
+      "deletePayment": "Delete payment of {{amount}}",
+      "deletePaymentTitle": "Delete payment"
+    },
+    "addPaymentModal": {
+      "titleAdd": "Add Payment",
+      "titleEdit": "Edit Payment",
+      "dateLabel": "Payment Date",
+      "amountLabel": "Amount"
+    },
+    "deletePaymentDialog": {
+      "title": "Delete Payment",
+      "message": "Are you sure you want to delete this {{description}}? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "columns": {
+      "paymentDate": "Payment Date",
+      "amount": "Amount"
+    },
+    "toasts": {
+      "paymentRecorded": "Payment recorded",
+      "paymentRecordFailed": "Failed to record payment.",
+      "paymentUpdated": "Payment updated",
+      "paymentUpdateFailed": "Failed to update payment.",
+      "paymentDeleted": "Payment deleted",
+      "paymentDeleteFailed": "Failed to delete payment."
+    }
+  },
+  "administration": {
+    "pageTitle": "Administration",
+    "assignmentLocked": "Assignment locked",
+    "assignmentLockedDesc": "This appraisal is in Quotation #{{quotationNumber}} ({{status}}). Cancel the quotation or remove this appraisal from it to change.",
+    "openQuotation": "Open quotation",
+    "assignmentType": {
+      "title": "Assignment Type",
+      "subtitle": "Select whether to assign internally or to an external company",
+      "internal": "Internal Appraisal",
+      "internalDesc": "Assign to internal appraisal staff",
+      "external": "External Company",
+      "externalDesc": "Assign to external appraisal company",
+      "internalDisabledHint": "Internal assignment is not available for facility limits exceeding 50M"
+    },
+    "assignmentDetails": {
+      "titleInternal": "Internal Assignment Details",
+      "titleExternal": "External Assignment Details",
+      "subtitle": "Configure assignment method and select assignee",
+      "methodLabel": "Assignment Method",
+      "manual": "Manual Selection",
+      "manualDesc": "Select specific assignee",
+      "roundrobin": "Round-robin",
+      "roundrobinDesc": "System auto-assigns based on workload",
+      "quotation": "Request Quotation",
+      "quotationDesc": "Request quotation from company first"
+    },
+    "manualStaff": {
+      "label": "Select Staff Member",
+      "placeholder": "Click to search and select staff member..."
+    },
+    "manualCompany": {
+      "label": "Select External Company",
+      "placeholder": "Click to search and select external company..."
+    },
+    "roundrobinInfo": {
+      "title": "Round-robin Assignment",
+      "internalDesc": "The system will automatically assign this appraisal to the next available staff member based on current workload distribution.",
+      "externalDesc": "The system will automatically assign this appraisal to the next external company based on the rotation schedule."
+    },
+    "followupStaff": {
+      "label": "Internal Followup Staff",
+      "manualLabel": "Manual Select",
+      "manualDesc": "Select specific staff",
+      "roundrobinLabel": "Round Robin",
+      "roundrobinDesc": "System auto-assigns",
+      "roundrobinInfo": "The system will automatically assign a followup staff member based on round-robin distribution.",
+      "placeholder": "Click to search and select internal followup staff..."
+    },
+    "unsavedChanges": "Unsaved changes",
+    "assigning": "Assigning...",
+    "assign": "Assign",
+    "toasts": {
+      "assignmentCreated": "Assignment created successfully",
+      "assignmentFailed": "Failed to create assignment. Please try again.",
+      "noWorkflowTask": "Assignment requires an active workflow task. Open this page from the Tasks list to assign.",
+      "notTaskOwner": "Only the task owner can assign this appraisal.",
+      "quotationLocked": "Assignment locked — appraisal is in Quotation #{{quotationNumber}} ({{status}}). Cancel the quotation or remove this appraisal from it to change.",
+      "quotationNotFinalized": "The quotation must be finalized with a winner before routing externally.",
+      "loadingActions": "Loading decision options, please try again in a moment.",
+      "selectAssignee": "Please select the next assignee before submitting."
+    }
+  },
+  "quotation": {
+    "sectionTitle": "Quotation",
+    "noQuotation": "No quotation request yet",
+    "noQuotationHint": "Start a quotation to invite external companies to bid",
+    "requestQuotation": "Request Quotation",
+    "newQuotation": "New Quotation",
+    "sendQuotation": "Send Quotation",
+    "cancelQuotation": "Cancel Quotation",
+    "cancelQuotationTitle": "Cancel Quotation",
+    "rejectWinner": "Reject Winner",
+    "openNegotiation": "Open Negotiation",
+    "finalize": "Finalize",
+    "edit": "Edit",
+    "save": "Save",
+    "saving": "Saving...",
+    "sending": "Sending...",
+    "cancelling": "Cancelling...",
+    "goBack": "Go Back",
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirmSend": "Confirm & Send",
+    "removeFromQuotation": "Remove this appraisal from quotation",
+    "removeConfirmTitle": "Remove from quotation?",
+    "removeConfirmMessage": "This appraisal will be removed from quotation {{quotationNumber}}. If it's the last one, the quotation is cancelled.",
+    "removeConfirm": "Remove",
+    "cancelConfirmMessage": "This will cancel quotation {{quotationNumber}}. All invited companies will be notified and the workflow task will be cancelled. This action cannot be undone.",
+    "cancelReasonLabel": "Reason",
+    "cancelReasonOptional": "(optional)",
+    "cancelReasonPlaceholder": "Why is this quotation being cancelled?",
+    "draftHint": "This quotation is still a draft. Add appraisals, invite companies, then click Send Quotation to open bidding.",
+    "notSet": "Not set",
+    "closes": "Closes",
+    "hoursRemaining": "{{n}}h remaining",
+    "stats": {
+      "companiesInvited": "Companies Invited",
+      "responses": "Responses",
+      "appraisals": "Appraisals",
+      "cutOffTime": "Cut Off Time"
+    },
+    "table": {
+      "company": "Company",
+      "totalFeeAmount": "Total Fee Amount",
+      "totalDiscount": "Total Discount",
+      "totalNetAmount": "Total Net Amount",
+      "totalEstimateManday": "Total Estimate Manday",
+      "submittedAt": "Submitted At",
+      "status": "Status"
+    },
+    "finalizedWith": "Quotation finalized with {{company}}.",
+    "finalPrice": "Final price:",
+    "finalizedHint": "Click \"Assign\" to route externally to this company.",
+    "cancelledHint": "This quotation was cancelled. Create a new quotation for this appraisal.",
+    "maximumNegotiationRounds": "Maximum negotiation rounds reached",
+    "shareDocuments": {
+      "title": "Share Documents",
+      "step": "Step 2 of 2 — Tick documents to share with invited companies",
+      "noAppraisals": "No appraisals to share documents for.",
+      "loadingDocuments": "Loading documents...",
+      "noRequestLinked": "No request linked to this appraisal. Documents cannot be loaded.",
+      "noDocuments": "No uploaded documents found for this request.",
+      "selectAll": "Select all",
+      "coverageWarning": "Select at least one document for every appraisal before sending.",
+      "coverageTitle": "Select at least one document for every appraisal"
+    },
+    "editDraft": {
+      "appraisalCount": "{{n}} (use Add / Remove to change appraisals)",
+      "companiesInvited": "Companies Invited",
+      "eligibleFor": "eligible for",
+      "companySearchPlaceholder": "Search company name...",
+      "noEligibleCompanies": "No eligible companies for this segment",
+      "noCompaniesFound": "No companies found",
+      "cutOffTime": "Cut Off Time",
+      "appraisalsLabel": "Appraisals",
+      "cutOffTimeRequired": "Cut off time is required"
+    },
+    "emailModal": {
+      "title": "Drafting email to send to external appraisal company"
+    },
+    "toasts": {
+      "quotationSent": "Quotation sent — bidding is now open",
+      "quotationSendFailed": "Failed to send quotation",
+      "docSelectionFailed": "Failed to save document selection",
+      "quotationCancelled": "Quotation cancelled",
+      "quotationCancelFailed": "Failed to cancel quotation",
+      "removedFromQuotation": "Removed from quotation",
+      "removeFailed": "Failed to remove",
+      "draftUpdated": "Draft quotation updated",
+      "draftUpdateFailed": "Failed to update draft",
+      "notCancellable": "Quotation is no longer cancellable (current status: {{status}})."
+    },
+    "loading": "Loading quotation..."
+  },
+  "decisionSummary": {
+    "pageTitle": "Decision Summary",
+    "sections": {
+      "valuation": "Valuation",
+      "constructionSummary": "Construction Summary",
+      "reviewOpinions": "Review & Opinions",
+      "decision": "Decision"
+    },
+    "appraisalDate": "Appraisal Date:",
+    "fields": {
+      "totalAppraisalPrice": "Total Appraisal Price",
+      "forceSellingPrice": "Force Selling Price",
+      "forceSellingPriceHint": "70% of appraisal price",
+      "buildingInsurance": "Building Insurance",
+      "buildingInsuranceHint": "buildings only — excludes land",
+      "decisionApproach": "Decision Approach",
+      "priceVerification": "Price Verification",
+      "priceVerificationOptions": ["Not Verified", "Verified"],
+      "reviewPrices": "Review Prices",
+      "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
+      "forceSellingPriceReview": "Force Selling Price (Review)",
+      "buildingInsuranceReview": "Building Insurance (Review)",
+      "condition": "Condition",
+      "conditionType": "Condition Type",
+      "conditionTypePlaceholder": "Select condition type...",
+      "conditionDetails": "Condition Details",
+      "conditionDetailsPlaceholder": "Enter condition details...",
+      "remark": "Remark",
+      "remarkType": "Remark Type",
+      "remarkTypePlaceholder": "Select remark type...",
+      "remarkDetails": "Remark Details",
+      "remarkPlaceholder": "Enter remark...",
+      "appraiserOpinions": "Appraiser Opinions",
+      "committeeOpinions": "Committee Opinions",
+      "opinionType": "Opinion Type",
+      "opinionTypePlaceholder": "Select opinion type...",
+      "appraiserOpinion": "Appraiser Opinion",
+      "appraiserOpinionPlaceholder": "Enter appraiser opinion...",
+      "committeeOpinion": "Committee Opinion",
+      "committeeOpinionPlaceholder": "Enter committee opinion...",
+      "additionalAssumptions": "Additional / Special Assumptions",
+      "additionalAssumptionsDetails": "Details",
+      "additionalAssumptionsPlaceholder": "Enter additional or special assumptions..."
+    },
+    "options": {
+      "conditionType": {
+        "normal": "Normal",
+        "special": "Special",
+        "other": "Other"
+      },
+      "remarkType": {
+        "normal": "Normal",
+        "special": "Special",
+        "other": "Other"
+      },
+      "opinionType": {
+        "agree": "Agree",
+        "disagree": "Disagree",
+        "conditional": "Conditional"
+      }
+    },
+    "empty": {
+      "noApproachData": "No approach data available.",
+      "noGovernmentPrice": "No government price data available."
+    },
+    "historySearch": "History Search",
+    "historySearchTitle": "History Search (nearby appraisals & market comparables)",
+    "unsavedChanges": "Unsaved changes",
+    "confirmDialog": {
+      "title": "Submit Decision Summary",
+      "message": "Are you sure you want to submit this decision summary?",
+      "confirm": "Submit",
+      "cancel": "Cancel",
+      "submitting": "Submitting…",
+      "validationErrorsTitle": "Please complete the required fields"
+    },
+    "toasts": {
+      "saved": "Decision summary saved successfully",
+      "saveFailed": "Failed to save decision summary. Please try again.",
+      "submitted": "Decision submitted successfully",
+      "submitFailed": "Failed to submit decision",
+      "validationErrors": "Validation errors occurred"
+    }
+  },
+  "decision": {
+    "sectionTitle": "Decision",
+    "activityTracking": "Activity Tracking",
+    "decisionLabel": "Decision",
+    "commentsLabel": "Comments",
+    "noDecision": "No decision made",
+    "assignNextTo": "Assign Next To",
+    "decisionPlaceholder": "Select a decision...",
+    "assigneePlaceholder": "Select an assignee...",
+    "requestDocuments": "Request Additional Documents",
+    "loadingActivity": "Loading activity...",
+    "loadingActions": "Loading actions...",
+    "loadingAssignees": "Loading assignees...",
+    "commentPlaceholders": {
+      "default": "Enter your comments or reason for this decision...",
+      "approve": "Why are you approving?",
+      "reject": "Why are you rejecting?",
+      "routeBack": "What needs to be revised?",
+      "proceed": "Any final notes before proceeding?",
+      "hold": "Why are you placing this on hold?"
+    }
+  },
+  "propertyInfo": {
+    "tabs": {
+      "properties": "Properties",
+      "markets": "Markets",
+      "gallery": "Gallery",
+      "photos": "Photos",
+      "laws": "Laws & Regulations"
+    }
+  },
+  "properties": {
+    "addNewGroup": "Add New Group",
+    "noGroups": "No property groups yet",
+    "noGroupsHint": "Click \"Add New Group\" to create your first group",
+    "loadError": "Failed to load property groups",
+    "loadErrorHint": "Please try refreshing the page",
+    "viewGrid": "Grid",
+    "viewList": "List",
+    "contextMenu": {
+      "view": "View",
+      "edit": "Edit",
+      "moveTo": "Move to",
+      "copy": "Copy",
+      "paste": "Paste",
+      "delete": "Delete"
+    },
+    "moveModal": {
+      "title": "Move Property",
+      "loading": "Moving..."
+    },
+    "deleteModal": {
+      "title": "Delete Property",
+      "message": "Are you sure you want to remove this property?",
+      "confirm": "Remove"
+    },
+    "toasts": {
+      "groupCreateFailed": "Failed to create group",
+      "groupRenameFailed": "Failed to rename group",
+      "groupDeleteFailed": "Failed to delete group",
+      "propertyRemoveFailed": "Failed to remove property from group",
+      "propertyMoveFailed": "Failed to move property",
+      "propertyPasteFailed": "Failed to paste property",
+      "reorderFailed": "Failed to reorder properties"
+    }
+  },
+  "view360": {
+    "pageTitle": "360 View",
+    "header": {
+      "totalAppraisalPrice": "Total Appraisal Price",
+      "forceSellingPrice": "Force Selling Price",
+      "buildingInsurance": "Building Insurance"
+    },
+    "requestInfo": {
+      "sectionTitle": "Request Information"
+    },
+    "propertyGroups": {
+      "sectionTitle": "Property Groups"
+    },
+    "pricingAnalysis": {
+      "sectionTitle": "Pricing Analysis"
+    },
+    "decisionSummary": {
+      "sectionTitle": "Decision Summary"
+    },
+    "decisionSummarySection": {
+      "title": "Decision & Summary",
+      "appraisalPriceSummary": "Appraisal Price Summary",
+      "governmentAppraisalPrice": "Government Appraisal Price",
+      "totalAppraisalPrice": "Total Appraisal Price",
+      "forceSellingPrice": "Force Selling Price",
+      "buildingInsurance": "Building Insurance",
+      "noApproachData": "No approach data available.",
+      "noGovernmentPrice": "No government price data available."
+    },
+    "pricingAnalysisSection": {
+      "heading": "Pricing Analysis",
+      "decisionApproach": "Decision Approach",
+      "noApproachData": "No approach data available."
+    },
+    "requestInfoSection": {
+      "title": "Request Information",
+      "requestNumber": "Request Number",
+      "customerName": "Customer Name",
+      "contactNumber": "Contact Number",
+      "purpose": "Purpose",
+      "appraisalNumber": "Appraisal Number",
+      "channel": "Channel",
+      "status": "Status",
+      "requestor": "Requestor"
+    }
+  },
+  "activityTracking": {
+    "pageTitle": "Activity Tracking",
+    "tabs": {
+      "timeline": "Timeline",
+      "log": "Log"
+    },
+    "empty": "No activity recorded",
+    "columns": {
+      "activity": "Activity",
+      "assignedTo": "Assigned To",
+      "startedAt": "Started At",
+      "completedAt": "Completed At",
+      "status": "Status",
+      "movement": "Movement",
+      "remark": "Remark"
+    }
+  },
+  "documentChecklist": {
+    "pageTitle": "Document Checklist",
+    "empty": "No documents required",
+    "columns": {
+      "document": "Document",
+      "required": "Required",
+      "received": "Received",
+      "remarks": "Remarks"
+    },
+    "toasts": {
+      "saveFailed": "Failed to save checklist",
+      "saved": "Checklist saved"
+    }
+  },
+  "gallery": {
+    "sectionTitle": "Gallery",
+    "noPhotos": "No photos yet",
+    "noPhotosHint": "Upload photos to get started",
+    "addPhoto": "Add Photo",
+    "uploadPhoto": "Upload Photo",
+    "takePhoto": "Take Photo",
+    "photoSource": "Select Photo Source",
+    "editPhoto": "Edit Photo",
+    "deletePhoto": "Delete Photo",
+    "previewPhoto": "Preview Photo",
+    "gridView": "Grid View",
+    "listView": "List View",
+    "columns": {
+      "fileName": "File Name",
+      "category": "Category",
+      "uploadedBy": "Uploaded By",
+      "uploadedAt": "Uploaded At",
+      "actions": "Actions"
+    },
+    "aria": {
+      "editPhoto": "Edit photo",
+      "deletePhoto": "Delete photo",
+      "previewPhoto": "Preview photo"
+    },
+    "deleteConfirm": {
+      "title": "Delete Photo",
+      "message": "Are you sure you want to delete this photo? This action cannot be undone.",
+      "confirm": "Delete"
+    },
+    "toasts": {
+      "uploaded": "Photo uploaded",
+      "uploadFailed": "Failed to upload photo",
+      "deleted": "Photo deleted",
+      "deleteFailed": "Failed to delete photo",
+      "updated": "Photo updated",
+      "updateFailed": "Failed to update photo"
+    }
+  },
+  "search": {
+    "pageTitle": "Appraisal Search",
+    "placeholder": "Search appraisals...",
+    "savedSearches": "Saved Searches",
+    "saveSearch": "Save Search",
+    "deleteSavedSearch": "Delete saved search",
+    "activeFilters": "Active Filters",
+    "clearAll": "Clear All"
+  },
+  "lawsRegulations": {
+    "pageTitle": "Laws & Regulations",
+    "addRecord": "Add Record",
+    "noRecords": "No laws and regulations",
+    "noRecordsHint": "Add laws and regulations that apply to this property",
+    "columns": {
+      "type": "Type",
+      "detail": "Detail",
+      "actions": "Actions"
+    },
+    "toasts": {
+      "saved": "Record saved",
+      "saveFailed": "Failed to save record",
+      "deleted": "Record deleted",
+      "deleteFailed": "Failed to delete record"
+    }
+  },
+  "markets": {
+    "pageTitle": "Market Comparables",
+    "addComparable": "Add Comparable",
+    "noComparables": "No market comparables yet",
+    "noComparablesHint": "Add market comparable data to support the appraisal",
+    "columns": {
+      "address": "Address",
+      "area": "Area",
+      "price": "Price",
+      "pricePerUnit": "Price / Unit",
+      "source": "Source",
+      "date": "Date"
+    },
+    "toasts": {
+      "saved": "Market comparable saved",
+      "saveFailed": "Failed to save market comparable",
+      "deleted": "Market comparable deleted",
+      "deleteFailed": "Failed to delete market comparable"
+    }
+  },
+  "constructionInspection": {
+    "sectionTitle": "Construction Inspection",
+    "summary": "Construction Summary",
+    "columns": {
+      "description": "Description",
+      "buildingValue": "Building Value",
+      "buildingValue100": "Building Value 100% Pre-inspection",
+      "totalValue": "Total Value"
+    }
+  },
+  "forms": {
+    "land": {
+      "sectionTitleInfo": "Land Information",
+      "sectionTitleLocation": "Land Location",
+      "sectionTitleBoundary": "Land Boundary",
+      "sectionTitleCharacteristics": "Land Characteristics",
+      "sectionTitlePlot": "Plot Location"
+    },
+    "building": {
+      "sectionTitle": "Building Details"
+    },
+    "condo": {
+      "sectionTitle": "Condo Details",
+      "areaDetail": "Area Detail",
+      "pma": "PMA Information"
+    },
+    "machinery": {
+      "sectionTitle": "Machinery Details"
+    },
+    "titleDeed": {
+      "sectionTitle": "Title Deed"
+    },
+    "leaseAgreement": {
+      "sectionTitle": "Lease Agreement"
+    },
+    "rentalInfo": {
+      "sectionTitle": "Rental Information"
+    },
+    "marketComparable": {
+      "sectionTitle": "Market Comparable"
+    }
+  },
+  "validation": {
+    "dateTimeRequired": "Date and time is required",
+    "locationRequired": "Location is required",
+    "descriptionRequired": "Description is required",
+    "amountNonNegative": "Amount must be non-negative",
+    "amountPositive": "Amount must be greater than 0",
+    "paymentDateRequired": "Payment date is required",
+    "feeTypeRequired": "Fee type is required",
+    "bankAbsorbNonNegative": "Bank absorb amount must be non-negative",
+    "ciFeeNonNegative": "Construction inspection fee must be non-negative",
+    "subDistrictRequired": "Sub district is required.",
+    "districtRequired": "District is required.",
+    "provinceRequired": "Province is required.",
+    "builtOnTitleNumberRequired": "Built on title number is required.",
+    "condoRegistrationNumberRequired": "Condo registration number is required.",
+    "roomNumberRequired": "Room number is required.",
+    "buildingNumberRequired": "Building number is required.",
+    "condoNameRequired": "Condo name is required.",
+    "headerRequired": "Header is required",
+    "assignmentTypeRequired": "Please select an assignment type",
+    "assignmentMethodRequired": "Please select an assignment method",
+    "remarksMaxLength": "Remarks must not exceed 500 characters",
+    "selectAssignee": "Please select an assignee",
+    "selectFollowupStaff": "Please select an internal followup staff"
+  },
+  "toasts": {
+    "photoUploaded": "Photo uploaded successfully",
+    "photoUploadFailed": "Failed to upload photo",
+    "photoLinked": "Photo linked successfully",
+    "photosLinked": "{{count}} photos linked successfully",
+    "photoLinkFailed": "Failed to link photo",
+    "photoLinkIndexFailed": "Failed to link photo {{index}}",
+    "photoRemoved": "Photo removed",
+    "photoUnlinked": "Photo unlinked from property",
+    "photoUnlinkFailed": "Failed to unlink photo",
+    "photoUnlinkMissingId": "Cannot unlink: missing image ID",
+    "photoUnlinkMissingMappingId": "Cannot unlink: missing mapping ID",
+    "photoRemoveFailed": "Failed to remove photo",
+    "photoDeletedPermanently": "Photo deleted permanently",
+    "photoDeleteFailed": "Failed to delete photo",
+    "photoThumbnailSetFailed": "Failed to set cover photo",
+    "photoThumbnailUnsetFailed": "Failed to remove cover photo",
+    "photoThumbnailSetPropertyFailed": "Failed to set thumbnail",
+    "photoThumbnailUnsetPropertyFailed": "Failed to unset thumbnail",
+    "descriptionUpdated": "Description updated",
+    "descriptionUpdateFailed": "Failed to update description",
+    "galleryPhotoNotFound": "Gallery photo not found",
+    "uploading": "Uploading {{count}} file(s)...",
+    "uploadedFile": "Uploaded {{name}}",
+    "uploadFileFailed": "Failed to upload {{name}}",
+    "photosLinkedToProperty": "Linked {{count}} photo(s) to property",
+    "photosLinkedPartial": "Linked {{success}}, failed {{failed}}",
+    "photoSelectTopicFirst": "Please select a topic first",
+    "photoUnsupportedFormat": "Please select supported image files only (JPG, JPEG, PNG)",
+    "photoUnsupportedFormatGallery": "{{name}} is not a supported image file (JPG, JPEG, PNG only)",
+    "photoAddedCount": "Added {{count}} photo(s)",
+    "photoAssignFailed": "Failed to assign photo",
+    "photoRemoveFromTopicFailed": "Failed to remove photo from topic",
+    "topicUnassignFailed": "Failed to unassign photos from topic",
+    "topicCreated": "Topic created",
+    "uploadSessionFailed": "Failed to create upload session",
+    "documentUpdated": "Document updated",
+    "filesUploaded": "Files uploaded successfully",
+    "annotationSaveFailed": "Failed to save annotated image",
+    "fileUploadFailed": "Failed to upload file",
+    "documentLoadFailed": "Failed to load document for editing",
+    "onlyImageFilesAllowed": "Only image files are allowed",
+    "galleryFilesAdded": "Files added from gallery",
+    "galleryFilesAddFailed": "Failed to add files from gallery",
+    "documentRemoved": "Document removed",
+    "documentRemoveFailed": "Failed to remove document",
+    "layoutUpdateFailed": "Failed to update layout",
+    "galleryPhotoDeletedCount": "Deleted {{count}} photo(s)",
+    "galleryPhotoDeletedPartial": "Deleted {{deleted}}, failed {{failed}}",
+    "galleryPhotoSelectFirst": "Please select at least one photo",
+    "comparableUnlinked": "Comparable unlinked successfully",
+    "comparableUnlinkFailed": "Failed to unlink comparable",
+    "lawItemDeleted": "Item deleted successfully",
+    "lawItemDeleteFailed": "Failed to delete item",
+    "lawImageUploaded": "Uploaded \"{{name}}\"",
+    "lawImageUploadFailed": "Failed to upload image",
+    "lawImagesUploading": "Uploading {{count}} file(s)...",
+    "lawSaveFailed": "Failed to save",
+    "lawDescriptionUpdated": "Description updated",
+    "lawDescriptionUpdateFailed": "Failed to update description",
+    "quotationTaskContextMissing": "Task context is missing. Please reopen the task and try again.",
+    "quotationStarted": "Quotation started — companies have been invited",
+    "quotationAddSelectDraft": "Please select a Draft quotation to add to",
+    "quotationAddedToDraft": "Appraisal added to {{quotationNumber}}",
+    "voteSubmitFailed": "Failed to submit vote",
+    "committeeDecisionRecorded": "Committee decision recorded",
+    "voteRecorded": "Vote recorded",
+    "propertyCondoUpdated": "Property condominium updated successfully",
+    "propertyCondoCreated": "Property condominium created successfully",
+    "propertyLandUpdated": "Property land updated successfully",
+    "propertyLandCreated": "Property land created successfully",
+    "propertyLandBuildingUpdated": "Property land and building updated successfully",
+    "propertyLandBuildingCreated": "Property land and building created successfully",
+    "propertyBuildingUpdated": "Property building updated successfully",
+    "propertyBuildingCreated": "Property building created successfully",
+    "propertyMachineryUpdated": "Property Machinery updated successfully",
+    "propertyMachineryCreated": "Property Machinery created successfully",
+    "leaseAgreementBuildingUpdated": "Lease agreement building updated successfully",
+    "leaseAgreementBuildingCreated": "Lease agreement building created successfully",
+    "leaseAgreementLandUpdated": "Lease agreement land updated successfully",
+    "leaseAgreementLandCreated": "Lease agreement land created successfully",
+    "leaseAgreementLandBuildingUpdated": "Lease agreement land and building updated successfully",
+    "leaseAgreementLandBuildingCreated": "Lease agreement land and building created successfully",
+    "leaseAgreementCondoUpdated": "Lease agreement condo updated successfully",
+    "leaseAgreementCondoCreated": "Lease agreement condo created successfully",
+    "draftSaved": "Draft saved successfully",
+    "marketComparableUpdated": "Market comparable updated successfully",
+    "marketComparableCreated": "Market comparable created successfully",
+    "marketComparableDeleted": "Market comparable deleted successfully",
+    "marketComparableDeleteFailed": "Failed to delete market comparable"
+  },
+  "common": {
+    "unsavedChanges": "Unsaved changes",
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "noData": "—",
+    "cancelButton": "Cancel",
+    "saveButton": "Save",
+    "submitButton": "Submit",
+    "assignButton": "Assign",
+    "editButton": "Edit",
+    "deleteButton": "Delete",
+    "addButton": "Add",
+    "closeButton": "Close",
+    "backButton": "Back",
+    "retryButton": "Retry",
+    "appraisals": "appraisals",
+    "company": "Company",
+    "province": "Province",
+    "status": "Status"
+  },
+  "pageHeader": {
+    "appraisalNumber": "Appraisal Number"
+  },
+  "collateralSelectModal": {
+    "title": "Select Collateral",
+    "searchPlaceholder": "Search collateral...",
+    "noResults": "No collateral found"
+  },
+  "collateralAssignmentModal": {
+    "title": "Collateral Assignment",
+    "assign": "Assign"
+  },
+  "moveToGroupModal": {
+    "title": "Move to Group",
+    "selectGroup": "Select Group",
+    "moving": "Moving..."
+  },
+  "deleteConfirmationModal": {
+    "title": "Delete Property",
+    "message": "Are you sure you want to remove this property from the group? This action cannot be undone.",
+    "confirm": "Delete"
+  },
+  "editPropertyModal": {
+    "title": "Edit Property"
+  },
+  "addToQuotationModal": {
+    "title": "Add to Quotation",
+    "searchPlaceholder": "Search quotation...",
+    "noQuotations": "No open quotations found",
+    "add": "Add to Quotation",
+    "toasts": {
+      "added": "Added to quotation",
+      "addFailed": "Failed to add to quotation"
+    }
+  },
+  "createQuotationModal": {
+    "title": "Create Quotation Request",
+    "fields": {
+      "companies": "Invite Companies",
+      "cutOffTime": "Cut Off Time",
+      "assignmentType": "Assignment Type",
+      "assignmentMethod": "Assignment Method"
+    },
+    "submit": "Create Quotation",
+    "creating": "Creating...",
+    "toasts": {
+      "created": "Quotation request created",
+      "createFailed": "Failed to create quotation request"
+    }
+  },
+  "history": {
+    "title": "History",
+    "viewHistory": "View history",
+    "eventCount_one": "{{count}} event",
+    "eventCount_other": "{{count}} events",
+    "chips": {
+      "all": "All",
+      "appointment": "Appointment",
+      "fees": "Fees"
+    },
+    "status": {
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Pending": "Pending",
+      "Auto": "Auto",
+      "Cancelled": "Cancelled"
+    },
+    "emptyState": "No history yet",
+    "loadError": "Failed to load history"
+  },
+  "approval": {
+    "banner": {
+      "needsApproval": "This change needs bank approval — submit it for review before it takes effect.",
+      "awaiting": "Awaiting bank approval. Edits are locked until the approval is resolved."
+    },
+    "badge": {
+      "needsApproval": "Needs approval",
+      "awaiting": "Pending approval"
+    },
+    "submitButton": "Submit for Approval — {{summary}}",
+    "submitConfirm": "Submit",
+    "summary": {
+      "dateChange": "1 date change",
+      "fees_one": "{{count}} fee",
+      "fees_other": "{{count}} fees"
+    },
+    "toasts": {
+      "submitted": "Submitted for bank approval",
+      "submitFailed": "Failed to submit for approval"
+    }
+  },
+  "createPage": {
+    "photosSection": "Photos",
+    "landSection": "Land Information",
+    "leaseAgreementSection": "Lease Agreement",
+    "rentalInfoSection": "Rental Info",
+    "condoSection": "Condo Information",
+    "buildingSection": "Building Information",
+    "constructionSection": "Construction Inspection",
+    "machinerySection": "Machinery Information",
+    "navPhotos": "Photos",
+    "navLand": "Land",
+    "navLeaseAgreement": "Lease Agreement",
+    "navRentalInfo": "Rental Info",
+    "navCondo": "Condo",
+    "navBuilding": "Building",
+    "navConstructionInspection": "Construction Inspection",
+    "navMachinery": "Machinery",
+    "saveDraft": "Save draft",
+    "save": "Save"
+  },
+  "landCharacteristicsForm": {
+    "sections": {
+      "landfill": "Landfill",
+      "road": "Road",
+      "landAccessibility": "Land Accessibility",
+      "roadSurface": "Road Surface",
+      "publicUtility": "Public Utility",
+      "landUse": "Land Use",
+      "landEntranceExit": "Land Entrance-Exit",
+      "transportation": "Transportation",
+      "anticipationOfProperty": "Anticipation of Property",
+      "limitation": "Limitation",
+      "eviction": "Eviction",
+      "allocation": "Allocation",
+      "hasBuilding": "Has Building",
+      "remark": "Remark"
+    },
+    "fields": {
+      "other": "Other",
+      "landfillHeight": "Landfill Height",
+      "landAccessibilityDescription": "Land Accessibility Description",
+      "roadWidth": "Road Width",
+      "rightOfWay": "Right of Way",
+      "roadFrontage": "Road Frontage of land adjacent to the road",
+      "numberOrSidesFacingRoad": "Number of sides facing the road",
+      "roadRunningInFrontOfLand": "Road running in front of the land",
+      "areaSqWa": "Area Sq.Wa",
+      "distance": "Distance",
+      "remarkPlaceholder": "Enter remarks...",
+      "isExpropriate": "Is Expropriate",
+      "inLineExpropriate": "In Line Expropriate",
+      "royalDecree": "Royal Decree",
+      "isEncroached": "Is Encroached",
+      "electricity": "Electricity",
+      "isLandlocked": "Is Landlocked",
+      "isForestBoundary": "Is Forest Boundary"
+    },
+    "landfillOptions": {
+      "emptyLand": "Empty Land",
+      "filled": "Filled",
+      "notFilledYet": "Not Filled yet",
+      "partiallyFilled": "Partially Filled",
+      "other": "Other"
+    },
+    "landAccessibilityOptions": {
+      "able": "Able",
+      "unable": "Unable",
+      "inAllocation": "In Allocation"
+    },
+    "roadSurfaceOptions": {
+      "reinforcedConcrete": "Reinforced Concrete",
+      "gravelCrushedStone": "Gravel/Crushed Stone",
+      "soil": "Soil",
+      "paved": "Paved",
+      "other": "Other"
+    },
+    "publicUtilityOptions": {
+      "permanentElectricity": "Permanent Electricity",
+      "tapWaterGroundwater": "Tap Water/Groundwater",
+      "drainagePipeStone": "Drainage Pipe/Stone",
+      "streetlight": "Streetlight",
+      "other": "Other"
+    },
+    "landUseOptions": {
+      "residence": "Residence",
+      "agriculture": "Agriculture",
+      "commercial": "Commercial",
+      "industry": "Industry",
+      "other": "Other"
+    },
+    "landEntranceExitOptions": {
+      "publicInterest": "Public Interest",
+      "insideAllocationProject": "Inside the Allocation Project",
+      "personal": "Personal",
+      "servitude": "Servitude",
+      "other": "Other"
+    },
+    "transportationOptions": {
+      "car": "Car",
+      "bus": "Bus",
+      "ship": "Ship",
+      "footpath": "Footpath",
+      "other": "Other"
+    },
+    "anticipationOptions": {
+      "veryProspective": "Very Prospective",
+      "moderate": "Moderate",
+      "likelyToProsperInFuture": "Likely to Prosper in the Future",
+      "littleChanceOfProsperity": "Little Chance of Prosperity"
+    },
+    "evictionOptions": {
+      "permanentElectricity": "Permanent Electricity",
+      "subwayLine": "Subway Line",
+      "other": "Other"
+    },
+    "allocationOptions": {
+      "allocateNewProject": "Allocate New Projects",
+      "allocateOldProject": "Allocate Old Projects",
+      "notAllocate": "Not Allocate"
+    },
+    "hasBuildingOptions": {
+      "yes": "Yes",
+      "no": "No",
+      "other": "Other"
+    }
+  },
+  "approachMatrixTable": {
+    "columns": {
+      "group": "Group",
+      "model": "Model",
+      "market": "Market Comparison Approach",
+      "cost": "Cost Approach",
+      "income": "Income Approach",
+      "residual": "Residual Approach",
+      "summary": "Summary"
+    },
+    "footer": {
+      "total": "Total",
+      "project": "Project"
+    }
+  },
+  "blockPriceSummaryTable": {
+    "columns": {
+      "model": "Model",
+      "unitCount": "Unit Count",
+      "totalAppraisalPrice": "Total Appraisal Price",
+      "forceSellingPrice": "Force Selling Price",
+      "buildingInsurance": "Building Insurance"
+    },
+    "footer": {
+      "project": "Project"
+    }
+  },
+  "governmentPriceTable": {
+    "columns": {
+      "titleDeedNo": "Title Deed No.",
+      "sqWa": "Sq.Wa",
+      "bahtPerSqWa": "Baht / Sq.Wa",
+      "landPrice": "Land Price"
+    },
+    "footer": {
+      "total": "Total",
+      "avg": "avg"
+    },
+    "missingFromSurvey": "Missing from survey"
+  },
+  "constructionSummaryTable": {
+    "columns": {
+      "milestone": "Milestone",
+      "totalAppraisalValue": "Total Appraisal Value",
+      "landValue": "Land Value",
+      "constructionProgress": "Construction Progress (%)",
+      "buildingValue": "Building Value",
+      "buildingValuePreInspection": "Building Value Pre-inspection"
+    },
+    "rows": {
+      "Previous": "Previous",
+      "ConstructionIncreased": "Construction Increased",
+      "Current": "Current",
+      "RemainingConstruction": "Remaining construction",
+      "Complete100": "Complete ( 100% )"
+    }
+  },
+  "approvalListSection": {
+    "title": "Committee Approval",
+    "notActiveYet": "Committee approval is not active for this appraisal yet.",
+    "approvedBanner": "This appraisal has been approved by the committee.",
+    "returnedBanner": "This appraisal has been returned for revision.",
+    "conditionsTitle": "Approval Conditions",
+    "votesDisplay": "{{received}}/{{total}} votes",
+    "youBadge": "You",
+    "pendingVote": "Pending",
+    "tierLabels": {
+      "1": "Tier 1",
+      "2": "Tier 2",
+      "3": "Tier 3"
+    },
+    "committeeCodeLabels": {
+      "SUB_COMMITTEE": "Sub-Committee",
+      "COMMITTEE": "Committee",
+      "COMMITTEE_WITH_MEETING": "Committee (with Meeting)"
+    },
+    "committeeDefault": "Committee",
+    "conditionRoleRequired": "{{role}} must vote",
+    "conditionRoleRequiredDefault": "Required role must vote",
+    "conditionMinVotes": "At least {{n}} votes required",
+    "conditionMinVotesDefault": "Minimum vote count required",
+    "columns": {
+      "member": "Member",
+      "role": "Role",
+      "vote": "Vote",
+      "date": "Date",
+      "comments": "Comments"
+    }
+  },
+  "decisionSummaryPageExtra": {
+    "governmentAppraisalPrice": "Government Appraisal Price",
+    "constructionSummaryTitle": "Construction Summary",
+    "cancelButton": "Cancel",
+    "saveButton": "Save",
+    "submitButton": "Submit"
+  },
+  "landDetailSchema": {
+    "latitudeRequired": "Latitude is required",
+    "longitudeRequired": "Longitude is required",
+    "subDistrictRequired": "Sub-District is required",
+    "districtRequired": "District is required",
+    "provinceRequired": "Province is required",
+    "landOfficeRequired": "Land Office is required"
+  }
+}

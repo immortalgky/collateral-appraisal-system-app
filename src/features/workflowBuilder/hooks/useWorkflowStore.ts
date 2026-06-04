@@ -1,16 +1,8 @@
 import { create } from 'zustand';
 import type { Node, Edge, Connection } from '@xyflow/react';
 import { v4 as uuid } from 'uuid';
-import type {
-  ActivityType,
-  WorkflowMetadata,
-  WorkflowSchema,
-  ActivityProperties,
-} from '../types';
-import {
-  ActivityType as ActivityTypeEnum,
-  createDefaultPropertiesForType,
-} from '../types';
+import type { ActivityType, WorkflowMetadata, WorkflowSchema, ActivityProperties } from '../types';
+import { ActivityType as ActivityTypeEnum, createDefaultPropertiesForType } from '../types';
 import { toReactFlow, type ActivityNodeData } from '../adapters/toReactFlow';
 import { toWorkflowSchema } from '../adapters/toWorkflowSchema';
 import { getLayoutedNodes } from '../utils/autoLayout';
@@ -120,11 +112,11 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
   workflowMeta: { ...defaultMeta },
   isDirty: false,
 
-  setNodes: (nodes) => set({ nodes, isDirty: true }),
-  setEdges: (edges) => set({ edges, isDirty: true }),
+  setNodes: nodes => set({ nodes, isDirty: true }),
+  setEdges: edges => set({ edges, isDirty: true }),
 
-  selectNode: (id) => set({ selectedNodeId: id, selectedEdgeId: null }),
-  selectEdge: (id) => set({ selectedEdgeId: id, selectedNodeId: null }),
+  selectNode: id => set({ selectedNodeId: id, selectedEdgeId: null }),
+  selectEdge: id => set({ selectedEdgeId: id, selectedNodeId: null }),
   clearSelection: () => set({ selectedNodeId: null, selectedEdgeId: null }),
 
   addActivity: (type, position) => {
@@ -149,7 +141,7 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
       },
     };
 
-    set((state) => ({
+    set(state => ({
       nodes: [...state.nodes, newNode],
       isDirty: true,
       selectedNodeId: id,
@@ -158,8 +150,8 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
   },
 
   updateActivityData: (id, data) => {
-    set((state) => ({
-      nodes: state.nodes.map((node) => {
+    set(state => ({
+      nodes: state.nodes.map(node => {
         if (node.id !== id) return node;
         return {
           ...node,
@@ -170,17 +162,16 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
     }));
   },
 
-  removeActivity: (id) => {
-    set((state) => ({
-      nodes: state.nodes.filter((n) => n.id !== id),
-      edges: state.edges.filter((e) => e.source !== id && e.target !== id),
-      selectedNodeId:
-        state.selectedNodeId === id ? null : state.selectedNodeId,
+  removeActivity: id => {
+    set(state => ({
+      nodes: state.nodes.filter(n => n.id !== id),
+      edges: state.edges.filter(e => e.source !== id && e.target !== id),
+      selectedNodeId: state.selectedNodeId === id ? null : state.selectedNodeId,
       isDirty: true,
     }));
   },
 
-  addTransition: (connection) => {
+  addTransition: connection => {
     if (!connection.source || !connection.target) return;
 
     const id = uuid();
@@ -204,7 +195,7 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
       },
     };
 
-    set((state) => ({
+    set(state => ({
       edges: [...state.edges, newEdge],
       isDirty: true,
       selectedEdgeId: id,
@@ -213,8 +204,8 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
   },
 
   updateTransition: (id, data) => {
-    set((state) => ({
-      edges: state.edges.map((edge) => {
+    set(state => ({
+      edges: state.edges.map(edge => {
         if (edge.id !== id) return edge;
         const isConditional = data.type === 'Conditional';
         return {
@@ -240,24 +231,23 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
     }));
   },
 
-  removeTransition: (id) => {
-    set((state) => ({
-      edges: state.edges.filter((e) => e.id !== id),
-      selectedEdgeId:
-        state.selectedEdgeId === id ? null : state.selectedEdgeId,
+  removeTransition: id => {
+    set(state => ({
+      edges: state.edges.filter(e => e.id !== id),
+      selectedEdgeId: state.selectedEdgeId === id ? null : state.selectedEdgeId,
       isDirty: true,
     }));
   },
 
-  updateMeta: (meta) => {
-    set((state) => ({
+  updateMeta: meta => {
+    set(state => ({
       workflowMeta: { ...state.workflowMeta, ...meta },
       isDirty: true,
     }));
   },
 
-  updateMetadata: (metadata) => {
-    set((state) => ({
+  updateMetadata: metadata => {
+    set(state => ({
       workflowMeta: {
         ...state.workflowMeta,
         metadata: { ...state.workflowMeta.metadata, ...metadata },
@@ -272,7 +262,7 @@ export const useWorkflowStore = create<WorkflowBuilderState>((set, get) => ({
     set({ nodes: layouted, isDirty: true });
   },
 
-  loadFromSchema: (schema) => {
+  loadFromSchema: schema => {
     const { nodes, edges } = toReactFlow(schema);
     set({
       nodes,

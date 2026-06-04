@@ -17,7 +17,10 @@ import {
 } from '@/features/quotation/api/quotation';
 import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { QuotationStatus } from '../types/administration';
-import type { AppraisalSummaryDto, SharedDocumentSelectionDto } from '@/features/quotation/schemas/quotation';
+import type {
+  AppraisalSummaryDto,
+  SharedDocumentSelectionDto,
+} from '@/features/quotation/schemas/quotation';
 import QuotationStatusBadge from '@/features/quotation/components/QuotationStatusBadge';
 import AdminShortlistPanel from '@/features/quotation/components/AdminShortlistPanel';
 import ShortlistSentPanel from '@/features/quotation/components/ShortlistSentPanel';
@@ -39,12 +42,20 @@ import { useAuthStore } from '@/features/auth/store';
  * State: outer key = appraisalId, inner key = documentId,
  * value = { level: 'RequestLevel' | 'TitleLevel' }
  */
-type ShareSelections = Record<string, Record<string, { level: SharedDocumentSelectionDto['level'] }>>;
+type ShareSelections = Record<
+  string,
+  Record<string, { level: SharedDocumentSelectionDto['level'] }>
+>;
 
 interface ShareDocumentsStepProps {
   appraisals: AppraisalSummaryDto[];
   selections: ShareSelections;
-  onToggle: (appraisalId: string, documentId: string, level: SharedDocumentSelectionDto['level'], checked: boolean) => void;
+  onToggle: (
+    appraisalId: string,
+    documentId: string,
+    level: SharedDocumentSelectionDto['level'],
+    checked: boolean,
+  ) => void;
   /** Appraisals whose request has no uploaded docs — skipped in the coverage gate. */
   noDocsAppraisalIds: Set<string>;
   onReportNoDocs: (appraisalId: string, noDocs: boolean) => void;
@@ -57,11 +68,16 @@ const ShareDocumentsStep = ({
   noDocsAppraisalIds,
   onReportNoDocs,
 }: ShareDocumentsStepProps) => {
+  const { t } = useTranslation('appraisal');
   const [activeTabIdx, setActiveTabIdx] = useState(0);
   const appraisal = appraisals[activeTabIdx];
 
   if (appraisals.length === 0) {
-    return <p className="text-sm text-gray-500 py-4 text-center">No appraisals to share documents for.</p>;
+    return (
+      <p className="text-sm text-gray-500 py-4 text-center">
+        {t('quotation.shareDocuments.noAppraisals')}
+      </p>
+    );
   }
 
   return (
@@ -114,11 +130,22 @@ const ShareDocumentsStep = ({
 interface AppraisalDocTabProps {
   appraisal: AppraisalSummaryDto;
   apSelection: Record<string, { level: SharedDocumentSelectionDto['level'] }>;
-  onToggle: (appraisalId: string, documentId: string, level: SharedDocumentSelectionDto['level'], checked: boolean) => void;
+  onToggle: (
+    appraisalId: string,
+    documentId: string,
+    level: SharedDocumentSelectionDto['level'],
+    checked: boolean,
+  ) => void;
   onReportNoDocs: (appraisalId: string, noDocs: boolean) => void;
 }
 
-const AppraisalDocTab = ({ appraisal, apSelection, onToggle, onReportNoDocs }: AppraisalDocTabProps) => {
+const AppraisalDocTab = ({
+  appraisal,
+  apSelection,
+  onToggle,
+  onReportNoDocs,
+}: AppraisalDocTabProps) => {
+  const { t } = useTranslation('appraisal');
   const { data, isLoading } = useGetRequestDocuments(appraisal.requestId ?? undefined);
 
   const sections = data?.sections ?? [];
@@ -134,7 +161,7 @@ const AppraisalDocTab = ({ appraisal, apSelection, onToggle, onReportNoDocs }: A
     return (
       <div className="flex items-center gap-2 py-6 px-3 text-xs text-gray-400">
         <Icon name="spinner" style="solid" className="size-3.5 animate-spin" />
-        Loading documents...
+        {t('quotation.shareDocuments.loadingDocuments')}
       </div>
     );
   }
@@ -143,7 +170,7 @@ const AppraisalDocTab = ({ appraisal, apSelection, onToggle, onReportNoDocs }: A
     return (
       <div className="px-3 py-4 text-xs text-amber-600 flex items-center gap-1.5">
         <Icon name="triangle-exclamation" style="solid" className="size-3.5 shrink-0" />
-        No request linked to this appraisal. Documents cannot be loaded.
+        {t('quotation.shareDocuments.noRequestLinked')}
       </div>
     );
   }
@@ -151,7 +178,7 @@ const AppraisalDocTab = ({ appraisal, apSelection, onToggle, onReportNoDocs }: A
   if (!hasAnyUploadedDocs) {
     return (
       <div className="px-3 py-4 text-xs text-gray-400">
-        No uploaded documents found for this request.
+        {t('quotation.shareDocuments.noDocuments')}
       </div>
     );
   }
@@ -184,16 +211,23 @@ const AppraisalDocTab = ({ appraisal, apSelection, onToggle, onReportNoDocs }: A
                   onChange={e => handleSelectAll(e.target.checked)}
                   className="size-3 accent-primary rounded"
                 />
-                <span className="text-[10px] text-gray-500">Select all</span>
+                <span className="text-[10px] text-gray-500">
+                  {t('quotation.shareDocuments.selectAll')}
+                </span>
               </label>
             </div>
             <div className="flex flex-col gap-1">
               {uploadedDocs.map(doc => (
-                <label key={doc.documentId} className="flex items-center gap-2 cursor-pointer group">
+                <label
+                  key={doc.documentId}
+                  className="flex items-center gap-2 cursor-pointer group"
+                >
                   <input
                     type="checkbox"
                     checked={!!apSelection[doc.documentId!]}
-                    onChange={e => onToggle(appraisal.appraisalId, doc.documentId!, level, e.target.checked)}
+                    onChange={e =>
+                      onToggle(appraisal.appraisalId, doc.documentId!, level, e.target.checked)
+                    }
                     className="size-3.5 accent-primary rounded shrink-0"
                   />
                   <span className="text-xs text-gray-800 truncate group-hover:text-primary">
@@ -240,6 +274,7 @@ const EditDraftForm = ({
   editSearchQuery,
   onEditSearchQueryChange,
 }: EditDraftFormProps) => {
+  const { t } = useTranslation(['appraisal', 'common']);
   const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
     bankingSegment,
     true,
@@ -282,19 +317,19 @@ const EditDraftForm = ({
     <div className="px-4 py-3 flex flex-col gap-4 text-sm text-gray-600">
       {/* Read-only appraisals count */}
       <div className="grid grid-cols-1 gap-1">
-        <div className="text-xs text-gray-500">Appraisals</div>
+        <div className="text-xs text-gray-500">{t('quotation.editDraft.appraisalsLabel')}</div>
         <div className="font-medium text-gray-400 text-xs italic">
-          {appraisalCount} (use Add / Remove to change appraisals)
+          {t('quotation.editDraft.appraisalCount', { n: appraisalCount })}
         </div>
       </div>
 
       {/* Companies Invited — editable multiselect */}
       <div className="flex flex-col gap-2">
         <div className="text-xs font-medium text-gray-700">
-          Companies Invited
+          {t('quotation.editDraft.companiesInvited')}
           {bankingSegment && (
             <span className="ml-1.5 text-purple-600 font-normal">
-              (eligible for <strong>{bankingSegment}</strong>)
+              ({t('quotation.editDraft.eligibleFor')} <strong>{bankingSegment}</strong>)
             </span>
           )}
         </div>
@@ -332,7 +367,7 @@ const EditDraftForm = ({
               />
               <input
                 type="text"
-                placeholder="Search company name..."
+                placeholder={t('quotation.editDraft.companySearchPlaceholder')}
                 value={editSearchQuery}
                 onChange={e => onEditSearchQueryChange(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 text-xs border-0 focus:ring-0 outline-none"
@@ -343,11 +378,13 @@ const EditDraftForm = ({
             {isLoadingCompanies ? (
               <div className="px-4 py-4 text-center text-gray-500">
                 <Icon name="spinner" style="solid" className="size-3.5 animate-spin mx-auto mb-1" />
-                <span className="text-xs">Loading...</span>
+                <span className="text-xs">{t('common:status.loading')}</span>
               </div>
             ) : filteredCompanies.length === 0 ? (
               <div className="px-4 py-4 text-center text-gray-500 text-xs">
-                {bankingSegment ? 'No eligible companies for this segment' : 'No companies found'}
+                {bankingSegment
+                  ? t('quotation.editDraft.noEligibleCompanies')
+                  : t('quotation.editDraft.noCompaniesFound')}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -366,7 +403,9 @@ const EditDraftForm = ({
                       <div
                         className={clsx(
                           'size-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                          isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white',
+                          isSelected
+                            ? 'bg-purple-500 border-purple-500'
+                            : 'border-gray-300 bg-white',
                         )}
                       >
                         {isSelected && (
@@ -389,7 +428,7 @@ const EditDraftForm = ({
       {/* Cut Off Time — editable */}
       <div>
         <DateTimePickerInput
-          label="Cut Off Time"
+          label={t('quotation.editDraft.cutOffTime')}
           required
           placeholder="dd/mm/yyyy hh:mm"
           value={editDueDate}
@@ -414,7 +453,7 @@ type SendStep = 'confirm' | 'share-docs';
 
 const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation('appraisal');
   const currentUser = useAuthStore(s => s.user);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
   const [pendingEmailData, setPendingEmailData] = useState<EmailFormValues | null>(null);
@@ -438,7 +477,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const [noDocsAppraisalIds, setNoDocsAppraisalIds] = useState<Set<string>>(new Set());
   const { isOpen: isRejectOpen, onOpen: openReject, onClose: closeReject } = useDisclosure();
   const { isOpen: isFinalizeOpen, onOpen: openFinalize, onClose: closeFinalize } = useDisclosure();
-  const { isOpen: isNegotiateOpen, onOpen: openNegotiate, onClose: closeNegotiate } = useDisclosure();
+  const {
+    isOpen: isNegotiateOpen,
+    onOpen: openNegotiate,
+    onClose: closeNegotiate,
+  } = useDisclosure();
 
   const handleReportNoDocs = (appraisalId: string, noDocs: boolean) => {
     setNoDocsAppraisalIds(prev => {
@@ -469,9 +512,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   };
 
   // Fetch quotations that this appraisal belongs to
-  const { data: quotations = [], isLoading: isLoadingList } = useGetAppraisalQuotations(
-    appraisalId,
-  );
+  const { data: quotations = [], isLoading: isLoadingList } =
+    useGetAppraisalQuotations(appraisalId);
 
   // If there's an active quotation, fetch its detail (with company submissions)
   const activeQuotation = quotations[0] ?? null;
@@ -499,29 +541,39 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const cutOffTime = quotationDetail?.cutOffTime ? new Date(quotationDetail.cutOffTime) : null;
 
     const distinctCustomerNames = [
-      ...new Set(appraisals.map((a) => a.customerName).filter(Boolean)),
+      ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
     ].join(', ');
-    const appraisalNumbers = appraisals.map((a) => a.appraisalNumber ?? '').filter(Boolean).join(',');
+    const appraisalNumbers = appraisals
+      .map(a => a.appraisalNumber ?? '')
+      .filter(Boolean)
+      .join(',');
 
     const targetTime = cutOffTime
-      ? cutOffTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
+      ? cutOffTime.toLocaleTimeString('th-TH', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        })
       : '';
     const targetDate = cutOffTime
-      ? cutOffTime.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' })
+      ? cutOffTime.toLocaleDateString('th-TH-u-ca-buddhist', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
       : '';
 
     const appraisalList = appraisals
       .map(
         (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`
+          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`,
       )
       .join('\n');
 
-    const adminFullName =
-      `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
+    const adminFullName = `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
 
     const bccEmails = (quotationDetail?.invitedCompanies ?? [])
-      .map((c) => c.email)
+      .map(c => c.email)
       .filter(Boolean)
       .join(',');
 
@@ -554,9 +606,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     // status may have moved to Cancelled/Finalized due to another admin's action.
     const currentStatus = quotationDetail?.status ?? activeQuotation?.status;
     if (!currentStatus || !CANCELLABLE_STATUSES.includes(currentStatus)) {
-      toast.error(
-        `Quotation is no longer cancellable (current status: ${currentStatus ?? 'unknown'}).`,
-      );
+      toast.error(t('quotation.toasts.notCancellable', { status: currentStatus ?? 'unknown' }));
       setShowCancelConfirm(false);
       setCancelReason('');
       return;
@@ -565,13 +615,13 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       { reason: cancelReason.trim() || null },
       {
         onSuccess: () => {
-          toast.success('Quotation cancelled');
+          toast.success(t('quotation.toasts.quotationCancelled'));
           setShowCancelConfirm(false);
           setCancelReason('');
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? 'Failed to cancel quotation');
+          toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.quotationCancelFailed'));
         },
       },
     );
@@ -580,12 +630,12 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const handleRemoveAppraisal = () => {
     removeAppraisal(appraisalId, {
       onSuccess: () => {
-        toast.success('Removed from quotation');
+        toast.success(t('quotation.toasts.removedFromQuotation'));
         setShowRemoveConfirm(false);
       },
       onError: (err: unknown) => {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(apiErr?.apiError?.detail ?? 'Failed to remove');
+        toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.removeFailed'));
       },
     });
   };
@@ -616,8 +666,12 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-4 py-8 text-center">
-          <Icon name="spinner" style="solid" className="size-5 animate-spin text-gray-400 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">Loading quotation...</p>
+          <Icon
+            name="spinner"
+            style="solid"
+            className="size-5 animate-spin text-gray-400 mx-auto mb-2"
+          />
+          <p className="text-sm text-gray-500">{t('quotation.loading')}</p>
         </div>
       </div>
     );
@@ -632,15 +686,13 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <Icon name="file-invoice-dollar" style="solid" className="size-6 text-purple-500" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-700">No quotation request yet</p>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Start a quotation to invite external companies to bid
-            </p>
+            <p className="text-sm font-medium text-gray-700">{t('quotation.noQuotation')}</p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('quotation.noQuotationHint')}</p>
           </div>
           {!readOnly && (
             <Button onClick={onCreateNew} size="sm">
               <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-              Request Quotation
+              {t('quotation.requestQuotation')}
             </Button>
           )}
         </div>
@@ -668,57 +720,58 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icon name="ban" style="solid" className="size-3" />
-            Cancel Quotation
+            {t('quotation.cancelQuotation')}
           </button>
         </div>
       )}
       <Modal
         isOpen={showCancelConfirm}
         onClose={closeCancelModal}
-        title="Cancel Quotation"
+        title={t('quotation.cancelQuotationTitle')}
         size="sm"
       >
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
-            <Icon name="triangle-exclamation" style="solid" className="size-4 text-red-500 shrink-0 mt-0.5" />
+            <Icon
+              name="triangle-exclamation"
+              style="solid"
+              className="size-4 text-red-500 shrink-0 mt-0.5"
+            />
             <p className="text-sm text-red-700">
-              This will cancel quotation{' '}
-              <strong>{activeQuotation.quotationNumber}</strong>. All invited companies will be
-              notified and the workflow task will be cancelled. This action cannot be undone.
+              {t('quotation.cancelConfirmMessage', {
+                quotationNumber: activeQuotation.quotationNumber,
+              })}
             </p>
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">
-              Reason <span className="text-gray-400">(optional)</span>
+              {t('quotation.cancelReasonLabel')}{' '}
+              <span className="text-gray-400">{t('quotation.cancelReasonOptional')}</span>
             </label>
             <textarea
               rows={3}
               maxLength={500}
               value={cancelReason}
               onChange={e => setCancelReason(e.target.value)}
-              placeholder="Why is this quotation being cancelled?"
+              placeholder={t('quotation.cancelReasonPlaceholder')}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             />
             <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={closeCancelModal} disabled={isCancelling}>
-              Go Back
+              {t('quotation.goBack')}
             </Button>
-            <Button
-              variant="danger"
-              onClick={handleConfirmCancelQuotation}
-              disabled={isCancelling}
-            >
+            <Button variant="danger" onClick={handleConfirmCancelQuotation} disabled={isCancelling}>
               {isCancelling ? (
                 <>
                   <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  Cancelling...
+                  {t('quotation.cancelling')}
                 </>
               ) : (
                 <>
                   <Icon name="ban" style="solid" className="size-4 mr-2" />
-                  Cancel Quotation
+                  {t('quotation.cancelQuotation')}
                 </>
               )}
             </Button>
@@ -736,7 +789,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const sentCompanyQuotations = quotationDetail?.companyQuotations ?? [];
 
     const fmtCurrency = (v?: number | null) =>
-      v != null ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v) : '—';
+      v != null
+        ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
+        : '—';
 
     const fmtDt = (iso: string | null | undefined) => {
       if (!iso) return '—';
@@ -750,117 +805,162 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
     return (
       <div className="flex flex-col gap-2">
-      <div className="bg-white rounded-xl border border-purple-200 overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-              <Icon name="clock" style="solid" className="size-4 text-purple-700" />
-            </div>
-            <div>
-              <span className="text-sm font-semibold text-gray-900">{activeQuotation.quotationNumber}</span>
-              <QuotationStatusBadge status={status} className="ml-2" />
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-500">Closes</div>
-            <div className={clsx('text-sm font-medium', hoursLeft < 24 ? 'text-red-600' : 'text-gray-800')}>
-              {formatDateTime(activeQuotation.cutOffTime)}
-            </div>
-            {hoursLeft < 48 && (
-              <div className="text-xs text-amber-600">{hoursLeft}h remaining</div>
-            )}
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="px-4 py-3 text-sm text-gray-600 border-b border-gray-100">
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <div className="text-xs text-gray-500 flex items-center gap-1">
-                Companies Invited
-                <InvitedCompaniesPopover
-                  companies={quotationDetail?.invitedCompanies ?? []}
-                  totalInvited={activeQuotation.totalCompaniesInvited}
-                />
+        <div className="bg-white rounded-xl border border-purple-200 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
+            <div className="flex items-center gap-2">
+              <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
+                <Icon name="clock" style="solid" className="size-4 text-purple-700" />
               </div>
-              <div className="font-medium text-gray-900">{activeQuotation.totalCompaniesInvited}</div>
-            </div>
-            <div>
-              <div className="text-xs text-gray-500">Responses</div>
-              <div className="font-medium text-gray-900">
-                {activeQuotation.totalQuotationsReceived} / {activeQuotation.totalCompaniesInvited}
+              <div>
+                <span className="text-sm font-semibold text-gray-900">
+                  {activeQuotation.quotationNumber}
+                </span>
+                <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
-            <div>
-              <div className="text-xs text-gray-500">Appraisals</div>
-              <div className="font-medium text-gray-900">{activeQuotation.totalAppraisals}</div>
+            <div className="text-right">
+              <div className="text-xs text-gray-500">{t('quotation.closes')}</div>
+              <div
+                className={clsx(
+                  'text-sm font-medium',
+                  hoursLeft < 24 ? 'text-red-600' : 'text-gray-800',
+                )}
+              >
+                {formatDateTime(activeQuotation.cutOffTime)}
+              </div>
+              {hoursLeft < 48 && (
+                <div className="text-xs text-amber-600">
+                  {t('quotation.hoursRemaining', { n: hoursLeft })}
+                </div>
+              )}
             </div>
           </div>
-        </div>
 
-        {/* Company responses table */}
-        {invitedCompanies.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fee Amount</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Discount</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Net Amount</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Estimate Manday</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {invitedCompanies.map(inv => {
-                  const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
-                  const items = cq?.items ?? [];
-                  const hasItems = items.length > 0;
-                  const totalFeeAmount = items.reduce((sum, item) => sum + (item.feeAmount ?? 0), 0);
-                  const totalDiscount = items.reduce((sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0), 0);
-                  const totalEstimateManday = items.reduce((sum, item) => sum + (item.estimatedDays ?? 0), 0);
-                  return (
-                    <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-gray-900">{inv.companyName}</div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm text-gray-700 tabular-nums">{hasItems ? fmtCurrency(totalFeeAmount) : '—'}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm text-gray-700 tabular-nums">{hasItems ? fmtCurrency(totalDiscount) : '—'}</span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-gray-900 tabular-nums">{cq ? fmtCurrency(cq.totalQuotedPrice) : '—'}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="text-sm text-gray-600">{hasItems ? totalEstimateManday : '—'}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{cq ? fmtDt(cq.submittedAt) : '—'}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {cq ? (
-                          <QuotationStatusBadge status={cq.status} />
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                            Pending
+          {/* Stats */}
+          <div className="px-4 py-3 text-sm text-gray-600 border-b border-gray-100">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <div className="text-xs text-gray-500 flex items-center gap-1">
+                  {t('quotation.stats.companiesInvited')}
+                  <InvitedCompaniesPopover
+                    companies={quotationDetail?.invitedCompanies ?? []}
+                    totalInvited={activeQuotation.totalCompaniesInvited}
+                  />
+                </div>
+                <div className="font-medium text-gray-900">
+                  {activeQuotation.totalCompaniesInvited}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">{t('quotation.stats.responses')}</div>
+                <div className="font-medium text-gray-900">
+                  {activeQuotation.totalQuotationsReceived} /{' '}
+                  {activeQuotation.totalCompaniesInvited}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">{t('quotation.stats.appraisals')}</div>
+                <div className="font-medium text-gray-900">{activeQuotation.totalAppraisals}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Company responses table */}
+          {invitedCompanies.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.company')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.totalFeeAmount')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.totalDiscount')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.totalNetAmount')}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.totalEstimateManday')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.submittedAt')}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('quotation.table.status')}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {invitedCompanies.map(inv => {
+                    const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
+                    const items = cq?.items ?? [];
+                    const hasItems = items.length > 0;
+                    const totalFeeAmount = items.reduce(
+                      (sum, item) => sum + (item.feeAmount ?? 0),
+                      0,
+                    );
+                    const totalDiscount = items.reduce(
+                      (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
+                      0,
+                    );
+                    const totalEstimateManday = items.reduce(
+                      (sum, item) => sum + (item.estimatedDays ?? 0),
+                      0,
+                    );
+                    return (
+                      <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-gray-900">{inv.companyName}</div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm text-gray-700 tabular-nums">
+                            {hasItems ? fmtCurrency(totalFeeAmount) : '—'}
                           </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm text-gray-700 tabular-nums">
+                            {hasItems ? fmtCurrency(totalDiscount) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                            {cq ? fmtCurrency(cq.totalQuotedPrice) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className="text-sm text-gray-600">
+                            {hasItems ? totalEstimateManday : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="text-sm text-gray-600">
+                            {cq ? fmtDt(cq.submittedAt) : '—'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {cq ? (
+                            <QuotationStatusBadge status={cq.status} />
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
-      {renderCancelFooter()}
+        {renderCancelFooter()}
       </div>
     );
   }
@@ -869,7 +969,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   if (status === 'Draft') {
     const draftDetail = quotationDetail;
     const appraisalCount = draftDetail?.totalAppraisals ?? activeQuotation.totalAppraisals ?? 0;
-    const companyCount = draftDetail?.totalCompaniesInvited ?? activeQuotation.totalCompaniesInvited ?? 0;
+    const companyCount =
+      draftDetail?.totalCompaniesInvited ?? activeQuotation.totalCompaniesInvited ?? 0;
     const hasDueDate = !!activeQuotation.cutOffTime;
     const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
     const draftAppraisals = draftDetail?.appraisals ?? [];
@@ -922,20 +1023,20 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             },
             {
               onSuccess: () => {
-                toast.success('Quotation sent — bidding is now open');
+                toast.success(t('quotation.toasts.quotationSent'));
                 setSendStep(null);
                 setPendingEmailData(null);
               },
               onError: (err: unknown) => {
                 const apiErr = err as { apiError?: { detail?: string } };
-                toast.error(apiErr?.apiError?.detail ?? 'Failed to send quotation');
+                toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'));
               },
             },
           );
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? 'Failed to save document selection');
+          toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.docSelectionFailed'));
         },
       });
     };
@@ -968,19 +1069,21 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     /** Save the edit. */
     const handleSaveEdit = () => {
       if (!editDueDate) {
-        toast.error('Cut off time is required');
+        toast.error(t('quotation.editDraft.cutOffTimeRequired'));
         return;
       }
       editDraftQuotation(
         { cutOffTime: editDueDate, companyIds: Array.from(editCompanyIds) },
         {
           onSuccess: () => {
-            toast.success('Draft quotation updated');
+            toast.success(t('quotation.toasts.draftUpdated'));
             setIsEditing(false);
           },
           onError: (err: unknown) => {
             const apiErr = err as { data?: { message?: string }; error?: string };
-            toast.error(apiErr?.data?.message ?? apiErr?.error ?? 'Failed to update draft');
+            toast.error(
+              apiErr?.data?.message ?? apiErr?.error ?? t('quotation.toasts.draftUpdateFailed'),
+            );
           },
         },
       );
@@ -990,9 +1093,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
     // Owner-only guard: gate Edit button on requestedBy if available, else show for all Draft.
     const canEdit =
-      !currentUser ||
-      !draftDetail?.requestedBy ||
-      currentUser.username === draftDetail.requestedBy;
+      !currentUser || !draftDetail?.requestedBy || currentUser.username === draftDetail.requestedBy;
 
     return (
       <div className="flex flex-col gap-3">
@@ -1010,71 +1111,72 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
-            {!readOnly && (isEditing ? (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  disabled={isEditSaving}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleSaveEdit}
-                  disabled={isEditSaving || !editDueDate}
-                >
-                  {isEditSaving ? (
-                    <>
-                      <Icon name="spinner" style="solid" className="size-3.5 mr-1.5 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="floppy-disk" style="solid" className="size-3.5 mr-1.5" />
-                      Save
-                    </>
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                {canEdit && (
+            {!readOnly &&
+              (isEditing ? (
+                <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleEnterEdit}
-                    disabled={isBusy}
+                    onClick={handleCancelEdit}
+                    disabled={isEditSaving}
                   >
-                    <Icon name="pencil" style="solid" className="size-3.5 mr-1.5" />
-                    Edit
+                    {t('quotation.cancel')}
                   </Button>
-                )}
-                <Button
-                  size="sm"
-                  onClick={() => setSendStep('confirm')}
-                  disabled={!canSend || isBusy}
-                  title={
-                    !canSend
-                      ? 'Add at least 1 appraisal, 1 company, and set a due date before sending'
-                      : undefined
-                  }
-                >
-                  <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-                  Send Quotation
-                </Button>
-              </div>
-            ))}
+                  <Button
+                    size="sm"
+                    onClick={handleSaveEdit}
+                    disabled={isEditSaving || !editDueDate}
+                  >
+                    {isEditSaving ? (
+                      <>
+                        <Icon
+                          name="spinner"
+                          style="solid"
+                          className="size-3.5 mr-1.5 animate-spin"
+                        />
+                        {t('quotation.saving')}
+                      </>
+                    ) : (
+                      <>
+                        <Icon name="floppy-disk" style="solid" className="size-3.5 mr-1.5" />
+                        {t('quotation.save')}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {canEdit && (
+                    <Button variant="outline" size="sm" onClick={handleEnterEdit} disabled={isBusy}>
+                      <Icon name="pencil" style="solid" className="size-3.5 mr-1.5" />
+                      {t('quotation.edit')}
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={() => setSendStep('confirm')}
+                    disabled={!canSend || isBusy}
+                    title={
+                      !canSend
+                        ? 'Add at least 1 appraisal, 1 company, and set a due date before sending'
+                        : undefined
+                    }
+                  >
+                    <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
+                    {t('quotation.sendQuotation')}
+                  </Button>
+                </div>
+              ))}
           </div>
 
           {/* Hint banner — visible in both read and edit mode */}
           <div className="flex items-start gap-2 px-4 py-3 bg-amber-50 border-b border-amber-100">
-            <Icon name="circle-info" style="solid" className="size-4 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700">
-              This quotation is still a draft. Add appraisals, invite companies, then click{' '}
-              <strong>Send Quotation</strong> to open bidding.
-            </p>
+            <Icon
+              name="circle-info"
+              style="solid"
+              className="size-4 text-amber-500 shrink-0 mt-0.5"
+            />
+            <p className="text-xs text-amber-700">{t('quotation.draftHint')}</p>
           </div>
 
           {/* Stats — read-only or edit form */}
@@ -1095,29 +1197,44 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <div className="px-4 py-3 text-sm text-gray-600">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <div className="text-xs text-gray-500">Appraisals</div>
-                  <div className={clsx('font-medium', appraisalCount === 0 ? 'text-amber-600' : 'text-gray-900')}>
+                  <div className="text-xs text-gray-500">{t('quotation.stats.appraisals')}</div>
+                  <div
+                    className={clsx(
+                      'font-medium',
+                      appraisalCount === 0 ? 'text-amber-600' : 'text-gray-900',
+                    )}
+                  >
                     {appraisalCount}
                   </div>
                 </div>
                 <div>
                   <div className="text-xs text-gray-500 flex items-center gap-1">
-                    Companies Invited
+                    {t('quotation.stats.companiesInvited')}
                     <InvitedCompaniesPopover
                       companies={draftDetail?.invitedCompanies ?? []}
                       totalInvited={companyCount}
                     />
                   </div>
-                  <div className={clsx('font-medium', companyCount === 0 ? 'text-amber-600' : 'text-gray-900')}>
+                  <div
+                    className={clsx(
+                      'font-medium',
+                      companyCount === 0 ? 'text-amber-600' : 'text-gray-900',
+                    )}
+                  >
                     {companyCount}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">Cut Off Time</div>
-                  <div className={clsx('font-medium', !hasDueDate ? 'text-amber-600' : 'text-gray-900')}>
+                  <div className="text-xs text-gray-500">{t('quotation.stats.cutOffTime')}</div>
+                  <div
+                    className={clsx(
+                      'font-medium',
+                      !hasDueDate ? 'text-amber-600' : 'text-gray-900',
+                    )}
+                  >
                     {hasDueDate
                       ? formatDateTime(activeQuotation.cutOffTime)
-                      : 'Not set'}
+                      : t('quotation.notSet')}
                   </div>
                 </div>
               </div>
@@ -1135,7 +1252,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Icon name="trash" style="solid" className="size-3" />
-              Remove this appraisal from quotation
+              {t('quotation.removeFromQuotation')}
             </button>
           </div>
         )}
@@ -1144,9 +1261,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           isOpen={showRemoveConfirm}
           onClose={() => setShowRemoveConfirm(false)}
           onConfirm={handleRemoveAppraisal}
-          title="Remove from quotation?"
-          message={`This appraisal will be removed from quotation ${activeQuotation.quotationNumber}. If it's the last one, the quotation is cancelled.`}
-          confirmText="Remove"
+          title={t('quotation.removeConfirmTitle')}
+          message={t('quotation.removeConfirmMessage', {
+            quotationNumber: activeQuotation.quotationNumber,
+          })}
+          confirmText={t('quotation.removeConfirm')}
           variant="danger"
           isLoading={isRemoving}
         />
@@ -1155,7 +1274,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         <EmailCompositionModal
           isOpen={sendStep === 'confirm'}
           onClose={handleCancelSendFlow}
-          title="Drafting email to send to external appraisal company"
+          title={t('quotation.emailModal.title')}
           defaultValues={defaultEmailValues}
           showCc={true}
           showBcc={true}
@@ -1174,8 +1293,10 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   <Icon name="file-check" style="solid" className="size-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Share Documents</h3>
-                  <p className="text-xs text-gray-500">Step 2 of 2 — Tick documents to share with invited companies</p>
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    {t('quotation.shareDocuments.title')}
+                  </h3>
+                  <p className="text-xs text-gray-500">{t('quotation.shareDocuments.step')}</p>
                 </div>
               </div>
 
@@ -1189,9 +1310,13 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
               {!allAppraisalsCovered && draftAppraisals.length > 0 && (
                 <div className="mt-3 flex items-center gap-1.5 p-2 bg-amber-50 rounded-lg border border-amber-100">
-                  <Icon name="triangle-exclamation" style="solid" className="size-3.5 text-amber-500 shrink-0" />
+                  <Icon
+                    name="triangle-exclamation"
+                    style="solid"
+                    className="size-3.5 text-amber-500 shrink-0"
+                  />
                   <p className="text-xs text-amber-700">
-                    Select at least one document for every appraisal before sending.
+                    {t('quotation.shareDocuments.coverageWarning')}
                   </p>
                 </div>
               )}
@@ -1205,7 +1330,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   disabled={isBusy}
                 >
                   <Icon name="arrow-left" style="solid" className="size-3.5 mr-1.5" />
-                  Back
+                  {t('quotation.back')}
                 </Button>
                 <div className="flex gap-2">
                   <Button
@@ -1215,24 +1340,32 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                     onClick={handleCancelSendFlow}
                     disabled={isBusy}
                   >
-                    Cancel
+                    {t('quotation.cancel')}
                   </Button>
                   <Button
                     size="sm"
                     type="button"
                     onClick={handleFinalSend}
                     disabled={isBusy || !allAppraisalsCovered}
-                    title={!allAppraisalsCovered ? 'Select at least one document for every appraisal' : undefined}
+                    title={
+                      !allAppraisalsCovered
+                        ? t('quotation.shareDocuments.coverageTitle')
+                        : undefined
+                    }
                   >
                     {isBusy ? (
                       <>
-                        <Icon name="spinner" style="solid" className="size-3.5 mr-1.5 animate-spin" />
-                        Sending...
+                        <Icon
+                          name="spinner"
+                          style="solid"
+                          className="size-3.5 mr-1.5 animate-spin"
+                        />
+                        {t('quotation.sending')}
                       </>
                     ) : (
                       <>
                         <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-                        Confirm & Send
+                        {t('quotation.confirmSend')}
                       </>
                     )}
                   </Button>
@@ -1272,7 +1405,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">{activeQuotation.quotationNumber}</span>
+          <span className="text-sm font-semibold text-gray-700">
+            {activeQuotation.quotationNumber}
+          </span>
           <QuotationStatusBadge status={status} />
         </div>
         <ShortlistSentPanel quotation={quotationDetail} />
@@ -1292,7 +1427,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-700">{activeQuotation.quotationNumber}</span>
+              <span className="text-sm font-semibold text-gray-700">
+                {activeQuotation.quotationNumber}
+              </span>
               <QuotationStatusBadge status={status} />
             </div>
             {winner && !readOnly && (
@@ -1304,7 +1441,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   className="text-red-600 border-red-300 hover:bg-red-50"
                 >
                   <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-                  Reject Winner
+                  {t('quotation.rejectWinner')}
                 </Button>
                 <Button
                   variant="outline"
@@ -1313,16 +1450,24 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   disabled={(winner.negotiationRounds ?? 0) >= 3}
                   title={
                     (winner.negotiationRounds ?? 0) >= 3
-                      ? 'Maximum negotiation rounds reached'
+                      ? t('quotation.maximumNegotiationRounds')
                       : undefined
                   }
                 >
-                  <Icon name="handshake" style="solid" className="size-3.5 mr-1.5 text-orange-500" />
-                  Open Negotiation
+                  <Icon
+                    name="handshake"
+                    style="solid"
+                    className="size-3.5 mr-1.5 text-orange-500"
+                  />
+                  {t('quotation.openNegotiation')}
                 </Button>
-                <Button size="sm" onClick={openFinalize} className="bg-green-600 hover:bg-green-700">
+                <Button
+                  size="sm"
+                  onClick={openFinalize}
+                  className="bg-green-600 hover:bg-green-700"
+                >
                   <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-                  Finalize
+                  {t('quotation.finalize')}
                 </Button>
               </div>
             )}
@@ -1367,7 +1512,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">{activeQuotation.quotationNumber}</span>
+          <span className="text-sm font-semibold text-gray-700">
+            {activeQuotation.quotationNumber}
+          </span>
           <QuotationStatusBadge status={status} />
         </div>
         <NegotiationPanel quotation={quotationDetail} />
@@ -1406,18 +1553,17 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <Icon name="circle-check" style="solid" className="size-4 text-green-700" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-900">{activeQuotation.quotationNumber}</span>
+            <span className="text-sm font-semibold text-gray-900">
+              {activeQuotation.quotationNumber}
+            </span>
             <QuotationStatusBadge status={status} className="ml-2" />
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-600">
-          <p>
-            Quotation finalized with{' '}
-            <strong className="text-gray-900">{winner?.companyName ?? '—'}</strong>.
-          </p>
+          <p>{t('quotation.finalizedWith', { company: winner?.companyName ?? '—' })}</p>
           {finalPrice != null && (
             <p className="mt-1">
-              Final price:{' '}
+              {t('quotation.finalPrice')}{' '}
               <strong className="text-green-700">
                 {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(
                   finalPrice,
@@ -1425,9 +1571,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               </strong>
             </p>
           )}
-          <p className="mt-2 text-xs text-gray-400">
-            Click "Assign" to route externally to this company.
-          </p>
+          <p className="mt-2 text-xs text-gray-400">{t('quotation.finalizedHint')}</p>
         </div>
       </div>
     );
@@ -1443,20 +1587,20 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               <Icon name="ban" style="solid" className="size-4 text-red-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">{activeQuotation.quotationNumber}</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {activeQuotation.quotationNumber}
+              </span>
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
           {!readOnly && (
             <Button size="sm" onClick={onCreateNew}>
               <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-              New Quotation
+              {t('quotation.newQuotation')}
             </Button>
           )}
         </div>
-        <div className="px-4 py-3 text-sm text-gray-500">
-          This quotation was cancelled. Create a new quotation for this appraisal.
-        </div>
+        <div className="px-4 py-3 text-sm text-gray-500">{t('quotation.cancelledHint')}</div>
       </div>
     );
   }
@@ -1469,18 +1613,20 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
             <Icon name="file-invoice-dollar" style="solid" className="size-4 text-purple-700" />
           </div>
-          <span className="text-sm font-semibold text-gray-900">Quotation</span>
+          <span className="text-sm font-semibold text-gray-900">{t('quotation.sectionTitle')}</span>
         </div>
         {!readOnly && (
           <Button size="sm" onClick={onCreateNew}>
             <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-            New Quotation
+            {t('quotation.newQuotation')}
           </Button>
         )}
       </div>
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-purple-600">{activeQuotation.quotationNumber}</span>
+          <span className="text-sm font-medium text-purple-600">
+            {activeQuotation.quotationNumber}
+          </span>
           <QuotationStatusBadge status={status} />
         </div>
       </div>

@@ -24,6 +24,7 @@ import { useGetWorkflowProgress } from '../api/workflow';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import Avatar from '@/shared/components/Avatar';
+import { getFeePaymentStatusDisplay } from '../utils/feePaymentStatus';
 
 interface AppraisalRightMenuProps {
   onClose?: () => void;
@@ -417,11 +418,26 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                   icon="circle-check"
                   label="Payment Status"
                   value={
-                    feeSummary?.paymentStatus ? (
-                      <ParameterDisplay group="FeePaymentStatus" code={feeSummary?.paymentStatus} />
-                    ) : (
-                      'Not set'
-                    )
+                    feeSummary?.paymentStatus
+                      ? (() => {
+                          const { label, color } = getFeePaymentStatusDisplay(
+                            feeSummary.paymentStatus,
+                          );
+                          const colorClass =
+                            color === 'success'
+                              ? 'text-success'
+                              : color === 'warning'
+                                ? 'text-warning'
+                                : color === 'danger'
+                                  ? 'text-danger'
+                                  : color === 'info'
+                                    ? 'text-blue-700'
+                                    : 'text-gray-500';
+                          return (
+                            <span className={`text-sm font-medium ${colorClass}`}>{label}</span>
+                          );
+                        })()
+                      : 'Not set'
                   }
                   muted={!feeSummary?.paymentStatus}
                 />

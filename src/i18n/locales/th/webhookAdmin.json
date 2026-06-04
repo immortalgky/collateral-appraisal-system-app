@@ -1,51 +1,53 @@
 {
   "page": {
-    "title": "Webhook Deliveries",
-    "subtitle": "Monitor and retry outbound webhook delivery attempts"
+    "title": "การส่ง Webhook",
+    "subtitle": "ตรวจสอบและส่งซ้ำความพยายามส่ง Webhook ขาออก"
   },
   "columns": {
     "id": "ID",
     "subscriptionId": "Subscription ID",
-    "created": "Created",
-    "eventType": "Event Type",
-    "system": "System",
-    "status": "Status",
-    "attempts": "Attempts",
-    "lastStatusCode": "HTTP Status",
-    "lastError": "Last Error",
-    "deliveredAt": "Delivered At",
-    "actions": "Actions"
+    "created": "สร้างเมื่อ",
+    "eventType": "ประเภทเหตุการณ์",
+    "system": "ระบบ",
+    "status": "สถานะ",
+    "attempts": "จำนวนครั้ง",
+    "lastStatusCode": "สถานะ HTTP",
+    "lastError": "ข้อผิดพลาดล่าสุด",
+    "deliveredAt": "ส่งเมื่อ",
+    "actions": "การดำเนินการ"
   },
   "status": {
-    "Pending": "Pending",
-    "Delivered": "Delivered",
-    "Failed": "Failed"
+    "Pending": "รอดำเนินการ",
+    "Delivered": "ส่งสำเร็จ",
+    "Failed": "ล้มเหลว"
   },
   "filters": {
-    "eventTypePlaceholder": "Filter by event type...",
-    "statusLabel": "Status",
-    "from": "From",
-    "to": "To",
-    "clear": "Clear filters"
+    "eventTypePlaceholder": "กรองตามประเภทเหตุการณ์...",
+    "statusLabel": "สถานะ",
+    "allStatuses": "ทุกสถานะ",
+    "from": "ตั้งแต่",
+    "to": "ถึง",
+    "clear": "ล้างตัวกรอง"
   },
   "actions": {
-    "view": "View details",
-    "retry": "Retry delivery"
+    "view": "ดูรายละเอียด",
+    "retry": "ส่งซ้ำ"
   },
   "retry": {
-    "confirmTitle": "Resend Webhook Delivery",
-    "confirmMessage": "The same payload will be sent to the current callback URL. Do you want to continue?",
-    "confirmButton": "Resend",
-    "cancelButton": "Cancel",
-    "successToast": "Webhook delivery queued for retry",
-    "errorToast": "Failed to retry webhook delivery"
+    "confirmTitle": "ส่ง Webhook ซ้ำ",
+    "confirmMessage": "ระบบจะส่งข้อมูลชุดเดิมไปยัง callback URL ปัจจุบัน คุณต้องการดำเนินการต่อหรือไม่?",
+    "confirmButton": "ส่งซ้ำ",
+    "cancelButton": "ยกเลิก",
+    "successToast": "เข้าคิวส่ง Webhook ซ้ำแล้ว",
+    "errorToast": "ส่ง Webhook ซ้ำไม่สำเร็จ"
   },
   "drawer": {
-    "title": "Delivery Details",
+    "title": "รายละเอียดการส่ง",
     "payload": "Payload",
-    "copy": "Copy",
-    "copied": "Copied!",
-    "noPayload": "No payload"
+    "copy": "คัดลอก",
+    "copied": "คัดลอกแล้ว!",
+    "noPayload": "ไม่มี Payload"
   },
-  "emptyState": "No webhook deliveries found"
+  "emptyState": "ไม่พบรายการส่ง Webhook",
+  "loadFailed": "โหลดรายการส่ง Webhook ไม่สำเร็จ"
 }

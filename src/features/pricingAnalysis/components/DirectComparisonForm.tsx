@@ -13,6 +13,7 @@ interface DirectComparisonProps {
   template?: TemplateDetailType;
   allFactors: FactorDataType[];
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
+  manualSubject?: boolean;
 }
 
 export const DirectComparisonForm = ({
@@ -24,6 +25,7 @@ export const DirectComparisonForm = ({
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
+  manualSubject,
 }: DirectComparisonProps) => {
   const fieldPath = directComparisonPath;
 
@@ -42,6 +44,7 @@ export const DirectComparisonForm = ({
             comparativeMarketSurveys={comparativeMarketSurveys}
             fieldPath={fieldPath}
             onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
+            manualSubject={manualSubject}
           />
           {comparativeMarketSurveys.length > 0 && (
             <>
@@ -78,4 +81,3 @@ export const DirectComparisonForm = ({
     </div>
   );
 };
-

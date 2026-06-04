@@ -33,8 +33,7 @@ const toN = (v: unknown): number => {
 };
 
 /** B03 */
-const computePriceBeforeDepre = (row: CostBuildingRow) =>
-  toN(row.area) * toN(row.pricePerSqM);
+const computePriceBeforeDepre = (row: CostBuildingRow) => toN(row.area) * toN(row.pricePerSqM);
 
 /**
  * B06 — method-aware.
@@ -42,7 +41,11 @@ const computePriceBeforeDepre = (row: CostBuildingRow) =>
  * Period: min(100, Σ (toYear − atYear + 1) × depreciationPerYear)
  */
 const computeTotalDeprecPct = (row: CostBuildingRow): number => {
-  if (row.depreciationMethod === 'Period' && Array.isArray(row.depreciationPeriods) && row.depreciationPeriods.length > 0) {
+  if (
+    row.depreciationMethod === 'Period' &&
+    Array.isArray(row.depreciationPeriods) &&
+    row.depreciationPeriods.length > 0
+  ) {
     const sum = row.depreciationPeriods.reduce((acc, p) => {
       const span = Math.max(toN(p.toYear) - toN(p.atYear) + 1, 0);
       return acc + span * toN(p.depreciationPerYear);
@@ -54,7 +57,7 @@ const computeTotalDeprecPct = (row: CostBuildingRow): number => {
 
 /** B07 */
 const computeDepreciationAmt = (row: CostBuildingRow) =>
-  computePriceBeforeDepre(row) * computeTotalDeprecPct(row) / 100;
+  (computePriceBeforeDepre(row) * computeTotalDeprecPct(row)) / 100;
 
 /** B08 */
 const computeValueAfterDepre = (row: CostBuildingRow) =>
@@ -65,7 +68,9 @@ const computeValueAfterDepre = (row: CostBuildingRow) =>
 function NumCell({ value }: { value: number | null | undefined }) {
   if (value == null || !Number.isFinite(value)) return <span className="text-gray-300">—</span>;
   return (
-    <span>{value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+    <span>
+      {value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    </span>
   );
 }
 
@@ -114,16 +119,22 @@ function SubgroupRows({
   const totalPriceBefore = rowIndices.reduce((acc, { idx }) => {
     const r = liveValues?.[idx];
     if (!r) return acc;
-    return acc + (Number.isFinite(r.priceBeforeDepreciation) && r.priceBeforeDepreciation != null
-      ? r.priceBeforeDepreciation
-      : computePriceBeforeDepre(r));
+    return (
+      acc +
+      (Number.isFinite(r.priceBeforeDepreciation) && r.priceBeforeDepreciation != null
+        ? r.priceBeforeDepreciation
+        : computePriceBeforeDepre(r))
+    );
   }, 0);
   const totalValueAfter = rowIndices.reduce((acc, { idx }) => {
     const r = liveValues?.[idx];
     if (!r) return acc;
-    return acc + (Number.isFinite(r.valueAfterDepreciation) && r.valueAfterDepreciation != null
-      ? r.valueAfterDepreciation
-      : computeValueAfterDepre(r));
+    return (
+      acc +
+      (Number.isFinite(r.valueAfterDepreciation) && r.valueAfterDepreciation != null
+        ? r.valueAfterDepreciation
+        : computeValueAfterDepre(r))
+    );
   }, 0);
 
   return (
@@ -156,8 +167,7 @@ function SubgroupRows({
             ? liveRow.depreciationAmount
             : computeDepreciationAmt(liveRow);
         const valueAfterDepre =
-          Number.isFinite(liveRow.valueAfterDepreciation) &&
-          liveRow.valueAfterDepreciation != null
+          Number.isFinite(liveRow.valueAfterDepreciation) && liveRow.valueAfterDepreciation != null
             ? liveRow.valueAfterDepreciation
             : computeValueAfterDepre(liveRow);
 
@@ -213,18 +223,27 @@ function SubgroupRows({
           {label} subtotal
         </td>
         <td className="border-r border-gray-200 px-2 py-1.5 text-right tabular-nums text-gray-700 text-xs">
-          {totalArea.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {totalArea.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </td>
         <td className="border-r border-gray-200 px-2 py-1.5" />
         <td className="border-r border-gray-200 px-2 py-1.5 text-right tabular-nums text-gray-700 text-xs">
-          {totalPriceBefore.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {totalPriceBefore.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </td>
         <td className="border-r border-gray-200 px-2 py-1.5" />
         <td className="border-r border-gray-200 px-2 py-1.5" />
         <td className="border-r border-gray-200 px-2 py-1.5" />
         <td className="border-r border-gray-200 px-2 py-1.5" />
         <td className="px-2 py-1.5 text-right tabular-nums text-green-700 text-xs font-semibold">
-          {totalValueAfter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {totalValueAfter.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </td>
       </tr>
     </>
@@ -333,14 +352,20 @@ function ModelSection({ modelName, modelAgg }: ModelSectionProps) {
 
   const totalArea = modelLiveRows.reduce((acc, r) => acc + toN(r.area), 0);
   const totalPriceBefore = modelLiveRows.reduce((acc, r) => {
-    return acc + (Number.isFinite(r.priceBeforeDepreciation) && r.priceBeforeDepreciation != null
-      ? r.priceBeforeDepreciation
-      : computePriceBeforeDepre(r));
+    return (
+      acc +
+      (Number.isFinite(r.priceBeforeDepreciation) && r.priceBeforeDepreciation != null
+        ? r.priceBeforeDepreciation
+        : computePriceBeforeDepre(r))
+    );
   }, 0);
   const totalValueAfter = modelLiveRows.reduce((acc, r) => {
-    return acc + (Number.isFinite(r.valueAfterDepreciation) && r.valueAfterDepreciation != null
-      ? r.valueAfterDepreciation
-      : computeValueAfterDepre(r));
+    return (
+      acc +
+      (Number.isFinite(r.valueAfterDepreciation) && r.valueAfterDepreciation != null
+        ? r.valueAfterDepreciation
+        : computeValueAfterDepre(r))
+    );
   }, 0);
 
   const initialEditData =
@@ -358,8 +383,8 @@ function ModelSection({ modelName, modelAgg }: ModelSectionProps) {
           </span>
           {modelAgg && (
             <span className="text-xs text-gray-500">
-              {modelAgg.unitCount} units · Avg {fmt(modelAgg.avgLandAreaSqWa)} Sq.Wa ·
-              Revenue {fmt(modelAgg.totalSellingPrice)} Baht
+              {modelAgg.unitCount} units · Avg {fmt(modelAgg.avgLandAreaSqWa)} Sq.Wa · Revenue{' '}
+              {fmt(modelAgg.totalSellingPrice)} Baht
             </span>
           )}
         </div>
@@ -555,9 +580,7 @@ export function CostOfBuildingTab({ models }: CostOfBuildingTabProps) {
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
         <Icon name="upload" style="regular" className="size-8 text-gray-300" />
         <p className="text-sm text-gray-500 font-medium">No unit data uploaded yet</p>
-        <p className="text-xs text-gray-400">
-          Upload an Excel file on the Unit Details tab first.
-        </p>
+        <p className="text-xs text-gray-400">Upload an Excel file on the Unit Details tab first.</p>
       </div>
     );
   }

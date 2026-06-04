@@ -1,5 +1,6 @@
 import Button from '@/shared/components/Button';
 import Modal from '@shared/components/Modal';
+import { useTranslation } from 'react-i18next';
 import Pagination from '@shared/components/Pagination';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { ServerDataCtx } from '@features/pricingAnalysis/store/selectionContext';
@@ -25,6 +26,7 @@ export const MarketSurveySelectionModal = ({
   onCancel,
   readOnly,
 }: MarketSurveySelectionModalProps) => {
+  const { t } = useTranslation('pricingAnalysis');
   const serverData = useContext(ServerDataCtx);
   const language = useLocaleStore(s => s.language);
 
@@ -51,12 +53,12 @@ export const MarketSurveySelectionModal = ({
       [...(groupProperties ?? [])]
         .sort((a, b) => (a.sequenceInGroup ?? 0) - (b.sequenceInGroup ?? 0))
         .map((p, i) => ({
-        id: p.propertyId ?? `subject-${i}`,
-        label: p.propertyName || p.propertyType || 'Subject collateral',
-        lat: Number(p.latitude),
-        lon: Number(p.longitude),
-        property: (p.propertyId ? propertiesMap?.[p.propertyId] : undefined) ?? {},
-      })),
+          id: p.propertyId ?? `subject-${i}`,
+          label: p.propertyName || p.propertyType || 'Subject collateral',
+          lat: Number(p.latitude),
+          lon: Number(p.longitude),
+          property: (p.propertyId ? propertiesMap?.[p.propertyId] : undefined) ?? {},
+        })),
     [groupProperties, propertiesMap],
   );
 
@@ -152,7 +154,7 @@ export const MarketSurveySelectionModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleCancel} title="Select Comparative Data" size="3xl">
+    <Modal isOpen={isOpen} onClose={handleCancel} title={t('surveySelection.title')} size="3xl">
       <div className="flex h-[70vh] gap-4">
         {/* Map — left panel. Shows ALL surveys (table is paginated); click a pin to (de)select. */}
         <SurveySelectionMap
@@ -203,17 +205,19 @@ export const MarketSurveySelectionModal = ({
       <div className="mt-6 flex justify-between gap-2 border-t border-gray-200 pt-4">
         <div className="flex gap-2">
           <Button variant="ghost" type="button" onClick={handleCancel}>
-            Cancel
+            {t('surveySelection.cancel')}
           </Button>
           {!readOnly && (
             <Button variant="ghost" type="button" onClick={handleClear}>
-              Clear
+              {t('footer.cancel')}
             </Button>
           )}
         </div>
         <div className="flex gap-2 items-center">
           {!readOnly && belowMinimumSelection && (
-            <span className="text-danger">Select at least {minimunSelection} surveys</span>
+            <span className="text-danger">
+              {t('surveySelection.selected', { count: minimunSelection })}
+            </span>
           )}
           {!readOnly && (
             <Button
@@ -222,7 +226,7 @@ export const MarketSurveySelectionModal = ({
               onClick={handleSave}
               disabled={belowMinimumSelection}
             >
-              Add ({selectedIds.size})
+              {t('surveySelection.confirm')} ({selectedIds.size})
             </Button>
           )}
         </div>

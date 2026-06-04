@@ -50,11 +50,14 @@ interface KpiSummaryStripProps {
 }
 
 export function KpiSummaryStrip({ cards }: KpiSummaryStripProps) {
-  if (cards.every((c) => c.value == null || c.value === 0)) return null;
+  if (cards.every(c => c.value == null || c.value === 0)) return null;
 
   return (
-    <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))` }}>
-      {cards.map((card) => {
+    <div
+      className={`grid gap-3`}
+      style={{ gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))` }}
+    >
+      {cards.map(card => {
         const c = colorMap[card.color];
         return (
           <div
@@ -69,7 +72,9 @@ export function KpiSummaryStrip({ cards }: KpiSummaryStripProps) {
             </div>
             <div className={`text-sm font-bold ${c.value} tabular-nums`}>
               {fmt(card.value)}
-              {card.suffix && <span className="text-[10px] font-normal ml-1 opacity-70">{card.suffix}</span>}
+              {card.suffix && (
+                <span className="text-[10px] font-normal ml-1 opacity-70">{card.suffix}</span>
+              )}
             </div>
           </div>
         );

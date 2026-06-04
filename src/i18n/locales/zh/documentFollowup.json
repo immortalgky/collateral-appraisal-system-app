@@ -1,0 +1,131 @@
+{
+  "banner": {
+    "title": "待处理文件请求",
+    "pendingItems": "来自申请人的 {{n}} 个待处理项目 — 提交被阻止，直至解决",
+    "loadingDetails": "正在加载详情...",
+    "raised": "提出于",
+    "raisedBy": "由 {{name}}",
+    "cancelAll": "全部取消"
+  },
+  "columns": {
+    "documentType": "文件类型",
+    "notes": "备注",
+    "status": "状态"
+  },
+  "status": {
+    "Pending": "待处理",
+    "Uploaded": "已上传",
+    "Declined": "已拒绝",
+    "Cancelled": "已取消"
+  },
+  "raiseDialog": {
+    "title": "请求补充文件",
+    "subtitle": "指定申请人需要提供的文件",
+    "requestLabel": "文件请求 #{{number}}",
+    "documentTypeLabel": "文件类型",
+    "documentTypePlaceholder": "选择文件类型...",
+    "notesLabel": "备注 / 说明",
+    "notesPlaceholder": "描述所需内容及原因...",
+    "addAnother": "添加另一个文件请求",
+    "submitting": "提交中...",
+    "sendRequest": "发送请求"
+  },
+  "uploadDialog": {
+    "title": "上传文件",
+    "fulfilling": "正在处理：",
+    "attachToLabel": "附加到",
+    "loadingTitles": "正在加载产权信息...",
+    "applicationLevel": "申请级别（请求）",
+    "fileLabel": "文件",
+    "selectedFile": "已选择：",
+    "deferredNotePre": "文件已上传至存储，但",
+    "deferredNoteNot": "尚未",
+    "deferredNotePost": "附加到请求。附件将在您点击",
+    "deferredNoteAction": "提交响应",
+    "deferredNoteEnd": "时同步处理。",
+    "titleFallback": "产权",
+    "uploading": "上传中...",
+    "stageFile": "暂存文件",
+    "loadError": "加载上传表单失败"
+  },
+  "cancelReasonModal": {
+    "reasonPlaceholder": "输入原因...",
+    "cancelFollowupTitle": "取消文件请求",
+    "cancelLineItemTitle": "取消行项目",
+    "cancelReasonSubtitle": "请提供取消原因。",
+    "confirm": "确认"
+  },
+  "declineModal": {
+    "title": "拒绝文件请求",
+    "youAreDeclining": "您正在拒绝：",
+    "reasonRequired": "拒绝此请求需要提供原因。",
+    "reasonLabel": "拒绝原因",
+    "reasonPlaceholder": "输入拒绝原因...",
+    "decline": "拒绝"
+  },
+  "bulkDeclineModal": {
+    "title": "拒绝所有剩余项目",
+    "youAreDeclining_one": "您正在拒绝 {{count}} 个待处理请求。",
+    "youAreDeclining_other": "您正在拒绝 {{count}} 个待处理请求。",
+    "reasonRequired": "拒绝所有请求需要提供原因。",
+    "reasonLabel": "拒绝原因",
+    "reasonPlaceholder": "输入拒绝所有剩余请求的原因...",
+    "declineAll": "全部拒绝"
+  },
+  "page": {
+    "back": "返回评估",
+    "title": "提供补充文件",
+    "infoTitle": "审核员已请求补充文件。",
+    "infoBody": "请在下方提供或拒绝每份请求的文件。所有项目解决后，审核员的任务将继续进行。",
+    "requestedBy": "由 {{name}} 于 {{date}} 请求",
+    "pendingRequests": "待处理请求（{{count}}）",
+    "declineAllRemaining": "拒绝所有剩余项目",
+    "resolved": "已解决（{{count}}）",
+    "reasonPrefix": "原因：",
+    "replaceStagedFile": "替换",
+    "removeStagedFile": "移除",
+    "declineButton": "拒绝",
+    "uploadButton": "上传",
+    "uploadUnavailableTitle": "请求上下文不可用 — 无法上传。",
+    "allStagedBanner": "所有待处理请求均已暂存文件。点击提交响应以发送。",
+    "allResolvedBanner": "所有文件请求均已解决。",
+    "submitResponse": "提交响应",
+    "stageHint": "为每个待处理项目暂存文件（或拒绝）以启用提交。",
+    "documentChecklist": "文件清单",
+    "checklistHint": "已附加到请求的文件的只读视图。点击提交响应时，上方暂存的文件将同步附加。",
+    "loadingRequests": "正在加载文件请求...",
+    "loadError": "加载文件请求失败",
+    "loadErrorDetail": "此任务可能已不再有效。",
+    "confirmSubmitTitle": "提交响应",
+    "confirmSubmitMessage": "将您的响应提交给审核员？这将把所有项目标记为已解决，并允许审核员继续进行。",
+    "confirmSubmit": "提交"
+  },
+  "toasts": {
+    "submitSuccess": "响应提交成功",
+    "submitAlreadyDone": "此跟进已提交。",
+    "submitItemsRequired": "提交前必须提供或拒绝所有项目。",
+    "submitFailed": "提交响应失败",
+    "raiseSuccess": "文件请求提出成功",
+    "raiseFailed": "提出文件请求失败",
+    "cancelSuccess": "文件请求已取消",
+    "cancelFailed": "取消文件请求失败",
+    "cancelLineItemSuccess": "行项目已取消",
+    "cancelLineItemFailed": "取消行项目失败",
+    "declineSuccess": "文件请求已拒绝",
+    "declineFailed": "拒绝文件请求失败",
+    "bulkDeclineFailed": "部分项目拒绝失败，请重试。",
+    "fileChooseRequired": "请选择要上传的文件。",
+    "fileStaged": "文件已暂存，提交时将附加。",
+    "uploadFailed": "上传失败，请重试。"
+  },
+  "validation": {
+    "documentTypeRequired": "文件类型为必填项",
+    "notesRequired": "备注为必填项",
+    "reasonRequired": "原因为必填项",
+    "atLeastOneItem": "至少需要一个文件请求"
+  },
+  "aria": {
+    "cancelLineItem": "取消此行项目",
+    "closeDialog": "关闭"
+  }
+}

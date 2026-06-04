@@ -1,0 +1,185 @@
+{
+  "factors": {
+    "pageTitle": "ปัจจัยตัวอย่างตลาด",
+    "pageSubtitle": "จัดการรายการหลักของปัจจัยที่ใช้ร่วมกันในทุกประเภทแม่แบบ",
+    "createButton": "สร้างปัจจัย",
+    "searchPlaceholder": "ค้นหาด้วยรหัสหรือชื่อ...",
+    "filterAll": "ทั้งหมด",
+    "filterActive": "ใช้งาน",
+    "filterInactive": "ไม่ใช้งาน",
+    "showingOf": "แสดง {{shown}} จาก {{total}} ปัจจัย",
+    "empty": "ไม่พบปัจจัย",
+    "columns": {
+      "code": "รหัส",
+      "name": "ชื่อ",
+      "fieldName": "ชื่อฟิลด์",
+      "dataType": "ประเภทข้อมูล",
+      "config": "การตั้งค่า",
+      "status": "สถานะ",
+      "action": "การดำเนินการ"
+    },
+    "configLength": "ความยาว: {{n}}",
+    "configLen": "ยาว: {{n}}",
+    "configDec": "ทศนิยม: {{n}}",
+    "status": {
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน"
+    },
+    "dataTypes": {
+      "Dropdown": "ดรอปดาวน์",
+      "Radio": "ปุ่มเลือก",
+      "CheckboxGroup": "กลุ่มช่องเลือก",
+      "Checkbox": "ช่องเลือก",
+      "Numeric": "ตัวเลข",
+      "Text": "ข้อความ"
+    }
+  },
+  "factorForm": {
+    "createTitle": "สร้างปัจจัย",
+    "editTitle": "แก้ไขปัจจัย",
+    "fields": {
+      "factorCode": "รหัสปัจจัย",
+      "factorCodePlaceholder": "เช่น AREA",
+      "fieldName": "ชื่อฟิลด์",
+      "fieldNamePlaceholder": "เช่น areaSize",
+      "dataType": "ประเภทข้อมูล",
+      "parameterGroup": "กลุ่มพารามิเตอร์",
+      "parameterGroupPlaceholder": "เช่น PropertyType",
+      "fieldLength": "ความยาวฟิลด์",
+      "fieldLengthPlaceholder": "เช่น 100",
+      "fieldDecimal": "ทศนิยมฟิลด์",
+      "fieldDecimalPlaceholder": "เช่น 2"
+    },
+    "translations": {
+      "sectionLabel": "คำแปลชื่อปัจจัย",
+      "addLanguagePlaceholder": "เพิ่มภาษา...",
+      "columns": {
+        "language": "ภาษา",
+        "factorName": "ชื่อปัจจัย",
+        "action": "การดำเนินการ"
+      },
+      "namePlaceholder": "ชื่อปัจจัยในภาษา {{lang}}",
+      "required": "จำเป็น",
+      "languages": {
+        "en": "อังกฤษ (en)",
+        "th": "ไทย (th)",
+        "cn": "จีน (cn)",
+        "jp": "ญี่ปุ่น (jp)"
+      }
+    },
+    "validation": {
+      "requiredFields": "กรุณากรอกข้อมูลที่จำเป็นทั้งหมด (ต้องระบุชื่อภาษาอังกฤษ)",
+      "parameterGroupRequired": "กลุ่มพารามิเตอร์จำเป็นสำหรับประเภทข้อมูลนี้",
+      "fieldLengthRequired": "ความยาวฟิลด์จำเป็นสำหรับประเภทข้อมูลนี้",
+      "fieldDecimalRequired": "ทศนิยมฟิลด์จำเป็นสำหรับประเภทข้อมูล Numeric"
+    }
+  },
+  "templates": {
+    "mcPageTitle": "แม่แบบตัวอย่างตลาด",
+    "mcPageSubtitle": "จัดการแม่แบบสำหรับการเก็บข้อมูลสำรวจตลาด",
+    "compPageTitle": "แม่แบบการวิเคราะห์เปรียบเทียบ",
+    "compPageSubtitle": "จัดการแม่แบบสำหรับวิธีการคำนวณราคา (DC/SAG/WQS)",
+    "createButton": "สร้างแม่แบบ",
+    "searchPlaceholder": "ค้นหาด้วยรหัสหรือชื่อ...",
+    "showingOf": "แสดง {{shown}} จาก {{total}} แม่แบบ",
+    "empty": "ไม่พบแม่แบบ",
+    "columns": {
+      "code": "รหัส",
+      "name": "ชื่อ",
+      "propertyType": "ประเภททรัพย์สิน",
+      "description": "คำอธิบาย",
+      "factors": "ปัจจัย",
+      "status": "สถานะ",
+      "actions": "การดำเนินการ"
+    },
+    "status": {
+      "active": "ใช้งาน",
+      "inactive": "ไม่ใช้งาน"
+    }
+  },
+  "templateDetail": {
+    "mcCreateTitle": "สร้างแม่แบบตัวอย่างตลาด",
+    "mcEditTitle": "แก้ไขแม่แบบตัวอย่างตลาด",
+    "compCreateTitle": "สร้างแม่แบบการวิเคราะห์เปรียบเทียบ",
+    "compEditTitle": "แก้ไขแม่แบบการวิเคราะห์เปรียบเทียบ",
+    "createSubtitle": "กรอกรายละเอียดของแม่แบบ"
+  },
+  "templateForm": {
+    "fields": {
+      "templateCode": "รหัสแม่แบบ",
+      "templateCodePlaceholder": "เช่น MC_LAND_01",
+      "templateName": "ชื่อแม่แบบ",
+      "templateNamePlaceholder": "ชื่อแม่แบบ",
+      "propertyType": "ประเภททรัพย์สิน",
+      "propertyTypePlaceholder": "เลือกประเภททรัพย์สิน",
+      "description": "คำอธิบาย",
+      "descriptionPlaceholder": "คำอธิบาย (ไม่บังคับ)"
+    },
+    "validation": {
+      "requiredFields": "กรุณากรอกข้อมูลที่จำเป็นทั้งหมด"
+    }
+  },
+  "factorManager": {
+    "sectionTitle": "ปัจจัยในแม่แบบ",
+    "sectionSubtitle": "กำหนด {{n}} ปัจจัย",
+    "addFactorButton": "เพิ่มปัจจัย",
+    "emptyTitle": "ยังไม่มีปัจจัยที่กำหนด",
+    "emptyHint": "คลิก \"เพิ่มปัจจัย\" เพื่อกำหนดปัจจัยจากรายการหลัก",
+    "unknownFactor": "ปัจจัยที่ไม่รู้จัก",
+    "columns": {
+      "seq": "#",
+      "code": "รหัส",
+      "name": "ชื่อ",
+      "mandatory": "บังคับ",
+      "calculation": "การคำนวณ",
+      "defaultWeight": "น้ำหนักเริ่มต้น",
+      "defaultIntensity": "ความเข้มเริ่มต้น",
+      "action": "การดำเนินการ"
+    },
+    "yes": "ใช่",
+    "no": "ไม่"
+  },
+  "addFactorModal": {
+    "title": "เพิ่มปัจจัย",
+    "searchPlaceholder": "ค้นหาด้วยรหัสหรือชื่อ...",
+    "selectAll": "เลือกทั้งหมด",
+    "deselectAll": "ล้าง",
+    "noFactors": "ไม่พบปัจจัยที่พร้อมใช้งาน",
+    "columns": {
+      "code": "รหัส",
+      "name": "ชื่อ",
+      "dataType": "ประเภทข้อมูล",
+      "mandatory": "บังคับ",
+      "calculation": "การคำนวณ"
+    },
+    "selectedCount": "เลือก {{n}} ปัจจัย",
+    "selectPrompt": "เลือกปัจจัยที่ต้องการเพิ่ม",
+    "addButton": "เพิ่ม",
+    "addButtonWithCount": "เพิ่ม ({{n}})"
+  },
+  "toasts": {
+    "factorCreated": "สร้างปัจจัยสำเร็จ",
+    "factorCreateFailed": "ไม่สามารถสร้างปัจจัยได้",
+    "factorUpdated": "อัปเดตปัจจัยสำเร็จ",
+    "factorUpdateFailed": "ไม่สามารถอัปเดตปัจจัยได้",
+    "templateCreated": "สร้างแม่แบบสำเร็จ",
+    "templateCreateFailed": "ไม่สามารถสร้างแม่แบบได้",
+    "templateUpdated": "อัปเดตแม่แบบสำเร็จ",
+    "templateUpdateFailed": "ไม่สามารถอัปเดตแม่แบบได้",
+    "templateDeleted": "ลบแม่แบบสำเร็จ",
+    "templateDeleteFailed": "ไม่สามารถลบแม่แบบได้",
+    "factorsAdded": "เพิ่ม {{n}} ปัจจัยสำเร็จ",
+    "factorAddFailed": "ไม่สามารถเพิ่มปัจจัยได้",
+    "factorRemoved": "ลบปัจจัยออกแล้ว",
+    "factorRemoveFailed": "ไม่สามารถลบปัจจัยได้",
+    "mandatoryUpdated": "อัปเดตการบังคับแล้ว",
+    "mandatoryUpdateFailed": "ไม่สามารถอัปเดตการบังคับได้",
+    "calculationUpdated": "อัปเดตปัจจัยการคำนวณแล้ว",
+    "calculationUpdateFailed": "ไม่สามารถอัปเดตปัจจัยการคำนวณได้",
+    "defaultValuesUpdated": "อัปเดตค่าเริ่มต้นแล้ว",
+    "defaultValuesUpdateFailed": "ไม่สามารถอัปเดตค่าเริ่มต้นได้"
+  },
+  "confirm": {
+    "deleteTemplate": "คุณแน่ใจหรือว่าต้องการลบแม่แบบนี้?"
+  }
+}

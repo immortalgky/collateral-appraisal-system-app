@@ -43,9 +43,7 @@ const stripEmptyDocuments = <T extends Record<string, any>>(request: T): T => {
   const result = { ...request };
 
   if (Array.isArray(result.documents)) {
-    result.documents = result.documents.filter(
-      (doc: any) => doc.fileName || doc.documentId,
-    );
+    result.documents = result.documents.filter((doc: any) => doc.fileName || doc.documentId);
   }
 
   if (Array.isArray(result.titles)) {
@@ -53,9 +51,7 @@ const stripEmptyDocuments = <T extends Record<string, any>>(request: T): T => {
       if (!Array.isArray(title?.documents)) return title;
       return {
         ...title,
-        documents: title.documents.filter(
-          (doc: any) => doc.fileName || doc.documentId,
-        ),
+        documents: title.documents.filter((doc: any) => doc.fileName || doc.documentId),
       };
     });
   }
@@ -212,7 +208,9 @@ export const useCreateDraftRequest = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (request: CreateDraftRequestRequestType): Promise<CreateDraftRequestResponseType> => {
+    mutationFn: async (
+      request: CreateDraftRequestRequestType,
+    ): Promise<CreateDraftRequestResponseType> => {
       const { data } = await axios.post('/requests/draft', stripEmptyDocuments(request));
       return data;
     },

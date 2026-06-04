@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
@@ -7,23 +8,24 @@ import TemplateTable from '../components/TemplateTable';
 import { useGetMCTemplates, useDeleteMCTemplate } from '../api/marketComparableTemplate';
 
 const MarketComparableTemplateListPage = () => {
+  const { t } = useTranslation('templateManagement');
   const navigate = useNavigate();
   const { data: templates = [], isLoading } = useGetMCTemplates();
   const deleteMutation = useDeleteMCTemplate();
 
   const handleDelete = (id: string) => {
-    if (!confirm('Are you sure you want to delete this template?')) return;
+    if (!confirm(t('confirm.deleteTemplate'))) return;
     deleteMutation.mutate(id, {
-      onSuccess: () => toast.success('Template deleted successfully'),
-      onError: () => toast.error('Failed to delete template'),
+      onSuccess: () => toast.success(t('toasts.templateDeleted')),
+      onError: () => toast.error(t('toasts.templateDeleteFailed')),
     });
   };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
       <SectionHeader
-        title="Market Comparable Templates"
-        subtitle="Manage templates for market survey data collection"
+        title={t('templates.mcPageTitle')}
+        subtitle={t('templates.mcPageSubtitle')}
         icon="rectangle-list"
         iconColor="cyan"
         rightIcon={
@@ -33,7 +35,7 @@ const MarketComparableTemplateListPage = () => {
             onClick={() => navigate('/market-comparable-templates/new')}
             leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
           >
-            Create Template
+            {t('templates.createButton')}
           </Button>
         }
       />

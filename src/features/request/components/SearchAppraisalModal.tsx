@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -11,7 +12,10 @@ import {
 } from '@/features/appraisal/api/copyTemplate';
 import AppraisalResultsTable from '@/features/appraisal/components/search/AppraisalResultsTable';
 import SearchFilterBar from '@/features/appraisal/components/search/SearchFilterBar';
-import type { AppraisalColumnDef, FilterField } from '@/features/appraisal/components/search/tabConfigs';
+import type {
+  AppraisalColumnDef,
+  FilterField,
+} from '@/features/appraisal/components/search/tabConfigs';
 import { useAddressStore } from '@/shared/store';
 import toast from 'react-hot-toast';
 import { isAxiosError } from 'axios';
@@ -22,12 +26,17 @@ interface SearchAppraisalModalProps {
   onSelect: (template: AppraisalCopyTemplate) => void;
 }
 
-const dateFilterFields: FilterField[] = [
-  { key: 'appointmentDateFrom', label: 'Appraisal date from', type: 'date' },
-  { key: 'appointmentDateTo', label: 'Appraisal date to', type: 'date' },
-];
+// dateFilterFields are built inside the component to use t()
 
 const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModalProps) => {
+  const { t } = useTranslation(['request', 'common']);
+  const dateFilterFields: FilterField[] = useMemo(
+    () => [
+      { key: 'appointmentDateFrom', label: t('searchAppraisal.dateFilterFrom'), type: 'date' },
+      { key: 'appointmentDateTo', label: t('searchAppraisal.dateFilterTo'), type: 'date' },
+    ],
+    [t],
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFetchingTemplate, setIsFetchingTemplate] = useState(false);
@@ -90,43 +99,43 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
 
   const columns = useMemo<AppraisalColumnDef[]>(
     () => [
-      { key: 'appraisalNumber', label: 'Appraisal No.', sortable: true },
-      { key: 'customerName', label: 'Customer', sortable: true },
+      { key: 'appraisalNumber', label: t('searchAppraisal.columnAppraisalNo'), sortable: true },
+      { key: 'customerName', label: t('searchAppraisal.columnCustomer'), sortable: true },
       {
         key: 'location',
-        label: 'Location',
+        label: t('searchAppraisal.columnLocation'),
         sortable: false,
         render: (item: AppraisalDto) => {
           const districtName = item.district
-            ? districtCodeToName.get(item.district) ?? item.district
+            ? (districtCodeToName.get(item.district) ?? item.district)
             : null;
           const provinceName = item.province
-            ? provinceCodeToName.get(item.province) ?? item.province
+            ? (provinceCodeToName.get(item.province) ?? item.province)
             : null;
           return [districtName, provinceName].filter(Boolean).join(', ') || '-';
         },
       },
       {
         key: 'facilityLimit',
-        label: 'Facility Limit',
+        label: t('searchAppraisal.columnFacilityLimit'),
         sortable: false,
         render: (item: AppraisalDto) => formatCurrency(item.facilityLimit),
       },
       {
         key: 'appraisalValue',
-        label: 'Appraisal Value',
+        label: t('searchAppraisal.columnAppraisalValue'),
         sortable: false,
         render: (item: AppraisalDto) => formatCurrency(item.appraisalValue),
       },
       {
         key: 'appointmentDateTime',
-        label: 'Appraisal Date',
+        label: t('searchAppraisal.columnAppraisalDate'),
         sortable: true,
         render: (item: AppraisalDto) => formatDate(item.appointmentDateTime),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [provinceCodeToName, districtCodeToName],
+
+    [provinceCodeToName, districtCodeToName, t],
   );
 
   const handleSort = (field: string) => {
@@ -147,11 +156,11 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
       handleClose();
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 409) {
-        toast.error('This appraisal is not completed and cannot be copied.');
+        toast.error(t('toasts.appraisalNotCompleted'));
       } else if (isAxiosError(err) && err.response?.status === 404) {
-        toast.error('Appraisal not found.');
+        toast.error(t('toasts.appraisalNotFound'));
       } else {
-        toast.error('Failed to load appraisal data. Please try again.');
+        toast.error(t('toasts.appraisalLoadFailed'));
       }
       setSelectedId(null);
     } finally {
@@ -170,7 +179,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Search Previous Appraisal Report" size="xl">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('searchAppraisal.modalTitle')} size="xl">
       <div className="flex flex-col gap-4">
         <div className="relative">
           <Icon
@@ -180,7 +189,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
           />
           <input
             type="text"
-            placeholder="Search by appraisal number or customer name..."
+            placeholder={t('searchAppraisal.searchPlaceholder')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
@@ -209,11 +218,9 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         </div>
 
         <div className="flex items-center justify-between pt-2">
-          <p className="text-xs text-gray-500">
-            Click a row to copy its data into the new request.
-          </p>
+          <p className="text-xs text-gray-500">{t('searchAppraisal.clickToCopy')}</p>
           <Button variant="outline" onClick={handleClose} disabled={isFetchingTemplate}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
         </div>
       </div>

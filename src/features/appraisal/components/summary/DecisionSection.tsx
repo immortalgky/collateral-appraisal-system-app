@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
@@ -8,8 +9,16 @@ import InlineSubSection from '@/shared/components/sections/InlineSubSection';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import Textarea from '@/shared/components/inputs/Textarea';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { useActivityId, useIsTaskOwner, useWorkflowInstanceId, } from '@/features/appraisal/context/AppraisalContext';
-import { type TaskHistoryItem, useGetActivityActions, useGetTaskHistory, } from '@/features/appraisal/api/workflow';
+import {
+  useActivityId,
+  useIsTaskOwner,
+  useWorkflowInstanceId,
+} from '@/features/appraisal/context/AppraisalContext';
+import {
+  type TaskHistoryItem,
+  useGetActivityActions,
+  useGetTaskHistory,
+} from '@/features/appraisal/api/workflow';
 import { useGetEligibleStaff } from '@/features/appraisal/api/administration';
 import { RaiseFollowupDialog } from '@/features/document-followup/components/RaiseFollowupDialog';
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
@@ -28,28 +37,26 @@ interface DecisionVisual {
 /** Maps action value/label keywords → icon + color. Falls back to gray + neutral icon. */
 const resolveDecisionVisual = (value: string, label: string): DecisionVisual => {
   const k = `${value} ${label}`.toLowerCase();
-  if (/(approve|agree|accept|confirm)/.test(k))
-    return { icon: 'check', color: 'emerald' };
-  if (/(reject|disagree|decline|deny)/.test(k))
-    return { icon: 'xmark', color: 'red' };
-  if (/(route.?back|send.?back|return)/.test(k))
-    return { icon: 'rotate-left', color: 'purple' };
-  if (/(proceed|forward|next|complete)/.test(k))
-    return { icon: 'arrow-right', color: 'blue' };
-  if (/(hold|defer|pause)/.test(k))
-    return { icon: 'pause', color: 'amber' };
+  if (/(approve|agree|accept|confirm)/.test(k)) return { icon: 'check', color: 'emerald' };
+  if (/(reject|disagree|decline|deny)/.test(k)) return { icon: 'xmark', color: 'red' };
+  if (/(route.?back|send.?back|return)/.test(k)) return { icon: 'rotate-left', color: 'purple' };
+  if (/(proceed|forward|next|complete)/.test(k)) return { icon: 'arrow-right', color: 'blue' };
+  if (/(hold|defer|pause)/.test(k)) return { icon: 'pause', color: 'amber' };
   return { icon: 'circle-dot', color: 'gray' };
 };
 
-const COLOR_CLASSES: Record<DecisionColor, {
-  borderSelected: string;
-  bgSelected: string;
-  textSelected: string;
-  iconBgSelected: string;
-  iconBgIdle: string;
-  iconTextIdle: string;
-  ring: string;
-}> = {
+const COLOR_CLASSES: Record<
+  DecisionColor,
+  {
+    borderSelected: string;
+    bgSelected: string;
+    textSelected: string;
+    iconBgSelected: string;
+    iconBgIdle: string;
+    iconTextIdle: string;
+    ring: string;
+  }
+> = {
   emerald: {
     borderSelected: 'border-emerald-500',
     bgSelected: 'bg-emerald-50',
@@ -106,16 +113,16 @@ const COLOR_CLASSES: Record<DecisionColor, {
   },
 };
 
-/** Contextual comment placeholder based on the selected decision. */
-const resolveCommentPlaceholder = (value: string | null, label: string | null): string => {
-  if (!value) return 'Enter your comments or reason for this decision...';
+/** Contextual comment placeholder based on the selected decision (en fallback). */
+const resolveCommentPlaceholderKey = (value: string | null, label: string | null): string => {
+  if (!value) return 'default';
   const k = `${value} ${label ?? ''}`.toLowerCase();
-  if (/(approve|agree|accept|confirm)/.test(k)) return 'Why are you approving?';
-  if (/(reject|disagree|decline|deny)/.test(k)) return 'Why are you rejecting?';
-  if (/(route.?back|send.?back|return)/.test(k)) return 'What needs to be revised?';
-  if (/(proceed|forward|next|complete)/.test(k)) return 'Any final notes before proceeding?';
-  if (/(hold|defer|pause)/.test(k)) return 'Why are you placing this on hold?';
-  return 'Enter your comments or reason for this decision...';
+  if (/(approve|agree|accept|confirm)/.test(k)) return 'approve';
+  if (/(reject|disagree|decline|deny)/.test(k)) return 'reject';
+  if (/(route.?back|send.?back|return)/.test(k)) return 'routeBack';
+  if (/(proceed|forward|next|complete)/.test(k)) return 'proceed';
+  if (/(hold|defer|pause)/.test(k)) return 'hold';
+  return 'default';
 };
 
 // ==================== Helpers ====================
@@ -153,6 +160,7 @@ const DecisionSection = ({
   selectedAssigneeUserId,
   onAssigneeChange,
 }: DecisionSectionProps) => {
+  const { t } = useTranslation('appraisal');
   const isPageReadOnly = usePageReadOnly();
   const isTaskOwner = useIsTaskOwner();
   const workflowInstanceId = useWorkflowInstanceId();
@@ -216,14 +224,14 @@ const DecisionSection = ({
       {/* Open followup banner — shown when there is an active document request */}
       {taskId && <OpenFollowupBanner raisingTaskId={taskId} />}
 
-      <GroupCard title="Decision" icon="gavel" iconColor="rose">
+      <GroupCard title={t('decision.sectionTitle')} icon="gavel" iconColor="rose">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-0 lg:gap-6">
           {/* Left: Activity Tracking */}
-          <InlineSubSection title="Activity Tracking" className="min-w-0">
+          <InlineSubSection title={t('decision.activityTracking')} className="min-w-0">
             {isHistoryLoading ? (
               <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
                 <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-                Loading activity...
+                {t('decision.loadingActivity')}
               </div>
             ) : (
               <ActivityTrackingTimeline activities={activitySteps} />
@@ -236,7 +244,7 @@ const DecisionSection = ({
 
           {/* Right: Decision Form */}
           <InlineSubSection
-            title="Decision"
+            title={t('decision.sectionTitle')}
             className="min-w-0"
             rightSlot={<span className="text-danger">*</span>}
           >
@@ -244,7 +252,9 @@ const DecisionSection = ({
               // Read-only view
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Decision</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    {t('decision.decisionLabel')}
+                  </label>
                   {selectedDecision ? (
                     <Badge
                       type="vote"
@@ -252,12 +262,14 @@ const DecisionSection = ({
                       size="md"
                     />
                   ) : (
-                    <span className="text-sm text-gray-400">No decision made</span>
+                    <span className="text-sm text-gray-400">{t('decision.noDecision')}</span>
                   )}
                 </div>
                 {comments && (
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Comments</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      {t('decision.commentsLabel')}
+                    </label>
                     <p className="text-sm text-gray-600">{comments}</p>
                   </div>
                 )}
@@ -268,7 +280,7 @@ const DecisionSection = ({
                 {isActionsLoading ? (
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-                    Loading actions...
+                    {t('decision.loadingActions')}
                   </div>
                 ) : (
                   <>
@@ -281,23 +293,23 @@ const DecisionSection = ({
                         onAssigneeChange(null);
                         onDecisionChange(value);
                       }}
-                      placeholder="Select a decision..."
+                      placeholder={t('decision.decisionPlaceholder')}
                     />
 
                     {isManualAssignment &&
                       (isStaffLoading ? (
                         <div className="flex items-center gap-2 text-sm text-gray-500">
                           <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-                          Loading assignees...
+                          {t('decision.loadingAssignees')}
                         </div>
                       ) : (
                         <Dropdown
-                          label="Assign Next To"
+                          label={t('decision.assignNextTo')}
                           required
                           options={(eligibleStaff ?? []).map(s => ({ value: s.id, label: s.name }))}
                           value={selectedAssigneeUserId ?? undefined}
                           onChange={onAssigneeChange}
-                          placeholder="Select an assignee..."
+                          placeholder={t('decision.assigneePlaceholder')}
                         />
                       ))}
 
@@ -310,14 +322,22 @@ const DecisionSection = ({
                           )
                         : null;
                       const ringClass = visual ? COLOR_CLASSES[visual.color].ring : '';
-                      const placeholder = resolveCommentPlaceholder(
+                      const placeholderKey = resolveCommentPlaceholderKey(
                         selectedDecision,
-                        selectedDecision ? badgeMap[selectedDecision] ?? null : null,
+                        selectedDecision ? (badgeMap[selectedDecision] ?? null) : null,
+                      );
+                      const placeholder = t(
+                        `decision.commentPlaceholders.${placeholderKey}` as `decision.commentPlaceholders.default`,
                       );
                       return (
-                        <div className={clsx('rounded-xl focus-within:ring-2 transition-shadow', ringClass)}>
+                        <div
+                          className={clsx(
+                            'rounded-xl focus-within:ring-2 transition-shadow',
+                            ringClass,
+                          )}
+                        >
                           <Textarea
-                            label="Comments"
+                            label={t('decision.commentsLabel')}
                             value={comments}
                             onChange={e => onCommentsChange(e.target.value)}
                             placeholder={placeholder}
@@ -335,7 +355,7 @@ const DecisionSection = ({
                           className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors"
                         >
                           <Icon name="file-circle-plus" style="solid" className="size-4" />
-                          Request Additional Documents
+                          {t('decision.requestDocuments')}
                         </button>
                       </div>
                     )}

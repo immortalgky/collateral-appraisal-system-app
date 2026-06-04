@@ -1,4 +1,5 @@
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store.ts';
 import { useCurrentUser } from '../api.ts';
 import { getAccessToken } from '@shared/api/axiosInstance';
@@ -6,6 +7,7 @@ import { useNotificationHub } from '@features/notification/hooks/useNotification
 import type { JSX } from 'react';
 
 export function ProtectedRoute({ component }: { component: JSX.Element }) {
+  const { t } = useTranslation('auth');
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
   const hasToken = !!getAccessToken();
   const { isLoading } = useCurrentUser();
@@ -27,7 +29,7 @@ export function ProtectedRoute({ component }: { component: JSX.Element }) {
         <div
           className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
           role="status"
-          aria-label="Authenticating"
+          aria-label={t('aria.authenticating')}
         />
       </div>
     );

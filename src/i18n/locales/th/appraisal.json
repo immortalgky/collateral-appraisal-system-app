@@ -1,0 +1,1185 @@
+{
+  "completionChecklist": {
+    "title": "การตรวจสอบ",
+    "submitting": "กำลังส่ง…",
+    "allPassed": "ผ่านการตรวจสอบทั้งหมด"
+  },
+  "completionErrors": {
+    "defaultTitle": "การตรวจสอบล้มเหลว"
+  },
+  "list": {
+    "title": "การประเมินราคา",
+    "countFound": "พบ {{count}} รายการประเมิน",
+    "browseHint": "ค้นหาและเรียกดูรายการประเมินราคา",
+    "searchPlaceholder": "ค้นหาด้วยเลขประเมิน ชื่อลูกค้า หรือเลขคำขอ...",
+    "export": "ส่งออก",
+    "exportXlsx": "Excel (.xlsx)",
+    "exportCsv": "CSV (.csv)",
+    "empty": "ไม่พบรายการประเมินราคา",
+    "emptyHint": "ลองปรับเงื่อนไขการค้นหาหรือตัวกรอง",
+    "columns": {
+      "appraisalNumber": "เลขประเมิน",
+      "customer": "ลูกค้า",
+      "status": "สถานะ",
+      "priority": "ความสำคัญ",
+      "sla": "SLA",
+      "province": "จังหวัด",
+      "assignment": "การมอบหมาย",
+      "company": "บริษัท",
+      "appointment": "นัดหมาย",
+      "created": "วันที่สร้าง"
+    },
+    "filters": {
+      "statusLabel": "สถานะ",
+      "statusPlaceholder": "ทุกสถานะ",
+      "priorityLabel": "ความสำคัญ",
+      "priorityPlaceholder": "ทุกระดับ",
+      "slaStatusLabel": "สถานะ SLA",
+      "slaStatusPlaceholder": "ทุก SLA",
+      "typeLabel": "ประเภท",
+      "typePlaceholder": "ทุกประเภท",
+      "assignmentLabel": "การมอบหมาย",
+      "assignmentPlaceholder": "ทุกประเภทการมอบหมาย",
+      "provincePlaceholder": "ทุกจังหวัด",
+      "companyPlaceholder": "ค้นหาบริษัท...",
+      "createdFrom": "สร้างตั้งแต่",
+      "createdTo": "สร้างถึง",
+      "slaDueFrom": "กำหนด SLA ตั้งแต่",
+      "slaDueTo": "กำหนด SLA ถึง"
+    },
+    "status": {
+      "Pending": "รอดำเนินการ",
+      "Assigned": "มอบหมายแล้ว",
+      "InProgress": "กำลังดำเนินการ",
+      "UnderReview": "อยู่ระหว่างตรวจสอบ",
+      "Completed": "เสร็จสิ้น",
+      "Cancelled": "ยกเลิก"
+    },
+    "priority": {
+      "Normal": "ปกติ",
+      "High": "สูง"
+    },
+    "sla": {
+      "OnTrack": "ตามกำหนด",
+      "AtRisk": "เสี่ยง",
+      "Breached": "เกินกำหนด",
+      "overdue": "เกินกำหนด {{time}}",
+      "left": "เหลือ {{time}}"
+    },
+    "assignmentType": {
+      "Internal": "ภายใน",
+      "External": "ภายนอก"
+    },
+    "appraisalType": {
+      "New": "ใหม่",
+      "Revaluation": "ประเมินซ้ำ"
+    }
+  },
+  "appointment": {
+    "sectionTitle": "ข้อมูลการนัดหมาย",
+    "noAppointment": "ยังไม่มีการนัดหมาย",
+    "noAppointmentHint": "กำหนดการนัดหมายเพื่อดำเนินการประเมินต่อ",
+    "scheduleButton": "กำหนดการนัดหมาย",
+    "rescheduleButton": "เลื่อนนัด",
+    "cancelButton": "ยกเลิก",
+    "locationNotSpecified": "ไม่ระบุสถานที่",
+    "contactNotSpecified": "ไม่ระบุผู้ติดต่อ",
+    "rescheduledCount": "เลื่อนแล้ว {{n}} ครั้ง",
+    "scheduleModal": {
+      "titleNew": "กำหนดการนัดหมาย",
+      "titleReschedule": "เลื่อนการนัดหมาย",
+      "submitNew": "กำหนด",
+      "submitReschedule": "บันทึก",
+      "dateTimeLabel": "วันที่และเวลานัดหมาย",
+      "locationLabel": "สถานที่",
+      "locationPlaceholder": "ระบุรายละเอียดสถานที่นัดหมาย",
+      "reasonLabel": "เหตุผลในการเลื่อนนัด",
+      "reasonPlaceholder": "ระบุเหตุผล (ไม่บังคับ)"
+    },
+    "cancelDialog": {
+      "title": "ยกเลิกการนัดหมาย?",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการนัดหมายนี้? ไม่สามารถย้อนกลับได้",
+      "confirm": "ยกเลิกการนัดหมาย",
+      "cancel": "คงการนัดหมาย"
+    },
+    "toasts": {
+      "scheduled": "กำหนดการนัดหมายแล้ว",
+      "rescheduled": "เลื่อนการนัดหมายแล้ว",
+      "cancelled": "ยกเลิกการนัดหมายแล้ว",
+      "scheduleFailed": "ไม่สามารถอัปเดตการนัดหมายได้ กรุณาลองใหม่",
+      "cancelFailed": "ไม่สามารถยกเลิกการนัดหมายได้ กรุณาลองใหม่"
+    }
+  },
+  "fee": {
+    "sectionTitle": "ข้อมูลค่าธรรมเนียม",
+    "feePaymentTypeLabel": "ประเภทการชำระค่าธรรมเนียม",
+    "columns": {
+      "type": "ประเภท",
+      "description": "รายละเอียด",
+      "amount": "จำนวนเงิน",
+      "actions": "การดำเนินการ"
+    },
+    "empty": "ยังไม่มีค่าธรรมเนียม",
+    "emptyHint": "เพิ่มค่าธรรมเนียมรายการแรก",
+    "addFee": "เพิ่มค่าธรรมเนียมเพิ่มเติม",
+    "subtotal": "ยอดรวมก่อน VAT",
+    "vat": "VAT ({{rate}}%)",
+    "vatTooltip": "ภาษีมูลค่าเพิ่มคำนวณจากยอดก่อน VAT",
+    "total": "รวมทั้งสิ้น",
+    "constructionInspectionFee": "ค่าตรวจสอบการก่อสร้าง",
+    "constructionInspectionFeeHint": "ค่าธรรมเนียมนี้จะนำมาใช้เป็นค่าประเมินในการขอตรวจสอบการก่อสร้างครั้งถัดไปสำหรับหลักประกันนี้",
+    "bankAbsorbAmount": "จำนวนที่ธนาคารรับผิดชอบ",
+    "bankAbsorbAmountHint": "จำนวนเงินที่ธนาคารรับผิดชอบ ส่วนที่เหลือจะเรียกเก็บจากลูกค้า",
+    "addFeeModal": {
+      "titleAdd": "เพิ่มค่าธรรมเนียม",
+      "titleEdit": "แก้ไขค่าธรรมเนียม",
+      "typeLabel": "ประเภทค่าธรรมเนียม",
+      "descriptionLabel": "รายละเอียด",
+      "amountLabel": "จำนวนเงิน"
+    },
+    "deleteFeeDialog": {
+      "title": "ลบค่าธรรมเนียม",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ {{description}}? ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    },
+    "aria": {
+      "editFee": "แก้ไขค่าธรรมเนียม: {{description}}",
+      "editFeeTitle": "แก้ไขค่าธรรมเนียม",
+      "deleteFee": "ลบค่าธรรมเนียม: {{description}}",
+      "deleteFeeTitle": "ลบค่าธรรมเนียม",
+      "approveFee": "อนุมัติ",
+      "rejectFee": "ปฏิเสธ"
+    },
+    "cannotDeleteFee": "ไม่สามารถลบรายการค่าธรรมเนียมได้ ยอดรวม ({{newTotal}}) จะต่ำกว่าจำนวนที่ชำระแล้ว ({{totalPaid}})",
+    "toasts": {
+      "feeAdded": "เพิ่มค่าธรรมเนียมสำเร็จ",
+      "feeAddFailed": "ไม่สามารถเพิ่มค่าธรรมเนียมได้",
+      "feeUpdated": "อัปเดตค่าธรรมเนียมสำเร็จ",
+      "feeUpdateFailed": "ไม่สามารถอัปเดตค่าธรรมเนียมได้",
+      "feeDeleted": "ลบค่าธรรมเนียมสำเร็จ",
+      "feeDeleteFailed": "ไม่สามารถลบค่าธรรมเนียมได้",
+      "feeTypeUpdated": "อัปเดตประเภทค่าธรรมเนียมแล้ว",
+      "feeTypeUpdateFailed": "ไม่สามารถอัปเดตประเภทค่าธรรมเนียมได้",
+      "feeApproved": "อนุมัติรายการค่าธรรมเนียมแล้ว",
+      "feeApproveFailed": "ไม่สามารถอนุมัติรายการค่าธรรมเนียมได้",
+      "feeRejected": "ปฏิเสธรายการค่าธรรมเนียมแล้ว",
+      "feeRejectFailed": "ไม่สามารถปฏิเสธรายการค่าธรรมเนียมได้",
+      "ciFeesSaved": "บันทึกค่าตรวจสอบการก่อสร้างแล้ว",
+      "ciFeesFailed": "ไม่สามารถบันทึกค่าตรวจสอบการก่อสร้างได้",
+      "absorbAmountSaved": "บันทึกจำนวนที่ธนาคารรับผิดชอบแล้ว",
+      "absorbAmountFailed": "ไม่สามารถบันทึกจำนวนที่ธนาคารรับผิดชอบได้"
+    }
+  },
+  "payment": {
+    "sectionTitle": "ข้อมูลการชำระเงิน",
+    "paymentDate": "วันที่ชำระ",
+    "paidAmount": "จำนวนที่ชำระแล้ว",
+    "bankAbsorbAmount": "จำนวนที่ธนาคารรับผิดชอบ",
+    "bankAbsorbTooltip": "จำนวนเงินที่ธนาคารรับผิดชอบ ลดภาระการชำระของลูกค้า",
+    "customerPayable": "ลูกค้าต้องชำระ",
+    "remaining": "คงเหลือ",
+    "noPayments": "ยังไม่มีการชำระเงิน",
+    "addPayment": "เพิ่มการชำระเงิน",
+    "bankAbsorbed": "ธนาคารรับผิดชอบ",
+    "paidPercent": "ชำระแล้ว {{n}}%",
+    "aria": {
+      "expandHistory": "ขยายประวัติการชำระเงิน",
+      "collapseHistory": "ย่อประวัติการชำระเงิน",
+      "editPayment": "แก้ไขการชำระเงิน {{amount}}",
+      "editPaymentTitle": "แก้ไขการชำระเงิน",
+      "deletePayment": "ลบการชำระเงิน {{amount}}",
+      "deletePaymentTitle": "ลบการชำระเงิน"
+    },
+    "addPaymentModal": {
+      "titleAdd": "เพิ่มการชำระเงิน",
+      "titleEdit": "แก้ไขการชำระเงิน",
+      "dateLabel": "วันที่ชำระ",
+      "amountLabel": "จำนวนเงิน"
+    },
+    "deletePaymentDialog": {
+      "title": "ลบการชำระเงิน",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ {{description}} นี้? ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    },
+    "columns": {
+      "paymentDate": "วันที่ชำระ",
+      "amount": "จำนวนเงิน"
+    },
+    "toasts": {
+      "paymentRecorded": "บันทึกการชำระเงินแล้ว",
+      "paymentRecordFailed": "ไม่สามารถบันทึกการชำระเงินได้",
+      "paymentUpdated": "อัปเดตการชำระเงินแล้ว",
+      "paymentUpdateFailed": "ไม่สามารถอัปเดตการชำระเงินได้",
+      "paymentDeleted": "ลบการชำระเงินแล้ว",
+      "paymentDeleteFailed": "ไม่สามารถลบการชำระเงินได้"
+    }
+  },
+  "administration": {
+    "pageTitle": "การมอบหมาย",
+    "assignmentLocked": "ล็อคการมอบหมาย",
+    "assignmentLockedDesc": "งานประเมินนี้อยู่ใน Quotation #{{quotationNumber}} ({{status}}) ยกเลิก Quotation หรือนำงานนี้ออกเพื่อเปลี่ยนแปลง",
+    "openQuotation": "เปิด Quotation",
+    "assignmentType": {
+      "title": "ประเภทการมอบหมาย",
+      "subtitle": "เลือกว่าจะมอบหมายให้ภายในหรือบริษัทภายนอก",
+      "internal": "ประเมินภายใน",
+      "internalDesc": "มอบหมายให้เจ้าหน้าที่ประเมินภายใน",
+      "external": "บริษัทภายนอก",
+      "externalDesc": "มอบหมายให้บริษัทประเมินภายนอก",
+      "internalDisabledHint": "ไม่สามารถมอบหมายภายในได้สำหรับวงเงินกู้เกิน 50 ล้าน"
+    },
+    "assignmentDetails": {
+      "titleInternal": "รายละเอียดการมอบหมายภายใน",
+      "titleExternal": "รายละเอียดการมอบหมายภายนอก",
+      "subtitle": "กำหนดวิธีการมอบหมายและเลือกผู้รับมอบหมาย",
+      "methodLabel": "วิธีการมอบหมาย",
+      "manual": "เลือกเอง",
+      "manualDesc": "เลือกผู้รับมอบหมายโดยตรง",
+      "roundrobin": "วนเวียน",
+      "roundrobinDesc": "ระบบมอบหมายอัตโนมัติตามภาระงาน",
+      "quotation": "ขอใบเสนอราคา",
+      "quotationDesc": "ขอใบเสนอราคาจากบริษัทก่อน"
+    },
+    "manualStaff": {
+      "label": "เลือกเจ้าหน้าที่",
+      "placeholder": "คลิกเพื่อค้นหาและเลือกเจ้าหน้าที่..."
+    },
+    "manualCompany": {
+      "label": "เลือกบริษัทภายนอก",
+      "placeholder": "คลิกเพื่อค้นหาและเลือกบริษัทภายนอก..."
+    },
+    "roundrobinInfo": {
+      "title": "การมอบหมายแบบวนเวียน",
+      "internalDesc": "ระบบจะมอบหมายงานประเมินนี้ให้เจ้าหน้าที่ที่พร้อมรับงานถัดไปตามการกระจายภาระงาน",
+      "externalDesc": "ระบบจะมอบหมายงานประเมินนี้ให้บริษัทภายนอกถัดไปตามรอบการหมุนเวียน"
+    },
+    "followupStaff": {
+      "label": "เจ้าหน้าที่ติดตามภายใน",
+      "manualLabel": "เลือกเอง",
+      "manualDesc": "เลือกเจ้าหน้าที่โดยตรง",
+      "roundrobinLabel": "วนเวียน",
+      "roundrobinDesc": "ระบบมอบหมายอัตโนมัติ",
+      "roundrobinInfo": "ระบบจะมอบหมายเจ้าหน้าที่ติดตามอัตโนมัติตามการวนเวียน",
+      "placeholder": "คลิกเพื่อค้นหาและเลือกเจ้าหน้าที่ติดตาม..."
+    },
+    "unsavedChanges": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก",
+    "assigning": "กำลังมอบหมาย...",
+    "assign": "มอบหมาย",
+    "toasts": {
+      "assignmentCreated": "สร้างการมอบหมายสำเร็จ",
+      "assignmentFailed": "ไม่สามารถสร้างการมอบหมายได้ กรุณาลองใหม่",
+      "noWorkflowTask": "การมอบหมายต้องมี workflow task ที่ใช้งานอยู่ เปิดหน้านี้จากรายการงาน",
+      "notTaskOwner": "เฉพาะเจ้าของงานเท่านั้นที่สามารถมอบหมายงานประเมินนี้ได้",
+      "quotationLocked": "ล็อคการมอบหมาย — งานอยู่ใน Quotation #{{quotationNumber}} ({{status}}) ยกเลิกหรือนำออกเพื่อเปลี่ยนแปลง",
+      "quotationNotFinalized": "Quotation ต้องเสร็จสิ้นพร้อมผู้ชนะก่อนส่งออกภายนอก",
+      "loadingActions": "กำลังโหลดตัวเลือก กรุณาลองใหม่อีกครั้ง",
+      "selectAssignee": "กรุณาเลือกผู้รับมอบหมายถัดไปก่อนส่ง"
+    }
+  },
+  "quotation": {
+    "sectionTitle": "ใบเสนอราคา",
+    "noQuotation": "ยังไม่มีคำขอใบเสนอราคา",
+    "noQuotationHint": "สร้างใบเสนอราคาเพื่อเชิญบริษัทภายนอกเสนอราคา",
+    "requestQuotation": "ขอใบเสนอราคา",
+    "newQuotation": "ใบเสนอราคาใหม่",
+    "sendQuotation": "ส่งใบเสนอราคา",
+    "cancelQuotation": "ยกเลิกใบเสนอราคา",
+    "cancelQuotationTitle": "ยกเลิกใบเสนอราคา",
+    "rejectWinner": "ปฏิเสธผู้ชนะ",
+    "openNegotiation": "เปิดการเจรจา",
+    "finalize": "สรุป",
+    "edit": "แก้ไข",
+    "save": "บันทึก",
+    "saving": "กำลังบันทึก...",
+    "sending": "กำลังส่ง...",
+    "cancelling": "กำลังยกเลิก...",
+    "goBack": "กลับ",
+    "back": "ย้อนกลับ",
+    "cancel": "ยกเลิก",
+    "confirmSend": "ยืนยันและส่ง",
+    "removeFromQuotation": "นำงานประเมินนี้ออกจากใบเสนอราคา",
+    "removeConfirmTitle": "นำออกจากใบเสนอราคา?",
+    "removeConfirmMessage": "งานประเมินนี้จะถูกนำออกจากใบเสนอราคา {{quotationNumber}} หากเป็นรายการสุดท้าย ใบเสนอราคาจะถูกยกเลิก",
+    "removeConfirm": "นำออก",
+    "cancelConfirmMessage": "การดำเนินการนี้จะยกเลิกใบเสนอราคา {{quotationNumber}} บริษัทที่เชิญทั้งหมดจะได้รับแจ้ง และ workflow task จะถูกยกเลิก ไม่สามารถย้อนกลับได้",
+    "cancelReasonLabel": "เหตุผล",
+    "cancelReasonOptional": "(ไม่บังคับ)",
+    "cancelReasonPlaceholder": "ทำไมถึงยกเลิกใบเสนอราคานี้?",
+    "draftHint": "ใบเสนอราคานี้ยังเป็นฉบับร่าง เพิ่มงานประเมิน เชิญบริษัท แล้วคลิก ส่งใบเสนอราคา เพื่อเปิดรับการเสนอราคา",
+    "notSet": "ยังไม่กำหนด",
+    "closes": "ปิดรับ",
+    "hoursRemaining": "เหลือ {{n}} ชั่วโมง",
+    "stats": {
+      "companiesInvited": "บริษัทที่เชิญ",
+      "responses": "การตอบรับ",
+      "appraisals": "งานประเมิน",
+      "cutOffTime": "เวลาปิดรับ"
+    },
+    "table": {
+      "company": "บริษัท",
+      "totalFeeAmount": "ค่าธรรมเนียมรวม",
+      "totalDiscount": "ส่วนลดรวม",
+      "totalNetAmount": "ยอดสุทธิรวม",
+      "totalEstimateManday": "จำนวนวันทำงานประมาณการ",
+      "submittedAt": "ส่งเมื่อ",
+      "status": "สถานะ"
+    },
+    "finalizedWith": "สรุปใบเสนอราคากับ {{company}} แล้ว",
+    "finalPrice": "ราคาสุดท้าย:",
+    "finalizedHint": "คลิก \"มอบหมาย\" เพื่อส่งให้บริษัทนี้",
+    "cancelledHint": "ใบเสนอราคานี้ถูกยกเลิกแล้ว สร้างใบเสนอราคาใหม่สำหรับงานประเมินนี้",
+    "maximumNegotiationRounds": "ถึงรอบการเจรจาสูงสุดแล้ว",
+    "shareDocuments": {
+      "title": "แชร์เอกสาร",
+      "step": "ขั้นตอนที่ 2 จาก 2 — เลือกเอกสารที่จะแชร์กับบริษัทที่เชิญ",
+      "noAppraisals": "ไม่มีงานประเมินสำหรับแชร์เอกสาร",
+      "loadingDocuments": "กำลังโหลดเอกสาร...",
+      "noRequestLinked": "ไม่มีคำขอที่เชื่อมกับงานประเมินนี้ ไม่สามารถโหลดเอกสารได้",
+      "noDocuments": "ไม่พบเอกสารที่อัปโหลดสำหรับคำขอนี้",
+      "selectAll": "เลือกทั้งหมด",
+      "coverageWarning": "เลือกอย่างน้อยหนึ่งเอกสารสำหรับทุกงานประเมินก่อนส่ง",
+      "coverageTitle": "เลือกอย่างน้อยหนึ่งเอกสารสำหรับทุกงานประเมิน"
+    },
+    "editDraft": {
+      "appraisalCount": "{{n}} (ใช้ เพิ่ม / นำออก เพื่อเปลี่ยนงานประเมิน)",
+      "companiesInvited": "บริษัทที่เชิญ",
+      "eligibleFor": "มีสิทธิ์สำหรับ",
+      "companySearchPlaceholder": "ค้นหาชื่อบริษัท...",
+      "noEligibleCompanies": "ไม่มีบริษัทที่มีสิทธิ์สำหรับกลุ่มนี้",
+      "noCompaniesFound": "ไม่พบบริษัท",
+      "cutOffTime": "เวลาปิดรับ",
+      "appraisalsLabel": "งานประเมิน",
+      "cutOffTimeRequired": "กรุณาระบุเวลาปิดรับ"
+    },
+    "emailModal": {
+      "title": "ร่างอีเมลส่งให้บริษัทประเมินภายนอก"
+    },
+    "toasts": {
+      "quotationSent": "ส่งใบเสนอราคาแล้ว — เปิดรับการเสนอราคา",
+      "quotationSendFailed": "ไม่สามารถส่งใบเสนอราคาได้",
+      "docSelectionFailed": "ไม่สามารถบันทึกการเลือกเอกสารได้",
+      "quotationCancelled": "ยกเลิกใบเสนอราคาแล้ว",
+      "quotationCancelFailed": "ไม่สามารถยกเลิกใบเสนอราคาได้",
+      "removedFromQuotation": "นำออกจากใบเสนอราคาแล้ว",
+      "removeFailed": "ไม่สามารถนำออกได้",
+      "draftUpdated": "อัปเดตฉบับร่างใบเสนอราคาแล้ว",
+      "draftUpdateFailed": "ไม่สามารถอัปเดตฉบับร่างได้",
+      "notCancellable": "ไม่สามารถยกเลิกใบเสนอราคาได้แล้ว (สถานะปัจจุบัน: {{status}})"
+    },
+    "loading": "กำลังโหลดใบเสนอราคา..."
+  },
+  "decisionSummary": {
+    "pageTitle": "สรุปการตัดสินใจ",
+    "sections": {
+      "valuation": "การประเมินมูลค่า",
+      "constructionSummary": "สรุปงานก่อสร้าง",
+      "reviewOpinions": "การทบทวนและความเห็น",
+      "decision": "การตัดสินใจ"
+    },
+    "appraisalDate": "วันที่ประเมิน:",
+    "fields": {
+      "totalAppraisalPrice": "ราคาประเมินรวม",
+      "forceSellingPrice": "ราคาขายบังคับ",
+      "forceSellingPriceHint": "70% ของราคาประเมิน",
+      "buildingInsurance": "ประกันสิ่งปลูกสร้าง",
+      "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
+      "decisionApproach": "วิธีการตัดสินใจ",
+      "priceVerification": "การตรวจสอบราคา",
+      "priceVerificationOptions": [
+        "ยังไม่ตรวจสอบ",
+        "ตรวจสอบแล้ว"
+      ],
+      "reviewPrices": "ราคาทบทวน",
+      "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
+      "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
+      "buildingInsuranceReview": "ประกันสิ่งปลูกสร้าง (ทบทวน)",
+      "condition": "เงื่อนไข",
+      "conditionType": "ประเภทเงื่อนไข",
+      "conditionTypePlaceholder": "เลือกประเภทเงื่อนไข...",
+      "conditionDetails": "รายละเอียดเงื่อนไข",
+      "conditionDetailsPlaceholder": "ระบุรายละเอียดเงื่อนไข...",
+      "remark": "หมายเหตุ",
+      "remarkType": "ประเภทหมายเหตุ",
+      "remarkTypePlaceholder": "เลือกประเภทหมายเหตุ...",
+      "remarkDetails": "รายละเอียดหมายเหตุ",
+      "remarkPlaceholder": "ระบุหมายเหตุ...",
+      "appraiserOpinions": "ความเห็นผู้ประเมิน",
+      "committeeOpinions": "ความเห็นคณะกรรมการ",
+      "opinionType": "ประเภทความเห็น",
+      "opinionTypePlaceholder": "เลือกประเภทความเห็น...",
+      "appraiserOpinion": "ความเห็นผู้ประเมิน",
+      "appraiserOpinionPlaceholder": "ระบุความเห็นผู้ประเมิน...",
+      "committeeOpinion": "ความเห็นคณะกรรมการ",
+      "committeeOpinionPlaceholder": "ระบุความเห็นคณะกรรมการ...",
+      "additionalAssumptions": "ข้อสมมติฐานเพิ่มเติม / พิเศษ",
+      "additionalAssumptionsDetails": "รายละเอียด",
+      "additionalAssumptionsPlaceholder": "ระบุข้อสมมติฐานเพิ่มเติมหรือพิเศษ..."
+    },
+    "options": {
+      "conditionType": {
+        "normal": "ปกติ",
+        "special": "พิเศษ",
+        "other": "อื่นๆ"
+      },
+      "remarkType": {
+        "normal": "ปกติ",
+        "special": "พิเศษ",
+        "other": "อื่นๆ"
+      },
+      "opinionType": {
+        "agree": "เห็นด้วย",
+        "disagree": "ไม่เห็นด้วย",
+        "conditional": "มีเงื่อนไข"
+      }
+    },
+    "empty": {
+      "noApproachData": "ไม่มีข้อมูลวิธีการ",
+      "noGovernmentPrice": "ไม่มีข้อมูลราคาประเมินภาครัฐ"
+    },
+    "historySearch": "ค้นหาประวัติ",
+    "historySearchTitle": "ค้นหาประวัติ (งานประเมินและข้อมูลตลาดใกล้เคียง)",
+    "unsavedChanges": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก",
+    "confirmDialog": {
+      "title": "ส่งสรุปการตัดสินใจ",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการส่งสรุปการตัดสินใจนี้?",
+      "confirm": "ส่ง",
+      "cancel": "ยกเลิก",
+      "submitting": "กำลังส่ง…",
+      "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
+    },
+    "toasts": {
+      "saved": "บันทึกสรุปการตัดสินใจสำเร็จ",
+      "saveFailed": "ไม่สามารถบันทึกสรุปการตัดสินใจได้ กรุณาลองใหม่",
+      "submitted": "ส่งการตัดสินใจสำเร็จ",
+      "submitFailed": "ไม่สามารถส่งการตัดสินใจได้",
+      "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ"
+    }
+  },
+  "decision": {
+    "sectionTitle": "การตัดสินใจ",
+    "activityTracking": "ติดตามกิจกรรม",
+    "decisionLabel": "การตัดสินใจ",
+    "commentsLabel": "ความคิดเห็น",
+    "noDecision": "ยังไม่มีการตัดสินใจ",
+    "assignNextTo": "มอบหมายถัดไปให้",
+    "decisionPlaceholder": "เลือกการตัดสินใจ...",
+    "assigneePlaceholder": "เลือกผู้รับมอบหมาย...",
+    "requestDocuments": "ขอเอกสารเพิ่มเติม",
+    "loadingActivity": "กำลังโหลดกิจกรรม...",
+    "loadingActions": "กำลังโหลดตัวเลือก...",
+    "loadingAssignees": "กำลังโหลดรายชื่อ...",
+    "commentPlaceholders": {
+      "default": "ระบุความคิดเห็นหรือเหตุผลสำหรับการตัดสินใจนี้...",
+      "approve": "ทำไมถึงอนุมัติ?",
+      "reject": "ทำไมถึงปฏิเสธ?",
+      "routeBack": "ต้องการแก้ไขอะไร?",
+      "proceed": "หมายเหตุสุดท้ายก่อนดำเนินการ?",
+      "hold": "ทำไมถึงพักงานนี้ไว้?"
+    }
+  },
+  "propertyInfo": {
+    "tabs": {
+      "properties": "ทรัพย์สิน",
+      "markets": "ตลาด",
+      "gallery": "แกลเลอรี",
+      "photos": "รูปภาพ",
+      "laws": "กฎหมายและข้อบังคับ"
+    }
+  },
+  "properties": {
+    "addNewGroup": "เพิ่มกลุ่มใหม่",
+    "noGroups": "ยังไม่มีกลุ่มทรัพย์สิน",
+    "noGroupsHint": "คลิก \"เพิ่มกลุ่มใหม่\" เพื่อสร้างกลุ่มแรก",
+    "loadError": "ไม่สามารถโหลดกลุ่มทรัพย์สินได้",
+    "loadErrorHint": "กรุณารีเฟรชหน้า",
+    "viewGrid": "ตาราง",
+    "viewList": "รายการ",
+    "contextMenu": {
+      "view": "ดู",
+      "edit": "แก้ไข",
+      "moveTo": "ย้ายไป",
+      "copy": "คัดลอก",
+      "paste": "วาง",
+      "delete": "ลบ"
+    },
+    "moveModal": {
+      "title": "ย้ายทรัพย์สิน",
+      "loading": "กำลังย้าย..."
+    },
+    "deleteModal": {
+      "title": "ลบทรัพย์สิน",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการนำทรัพย์สินนี้ออก?",
+      "confirm": "นำออก"
+    },
+    "toasts": {
+      "groupCreateFailed": "ไม่สามารถสร้างกลุ่มได้",
+      "groupRenameFailed": "ไม่สามารถเปลี่ยนชื่อกลุ่มได้",
+      "groupDeleteFailed": "ไม่สามารถลบกลุ่มได้",
+      "propertyRemoveFailed": "ไม่สามารถนำทรัพย์สินออกจากกลุ่มได้",
+      "propertyMoveFailed": "ไม่สามารถย้ายทรัพย์สินได้",
+      "propertyPasteFailed": "ไม่สามารถวางทรัพย์สินได้",
+      "reorderFailed": "ไม่สามารถเรียงลำดับทรัพย์สินได้"
+    }
+  },
+  "view360": {
+    "pageTitle": "มุมมอง 360",
+    "header": {
+      "totalAppraisalPrice": "ราคาประเมินรวม",
+      "forceSellingPrice": "ราคาขายบังคับ",
+      "buildingInsurance": "ประกันสิ่งปลูกสร้าง"
+    },
+    "requestInfo": {
+      "sectionTitle": "ข้อมูลคำขอ"
+    },
+    "propertyGroups": {
+      "sectionTitle": "กลุ่มทรัพย์สิน"
+    },
+    "pricingAnalysis": {
+      "sectionTitle": "การวิเคราะห์ราคา"
+    },
+    "decisionSummary": {
+      "sectionTitle": "สรุปการตัดสินใจ"
+    },
+    "decisionSummarySection": {
+      "title": "การตัดสินใจและสรุป",
+      "appraisalPriceSummary": "สรุปราคาประเมิน",
+      "governmentAppraisalPrice": "ราคาประเมินของทางราชการ",
+      "totalAppraisalPrice": "ราคาประเมินรวม",
+      "forceSellingPrice": "ราคาบังคับขาย",
+      "buildingInsurance": "ทุนประกันอาคาร",
+      "noApproachData": "ไม่มีข้อมูลวิธีการประเมิน",
+      "noGovernmentPrice": "ไม่มีข้อมูลราคาประเมินของทางราชการ"
+    },
+    "pricingAnalysisSection": {
+      "heading": "การวิเคราะห์ราคา",
+      "decisionApproach": "วิธีการตัดสินใจ",
+      "noApproachData": "ไม่มีข้อมูลวิธีการประเมิน"
+    },
+    "requestInfoSection": {
+      "title": "ข้อมูลคำขอ",
+      "requestNumber": "เลขที่คำขอ",
+      "customerName": "ชื่อลูกค้า",
+      "contactNumber": "เบอร์ติดต่อ",
+      "purpose": "วัตถุประสงค์",
+      "appraisalNumber": "เลขที่ประเมิน",
+      "channel": "ช่องทาง",
+      "status": "สถานะ",
+      "requestor": "ผู้ขอ"
+    }
+  },
+  "activityTracking": {
+    "pageTitle": "ติดตามกิจกรรม",
+    "tabs": {
+      "timeline": "ไทม์ไลน์",
+      "log": "บันทึก"
+    },
+    "empty": "ยังไม่มีกิจกรรม",
+    "columns": {
+      "activity": "กิจกรรม",
+      "assignedTo": "มอบหมายให้",
+      "startedAt": "เริ่มเมื่อ",
+      "completedAt": "เสร็จเมื่อ",
+      "status": "สถานะ",
+      "movement": "การเคลื่อนไหว",
+      "remark": "หมายเหตุ"
+    }
+  },
+  "documentChecklist": {
+    "pageTitle": "รายการตรวจเอกสาร",
+    "empty": "ไม่มีเอกสารที่ต้องใช้",
+    "columns": {
+      "document": "เอกสาร",
+      "required": "จำเป็น",
+      "received": "รับแล้ว",
+      "remarks": "หมายเหตุ"
+    },
+    "toasts": {
+      "saveFailed": "ไม่สามารถบันทึกรายการตรวจเอกสารได้",
+      "saved": "บันทึกรายการตรวจเอกสารแล้ว"
+    }
+  },
+  "gallery": {
+    "sectionTitle": "แกลเลอรี",
+    "noPhotos": "ยังไม่มีรูปภาพ",
+    "noPhotosHint": "อัปโหลดรูปภาพเพื่อเริ่มต้น",
+    "addPhoto": "เพิ่มรูปภาพ",
+    "uploadPhoto": "อัปโหลดรูปภาพ",
+    "takePhoto": "ถ่ายรูป",
+    "photoSource": "เลือกแหล่งที่มาของรูปภาพ",
+    "editPhoto": "แก้ไขรูปภาพ",
+    "deletePhoto": "ลบรูปภาพ",
+    "previewPhoto": "ดูตัวอย่างรูปภาพ",
+    "gridView": "มุมมองตาราง",
+    "listView": "มุมมองรายการ",
+    "columns": {
+      "fileName": "ชื่อไฟล์",
+      "category": "หมวดหมู่",
+      "uploadedBy": "อัปโหลดโดย",
+      "uploadedAt": "อัปโหลดเมื่อ",
+      "actions": "การดำเนินการ"
+    },
+    "aria": {
+      "editPhoto": "แก้ไขรูปภาพ",
+      "deletePhoto": "ลบรูปภาพ",
+      "previewPhoto": "ดูตัวอย่างรูปภาพ"
+    },
+    "deleteConfirm": {
+      "title": "ลบรูปภาพ",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้? ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    },
+    "toasts": {
+      "uploaded": "อัปโหลดรูปภาพแล้ว",
+      "uploadFailed": "ไม่สามารถอัปโหลดรูปภาพได้",
+      "deleted": "ลบรูปภาพแล้ว",
+      "deleteFailed": "ไม่สามารถลบรูปภาพได้",
+      "updated": "อัปเดตรูปภาพแล้ว",
+      "updateFailed": "ไม่สามารถอัปเดตรูปภาพได้"
+    }
+  },
+  "search": {
+    "pageTitle": "ค้นหางานประเมิน",
+    "placeholder": "ค้นหางานประเมิน...",
+    "savedSearches": "การค้นหาที่บันทึก",
+    "saveSearch": "บันทึกการค้นหา",
+    "deleteSavedSearch": "ลบการค้นหาที่บันทึก",
+    "activeFilters": "ตัวกรองที่ใช้งาน",
+    "clearAll": "ล้างทั้งหมด"
+  },
+  "lawsRegulations": {
+    "pageTitle": "กฎหมายและข้อบังคับ",
+    "addRecord": "เพิ่มรายการ",
+    "noRecords": "ไม่มีกฎหมายและข้อบังคับ",
+    "noRecordsHint": "เพิ่มกฎหมายและข้อบังคับที่ใช้กับทรัพย์สินนี้",
+    "columns": {
+      "type": "ประเภท",
+      "detail": "รายละเอียด",
+      "actions": "การดำเนินการ"
+    },
+    "toasts": {
+      "saved": "บันทึกรายการแล้ว",
+      "saveFailed": "ไม่สามารถบันทึกรายการได้",
+      "deleted": "ลบรายการแล้ว",
+      "deleteFailed": "ไม่สามารถลบรายการได้"
+    }
+  },
+  "markets": {
+    "pageTitle": "ข้อมูลตลาด",
+    "addComparable": "เพิ่มข้อมูลเปรียบเทียบ",
+    "noComparables": "ยังไม่มีข้อมูลตลาดเปรียบเทียบ",
+    "noComparablesHint": "เพิ่มข้อมูลตลาดเปรียบเทียบเพื่อสนับสนุนการประเมิน",
+    "columns": {
+      "address": "ที่อยู่",
+      "area": "พื้นที่",
+      "price": "ราคา",
+      "pricePerUnit": "ราคา / หน่วย",
+      "source": "แหล่งที่มา",
+      "date": "วันที่"
+    },
+    "toasts": {
+      "saved": "บันทึกข้อมูลตลาดเปรียบเทียบแล้ว",
+      "saveFailed": "ไม่สามารถบันทึกข้อมูลตลาดเปรียบเทียบได้",
+      "deleted": "ลบข้อมูลตลาดเปรียบเทียบแล้ว",
+      "deleteFailed": "ไม่สามารถลบข้อมูลตลาดเปรียบเทียบได้"
+    }
+  },
+  "constructionInspection": {
+    "sectionTitle": "การตรวจสอบการก่อสร้าง",
+    "summary": "สรุปการก่อสร้าง",
+    "columns": {
+      "description": "รายละเอียด",
+      "buildingValue": "มูลค่าอาคาร",
+      "buildingValue100": "มูลค่าอาคาร 100% ก่อนตรวจสอบ",
+      "totalValue": "มูลค่ารวม"
+    }
+  },
+  "forms": {
+    "land": {
+      "sectionTitleInfo": "ข้อมูลที่ดิน",
+      "sectionTitleLocation": "ที่ตั้งที่ดิน",
+      "sectionTitleBoundary": "แนวเขตที่ดิน",
+      "sectionTitleCharacteristics": "ลักษณะที่ดิน",
+      "sectionTitlePlot": "ที่ตั้งแปลง"
+    },
+    "building": {
+      "sectionTitle": "รายละเอียดอาคาร"
+    },
+    "condo": {
+      "sectionTitle": "รายละเอียดคอนโด",
+      "areaDetail": "รายละเอียดพื้นที่",
+      "pma": "ข้อมูล PMA"
+    },
+    "machinery": {
+      "sectionTitle": "รายละเอียดเครื่องจักร"
+    },
+    "titleDeed": {
+      "sectionTitle": "โฉนดที่ดิน"
+    },
+    "leaseAgreement": {
+      "sectionTitle": "สัญญาเช่า"
+    },
+    "rentalInfo": {
+      "sectionTitle": "ข้อมูลการเช่า"
+    },
+    "marketComparable": {
+      "sectionTitle": "ข้อมูลตลาดเปรียบเทียบ"
+    }
+  },
+  "validation": {
+    "dateTimeRequired": "กรุณาระบุวันที่และเวลา",
+    "locationRequired": "กรุณาระบุสถานที่",
+    "descriptionRequired": "กรุณาระบุรายละเอียด",
+    "amountNonNegative": "จำนวนเงินต้องไม่ติดลบ",
+    "amountPositive": "จำนวนเงินต้องมากกว่า 0",
+    "paymentDateRequired": "กรุณาระบุวันที่ชำระ",
+    "feeTypeRequired": "กรุณาระบุประเภทค่าธรรมเนียม",
+    "bankAbsorbNonNegative": "จำนวนที่ธนาคารรับผิดชอบต้องไม่ติดลบ",
+    "ciFeeNonNegative": "ค่าตรวจสอบการก่อสร้างต้องไม่ติดลบ",
+    "subDistrictRequired": "กรุณาระบุตำบล",
+    "districtRequired": "กรุณาระบุอำเภอ",
+    "provinceRequired": "กรุณาระบุจังหวัด",
+    "builtOnTitleNumberRequired": "กรุณาระบุเลขที่โฉนดที่ดิน",
+    "condoRegistrationNumberRequired": "กรุณาระบุเลขทะเบียนคอนโด",
+    "roomNumberRequired": "กรุณาระบุหมายเลขห้อง",
+    "buildingNumberRequired": "กรุณาระบุหมายเลขตึก",
+    "condoNameRequired": "กรุณาระบุชื่อคอนโด",
+    "headerRequired": "กรุณาระบุหัวข้อ",
+    "assignmentTypeRequired": "กรุณาเลือกประเภทการมอบหมาย",
+    "assignmentMethodRequired": "กรุณาเลือกวิธีการมอบหมาย",
+    "remarksMaxLength": "หมายเหตุต้องไม่เกิน 500 ตัวอักษร",
+    "selectAssignee": "กรุณาเลือกผู้รับมอบหมาย",
+    "selectFollowupStaff": "กรุณาเลือกเจ้าหน้าที่ติดตามภายใน"
+  },
+  "toasts": {
+    "photoUploaded": "อัปโหลดรูปภาพสำเร็จ",
+    "photoUploadFailed": "อัปโหลดรูปภาพล้มเหลว",
+    "photoLinked": "เชื่อมโยงรูปภาพสำเร็จ",
+    "photosLinked": "เชื่อมโยง {{count}} รูปภาพสำเร็จ",
+    "photoLinkFailed": "เชื่อมโยงรูปภาพล้มเหลว",
+    "photoLinkIndexFailed": "เชื่อมโยงรูปภาพที่ {{index}} ล้มเหลว",
+    "photoRemoved": "ลบรูปภาพแล้ว",
+    "photoUnlinked": "ยกเลิกการเชื่อมโยงรูปภาพกับทรัพย์สินแล้ว",
+    "photoUnlinkFailed": "ยกเลิกการเชื่อมโยงรูปภาพล้มเหลว",
+    "photoUnlinkMissingId": "ไม่สามารถยกเลิกการเชื่อมโยง: ไม่พบ ID รูปภาพ",
+    "photoUnlinkMissingMappingId": "ไม่สามารถยกเลิกการเชื่อมโยง: ไม่พบ mapping ID",
+    "photoRemoveFailed": "ลบรูปภาพล้มเหลว",
+    "photoDeletedPermanently": "ลบรูปภาพถาวรแล้ว",
+    "photoDeleteFailed": "ลบรูปภาพล้มเหลว",
+    "photoThumbnailSetFailed": "ตั้งค่ารูปปก​ล้มเหลว",
+    "photoThumbnailUnsetFailed": "ลบรูปปกล้มเหลว",
+    "photoThumbnailSetPropertyFailed": "ตั้งค่ารูปขนาดเล็กล้มเหลว",
+    "photoThumbnailUnsetPropertyFailed": "ยกเลิกรูปขนาดเล็กล้มเหลว",
+    "descriptionUpdated": "อัปเดตคำอธิบายแล้ว",
+    "descriptionUpdateFailed": "อัปเดตคำอธิบายล้มเหลว",
+    "galleryPhotoNotFound": "ไม่พบรูปภาพในแกลเลอรี",
+    "uploading": "กำลังอัปโหลด {{count}} ไฟล์...",
+    "uploadedFile": "อัปโหลด {{name}} สำเร็จ",
+    "uploadFileFailed": "อัปโหลด {{name}} ล้มเหลว",
+    "photosLinkedToProperty": "เชื่อมโยง {{count}} รูปภาพกับทรัพย์สินสำเร็จ",
+    "photosLinkedPartial": "เชื่อมโยงสำเร็จ {{success}}, ล้มเหลว {{failed}}",
+    "photoSelectTopicFirst": "กรุณาเลือกหัวข้อก่อน",
+    "photoUnsupportedFormat": "กรุณาเลือกไฟล์รูปภาพที่รองรับเท่านั้น (JPG, JPEG, PNG)",
+    "photoUnsupportedFormatGallery": "{{name}} ไม่ใช่ไฟล์รูปภาพที่รองรับ (JPG, JPEG, PNG เท่านั้น)",
+    "photoAddedCount": "เพิ่ม {{count}} รูปภาพแล้ว",
+    "photoAssignFailed": "กำหนดรูปภาพล้มเหลว",
+    "photoRemoveFromTopicFailed": "ลบรูปภาพออกจากหัวข้อล้มเหลว",
+    "topicUnassignFailed": "ยกเลิกการกำหนดรูปภาพออกจากหัวข้อล้มเหลว",
+    "topicCreated": "สร้างหัวข้อแล้ว",
+    "uploadSessionFailed": "สร้าง upload session ล้มเหลว",
+    "documentUpdated": "อัปเดตเอกสารแล้ว",
+    "filesUploaded": "อัปโหลดไฟล์สำเร็จ",
+    "annotationSaveFailed": "บันทึกรูปภาพที่มีคำอธิบายล้มเหลว",
+    "fileUploadFailed": "อัปโหลดไฟล์ล้มเหลว",
+    "documentLoadFailed": "โหลดเอกสารสำหรับแก้ไขล้มเหลว",
+    "onlyImageFilesAllowed": "อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น",
+    "galleryFilesAdded": "เพิ่มไฟล์จากแกลเลอรีแล้ว",
+    "galleryFilesAddFailed": "เพิ่มไฟล์จากแกลเลอรีล้มเหลว",
+    "documentRemoved": "ลบเอกสารแล้ว",
+    "documentRemoveFailed": "ลบเอกสารล้มเหลว",
+    "layoutUpdateFailed": "อัปเดตรูปแบบล้มเหลว",
+    "galleryPhotoDeletedCount": "ลบ {{count}} รูปภาพแล้ว",
+    "galleryPhotoDeletedPartial": "ลบสำเร็จ {{deleted}}, ล้มเหลว {{failed}}",
+    "galleryPhotoSelectFirst": "กรุณาเลือกรูปภาพอย่างน้อยหนึ่งรูป",
+    "comparableUnlinked": "ยกเลิกการเชื่อมโยงข้อมูลเปรียบเทียบสำเร็จ",
+    "comparableUnlinkFailed": "ยกเลิกการเชื่อมโยงข้อมูลเปรียบเทียบล้มเหลว",
+    "lawItemDeleted": "ลบรายการสำเร็จ",
+    "lawItemDeleteFailed": "ลบรายการล้มเหลว",
+    "lawImageUploaded": "อัปโหลด \"{{name}}\" สำเร็จ",
+    "lawImageUploadFailed": "อัปโหลดรูปภาพล้มเหลว",
+    "lawImagesUploading": "กำลังอัปโหลด {{count}} ไฟล์...",
+    "lawSaveFailed": "บันทึกล้มเหลว",
+    "lawDescriptionUpdated": "อัปเดตคำอธิบายแล้ว",
+    "lawDescriptionUpdateFailed": "อัปเดตคำอธิบายล้มเหลว",
+    "quotationTaskContextMissing": "ไม่มีข้อมูล task กรุณาเปิดหน้า task ใหม่และลองอีกครั้ง",
+    "quotationStarted": "เริ่มต้นการประกวดราคาแล้ว — ได้รับเชิญบริษัทต่างๆ แล้ว",
+    "quotationAddSelectDraft": "กรุณาเลือกใบเสนอราคาฉบับร่างที่ต้องการเพิ่ม",
+    "quotationAddedToDraft": "เพิ่มงานประเมินใน {{quotationNumber}} แล้ว",
+    "voteSubmitFailed": "ส่งการโหวตล้มเหลว",
+    "committeeDecisionRecorded": "บันทึกการตัดสินใจของคณะกรรมการแล้ว",
+    "voteRecorded": "บันทึกการโหวตแล้ว",
+    "propertyCondoUpdated": "อัปเดตทรัพย์สินคอนโดสำเร็จ",
+    "propertyCondoCreated": "สร้างทรัพย์สินคอนโดสำเร็จ",
+    "propertyLandUpdated": "อัปเดตทรัพย์สินที่ดินสำเร็จ",
+    "propertyLandCreated": "สร้างทรัพย์สินที่ดินสำเร็จ",
+    "propertyLandBuildingUpdated": "อัปเดตทรัพย์สินที่ดินและสิ่งปลูกสร้างสำเร็จ",
+    "propertyLandBuildingCreated": "สร้างทรัพย์สินที่ดินและสิ่งปลูกสร้างสำเร็จ",
+    "propertyBuildingUpdated": "อัปเดตทรัพย์สินสิ่งปลูกสร้างสำเร็จ",
+    "propertyBuildingCreated": "สร้างทรัพย์สินสิ่งปลูกสร้างสำเร็จ",
+    "propertyMachineryUpdated": "อัปเดตทรัพย์สินเครื่องจักรสำเร็จ",
+    "propertyMachineryCreated": "สร้างทรัพย์สินเครื่องจักรสำเร็จ",
+    "leaseAgreementBuildingUpdated": "อัปเดตสัญญาเช่าอาคารสำเร็จ",
+    "leaseAgreementBuildingCreated": "สร้างสัญญาเช่าอาคารสำเร็จ",
+    "leaseAgreementLandUpdated": "อัปเดตสัญญาเช่าที่ดินสำเร็จ",
+    "leaseAgreementLandCreated": "สร้างสัญญาเช่าที่ดินสำเร็จ",
+    "leaseAgreementLandBuildingUpdated": "อัปเดตสัญญาเช่าที่ดินและสิ่งปลูกสร้างสำเร็จ",
+    "leaseAgreementLandBuildingCreated": "สร้างสัญญาเช่าที่ดินและสิ่งปลูกสร้างสำเร็จ",
+    "leaseAgreementCondoUpdated": "อัปเดตสัญญาเช่าคอนโดสำเร็จ",
+    "leaseAgreementCondoCreated": "สร้างสัญญาเช่าคอนโดสำเร็จ",
+    "draftSaved": "บันทึกฉบับร่างสำเร็จ",
+    "marketComparableUpdated": "อัปเดตข้อมูลตลาดเปรียบเทียบสำเร็จ",
+    "marketComparableCreated": "สร้างข้อมูลตลาดเปรียบเทียบสำเร็จ",
+    "marketComparableDeleted": "ลบข้อมูลตลาดเปรียบเทียบสำเร็จ",
+    "marketComparableDeleteFailed": "ลบข้อมูลตลาดเปรียบเทียบล้มเหลว"
+  },
+  "common": {
+    "unsavedChanges": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก",
+    "loading": "กำลังโหลด...",
+    "saving": "กำลังบันทึก...",
+    "noData": "—",
+    "cancelButton": "ยกเลิก",
+    "saveButton": "บันทึก",
+    "submitButton": "ส่ง",
+    "assignButton": "มอบหมาย",
+    "editButton": "แก้ไข",
+    "deleteButton": "ลบ",
+    "addButton": "เพิ่ม",
+    "closeButton": "ปิด",
+    "backButton": "กลับ",
+    "retryButton": "ลองใหม่",
+    "appraisals": "งานประเมิน",
+    "company": "บริษัท",
+    "province": "จังหวัด",
+    "status": "สถานะ"
+  },
+  "pageHeader": {
+    "appraisalNumber": "เลขประเมิน"
+  },
+  "collateralSelectModal": {
+    "title": "เลือกหลักประกัน",
+    "searchPlaceholder": "ค้นหาหลักประกัน...",
+    "noResults": "ไม่พบหลักประกัน"
+  },
+  "collateralAssignmentModal": {
+    "title": "มอบหมายหลักประกัน",
+    "assign": "มอบหมาย"
+  },
+  "moveToGroupModal": {
+    "title": "ย้ายไปกลุ่ม",
+    "selectGroup": "เลือกกลุ่ม",
+    "moving": "กำลังย้าย..."
+  },
+  "deleteConfirmationModal": {
+    "title": "ลบทรัพย์สิน",
+    "message": "คุณแน่ใจหรือไม่ว่าต้องการนำทรัพย์สินนี้ออกจากกลุ่ม? ไม่สามารถย้อนกลับได้",
+    "confirm": "ลบ"
+  },
+  "editPropertyModal": {
+    "title": "แก้ไขทรัพย์สิน"
+  },
+  "addToQuotationModal": {
+    "title": "เพิ่มเข้าใบเสนอราคา",
+    "searchPlaceholder": "ค้นหาใบเสนอราคา...",
+    "noQuotations": "ไม่พบใบเสนอราคาที่เปิดอยู่",
+    "add": "เพิ่มเข้าใบเสนอราคา",
+    "toasts": {
+      "added": "เพิ่มเข้าใบเสนอราคาแล้ว",
+      "addFailed": "ไม่สามารถเพิ่มเข้าใบเสนอราคาได้"
+    }
+  },
+  "createQuotationModal": {
+    "title": "สร้างคำขอใบเสนอราคา",
+    "fields": {
+      "companies": "เชิญบริษัท",
+      "cutOffTime": "เวลาปิดรับ",
+      "assignmentType": "ประเภทการมอบหมาย",
+      "assignmentMethod": "วิธีการมอบหมาย"
+    },
+    "submit": "สร้างใบเสนอราคา",
+    "creating": "กำลังสร้าง...",
+    "toasts": {
+      "created": "สร้างคำขอใบเสนอราคาแล้ว",
+      "createFailed": "ไม่สามารถสร้างคำขอใบเสนอราคาได้"
+    }
+  },
+  "history": {
+    "title": "ประวัติ",
+    "viewHistory": "ดูประวัติ",
+    "eventCount_one": "{{count}} รายการ",
+    "eventCount_other": "{{count}} รายการ",
+    "chips": {
+      "all": "ทั้งหมด",
+      "appointment": "การนัดหมาย",
+      "fees": "ค่าธรรมเนียม"
+    },
+    "status": {
+      "Approved": "อนุมัติแล้ว",
+      "Rejected": "ปฏิเสธแล้ว",
+      "Pending": "รออนุมัติ",
+      "Auto": "อัตโนมัติ",
+      "Cancelled": "ยกเลิกแล้ว"
+    },
+    "emptyState": "ยังไม่มีประวัติ",
+    "loadError": "ไม่สามารถโหลดประวัติได้"
+  },
+  "approval": {
+    "banner": {
+      "needsApproval": "การเปลี่ยนแปลงนี้ต้องได้รับอนุมัติจากธนาคาร — กรุณาส่งเพื่อรับการพิจารณาก่อนมีผล",
+      "awaiting": "รอการอนุมัติจากธนาคาร ไม่สามารถแก้ไขได้จนกว่าจะได้รับการอนุมัติ"
+    },
+    "badge": {
+      "needsApproval": "รอส่งขออนุมัติ",
+      "awaiting": "รออนุมัติ"
+    },
+    "submitButton": "ส่งขออนุมัติ — {{summary}}",
+    "submitConfirm": "ส่ง",
+    "summary": {
+      "dateChange": "เปลี่ยนวันนัด 1 ครั้ง",
+      "fees_one": "{{count}} รายการค่าธรรมเนียม",
+      "fees_other": "{{count}} รายการค่าธรรมเนียม"
+    },
+    "toasts": {
+      "submitted": "ส่งขออนุมัติจากธนาคารแล้ว",
+      "submitFailed": "ส่งขออนุมัติไม่สำเร็จ"
+    }
+  },
+  "createPage": {
+    "photosSection": "รูปภาพ",
+    "landSection": "ข้อมูลที่ดิน",
+    "leaseAgreementSection": "สัญญาเช่า",
+    "rentalInfoSection": "ข้อมูลการเช่า",
+    "condoSection": "ข้อมูลคอนโด",
+    "buildingSection": "ข้อมูลอาคาร",
+    "constructionSection": "การตรวจสอบการก่อสร้าง",
+    "machinerySection": "ข้อมูลเครื่องจักร",
+    "navPhotos": "รูปภาพ",
+    "navLand": "ที่ดิน",
+    "navLeaseAgreement": "สัญญาเช่า",
+    "navRentalInfo": "ข้อมูลการเช่า",
+    "navCondo": "คอนโด",
+    "navBuilding": "อาคาร",
+    "navConstructionInspection": "การตรวจสอบการก่อสร้าง",
+    "navMachinery": "เครื่องจักร",
+    "saveDraft": "บันทึกร่าง",
+    "save": "บันทึก"
+  },
+  "landCharacteristicsForm": {
+    "sections": {
+      "landfill": "การถมที่",
+      "road": "ถนน",
+      "landAccessibility": "การเข้าถึงที่ดิน",
+      "roadSurface": "ผิวถนน",
+      "publicUtility": "สาธารณูปโภค",
+      "landUse": "การใช้ที่ดิน",
+      "landEntranceExit": "ทางเข้า-ออก",
+      "transportation": "การคมนาคม",
+      "anticipationOfProperty": "การคาดการณ์อสังหาริมทรัพย์",
+      "limitation": "ข้อจำกัด",
+      "eviction": "การไล่รื้อ",
+      "allocation": "การจัดสรร",
+      "hasBuilding": "มีอาคาร",
+      "remark": "หมายเหตุ"
+    },
+    "fields": {
+      "other": "อื่นๆ",
+      "landfillHeight": "ความสูงการถม",
+      "landAccessibilityDescription": "รายละเอียดการเข้าถึงที่ดิน",
+      "roadWidth": "ความกว้างถนน",
+      "rightOfWay": "สิทธิทาง",
+      "roadFrontage": "หน้าที่ดินติดถนน",
+      "numberOrSidesFacingRoad": "จำนวนด้านที่ติดถนน",
+      "roadRunningInFrontOfLand": "ถนนหน้าที่ดิน",
+      "areaSqWa": "พื้นที่ (ตร.วา)",
+      "distance": "ระยะทาง",
+      "remarkPlaceholder": "ใส่หมายเหตุ...",
+      "isExpropriate": "อยู่ในแนวเวนคืน",
+      "inLineExpropriate": "อยู่ในแนวเขต",
+      "royalDecree": "พระราชกฤษฎีกา",
+      "isEncroached": "มีการบุกรุก",
+      "electricity": "ไฟฟ้า",
+      "isLandlocked": "ที่ดินตาบอด",
+      "isForestBoundary": "แนวเขตป่า"
+    },
+    "landfillOptions": {
+      "emptyLand": "ที่ดินเปล่า",
+      "filled": "ถมแล้ว",
+      "notFilledYet": "ยังไม่ได้ถม",
+      "partiallyFilled": "ถมบางส่วน",
+      "other": "อื่นๆ"
+    },
+    "landAccessibilityOptions": {
+      "able": "เข้าถึงได้",
+      "unable": "เข้าถึงไม่ได้",
+      "inAllocation": "อยู่ในโครงการจัดสรร"
+    },
+    "roadSurfaceOptions": {
+      "reinforcedConcrete": "คอนกรีตเสริมเหล็ก",
+      "gravelCrushedStone": "กรวด/หินคลุก",
+      "soil": "ดิน",
+      "paved": "ลาดยาง",
+      "other": "อื่นๆ"
+    },
+    "publicUtilityOptions": {
+      "permanentElectricity": "ไฟฟ้าถาวร",
+      "tapWaterGroundwater": "ประปา/น้ำบาดาล",
+      "drainagePipeStone": "ท่อระบายน้ำ/หิน",
+      "streetlight": "ไฟถนน",
+      "other": "อื่นๆ"
+    },
+    "landUseOptions": {
+      "residence": "ที่อยู่อาศัย",
+      "agriculture": "เกษตรกรรม",
+      "commercial": "พาณิชยกรรม",
+      "industry": "อุตสาหกรรม",
+      "other": "อื่นๆ"
+    },
+    "landEntranceExitOptions": {
+      "publicInterest": "ทางสาธารณะ",
+      "insideAllocationProject": "ภายในโครงการจัดสรร",
+      "personal": "ส่วนตัว",
+      "servitude": "ภาระจำยอม",
+      "other": "อื่นๆ"
+    },
+    "transportationOptions": {
+      "car": "รถยนต์",
+      "bus": "รถโดยสาร",
+      "ship": "เรือ",
+      "footpath": "ทางเดินเท้า",
+      "other": "อื่นๆ"
+    },
+    "anticipationOptions": {
+      "veryProspective": "มีโอกาสสูงมาก",
+      "moderate": "ปานกลาง",
+      "likelyToProsperInFuture": "อาจเจริญในอนาคต",
+      "littleChanceOfProsperity": "โอกาสเจริญน้อย"
+    },
+    "evictionOptions": {
+      "permanentElectricity": "ไฟฟ้าถาวร",
+      "subwayLine": "รถไฟใต้ดิน",
+      "other": "อื่นๆ"
+    },
+    "allocationOptions": {
+      "allocateNewProject": "จัดสรรโครงการใหม่",
+      "allocateOldProject": "จัดสรรโครงการเก่า",
+      "notAllocate": "ไม่จัดสรร"
+    },
+    "hasBuildingOptions": {
+      "yes": "มี",
+      "no": "ไม่มี",
+      "other": "อื่นๆ"
+    }
+  },
+  "approachMatrixTable": {
+    "columns": {
+      "group": "กลุ่ม",
+      "model": "รูปแบบ",
+      "market": "วิธีเปรียบเทียบตลาด",
+      "cost": "วิธีต้นทุน",
+      "income": "วิธีรายได้",
+      "residual": "วิธีส่วนเหลือ",
+      "summary": "สรุป"
+    },
+    "footer": {
+      "total": "รวม",
+      "project": "โครงการ"
+    }
+  },
+  "blockPriceSummaryTable": {
+    "columns": {
+      "model": "รูปแบบ",
+      "unitCount": "จำนวนยูนิต",
+      "totalAppraisalPrice": "ราคาประเมินรวม",
+      "forceSellingPrice": "ราคาบังคับขาย",
+      "buildingInsurance": "ทุนประกันอาคาร"
+    },
+    "footer": {
+      "project": "โครงการ"
+    }
+  },
+  "governmentPriceTable": {
+    "columns": {
+      "titleDeedNo": "เลขที่โฉนด",
+      "sqWa": "ตร.วา",
+      "bahtPerSqWa": "บาท / ตร.วา",
+      "landPrice": "ราคาที่ดิน"
+    },
+    "footer": {
+      "total": "รวม",
+      "avg": "เฉลี่ย"
+    },
+    "missingFromSurvey": "ไม่พบในรังวัด"
+  },
+  "constructionSummaryTable": {
+    "columns": {
+      "milestone": "ช่วงการก่อสร้าง",
+      "totalAppraisalValue": "มูลค่าประเมินรวม",
+      "landValue": "มูลค่าที่ดิน",
+      "constructionProgress": "ความคืบหน้าการก่อสร้าง (%)",
+      "buildingValue": "มูลค่าอาคาร",
+      "buildingValuePreInspection": "มูลค่าอาคารก่อนตรวจสอบ"
+    },
+    "rows": {
+      "Previous": "งวดก่อนหน้า",
+      "ConstructionIncreased": "การก่อสร้างเพิ่มขึ้น",
+      "Current": "งวดปัจจุบัน",
+      "RemainingConstruction": "งานก่อสร้างที่เหลือ",
+      "Complete100": "สมบูรณ์ (100%)"
+    }
+  },
+  "approvalListSection": {
+    "title": "การอนุมัติของคณะกรรมการ",
+    "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",
+    "approvedBanner": "การประเมินนี้ได้รับการอนุมัติจากคณะกรรมการแล้ว",
+    "returnedBanner": "การประเมินนี้ถูกส่งกลับเพื่อแก้ไข",
+    "conditionsTitle": "เงื่อนไขการอนุมัติ",
+    "votesDisplay": "{{received}}/{{total}} คะแนนเสียง",
+    "youBadge": "คุณ",
+    "pendingVote": "รอดำเนินการ",
+    "tierLabels": {
+      "1": "ระดับ 1",
+      "2": "ระดับ 2",
+      "3": "ระดับ 3"
+    },
+    "committeeCodeLabels": {
+      "SUB_COMMITTEE": "อนุกรรมการ",
+      "COMMITTEE": "คณะกรรมการ",
+      "COMMITTEE_WITH_MEETING": "คณะกรรมการ (พร้อมการประชุม)"
+    },
+    "committeeDefault": "คณะกรรมการ",
+    "conditionRoleRequired": "{{role}} ต้องลงคะแนน",
+    "conditionRoleRequiredDefault": "ต้องมีผู้มีสิทธิ์ลงคะแนน",
+    "conditionMinVotes": "ต้องการอย่างน้อย {{n}} คะแนน",
+    "conditionMinVotesDefault": "ต้องการจำนวนคะแนนขั้นต่ำ",
+    "columns": {
+      "member": "สมาชิก",
+      "role": "บทบาท",
+      "vote": "คะแนนเสียง",
+      "date": "วันที่",
+      "comments": "ความคิดเห็น"
+    }
+  },
+  "decisionSummaryPageExtra": {
+    "governmentAppraisalPrice": "ราคาประเมินของทางราชการ",
+    "constructionSummaryTitle": "สรุปการก่อสร้าง",
+    "cancelButton": "ยกเลิก",
+    "saveButton": "บันทึก",
+    "submitButton": "ส่ง"
+  },
+  "landDetailSchema": {
+    "latitudeRequired": "กรุณากรอกละติจูด",
+    "longitudeRequired": "กรุณากรอกลองจิจูด",
+    "subDistrictRequired": "กรุณาเลือกตำบล/แขวง",
+    "districtRequired": "กรุณาเลือกอำเภอ/เขต",
+    "provinceRequired": "กรุณาเลือกจังหวัด",
+    "landOfficeRequired": "กรุณาระบุสำนักงานที่ดิน"
+  }
+}

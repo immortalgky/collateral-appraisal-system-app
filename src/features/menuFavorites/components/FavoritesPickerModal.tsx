@@ -37,6 +37,7 @@ interface TreeNodeRowProps {
 }
 
 function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowProps) {
+  const { t } = useTranslation('common');
   const [expanded, setExpanded] = useState(true);
   const pinnable = isPinnable(node);
   const label = node.labels[lang] ?? node.labels['en'] ?? node.itemKey;
@@ -72,7 +73,7 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
               setExpanded(v => !v);
             }}
             className="flex-shrink-0 text-gray-400 hover:text-gray-600 w-4"
-            aria-label={expanded ? 'Collapse' : 'Expand'}
+            aria-label={expanded ? t('favorites.aria.collapse') : t('favorites.aria.expand')}
           >
             <Icon
               style="solid"
@@ -120,7 +121,7 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
         {/* "Folder" badge for non-pinnable parents */}
         {!pinnable && hasChildren && (
           <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
-            folder
+            {t('favorites.picker.folderBadge')}
           </span>
         )}
       </div>

@@ -13,7 +13,8 @@ import type { WQSCalculation } from '../types/wqs';
 
 interface RestoreWQSFromSavedDataProps {
   methodId: string;
-  property: Record<string, unknown>;
+  /** Optional for manual-subject references (room/profit-rent) with no backing property. */
+  property?: Record<string, unknown>;
   comparativeSurveys: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
   linkedComparables?: LinkedComparableType[];
@@ -54,6 +55,8 @@ export function restoreWQSFromSavedData({
       id: cf.id,
       factorId: cf.factorId,
       factorCode: cf.factorCode ?? factorCodeMap.get(cf.factorId) ?? '',
+      // collateralValue: persisted manual subject value for reference analyses (M3 fix)
+      collateralValue: (cf as any).collateralValue ?? null,
     }));
 
   // Group factorScores by factorId
@@ -120,15 +123,13 @@ export function restoreWQSFromSavedData({
     return {
       marketId: survey.id ?? '',
       offeringPrice: saved?.offeringPrice ?? survey.offerPrice ?? 0,
-      offeringPriceMeasurementUnit:
-        saved?.offeringPriceUnit ?? survey.offerPriceUnit ?? '',
+      offeringPriceMeasurementUnit: saved?.offeringPriceUnit ?? survey.offerPriceUnit ?? '',
       offeringPriceAdjustmentPct:
         saved?.adjustOfferPricePct ?? survey.offerPriceAdjustmentPercent ?? 0,
       offeringPriceAdjustmentAmt:
         saved?.adjustOfferPriceAmt ?? survey.offerPriceAdjustmentAmount ?? 0,
       sellingPrice: saved?.sellingPrice ?? survey.salePrice ?? 0,
-      sellingPriceMeasurementUnit:
-        (saved as any)?.sellingPriceUnit ?? survey.salePriceUnit ?? '',
+      sellingPriceMeasurementUnit: (saved as any)?.sellingPriceUnit ?? survey.salePriceUnit ?? '',
       sellingPriceAdjustmentYear: saved?.adjustedPeriodPct ?? toNum(surveyMap.get('23'), 3),
       numberOfYears: saved?.buySellYear ?? yearDiffFromToday(survey.saleDate),
       totalAdjustedSellingPrice: saved?.cumulativeAdjPeriod ?? 0,
@@ -164,10 +165,10 @@ export function restoreWQSFromSavedData({
       },
       WQSCalculations,
       WQSFinalValue: {
-        landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-        usableArea: property.totalBuildingArea
+        landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        usableArea: property?.totalBuildingArea
           ? Number(property.totalBuildingArea)
-          : property.usableArea
+          : property?.usableArea
             ? Number(property.usableArea)
             : undefined,
         finalValue: 0,

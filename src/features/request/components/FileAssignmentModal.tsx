@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -32,6 +33,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
   uploadedFiles,
   onAssign,
 }) => {
+  const { t } = useTranslation(['request', 'common']);
   const { watch } = useFormContext();
   const titles = watch('titles') || [];
   const requestNumber = watch('requestNumber');
@@ -184,15 +186,12 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Assign Documents"
+      title={t('fileAssignment.modalTitle')}
       size="2xl"
       showCloseButton={false}
     >
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Assign each uploaded file to a document slot. Select the entity and document type for each
-          file.
-        </p>
+        <p className="text-sm text-gray-600">{t('fileAssignment.description')}</p>
 
         {/* File list table */}
         <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
@@ -200,17 +199,17 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
             <thead className="bg-gray-50 sticky top-0">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  File
+                  {t('fileAssignment.columnFile')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  Entity
+                  {t('fileAssignment.columnEntity')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  Document Type
+                  {t('fileAssignment.columnDocumentType')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
                   <div className="flex items-center gap-1">
-                    <span>Set</span>
+                    <span>{t('fileAssignment.columnSet')}</span>
                     <div className="group relative">
                       <Icon
                         name="circle-question"
@@ -218,14 +217,14 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                         className="w-3.5 h-3.5 text-gray-400 cursor-help"
                       />
                       <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                        Set number for multiple copies of the same document
+                        {t('fileAssignment.columnSetTooltip')}
                         <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-800" />
                       </div>
                     </div>
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  Notes
+                  {t('fileAssignment.columnNotes')}
                 </th>
               </tr>
             </thead>
@@ -302,7 +301,11 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                         }}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
-                        <option value="">{isLoadingTypes ? 'Loading...' : 'Select type...'}</option>
+                        <option value="">
+                          {isLoadingTypes
+                            ? t('fileAssignment.loadingTypes')
+                            : t('fileAssignment.selectType')}
+                        </option>
                         {availableTypes.map(type => (
                           <option key={type.code} value={type.code}>
                             {type.name}
@@ -326,7 +329,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                         type="text"
                         value={assignment?.comment || ''}
                         onChange={e => updateAssignment(file.documentId, 'comment', e.target.value)}
-                        placeholder="Optional"
+                        placeholder={t('fileAssignment.notesPlaceholder')}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </td>
@@ -341,19 +344,17 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
         {!allAssigned && (
           <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <Icon name="triangle-exclamation" style="solid" className="w-5 h-5 text-yellow-600" />
-            <span className="text-sm text-yellow-800">
-              Please select an entity and document type for all files.
-            </span>
+            <span className="text-sm text-yellow-800">{t('fileAssignment.warningSelectAll')}</span>
           </div>
         )}
 
         {/* Action buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" onClick={handleAssign} disabled={!allAssigned}>
-            Assign to Form
+            {t('fileAssignment.assignToForm')}
           </Button>
         </div>
       </div>

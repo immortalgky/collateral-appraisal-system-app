@@ -1,0 +1,379 @@
+{
+  "page": {
+    "welcome": "ยินดีต้อนรับกลับ",
+    "date": "{{date}}",
+    "editDone": "เสร็จสิ้น",
+    "editStart": "แก้ไข",
+    "dragHint": "ลากวิดเจ็ตระหว่างแผง • วิดเจ็ตขนาดเล็กสามารถใส่ในแถบด้านข้างได้"
+  },
+  "empty": {
+    "noWidgets": "ไม่มีวิดเจ็ตบนแดชบอร์ดของคุณ",
+    "noWidgetsHint": "คลิก แก้ไข เพื่อเพิ่มวิดเจ็ต",
+    "dropMain": "ลากวิดเจ็ตมาที่นี่สำหรับแผงหลัก",
+    "dropSidebarSmallOnly": "เฉพาะวิดเจ็ตขนาดเล็กเท่านั้น",
+    "dropHere": "วางที่นี่"
+  },
+  "addWidget": {
+    "title": "เพิ่มวิดเจ็ต",
+    "mainPanelOnly": "แผงหลักเท่านั้น",
+    "smallWidgets": "วิดเจ็ตขนาดเล็ก",
+    "addToMain": "แผงหลัก",
+    "addToSidebar": "แถบด้านข้าง",
+    "allVisible": "แสดงวิดเจ็ตทั้งหมดแล้ว",
+    "allVisibleHint": "แดชบอร์ดของคุณได้รับการกำหนดค่าครบถ้วนแล้ว"
+  },
+  "draggable": {
+    "size": {
+      "quarter": "1/4",
+      "third": "1/3",
+      "half": "1/2",
+      "twoThirds": "2/3",
+      "full": "เต็ม"
+    }
+  },
+  "widgetError": {
+    "defaultMessage": "โหลดข้อมูลไม่สำเร็จ",
+    "retry": "ลองอีกครั้ง"
+  },
+  "updatedAgo": "อัปเดตเมื่อ {{n}} ที่ผ่านมา",
+  "period": {
+    "MTD": "เดือนถึงปัจจุบัน",
+    "QTD": "ไตรมาสถึงปัจจุบัน",
+    "YTD": "ปีถึงปัจจุบัน",
+    "LAST_12M": "12 เดือนย้อนหลัง",
+    "CUSTOM": "ช่วงกำหนดเอง",
+    "customFrom": "จาก",
+    "customTo": "ถึง",
+    "apply": "นำไปใช้"
+  },
+  "taskSummary": {
+    "title": "สรุปงาน",
+    "notStarted": "ยังไม่เริ่ม",
+    "inProgress": "กำลังดำเนินการ",
+    "overdue": "เกินกำหนด",
+    "completed": "เสร็จสิ้น",
+    "tasks": "งาน",
+    "openList": "เปิดรายการ",
+    "periodDay": "ว",
+    "periodDayTitle": "รายวัน (วันนี้)",
+    "periodWeek": "ส",
+    "periodWeekTitle": "รายสัปดาห์ (สัปดาห์นี้)",
+    "periodMonth": "ด",
+    "periodMonthTitle": "รายเดือน (เดือนนี้)",
+    "periodAll": "ทั้งหมด",
+    "periodAllTitle": "ทุกช่วงเวลา",
+    "customRange": "ช่วงวันที่กำหนดเอง",
+    "hintAssigned": "กรองรายการงานตามสถานะ Assigned",
+    "hintInProgress": "กรองรายการงานตามสถานะ In Progress",
+    "hintBreached": "กรองรายการงานตามสถานะ SLA Breached",
+    "ariaGauge": "{{label}}: {{count}} งาน {{hint}} เปิดรายการที่กรองแล้ว",
+    "error": "ไม่สามารถโหลดสรุปงานได้"
+  },
+  "recentTask": {
+    "title": "งานล่าสุด",
+    "viewAll": "ดูทั้งหมด",
+    "columns": {
+      "appraisalNo": "เลขที่ประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "taskType": "ประเภทงาน",
+      "purpose": "วัตถุประสงค์",
+      "status": "สถานะ"
+    },
+    "empty": "ยังไม่มีงานล่าสุด"
+  },
+  "totalAppraisals": {
+    "title": "จำนวนการประเมินทั้งหมด",
+    "detailedView": "จำนวนการประเมินทั้งหมด — มุมมองรายละเอียด",
+    "kpi": {
+      "created": "สร้างแล้ว",
+      "completed": "เสร็จสิ้น",
+      "completionRate": "อัตราความสำเร็จ"
+    },
+    "pace": "ในอัตราปัจจุบัน:",
+    "paceByPeriodEnd": "ภายในสิ้นงวด",
+    "paceVsPrior": "เทียบงวดก่อน",
+    "noData": "ไม่มีการประเมินในช่วงนี้",
+    "chart": {
+      "prevPeriod": "งวดก่อน",
+      "created": "สร้างแล้ว",
+      "completed": "เสร็จสิ้น"
+    },
+    "table": {
+      "period": "งวด",
+      "created": "สร้างแล้ว",
+      "completed": "เสร็จสิ้น",
+      "completionPct": "ความสำเร็จ %",
+      "prior": "งวดก่อน"
+    },
+    "rangeInfo": "ช่วง: {{from}} – {{to}} · {{buckets}} ช่วง{{bucketPlural}} · {{days}} วัน",
+    "aria": {
+      "expand": "ขยายวิดเจ็ต",
+      "menu": "เมนูวิดเจ็ต"
+    },
+    "menu": {
+      "refresh": "รีเฟรช",
+      "reset": "รีเซ็ต"
+    },
+    "error": "ไม่สามารถโหลดแนวโน้มการประเมินได้"
+  },
+  "progressSummary": {
+    "title": "สรุปความคืบหน้าการประเมิน",
+    "total": "ทั้งหมด",
+    "vsPrior": "เทียบงวดก่อน",
+    "noData": "ไม่มีการประเมินที่ตรงกับตัวกรองเหล่านี้",
+    "clearFilters": "ล้างตัวกรอง",
+    "filters": {
+      "label": "ตัวกรอง",
+      "assigneeUsername": "ชื่อผู้ใช้ผู้รับผิดชอบ",
+      "assigneePlaceholder": "เช่น P5229",
+      "bankingSegment": "กลุ่มลูกค้าธนาคาร",
+      "bankingPlaceholder": "เช่น SME, Corporate",
+      "comparePrior": "เปรียบเทียบกับงวดก่อน",
+      "apply": "นำไปใช้"
+    },
+    "status": {
+      "Pending": "รอดำเนินการ",
+      "InProgress": "กำลังดำเนินการ",
+      "UnderReview": "กำลังตรวจสอบ",
+      "Completed": "เสร็จสิ้น",
+      "Cancelled": "ยกเลิก"
+    },
+    "aria": {
+      "menu": "เมนูวิดเจ็ต",
+      "filtersBtn": "ตัวกรอง",
+      "legendRow": "{{label}}: {{count}}, {{pct}} เปอร์เซ็นต์{{hidden}} กด Enter เพื่อเปิดรายการที่กรอง กด Space เพื่อสลับการมองเห็น",
+      "legendHidden": ", ซ่อนอยู่",
+      "toggleVisibility": "{{action}} ส่วน {{label}}",
+      "show": "แสดง",
+      "hide": "ซ่อน"
+    },
+    "menu": {
+      "refresh": "รีเฟรช",
+      "clearFilters": "ล้างตัวกรอง",
+      "reset": "รีเซ็ต"
+    },
+    "error": "ไม่สามารถโหลดสรุปความคืบหน้าได้"
+  },
+  "teamWorkload": {
+    "title": "ภาระงานของทีม",
+    "legend": {
+      "notStarted": "ยังไม่เริ่ม",
+      "inProgress": "กำลังดำเนินการ",
+      "completed": "เสร็จสิ้น",
+      "overdue": "เกินกำหนด (ซ้อนทับ)"
+    },
+    "overdueCount": "{{n}} งานเกินกำหนด",
+    "clickRowHint": "คลิกแถวเพื่อดูงาน",
+    "noData": "ไม่มีข้อมูลภาระงานของทีมสำหรับช่วงนี้",
+    "aria": {
+      "menu": "เมนูวิดเจ็ต"
+    },
+    "menu": {
+      "refresh": "รีเฟรช",
+      "reset": "รีเซ็ต"
+    },
+    "error": "ไม่สามารถโหลดภาระงานของทีมได้"
+  },
+  "externalSummary": {
+    "title": "สรุปการประเมินจากภายนอก",
+    "allCompanies": "บริษัททั้งหมด",
+    "clickBarHint": "คลิกแถบเพื่อดูการประเมินของบริษัทนั้น",
+    "clearCompanyFilter": "ล้างตัวกรองบริษัท",
+    "noData": "ไม่มีข้อมูลบริษัทสำหรับช่วงนี้",
+    "chart": {
+      "assigned": "มอบหมายแล้ว",
+      "completed": "เสร็จสิ้น"
+    },
+    "aria": {
+      "filterByCompany": "กรองตามบริษัท",
+      "menu": "เมนูวิดเจ็ต"
+    },
+    "menu": {
+      "refresh": "รีเฟรช",
+      "reset": "รีเซ็ต"
+    },
+    "error": "ไม่สามารถโหลดสรุปบริษัทได้"
+  },
+  "quotationSummary": {
+    "title": "สรุปงานใบเสนอราคา",
+    "pendingCreation": "รอสร้างใบเสนอราคา",
+    "waitingSubmission": "รอบริษัทส่งเอกสาร",
+    "waitingRm": "รอ RM เลือก",
+    "openList": "เปิดรายการ",
+    "error": "ไม่สามารถโหลดสรุปงานใบเสนอราคาได้"
+  },
+  "calendar": {
+    "title": "ปฏิทิน",
+    "viewCalendar": "ดูปฏิทิน",
+    "topics": "หัวข้อ",
+    "topicLabels": {
+      "meeting": "การประชุม",
+      "task_due": "งานที่ถึงกำหนด"
+    },
+    "categoryLabels": {
+      "meeting": "การประชุม",
+      "sla": "SLA วิกฤต",
+      "task": "งานถึงกำหนด"
+    },
+    "legend": {
+      "meeting": "การประชุม",
+      "taskDue": "งานถึงกำหนด",
+      "slaCritical": "แดง = SLA วิกฤต"
+    },
+    "aria": {
+      "filterByTopic": "กรองตามหัวข้อ",
+      "selectMonth": "เลือกเดือน",
+      "selectYear": "เลือกปี",
+      "previous": "ก่อนหน้า",
+      "next": "ถัดไป"
+    },
+    "months": {
+      "0": "มกราคม",
+      "1": "กุมภาพันธ์",
+      "2": "มีนาคม",
+      "3": "เมษายน",
+      "4": "พฤษภาคม",
+      "5": "มิถุนายน",
+      "6": "กรกฎาคม",
+      "7": "สิงหาคม",
+      "8": "กันยายน",
+      "9": "ตุลาคม",
+      "10": "พฤศจิกายน",
+      "11": "ธันวาคม"
+    },
+    "monthsShort": {
+      "0": "ม.ค.",
+      "1": "ก.พ.",
+      "2": "มี.ค.",
+      "3": "เม.ย.",
+      "4": "พ.ค.",
+      "5": "มิ.ย.",
+      "6": "ก.ค.",
+      "7": "ส.ค.",
+      "8": "ก.ย.",
+      "9": "ต.ค.",
+      "10": "พ.ย.",
+      "11": "ธ.ค."
+    },
+    "days": {
+      "MON": "จ",
+      "TUE": "อ",
+      "WED": "พ",
+      "THU": "พฤ",
+      "FRI": "ศ",
+      "SAT": "ส",
+      "SUN": "อา"
+    },
+    "eventCount": "{{n}} กิจกรรม",
+    "asOf": "ณ {{date}}"
+  },
+  "calendarPage": {
+    "breadcrumbDashboard": "แดชบอร์ด",
+    "breadcrumbCalendar": "ปฏิทิน",
+    "title": "ปฏิทิน",
+    "subtitle": "การประชุม วันกำหนดงาน และกำหนด SLA ที่มอบหมายให้คุณ",
+    "viewModes": {
+      "day": "วัน",
+      "week": "สัปดาห์",
+      "month": "เดือน"
+    },
+    "today": "วันนี้",
+    "topicsLabel": "หัวข้อ",
+    "noEventsForDay": "ไม่มีกิจกรรมสำหรับวันนี้",
+    "error": "ไม่สามารถโหลดกิจกรรมปฏิทินได้"
+  },
+  "reminders": {
+    "title": "การแจ้งเตือน",
+    "chips": {
+      "all": "ทั้งหมด",
+      "overdue": "เกินกำหนด",
+      "task_due": "งานถึงกำหนด",
+      "followup": "ติดตาม"
+    },
+    "overdueLabel": "เกินกำหนด",
+    "noneAll": "ไม่มีการแจ้งเตือนขณะนี้ — คุณทันหมดแล้ว",
+    "noneFiltered": "ไม่มีการแจ้งเตือน {{filter}}",
+    "aria": {
+      "dismiss": "ยกเลิกการแจ้งเตือน"
+    }
+  },
+  "notes": {
+    "title": "บันทึก",
+    "addNew": "เพิ่มใหม่",
+    "emptyMessage": "ยังไม่มีบันทึก — เริ่มจดได้เลย",
+    "delete": {
+      "title": "ลบบันทึก",
+      "message": "บันทึกนี้จะถูกลบอย่างถาวร ต้องการดำเนินการต่อหรือไม่?",
+      "confirm": "ลบ"
+    },
+    "editor": {
+      "titleNew": "บันทึกใหม่",
+      "titleEdit": "แก้ไขบันทึก",
+      "placeholder": "เขียนบันทึกของคุณ...",
+      "overCapError": "ลดเนื้อหาให้ไม่เกิน 4,000 ตัวอักษรเพื่อบันทึก",
+      "saveError": "บันทึกไม่สำเร็จ — กรุณาลองอีกครั้ง",
+      "saving": "กำลังบันทึก...",
+      "save": "บันทึก"
+    },
+    "aria": {
+      "editNote": "แก้ไขบันทึก",
+      "deleteNote": "ลบบันทึก"
+    }
+  },
+  "widgetConfigs": {
+    "totalAppraisals": {
+      "title": "จำนวนการประเมินทั้งหมด",
+      "description": "กราฟเส้นแสดงแนวโน้มการประเมิน"
+    },
+    "taskSummary": {
+      "title": "สรุปงาน",
+      "description": "ภาพรวมสถานะงานด้วยมาตรวัด"
+    },
+    "progressSummary": {
+      "title": "สรุปความคืบหน้า",
+      "description": "แผนภูมิโดนัทของคำขอที่รอดำเนินการ"
+    },
+    "teamWorkload": {
+      "title": "ภาระงานของทีม",
+      "description": "การกระจายงานของสมาชิกทีม"
+    },
+    "recentTask": {
+      "title": "งานล่าสุด",
+      "description": "ตารางงานล่าสุด"
+    },
+    "externalTaskSummary": {
+      "title": "สรุปงานภายนอก",
+      "description": "กราฟแท่งของการประเมินภายนอก"
+    },
+    "quotationTaskSummary": {
+      "title": "สรุปงานใบเสนอราคา",
+      "description": "ติดตามขั้นตอนใบเสนอราคาสำหรับ intAdmin"
+    },
+    "calendar": {
+      "title": "ปฏิทิน",
+      "description": "มุมมองปฏิทินขนาดเล็ก"
+    },
+    "reminders": {
+      "title": "การแจ้งเตือน",
+      "description": "การแจ้งเตือนและการแจ้งเตือนที่กำลังจะมาถึง"
+    },
+    "notes": {
+      "title": "บันทึก",
+      "description": "บันทึกส่วนตัว"
+    }
+  },
+  "appraisalList": {
+    "columns": {
+      "property": "ทรัพย์สิน",
+      "type": "ประเภท",
+      "status": "สถานะ",
+      "date": "วันที่",
+      "value": "มูลค่า",
+      "actions": "การดำเนินการ"
+    },
+    "actions": {
+      "view": "ดู",
+      "edit": "แก้ไข"
+    }
+  }
+}

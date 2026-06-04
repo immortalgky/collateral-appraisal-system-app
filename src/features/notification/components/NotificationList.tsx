@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { useNotificationStore } from '../store';
 import { notificationTypeConfig } from '../types';
@@ -5,6 +6,7 @@ import { timeAgo } from '../utils/timeAgo';
 import clsx from 'clsx';
 
 export default function NotificationList() {
+  const { t } = useTranslation('notification');
   const { notifications, markAsRead } = useNotificationStore();
 
   return (
@@ -34,15 +36,19 @@ export default function NotificationList() {
                 <p
                   className={clsx(
                     'text-sm',
-                    !notification.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700',
+                    !notification.isRead
+                      ? 'font-semibold text-gray-900'
+                      : 'font-medium text-gray-700',
                   )}
                 >
                   {notification.title}
                 </p>
-                {!notification.isRead && <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />}
+                {!notification.isRead && (
+                  <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
+                )}
               </div>
               <p className="text-sm text-gray-500 mt-0.5">{notification.message}</p>
-              <p className="text-xs text-gray-400 mt-1.5">{timeAgo(notification.createdAt)}</p>
+              <p className="text-xs text-gray-400 mt-1.5">{timeAgo(notification.createdAt, t)}</p>
             </div>
           </button>
         );

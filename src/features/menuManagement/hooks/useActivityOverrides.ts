@@ -1,15 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import {
-  listActivities,
-  getActivityOverrides,
-  updateActivityOverrides,
-} from '../api/menus';
+import i18n from '@/i18n';
+import { listActivities, getActivityOverrides, updateActivityOverrides } from '../api/menus';
 import type {
   ActivitySummary,
   ActivityOverridesResponse,
   UpdateActivityOverridesRequest,
 } from '../types';
+
+const t = i18n.getFixedT(null, 'menuManagement');
 
 export const ACTIVITY_OVERRIDE_KEYS = {
   all: ['activity-overrides'] as const,
@@ -44,10 +43,10 @@ export function useUpdateActivityOverrides() {
     }) => updateActivityOverrides(activityId, body),
     onSuccess: (_data, { activityId }) => {
       queryClient.invalidateQueries({ queryKey: ACTIVITY_OVERRIDE_KEYS.byActivity(activityId) });
-      toast.success('Activity overrides saved');
+      toast.success(t('toasts.overridesSaved'));
     },
     onError: () => {
-      toast.error('Failed to save activity overrides');
+      toast.error(t('toasts.overridesSaveFailed'));
     },
   });
 }

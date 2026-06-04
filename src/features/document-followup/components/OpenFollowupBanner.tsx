@@ -1,8 +1,10 @@
+import '@/features/document-followup/i18n';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useGetDocumentTypes, getDocumentTypeName } from '@/features/request/api/documentTypes';
 import { useAuthStore } from '@/features/auth/store';
@@ -11,7 +13,7 @@ import { useGetFollowupById } from '../hooks/useGetFollowupById';
 import { useCancelFollowup } from '../hooks/useCancelFollowup';
 import { useCancelLineItem } from '../hooks/useCancelLineItem';
 import { LineItemStatusBadge } from './LineItemStatusBadge';
-import { cancelWithReasonSchema, type CancelWithReasonFormValues } from '../schemas/followup';
+import { makeCancelWithReasonSchema, type CancelWithReasonFormValues } from '../schemas/followup';
 
 interface OpenFollowupBannerProps {
   /** The taskId of the raising task (checker's task) */
@@ -31,13 +33,14 @@ function CancelReasonModal({
   title: string;
   isPending: boolean;
 }) {
+  const { t } = useTranslation(['documentFollowup', 'common']);
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<CancelWithReasonFormValues>({
-    resolver: zodResolver(cancelWithReasonSchema),
+    resolver: zodResolver(makeCancelWithReasonSchema(t)),
   });
 
   const handleClose = () => {
@@ -56,22 +59,17 @@ function CancelReasonModal({
           </div>
           <h3 className="font-semibold text-base text-gray-900 mb-1 text-center">{title}</h3>
           <p className="text-sm text-gray-500 mb-4 text-center">
-            Please provide a reason for cancellation.
+            {t('cancelReasonModal.cancelReasonSubtitle')}
           </p>
-          <form
-            onSubmit={handleSubmit(values => onConfirm(values.reason))}
-            noValidate
-          >
+          <form onSubmit={handleSubmit(values => onConfirm(values.reason))} noValidate>
             <div className="mb-4">
               <textarea
                 {...register('reason')}
                 rows={3}
-                placeholder="Enter reason..."
+                placeholder={t('cancelReasonModal.reasonPlaceholder')}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
               />
-              {errors.reason && (
-                <p className="text-xs text-danger mt-1">{errors.reason.message}</p>
-              )}
+              {errors.reason && <p className="text-xs text-danger mt-1">{errors.reason.message}</p>}
             </div>
             <div className="flex gap-3">
               <button
@@ -80,7 +78,7 @@ function CancelReasonModal({
                 disabled={isPending}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50"
               >
-                Back
+                {t('common:actions.back')}
               </button>
               <button
                 type="submit"
@@ -90,14 +88,14 @@ function CancelReasonModal({
                 {isPending ? (
                   <Icon name="spinner" style="solid" className="size-4 animate-spin" />
                 ) : null}
-                Confirm
+                {t('cancelReasonModal.confirm')}
               </button>
             </div>
           </form>
         </div>
       </div>
       <div className="modal-backdrop bg-black/40" onClick={handleClose}>
-        <button type="button">close</button>
+        <button type="button">{t('aria.closeDialog')}</button>
       </div>
     </div>,
     document.body,
@@ -117,6 +115,7 @@ function FollowupDetail({
   raisingTaskId: string;
   currentUsername: string | undefined;
 }) {
+  const { t } = useTranslation('documentFollowup');
   const { data: followup, isLoading } = useGetFollowupById(followupId);
   const { data: documentTypes = [] } = useGetDocumentTypes();
   const cancelFollowup = useCancelFollowup();
@@ -129,7 +128,7 @@ function FollowupDetail({
     return (
       <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
         <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-        Loading details...
+        {t('banner.loadingDetails')}
       </div>
     );
   }
@@ -140,8 +139,7 @@ function FollowupDetail({
   // Backend stores RaisingUserId as the username, and the DTO's raisedBy.userId carries
   // that same value — compare against the current user's username, not their GUID id.
   const isRaisingUser =
-    !!currentUsername &&
-    currentUsername.toLowerCase() === followup.raisedBy.userId?.toLowerCase();
+    !!currentUsername && currentUsername.toLowerCase() === followup.raisedBy.userId?.toLowerCase();
 
   const formatDate = (d: string) => {
     try {
@@ -152,8 +150,7 @@ function FollowupDetail({
   };
 
   // Resolve display name with graceful fallback for null (backend lookup may be pending)
-  const raisedByLabel =
-    followup.raisedBy.displayName ?? followup.raisedBy.userId ?? 'Unknown';
+  const raisedByLabel = followup.raisedBy.displayName ?? followup.raisedBy.userId ?? 'Unknown';
 
   const handleCancelFollowup = (reason: string) => {
     cancelFollowup.mutate(
@@ -175,8 +172,8 @@ function FollowupDetail({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <Icon name="clock" style="regular" className="size-3.5" />
-          Raised {formatDate(followup.raisedAt)}
-          <span>by {raisedByLabel}</span>
+          {t('banner.raised')} {formatDate(followup.raisedAt)}
+          <span>{t('banner.raisedBy', { name: raisedByLabel })}</span>
         </div>
         {/* Cancel all — only visible to the user who raised the followup */}
         {isRaisingUser && (
@@ -186,7 +183,7 @@ function FollowupDetail({
             className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
           >
             <Icon name="xmark" style="solid" className="size-3.5" />
-            Cancel all
+            {t('banner.cancelAll')}
           </button>
         )}
       </div>
@@ -197,13 +194,13 @@ function FollowupDetail({
           <thead className="bg-amber-50">
             <tr>
               <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                Document Type
+                {t('columns.documentType')}
               </th>
               <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                Notes
+                {t('columns.notes')}
               </th>
               <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                Status
+                {t('columns.status')}
               </th>
               {/* Action column only rendered when viewer is the raising user */}
               {isRaisingUser && <th className="px-3 py-2 w-10" />}
@@ -217,12 +214,11 @@ function FollowupDetail({
                 </td>
                 <td className="px-3 py-2.5 text-gray-500 max-w-xs">
                   <span className="line-clamp-2">{item.notes}</span>
-                  {(item.status === 'Declined' || item.status === 'Cancelled') &&
-                    item.reason && (
-                      <span className="block text-xs text-red-500 mt-0.5">
-                        Reason: {item.reason}
-                      </span>
-                    )}
+                  {(item.status === 'Declined' || item.status === 'Cancelled') && item.reason && (
+                    <span className="block text-xs text-red-500 mt-0.5">
+                      {t('page.reasonPrefix')} {item.reason}
+                    </span>
+                  )}
                 </td>
                 <td className="px-3 py-2.5">
                   <LineItemStatusBadge status={item.status} />
@@ -235,7 +231,7 @@ function FollowupDetail({
                         type="button"
                         onClick={() => setCancelLineItemTarget(item.id)}
                         className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Cancel this line item"
+                        title={t('aria.cancelLineItem')}
                       >
                         <Icon name="xmark" style="solid" className="size-3.5" />
                       </button>
@@ -253,7 +249,7 @@ function FollowupDetail({
         isOpen={cancelFollowupOpen}
         onClose={() => setCancelFollowupOpen(false)}
         onConfirm={handleCancelFollowup}
-        title="Cancel Document Request"
+        title={t('cancelReasonModal.cancelFollowupTitle')}
         isPending={cancelFollowup.isPending}
       />
 
@@ -262,7 +258,7 @@ function FollowupDetail({
         isOpen={!!cancelLineItemTarget}
         onClose={() => setCancelLineItemTarget(null)}
         onConfirm={handleCancelLineItem}
-        title="Cancel Line Item"
+        title={t('cancelReasonModal.cancelLineItemTitle')}
         isPending={cancelLineItem.isPending}
       />
     </div>
@@ -275,6 +271,7 @@ function FollowupDetail({
  * Cancel controls inside the expanded view are only shown to the raising user.
  */
 export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
+  const { t } = useTranslation('documentFollowup');
   const { data: followups = [], isLoading } = useOpenFollowupsForTask(raisingTaskId);
   const [expanded, setExpanded] = useState(true);
   // Granular selector — avoids re-renders on unrelated auth store changes.
@@ -300,12 +297,9 @@ export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
           <Icon name="file-circle-exclamation" style="solid" className="size-4 text-amber-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-800">
-            Open Document Request
-          </p>
+          <p className="text-sm font-semibold text-amber-800">{t('banner.title')}</p>
           <p className="text-xs text-amber-600 mt-0.5">
-            {totalPending} item{totalPending !== 1 ? 's' : ''} pending from the request maker
-            — submission is blocked until resolved
+            {t('banner.pendingItems', { n: totalPending })}
           </p>
         </div>
         <Icon

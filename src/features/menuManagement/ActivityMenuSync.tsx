@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
 import toast from 'react-hot-toast';
+import i18n from '@/i18n';
 import { fetchMyMenu } from './api/menus';
 import { useMenuStore } from './store';
+
+const t = i18n.getFixedT(null, 'menuManagement');
 
 /**
  * Keeps the appraisal menu tree in sync with the active task's activityId.
@@ -30,8 +33,8 @@ export function ActivityMenuSync({ activityId }: { activityId: string | undefine
       .then(({ appraisal }) => {
         if (!cancelled) setAppraisalTree(appraisal, next);
       })
-      .catch((err) => {
-        toast.error('Failed to sync menu');
+      .catch(err => {
+        toast.error(t('toasts.syncMenuFailed'));
         console.error('ActivityMenuSync error:', err);
       });
 

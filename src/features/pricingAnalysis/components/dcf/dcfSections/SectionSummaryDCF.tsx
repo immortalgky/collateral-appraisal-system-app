@@ -7,8 +7,18 @@ interface SectionSummaryDCFProps {
   totalNumberOfYears: number;
   isReadOnly?: boolean;
 }
-export function SectionSummaryDCF({ name, totalNumberOfYears, isReadOnly }: SectionSummaryDCFProps) {
-  return <SummarySectionTable name={name} totalNumberOfYears={totalNumberOfYears} isReadOnly={isReadOnly} />;
+export function SectionSummaryDCF({
+  name,
+  totalNumberOfYears,
+  isReadOnly,
+}: SectionSummaryDCFProps) {
+  return (
+    <SummarySectionTable
+      name={name}
+      totalNumberOfYears={totalNumberOfYears}
+      isReadOnly={isReadOnly}
+    />
+  );
 }
 
 interface SummarySectionTableProps {

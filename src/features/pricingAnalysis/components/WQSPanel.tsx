@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, type SubmitErrorHandler } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelector';
 import { MethodFooterActions } from './MethodFooterActions';
-import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
+import { makeWQSDto, WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import { COLLATERAL_TYPE } from '../data/constants';
 import toast from 'react-hot-toast';
@@ -38,6 +39,7 @@ interface WQSPanelProps {
     methodType?: string;
   };
   properties: Record<string, unknown>[] | undefined;
+  manualSubject?: boolean;
   marketSurveys: MarketComparableDetailType[];
   allFactors: FactorDataType[] | undefined;
   templateList: TemplateDtoType[] | undefined;
@@ -78,10 +80,12 @@ export function WQSPanel({
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
+  manualSubject,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: WQSPanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'WQS_COST';
   const property: Record<string, unknown> | undefined = isCostApproach
@@ -91,7 +95,7 @@ export function WQSPanel({
 
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
-    resolver: zodResolver(WQSDto),
+    resolver: zodResolver(makeWQSDto(t)),
   });
 
   const {
@@ -133,7 +137,7 @@ export function WQSPanel({
   /** Form handler — skips full Zod validation so we can save factors/scores independently */
   const handleOnSubmit = async () => {
     if (!activeMethod?.pricingAnalysisId || !methodId) {
-      toast.error('Pricing analysis ID or method ID not found!');
+      toast.error(t('toasts.missingIds'));
       return;
     }
 
@@ -159,10 +163,10 @@ export function WQSPanel({
           appraisalValue: landValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
       reset(value);
     } catch {
-      toast.error('Failed to save comparative analysis');
+      toast.error(t('toasts.failedSave'));
     }
   };
 
@@ -194,7 +198,7 @@ export function WQSPanel({
       methodId: methodId!,
       methodType: methodType!,
       comparativeSurveys,
-      property: property!,
+      property: property,
       template,
       allFactors,
       reset,
@@ -227,22 +231,26 @@ export function WQSPanel({
       setIsGenerated(false);
       setPricingTemplate(undefined);
       reset();
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || !property) return;
+    // A saved reference (e.g. IncomeLandRef opened from the group References section)
+    // has no live subject `property` — but it DOES have saved data to restore. Only
+    // require a property for a fresh, manual-less generate; never block a restore.
+    const hasSavedData = !!(savedComparativeFactors && savedComparativeFactors.length > 0);
+    if (!methodId || !methodType || (!manualSubject && !property && !hasSavedData)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
       restoreWQSFromSavedData({
         methodId,
-        property,
+        property: property ?? {},
         comparativeSurveys,
         allFactors,
         linkedComparables,
@@ -305,7 +313,7 @@ export function WQSPanel({
       methodId,
       methodType,
       comparativeSurveys,
-      property,
+      property: property,
       template: undefined,
       allFactors,
       reset,
@@ -334,7 +342,7 @@ export function WQSPanel({
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
     if (!isGenerated) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
@@ -352,7 +360,7 @@ export function WQSPanel({
       methodId: methodId,
       methodType: methodType,
       comparativeSurveys: comparativeSurveys,
-      property: property,
+      property: property ?? {},
       template: pricingTemplate,
       reset: reset,
       getValues: getValues,
@@ -367,7 +375,7 @@ export function WQSPanel({
     setValue,
   ]);
 
-  const isLoading = !isGenerated || !property || !marketSurveys || !allFactors;
+  const isLoading = !isGenerated || (!manualSubject && !property) || !marketSurveys || !allFactors;
 
   // Warn user about unsaved changes before leaving
   useEffect(() => {
@@ -394,7 +402,7 @@ export function WQSPanel({
       >
         <PricingAnalysisTemplateSelector
           icon="scale-balanced"
-          methodName="Weighted Quality Scores (WQS)"
+          methodName={t('wqs.methodName')}
           onGenerate={handleOnGenerate}
           collateralType={{
             onSelectCollateralType: handleOnSelectCollateralType,
@@ -417,7 +425,7 @@ export function WQSPanel({
             <div className="flex-1 min-h-0 overflow-auto">
               <WQSForm
                 {...methods}
-                property={property}
+                property={property ?? {}}
                 buildingCost={buildingCost}
                 isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
@@ -425,6 +433,7 @@ export function WQSPanel({
                 template={pricingTemplate}
                 allFactors={allFactors}
                 onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+                manualSubject={manualSubject}
               />
             </div>
             <MethodFooterActions
@@ -439,7 +448,7 @@ export function WQSPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>

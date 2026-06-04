@@ -1,5 +1,9 @@
 import type { GrowthRateType, ProfitRentGrowthPeriod } from '../types/profitRent';
-import { calculatePVFactor, computeAppraisalSchedule, type AppraisalScheduleRow } from './calculateLeasehold';
+import {
+  calculatePVFactor,
+  computeAppraisalSchedule,
+  type AppraisalScheduleRow,
+} from './calculateLeasehold';
 import type { RentalScheduleRow } from '@/features/appraisal/api/property';
 
 function round2(n: number): number {
@@ -37,7 +41,7 @@ function calculateMarketFeeGrowth(config: MarketFeeGrowthConfig, year: number): 
   // Period mode
   let value = baseFee;
   for (let y = 1; y <= Math.floor(year); y++) {
-    const period = periods.find((p) => y >= p.fromYear && y <= p.toYear);
+    const period = periods.find(p => y >= p.fromYear && y <= p.toYear);
     const rate = period ? period.growthRatePercent / 100 : 0;
     value = value * (1 + rate);
   }
@@ -96,7 +100,14 @@ export function generateProfitRentTable(input: ProfitRentTableInput): ProfitRent
   } = input;
 
   if (appraisalSchedule.length === 0) {
-    return { rows: [], totalMarketRentalFee: 0, totalContractRentalFee: 0, totalReturnsFromLease: 0, totalPresentValue: 0, finalValueRounded: 0 };
+    return {
+      rows: [],
+      totalMarketRentalFee: 0,
+      totalContractRentalFee: 0,
+      totalReturnsFromLease: 0,
+      totalPresentValue: 0,
+      finalValueRounded: 0,
+    };
   }
 
   const config: MarketFeeGrowthConfig = {

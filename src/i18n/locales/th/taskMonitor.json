@@ -1,0 +1,64 @@
+{
+  "columns": {
+    "appraisalNumber": "เลขที่ประเมิน",
+    "customerName": "ชื่อลูกค้า",
+    "taskType": "ประเภทงาน",
+    "purpose": "วัตถุประสงค์",
+    "status": "สถานะ",
+    "sla": "SLA",
+    "assigned": "มอบหมายเมื่อ",
+    "dueAt": "กำหนดเสร็จ"
+  },
+  "peopleColumns": {
+    "userCode": "รหัสผู้ใช้",
+    "userName": "ชื่อผู้ใช้",
+    "openTasks": "งานที่เปิดอยู่",
+    "availableTasks": "งานที่รับได้",
+    "totalTasks": "งานทั้งหมด"
+  },
+  "sla": {
+    "onTrack": "ตามกำหนด",
+    "onTime": "ตรงเวลา",
+    "atRisk": "เสี่ยงเกินกำหนด",
+    "breached": "เกินกำหนด"
+  },
+  "table": {
+    "ref": "(อ้างอิง {{number}})",
+    "reassign": "มอบหมายใหม่"
+  },
+  "empty": {
+    "tasksTitle": "ไม่มีงานที่ติดตาม",
+    "tasksDesc": "ไม่พบงานในกลุ่มที่คุณติดตาม หรืองานทั้งหมดอยู่ในสถานะที่ไม่สามารถมอบหมายใหม่ได้",
+    "peopleTitle": "ไม่มีบุคคลให้ติดตาม",
+    "peopleDesc": "ไม่มีใครในกลุ่มที่คุณติดตามที่มีงานที่กำลังดำเนินการอยู่ในขณะนี้"
+  },
+  "filters": {
+    "searchTasksPlaceholder": "ค้นหางาน...",
+    "allSla": "ทุก SLA",
+    "groupPlaceholder": "กลุ่ม...",
+    "assigneePlaceholder": "ผู้รับผิดชอบ...",
+    "activityPlaceholder": "กิจกรรม...",
+    "peopleSearchPlaceholder": "ค้นหารหัสหรือชื่อผู้ใช้...",
+    "searchLabel": "ค้นหา",
+    "personSearchPlaceholder": "เลขที่ประเมินหรือชื่อลูกค้า...",
+    "statusLabel": "สถานะ",
+    "taskTypeLabel": "ประเภทงาน"
+  },
+  "errors": {
+    "loadPeopleFailed": "โหลดรายชื่อบุคคลที่ติดตามไม่สำเร็จ",
+    "loadTasksFailed": "โหลดรายการงานไม่สำเร็จ"
+  },
+  "reassign": {
+    "title": "มอบหมายงานใหม่",
+    "currentlyAssigned": "ปัจจุบันมอบหมายให้",
+    "due": "กำหนดเสร็จ:",
+    "slaPreserved": "คง SLA เดิม",
+    "newAssignee": "ผู้รับผิดชอบใหม่",
+    "loadingUsers": "กำลังโหลดผู้ใช้ที่มีสิทธิ์…",
+    "noEligible": "ไม่พบผู้ใช้ที่มีสิทธิ์สำหรับกิจกรรมนี้",
+    "pageInfo": "{{from}}–{{to}} จาก {{total}}",
+    "success": "มอบหมายให้ {{name}} แล้ว กำหนดเสร็จไม่เปลี่ยนแปลง",
+    "failed": "การมอบหมายใหม่ไม่สำเร็จ",
+    "unexpectedError": "เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองอีกครั้ง"
+  }
+}

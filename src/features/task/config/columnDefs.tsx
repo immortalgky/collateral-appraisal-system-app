@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { differenceInDays, format, isPast } from 'date-fns';
+import { format } from 'date-fns';
 import type { Task } from '../types';
 import Badge from '@/shared/components/Badge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import Icon from '@/shared/components/Icon';
-import { SlaStatusBadge } from '@features/common/monitoring/components/SlaCells';
+import { SlaStatusBadge, bucketForSlaStatus } from '@features/common/monitoring/components/SlaCells';
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import { DateCell } from '@features/common/monitoring/components/DateCell';
 
@@ -61,21 +61,28 @@ function PersonCell({ name }: { name: string | null | undefined }) {
 }
 
 
-function DueDateCell({ dateString }: { dateString: string | null | undefined }) {
+function DueDateCell({
+  dateString,
+  slaStatus,
+}: {
+  dateString: string | null | undefined;
+  slaStatus: string | null;
+}) {
   if (!dateString) return <>-</>;
   try {
-    const date = new Date(dateString);
-    const days = differenceInDays(date, new Date());
-    const overdue = isPast(date);
-    const formatted = format(date, 'dd/MM/yyyy');
-    if (overdue)
+    const formatted = format(new Date(dateString), 'dd/MM/yyyy');
+    // Drive icon/color from the backend slaStatus so this cell agrees with the
+    // SLA Status badge and the row tint (proportional 75%-of-window rule), rather
+    // than a fixed client-side day threshold.
+    const bucket = bucketForSlaStatus(slaStatus);
+    if (bucket === 'breached')
       return (
         <span className="inline-flex items-center gap-1 text-red-600 font-medium text-sm">
           <Icon style="solid" name="circle-exclamation" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
-    if (days <= 3)
+    if (bucket === 'atRisk')
       return (
         <span className="inline-flex items-center gap-1 text-amber-600 font-medium text-sm">
           <Icon style="solid" name="clock" className="size-3 flex-shrink-0" />
@@ -158,13 +165,20 @@ export type ColumnDef = {
   sortField?: string;
   /** td className override. Defaults to 'px-3 py-1.5 text-gray-600 text-xs' when not set. */
   tdClassName?: string;
+  /** Default column width in px. Falls back to DEFAULT_COLUMN_WIDTH when not set. */
+  width?: number;
   render: (task: Task) => ReactNode;
 };
+
+export const DEFAULT_COLUMN_WIDTH = 150;
+export const MIN_COLUMN_WIDTH = 60;
+export const MAX_AUTOFIT_WIDTH = 480;
 
 export const columnDefs: Record<ColumnKey, ColumnDef> = {
   appraisalNumber: {
     label: 'Appraisal Number',
     sortField: 'appraisalNumber',
+    width: 130,
     render: task => {
       const display = task.appraisalNumber ?? task.requestNumber;
       const isReq = !task.appraisalNumber && !!task.requestNumber;
@@ -187,6 +201,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   requestNumber: {
     label: 'Request Number',
     sortField: 'requestNumber',
+    width: 130,
     render: task => (
       <Link
         to={`/tasks/${task.id}/opening`}
@@ -200,58 +215,70 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   customerName: {
     label: 'Customer Name',
     sortField: 'customerName',
+    width: 170,
     render: task => task.customerName ?? '-',
   },
   taskType: {
     label: 'Task Type',
     sortField: 'taskType',
+    width: 150,
     render: task => task.taskDescription || task.taskType || '-',
   },
   purpose: {
     label: 'Purpose',
     sortField: 'purpose',
+    width: 200,
     render: task => <ParameterDisplay group="AppraisalPurpose" code={task.purpose} />,
   },
   propertyType: {
     label: 'Property Type',
     sortField: 'propertyType',
+    width: 150,
     render: task => <ParameterDisplay group="PropertyType" code={task.propertyType} />,
   },
   status: {
     label: 'Status',
     tdClassName: 'px-3 py-1.5',
+    width: 120,
     render: task => <Badge type="status" value={task.status} size="sm" />,
   },
   appointmentDateTime: {
     label: 'Appointment Date',
     sortField: 'appointmentDateTime',
+    width: 150,
     render: task => <AppointmentCell dateString={task.appointmentDateTime} />,
   },
   requestedAt: {
     label: 'Requested At',
     sortField: 'RequestedAt',
+    width: 140,
     render: task => formatDate(task.requestedAt),
   },
   requestedBy: {
     label: 'Requested By',
+    width: 150,
     render: task => <PersonCell name={task.requestedByName ?? task.requestedBy} />,
   },
   reportReceivedAt: {
     label: 'Report Received At',
     sortField: 'ReportReceivedAt',
+    width: 150,
     render: task => formatDate(task.reportReceivedAt),
   },
   requestReceivedDate: {
     label: 'Request Received Date',
     sortField: 'requestReceivedDate',
+    width: 150,
     render: task => <AppointmentCell dateString={task.requestReceivedDate} />,
   },
   internalFollowupStaff: {
     label: 'Internal Followup Staff',
+    width: 160,
     render: task => <PersonCell name={task.internalFollowupStaff} />,
   },
   appraiser: {
     label: 'Appraiser',
+    width: 160,
     render: task =>
       task.appraiser ? (
         <div className="flex items-center gap-2 min-w-0">
@@ -265,38 +292,45 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   assignedDate: {
     label: 'Assigned Date',
     sortField: 'assignedDate',
+    width: 150,
     render: task => <DateCell value={task.assignedDate} withTime withAgo />,
   },
   movement: {
     label: 'Movement',
     sortField: 'movement',
+    width: 120,
     render: task => <MovementBadgeFromTaskDto value={task.movement} />,
   },
   dueAt: {
     label: 'SLA Due',
     sortField: 'dueAt',
-    render: task => <DueDateCell dateString={task.dueAt} />,
+    width: 140,
+    render: task => <DueDateCell dateString={task.dueAt} slaStatus={task.slaStatus} />,
   },
   elapsedHours: {
     label: 'Elapsed (hrs)',
     sortField: 'elapsedHours',
+    width: 110,
     render: task => <HoursCell hours={task.elapsedHours} type="elapsed" />,
   },
   remainingHours: {
     label: 'Remaining (hrs)',
     sortField: 'remainingHours',
+    width: 120,
     render: task => <HoursCell hours={task.remainingHours} type="remaining" />,
   },
   slaStatus: {
     label: 'SLA Status',
     sortField: 'slaStatus',
     tdClassName: 'px-3 py-1.5',
+    width: 120,
     render: task => <SlaStatusBadge sla={task.slaStatus} />,
   },
   priority: {
     label: 'Priority',
     sortField: 'priority',
     tdClassName: 'px-3 py-1.5',
+    width: 110,
     render: task => <Badge type="priority" value={task.priority} size="sm" />,
   },
 };
