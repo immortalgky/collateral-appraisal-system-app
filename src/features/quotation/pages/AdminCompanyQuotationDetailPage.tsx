@@ -389,7 +389,7 @@ export const AdminCompanyQuotationDetailContent = ({
                 {selectedAppraisal ? (
                   <div className="p-5 space-y-6">
                     {/* Section 1 — Appraisal Information */}
-                    <section aria-label="Appraisal Information">
+                    <section aria-label={t('aria.sectionAppraisalInfo')}>
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         {t('sections.appraisalInformation')}
                       </h2>
@@ -415,7 +415,7 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 2 — Attached Documents (grouped by section, mirrors ext-company submit page) */}
                     {appraisalDocs.length > 0 && (
-                      <section aria-label="Attached Documents">
+                      <section aria-label={t('aria.sectionAttachedDocs')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.attachDocument')}
                         </h2>
@@ -487,7 +487,7 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 3 — Quotation Information — Appraisal Fee */}
                     {selectedItem && (
-                      <section aria-label="Quotation Information">
+                      <section aria-label={t('aria.sectionQuotationInfo')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.quotationInformationFee')}
                         </h2>
@@ -497,7 +497,7 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 4 — Duration */}
                     {selectedItem && (
-                      <section aria-label="Duration and Mandays">
+                      <section aria-label={t('aria.sectionDuration')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.duration')}
                         </h2>
@@ -524,7 +524,7 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 5 — Remark for this Appraisal */}
                     {selectedItem && (
-                      <section aria-label="Appraisal Remark">
+                      <section aria-label={t('aria.sectionAppraisalRemark')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.appraisalRemark')}
                         </h2>

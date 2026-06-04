@@ -178,7 +178,12 @@
     "collapseAppraisal": "Collapse {{number}}",
     "selectAllVisibleCompanies": "Select all visible companies",
     "selectAllPage": "Select all on this page",
-    "maxDaysFor": "Max appraisal days for {{number}}"
+    "maxDaysFor": "Max appraisal days for {{number}}",
+    "sectionAppraisalInfo": "Appraisal Information",
+    "sectionAttachedDocs": "Attached Documents",
+    "sectionQuotationInfo": "Quotation Information",
+    "sectionDuration": "Duration and Mandays",
+    "sectionAppraisalRemark": "Appraisal Remark"
   },
   "empty": {
     "noQuotations": "No quotations found",
@@ -213,7 +218,8 @@
     "failedToLoadQuotation": "Failed to load quotation.",
     "companyNotFound": "Company quotation not found.",
     "noAppraisalLinked": "No appraisal linked to this task. Cannot display quotation section.",
-    "noAccessDocument": "You no longer have access to this document — the quotation may have been awarded or cancelled."
+    "noAccessDocument": "You no longer have access to this document — the quotation may have been awarded or cancelled.",
+    "failedToLoadTask": "Failed to load task"
   },
   "toasts": {
     "saved": "Quotation saved successfully",
@@ -403,6 +409,10 @@
     "totalLabel": "{{count}} total",
     "pending": "Pending"
   },
+  "email": {
+    "draftingTitle": "Drafting email to send to external appraisal company",
+    "subjectLabel": "Subject"
+  },
   "picker": {
     "customerName": "Customer Name",
     "customerNamePlaceholder": "Search customer...",
@@ -425,6 +435,7 @@
     "district": "District",
     "districtPlaceholder": "District...",
     "province": "Province",
+    "provincePlaceholder": "All provinces",
     "clearFilters": "Clear all filters",
     "clear": "Clear",
     "selectAll": "Select all",
