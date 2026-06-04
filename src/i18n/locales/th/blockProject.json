@@ -238,6 +238,12 @@
       "numFloors": "จำนวนชั้น",
       "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)"
     },
+    "reappraisal": {
+      "title": "อัปเดตยูนิตจาก Excel ที่แก้ไข (Re-match)",
+      "hint": "อัปโหลด Excel ที่อัปเดตเพื่อ re-match ยูนิตที่ seed ไว้ แถวที่มีในไฟล์จะคงสถานะยังไม่ขาย แถวที่ขาดหายจะถูกทำเครื่องหมายเป็นขายแล้วโดยอัตโนมัติ แถวใหม่จะถูกนับแต่ไม่ถูกเพิ่ม",
+      "normalUploadNote": "ใช้การอัปโหลดนี้เพื่อเพิ่มสินค้าคงคลังยูนิตใหม่เท่านั้น",
+      "resultToast": "Re-match เสร็จสิ้น: {{matched}} ยังไม่ขาย, {{autoSold}} ขายอัตโนมัติ, {{added}} ใหม่ (ไม่ถูกเพิ่ม)"
+    },
     "aria": {
       "deleteUpload": "ลบการอัปโหลด"
     }
@@ -622,6 +628,12 @@
   },
   "errors": {
     "failedToLoadProject": "โหลดข้อมูลโครงการไม่สำเร็จ"
+  },
+  "projectTypePill": {
+    "placeholder": "เลือกประเภทโครงการ"
+  },
+  "radioGroup": {
+    "specifyPlaceholder": "โปรดระบุ"
   },
   "partialDate": {
     "year": "ปี",

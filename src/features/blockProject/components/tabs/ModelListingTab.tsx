@@ -271,7 +271,7 @@ function ModelCard({
             type="button"
             onClick={onDelete}
             className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-            title="Delete model"
+            title={t('modelListing.aria.deleteModel')}
           >
             <Icon name="trash-can" style="regular" className="size-3.5" />
           </button>

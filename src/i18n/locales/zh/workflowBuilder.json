@@ -35,13 +35,15 @@
     "saveFailed": "Save failed",
     "migrationFailed": "Migration failed",
     "failedToLoadPreview": "Failed to load preview. You can still publish without impact analysis.",
-    "publishFailed": "Publish failed"
+    "publishFailed": "Publish failed",
+    "failedToCreateDraft": "Failed to create a new draft version"
   },
   "toasts": {
     "workflowCreated": "Workflow created",
     "draftSaved": "Draft saved",
     "workflowPublished": "Workflow published (v{{version}})",
-    "noInstancesSelected": "No instances selected for migration."
+    "noInstancesSelected": "No instances selected for migration.",
+    "draftVersionCreated": "New draft version created — you can now edit"
   },
   "toolbar": {
     "backToList": "Back to list",
@@ -52,7 +54,8 @@
     "saveDraft": "Save Draft",
     "publish": "Publish",
     "autoLayoutTitle": "Auto-arrange nodes",
-    "settingsTitle": "Workflow Settings"
+    "settingsTitle": "Workflow Settings",
+    "editNewVersion": "Edit (new version)"
   },
   "settings": {
     "title": "Workflow Settings",

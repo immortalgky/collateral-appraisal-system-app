@@ -2,7 +2,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useAppraisalContext } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
@@ -13,6 +13,7 @@ import {
   useGetProjectUnits,
   useGetProjectUnitUploads,
   useUploadProjectUnits,
+  useUploadReappraisalUnits,
   useDeleteProjectUnitUpload,
 } from '../../api/projectUnit';
 import { isCondo } from '../../types';
@@ -318,12 +319,16 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const readOnly = usePageReadOnly();
+  const { appraisal } = useAppraisalContext();
+  const isReappraisal = appraisal?.appraisalType === 'ReAppraisal';
 
   const { data: unitsData, isLoading: unitsLoading } = useGetProjectUnits(appraisalId ?? '');
   const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(
     appraisalId ?? '',
   );
   const { mutate: uploadUnits, isPending: isUploading } = useUploadProjectUnits();
+  const { mutate: uploadReappraisalUnits, isPending: isReappraisalUploading } =
+    useUploadReappraisalUnits();
   const { mutate: deleteUpload, isPending: isDeleting } = useDeleteProjectUnitUpload();
 
   const units = unitsData?.units ?? [];
@@ -377,6 +382,44 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     setPendingFile(null);
   };
 
+  const handleReappraisalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (readOnly || !file || !appraisalId) return;
+
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    let validationError: string | null = null;
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      validationError = t('toasts.units.invalidFileType', {
+        extensions: ALLOWED_EXTENSIONS.join(', '),
+      });
+    } else if (file.size > MAX_FILE_SIZE_BYTES) {
+      validationError = t('toasts.units.fileTooLarge');
+    }
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    uploadReappraisalUnits(
+      { appraisalId, file },
+      {
+        onSuccess: data => {
+          toast.success(
+            t('unitListing.reappraisal.resultToast', {
+              matched: data.matchedUnsold,
+              autoSold: data.autoSold,
+              added: data.added,
+            }),
+          );
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? t('toasts.units.uploadFailed'));
+        },
+      },
+    );
+  };
+
   const handleConfirmDelete = () => {
     if (readOnly || !pendingDeleteUpload || !appraisalId) return;
     deleteUpload(
@@ -396,6 +439,9 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           <h3 className="text-sm font-semibold text-gray-900 mb-4">
             {t('unitListing.importUnits')}
           </h3>
+          {isReappraisal && (
+            <p className="text-xs text-gray-500 mb-3">{t('unitListing.reappraisal.normalUploadNote')}</p>
+          )}
           <UploadArea
             onChange={handleFileChange}
             accept=".xlsx,.xls,.csv"
@@ -418,6 +464,22 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           />
         </div>
       </div>
+
+      {isReappraisal && !readOnly && (
+        <div className="bg-white rounded-xl border border-amber-200 p-6">
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">
+            {t('unitListing.reappraisal.title')}
+          </h3>
+          <p className="text-xs text-gray-500 mb-4">{t('unitListing.reappraisal.hint')}</p>
+          <UploadArea
+            onChange={handleReappraisalFileChange}
+            accept=".xlsx,.xls,.csv"
+            isLoading={isReappraisalUploading}
+            disabled={readOnly}
+            supportedText=".xlsx, .xls, .csv (max 10MB)"
+          />
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">

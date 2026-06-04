@@ -100,6 +100,50 @@ export const useUploadProjectUnits = () => {
   });
 };
 
+// ── Reappraisal result type ───────────────────────────────────────────────────
+
+export interface ReappraisalUploadResult {
+  matchedUnsold: number;
+  autoSold: number;
+  added: number;
+}
+
+/**
+ * Re-upload an Excel file for a REAPPRAISAL appraisal.
+ * POST /appraisals/{appraisalId}/project/units/reappraisal-upload
+ *
+ * Matches rows to seeded unsold units: present rows stay UNSOLD, missing rows
+ * are auto-marked SOLD, new rows are counted but NOT persisted (v1).
+ * Same FormData field name as useUploadProjectUnits.
+ */
+export const useUploadReappraisalUnits = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      file: File;
+    }): Promise<ReappraisalUploadResult> => {
+      const formData = new FormData();
+      formData.append('file', params.file);
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/project/units/reappraisal-upload`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return data.result ?? data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectUnitKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitKeys.uploads(variables.appraisalId),
+      });
+    },
+  });
+};
+
 /**
  * Delete a unit upload batch and its associated units.
  * DELETE /appraisals/{appraisalId}/project/units/uploads/{uploadId}

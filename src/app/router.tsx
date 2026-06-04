@@ -105,6 +105,8 @@ import MonitoringPage from '@/features/common/monitoring/pages/MonitoringPage';
 import HistorySearchPage from '@/features/common/historySearch/pages/HistorySearchPage';
 import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage';
 import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
+import BlockReappraisalListPage from '@/features/blockReappraisal/pages/BlockReappraisalListPage';
+import BlockReappraisalDetailPage from '@/features/blockReappraisal/pages/BlockReappraisalDetailPage';
 import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
 import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
 import StepValidationRulesPage from '@features/workflowAdmin/pages/StepValidationRulesPage';
@@ -481,6 +483,15 @@ export const router = createBrowserRouter([
       {
         path: 'standalone/supporting-data-maintenance/:supportingId/data/:id',
         element: <CreateSupportingDataPage />,
+      },
+      // ─── Block Project Reappraisal ──────────────────────────────────────────
+      {
+        path: 'standalone/block-reappraisal',
+        element: <BlockReappraisalListPage />,
+      },
+      {
+        path: 'standalone/block-reappraisal/:collateralMasterId',
+        element: <BlockReappraisalDetailPage />,
       },
       // ─── Periodical Reappraisal (AS400) ────────────────────────────────────
       {
