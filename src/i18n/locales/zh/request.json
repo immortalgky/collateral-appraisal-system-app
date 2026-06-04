@@ -29,6 +29,12 @@
     "createdAt": "创建时间",
     "actions": "操作"
   },
+  "titleTable": {
+    "itemNo": "产权编号 / 房号",
+    "propertyType": "房产类型",
+    "buildingType": "建筑类型",
+    "area": "面积"
+  },
   "filters": {
     "searchPlaceholder": "搜索申请...",
     "allStatus": "所有状态",

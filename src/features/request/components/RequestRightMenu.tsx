@@ -478,7 +478,7 @@ const RequestRightMenu = ({
                                     type="button"
                                     onClick={() => handleEditClick(index, comment)}
                                     className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-primary hover:bg-primary-50 transition-all"
-                                    title="Edit"
+                                    title={t('common:actions.edit')}
                                   >
                                     <Icon style="regular" name="pen" className="size-2.5" />
                                   </button>
@@ -486,7 +486,7 @@ const RequestRightMenu = ({
                                     type="button"
                                     onClick={() => setDeleteConfirmIndex(index)}
                                     className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-danger-500 hover:bg-danger-50 transition-all"
-                                    title="Delete"
+                                    title={t('common:actions.delete')}
                                   >
                                     <Icon style="solid" name="xmark" className="size-3" />
                                   </button>
