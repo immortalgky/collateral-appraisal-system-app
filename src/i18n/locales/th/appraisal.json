@@ -532,7 +532,9 @@
       "sectionTitle": "ข้อมูลคำขอ"
     },
     "propertyGroups": {
-      "sectionTitle": "กลุ่มทรัพย์สิน"
+      "sectionTitle": "กลุ่มทรัพย์สิน",
+      "title": "กลุ่มทรัพย์สิน ({{n}})",
+      "noGroups": "ไม่พบกลุ่มทรัพย์สิน"
     },
     "pricingAnalysis": {
       "sectionTitle": "การวิเคราะห์ราคา"
@@ -695,11 +697,16 @@
   },
   "forms": {
     "land": {
+      "pageTitle": "รายละเอียดที่ดิน",
       "sectionTitleInfo": "ข้อมูลที่ดิน",
       "sectionTitleLocation": "ที่ตั้งที่ดิน",
-      "sectionTitleBoundary": "แนวเขตที่ดิน",
+      "sectionTitleBoundary": "ขนาดและแนวเขต",
       "sectionTitleCharacteristics": "ลักษณะที่ดิน",
-      "sectionTitlePlot": "ที่ตั้งแปลง"
+      "sectionTitlePlot": "ที่ตั้งแปลง",
+      "sectionTitleRoadSurface": "ถนนและผิวจราจร",
+      "sectionTitleLandAccessUtilities": "การเข้าถึงและสาธารณูปโภค",
+      "sectionTitleAssessment": "การประเมิน",
+      "sectionTitleOtherInfo": "ข้อมูลอื่น ๆ"
     },
     "building": {
       "sectionTitle": "รายละเอียดอาคาร"

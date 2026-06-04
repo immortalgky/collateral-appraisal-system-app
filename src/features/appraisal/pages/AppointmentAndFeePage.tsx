@@ -153,7 +153,6 @@ export default function AppointmentAndFeePage() {
         appraisalId,
         feeId,
         itemId,
-        approvedBy: currentUser?.username ?? '',
       });
       toast.success(t('fee.toasts.feeApproved'));
     } catch (error: any) {
@@ -167,7 +166,6 @@ export default function AppointmentAndFeePage() {
         appraisalId,
         feeId,
         itemId,
-        rejectedBy: currentUser?.username ?? '',
         reason: reason || 'Rejected',
       });
       toast.success(t('fee.toasts.feeRejected'));

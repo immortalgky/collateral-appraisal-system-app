@@ -532,7 +532,9 @@
       "sectionTitle": "请求信息"
     },
     "propertyGroups": {
-      "sectionTitle": "房产组"
+      "sectionTitle": "房产组",
+      "title": "房产组 ({{n}})",
+      "noGroups": "未找到房产组。"
     },
     "pricingAnalysis": {
       "sectionTitle": "定价分析"
@@ -695,11 +697,16 @@
   },
   "forms": {
     "land": {
+      "pageTitle": "Land Detail",
       "sectionTitleInfo": "土地信息",
       "sectionTitleLocation": "土地位置",
-      "sectionTitleBoundary": "土地边界",
+      "sectionTitleBoundary": "尺寸与边界",
       "sectionTitleCharacteristics": "土地特征",
-      "sectionTitlePlot": "地块位置"
+      "sectionTitlePlot": "地块位置",
+      "sectionTitleRoadSurface": "Road & Surface",
+      "sectionTitleLandAccessUtilities": "Land Access & Utilities",
+      "sectionTitleAssessment": "Assessment",
+      "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
       "sectionTitle": "建筑详情"
@@ -953,24 +960,24 @@
     }
   },
   "createPage": {
-    "photosSection": "Photos",
-    "landSection": "Land Information",
-    "leaseAgreementSection": "Lease Agreement",
-    "rentalInfoSection": "Rental Info",
-    "condoSection": "Condo Information",
-    "buildingSection": "Building Information",
-    "constructionSection": "Construction Inspection",
-    "machinerySection": "Machinery Information",
-    "navPhotos": "Photos",
-    "navLand": "Land",
-    "navLeaseAgreement": "Lease Agreement",
-    "navRentalInfo": "Rental Info",
-    "navCondo": "Condo",
-    "navBuilding": "Building",
-    "navConstructionInspection": "Construction Inspection",
-    "navMachinery": "Machinery",
-    "saveDraft": "Save draft",
-    "save": "Save"
+    "photosSection": "照片",
+    "landSection": "土地信息",
+    "leaseAgreementSection": "租赁合同",
+    "rentalInfoSection": "租赁信息",
+    "condoSection": "公寓信息",
+    "buildingSection": "建筑信息",
+    "constructionSection": "施工检验",
+    "machinerySection": "机械信息",
+    "navPhotos": "照片",
+    "navLand": "土地",
+    "navLeaseAgreement": "租赁合同",
+    "navRentalInfo": "租赁信息",
+    "navCondo": "公寓",
+    "navBuilding": "建筑",
+    "navConstructionInspection": "施工检验",
+    "navMachinery": "机械",
+    "saveDraft": "保存草稿",
+    "save": "保存"
   },
   "landCharacteristicsForm": {
     "sections": {

@@ -99,71 +99,105 @@ export default function AppointmentInfoCard({
     );
   }
 
-  // Only surface the approval state — no badge for normal statuses (Approved/Pending/etc.).
   const status = (appointment.status ?? '').toLowerCase();
-  const statusBadge = approvalSubmitted
-    ? { label: t('approval.badge.awaiting'), cls: 'bg-blue-50 text-blue-700 border-blue-200' }
-    : approvalDraft
-      ? { label: t('approval.badge.needsApproval'), cls: 'bg-amber-50 text-amber-700 border-amber-200' }
-      : null;
-
   const rescheduleCount = appointment.rescheduleCount ?? 0;
   const isCancelled = status === 'cancelled';
-  const tileAccent = pendingApproval ? 'bg-amber-500' : 'bg-orange-500';
+
+  // Status pill — approval-pending states take precedence, otherwise reflect the appointment status.
+  const statusPill = approvalSubmitted
+    ? { label: t('approval.badge.awaiting'), cls: 'bg-blue-50 text-blue-700', dot: 'bg-blue-500' }
+    : approvalDraft
+      ? { label: t('approval.badge.needsApproval'), cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500' }
+      : (() => {
+          switch (status) {
+            case 'approved':
+              return { label: t('history.status.Approved'), cls: 'bg-green-50 text-green-700', dot: 'bg-green-500' };
+            case 'pending':
+              return { label: t('history.status.Pending'), cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500' };
+            case 'rejected':
+              return { label: t('history.status.Rejected'), cls: 'bg-red-50 text-red-700', dot: 'bg-red-500' };
+            case 'cancelled':
+              return { label: t('history.status.Cancelled'), cls: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' };
+            default:
+              return appointment.status
+                ? { label: appointment.status, cls: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' }
+                : null;
+          }
+        })();
+
+  // Initials for the contact avatar (e.g. "John Doe" → "JD").
+  const initials =
+    (appointment.contactPerson || '')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]!.toUpperCase())
+      .join('') || '—';
 
   return (
     <div
-      className={`rounded-xl shadow-sm overflow-hidden border ${
-        pendingApproval ? 'border-amber-200 bg-amber-50/40' : 'border-gray-200 bg-white'
+      className={`rounded-xl shadow-sm overflow-hidden border bg-white ${
+        pendingApproval ? 'border-amber-200' : 'border-gray-200'
       }`}
     >
-      {/* ── Top row: calendar tile · details · status + actions ── */}
-      <div className="flex items-start gap-5 p-5">
-        {/* Calendar date tile */}
-        <div
-          className={`flex-shrink-0 w-[76px] rounded-xl border overflow-hidden text-center bg-white ${
-            pendingApproval ? 'border-amber-200' : 'border-gray-200'
-          }`}
-        >
-          <div className={`text-[11px] font-bold uppercase tracking-wider text-white py-1 ${tileAccent}`}>
-            {formattedDate?.month}
+      {/* ── Header bar: title + status · view history ── */}
+      <div
+        className={`flex items-center justify-between gap-3 px-5 py-3 border-b ${
+          pendingApproval ? 'border-amber-100 bg-amber-50/50' : 'border-gray-100 bg-gray-50/70'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+            {t('history.chips.appointment')}
+          </span>
+          {statusPill && (
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusPill.cls}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${statusPill.dot}`} />
+              {statusPill.label}
+            </span>
+          )}
+        </div>
+        {onViewHistory && (
+          <button
+            type="button"
+            onClick={onViewHistory}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-primary transition-colors"
+          >
+            <Icon name="clock-rotate-left" style="regular" className="w-3.5 h-3.5" />
+            {t('history.viewHistory')}
+            {historyEventCount !== undefined && historyEventCount > 0 && ` (${historyEventCount})`}
+          </button>
+        )}
+      </div>
+
+      {/* ── Body: date · details · actions ── */}
+      <div className="flex items-center gap-5 px-5 py-4">
+        {/* Date column */}
+        <div className="flex-shrink-0">
+          {formattedPreviousDate && (
+            <div className="text-[11px] text-gray-400 line-through decoration-red-300 mb-0.5">
+              {formattedPreviousDate.fullDate} · {formattedPreviousDate.time}
+            </div>
+          )}
+          <div className={`text-xs font-semibold ${pendingApproval ? 'text-amber-500' : 'text-orange-500'}`}>
+            {formattedDate?.dayName}
           </div>
-          <div className="text-xl font-bold text-gray-800 leading-none pt-1.5">
-            {formattedDate?.day}
+          <div className="text-xl font-bold text-gray-900 leading-tight">
+            {formattedDate?.fullDate}
           </div>
-          <div className="text-[11px] text-gray-500 pb-1.5">{formattedDate?.weekday}</div>
+          <div className="text-sm text-gray-500">{formattedDate?.time}</div>
         </div>
 
         {/* Details */}
         <div className="flex-1 min-w-0">
-          {/* Time / pending old→new */}
-          {formattedPreviousDate ? (
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-medium text-gray-400 line-through decoration-red-300">
-                {formattedPreviousDate.fullDate} · {formattedPreviousDate.time}
-              </span>
-              <Icon name="arrow-right" style="solid" className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-              <span className="text-sm font-semibold text-gray-800">
-                {formattedDate?.fullDate} · {formattedDate?.time}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-800">
-                <Icon name="clock" style="regular" className="w-3.5 h-3.5 text-gray-400" />
-                {formattedDate?.time}
-              </span>
-              <span className="text-xs text-gray-400">
-                · {formattedDate?.dayName}, {formattedDate?.fullDate}
-              </span>
-            </div>
-          )}
-
           {/* Location */}
-          <div className="flex items-center gap-2 mt-2.5">
+          <div className="flex items-center gap-2">
             <Icon name="location-dot" style="light" className="w-4 h-4 text-gray-400 shrink-0" />
             <span
-              className={`text-xs line-clamp-1 break-words ${
+              className={`text-sm line-clamp-1 break-words ${
                 appointment.locationDetail ? 'text-gray-700' : 'text-gray-400'
               }`}
             >
@@ -172,88 +206,54 @@ export default function AppointmentInfoCard({
           </div>
 
           {/* Contact */}
-          <div className="flex items-center gap-2 mt-1.5">
-            <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-              <Icon name="user" style="solid" className="w-2.5 h-2.5 text-gray-500" />
+          <div className="flex items-center gap-2 mt-2">
+            <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+              <span className="text-[11px] font-semibold text-gray-600">{initials}</span>
             </div>
-            <span className="text-xs text-gray-700">
+            <span className="text-sm text-gray-700">
               {appointment.contactPerson || t('appointment.contactNotSpecified')}
               {appointment.contactPhone && (
                 <span className="text-gray-400"> · {appointment.contactPhone}</span>
               )}
             </span>
           </div>
-        </div>
 
-        {/* Status + action buttons */}
-        <div className="flex flex-col items-end gap-3 flex-shrink-0">
-          {statusBadge && (
-            <span
-              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusBadge.cls}`}
-            >
-              {statusBadge.label}
-            </span>
-          )}
-          {!readOnly && (
-            <div className="flex items-center gap-2">
-              {onCancel && !isCancelled && (
-                <button
-                  type="button"
-                  onClick={!approvalSubmitted ? onCancel : undefined}
-                  disabled={approvalSubmitted}
-                  title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-danger/10"
-                >
-                  <Icon name="xmark" style="solid" className="w-4 h-4" />
-                  <span className="text-sm font-medium">{t('appointment.cancelButton')}</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={!approvalSubmitted ? onReschedule : undefined}
-                disabled={approvalSubmitted}
-                title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-secondary bg-secondary/20 text-secondary hover:bg-secondary/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-secondary/20"
-              >
-                <Icon name="clock-rotate-left" style="solid" className="w-5 h-5" />
-                <span className="text-sm font-medium uppercase tracking-wider">
-                  {t('appointment.rescheduleButton')}
-                </span>
-              </button>
+          {/* Reschedule count */}
+          {rescheduleCount > 0 && (
+            <div className="text-xs text-gray-400 mt-2 ml-9">
+              {t('appointment.rescheduledCount', { n: rescheduleCount })}
             </div>
           )}
         </div>
-      </div>
 
-      {/* ── Footer: reschedule count · history ── */}
-      {(rescheduleCount > 0 || onViewHistory) && (
-        <div
-          className={`flex items-center gap-2 px-5 py-2.5 border-t text-xs ${
-            pendingApproval ? 'border-amber-100 bg-amber-100/30' : 'border-gray-100 bg-gray-50/60'
-          }`}
-        >
-          {rescheduleCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 text-gray-500">
-              <Icon name="clock-rotate-left" style="solid" className="w-3 h-3 text-gray-400" />
-              {t('appointment.rescheduledCount', { n: rescheduleCount })}
-            </span>
-          )}
-          {rescheduleCount > 0 && onViewHistory && (
-            <span className="text-gray-300" aria-hidden="true">·</span>
-          )}
-          {onViewHistory && (
+        {/* Action buttons */}
+        {!readOnly && (
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {onCancel && !isCancelled && (
+              <button
+                type="button"
+                onClick={!approvalSubmitted ? onCancel : undefined}
+                disabled={approvalSubmitted}
+                title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-50"
+              >
+                <Icon name="xmark" style="solid" className="w-4 h-4" />
+                <span className="text-sm font-medium">{t('appointment.cancelButton')}</span>
+              </button>
+            )}
             <button
               type="button"
-              onClick={onViewHistory}
-              className="inline-flex items-center gap-1.5 font-semibold text-gray-500 hover:text-primary transition-colors"
+              onClick={!approvalSubmitted ? onReschedule : undefined}
+              disabled={approvalSubmitted}
+              title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
             >
-              <Icon name="clock-rotate-left" style="solid" className="w-3 h-3" />
-              {t('history.viewHistory')}
-              {historyEventCount !== undefined && historyEventCount > 0 && ` (${historyEventCount})`}
+              <Icon name="clock-rotate-left" style="solid" className="w-4 h-4" />
+              <span className="text-sm font-medium">{t('appointment.rescheduleButton')}</span>
             </button>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
