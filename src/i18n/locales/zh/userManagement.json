@@ -15,6 +15,22 @@
     "permissions": {
       "title": "Permissions",
       "subtitle": "Manage system permissions that can be assigned to roles"
+    },
+    "teams": {
+      "title": "Teams",
+      "subtitle": "Manage teams and their members"
+    },
+    "auditLogs": {
+      "title": "Audit Logs",
+      "subtitle": "Review a history of changes to users, roles, groups, and permissions"
+    },
+    "companies": {
+      "title": "Companies",
+      "subtitle": "Manage external appraisal companies and their details"
+    },
+    "accessReport": {
+      "title": "Access Report",
+      "subtitle": "View and export the full user access matrix"
     }
   },
   "tabs": {
@@ -25,10 +41,14 @@
     "general": "General",
     "roles": "Roles",
     "groups": "Groups",
+    "teams": "Teams",
     "users": "Users",
     "permissions": "Permissions",
     "security": "Security",
-    "monitoring": "Monitoring"
+    "status": "Status",
+    "monitoring": "Monitoring",
+    "address": "Address",
+    "bankAccount": "Bank Account"
   },
   "fields": {
     "username": "Username",
@@ -47,12 +67,35 @@
     "newPassword": "New Password",
     "confirmPassword": "Confirm Password",
     "currentPassword": "Current Password",
-    "confirmNewPassword": "Confirm New Password"
+    "confirmNewPassword": "Confirm New Password",
+    "companyName": "Company Name",
+    "taxId": "Tax ID",
+    "phone": "Phone",
+    "contactPerson": "Contact Person",
+    "street": "Street",
+    "city": "City",
+    "province": "Province",
+    "postalCode": "Postal Code",
+    "bankAccountNo": "Bank Account No.",
+    "bankAccountName": "Bank Account Name",
+    "loanTypes": "Loan Types",
+    "isActive": "Active",
+    "teamType": "Type",
+    "teamTypeInternal": "Internal",
+    "teamTypeExternal": "External",
+    "status": "Status",
+    "company": "Company",
+    "authSource": "Auth Source",
+    "lastLogin": "Last Login",
+    "noCompany": "No Company"
   },
   "placeholders": {
     "searchUsers": "Search users...",
     "searchRoles": "Search roles...",
     "searchGroups": "Search groups...",
+    "searchTeams": "Search teams...",
+    "searchCompanies": "Search companies...",
+    "searchActor": "Search by actor...",
     "searchPermissions": "Search by code or display name...",
     "searchPermissionsShort": "Search permissions...",
     "searchByNameOrEmail": "Search by name or email...",
@@ -61,6 +104,19 @@
     "roleDescription": "Brief description of this role",
     "groupName": "Group name",
     "groupDescription": "Brief description of this group",
+    "teamName": "Team name",
+    "teamDescription": "Brief description of this team",
+    "companyName": "Company name",
+    "taxId": "e.g. 0105556123456",
+    "phone": "e.g. 02-xxx-xxxx",
+    "contactPerson": "Contact person name",
+    "street": "Street address",
+    "city": "City",
+    "province": "Province",
+    "postalCode": "Postal code",
+    "bankAccountNo": "Bank account number",
+    "bankAccountName": "Account holder name",
+    "loanTypes": "e.g. HOUSING, AUTO",
     "briefDescription": "Brief description",
     "permissionCodeExample": "e.g., permissions.read",
     "displayNameExample": "e.g., View Permissions",
@@ -76,11 +132,41 @@
     "reEnterNewPassword": "Re-enter new password",
     "enterCurrentPassword": "Enter current password"
   },
+  "filters": {
+    "all": "All",
+    "entityType": "Entity Type",
+    "action": "Action",
+    "actor": "Actor",
+    "from": "From",
+    "to": "To",
+    "search": "Search",
+    "roleName": "Role",
+    "group": "Group",
+    "team": "Team"
+  },
+  "counts": {
+    "members": "{{count}} member",
+    "members_other": "{{count}} members",
+    "results": "{{count}} result",
+    "results_other": "{{count}} results"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "locked": "Locked"
+  },
+  "hints": {
+    "loanTypesComma": "Separate multiple loan types with a comma"
+  },
   "empty": {
     "noUsersFound": "No users found",
     "noRolesFound": "No roles found",
     "noGroupsFound": "No groups found",
     "noPermissionsFound": "No permissions found",
+    "noTeamsFound": "No teams found",
+    "noCompaniesFound": "No companies found",
+    "noAuditLogs": "No audit log entries found",
+    "noResults": "No results found",
     "noRolesAssigned": "No roles assigned",
     "noGroupsAssigned": "No groups assigned",
     "noUsersAssigned": "No users assigned",
@@ -89,14 +175,20 @@
     "selectUser": "Select a user to view details",
     "selectRole": "Select a role to view details",
     "selectGroup": "Select a group to view details",
+    "selectTeam": "Select a team to view details",
+    "selectCompany": "Select a company to view details",
     "noRolesAvailable": "No roles available",
     "noOtherGroupsFound": "No other groups found",
+    "noItemsFound": "No items found",
+    "noTeamsAssigned": "No teams assigned",
     "loading": "Loading..."
   },
   "aria": {
     "addUser": "Add user",
     "addRole": "Add role",
     "addGroup": "Add group",
+    "addTeam": "Add team",
+    "addCompany": "Add company",
     "removeItem": "Remove {{name}}"
   },
   "buttons": {
@@ -104,6 +196,8 @@
     "edit": "Edit",
     "deleteRole": "Delete Role",
     "deleteGroup": "Delete Group",
+    "deleteTeam": "Delete Team",
+    "deleteCompany": "Delete Company",
     "changePassword": "Change Password",
     "resetPassword": "Reset Password",
     "savePermissions": "Save Permissions",
@@ -111,7 +205,11 @@
     "showPasswords": "Show passwords",
     "hidePasswords": "Hide passwords",
     "update": "Update",
-    "create": "Create"
+    "create": "Create",
+    "exportCsv": "Export CSV",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "unlock": "Unlock"
   },
   "dialogs": {
     "createRole": {
@@ -134,6 +232,26 @@
       "title": "Delete Group",
       "message": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
     },
+    "createTeam": {
+      "title": "Create Team"
+    },
+    "editTeam": {
+      "title": "Edit Team"
+    },
+    "deleteTeam": {
+      "title": "Delete Team",
+      "message": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
+    },
+    "createCompany": {
+      "title": "Create Company"
+    },
+    "editCompany": {
+      "title": "Edit Company"
+    },
+    "deleteCompany": {
+      "title": "Delete Company",
+      "message": "Are you sure you want to delete \"{{name}}\"? This cannot be undone."
+    },
     "createUser": {
       "title": "Create User"
     },
@@ -147,6 +265,10 @@
     "editGroups": {
       "title": "Edit Groups",
       "hint": "Select groups to assign to this user."
+    },
+    "editTeams": {
+      "title": "Edit Teams",
+      "hint": "Select teams to assign to this user."
     },
     "resetPassword": {
       "title": "Reset Password",
@@ -173,11 +295,21 @@
     },
     "selectMonitoredGroups": {
       "title": "Select Monitored Groups"
+    },
+    "activateUser": {
+      "title": "Activate User",
+      "message": "Are you sure you want to activate \"{{name}}\"?"
+    },
+    "deactivateUser": {
+      "title": "Deactivate User",
+      "message": "Are you sure you want to deactivate \"{{name}}\"? They will not be able to sign in."
     }
   },
   "security": {
     "deleteRoleWarning": "Deleting this role will remove it from all assigned users. This action cannot be undone.",
-    "deleteGroupWarning": "Deleting this group will remove all user assignments. This action cannot be undone."
+    "deleteGroupWarning": "Deleting this group will remove all user assignments. This action cannot be undone.",
+    "deleteTeamWarning": "Deleting this team will remove all member assignments. This action cannot be undone.",
+    "deleteCompanyWarning": "Deleting this company will remove it from the system. This action cannot be undone."
   },
   "selectionCount": {
     "permissions": "{{count}} permission selected",
@@ -185,7 +317,9 @@
     "users": "{{count}} user selected",
     "users_other": "{{count}} users selected",
     "groups": "{{count}} group selected",
-    "groups_other": "{{count}} groups selected"
+    "groups_other": "{{count}} groups selected",
+    "items": "{{count}} item selected",
+    "items_other": "{{count}} items selected"
   },
   "loading": {
     "permissions": "Loading permissions...",
@@ -197,7 +331,17 @@
     "permissionCode": "Permission Code",
     "module": "Module",
     "description": "Description",
-    "actions": "Actions"
+    "actions": "Actions",
+    "when": "When",
+    "actor": "Actor",
+    "action": "Action",
+    "entityType": "Entity Type",
+    "entityName": "Entity",
+    "changes": "Changes",
+    "username": "Username",
+    "fullName": "Full Name",
+    "email": "Email",
+    "scope": "Scope"
   },
   "toasts": {
     "roleCreated": "Role created",
@@ -216,6 +360,19 @@
     "groupUpdateFailed": "Failed to update group",
     "groupDeleted": "Group deleted",
     "groupDeleteFailed": "Failed to delete group",
+    "teamCreated": "Team created",
+    "teamCreateFailed": "Failed to create team",
+    "teamUpdated": "Team updated",
+    "teamUpdateFailed": "Failed to update team",
+    "teamDeleted": "Team deleted",
+    "teamDeleteFailed": "Failed to delete team",
+    "companyCreated": "Company created",
+    "companyCreateFailed": "Failed to create company",
+    "companyUpdated": "Company updated",
+    "companyUpdateFailed": "Failed to update company",
+    "companyDeleted": "Company deleted",
+    "companyDeleteFailed": "Failed to delete company",
+    "exportFailed": "Failed to export report",
     "monitoredGroupsUpdated": "Monitored groups updated",
     "monitoredGroupsUpdateFailed": "Failed to update monitored groups",
     "userUpdated": "User updated",
@@ -236,7 +393,14 @@
     "permissionUpdated": "Permission updated successfully",
     "permissionUpdateFailed": "Failed to update permission",
     "permissionDeleted": "Permission deleted successfully",
-    "permissionDeleteFailed": "Failed to delete permission"
+    "permissionDeleteFailed": "Failed to delete permission",
+    "teamsUpdated": "Teams updated",
+    "teamsUpdateFailed": "Failed to update teams",
+    "userActivated": "User activated",
+    "userDeactivated": "User deactivated",
+    "userActivationFailed": "Failed to update user status",
+    "userUnlocked": "User account unlocked",
+    "userUnlockFailed": "Failed to unlock user account"
   },
   "validation": {
     "nameRequired": "Name is required",
@@ -261,6 +425,13 @@
     "passwordsDoNotMatch": "Passwords do not match",
     "passwordMinLengthReset": "Password must be at least 8 characters",
     "passwordsDoNotMatchReset": "Passwords do not match"
+  },
+  "passwordPolicy": {
+    "minLength": "At least {{count}} characters",
+    "requireUppercase": "One uppercase letter",
+    "requireLowercase": "One lowercase letter",
+    "requireDigit": "One digit",
+    "requireSymbol": "One special character"
   },
   "roles": {
     "displayNames": {

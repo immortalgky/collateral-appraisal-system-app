@@ -66,8 +66,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
     () =>
       (group?.users ?? []).map(u => ({
         id: u.userId,
-        userName: u.userName,
-        displayName: `${u.firstName} ${u.lastName}`.trim() || u.userName,
+        username: u.userName,
+        firstName: u.firstName,
+        lastName: u.lastName,
         email: '',
       })),
     [group?.users],
@@ -130,7 +131,7 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
   if (!group) return null;
 
   return (
-    <div className="flex flex-col gap-4 p-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-4 p-6">
       {/* General Section */}
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
@@ -320,8 +321,7 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
         onClose={() => setShowUserModal(false)}
         onSave={handleSaveUsers}
         currentUsers={adaptedUsers}
-        availableUsers={adaptedUsers}
-        isLoadingUsers={isLoading}
+        scope={group.scope}
         isSaving={updateUsers.isPending}
         title={t('dialogs.assignUsers.title')}
       />

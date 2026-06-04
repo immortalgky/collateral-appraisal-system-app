@@ -15,6 +15,22 @@
     "permissions": {
       "title": "สิทธิ์",
       "subtitle": "จัดการสิทธิ์ระบบที่สามารถกำหนดให้กับบทบาทได้"
+    },
+    "teams": {
+      "title": "ทีม",
+      "subtitle": "จัดการทีมและสมาชิก"
+    },
+    "auditLogs": {
+      "title": "บันทึกการตรวจสอบ",
+      "subtitle": "ตรวจสอบประวัติการเปลี่ยนแปลงผู้ใช้ บทบาท กลุ่ม และสิทธิ์"
+    },
+    "companies": {
+      "title": "บริษัท",
+      "subtitle": "จัดการบริษัทประเมินภายนอกและรายละเอียด"
+    },
+    "accessReport": {
+      "title": "รายงานการเข้าถึง",
+      "subtitle": "ดูและส่งออกเมทริกซ์การเข้าถึงของผู้ใช้"
     }
   },
   "tabs": {
@@ -25,10 +41,14 @@
     "general": "ทั่วไป",
     "roles": "บทบาท",
     "groups": "กลุ่ม",
+    "teams": "ทีม",
     "users": "ผู้ใช้งาน",
     "permissions": "สิทธิ์",
     "security": "ความปลอดภัย",
-    "monitoring": "การติดตาม"
+    "status": "สถานะ",
+    "monitoring": "การติดตาม",
+    "address": "ที่อยู่",
+    "bankAccount": "บัญชีธนาคาร"
   },
   "fields": {
     "username": "ชื่อผู้ใช้",
@@ -47,12 +67,35 @@
     "newPassword": "รหัสผ่านใหม่",
     "confirmPassword": "ยืนยันรหัสผ่าน",
     "currentPassword": "รหัสผ่านปัจจุบัน",
-    "confirmNewPassword": "ยืนยันรหัสผ่านใหม่"
+    "confirmNewPassword": "ยืนยันรหัสผ่านใหม่",
+    "companyName": "ชื่อบริษัท",
+    "taxId": "เลขประจำตัวผู้เสียภาษี",
+    "phone": "โทรศัพท์",
+    "contactPerson": "ผู้ติดต่อ",
+    "street": "ที่อยู่",
+    "city": "เมือง",
+    "province": "จังหวัด",
+    "postalCode": "รหัสไปรษณีย์",
+    "bankAccountNo": "เลขที่บัญชีธนาคาร",
+    "bankAccountName": "ชื่อบัญชี",
+    "loanTypes": "ประเภทสินเชื่อ",
+    "isActive": "ใช้งาน",
+    "teamType": "ประเภท",
+    "teamTypeInternal": "ภายใน",
+    "teamTypeExternal": "ภายนอก",
+    "status": "สถานะ",
+    "company": "บริษัท",
+    "authSource": "แหล่งยืนยันตัวตน",
+    "lastLogin": "เข้าสู่ระบบล่าสุด",
+    "noCompany": "ไม่มีบริษัท"
   },
   "placeholders": {
     "searchUsers": "ค้นหาผู้ใช้...",
     "searchRoles": "ค้นหาบทบาท...",
     "searchGroups": "ค้นหากลุ่ม...",
+    "searchTeams": "ค้นหาทีม...",
+    "searchCompanies": "ค้นหาบริษัท...",
+    "searchActor": "ค้นหาผู้กระทำ...",
     "searchPermissions": "ค้นหาด้วยรหัสหรือชื่อที่แสดง...",
     "searchPermissionsShort": "ค้นหาสิทธิ์...",
     "searchByNameOrEmail": "ค้นหาด้วยชื่อหรืออีเมล...",
@@ -61,6 +104,19 @@
     "roleDescription": "คำอธิบายสั้น ๆ ของบทบาทนี้",
     "groupName": "ชื่อกลุ่ม",
     "groupDescription": "คำอธิบายสั้น ๆ ของกลุ่มนี้",
+    "teamName": "ชื่อทีม",
+    "teamDescription": "คำอธิบายสั้น ๆ ของทีมนี้",
+    "companyName": "ชื่อบริษัท",
+    "taxId": "เช่น 0105556123456",
+    "phone": "เช่น 02-xxx-xxxx",
+    "contactPerson": "ชื่อผู้ติดต่อ",
+    "street": "ที่อยู่",
+    "city": "เมือง",
+    "province": "จังหวัด",
+    "postalCode": "รหัสไปรษณีย์",
+    "bankAccountNo": "เลขที่บัญชีธนาคาร",
+    "bankAccountName": "ชื่อผู้ถือบัญชี",
+    "loanTypes": "เช่น HOUSING, AUTO",
     "briefDescription": "คำอธิบายสั้น ๆ",
     "permissionCodeExample": "เช่น permissions.read",
     "displayNameExample": "เช่น ดูสิทธิ์",
@@ -76,11 +132,41 @@
     "reEnterNewPassword": "ป้อนรหัสผ่านใหม่อีกครั้ง",
     "enterCurrentPassword": "ป้อนรหัสผ่านปัจจุบัน"
   },
+  "filters": {
+    "all": "ทั้งหมด",
+    "entityType": "ประเภทข้อมูล",
+    "action": "การดำเนินการ",
+    "actor": "ผู้กระทำ",
+    "from": "ตั้งแต่",
+    "to": "ถึง",
+    "search": "ค้นหา",
+    "roleName": "บทบาท",
+    "group": "กลุ่ม",
+    "team": "ทีม"
+  },
+  "counts": {
+    "members": "{{count}} สมาชิก",
+    "members_other": "{{count}} สมาชิก",
+    "results": "{{count}} รายการ",
+    "results_other": "{{count}} รายการ"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน",
+    "locked": "ถูกล็อก"
+  },
+  "hints": {
+    "loanTypesComma": "คั่นประเภทสินเชื่อหลายประเภทด้วยเครื่องหมายจุลภาค"
+  },
   "empty": {
     "noUsersFound": "ไม่พบผู้ใช้งาน",
     "noRolesFound": "ไม่พบบทบาท",
     "noGroupsFound": "ไม่พบกลุ่ม",
     "noPermissionsFound": "ไม่พบสิทธิ์",
+    "noTeamsFound": "ไม่พบทีม",
+    "noCompaniesFound": "ไม่พบบริษัท",
+    "noAuditLogs": "ไม่พบรายการบันทึกการตรวจสอบ",
+    "noResults": "ไม่พบผลลัพธ์",
     "noRolesAssigned": "ยังไม่มีบทบาทที่กำหนด",
     "noGroupsAssigned": "ยังไม่มีกลุ่มที่กำหนด",
     "noUsersAssigned": "ยังไม่มีผู้ใช้ที่กำหนด",
@@ -89,14 +175,20 @@
     "selectUser": "เลือกผู้ใช้เพื่อดูรายละเอียด",
     "selectRole": "เลือกบทบาทเพื่อดูรายละเอียด",
     "selectGroup": "เลือกกลุ่มเพื่อดูรายละเอียด",
+    "selectTeam": "เลือกทีมเพื่อดูรายละเอียด",
+    "selectCompany": "เลือกบริษัทเพื่อดูรายละเอียด",
     "noRolesAvailable": "ไม่มีบทบาทที่ใช้งานได้",
     "noOtherGroupsFound": "ไม่พบกลุ่มอื่น",
+    "noItemsFound": "ไม่พบรายการ",
+    "noTeamsAssigned": "ยังไม่มีทีมที่กำหนด",
     "loading": "กำลังโหลด..."
   },
   "aria": {
     "addUser": "เพิ่มผู้ใช้",
     "addRole": "เพิ่มบทบาท",
     "addGroup": "เพิ่มกลุ่ม",
+    "addTeam": "เพิ่มทีม",
+    "addCompany": "เพิ่มบริษัท",
     "removeItem": "ลบ {{name}}"
   },
   "buttons": {
@@ -104,6 +196,8 @@
     "edit": "แก้ไข",
     "deleteRole": "ลบบทบาท",
     "deleteGroup": "ลบกลุ่ม",
+    "deleteTeam": "ลบทีม",
+    "deleteCompany": "ลบบริษัท",
     "changePassword": "เปลี่ยนรหัสผ่าน",
     "resetPassword": "รีเซ็ตรหัสผ่าน",
     "savePermissions": "บันทึกสิทธิ์",
@@ -111,7 +205,11 @@
     "showPasswords": "แสดงรหัสผ่าน",
     "hidePasswords": "ซ่อนรหัสผ่าน",
     "update": "อัปเดต",
-    "create": "สร้าง"
+    "create": "สร้าง",
+    "exportCsv": "ส่งออก CSV",
+    "activate": "เปิดใช้งาน",
+    "deactivate": "ปิดใช้งาน",
+    "unlock": "ปลดล็อก"
   },
   "dialogs": {
     "createRole": {
@@ -132,6 +230,26 @@
     },
     "deleteGroup": {
       "title": "ลบกลุ่ม",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "createTeam": {
+      "title": "สร้างทีม"
+    },
+    "editTeam": {
+      "title": "แก้ไขทีม"
+    },
+    "deleteTeam": {
+      "title": "ลบทีม",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "createCompany": {
+      "title": "สร้างบริษัท"
+    },
+    "editCompany": {
+      "title": "แก้ไขบริษัท"
+    },
+    "deleteCompany": {
+      "title": "ลบบริษัท",
       "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
     },
     "createUser": {
@@ -173,11 +291,25 @@
     },
     "selectMonitoredGroups": {
       "title": "เลือกกลุ่มที่ต้องการติดตาม"
+    },
+    "editTeams": {
+      "title": "แก้ไขทีม",
+      "hint": "เลือกทีมที่ต้องการกำหนดให้ผู้ใช้นี้"
+    },
+    "activateUser": {
+      "title": "เปิดใช้งานผู้ใช้",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดใช้งาน \"{{name}}\""
+    },
+    "deactivateUser": {
+      "title": "ปิดใช้งานผู้ใช้",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการปิดใช้งาน \"{{name}}\"? พวกเขาจะไม่สามารถเข้าสู่ระบบได้"
     }
   },
   "security": {
     "deleteRoleWarning": "การลบบทบาทนี้จะนำออกจากผู้ใช้ทั้งหมดที่ถูกกำหนด การดำเนินการนี้ไม่สามารถยกเลิกได้",
-    "deleteGroupWarning": "การลบกลุ่มนี้จะลบการกำหนดผู้ใช้ทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    "deleteGroupWarning": "การลบกลุ่มนี้จะลบการกำหนดผู้ใช้ทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "deleteTeamWarning": "การลบทีมนี้จะลบสมาชิกทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "deleteCompanyWarning": "การลบบริษัทนี้จะนำออกจากระบบ การดำเนินการนี้ไม่สามารถยกเลิกได้"
   },
   "selectionCount": {
     "permissions": "เลือก {{count}} สิทธิ์",
@@ -185,7 +317,9 @@
     "users": "เลือก {{count}} ผู้ใช้",
     "users_other": "เลือก {{count}} ผู้ใช้",
     "groups": "เลือก {{count}} กลุ่ม",
-    "groups_other": "เลือก {{count}} กลุ่ม"
+    "groups_other": "เลือก {{count}} กลุ่ม",
+    "items": "เลือก {{count}} รายการ",
+    "items_other": "เลือก {{count}} รายการ"
   },
   "loading": {
     "permissions": "กำลังโหลดสิทธิ์...",
@@ -197,7 +331,17 @@
     "permissionCode": "รหัสสิทธิ์",
     "module": "โมดูล",
     "description": "คำอธิบาย",
-    "actions": "การดำเนินการ"
+    "actions": "การดำเนินการ",
+    "when": "เวลา",
+    "actor": "ผู้กระทำ",
+    "action": "การดำเนินการ",
+    "entityType": "ประเภท",
+    "entityName": "ชื่อข้อมูล",
+    "changes": "การเปลี่ยนแปลง",
+    "username": "ชื่อผู้ใช้",
+    "fullName": "ชื่อ-นามสกุล",
+    "email": "อีเมล",
+    "scope": "ขอบเขต"
   },
   "toasts": {
     "roleCreated": "สร้างบทบาทเรียบร้อยแล้ว",
@@ -216,6 +360,19 @@
     "groupUpdateFailed": "ไม่สามารถอัปเดตกลุ่มได้",
     "groupDeleted": "ลบกลุ่มเรียบร้อยแล้ว",
     "groupDeleteFailed": "ไม่สามารถลบกลุ่มได้",
+    "teamCreated": "สร้างทีมเรียบร้อยแล้ว",
+    "teamCreateFailed": "ไม่สามารถสร้างทีมได้",
+    "teamUpdated": "อัปเดตทีมเรียบร้อยแล้ว",
+    "teamUpdateFailed": "ไม่สามารถอัปเดตทีมได้",
+    "teamDeleted": "ลบทีมเรียบร้อยแล้ว",
+    "teamDeleteFailed": "ไม่สามารถลบทีมได้",
+    "companyCreated": "สร้างบริษัทเรียบร้อยแล้ว",
+    "companyCreateFailed": "ไม่สามารถสร้างบริษัทได้",
+    "companyUpdated": "อัปเดตบริษัทเรียบร้อยแล้ว",
+    "companyUpdateFailed": "ไม่สามารถอัปเดตบริษัทได้",
+    "companyDeleted": "ลบบริษัทเรียบร้อยแล้ว",
+    "companyDeleteFailed": "ไม่สามารถลบบริษัทได้",
+    "exportFailed": "ไม่สามารถส่งออกรายงานได้",
     "monitoredGroupsUpdated": "อัปเดตกลุ่มที่ติดตามเรียบร้อยแล้ว",
     "monitoredGroupsUpdateFailed": "ไม่สามารถอัปเดตกลุ่มที่ติดตามได้",
     "userUpdated": "อัปเดตผู้ใช้เรียบร้อยแล้ว",
@@ -236,7 +393,14 @@
     "permissionUpdated": "อัปเดตสิทธิ์เรียบร้อยแล้ว",
     "permissionUpdateFailed": "ไม่สามารถอัปเดตสิทธิ์ได้",
     "permissionDeleted": "ลบสิทธิ์เรียบร้อยแล้ว",
-    "permissionDeleteFailed": "ไม่สามารถลบสิทธิ์ได้"
+    "permissionDeleteFailed": "ไม่สามารถลบสิทธิ์ได้",
+    "teamsUpdated": "อัปเดตทีมเรียบร้อยแล้ว",
+    "teamsUpdateFailed": "ไม่สามารถอัปเดตทีมได้",
+    "userActivated": "เปิดใช้งานผู้ใช้เรียบร้อยแล้ว",
+    "userDeactivated": "ปิดใช้งานผู้ใช้เรียบร้อยแล้ว",
+    "userActivationFailed": "ไม่สามารถอัปเดตสถานะผู้ใช้ได้",
+    "userUnlocked": "ปลดล็อกบัญชีผู้ใช้เรียบร้อยแล้ว",
+    "userUnlockFailed": "ไม่สามารถปลดล็อกบัญชีผู้ใช้ได้"
   },
   "validation": {
     "nameRequired": "ต้องระบุชื่อ",
@@ -261,6 +425,13 @@
     "passwordsDoNotMatch": "รหัสผ่านไม่ตรงกัน",
     "passwordMinLengthReset": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
     "passwordsDoNotMatchReset": "รหัสผ่านไม่ตรงกัน"
+  },
+  "passwordPolicy": {
+    "minLength": "อย่างน้อย {{count}} ตัวอักษร",
+    "requireUppercase": "ตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว",
+    "requireLowercase": "ตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว",
+    "requireDigit": "ตัวเลขอย่างน้อยหนึ่งตัว",
+    "requireSymbol": "อักขระพิเศษอย่างน้อยหนึ่งตัว"
   },
   "roles": {
     "displayNames": {

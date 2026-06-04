@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
-import { useChangePassword } from '../api/users';
+import { useChangePassword, useGetPasswordPolicy } from '../api/users';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -18,14 +18,17 @@ const emptyForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
 const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
   const changePassword = useChangePassword(userId);
+  const { data: policy } = useGetPasswordPolicy();
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Partial<typeof emptyForm>>({});
   const [showPasswords, setShowPasswords] = useState(false);
 
+  const minLength = policy?.requiredLength ?? 8;
+
   const schema = z
     .object({
       currentPassword: z.string().min(1, t('validation.currentPasswordRequired')),
-      newPassword: z.string().min(8, t('validation.newPasswordMinLength')),
+      newPassword: z.string().min(minLength, t('validation.newPasswordMinLength')),
       confirmPassword: z.string().min(1, t('validation.confirmPasswordRequired')),
     })
     .refine(data => data.newPassword === data.confirmPassword, {
@@ -35,7 +38,6 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
 
   const updateField = (key: keyof typeof emptyForm, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
-    // Clear error on change
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }));
   };
 
@@ -69,6 +71,54 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
       },
     });
   };
+
+  // Derive which policy rules pass against the current new-password value
+  const pw = form.newPassword;
+  const policyChecks = policy
+    ? [
+        {
+          key: 'length',
+          label: t('passwordPolicy.minLength', { count: policy.requiredLength }),
+          passed: pw.length >= policy.requiredLength,
+        },
+        ...(policy.requireUppercase
+          ? [
+              {
+                key: 'upper',
+                label: t('passwordPolicy.requireUppercase'),
+                passed: /[A-Z]/.test(pw),
+              },
+            ]
+          : []),
+        ...(policy.requireLowercase
+          ? [
+              {
+                key: 'lower',
+                label: t('passwordPolicy.requireLowercase'),
+                passed: /[a-z]/.test(pw),
+              },
+            ]
+          : []),
+        ...(policy.requireDigit
+          ? [
+              {
+                key: 'digit',
+                label: t('passwordPolicy.requireDigit'),
+                passed: /[0-9]/.test(pw),
+              },
+            ]
+          : []),
+        ...(policy.requireNonAlphanumeric
+          ? [
+              {
+                key: 'symbol',
+                label: t('passwordPolicy.requireSymbol'),
+                passed: /[^a-zA-Z0-9]/.test(pw),
+              },
+            ]
+          : []),
+      ]
+    : [];
 
   const inputType = showPasswords ? 'text' : 'password';
 
@@ -115,6 +165,24 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
           />
           {errors.newPassword && <p className="mt-1 text-xs text-danger">{errors.newPassword}</p>}
         </div>
+
+        {/* Password policy checklist */}
+        {policyChecks.length > 0 && form.newPassword.length > 0 && (
+          <ul className="flex flex-col gap-1">
+            {policyChecks.map(check => (
+              <li key={check.key} className="flex items-center gap-1.5 text-xs">
+                <Icon
+                  name={check.passed ? 'circle-check' : 'circle-xmark'}
+                  style="solid"
+                  className={`size-3.5 shrink-0 ${check.passed ? 'text-green-500' : 'text-gray-300'}`}
+                />
+                <span className={check.passed ? 'text-green-700' : 'text-gray-400'}>
+                  {check.label}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* Confirm password */}
         <div>

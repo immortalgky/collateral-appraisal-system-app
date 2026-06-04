@@ -11,8 +11,11 @@ import type {
   AdminUpdateUserRequest,
   UpdateUserRolesRequest,
   UpdateUserGroupsRequest,
+  UpdateUserTeamsRequest,
+  SetUserActivationRequest,
   CreateUserRequest,
   CreateUserResponse,
+  PasswordPolicy,
 } from '../types';
 
 const ME_KEY = ['me'];
@@ -66,6 +69,7 @@ export const useGetUsers = (params: GetUsersParams = {}) => {
           Search: params.search || undefined,
           Scope: params.scope || undefined,
           role: params.role || undefined,
+          isActive: params.isActive,
           PageNumber: params.pageNumber ?? 1,
           PageSize: params.pageSize ?? 20,
         },
@@ -162,5 +166,60 @@ export const useUpdateUserGroups = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
     },
+  });
+};
+
+/** Admin: update user teams */
+export const useUpdateUserTeams = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: UpdateUserTeamsRequest & { id: string }) => {
+      const { data } = await axios.put(`/auth/users/${id}/teams`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+    },
+  });
+};
+
+/** Admin: activate or deactivate a user */
+export const useSetUserActivation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: SetUserActivationRequest & { id: string }) => {
+      const { data } = await axios.put(`/auth/users/${id}/activation`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+};
+
+/** Admin: unlock a locked user account */
+export const useUnlockUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await axios.post(`/auth/users/${id}/unlock`);
+      return data;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, id] });
+    },
+  });
+};
+
+/** Get the global password policy */
+export const useGetPasswordPolicy = () => {
+  return useQuery({
+    queryKey: ['passwordPolicy'],
+    queryFn: async (): Promise<PasswordPolicy> => {
+      const { data } = await axios.get<PasswordPolicy>('/auth/password-policy');
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 };
