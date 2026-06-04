@@ -168,6 +168,8 @@ export interface UpdateGroupMonitoringRequest {
   monitoredGroupIds: string[];
 }
 
+export type TeamType = 'Internal' | 'External';
+
 // ─── User / Profile ──────────────────────────────────────────────────────────
 
 export interface UserRole {
@@ -180,6 +182,12 @@ export interface UserGroup {
   id: string;
   name: string;
   scope: string;
+}
+
+export interface UserTeam {
+  id: string;
+  name: string;
+  type: TeamType;
 }
 
 export interface UserProfile {
@@ -195,6 +203,15 @@ export interface UserProfile {
   companyId: string | null;
   roles: UserRole[];
   groups: UserGroup[];
+}
+
+export interface PasswordPolicy {
+  requiredLength: number;
+  requireDigit: boolean;
+  requireLowercase: boolean;
+  requireUppercase: boolean;
+  requireNonAlphanumeric: boolean;
+  requiredUniqueChars: number;
 }
 
 export interface UpdateProfileRequest {
@@ -221,12 +238,17 @@ export interface AdminUserListItem {
   department: string | null;
   companyId: string | null;
   roles: UserRole[];
+  isActive: boolean;
+  isLocked: boolean;
 }
 
 export interface AdminUserDetail extends AdminUserListItem {
   avatarUrl: string | null;
   authSource: 'Local' | 'External';
+  companyName: string | null;
   groups: UserGroup[];
+  teams: UserTeam[];
+  lastLoginAt: string | null;
 }
 
 export interface AdminUserListResult {
@@ -240,6 +262,7 @@ export interface GetUsersParams {
   search?: string;
   scope?: 'Bank' | 'Company';
   role?: string;
+  isActive?: boolean;
   pageNumber?: number;
   pageSize?: number;
 }
@@ -260,6 +283,14 @@ export interface UpdateUserGroupsRequest {
   groupIds: string[];
 }
 
+export interface UpdateUserTeamsRequest {
+  teamIds: string[];
+}
+
+export interface SetUserActivationRequest {
+  isActive: boolean;
+}
+
 export interface CreateUserRequest {
   username: string;
   password: string;
@@ -274,4 +305,206 @@ export interface CreateUserRequest {
 
 export interface CreateUserResponse {
   id: string;
+}
+
+// ─── Team ────────────────────────────────────────────────────────────────────
+
+export interface TeamMember {
+  userId: string;
+  userName: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface TeamDetail {
+  id: string;
+  name: string;
+  type: TeamType;
+  isActive: boolean;
+  members: TeamMember[];
+}
+
+export interface TeamListItem {
+  id: string;
+  name: string;
+  type: TeamType;
+  isActive: boolean;
+  memberCount: number;
+}
+
+export interface TeamListResult {
+  items: TeamListItem[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface GetTeamsParams {
+  search?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface CreateTeamRequest {
+  name: string;
+  type?: TeamType;
+  isActive?: boolean;
+}
+
+export interface UpdateTeamRequest {
+  name: string;
+  type: TeamType;
+  isActive: boolean;
+}
+
+export interface UpdateTeamMembersRequest {
+  userIds: string[];
+}
+
+// ─── Audit Log ───────────────────────────────────────────────────────────────
+
+export type AuditAction = 'Created' | 'Updated' | 'Deleted' | 'AssignmentChanged';
+export type AuditEntityType = 'User' | 'Role' | 'Permission' | 'Group' | 'Team';
+
+export interface AuditLogRow {
+  id: string;
+  occurredAt: string;
+  actorUserId: string;
+  actorName: string;
+  action: AuditAction;
+  entityType: AuditEntityType;
+  entityId: string;
+  entityName: string;
+  changesJson: string | null;
+}
+
+export interface AuditLogResult {
+  items: AuditLogRow[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface GetAuditLogsParams {
+  entityType?: AuditEntityType | '';
+  entityId?: string;
+  actorUserId?: string;
+  from?: string;
+  to?: string;
+  action?: AuditAction | '';
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+// ─── Company ─────────────────────────────────────────────────────────────────
+
+export interface Company {
+  id: string;
+  name: string;
+  taxId: string | null;
+  phone: string | null;
+  email: string | null;
+  street: string | null;
+  city: string | null;
+  province: string | null;
+  postalCode: string | null;
+  contactPerson: string | null;
+  loanTypes: string[];
+  isActive: boolean;
+  bankAccountNo: string | null;
+  bankAccountName: string | null;
+}
+
+export interface CompanyListItem {
+  id: string;
+  name: string;
+  taxId: string | null;
+  phone: string | null;
+  email: string | null;
+  isActive: boolean;
+}
+
+export interface CompanyListResult {
+  items: CompanyListItem[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface GetCompaniesParams {
+  search?: string;
+  isActive?: boolean;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface CreateCompanyRequest {
+  name: string;
+  taxId?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  street?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postalCode?: string | null;
+  contactPerson?: string | null;
+  loanTypes?: string[];
+  isActive?: boolean;
+  bankAccountNo?: string | null;
+  bankAccountName?: string | null;
+}
+
+export interface UpdateCompanyRequest {
+  name: string;
+  taxId?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  street?: string | null;
+  city?: string | null;
+  province?: string | null;
+  postalCode?: string | null;
+  contactPerson?: string | null;
+  loanTypes?: string[];
+  isActive?: boolean;
+  bankAccountNo?: string | null;
+  bankAccountName?: string | null;
+}
+
+export interface EligibleCompany {
+  id: string;
+  name: string;
+}
+
+// ─── Access Report ───────────────────────────────────────────────────────────
+
+export interface UserAccessMatrixRow {
+  userId: string;
+  userName: string;
+  fullName: string;
+  email: string;
+  companyName: string | null;
+  scope: string;
+  isActive: boolean;
+  roles: string;
+  groups: string;
+  teams: string;
+}
+
+export interface UserAccessMatrixResult {
+  items: UserAccessMatrixRow[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface GetUserAccessMatrixParams {
+  scope?: string;
+  companyId?: string;
+  roleName?: string;
+  groupId?: string;
+  teamId?: string;
+  isActive?: boolean;
+  search?: string;
+  pageNumber?: number;
+  pageSize?: number;
 }

@@ -74,7 +74,7 @@ const GroupListPage = () => {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
+    <div className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4">
       <SectionHeader
         title={t('page.groups.title')}
         subtitle={t('page.groups.subtitle')}
@@ -82,7 +82,7 @@ const GroupListPage = () => {
         iconColor="amber"
       />
 
-      <div className="flex gap-4 flex-1 min-h-0 mt-4">
+      <div className="flex gap-4">
         {/* Left panel — group list */}
         <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
           {/* Scope toggle tabs */}
@@ -132,7 +132,7 @@ const GroupListPage = () => {
           </div>
 
           {/* Group list */}
-          <div className="flex-1 overflow-y-auto divide-y divide-gray-50">
+          <div className="overflow-y-auto max-h-[calc(100vh-280px)] divide-y divide-gray-50">
             {isLoading ? (
               <table className="w-full">
                 <tbody>
@@ -168,7 +168,7 @@ const GroupListPage = () => {
         </div>
 
         {/* Right panel — group detail */}
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm min-h-0 overflow-hidden">
+        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto">
           {selectedGroupId ? (
             <GroupDetailPanel
               key={selectedGroupId}
@@ -176,7 +176,7 @@ const GroupListPage = () => {
               onDeleted={() => setSelectedGroupId(null)}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
               <Icon name="users-rectangle" style="regular" className="size-12 opacity-30" />
               <p className="text-sm">{t('empty.selectGroup')}</p>
             </div>

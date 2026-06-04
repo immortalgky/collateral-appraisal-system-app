@@ -47,7 +47,7 @@ const UserAssignmentModal = ({
       u =>
         `${u.firstName} ${u.lastName}`.toLowerCase().includes(q) ||
         (u.email ?? '').toLowerCase().includes(q) ||
-        (u.userName ?? '').toLowerCase().includes(q),
+        (u.username ?? '').toLowerCase().includes(q),
     );
   }, [allUsers, search]);
 
@@ -101,7 +101,7 @@ const UserAssignmentModal = ({
           <div className="flex flex-wrap gap-1.5">
             {Array.from(selected).map(id => {
               const u = allUsers.find(u => u.id === id);
-              const label = u ? getDisplayName(u.firstName, u.lastName, u.userName) : id;
+              const label = u ? getDisplayName(u.firstName, u.lastName, u.username) : id;
               return (
                 <span
                   key={id}
@@ -147,7 +147,7 @@ const UserAssignmentModal = ({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium text-gray-800 truncate">
-                    {getDisplayName(u.firstName, u.lastName, u.userName)}
+                    {getDisplayName(u.firstName, u.lastName, u.username)}
                   </div>
                   <div className="text-xs text-gray-400 truncate">{u.email}</div>
                 </div>

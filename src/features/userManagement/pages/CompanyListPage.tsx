@@ -7,80 +7,52 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
-import Dropdown from '@shared/components/inputs/Dropdown';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
-import RoleDetailPanel from '../components/RoleDetailPanel';
-import { useGetRoles, useCreateRole } from '../api/roles';
-import type { RoleScope } from '../types';
+import CompanyDetailPanel from '../components/CompanyDetailPanel';
+import { useGetAdminCompanies, useCreateAdminCompany } from '../api/companies';
 
-type ScopeTab = 'Bank' | 'Company';
-
-const RoleListPage = () => {
+const CompanyListPage = () => {
   const { t } = useTranslation(['userManagement', 'common']);
-  const [activeTab, setActiveTab] = useState<ScopeTab>('Bank');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
-  // Create modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState({
-    name: '',
-    description: '',
-    scope: 'Bank' as RoleScope,
-  });
+  const [createForm, setCreateForm] = useState({ name: '' });
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Reset selection when tab changes
-  useEffect(() => {
-    setSelectedRoleId(null);
-  }, [activeTab]);
-
-  const { data, isLoading } = useGetRoles({
+  const { data, isLoading } = useGetAdminCompanies({
     search: debouncedSearch || undefined,
-    scope: activeTab,
     pageNumber: 1,
     pageSize: 50,
   });
 
-  const roles = data?.items ?? [];
-  const createRole = useCreateRole();
-
-  const SCOPE_OPTIONS = [
-    { value: 'Bank', label: t('tabs.bank') },
-    { value: 'Company', label: t('tabs.company') },
-  ];
+  const companies = data?.items ?? [];
+  const createCompany = useCreateAdminCompany();
 
   const handleOpenCreate = () => {
-    setCreateForm({ name: '', description: '', scope: activeTab });
+    setCreateForm({ name: '' });
     setShowCreateModal(true);
   };
 
   const handleCreate = () => {
-    if (!createForm.name || !createForm.scope) {
-      toast.error(t('validation.nameAndScopeRequired'));
+    if (!createForm.name) {
+      toast.error(t('validation.nameRequired'));
       return;
     }
-    createRole.mutate(
-      {
-        name: createForm.name,
-        description: createForm.description,
-        scope: createForm.scope,
-        permissionIds: [],
-      },
+    createCompany.mutate(
+      { name: createForm.name, isActive: true },
       {
         onSuccess: (data: any) => {
-          toast.success(t('toasts.roleCreated'));
+          toast.success(t('toasts.companyCreated'));
           setShowCreateModal(false);
-          // Select the newly created role if ID returned
-          if (data?.id) setSelectedRoleId(data.id);
+          if (data?.id) setSelectedCompanyId(data.id);
         },
-        onError: () => toast.error(t('toasts.roleCreateFailed')),
+        onError: () => toast.error(t('toasts.companyCreateFailed')),
       },
     );
   };
@@ -88,34 +60,15 @@ const RoleListPage = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4">
       <SectionHeader
-        title={t('page.roles.title')}
-        subtitle={t('page.roles.subtitle')}
-        icon="user-shield"
-        iconColor="purple"
+        title={t('page.companies.title')}
+        subtitle={t('page.companies.subtitle')}
+        icon="building"
+        iconColor="emerald"
       />
 
       <div className="flex gap-4">
-        {/* Left panel — role list */}
+        {/* Left panel */}
         <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
-          {/* Scope toggle tabs */}
-          <div className="flex border-b border-gray-100">
-            {(['Bank', 'Company'] as ScopeTab[]).map(tab => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveTab(tab)}
-                className={clsx(
-                  'flex-1 py-2.5 text-sm font-medium transition-colors',
-                  activeTab === tab
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-500 hover:text-gray-700',
-                )}
-              >
-                {tab === 'Bank' ? t('tabs.bank') : t('tabs.company')}
-              </button>
-            ))}
-          </div>
-
           {/* Search + Add */}
           <div className="px-3 pt-3 pb-2 flex gap-2">
             <div className="relative flex-1">
@@ -128,22 +81,22 @@ const RoleListPage = () => {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                placeholder={t('placeholders.searchRoles')}
+                placeholder={t('placeholders.searchCompanies')}
                 className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
             <button
               type="button"
               onClick={handleOpenCreate}
-              title={t('aria.addRole')}
-              aria-label={t('aria.addRole')}
+              title={t('aria.addCompany')}
+              aria-label={t('aria.addCompany')}
               className="shrink-0 size-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/80 transition-colors"
             >
               <Icon name="plus" style="solid" className="size-3.5" />
             </button>
           </div>
 
-          {/* Role list */}
+          {/* Company list */}
           <div className="overflow-y-auto max-h-[calc(100vh-280px)] divide-y divide-gray-50">
             {isLoading ? (
               <table className="w-full">
@@ -151,27 +104,32 @@ const RoleListPage = () => {
                   <TableRowSkeleton columns={[{ width: 'w-full' }]} rows={6} />
                 </tbody>
               </table>
-            ) : roles.length === 0 ? (
+            ) : companies.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-xs gap-1">
-                <Icon name="user-shield" style="regular" className="size-7 opacity-40" />
-                <span>{t('empty.noRolesFound')}</span>
+                <Icon name="building" style="regular" className="size-7 opacity-40" />
+                <span>{t('empty.noCompaniesFound')}</span>
               </div>
             ) : (
-              roles.map(role => (
+              companies.map(company => (
                 <button
-                  key={role.id}
+                  key={company.id}
                   type="button"
-                  onClick={() => setSelectedRoleId(role.id)}
+                  onClick={() => setSelectedCompanyId(company.id)}
                   className={clsx(
                     'w-full text-left px-3 py-2.5 transition-colors',
-                    selectedRoleId === role.id
+                    selectedCompanyId === company.id
                       ? 'bg-primary/5 border-l-2 border-primary'
                       : 'hover:bg-gray-50 border-l-2 border-transparent',
                   )}
                 >
-                  <div className="text-sm font-medium text-gray-800 truncate">{role.name}</div>
-                  {role.description && (
-                    <div className="text-xs text-gray-400 truncate mt-0.5">{role.description}</div>
+                  <div className="flex items-center justify-between gap-1">
+                    <div className="text-sm font-medium text-gray-800 truncate">{company.name}</div>
+                    {!company.isActive && (
+                      <span className="shrink-0 text-xs text-gray-400">{t('status.inactive')}</span>
+                    )}
+                  </div>
+                  {company.phone && (
+                    <div className="text-xs text-gray-400 truncate mt-0.5">{company.phone}</div>
                   )}
                 </button>
               ))
@@ -179,58 +137,40 @@ const RoleListPage = () => {
           </div>
         </div>
 
-        {/* Right panel — role detail */}
+        {/* Right panel */}
         <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto">
-          {selectedRoleId ? (
-            <RoleDetailPanel
-              key={selectedRoleId}
-              roleId={selectedRoleId}
-              onDeleted={() => setSelectedRoleId(null)}
+          {selectedCompanyId ? (
+            <CompanyDetailPanel
+              key={selectedCompanyId}
+              companyId={selectedCompanyId}
+              onDeleted={() => setSelectedCompanyId(null)}
             />
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
-              <Icon name="user-shield" style="regular" className="size-12 opacity-30" />
-              <p className="text-sm">{t('empty.selectRole')}</p>
+              <Icon name="building" style="regular" className="size-12 opacity-30" />
+              <p className="text-sm">{t('empty.selectCompany')}</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Create Role Modal */}
+      {/* Create Company Modal */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title={t('dialogs.createRole.title')}
-        size="md"
+        title={t('dialogs.createCompany.title')}
+        size="sm"
       >
         <div className="grid grid-cols-1 gap-4 p-6">
           <TextInput
-            label={t('fields.name')}
+            label={t('fields.companyName')}
             value={createForm.name}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, name: value }));
             }}
             required
-            placeholder={t('placeholders.roleName')}
-          />
-          <Dropdown
-            label={t('fields.scope')}
-            value={createForm.scope}
-            onChange={(val: string | null) =>
-              setCreateForm(prev => ({ ...prev, scope: (val ?? 'Bank') as RoleScope }))
-            }
-            options={SCOPE_OPTIONS}
-            required
-          />
-          <TextInput
-            label={t('fields.description')}
-            value={createForm.description}
-            onChange={e => {
-              const value = e.currentTarget.value;
-              setCreateForm(prev => ({ ...prev, description: value }));
-            }}
-            placeholder={t('placeholders.roleDescription')}
+            placeholder={t('placeholders.companyName')}
           />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
@@ -240,7 +180,7 @@ const RoleListPage = () => {
           <Button
             variant="primary"
             size="sm"
-            isLoading={createRole.isPending}
+            isLoading={createCompany.isPending}
             onClick={handleCreate}
           >
             {t('buttons.create')}
@@ -251,4 +191,4 @@ const RoleListPage = () => {
   );
 };
 
-export default RoleListPage;
+export default CompanyListPage;

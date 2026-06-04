@@ -59,6 +59,10 @@ import PermissionListPage from '@features/userManagement/pages/PermissionListPag
 import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
+import TeamListPage from '@features/userManagement/pages/TeamListPage';
+import AuditLogPage from '@features/userManagement/pages/AuditLogPage';
+import CompanyListPage from '@features/userManagement/pages/CompanyListPage';
+import AccessReportPage from '@features/userManagement/pages/AccessReportPage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
 import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
 import BlockProjectPage from '@/features/blockProject/pages/BlockProjectPage';
@@ -307,6 +311,26 @@ export const router = createBrowserRouter([
           { path: 'roles', element: <RoleListPage /> },
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
+          {
+            path: 'teams',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageTeams" />,
+            children: [{ index: true, element: <TeamListPage /> }],
+          },
+          {
+            path: 'audit-logs',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanViewAuthAudit" />,
+            children: [{ index: true, element: <AuditLogPage /> }],
+          },
+          {
+            path: 'companies',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageCompanies" />,
+            children: [{ index: true, element: <CompanyListPage /> }],
+          },
+          {
+            path: 'access-report',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanViewAuthAudit" />,
+            children: [{ index: true, element: <AccessReportPage /> }],
+          },
           { path: 'committees', element: <CommitteeAdminPage /> },
           { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
           { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
