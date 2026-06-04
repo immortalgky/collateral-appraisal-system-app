@@ -28,6 +28,13 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     icon: 'building',
     allowedRoles: ['Admin', 'IntAdmin'],
   },
+  'fee-appointment-approval': {
+    activityId: 'fee-appointment-approval',
+    title: 'Fee & Appointment Approval',
+    description: 'Tasks for approving external-company appointment-postpone and added-fee changes',
+    icon: 'check-to-slot',
+    allowedRoles: ['Admin', 'IntAdmin'],
+  },
   'ext-appraisal-assignment': {
     activityId: 'ext-appraisal-assignment',
     title: 'External Appraisal Assignment',

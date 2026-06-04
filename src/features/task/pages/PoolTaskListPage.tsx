@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -14,7 +14,10 @@ import { useWorkflowHub } from '../hooks/useWorkflowHub';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { columnDefs } from '../config/columnDefs';
+import { columnDefs, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
+import type { ColumnKey } from '../config/columnDefs';
+import { useColumnWidths } from '../hooks/useColumnWidths';
+import { ColumnResizeHandle } from '../components/ColumnResizeHandle';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
 
@@ -158,6 +161,38 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
   const { mutate: claimTask, isPending: isClaiming } = useClaimTask();
   const pendingTaskIdRef = useRef<string | null>(null);
   const [openMenuTaskId, setOpenMenuTaskId] = useState<string | null>(null);
+
+  // Column widths
+  const poolColumnConfig = useMemo(
+    () => ({ columns: [...POOL_COLUMNS] as ColumnKey[], stickyColumn: 'appraisalNumber' as const }),
+    [],
+  );
+  const { widths: colWidths, setWidth: setColWidth } = useColumnWidths(
+    'task-columns-pool',
+    poolColumnConfig,
+  );
+  const tableRef = useRef<HTMLTableElement>(null);
+  const ACTIONS_COL_WIDTH = 40; // w-10 = 2.5rem = 40px
+  const totalTableWidth = useMemo(
+    () => POOL_COLUMNS.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH,
+    [colWidths],
+  );
+  const getAutoFitWidth = useCallback(
+    (_key: string, colIndex: number): (() => number | null) =>
+      () => {
+        const tbl = tableRef.current;
+        if (!tbl) return null;
+        const rows = tbl.querySelectorAll('tr');
+        let max = 0;
+        rows.forEach(row => {
+          const cell = row.children[colIndex] as HTMLElement | undefined;
+          if (cell) max = Math.max(max, cell.scrollWidth);
+        });
+        if (max === 0) return null;
+        return Math.min(Math.max(max + 24, MIN_COLUMN_WIDTH), MAX_AUTOFIT_WIDTH);
+      },
+    [],
+  );
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -396,14 +431,24 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
       {/* Table */}
       <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full min-w-max text-sm">
+          <table
+            ref={tableRef}
+            className="table-fixed text-sm"
+            style={{ width: totalTableWidth }}
+          >
+            <colgroup>
+              {POOL_COLUMNS.map(key => (
+                <col key={key} style={{ width: colWidths[key] }} />
+              ))}
+              <col style={{ width: ACTIONS_COL_WIDTH }} />
+            </colgroup>
             <thead className="sticky top-0 z-20">
               <tr className="bg-gray-50 border-b border-gray-200">
-                {POOL_COLUMNS.map(key => {
+                {POOL_COLUMNS.map((key, colIndex) => {
                   const col = columnDefs[key];
                   const isActive = sortField === col.sortField;
                   const base =
-                    'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                    'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
                   const isSticky = key === 'appraisalNumber';
                   const thClass = isSticky
                     ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
@@ -424,6 +469,11 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                       ) : (
                         col.label
                       )}
+                      <ColumnResizeHandle
+                        width={colWidths[key]}
+                        onResize={px => setColWidth(key, px)}
+                        getAutoFitWidth={getAutoFitWidth(key, colIndex)}
+                      />
                     </th>
                   );
                 })}
@@ -486,8 +536,8 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                         const col = columnDefs[key];
                         const isSticky = key === 'appraisalNumber';
                         const tdClass = isSticky
-                          ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                          : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs');
+                          ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                          : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap');
                         return (
                           <td key={key} className={tdClass}>
                             {key === 'appraisalNumber' ? (
