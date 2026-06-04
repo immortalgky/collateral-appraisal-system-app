@@ -66,6 +66,7 @@ export const useUpdateAppraisalFee = () => {
       appraisalId: string;
       feeId: string;
       feePaymentType: string;
+      bankAbsorbAmount: number;
     }): Promise<void> => {
       await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}`, body);
     },

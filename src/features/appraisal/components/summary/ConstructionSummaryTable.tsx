@@ -2,6 +2,7 @@ import Icon from '@/shared/components/Icon';
 import { ConstructionTimelineBar } from '@/shared/components/ConstructionTimelineBar';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import type { ConstructionSummaryRow } from '../../api/decisionSummary';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   rows: ConstructionSummaryRow[];
@@ -75,6 +76,8 @@ const ROW_CONFIG: Record<
 const DEFAULT_CONFIG = ROW_CONFIG['Previous'];
 
 const ConstructionSummaryTable = ({ rows }: Props) => {
+  const { t } = useTranslation('appraisal');
+
   const previousRow = rows.find(r => r.label === 'Previous');
   const currentRow = rows.find(r => r.label === 'Current');
   const completeRow = rows.find(r => r.label === 'Complete ( 100% )');
@@ -92,31 +95,31 @@ const ConstructionSummaryTable = ({ rows }: Props) => {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-56">
-                Milestone
+                {t('constructionSummaryTable.columns.milestone')}
               </th>
               <th
                 className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-40 leading-tight"
                 title="Land Value + under-construction value at this milestone + completed buildings"
               >
-                Total Appraisal Value
+                {t('constructionSummaryTable.columns.totalAppraisalValue')}
               </th>
               <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-36 leading-tight">
-                Land Value
+                {t('constructionSummaryTable.columns.landValue')}
               </th>
               <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-32 leading-tight">
-                Construction Progress (%)
+                {t('constructionSummaryTable.columns.constructionProgress')}
               </th>
               <th
                 className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-36 leading-tight"
                 title="Current under-construction structure value at this milestone (CI only)"
               >
-                Building Value
+                {t('constructionSummaryTable.columns.buildingValue')}
               </th>
               <th
                 className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-44 leading-tight"
                 title="Completed buildings registered before the construction inspection (non-CI)"
               >
-                Building Value Pre-inspection
+                {t('constructionSummaryTable.columns.buildingValuePreInspection')}
               </th>
             </tr>
           </thead>

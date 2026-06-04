@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 // Land Detail Table Item Schema
 export const LandDetailItemSchema = z.object({
@@ -22,8 +24,36 @@ export const LandDetailItemSchema = z.object({
 
 export type LandDetailItem = z.infer<typeof LandDetailItemSchema>;
 
-// Main Land Detail Form Schema
-export const LandDetailFormSchema = z.object({
+/**
+ * Factory that builds the land detail form schema with translated validation messages.
+ * Use `makeLandDetailFormSchema(t)` in components; the static export below is a
+ * type-only stand-in so callers can derive `LandDetailFormType` without a `t` instance.
+ */
+export const makeLandDetailFormSchema = (t: TFunction<'appraisal'>) =>
+  buildLandDetailFormSchema(
+    t('landDetailSchema.latitudeRequired'),
+    t('landDetailSchema.longitudeRequired'),
+    t('landDetailSchema.subDistrictRequired'),
+    t('landDetailSchema.districtRequired'),
+    t('landDetailSchema.provinceRequired'),
+    t('landDetailSchema.landOfficeRequired'),
+  );
+
+/** Hook to resolve the schema per render (for zodResolver). */
+export const useLandDetailFormSchema = () => {
+  const { t } = useTranslation('appraisal');
+  return makeLandDetailFormSchema(t);
+};
+
+function buildLandDetailFormSchema(
+  latitudeMsg: string,
+  longitudeMsg: string,
+  subDistrictMsg: string,
+  districtMsg: string,
+  provinceMsg: string,
+  landOfficeMsg: string,
+) {
+  return z.object({
   // Group selection
   groupId: z.string(),
 
@@ -32,12 +62,12 @@ export const LandDetailFormSchema = z.object({
 
   // Land Information
   propertyName: z.string().optional(),
-  latitude: z.string().min(1, 'Latitude is required'),
-  longitude: z.string().min(1, 'Longitude is required'),
-  subDistrict: z.string().min(1, 'Sub-District is required'),
-  district: z.string().min(1, 'District is required'),
-  province: z.string().min(1, 'Province is required'),
-  landOffice: z.string().min(1, 'Land Office is required'),
+  latitude: z.string().min(1, latitudeMsg),
+  longitude: z.string().min(1, longitudeMsg),
+  subDistrict: z.string().min(1, subDistrictMsg),
+  district: z.string().min(1, districtMsg),
+  province: z.string().min(1, provinceMsg),
+  landOffice: z.string().min(1, landOfficeMsg),
   landDescription: z.string().optional(),
 
   // Check Owner
@@ -200,7 +230,18 @@ export const LandDetailFormSchema = z.object({
 
   // Remark
   remark: z.string().optional(),
-});
+  }); // end buildLandDetailFormSchema return
+} // end buildLandDetailFormSchema
+
+/** Static schema with English stand-in messages — use for type derivation only. */
+export const LandDetailFormSchema = buildLandDetailFormSchema(
+  'Latitude is required',
+  'Longitude is required',
+  'Sub-District is required',
+  'District is required',
+  'Province is required',
+  'Land Office is required',
+);
 
 export type LandDetailFormType = z.infer<typeof LandDetailFormSchema>;
 

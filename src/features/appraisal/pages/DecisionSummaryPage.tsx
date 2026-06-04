@@ -817,7 +817,7 @@ const DecisionSummaryPage = () => {
                   )}
                   {showSection('governmentPrice') && (
                     <InlineSubSection
-                      title="Government Appraisal Price"
+                      title={t('decisionSummaryPageExtra.governmentAppraisalPrice')}
                       rightSlot={
                         data?.governmentPrices ? `(${data.governmentPrices.length})` : undefined
                       }
@@ -838,7 +838,7 @@ const DecisionSummaryPage = () => {
 
               {/* Construction Summary — only on Construction Inspection appraisals */}
               {isCiAppraisal && showSection('constructionSummary') && data?.constructionSummary && (
-                <GroupCard icon="helmet-safety" iconColor="yellow" title="Construction Summary">
+                <GroupCard icon="helmet-safety" iconColor="yellow" title={t('decisionSummaryPageExtra.constructionSummaryTitle')}>
                   <ConstructionSummaryTable rows={data.constructionSummary.rows} />
                 </GroupCard>
               )}
@@ -982,7 +982,7 @@ const DecisionSummaryPage = () => {
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-4">
                   <Button variant="ghost" type="button" onClick={handleCancel}>
-                    Cancel
+                    {t('decisionSummaryPageExtra.cancelButton')}
                   </Button>
                   <div className="h-6 w-px bg-gray-200" />
                   {/* History Search map icon — opens nearby appraisal/MC map */}
@@ -1011,7 +1011,7 @@ const DecisionSummaryPage = () => {
                       disabled={!appraisalId || !isDirty || isSaving}
                     >
                       <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                      Save
+                      {t('decisionSummaryPageExtra.saveButton')}
                     </Button>
                   )}
                   <Button
@@ -1026,7 +1026,7 @@ const DecisionSummaryPage = () => {
                     onClick={() => setIsConfirmOpen(true)}
                   >
                     <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                    Submit
+                    {t('decisionSummaryPageExtra.submitButton')}
                   </Button>
                 </div>
               </div>

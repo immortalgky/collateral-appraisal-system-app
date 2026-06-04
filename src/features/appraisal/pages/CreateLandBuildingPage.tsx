@@ -252,15 +252,15 @@ const CreateLandBuildingPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
             {
-              label: 'Land',
+              label: t('createPage.navLand'),
               id: 'land-section',
               icon: 'mountain-sun',
               onClick: () => setActiveTab('land'),
             },
             {
-              label: 'Building',
+              label: t('createPage.navBuilding'),
               id: 'building-section',
               icon: 'building',
               onClick: () => setActiveTab('building'),
@@ -268,7 +268,7 @@ const CreateLandBuildingPage = () => {
             ...(isUnderConstruction || isCiAppraisal
               ? [
                   {
-                    label: 'Construction Inspection',
+                    label: t('createPage.navConstructionInspection'),
                     id: 'construction-section',
                     icon: 'helmet-safety',
                     onClick: () => setActiveTab('construction'),
@@ -278,13 +278,13 @@ const CreateLandBuildingPage = () => {
             ...(isRentedOut
               ? [
                   {
-                    label: 'Lease Agreement',
+                    label: t('createPage.navLeaseAgreement'),
                     id: 'lease-agreement-section',
                     icon: 'file-contract',
                     onClick: () => setActiveTab('lease-agreement'),
                   },
                   {
-                    label: 'Rental Info',
+                    label: t('createPage.navRentalInfo'),
                     id: 'rental-info-section',
                     icon: 'calendar-days',
                     onClick: () => setActiveTab('rental-info'),
@@ -323,7 +323,7 @@ const CreateLandBuildingPage = () => {
                                 className="w-5 h-5 text-indigo-600"
                               />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                           </div>
                           <div className="h-px bg-gray-200 mb-4" />
                           {appraisalId && (
@@ -351,7 +351,7 @@ const CreateLandBuildingPage = () => {
                             className="w-5 h-5 text-amber-600"
                           />
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">{t('createPage.landSection')}</h2>
                       </div>
                       <div className="h-px bg-gray-200" />
                       <Section
@@ -381,7 +381,7 @@ const CreateLandBuildingPage = () => {
                           <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">
-                          Building Information
+                          {t('createPage.buildingSection')}
                         </h2>
                       </div>
                       <div className="h-px bg-gray-200" />
@@ -405,7 +405,7 @@ const CreateLandBuildingPage = () => {
                             />
                           </div>
                           <h2 className="text-lg font-semibold text-gray-900">
-                            Construction Inspection
+                            {t('createPage.constructionSection')}
                           </h2>
                         </div>
                         <div className="h-px bg-gray-200" />
@@ -436,7 +436,7 @@ const CreateLandBuildingPage = () => {
                                 className="w-5 h-5 text-purple-600"
                               />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('createPage.leaseAgreementSection')}</h2>
                           </div>
                           <div className="h-px bg-gray-200 mb-6" />
                           <LeaseAgreementForm namePrefix="leaseAgreement" />
@@ -459,7 +459,7 @@ const CreateLandBuildingPage = () => {
                                 className="w-5 h-5 text-teal-600"
                               />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('createPage.rentalInfoSection')}</h2>
                           </div>
                           <div className="h-px bg-gray-200 mb-6" />
                           <RentalInfoForm namePrefix="rentalInfo" />
@@ -492,7 +492,7 @@ const CreateLandBuildingPage = () => {
                     disabled={isPending}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                    Save draft
+                    {t('createPage.saveDraft')}
                   </Button>
                   <Button
                     type="submit"
@@ -500,7 +500,7 @@ const CreateLandBuildingPage = () => {
                     disabled={isPending}
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
-                    Save
+                    {t('createPage.save')}
                   </Button>
                 </ActionBar.Right>
               )}

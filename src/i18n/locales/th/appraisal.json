@@ -128,6 +128,8 @@
     "total": "รวมทั้งสิ้น",
     "constructionInspectionFee": "ค่าตรวจสอบการก่อสร้าง",
     "constructionInspectionFeeHint": "ค่าธรรมเนียมนี้จะนำมาใช้เป็นค่าประเมินในการขอตรวจสอบการก่อสร้างครั้งถัดไปสำหรับหลักประกันนี้",
+    "bankAbsorbAmount": "จำนวนที่ธนาคารรับผิดชอบ",
+    "bankAbsorbAmountHint": "จำนวนเงินที่ธนาคารรับผิดชอบ ส่วนที่เหลือจะเรียกเก็บจากลูกค้า",
     "addFeeModal": {
       "titleAdd": "เพิ่มค่าธรรมเนียม",
       "titleEdit": "แก้ไขค่าธรรมเนียม",
@@ -163,7 +165,9 @@
       "feeRejected": "ปฏิเสธรายการค่าธรรมเนียมแล้ว",
       "feeRejectFailed": "ไม่สามารถปฏิเสธรายการค่าธรรมเนียมได้",
       "ciFeesSaved": "บันทึกค่าตรวจสอบการก่อสร้างแล้ว",
-      "ciFeesFailed": "ไม่สามารถบันทึกค่าตรวจสอบการก่อสร้างได้"
+      "ciFeesFailed": "ไม่สามารถบันทึกค่าตรวจสอบการก่อสร้างได้",
+      "absorbAmountSaved": "บันทึกจำนวนที่ธนาคารรับผิดชอบแล้ว",
+      "absorbAmountFailed": "ไม่สามารถบันทึกจำนวนที่ธนาคารรับผิดชอบได้"
     }
   },
   "payment": {
@@ -535,6 +539,32 @@
     },
     "decisionSummary": {
       "sectionTitle": "สรุปการตัดสินใจ"
+    },
+    "decisionSummarySection": {
+      "title": "การตัดสินใจและสรุป",
+      "appraisalPriceSummary": "สรุปราคาประเมิน",
+      "governmentAppraisalPrice": "ราคาประเมินของทางราชการ",
+      "totalAppraisalPrice": "ราคาประเมินรวม",
+      "forceSellingPrice": "ราคาบังคับขาย",
+      "buildingInsurance": "ทุนประกันอาคาร",
+      "noApproachData": "ไม่มีข้อมูลวิธีการประเมิน",
+      "noGovernmentPrice": "ไม่มีข้อมูลราคาประเมินของทางราชการ"
+    },
+    "pricingAnalysisSection": {
+      "heading": "การวิเคราะห์ราคา",
+      "decisionApproach": "วิธีการตัดสินใจ",
+      "noApproachData": "ไม่มีข้อมูลวิธีการประเมิน"
+    },
+    "requestInfoSection": {
+      "title": "ข้อมูลคำขอ",
+      "requestNumber": "เลขที่คำขอ",
+      "customerName": "ชื่อลูกค้า",
+      "contactNumber": "เบอร์ติดต่อ",
+      "purpose": "วัตถุประสงค์",
+      "appraisalNumber": "เลขที่ประเมิน",
+      "channel": "ช่องทาง",
+      "status": "สถานะ",
+      "requestor": "ผู้ขอ"
     }
   },
   "activityTracking": {
@@ -881,6 +911,26 @@
       "createFailed": "ไม่สามารถสร้างคำขอใบเสนอราคาได้"
     }
   },
+  "history": {
+    "title": "ประวัติ",
+    "viewHistory": "ดูประวัติ",
+    "eventCount_one": "{{count}} รายการ",
+    "eventCount_other": "{{count}} รายการ",
+    "chips": {
+      "all": "ทั้งหมด",
+      "appointment": "การนัดหมาย",
+      "fees": "ค่าธรรมเนียม"
+    },
+    "status": {
+      "Approved": "อนุมัติแล้ว",
+      "Rejected": "ปฏิเสธแล้ว",
+      "Pending": "รออนุมัติ",
+      "Auto": "อัตโนมัติ",
+      "Cancelled": "ยกเลิกแล้ว"
+    },
+    "emptyState": "ยังไม่มีประวัติ",
+    "loadError": "ไม่สามารถโหลดประวัติได้"
+  },
   "approval": {
     "banner": {
       "needsApproval": "การเปลี่ยนแปลงนี้ต้องได้รับอนุมัติจากธนาคาร — กรุณาส่งเพื่อรับการพิจารณาก่อนมีผล",
@@ -901,5 +951,235 @@
       "submitted": "ส่งขออนุมัติจากธนาคารแล้ว",
       "submitFailed": "ส่งขออนุมัติไม่สำเร็จ"
     }
+  },
+  "createPage": {
+    "photosSection": "รูปภาพ",
+    "landSection": "ข้อมูลที่ดิน",
+    "leaseAgreementSection": "สัญญาเช่า",
+    "rentalInfoSection": "ข้อมูลการเช่า",
+    "condoSection": "ข้อมูลคอนโด",
+    "buildingSection": "ข้อมูลอาคาร",
+    "constructionSection": "การตรวจสอบการก่อสร้าง",
+    "machinerySection": "ข้อมูลเครื่องจักร",
+    "navPhotos": "รูปภาพ",
+    "navLand": "ที่ดิน",
+    "navLeaseAgreement": "สัญญาเช่า",
+    "navRentalInfo": "ข้อมูลการเช่า",
+    "navCondo": "คอนโด",
+    "navBuilding": "อาคาร",
+    "navConstructionInspection": "การตรวจสอบการก่อสร้าง",
+    "navMachinery": "เครื่องจักร",
+    "saveDraft": "บันทึกร่าง",
+    "save": "บันทึก"
+  },
+  "landCharacteristicsForm": {
+    "sections": {
+      "landfill": "การถมที่",
+      "road": "ถนน",
+      "landAccessibility": "การเข้าถึงที่ดิน",
+      "roadSurface": "ผิวถนน",
+      "publicUtility": "สาธารณูปโภค",
+      "landUse": "การใช้ที่ดิน",
+      "landEntranceExit": "ทางเข้า-ออก",
+      "transportation": "การคมนาคม",
+      "anticipationOfProperty": "การคาดการณ์อสังหาริมทรัพย์",
+      "limitation": "ข้อจำกัด",
+      "eviction": "การไล่รื้อ",
+      "allocation": "การจัดสรร",
+      "hasBuilding": "มีอาคาร",
+      "remark": "หมายเหตุ"
+    },
+    "fields": {
+      "other": "อื่นๆ",
+      "landfillHeight": "ความสูงการถม",
+      "landAccessibilityDescription": "รายละเอียดการเข้าถึงที่ดิน",
+      "roadWidth": "ความกว้างถนน",
+      "rightOfWay": "สิทธิทาง",
+      "roadFrontage": "หน้าที่ดินติดถนน",
+      "numberOrSidesFacingRoad": "จำนวนด้านที่ติดถนน",
+      "roadRunningInFrontOfLand": "ถนนหน้าที่ดิน",
+      "areaSqWa": "พื้นที่ (ตร.วา)",
+      "distance": "ระยะทาง",
+      "remarkPlaceholder": "ใส่หมายเหตุ...",
+      "isExpropriate": "อยู่ในแนวเวนคืน",
+      "inLineExpropriate": "อยู่ในแนวเขต",
+      "royalDecree": "พระราชกฤษฎีกา",
+      "isEncroached": "มีการบุกรุก",
+      "electricity": "ไฟฟ้า",
+      "isLandlocked": "ที่ดินตาบอด",
+      "isForestBoundary": "แนวเขตป่า"
+    },
+    "landfillOptions": {
+      "emptyLand": "ที่ดินเปล่า",
+      "filled": "ถมแล้ว",
+      "notFilledYet": "ยังไม่ได้ถม",
+      "partiallyFilled": "ถมบางส่วน",
+      "other": "อื่นๆ"
+    },
+    "landAccessibilityOptions": {
+      "able": "เข้าถึงได้",
+      "unable": "เข้าถึงไม่ได้",
+      "inAllocation": "อยู่ในโครงการจัดสรร"
+    },
+    "roadSurfaceOptions": {
+      "reinforcedConcrete": "คอนกรีตเสริมเหล็ก",
+      "gravelCrushedStone": "กรวด/หินคลุก",
+      "soil": "ดิน",
+      "paved": "ลาดยาง",
+      "other": "อื่นๆ"
+    },
+    "publicUtilityOptions": {
+      "permanentElectricity": "ไฟฟ้าถาวร",
+      "tapWaterGroundwater": "ประปา/น้ำบาดาล",
+      "drainagePipeStone": "ท่อระบายน้ำ/หิน",
+      "streetlight": "ไฟถนน",
+      "other": "อื่นๆ"
+    },
+    "landUseOptions": {
+      "residence": "ที่อยู่อาศัย",
+      "agriculture": "เกษตรกรรม",
+      "commercial": "พาณิชยกรรม",
+      "industry": "อุตสาหกรรม",
+      "other": "อื่นๆ"
+    },
+    "landEntranceExitOptions": {
+      "publicInterest": "ทางสาธารณะ",
+      "insideAllocationProject": "ภายในโครงการจัดสรร",
+      "personal": "ส่วนตัว",
+      "servitude": "ภาระจำยอม",
+      "other": "อื่นๆ"
+    },
+    "transportationOptions": {
+      "car": "รถยนต์",
+      "bus": "รถโดยสาร",
+      "ship": "เรือ",
+      "footpath": "ทางเดินเท้า",
+      "other": "อื่นๆ"
+    },
+    "anticipationOptions": {
+      "veryProspective": "มีโอกาสสูงมาก",
+      "moderate": "ปานกลาง",
+      "likelyToProsperInFuture": "อาจเจริญในอนาคต",
+      "littleChanceOfProsperity": "โอกาสเจริญน้อย"
+    },
+    "evictionOptions": {
+      "permanentElectricity": "ไฟฟ้าถาวร",
+      "subwayLine": "รถไฟใต้ดิน",
+      "other": "อื่นๆ"
+    },
+    "allocationOptions": {
+      "allocateNewProject": "จัดสรรโครงการใหม่",
+      "allocateOldProject": "จัดสรรโครงการเก่า",
+      "notAllocate": "ไม่จัดสรร"
+    },
+    "hasBuildingOptions": {
+      "yes": "มี",
+      "no": "ไม่มี",
+      "other": "อื่นๆ"
+    }
+  },
+  "approachMatrixTable": {
+    "columns": {
+      "group": "กลุ่ม",
+      "model": "รูปแบบ",
+      "market": "วิธีเปรียบเทียบตลาด",
+      "cost": "วิธีต้นทุน",
+      "income": "วิธีรายได้",
+      "residual": "วิธีส่วนเหลือ",
+      "summary": "สรุป"
+    },
+    "footer": {
+      "total": "รวม",
+      "project": "โครงการ"
+    }
+  },
+  "blockPriceSummaryTable": {
+    "columns": {
+      "model": "รูปแบบ",
+      "unitCount": "จำนวนยูนิต",
+      "totalAppraisalPrice": "ราคาประเมินรวม",
+      "forceSellingPrice": "ราคาบังคับขาย",
+      "buildingInsurance": "ทุนประกันอาคาร"
+    },
+    "footer": {
+      "project": "โครงการ"
+    }
+  },
+  "governmentPriceTable": {
+    "columns": {
+      "titleDeedNo": "เลขที่โฉนด",
+      "sqWa": "ตร.วา",
+      "bahtPerSqWa": "บาท / ตร.วา",
+      "landPrice": "ราคาที่ดิน"
+    },
+    "footer": {
+      "total": "รวม",
+      "avg": "เฉลี่ย"
+    },
+    "missingFromSurvey": "ไม่พบในรังวัด"
+  },
+  "constructionSummaryTable": {
+    "columns": {
+      "milestone": "ช่วงการก่อสร้าง",
+      "totalAppraisalValue": "มูลค่าประเมินรวม",
+      "landValue": "มูลค่าที่ดิน",
+      "constructionProgress": "ความคืบหน้าการก่อสร้าง (%)",
+      "buildingValue": "มูลค่าอาคาร",
+      "buildingValuePreInspection": "มูลค่าอาคารก่อนตรวจสอบ"
+    },
+    "rows": {
+      "Previous": "งวดก่อนหน้า",
+      "ConstructionIncreased": "การก่อสร้างเพิ่มขึ้น",
+      "Current": "งวดปัจจุบัน",
+      "RemainingConstruction": "งานก่อสร้างที่เหลือ",
+      "Complete100": "สมบูรณ์ (100%)"
+    }
+  },
+  "approvalListSection": {
+    "title": "การอนุมัติของคณะกรรมการ",
+    "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",
+    "approvedBanner": "การประเมินนี้ได้รับการอนุมัติจากคณะกรรมการแล้ว",
+    "returnedBanner": "การประเมินนี้ถูกส่งกลับเพื่อแก้ไข",
+    "conditionsTitle": "เงื่อนไขการอนุมัติ",
+    "votesDisplay": "{{received}}/{{total}} คะแนนเสียง",
+    "youBadge": "คุณ",
+    "pendingVote": "รอดำเนินการ",
+    "tierLabels": {
+      "1": "ระดับ 1",
+      "2": "ระดับ 2",
+      "3": "ระดับ 3"
+    },
+    "committeeCodeLabels": {
+      "SUB_COMMITTEE": "อนุกรรมการ",
+      "COMMITTEE": "คณะกรรมการ",
+      "COMMITTEE_WITH_MEETING": "คณะกรรมการ (พร้อมการประชุม)"
+    },
+    "committeeDefault": "คณะกรรมการ",
+    "conditionRoleRequired": "{{role}} ต้องลงคะแนน",
+    "conditionRoleRequiredDefault": "ต้องมีผู้มีสิทธิ์ลงคะแนน",
+    "conditionMinVotes": "ต้องการอย่างน้อย {{n}} คะแนน",
+    "conditionMinVotesDefault": "ต้องการจำนวนคะแนนขั้นต่ำ",
+    "columns": {
+      "member": "สมาชิก",
+      "role": "บทบาท",
+      "vote": "คะแนนเสียง",
+      "date": "วันที่",
+      "comments": "ความคิดเห็น"
+    }
+  },
+  "decisionSummaryPageExtra": {
+    "governmentAppraisalPrice": "ราคาประเมินของทางราชการ",
+    "constructionSummaryTitle": "สรุปการก่อสร้าง",
+    "cancelButton": "ยกเลิก",
+    "saveButton": "บันทึก",
+    "submitButton": "ส่ง"
+  },
+  "landDetailSchema": {
+    "latitudeRequired": "กรุณากรอกละติจูด",
+    "longitudeRequired": "กรุณากรอกลองจิจูด",
+    "subDistrictRequired": "กรุณาเลือกตำบล/แขวง",
+    "districtRequired": "กรุณาเลือกอำเภอ/เขต",
+    "provinceRequired": "กรุณาเลือกจังหวัด",
+    "landOfficeRequired": "กรุณาระบุสำนักงานที่ดิน"
   }
 }

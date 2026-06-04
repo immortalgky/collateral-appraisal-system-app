@@ -283,9 +283,9 @@ const CreateBuildingPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
             {
-              label: 'Building',
+              label: t('createPage.navBuilding'),
               id: 'properties-section',
               icon: 'building',
               onClick: () => setActiveTab('building'),
@@ -293,7 +293,7 @@ const CreateBuildingPage = () => {
             ...(isUnderConstruction || isCiAppraisal
               ? [
                   {
-                    label: 'Construction Inspection',
+                    label: t('createPage.navConstructionInspection'),
                     id: 'construction-section',
                     icon: 'helmet-safety',
                     onClick: () => setActiveTab('construction'),
@@ -332,7 +332,7 @@ const CreateBuildingPage = () => {
                                 className="w-5 h-5 text-indigo-600"
                               />
                             </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                           </div>
                           <div className="h-px bg-gray-200 mb-4" />
                           {appraisalId && (
@@ -356,7 +356,7 @@ const CreateBuildingPage = () => {
                           <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
                         </div>
                         <h2 className="text-lg font-semibold text-gray-900">
-                          Building Information
+                          {t('createPage.buildingSection')}
                         </h2>
                       </div>
                       <div className="h-px bg-gray-200" />
@@ -380,7 +380,7 @@ const CreateBuildingPage = () => {
                             />
                           </div>
                           <h2 className="text-lg font-semibold text-gray-900">
-                            Construction Inspection
+                            {t('createPage.constructionSection')}
                           </h2>
                         </div>
                         <div className="h-px bg-gray-200" />
@@ -420,7 +420,7 @@ const CreateBuildingPage = () => {
                     disabled={isPending}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                    Save draft
+                    {t('createPage.saveDraft')}
                   </Button>
                   <Button
                     type="submit"
@@ -428,7 +428,7 @@ const CreateBuildingPage = () => {
                     disabled={isPending}
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
-                    Save
+                    {t('createPage.save')}
                   </Button>
                 </ActionBar.Right>
               )}

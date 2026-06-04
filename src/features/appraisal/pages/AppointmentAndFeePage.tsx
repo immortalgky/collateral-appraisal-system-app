@@ -8,17 +8,18 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalContext } from '../context/AppraisalContext';
 import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
+import AppointmentHistoryDrawer from '../components/AppointmentHistoryDrawer';
 import RescheduleModal from '../components/RescheduleModal';
 import FeeInformationSection, { BANK_ABSORB_FEE_TYPES } from '../components/FeeInformationSection';
 import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import {
   useCancelAppointment,
   useCreateAppointment,
   useGetAppointment,
   useRescheduleAppointment,
 } from '../api/appointment';
+import { useGetAppointmentHistory } from '../api/appointmentHistory';
 import {
   useAddFeeItem,
   useApproveFeeItem,
@@ -46,6 +47,7 @@ export default function AppointmentAndFeePage() {
   const readOnly = usePageReadOnly();
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [isCancelAppointmentModalOpen, setIsCancelAppointmentModalOpen] = useState(false);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId ?? '';
@@ -53,6 +55,7 @@ export default function AppointmentAndFeePage() {
 
   // API hooks - Appointments
   const { data: appointment = null } = useGetAppointment(appraisalId);
+  const { data: historyEvents = [] } = useGetAppointmentHistory(appraisalId);
 
   // API hooks - Fees
   const { data: fees = [] } = useGetAppraisalFees(appraisalId);
@@ -77,8 +80,6 @@ export default function AppointmentAndFeePage() {
   // Get the first fee record
   const currentFee = fees.length > 0 ? fees[0] : null;
 
-  // Derive whether the current fee payment type is a bank-absorb type.
-  const isBankAbsorb = BANK_ABSORB_FEE_TYPES.includes((currentFee as any)?.feePaymentType ?? '');
 
   const isNewAppointment = !appointment;
 
@@ -108,7 +109,7 @@ export default function AppointmentAndFeePage() {
           appraisalId,
           assignmentId: appraisal?.appraisalId ?? '',
           appointmentDateTime: data.dateTime,
-          appointedBy: currentUser?.id ?? '',
+          appointedBy: currentUser?.username ?? '',
           locationDetail: data.location,
           contactPerson: null,
           contactPhone: null,
@@ -118,7 +119,7 @@ export default function AppointmentAndFeePage() {
         await rescheduleAppointment.mutateAsync({
           appraisalId,
           appointmentId: appointment!.id,
-          changedBy: currentUser?.id ?? '',
+          changedBy: currentUser?.username ?? '',
           newDateTime: data.dateTime,
           reason: data.reason || null,
         });
@@ -136,7 +137,7 @@ export default function AppointmentAndFeePage() {
       await cancelAppointment.mutateAsync({
         appraisalId,
         appointmentId: appointment.id,
-        changedBy: currentUser?.id ?? '',
+        changedBy: currentUser?.username ?? '',
         reason: null,
       });
       setIsCancelAppointmentModalOpen(false);
@@ -152,7 +153,7 @@ export default function AppointmentAndFeePage() {
         appraisalId,
         feeId,
         itemId,
-        approvedBy: currentUser?.id ?? '',
+        approvedBy: currentUser?.username ?? '',
       });
       toast.success(t('fee.toasts.feeApproved'));
     } catch (error: any) {
@@ -166,7 +167,7 @@ export default function AppointmentAndFeePage() {
         appraisalId,
         feeId,
         itemId,
-        rejectedBy: currentUser?.id ?? '',
+        rejectedBy: currentUser?.username ?? '',
         reason: reason || 'Rejected',
       });
       toast.success(t('fee.toasts.feeRejected'));
@@ -175,27 +176,31 @@ export default function AppointmentAndFeePage() {
     }
   };
 
-  const computeTotalFee = (items: Array<{ feeAmount?: number }>) => {
-    const vatRate = currentFee?.vatRate ?? VAT_PERCENTAGE;
-    const subtotal = items.reduce((sum, item) => sum + (item.feeAmount ?? 0), 0);
-    return subtotal * (1 + vatRate / 100);
-  };
-
-  const handleUpdateFeePaymentType = async (value: string, overrideTotalFee?: number) => {
+  const handleUpdateFeePaymentType = async (value: string) => {
     if (!currentFee) return;
-    const totalFee = overrideTotalFee ?? computeTotalFee(currentFee.items ?? []);
-    const isNewValueBankAbsorb = BANK_ABSORB_FEE_TYPES.includes(value);
     try {
       await updateAppraisalFee.mutateAsync({
         appraisalId,
         feeId: currentFee.id ?? '',
         feePaymentType: value,
-        bankAbsorbAmount: isNewValueBankAbsorb ? totalFee : 0,
+        bankAbsorbAmount: BANK_ABSORB_FEE_TYPES.includes(value)
+          ? (currentFee.bankAbsorbAmount ?? 0)
+          : 0,
       });
       toast.success(t('fee.toasts.feeTypeUpdated'));
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('fee.toasts.feeTypeUpdateFailed'));
     }
+  };
+
+  const handleUpdateBankAbsorbAmount = async (amount: number) => {
+    if (!currentFee) return;
+    await updateAppraisalFee.mutateAsync({
+      appraisalId,
+      feeId: currentFee.id ?? '',
+      feePaymentType: currentFee.feePaymentType ?? '',
+      bankAbsorbAmount: amount,
+    });
   };
 
   const handleAddFeeItem = async (data: {
@@ -209,8 +214,6 @@ export default function AppointmentAndFeePage() {
       feeId: currentFee.id ?? '',
       ...data,
     });
-    const newItems = [...(currentFee.items ?? []), { feeAmount: data.feeAmount }];
-    handleUpdateFeePaymentType(currentFee.feePaymentType ?? '', computeTotalFee(newItems));
   };
 
   const handleUpdateFeeItem = async (
@@ -224,10 +227,6 @@ export default function AppointmentAndFeePage() {
       feeItemId,
       ...data,
     });
-    const newItems = (currentFee?.items ?? []).map(item =>
-      item.id === feeItemId ? { ...item, feeAmount: data.feeAmount } : item,
-    );
-    handleUpdateFeePaymentType(currentFee?.feePaymentType ?? '', computeTotalFee(newItems));
   };
 
   const handleRemoveFeeItem = async (feeId: string, feeItemId: string) => {
@@ -236,8 +235,6 @@ export default function AppointmentAndFeePage() {
       feeId,
       feeItemId,
     });
-    const newItems = (currentFee?.items ?? []).filter(item => item.id !== feeItemId);
-    handleUpdateFeePaymentType(currentFee?.feePaymentType ?? '', computeTotalFee(newItems));
   };
 
   const handleRecordPayment = async (data: {
@@ -337,6 +334,8 @@ export default function AppointmentAndFeePage() {
             onCancel={() => !readOnly && setIsCancelAppointmentModalOpen(true)}
             approvalDraft={approvalState.draftDateChange}
             approvalSubmitted={approvalState.submittedDateChange}
+            onViewHistory={() => setIsHistoryDrawerOpen(true)}
+            historyEventCount={historyEvents.length}
           />
 
           {/* Divider */}
@@ -362,6 +361,10 @@ export default function AppointmentAndFeePage() {
               onUpdateConstructionInspectionFee={handleUpdateConstructionInspectionFee}
               isConstructionInspectionFeeUpdating={updateConstructionInspectionFee.isPending}
               totalFeePaid={currentFee?.totalPaidAmount ?? 0}
+              bankAbsorbAmount={currentFee?.bankAbsorbAmount ?? null}
+              totalFeeAfterVAT={currentFee?.totalFeeAfterVAT ?? undefined}
+              onUpdateBankAbsorbAmount={handleUpdateBankAbsorbAmount}
+              isAbsorbAmountUpdating={updateAppraisalFee.isPending}
             />
 
             {/* Payment Information (Right Column) */}
@@ -372,7 +375,6 @@ export default function AppointmentAndFeePage() {
               onUpdatePayment={handleUpdatePayment}
               onRemovePayment={handleRemovePayment}
               requestedAt={appraisal?.requestedAt}
-              isBankAbsorb={isBankAbsorb}
               isPaymentPending={
                 recordPayment.isPending || updatePayment.isPending || removePayment.isPending
               }
@@ -383,7 +385,7 @@ export default function AppointmentAndFeePage() {
 
       {/* Sticky Footer */}
       <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
           <Button variant="ghost" type="button" onClick={() => navigate(-1)}>
             Cancel
           </Button>
@@ -428,6 +430,13 @@ export default function AppointmentAndFeePage() {
         confirmText={t('appointment.cancelDialog.confirm')}
         cancelText={t('appointment.cancelDialog.cancel')}
         variant="danger"
+      />
+
+      {/* Appointment & Fee History Drawer */}
+      <AppointmentHistoryDrawer
+        appraisalId={appraisalId}
+        open={isHistoryDrawerOpen}
+        onClose={() => setIsHistoryDrawerOpen(false)}
       />
     </div>
   );
