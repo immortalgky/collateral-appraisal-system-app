@@ -248,6 +248,9 @@ export const useGetSupportingDataMaintenanceList = (
   const {
     pageNumber = 0,
     pageSize = 10,
+    search,
+    sortBy,
+    sortDir,
     status,
     supportingNumber,
     dateType,
@@ -258,6 +261,9 @@ export const useGetSupportingDataMaintenanceList = (
   const queryKey = supportingDataMaintenanceKeys.list({
     pageNumber,
     pageSize,
+    ...(search && { search }),
+    ...(sortBy && { sortBy }),
+    ...(sortDir && { sortDir }),
     ...(status && { status }),
     ...(supportingNumber && { supportingNumber }),
     ...(dateType && { dateType }),
@@ -272,6 +278,9 @@ export const useGetSupportingDataMaintenanceList = (
         params: {
           PageNumber: pageNumber,
           PageSize: pageSize,
+          ...(search && { Search: search }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortDir && { SortDir: sortDir }),
           ...(status && { Status: status }),
           ...(supportingNumber && { SupportingNumber: supportingNumber }),
           ...toDateQueryParams(dateType, dateFrom, dateTo),
@@ -380,6 +389,7 @@ export const useRemoveSupportingDetailImage = () => {
 };
 
 export interface BulkUploadSupportingDetailsResponse {
+  supportingId: string;
   insertedCount: number;
 }
 

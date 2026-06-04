@@ -134,21 +134,27 @@ export function SupportingDataMaintenanceDetailListPage() {
     error,
   } = useGetSupportingDataById(supportingId);
 
-  const status = supportingData?.status ?? '';
-  const isReadOnly = ARCHIVED_STATUSES.has(status);
+  /**
+   * Disable when
+   * 1. Status has Approved, Cancelled, Rejected
+   * 2. Permission to edit is false
+   * 3. Has SupportingId - path not /new
+   */
 
-  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false; // Status to check user has authority to edit detail header info (general info secton).
-  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // Status to check user has authority to make decision (decision section);
+  const status = supportingData?.status ?? '';
+
+  const isArchived = ARCHIVED_STATUSES.has(status); // To check disable action panel when status contains in Archived
+  const hasSupportingId = Boolean(supportingId); // To check allow to edit when path is /supporting-data-maintenance/new
+  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false; // To check disable detail form by permissions
+  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // To check disable decision form by permissions
 
   // Form
-  const isEditMode = Boolean(supportingId);
-
   const formDefaults = useMemo(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       return mapSupportingDataResponseToForm(supportingData);
     }
     return defaultSupportingData;
-  }, [isEditMode, supportingData]);
+  }, [hasSupportingId, supportingData]);
 
   /**
    * Submit supporting detail - staff
@@ -180,10 +186,10 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { getValues: getSupportingValues, reset: resetSupporting } = supportingMethods;
 
   useEffect(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       resetSupporting(mapSupportingDataResponseToForm(supportingData));
     }
-  }, [isEditMode, supportingData, resetSupporting]);
+  }, [hasSupportingId, supportingData, resetSupporting]);
 
   const { mutateAsync: createDraftSupportingData, isPending: isCreatingDraft } =
     useCreateDraftSupportingData();
@@ -221,7 +227,12 @@ export function SupportingDataMaintenanceDetailListPage() {
     try {
       setParseErrors(null);
       const result = await bulkUpload({ supportingId, file });
+
       toast.success(`${result.insertedCount} row(s) imported successfully`);
+
+      if (!hasSupportingId) {
+        navigate(`/standalone/supporting-data-maintenance/${result.supportingId}`);
+      }
     } catch (err: any) {
       // The server returns row-level errors in ProblemDetails.extensions.rowErrors
       const rowErrors: RowParseError[] | undefined = err?.response?.data?.rowErrors;
@@ -239,9 +250,6 @@ export function SupportingDataMaintenanceDetailListPage() {
   };
 
   // Local state
-  const [editIndex, setEditIndex] = useState<number | undefined>();
-  const isEditing = editIndex !== undefined;
-
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     id: string | null;
@@ -275,7 +283,7 @@ export function SupportingDataMaintenanceDetailListPage() {
     setSaveAction('submit');
     // Submit goes through react-hook-form so Zod validation runs first.
     console.log('Submit (decision):', data);
-    if (isEditMode) {
+    if (hasSupportingId) {
       submitSupportingData(
         { supportingId: supportingId!, data: data as any },
         {
@@ -306,7 +314,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   const handleAddSupportingDetailData = async () => {
     const values = getSupportingValues();
     // If supporting data is unsaved when "Add Item" is clicked, create a draft first to get the supportingId, then route to /:supportingId/new
-    if (!isEditMode) {
+    if (!hasSupportingId) {
       const { supportingId: newSupportingId } = await createDraftSupportingData(
         { data: values },
         {
@@ -339,7 +347,7 @@ export function SupportingDataMaintenanceDetailListPage() {
     const supportingData = getSupportingValues();
     const decisionData = hasAuthorityToDecision ? decisionMethods.getValues() : null;
     console.log('Save draft:', { supportingData, decisionData });
-    if (isEditMode) {
+    if (hasSupportingId) {
       updateDraftSupportingData(
         { supportingId: supportingId!, data: supportingData as any },
         {
@@ -422,7 +430,10 @@ export function SupportingDataMaintenanceDetailListPage() {
             >
               <div className="flex-1 flex flex-col gap-6">
                 <div className="grid grid-cols-12 gap-4">
-                  <FormFields fields={supportingDataFields} />
+                  <FormFields
+                    fields={supportingDataFields}
+                    disabled={!hasAuthorityToEdit && hasSupportingId}
+                  />
                 </div>
               </div>
             </FormCard>
@@ -430,7 +441,11 @@ export function SupportingDataMaintenanceDetailListPage() {
 
           {/* Remark from routedback */}
           {supportingData?.remark && (
-            <Alert variant="danger" title={`Remark`} className="mb-4" dismissible={false}>
+            <Alert
+              variant={status === 'Approved' ? 'success' : 'danger'}
+              title={`Remark`}
+              dismissible={false}
+            >
               <p className="max-h-24 overflow-y-auto text-xs whitespace-pre-wrap">
                 {supportingData.remark}
               </p>
@@ -446,8 +461,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             required
             rightIcon={
               <div className="flex items-center gap-2">
-                {/* Hidden file input + visible trigger button */}
-                {!isReadOnly && !isEditing && !hasAuthorityToDecision && (
+                {(hasAuthorityToEdit || !hasSupportingId) && (
                   <>
                     <input
                       ref={fileInputRef}
@@ -460,10 +474,11 @@ export function SupportingDataMaintenanceDetailListPage() {
                         e.target.value = '';
                       }}
                     />
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
                       onClick={handleOpenFilePicker}
-                      disabled={isUploading}
+                      disabled={isUploading || isPending}
                       className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       <Icon
@@ -472,15 +487,16 @@ export function SupportingDataMaintenanceDetailListPage() {
                         className={`size-4 ${isUploading ? 'animate-spin' : ''}`}
                       />
                       {isUploading ? 'Uploading…' : 'Import Excel'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       onClick={handleAddSupportingDetailData}
+                      disabled={isPending}
                       className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors cursor-pointer"
                     >
                       <Icon style="solid" name="plus" className="size-4" />
                       Add Item
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -489,7 +505,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             <div className="w-full">
               <SupportingDataTable
                 supportingId={supportingId}
-                isReadOnly={isReadOnly}
+                isReadOnly={isArchived || !hasAuthorityToEdit}
                 onSelectSupportingData={handleSelectSupportingData}
                 onDeleteSupportingData={handleDeleteSupportingData}
               />
@@ -515,12 +531,12 @@ export function SupportingDataMaintenanceDetailListPage() {
         </FormProvider>
       )}
 
-      {/* Section 4 — Action panel (Save Draft / Submit)             */}
+      {/* Action panel (Save Draft / Submit)             */}
       <ActionBar>
         <ActionBar.Left>
           <CancelButton fallbackPath="/standalone/supporting-data-maintenance" />
         </ActionBar.Left>
-        {!isReadOnly && (
+        {!isArchived && (
           <ActionBar.Right>
             <Button
               variant="ghost"
@@ -537,6 +553,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               onClick={() => handleFormSubmit()}
               isLoading={isPending && saveAction === 'submit'}
               leftIcon={<Icon name="check" style="solid" className="size-4" />}
+              disabled={isPending}
             >
               Submit
             </Button>

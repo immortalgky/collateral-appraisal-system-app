@@ -29,6 +29,9 @@ export interface CreateSupportingDataDetailRequest {
 export interface GetSupportingDataMaintenanceListParams {
   pageNumber?: number;
   pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortDir?: string;
   status?: string;
   supportingNumber?: string;
   dateType?: SupportingDataDateType;

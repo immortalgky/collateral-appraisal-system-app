@@ -22,7 +22,7 @@ export type SupportingDetailImageType = z.infer<typeof SupportingDetailImageSche
 
 const GetSupportingDataById = z.object({
   id: z.string(),
-  isEditable: z.boolean(), // to check authority to edit data of user
+  hasAuthorityToEdit: z.boolean(), // to check authority to edit data of user
   propertyName: z.string().nullable(),
   developer: z.string().nullable(),
   modelName: z.string().nullable(),

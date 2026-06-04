@@ -7,7 +7,11 @@ import {
   sourceAndReferenceFields,
 } from '../configs/fields';
 
-export function SupportingDataMaintenanceDetailForm() {
+interface SupportingDataMaintenanceDetailFormProps {
+  disabled?: boolean;
+}
+
+export function SupportingDataMaintenanceDetailForm({ disabled }: SupportingDataMaintenanceDetailFormProps) {
   return (
     <div className="flex flex-col gap-6 pr-2">
       {/*  */}
@@ -16,7 +20,7 @@ export function SupportingDataMaintenanceDetailForm() {
           <h3 className="text-base font-medium">Property Information</h3>
         </div>
         <div className="flex-1 grid grid-cols-12 gap-4">
-          <FormFields fields={propertyInformationFields} />
+          <FormFields fields={propertyInformationFields} disabled={disabled} />
         </div>
       </div>
 
@@ -25,7 +29,7 @@ export function SupportingDataMaintenanceDetailForm() {
           <h3 className="text-base font-medium">Location Details</h3>
         </div>
         <div className="flex-1 grid grid-cols-12 gap-4">
-          <FormFields fields={locationDetailFields} />
+          <FormFields fields={locationDetailFields} disabled={disabled} />
         </div>
       </div>
 
@@ -35,7 +39,7 @@ export function SupportingDataMaintenanceDetailForm() {
         </div>
         <div className="flex-1 flex flex-col gap-6">
           <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={financialDetailsFields} />
+            <FormFields fields={financialDetailsFields} disabled={disabled} />
           </div>
         </div>
       </div>
@@ -46,7 +50,7 @@ export function SupportingDataMaintenanceDetailForm() {
         </div>
         <div className="flex-1 flex flex-col gap-6">
           <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={contactInformationFields} />
+            <FormFields fields={contactInformationFields} disabled={disabled} />
           </div>
         </div>
       </div>
@@ -57,7 +61,7 @@ export function SupportingDataMaintenanceDetailForm() {
         </div>
         <div className="flex-1 flex flex-col gap-6">
           <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={sourceAndReferenceFields} />
+            <FormFields fields={sourceAndReferenceFields} disabled={disabled} />
           </div>
         </div>
       </div>

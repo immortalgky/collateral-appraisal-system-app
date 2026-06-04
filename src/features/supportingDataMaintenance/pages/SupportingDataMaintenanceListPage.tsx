@@ -70,6 +70,7 @@ const formatDateTime = (dateString?: string | null): string => {
 type ColumnDef = {
   key: string;
   label: string;
+  sortField?: string;
   tdClassName?: string;
   render: (item: SupportingDataMaintenance) => React.ReactNode;
 };
@@ -78,6 +79,7 @@ const columns: ColumnDef[] = [
   {
     key: 'supportingNumber',
     label: 'Supporting No.',
+    sortField: 'supportingNumber',
     render: item => (
       <Link
         to={`/standalone/supporting-data-maintenance/${item.id}`}
@@ -91,6 +93,7 @@ const columns: ColumnDef[] = [
   {
     key: 'createdDate',
     label: 'Created Date',
+    sortField: 'createdDate',
     render: item => formatDateTime(item.createdDate),
   },
   {
@@ -116,6 +119,7 @@ const columns: ColumnDef[] = [
   {
     key: 'status',
     label: 'Status',
+    sortField: 'status',
     tdClassName: 'px-4 py-3',
     render: item => (
       <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
@@ -165,6 +169,35 @@ export function SupportingDataMaintenanceListPage() {
   const [filters, setFilters] = useState<GetSupportingDataMaintenanceListParams>(
     initRef.current.filters,
   );
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field)
+      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+    return (
+      <Icon
+        style="solid"
+        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
+        className="size-2.5 text-primary"
+      />
+    );
+  };
+
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
     x: 0,
@@ -209,7 +242,7 @@ export function SupportingDataMaintenanceListPage() {
   // Reset to first page whenever the effective query changes
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, activeTab, filters]);
+  }, [debouncedSearch, activeTab, filters, sortField, sortDirection]);
 
   // Sync search back to the URL so the view is shareable
   useEffect(() => {
@@ -229,6 +262,9 @@ export function SupportingDataMaintenanceListPage() {
   const requestListParams = {
     pageNumber,
     pageSize,
+    search: debouncedSearch || undefined,
+    sortBy: sortField ?? undefined,
+    sortDir: sortDirection,
     ...filters,
   };
 
@@ -486,14 +522,28 @@ export function SupportingDataMaintenanceListPage() {
               <tr className="bg-gray-50 border-b border-gray-200">
                 {columns.map(col => {
                   const isSticky = col.key === STICKY_COLUMN_KEY;
+                  const isActive = !!col.sortField && sortField === col.sortField;
                   const base =
                     'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
                   const thClass = isSticky
-                    ? `${base} sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                    : base;
+                    ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                    : col.sortField
+                      ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
+                      : base;
                   return (
-                    <th key={col.key} className={thClass}>
-                      {col.label}
+                    <th
+                      key={col.key}
+                      onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
+                      className={thClass}
+                    >
+                      {col.sortField ? (
+                        <div className="flex items-center gap-1">
+                          {col.label}
+                          <SortIcon field={col.sortField} />
+                        </div>
+                      ) : (
+                        col.label
+                      )}
                     </th>
                   );
                 })}

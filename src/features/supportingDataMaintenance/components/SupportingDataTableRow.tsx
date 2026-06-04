@@ -103,8 +103,8 @@ export const SupportingDataTableRow = ({
                       focus ? 'bg-gray-50' : ''
                     } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
                   >
-                    <Icon name="pen-to-square" className="text-xs text-gray-400" />
-                    Edit
+                    <Icon name="arrow-up-right-from-square" className="text-xs text-gray-400" />
+                    Open
                   </button>
                 )}
               </MenuItem>
