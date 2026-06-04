@@ -178,7 +178,12 @@
     "collapseAppraisal": "ยุบ {{number}}",
     "selectAllVisibleCompanies": "เลือกบริษัทที่มองเห็นทั้งหมด",
     "selectAllPage": "เลือกทั้งหมดในหน้านี้",
-    "maxDaysFor": "จำนวนวันสูงสุดสำหรับ {{number}}"
+    "maxDaysFor": "จำนวนวันสูงสุดสำหรับ {{number}}",
+    "sectionAppraisalInfo": "ข้อมูลการประเมิน",
+    "sectionAttachedDocs": "เอกสารแนบ",
+    "sectionQuotationInfo": "ข้อมูลใบเสนอราคา",
+    "sectionDuration": "ระยะเวลาและจำนวนวัน",
+    "sectionAppraisalRemark": "หมายเหตุการประเมิน"
   },
   "empty": {
     "noQuotations": "ไม่พบใบเสนอราคา",
@@ -213,7 +218,8 @@
     "failedToLoadQuotation": "ไม่สามารถโหลดใบเสนอราคาได้",
     "companyNotFound": "ไม่พบใบเสนอราคาของบริษัท",
     "noAppraisalLinked": "ไม่มีการประเมินที่เชื่อมโยงกับงานนี้ ไม่สามารถแสดงส่วนใบเสนอราคาได้",
-    "noAccessDocument": "คุณไม่มีสิทธิ์เข้าถึงเอกสารนี้อีกต่อไป — ใบเสนอราคาอาจถูกมอบหรือยกเลิกแล้ว"
+    "noAccessDocument": "คุณไม่มีสิทธิ์เข้าถึงเอกสารนี้อีกต่อไป — ใบเสนอราคาอาจถูกมอบหรือยกเลิกแล้ว",
+    "failedToLoadTask": "โหลดงานไม่สำเร็จ"
   },
   "toasts": {
     "saved": "บันทึกใบเสนอราคาเรียบร้อย",
@@ -403,6 +409,10 @@
     "totalLabel": "{{count}} รายการ",
     "pending": "รอดำเนินการ"
   },
+  "email": {
+    "draftingTitle": "ร่างอีเมลเพื่อส่งถึงบริษัทประเมินราคาภายนอก",
+    "subjectLabel": "หัวข้อ"
+  },
   "picker": {
     "customerName": "ชื่อลูกค้า",
     "customerNamePlaceholder": "ค้นหาลูกค้า...",
@@ -425,6 +435,7 @@
     "district": "อำเภอ",
     "districtPlaceholder": "อำเภอ...",
     "province": "จังหวัด",
+    "provincePlaceholder": "ทุกจังหวัด",
     "clearFilters": "ล้างตัวกรองทั้งหมด",
     "clear": "ล้าง",
     "selectAll": "เลือกทั้งหมด",

@@ -1017,12 +1017,12 @@ const QuotationSelectionPage = () => {
       <EmailCompositionModal
         isOpen={isSendConfirmOpen}
         onClose={() => setIsSendConfirmOpen(false)}
-        title="Drafting email to send to external appraisal company"
+        title={t('email.draftingTitle')}
         defaultValues={defaultEmailValues}
         showCc={true}
         showBcc={true}
         showAttachments={false}
-        subjectLabel="Subject"
+        subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
         onSubmit={handleSendConfirm}
       />

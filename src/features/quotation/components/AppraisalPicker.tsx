@@ -813,7 +813,7 @@ export function AppraisalPicker({
                 <ProvinceAutocomplete
                   value={filters.province}
                   onChange={v => handleFilterChange('province', v)}
-                  placeholder="All provinces"
+                  placeholder={t('picker.provincePlaceholder')}
                 />
               </div>
               <div className="flex items-end">

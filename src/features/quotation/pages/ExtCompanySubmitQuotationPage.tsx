@@ -812,7 +812,7 @@ const ExtCompanySubmitQuotationPage = () => {
                 {selectedAppraisal && selectedItem ? (
                   <div key={selectedIndex} className="p-5 space-y-6">
                     {/* Section 1: Appraisal Information (read-only) */}
-                    <section aria-label="Appraisal Information">
+                    <section aria-label={t('aria.sectionAppraisalInfo')}>
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         {t('sections.appraisalInformation')}
                       </h2>
@@ -838,7 +838,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
                     {/* Section 2: Attached Documents — grouped by section, mirroring DocumentChecklist. */}
                     {selectedDocs.length > 0 && (
-                      <section aria-label="Attached Documents">
+                      <section aria-label={t('aria.sectionAttachedDocs')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.attachDocument')}
                         </h2>
@@ -931,7 +931,7 @@ const ExtCompanySubmitQuotationPage = () => {
                     )}
 
                     {/* Section 3: Quotation Information — Fee Breakdown */}
-                    <section aria-label="Quotation Information">
+                    <section aria-label={t('aria.sectionQuotationInfo')}>
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         {t('sections.quotationInformationFee')}
                       </h2>
@@ -948,7 +948,7 @@ const ExtCompanySubmitQuotationPage = () => {
                     </section>
 
                     {/* Section 4: Duration / Mandays */}
-                    <section aria-label="Duration and Mandays">
+                    <section aria-label={t('aria.sectionDuration')}>
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         {t('sections.duration')}
                       </h2>

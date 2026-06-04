@@ -11,13 +11,16 @@ import { DateInput } from '@/shared/components/inputs';
 import { formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import { useCancelQuotation, useGetQuotations, type QuotationListItem } from '../api/quotation';
+import { z } from 'zod';
 import { QuotationStatusSchema } from '../schemas/quotation';
+
+type QuotationStatus = z.infer<typeof QuotationStatusSchema>;
 
 /** Slice a DatePickerInput ISO value (`2026-04-28T00:00:00+07:00`) down to the
     `yyyy-MM-dd` slug the backend's `DateOnly?` query binder expects. */
 const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : undefined);
 
-const QUOTATION_STATUS_OPTIONS = QuotationStatusSchema.options;
+const QUOTATION_STATUS_OPTIONS: QuotationStatus[] = QuotationStatusSchema.options;
 
 const TERMINAL_STATUSES = new Set(['Finalized', 'Cancelled', 'Closed']);
 
@@ -196,7 +199,7 @@ function QuotationListingPage() {
           <option value="">{t('filters.allStatuses')}</option>
           {QUOTATION_STATUS_OPTIONS.map(s => (
             <option key={s} value={s}>
-              {t(`status.${s}` as `status.${string}`)}
+              {t(`status.${s}`)}
             </option>
           ))}
         </select>
