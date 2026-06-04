@@ -319,7 +319,7 @@ const TitleInformationForm = () => {
                                 handleDeleteTitle(index);
                               }}
                               className="opacity-0 group-hover:opacity-100 w-5 h-5 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger/20 transition-all shrink-0"
-                              title="Delete"
+                              title={t('common:actions.delete')}
                             >
                               <Icon style="solid" name="xmark" className="size-2.5" />
                             </button>

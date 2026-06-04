@@ -29,6 +29,12 @@
     "createdAt": "Created At",
     "actions": "Actions"
   },
+  "titleTable": {
+    "itemNo": "Title No / Room No",
+    "propertyType": "Property Type",
+    "buildingType": "Building Type",
+    "area": "Area"
+  },
   "filters": {
     "searchPlaceholder": "Search requests...",
     "allStatus": "All Status",

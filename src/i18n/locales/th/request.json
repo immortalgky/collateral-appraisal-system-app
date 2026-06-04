@@ -29,6 +29,12 @@
     "createdAt": "วันที่สร้าง",
     "actions": "การดำเนินการ"
   },
+  "titleTable": {
+    "itemNo": "เลขที่โฉนด / เลขห้อง",
+    "propertyType": "ประเภททรัพย์สิน",
+    "buildingType": "ประเภทอาคาร",
+    "area": "พื้นที่"
+  },
   "filters": {
     "searchPlaceholder": "ค้นหาคำขอ...",
     "allStatus": "ทุกสถานะ",
