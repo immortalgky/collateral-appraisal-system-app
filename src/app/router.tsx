@@ -110,6 +110,7 @@ import BlockReappraisalDetailPage from '@/features/blockReappraisal/pages/BlockR
 import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
 import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
 import StepValidationRulesPage from '@features/workflowAdmin/pages/StepValidationRulesPage';
+import ReportTestPage from '@features/reportGeneration/pages/ReportTestPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -334,6 +335,7 @@ export const router = createBrowserRouter([
             children: [{ index: true, element: <AccessReportPage /> }],
           },
           { path: 'committees', element: <CommitteeAdminPage /> },
+          { path: 'reports/test', element: <ReportTestPage /> },
           { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
           { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
           { path: 'evaluation-config', element: <EvaluationConfigPage /> },
