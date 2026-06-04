@@ -435,21 +435,36 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   return (
     <div className="flex flex-col gap-6 h-full min-h-0 overflow-y-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">
-            {t('unitListing.importUnits')}
-          </h3>
-          {isReappraisal && (
-            <p className="text-xs text-gray-500 mb-3">{t('unitListing.reappraisal.normalUploadNote')}</p>
-          )}
-          <UploadArea
-            onChange={handleFileChange}
-            accept=".xlsx,.xls,.csv"
-            isLoading={isUploading}
-            disabled={readOnly}
-            supportedText=".xlsx, .xls, .csv (max 10MB)"
-          />
-        </div>
+        {/* Reappraisal: the destructive "replace" upload is hidden — only the non-destructive
+            re-match upload is offered, in place of Import Units. */}
+        {isReappraisal ? (
+          <div className="bg-white rounded-xl border border-amber-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+              {t('unitListing.reappraisal.title')}
+            </h3>
+            <p className="text-xs text-gray-500 mb-4">{t('unitListing.reappraisal.hint')}</p>
+            <UploadArea
+              onChange={handleReappraisalFileChange}
+              accept=".xlsx,.xls,.csv"
+              isLoading={isReappraisalUploading}
+              disabled={readOnly}
+              supportedText=".xlsx, .xls, .csv (max 10MB)"
+            />
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">
+              {t('unitListing.importUnits')}
+            </h3>
+            <UploadArea
+              onChange={handleFileChange}
+              accept=".xlsx,.xls,.csv"
+              isLoading={isUploading}
+              disabled={readOnly}
+              supportedText=".xlsx, .xls, .csv (max 10MB)"
+            />
+          </div>
+        )}
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-4">
@@ -464,22 +479,6 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           />
         </div>
       </div>
-
-      {isReappraisal && !readOnly && (
-        <div className="bg-white rounded-xl border border-amber-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">
-            {t('unitListing.reappraisal.title')}
-          </h3>
-          <p className="text-xs text-gray-500 mb-4">{t('unitListing.reappraisal.hint')}</p>
-          <UploadArea
-            onChange={handleReappraisalFileChange}
-            accept=".xlsx,.xls,.csv"
-            isLoading={isReappraisalUploading}
-            disabled={readOnly}
-            supportedText=".xlsx, .xls, .csv (max 10MB)"
-          />
-        </div>
-      )}
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">

@@ -14,22 +14,6 @@ function formatNumber(n?: number | null): string {
   return n.toLocaleString();
 }
 
-function RemainingDayBadge({ days }: { days: number }) {
-  let cls = 'bg-green-50 text-green-700 border-green-200';
-  if (days <= 0) {
-    cls = 'bg-red-50 text-red-700 border-red-200';
-  } else if (days <= 30) {
-    cls = 'bg-amber-50 text-amber-700 border-amber-200';
-  }
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${cls}`}
-    >
-      {days <= 0 ? 'Overdue' : `${days}d`}
-    </span>
-  );
-}
-
 function BlockReappraisalListPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(['blockReappraisal', 'common']);
@@ -233,8 +217,8 @@ function BlockReappraisalListPage() {
                     <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
                       {formatLocaleDate(item.lastAppraisedDate, i18n.language)}
                     </td>
-                    <td className="px-3 py-2 text-center">
-                      <RemainingDayBadge days={item.remainingDay} />
+                    <td className="px-3 py-2 text-center text-xs text-gray-600 whitespace-nowrap">
+                      {item.remainingDay}
                     </td>
                     <td className="px-3 py-2 w-8">
                       <Icon

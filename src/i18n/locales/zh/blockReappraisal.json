@@ -17,6 +17,10 @@
     "lastAppraisedDate": "Last Appraised Date",
     "remainingDay": "Remaining Day"
   },
+  "remainingDayBadge": {
+    "overdue": "逾期",
+    "daysLeft": "{{days}}天"
+  },
   "filter": {
     "title": "Filter",
     "button": "Filters",
@@ -49,7 +53,7 @@
     "optOut": "Project marked as reappraisal not required"
   },
   "actions": {
-    "createRequest": "Create New Appraisal Request",
+    "createRequest": "Initiate reappraisal request",
     "notRequired": "Reappraisal Not Required"
   },
   "detail": {
@@ -79,7 +83,7 @@
     },
     "createModal": {
       "title": "Create Appraisal Request",
-      "body": "Create a new appraisal request for this block project? The sold/unsold status of units will be decided later via Excel re-upload inside the reappraisal application."
+      "body": "Create a new appraisal request for this block project?"
     },
     "successModal": {
       "title": "Appraisal Request Created",
