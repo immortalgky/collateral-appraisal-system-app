@@ -128,6 +128,8 @@
     "total": "合计",
     "constructionInspectionFee": "施工检验费",
     "constructionInspectionFeeHint": "此费用将用于该抵押品下次施工检验申请的评估费。",
+    "bankAbsorbAmount": "银行承担金额",
+    "bankAbsorbAmountHint": "银行承担的金额，其余部分将向客户收取。",
     "addFeeModal": {
       "titleAdd": "添加费用",
       "titleEdit": "编辑费用",
@@ -163,7 +165,9 @@
       "feeRejected": "费用项已拒绝",
       "feeRejectFailed": "拒绝费用项失败。",
       "ciFeesSaved": "施工检验费已保存",
-      "ciFeesFailed": "保存施工检验费失败。"
+      "ciFeesFailed": "保存施工检验费失败。",
+      "absorbAmountSaved": "银行承担金额已保存",
+      "absorbAmountFailed": "保存银行承担金额失败。"
     }
   },
   "payment": {
@@ -535,6 +539,32 @@
     },
     "decisionSummary": {
       "sectionTitle": "决策摘要"
+    },
+    "decisionSummarySection": {
+      "title": "决策与汇总",
+      "appraisalPriceSummary": "评估价格汇总",
+      "governmentAppraisalPrice": "政府评估价格",
+      "totalAppraisalPrice": "评估总价",
+      "forceSellingPrice": "强制销售价",
+      "buildingInsurance": "建筑保险",
+      "noApproachData": "暂无评估方法数据。",
+      "noGovernmentPrice": "暂无政府评估价格数据。"
+    },
+    "pricingAnalysisSection": {
+      "heading": "定价分析",
+      "decisionApproach": "决策方法",
+      "noApproachData": "暂无评估方法数据。"
+    },
+    "requestInfoSection": {
+      "title": "请求信息",
+      "requestNumber": "请求编号",
+      "customerName": "客户姓名",
+      "contactNumber": "联系电话",
+      "purpose": "用途",
+      "appraisalNumber": "评估编号",
+      "channel": "渠道",
+      "status": "状态",
+      "requestor": "申请人"
     }
   },
   "activityTracking": {
@@ -881,6 +911,26 @@
       "createFailed": "创建报价请求失败"
     }
   },
+  "history": {
+    "title": "历史记录",
+    "viewHistory": "查看历史",
+    "eventCount_one": "{{count}} 条记录",
+    "eventCount_other": "{{count}} 条记录",
+    "chips": {
+      "all": "全部",
+      "appointment": "预约",
+      "fees": "费用"
+    },
+    "status": {
+      "Approved": "已批准",
+      "Rejected": "已拒绝",
+      "Pending": "待批准",
+      "Auto": "自动",
+      "Cancelled": "已取消"
+    },
+    "emptyState": "暂无历史记录",
+    "loadError": "无法加载历史记录"
+  },
   "approval": {
     "banner": {
       "needsApproval": "此变更需要银行审批 — 请提交以供审核后才能生效。",
@@ -901,5 +951,235 @@
       "submitted": "已提交银行审批",
       "submitFailed": "提交审批失败"
     }
+  },
+  "createPage": {
+    "photosSection": "Photos",
+    "landSection": "Land Information",
+    "leaseAgreementSection": "Lease Agreement",
+    "rentalInfoSection": "Rental Info",
+    "condoSection": "Condo Information",
+    "buildingSection": "Building Information",
+    "constructionSection": "Construction Inspection",
+    "machinerySection": "Machinery Information",
+    "navPhotos": "Photos",
+    "navLand": "Land",
+    "navLeaseAgreement": "Lease Agreement",
+    "navRentalInfo": "Rental Info",
+    "navCondo": "Condo",
+    "navBuilding": "Building",
+    "navConstructionInspection": "Construction Inspection",
+    "navMachinery": "Machinery",
+    "saveDraft": "Save draft",
+    "save": "Save"
+  },
+  "landCharacteristicsForm": {
+    "sections": {
+      "landfill": "填土",
+      "road": "道路",
+      "landAccessibility": "土地可达性",
+      "roadSurface": "路面",
+      "publicUtility": "公共设施",
+      "landUse": "土地用途",
+      "landEntranceExit": "出入口",
+      "transportation": "交通",
+      "anticipationOfProperty": "物业前景",
+      "limitation": "限制",
+      "eviction": "征收",
+      "allocation": "分配",
+      "hasBuilding": "有无建筑",
+      "remark": "备注"
+    },
+    "fields": {
+      "other": "其他",
+      "landfillHeight": "填土高度",
+      "landAccessibilityDescription": "可达性描述",
+      "roadWidth": "路宽",
+      "rightOfWay": "通行权",
+      "roadFrontage": "临路长度",
+      "numberOrSidesFacingRoad": "临路面数",
+      "roadRunningInFrontOfLand": "地块前道路",
+      "areaSqWa": "面积（平方哇）",
+      "distance": "距离",
+      "remarkPlaceholder": "输入备注...",
+      "isExpropriate": "征收中",
+      "inLineExpropriate": "位于征收线内",
+      "royalDecree": "皇家法令",
+      "isEncroached": "被侵占",
+      "electricity": "电力",
+      "isLandlocked": "内陆地",
+      "isForestBoundary": "森林边界"
+    },
+    "landfillOptions": {
+      "emptyLand": "空地",
+      "filled": "已填",
+      "notFilledYet": "未填",
+      "partiallyFilled": "部分填充",
+      "other": "其他"
+    },
+    "landAccessibilityOptions": {
+      "able": "可进入",
+      "unable": "不可进入",
+      "inAllocation": "在分配项目内"
+    },
+    "roadSurfaceOptions": {
+      "reinforcedConcrete": "钢筋混凝土",
+      "gravelCrushedStone": "砾石/碎石",
+      "soil": "土路",
+      "paved": "铺装路面",
+      "other": "其他"
+    },
+    "publicUtilityOptions": {
+      "permanentElectricity": "永久电力",
+      "tapWaterGroundwater": "自来水/地下水",
+      "drainagePipeStone": "排水管/石",
+      "streetlight": "路灯",
+      "other": "其他"
+    },
+    "landUseOptions": {
+      "residence": "住宅",
+      "agriculture": "农业",
+      "commercial": "商业",
+      "industry": "工业",
+      "other": "其他"
+    },
+    "landEntranceExitOptions": {
+      "publicInterest": "公共通道",
+      "insideAllocationProject": "分配项目内",
+      "personal": "私人",
+      "servitude": "地役权",
+      "other": "其他"
+    },
+    "transportationOptions": {
+      "car": "轿车",
+      "bus": "公共汽车",
+      "ship": "船",
+      "footpath": "步行道",
+      "other": "其他"
+    },
+    "anticipationOptions": {
+      "veryProspective": "非常有前景",
+      "moderate": "一般",
+      "likelyToProsperInFuture": "未来可能繁荣",
+      "littleChanceOfProsperity": "发展机会较少"
+    },
+    "evictionOptions": {
+      "permanentElectricity": "永久电力",
+      "subwayLine": "地铁线路",
+      "other": "其他"
+    },
+    "allocationOptions": {
+      "allocateNewProject": "新项目分配",
+      "allocateOldProject": "旧项目分配",
+      "notAllocate": "不分配"
+    },
+    "hasBuildingOptions": {
+      "yes": "有",
+      "no": "无",
+      "other": "其他"
+    }
+  },
+  "approachMatrixTable": {
+    "columns": {
+      "group": "组别",
+      "model": "模型",
+      "market": "市场比较法",
+      "cost": "成本法",
+      "income": "收益法",
+      "residual": "剩余法",
+      "summary": "汇总"
+    },
+    "footer": {
+      "total": "合计",
+      "project": "项目"
+    }
+  },
+  "blockPriceSummaryTable": {
+    "columns": {
+      "model": "模型",
+      "unitCount": "单元数量",
+      "totalAppraisalPrice": "评估总价",
+      "forceSellingPrice": "强制销售价",
+      "buildingInsurance": "建筑保险"
+    },
+    "footer": {
+      "project": "项目"
+    }
+  },
+  "governmentPriceTable": {
+    "columns": {
+      "titleDeedNo": "地契编号",
+      "sqWa": "平方哇",
+      "bahtPerSqWa": "泰铢/平方哇",
+      "landPrice": "土地价格"
+    },
+    "footer": {
+      "total": "合计",
+      "avg": "平均"
+    },
+    "missingFromSurvey": "勘测中缺失"
+  },
+  "constructionSummaryTable": {
+    "columns": {
+      "milestone": "里程碑",
+      "totalAppraisalValue": "评估总价值",
+      "landValue": "土地价值",
+      "constructionProgress": "建设进度 (%)",
+      "buildingValue": "建筑价值",
+      "buildingValuePreInspection": "检验前建筑价值"
+    },
+    "rows": {
+      "Previous": "上期",
+      "ConstructionIncreased": "建设增量",
+      "Current": "本期",
+      "RemainingConstruction": "剩余建设",
+      "Complete100": "竣工（100%）"
+    }
+  },
+  "approvalListSection": {
+    "title": "委员会审批",
+    "notActiveYet": "此评估的委员会审批尚未启动。",
+    "approvedBanner": "此评估已获委员会批准。",
+    "returnedBanner": "此评估已被退回修改。",
+    "conditionsTitle": "审批条件",
+    "votesDisplay": "{{received}}/{{total}} 票",
+    "youBadge": "您",
+    "pendingVote": "待处理",
+    "tierLabels": {
+      "1": "层级 1",
+      "2": "层级 2",
+      "3": "层级 3"
+    },
+    "committeeCodeLabels": {
+      "SUB_COMMITTEE": "小组委员会",
+      "COMMITTEE": "委员会",
+      "COMMITTEE_WITH_MEETING": "委员会（含会议）"
+    },
+    "committeeDefault": "委员会",
+    "conditionRoleRequired": "{{role}} 必须投票",
+    "conditionRoleRequiredDefault": "所需角色必须投票",
+    "conditionMinVotes": "至少需要 {{n}} 票",
+    "conditionMinVotesDefault": "需达到最低投票数",
+    "columns": {
+      "member": "成员",
+      "role": "角色",
+      "vote": "投票",
+      "date": "日期",
+      "comments": "评论"
+    }
+  },
+  "decisionSummaryPageExtra": {
+    "governmentAppraisalPrice": "政府评估价格",
+    "constructionSummaryTitle": "建设汇总",
+    "cancelButton": "取消",
+    "saveButton": "保存",
+    "submitButton": "提交"
+  },
+  "landDetailSchema": {
+    "latitudeRequired": "纬度为必填项",
+    "longitudeRequired": "经度为必填项",
+    "subDistrictRequired": "街道/区为必填项",
+    "districtRequired": "区/县为必填项",
+    "provinceRequired": "省份为必填项",
+    "landOfficeRequired": "土地办公室为必填项"
   }
 }

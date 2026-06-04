@@ -1,5 +1,6 @@
 import { formatNumber } from '@/shared/utils/formatUtils';
 import type { GovernmentPriceRow } from '../../api/decisionSummary';
+import { useTranslation } from 'react-i18next';
 
 interface GovernmentPriceTableProps {
   rows: GovernmentPriceRow[];
@@ -11,6 +12,7 @@ interface GovernmentPriceTableProps {
  * Read-only table for government appraisal prices.
  */
 const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTableProps) => {
+  const { t } = useTranslation('appraisal');
   const totalPrice = rows.reduce((sum, row) => sum + (row.governmentPrice ?? 0), 0);
   const isSingleDeed = rows.length === 1;
 
@@ -20,13 +22,17 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">
-              Title Deed No.
+              {t('governmentPriceTable.columns.titleDeedNo')}
             </th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Sq.Wa</th>
             <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
-              Baht / Sq.Wa
+              {t('governmentPriceTable.columns.sqWa')}
             </th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">Land Price</th>
+            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+              {t('governmentPriceTable.columns.bahtPerSqWa')}
+            </th>
+            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+              {t('governmentPriceTable.columns.landPrice')}
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -37,7 +43,7 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
                   {row.titleNumber ?? '-'}
                   {row.isMissingFromSurvey && (
                     <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
-                      Missing from survey
+                      {t('governmentPriceTable.missingFromSurvey')}
                     </span>
                   )}
                 </span>
@@ -66,14 +72,14 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
           <tfoot>
             <tr className="bg-gray-100 border-t-2 border-gray-400">
               <td className="px-3 py-3 text-gray-700 font-bold uppercase tracking-wider text-xs">
-                Total
+                {t('governmentPriceTable.footer.total')}
               </td>
               <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">
                 {formatNumber(totalArea, 2)}
               </td>
               <td className="px-3 py-3 text-right text-gray-700 tabular-nums">
                 <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mr-1.5">
-                  avg
+                  {t('governmentPriceTable.footer.avg')}
                 </span>
                 {formatNumber(avgPerSqWa, 2)}
               </td>

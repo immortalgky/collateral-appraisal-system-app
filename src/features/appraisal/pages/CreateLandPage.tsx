@@ -220,9 +220,9 @@ const CreateLandPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
             {
-              label: 'Land',
+              label: t('createPage.navLand'),
               id: 'land-section',
               icon: 'mountain-sun',
               onClick: () => setActiveTab('land'),
@@ -230,13 +230,13 @@ const CreateLandPage = () => {
             ...(isRentedOut
               ? [
                   {
-                    label: 'Lease Agreement',
+                    label: t('createPage.navLeaseAgreement'),
                     id: 'lease-agreement-section',
                     icon: 'file-contract',
                     onClick: () => setActiveTab('lease-agreement'),
                   },
                   {
-                    label: 'Rental Info',
+                    label: t('createPage.navRentalInfo'),
                     id: 'rental-info-section',
                     icon: 'calendar-days',
                     onClick: () => setActiveTab('rental-info'),
@@ -268,7 +268,7 @@ const CreateLandPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                     {appraisalId && (
@@ -294,7 +294,7 @@ const CreateLandPage = () => {
                             className="w-5 h-5 text-amber-600"
                           />
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">{t('createPage.landSection')}</h2>
                       </div>
                       <div className="h-px bg-gray-200" />
                     </Section>
@@ -330,7 +330,7 @@ const CreateLandPage = () => {
                               className="w-5 h-5 text-purple-600"
                             />
                           </div>
-                          <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
+                          <h2 className="text-lg font-semibold text-gray-900">{t('createPage.leaseAgreementSection')}</h2>
                         </div>
                         <div className="h-px bg-gray-200 mb-6" />
                         <LeaseAgreementForm namePrefix="leaseAgreement" />
@@ -353,7 +353,7 @@ const CreateLandPage = () => {
                               className="w-5 h-5 text-teal-600"
                             />
                           </div>
-                          <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
+                          <h2 className="text-lg font-semibold text-gray-900">{t('createPage.rentalInfoSection')}</h2>
                         </div>
                         <div className="h-px bg-gray-200 mb-6" />
                         <RentalInfoForm namePrefix="rentalInfo" />
@@ -386,7 +386,7 @@ const CreateLandPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
+                  {t('createPage.saveDraft')}
                 </Button>
                 <Button
                   type="submit"
@@ -394,7 +394,7 @@ const CreateLandPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('createPage.save')}
                 </Button>
               </ActionBar.Right>
             )}

@@ -11,7 +11,10 @@ import type { AppraisalFeeItemDtoType } from '@shared/schemas/v1';
 import AddFeeModal from './AddFeeModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
-export const BANK_ABSORB_FEE_TYPES = ['05', '06', '07'];
+export const BANK_ABSORB_FEE_TYPES = ['04'];
+/** Fee types for which the bank-absorb amount input is shown (required for '04', optional for '99'). */
+const BANK_ABSORB_SHOW_TYPES = ['04', '99'];
+
 interface FeeInformationSectionProps {
   items: AppraisalFeeItemDtoType[];
   vatRate?: number;
@@ -46,6 +49,14 @@ interface FeeInformationSectionProps {
   onUpdateConstructionInspectionFee?: (amount: number | null) => Promise<void>;
   isConstructionInspectionFeeUpdating?: boolean;
   totalFeePaid?: number | null;
+
+  /** Bank-absorb amount input — shown when feePaymentType ∈ ['04','99']. */
+  bankAbsorbAmount?: number | null;
+  /** Upper bound for the absorb input (totalFeeAfterVAT from backend). */
+  totalFeeAfterVAT?: number;
+  /** Called on blur when the value has changed; returns Promise so the section can rollback on error. */
+  onUpdateBankAbsorbAmount?: (amount: number) => Promise<void>;
+  isAbsorbAmountUpdating?: boolean;
 }
 
 /**
@@ -68,6 +79,10 @@ export default function FeeInformationSection({
   onUpdateConstructionInspectionFee,
   isConstructionInspectionFeeUpdating,
   totalFeePaid,
+  bankAbsorbAmount = null,
+  totalFeeAfterVAT,
+  onUpdateBankAbsorbAmount,
+  isAbsorbAmountUpdating,
 }: FeeInformationSectionProps) {
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
@@ -89,6 +104,27 @@ export default function FeeInformationSection({
     } catch (error: any) {
       toast.error(error?.apiError?.detail || t('fee.toasts.ciFeesFailed'));
       setCiFeeDraft(constructionInspectionFeeAmount); // rollback
+    }
+  };
+
+  const [absorbDraft, setAbsorbDraft] = useState<number | null>(bankAbsorbAmount);
+  useEffect(() => {
+    setAbsorbDraft(bankAbsorbAmount);
+  }, [bankAbsorbAmount]);
+
+  const showAbsorbInput = BANK_ABSORB_SHOW_TYPES.includes(feePaymentType ?? '');
+  const absorbRequired = BANK_ABSORB_FEE_TYPES.includes(feePaymentType ?? '');
+
+  const handleAbsorbBlur = async () => {
+    if (!onUpdateBankAbsorbAmount) return;
+    const amount = absorbDraft ?? 0;
+    if (amount === (bankAbsorbAmount ?? 0)) return;
+    try {
+      await onUpdateBankAbsorbAmount(amount);
+      toast.success(t('fee.toasts.absorbAmountSaved'));
+    } catch (error: any) {
+      toast.error(error?.apiError?.detail || t('fee.toasts.absorbAmountFailed'));
+      setAbsorbDraft(bankAbsorbAmount); // rollback
     }
   };
 
@@ -268,6 +304,26 @@ export default function FeeInformationSection({
         onChange={value => onUpdateFeePaymentType?.(value)}
         disabled={readOnly || isFeePaymentTypeUpdating}
       />
+
+      {/* Bank Absorb Amount — visible when feePaymentType ∈ ['04','99'] */}
+      {showAbsorbInput && (
+        <div className="border border-blue-200 bg-blue-50/40 rounded-lg p-4">
+          <NumberInput
+            name="bankAbsorbAmount"
+            label={t('fee.bankAbsorbAmount')}
+            required={absorbRequired}
+            decimalPlaces={2}
+            min={0}
+            max={totalFeeAfterVAT}
+            value={absorbDraft}
+            onChange={e => setAbsorbDraft(e.target.value)}
+            onBlur={handleAbsorbBlur}
+            disabled={readOnly || editLocked || isAbsorbAmountUpdating}
+            placeholder="0.00"
+          />
+          <p className="mt-2 text-xs text-gray-500">{t('fee.bankAbsorbAmountHint')}</p>
+        </div>
+      )}
 
       {/* Fee Table */}
       <div className="border border-gray-200 rounded-lg overflow-hidden">

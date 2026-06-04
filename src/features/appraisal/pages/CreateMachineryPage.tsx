@@ -194,8 +194,8 @@ const CreateMachineryPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
-            { label: 'Machinery', id: 'properties-section', icon: 'tractor' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
+            { label: t('createPage.navMachinery'), id: 'properties-section', icon: 'tractor' },
           ]}
         />
       </div>
@@ -221,7 +221,7 @@ const CreateMachineryPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                     {appraisalId && (
@@ -243,7 +243,7 @@ const CreateMachineryPage = () => {
                           className="w-5 h-5 text-amber-600"
                         />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Machinery Information</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.machinerySection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200" />
                   </Section>
@@ -282,7 +282,7 @@ const CreateMachineryPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
+                  {t('createPage.saveDraft')}
                 </Button>
                 <Button
                   type="submit"
@@ -290,7 +290,7 @@ const CreateMachineryPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('createPage.save')}
                 </Button>
               </ActionBar.Right>
             )}

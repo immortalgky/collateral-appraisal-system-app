@@ -26,7 +26,6 @@ interface PaymentInformationSectionProps {
   onRemovePayment?: (paymentId: string) => void;
   isPaymentPending?: boolean;
   requestedAt?: string | null;
-  isBankAbsorb?: boolean;
 }
 
 /**
@@ -40,7 +39,6 @@ export default function PaymentInformationSection({
   onRemovePayment,
   isPaymentPending,
   requestedAt,
-  isBankAbsorb = false,
 }: PaymentInformationSectionProps) {
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
@@ -62,11 +60,11 @@ export default function PaymentInformationSection({
   const totalPaid = fee?.totalPaidAmount ?? 0;
   const remaining = fee?.outstandingAmount ?? totalFee - totalPaid - bankAbsorbAmount;
 
-  const effectiveBankAbsorbAmount = isBankAbsorb ? totalFee : bankAbsorbAmount;
-  const effectiveRemaining = isBankAbsorb ? 0 : remaining;
+  const effectiveBankAbsorbAmount = bankAbsorbAmount;
+  const effectiveRemaining = remaining;
   const paymentPercentage = totalFee > 0 ? Math.min((totalPaid / totalFee) * 100, 100) : 0;
 
-  // Determine payment status
+  // Determine payment status from the backend value.
   const getPaymentStatus = () => {
     if (fee) {
       return getFeePaymentStatusDisplay(fee.paymentStatus);
@@ -77,9 +75,7 @@ export default function PaymentInformationSection({
     return { label: 'Not Paid', color: 'danger' as const };
   };
 
-  const paymentStatus = isBankAbsorb
-    ? { label: 'Paid', color: 'success' as const }
-    : getPaymentStatus();
+  const paymentStatus = getPaymentStatus();
 
   // Only show 100% on the progress bar when the fee is fully paid (status === 'paid').
   // PendingInvoice means the customer portion is settled but the external invoice is outstanding —
@@ -195,7 +191,7 @@ export default function PaymentInformationSection({
             <div className="flex justify-between text-xs text-gray-500 mb-1">
               <span>{t('payment.paidPercent', { n: Math.round(effectivePaymentPercentage) })}</span>
               <span>
-                {isBankAbsorb ? formatCurrency(totalFee) : formatCurrency(totalPaid)} /
+                {formatCurrency(totalPaid)} /
                 {formatCurrency(totalFee)}
               </span>
             </div>
@@ -338,7 +334,7 @@ export default function PaymentInformationSection({
               )}
 
               {/* Add Payment Button */}
-              {!readOnly && !isBankAbsorb && (
+              {!readOnly && (
                 <button
                   type="button"
                   onClick={() => setIsAddPaymentModalOpen(true)}
