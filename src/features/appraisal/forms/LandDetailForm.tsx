@@ -1,7 +1,11 @@
-import { FormFields } from '@/shared/components/form';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useFormContext } from 'react-hook-form';
+import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import BoundaryFields from '../components/BoundaryFields';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import {
   allocationField,
   anticipationProsperityField,
@@ -58,28 +62,57 @@ const Card = ({ children }: { children: React.ReactNode }) => (
 );
 
 const LandDetailForm = () => {
+  const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
+  const { watch, setValue } = useFormContext();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const lat = watch('latitude');
+  const lon = watch('longitude');
+  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
+  const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
+
+  const pickerButton = useMemo(
+    () => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />,
+    [],
+  );
+
+  // Inject the map-picker trigger onto the lat/lon inputs (hidden in read-only mode).
+  const landFields = useMemo<FormField[]>(
+    () =>
+      landInfoField.map(field =>
+        !readOnly &&
+        (field.name === 'latitude' || field.name === 'longitude') &&
+        field.type === 'number-input'
+          ? { ...field, rightIcon: pickerButton }
+          : field,
+      ),
+    [pickerButton, readOnly],
+  );
+
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Land Detail</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('forms.land.pageTitle')}</h2>
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow title="Land Information" icon="info-circle">
-          <FormFields fields={landInfoField} />
+        <SectionRow title={t('forms.land.sectionTitleInfo')} icon="info-circle">
+          <FormFields fields={landFields} />
         </SectionRow>
 
-        <SectionRow title="Land Location" icon="map-location-dot">
+        <SectionRow title={t('forms.land.sectionTitleLocation')} icon="map-location-dot">
           <FormFields fields={landLocationField} />
         </SectionRow>
 
-        <SectionRow title="Plot Location" icon="location-dot">
+        <SectionRow title={t('forms.land.sectionTitlePlot')} icon="location-dot">
           <FormFields fields={plotLocationField} />
         </SectionRow>
 
-        <SectionRow title="Landfill" icon="mountain">
+        <SectionRow title={t('landCharacteristicsForm.sections.landfill')} icon="mountain">
           <FormFields fields={landFillField} />
         </SectionRow>
 
-        <SectionRow title="Road & Surface" icon="road">
+        <SectionRow title={t('forms.land.sectionTitleRoadSurface')} icon="road">
           <Card>
             <FormFields fields={roadField} />
           </Card>
@@ -88,7 +121,7 @@ const LandDetailForm = () => {
           </Card>
         </SectionRow>
 
-        <SectionRow title="Land Access & Utilities" icon="bolt">
+        <SectionRow title={t('forms.land.sectionTitleLandAccessUtilities')} icon="bolt">
           <Card>
             <FormFields fields={publicUtilityField} />
           </Card>
@@ -103,7 +136,7 @@ const LandDetailForm = () => {
           </Card>
         </SectionRow>
 
-        <SectionRow title="Limitation" icon="triangle-exclamation">
+        <SectionRow title={t('landCharacteristicsForm.sections.limitation')} icon="triangle-exclamation">
           <Card>
             <FormFields fields={expropriateField} />
           </Card>
@@ -118,7 +151,7 @@ const LandDetailForm = () => {
           </Card>
         </SectionRow>
 
-        <SectionRow title="Assessment" icon="chart-line">
+        <SectionRow title={t('forms.land.sectionTitleAssessment')} icon="chart-line">
           <Card>
             <FormFields fields={anticipationProsperityField} />
           </Card>
@@ -130,18 +163,29 @@ const LandDetailForm = () => {
           </Card>
         </SectionRow>
 
-        <SectionRow title="Size and Boundary" icon="ruler-combined">
+        <SectionRow title={t('forms.land.sectionTitleBoundary')} icon="ruler-combined">
           <BoundaryFields readOnly={readOnly} />
         </SectionRow>
 
-        <SectionRow title="Other Information" icon="circle-info">
+        <SectionRow title={t('forms.land.sectionTitleOtherInfo')} icon="circle-info">
           <FormFields fields={otherInformationField} />
         </SectionRow>
 
-        <SectionRow title="Remark" icon="comment" isLast>
+        <SectionRow title={t('landCharacteristicsForm.sections.remark')} icon="comment" isLast>
           <FormFields fields={remarkLandField} />
         </SectionRow>
       </div>
+
+      <MapLocationPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(newLat, newLon) => {
+          setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+          setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+        }}
+        initialLat={initialLat}
+        initialLon={initialLon}
+      />
     </div>
   );
 };

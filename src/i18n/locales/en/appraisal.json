@@ -529,7 +529,9 @@
       "sectionTitle": "Request Information"
     },
     "propertyGroups": {
-      "sectionTitle": "Property Groups"
+      "sectionTitle": "Property Groups",
+      "title": "Property Groups ({{n}})",
+      "noGroups": "No property groups found."
     },
     "pricingAnalysis": {
       "sectionTitle": "Pricing Analysis"
@@ -692,11 +694,16 @@
   },
   "forms": {
     "land": {
+      "pageTitle": "Land Detail",
       "sectionTitleInfo": "Land Information",
       "sectionTitleLocation": "Land Location",
-      "sectionTitleBoundary": "Land Boundary",
+      "sectionTitleBoundary": "Size and Boundary",
       "sectionTitleCharacteristics": "Land Characteristics",
-      "sectionTitlePlot": "Plot Location"
+      "sectionTitlePlot": "Plot Location",
+      "sectionTitleRoadSurface": "Road & Surface",
+      "sectionTitleLandAccessUtilities": "Land Access & Utilities",
+      "sectionTitleAssessment": "Assessment",
+      "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
       "sectionTitle": "Building Details"

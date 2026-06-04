@@ -33,7 +33,10 @@ const appointmentHistoryResponseSchema = z.object({
  * Get the appointment + fee history timeline for an appraisal.
  * GET /appraisals/{appraisalId}/appointment-history
  */
-export const useGetAppointmentHistory = (appraisalId: string) => {
+export const useGetAppointmentHistory = (
+  appraisalId: string,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'appointment-history'],
     queryFn: async (): Promise<AppointmentHistoryEvent[]> => {
@@ -41,6 +44,8 @@ export const useGetAppointmentHistory = (appraisalId: string) => {
       const parsed = appointmentHistoryResponseSchema.parse(data);
       return parsed.events;
     },
-    enabled: !!appraisalId,
+    // Caller may gate fetching (e.g. only when the history drawer is open). Same queryKey,
+    // so the page's count query and the drawer share one cache entry.
+    enabled: !!appraisalId && (options?.enabled ?? true),
   });
 };

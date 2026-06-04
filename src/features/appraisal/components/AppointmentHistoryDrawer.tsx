@@ -175,7 +175,11 @@ export default function AppointmentHistoryDrawer({
   const { t } = useTranslation(['appraisal', 'common']);
   const [activeFilter, setActiveFilter] = useState<FilterChip>('all');
 
-  const { data: events = [], isLoading, isError } = useGetAppointmentHistory(appraisalId);
+  // Only fetch when the drawer is open (the page already fetches the count on mount via the
+  // same queryKey, so an opened drawer reuses that cache).
+  const { data: events = [], isLoading, isError } = useGetAppointmentHistory(appraisalId, {
+    enabled: open,
+  });
 
   const filteredEvents = events.filter(event => {
     if (activeFilter === 'appointment') return isAppointmentEvent(event.eventType);
@@ -223,7 +227,7 @@ export default function AppointmentHistoryDrawer({
         {isLoading && (
           <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
             <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin mr-2" />
-            {t('common:loading', 'Loading…')}
+            {t('common:status.loading')}
           </div>
         )}
 

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { PropertyGroup, PropertyType } from '../../types';
 import PropertyGroupCard from './PropertyGroupCard';
@@ -13,6 +14,7 @@ const PropertyGroupsSection = ({
   isLoading,
   onPropertyClick,
 }: PropertyGroupsSectionProps) => {
+  const { t } = useTranslation('appraisal');
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -25,7 +27,7 @@ const PropertyGroupsSection = ({
     return (
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
         <Icon name="buildings" style="regular" className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-        <p className="text-sm text-gray-500">No property groups found.</p>
+        <p className="text-sm text-gray-500">{t('view360.propertyGroups.noGroups')}</p>
       </div>
     );
   }
@@ -35,7 +37,7 @@ const PropertyGroupsSection = ({
       <div className="flex items-center gap-2 px-1">
         <Icon name="buildings" style="solid" className="w-4 h-4 text-purple-500" />
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
-          Property Groups ({groups.length})
+          {t('view360.propertyGroups.title', { n: groups.length })}
         </h2>
       </div>
       {groups.map(group => (
