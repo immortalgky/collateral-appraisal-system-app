@@ -29,7 +29,9 @@
       "amount": "Amount"
     },
     "total": "Total Requested",
-    "groupHint": "One decision applies to all fee lines above."
+    "groupHint": "One decision applies to all fee lines above.",
+    "currentFeesTitle": "Current fees on this appraisal",
+    "currentFeesTotal": "Current total"
   },
   "decisions": {
     "approve": "Approve",
