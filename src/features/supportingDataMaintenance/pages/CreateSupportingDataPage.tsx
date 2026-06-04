@@ -26,22 +26,21 @@ import SupportingDataDetailPhotoSection, {
 import { useTranslation } from 'react-i18next';
 
 export function CreateSupportingDataPage() {
-  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const { t } = useTranslation('supportingDataMaintenance');
 
   const { supportingId, id } = useParams<{ supportingId: string; id?: string }>();
 
-  const isEditMode = Boolean(id);
+  const hasSupportingId = Boolean(id);
 
   const { data: supportingData, isLoading } = useGetSupportingDataDetailById(supportingId, id);
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       return mapSupportingDataDetailResponseToForm(supportingData);
     }
     return defaultSupportingDataDetail;
-  }, [isEditMode, supportingData]);
+  }, [hasSupportingId, supportingData]);
 
   // ------------------------------------------------------------------
   // Form
@@ -58,14 +57,15 @@ export function CreateSupportingDataPage() {
     formState: { dirtyFields },
   } = methods;
 
+  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false;
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   useEffect(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       reset(mapSupportingDataDetailResponseToForm(supportingData));
     }
-  }, [isEditMode, supportingData, reset]);
+  }, [hasSupportingId, supportingData, reset]);
 
   const photoSectionRef = useRef<SupportingDataDetailPhotoSectionRef>(null);
 
@@ -79,7 +79,7 @@ export function CreateSupportingDataPage() {
   const onSubmit: SubmitHandler<createSupportingDataDetailFormType> = data => {
     setSaveAction('submit');
 
-    if (isEditMode && id) {
+    if (hasSupportingId && id) {
       updateSupportingData(
         {
           supportingId: supportingId!,
@@ -126,58 +126,7 @@ export function CreateSupportingDataPage() {
     }
   };
 
-  const handleSaveDraft = () => {
-    setSaveAction('draft');
-    const data = getValues();
-
-    if (isEditMode && id) {
-      updateSupportingData(
-        {
-          supportingId: supportingId!,
-          id,
-          data: data as any,
-        },
-        {
-          onSuccess: () => {
-            reset(getValues());
-            toast.success(t('toasts.detailDraftSavedSuccess'));
-            setSaveAction(null);
-          },
-          onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.detailDraftSaveFailed'));
-            setSaveAction(null);
-          },
-        },
-      );
-    } else {
-      createSupportingData(
-        {
-          supportingId: supportingId!,
-          data: data as any,
-        },
-        {
-          onSuccess: async (response: any) => {
-            await photoSectionRef.current?.linkImagesToDetail(
-              response.supportingId ?? supportingId!,
-              response.id,
-            );
-            toast.success(t('toasts.detailDraftSavedSuccess'));
-            setSaveAction(null);
-            skipWarning();
-            navigate(
-              `/standalone/supporting-data-maintenance/${response.supportingId}/data/${response.id}`,
-            );
-          },
-          onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.detailDraftSaveFailed'));
-            setSaveAction(null);
-          },
-        },
-      );
-    }
-  };
-
-  if (isLoading || (isEditMode && !supportingData)) {
+  if (isLoading || (hasSupportingId && !supportingData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -226,6 +175,7 @@ export function CreateSupportingDataPage() {
                 <SupportingDataDetailPhotoSection
                   ref={photoSectionRef}
                   supportingId={supportingId!}
+                  disabled={!hasAuthorityToEdit && hasSupportingId}
                   detailId={id}
                   images={supportingData?.images}
                 />
@@ -250,7 +200,9 @@ export function CreateSupportingDataPage() {
 
               {/* Supporting Data Form */}
               <Section id="supporting-data-detail" anchor className="flex flex-col gap-6 min-w-0">
-                <SupportingDataMaintenanceDetailForm />
+                <SupportingDataMaintenanceDetailForm
+                  disabled={!hasAuthorityToEdit && hasSupportingId}
+                />
               </Section>
             </div>
           </div>
@@ -261,14 +213,14 @@ export function CreateSupportingDataPage() {
               <CancelButton
                 fallbackPath={`/standalone/supporting-data-maintenance/${supportingId}`}
               />
-              {!isReadOnly && (
+              {hasAuthorityToEdit && (
                 <>
                   <ActionBar.Divider />
                   <ActionBar.UnsavedIndicator show={hasDirtyFields} />
                 </>
               )}
             </ActionBar.Left>
-            {!isReadOnly && (
+            {(hasAuthorityToEdit || !hasSupportingId) && (
               <ActionBar.Right>
                 <Button
                   type="submit"

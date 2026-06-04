@@ -63,63 +63,69 @@ export function SupportingDataMaintenanceListPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t, i18n } = useTranslation(['supportingDataMaintenance', 'common']);
 
-
-// ── Column config (local to this page, mirrors task/columnDefs pattern) ──
+  // ── Column config (local to this page, mirrors task/columnDefs pattern) ──
   type ColumnDef = {
     key: string;
     label: string;
+    sortField?: string;
     tdClassName?: string;
     render: (item: SupportingDataMaintenance) => React.ReactNode;
   };
 
-  const columns: ColumnDef[] = useMemo(() => [{
-    key: 'supportingNumber',
-    label: t('columns.supportingNumber'),
-    render: item => (
-      <Link
-        to={`/standalone/supporting-data-maintenance/${item.id}`}
-        onClick={e => e.stopPropagation()}
-        className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
-      >
-        {item.supportingNumber ?? '-'}
-      </Link>
-    ),
-  },
-    {
-      key: 'createdDate',
-      label: t('columns.createdDate'),
-      render: item => formatLocaleDateTime(item.createdDate, i18n.language),
-    },
-    {
-      key: 'importChannel',
-      label: t('columns.importChannel'),
-      render: item => (item.importChannel ? getImportChannelLabel(item.importChannel) : '-'),
-    },
-    {
-      key: 'sourceOfData',
-      label: t('columns.sourceOfData'),
-      render: item => (item.sourceOfData ? getSourceOfDataLabel(item.sourceOfData) : '-'),
-    },
-    {
-      key: 'lastModifiedBy',
-      label: t('columns.lastModifiedBy'),
-      render: item => item.lastModifiedBy ?? '-',
-    },
-    {
-      key: 'lastModifiedDate',
-      label: t('columns.lastModifiedDate'),
-      render: item => formatLocaleDateTime(item.lastModifiedDate, i18n.language),
-    },
-    {
-      key: 'status',
-      label: t('columns.status'),
-      tdClassName: 'px-4 py-3',
-      render: item => (
-        <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
-      ),
-    }], [t, i18n.language]);
-
-
+  const columns: ColumnDef[] = useMemo(
+    () => [
+      {
+        key: 'supportingNumber',
+        label: t('columns.supportingNumber'),
+        sortField: 'supportingNumber',
+        render: item => (
+          <Link
+            to={`/standalone/supporting-data-maintenance/${item.id}`}
+            onClick={e => e.stopPropagation()}
+            className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+          >
+            {item.supportingNumber ?? '-'}
+          </Link>
+        ),
+      },
+      {
+        key: 'createdDate',
+        label: t('columns.createdDate'),
+        sortField: 'createdDate',
+        render: item => formatLocaleDateTime(item.createdDate, i18n.language),
+      },
+      {
+        key: 'importChannel',
+        label: t('columns.importChannel'),
+        render: item => (item.importChannel ? getImportChannelLabel(item.importChannel) : '-'),
+      },
+      {
+        key: 'sourceOfData',
+        label: t('columns.sourceOfData'),
+        render: item => (item.sourceOfData ? getSourceOfDataLabel(item.sourceOfData) : '-'),
+      },
+      {
+        key: 'lastModifiedBy',
+        label: t('columns.lastModifiedBy'),
+        render: item => item.lastModifiedBy ?? '-',
+      },
+      {
+        key: 'lastModifiedDate',
+        label: t('columns.lastModifiedDate'),
+        render: item => formatLocaleDateTime(item.lastModifiedDate, i18n.language),
+      },
+      {
+        key: 'status',
+        label: t('columns.status'),
+        sortField: 'status',
+        tdClassName: 'px-4 py-3',
+        render: item => (
+          <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
+        ),
+      },
+    ],
+    [t, i18n.language],
+  );
 
   const STICKY_COLUMN_KEY = 'supportingNumber';
 
@@ -148,6 +154,35 @@ export function SupportingDataMaintenanceListPage() {
   const [filters, setFilters] = useState<GetSupportingDataMaintenanceListParams>(
     initRef.current.filters,
   );
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field)
+      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+    return (
+      <Icon
+        style="solid"
+        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
+        className="size-2.5 text-primary"
+      />
+    );
+  };
+
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
     x: 0,
@@ -192,7 +227,7 @@ export function SupportingDataMaintenanceListPage() {
   // Reset to first page whenever the effective query changes
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, activeTab, filters]);
+  }, [debouncedSearch, activeTab, filters, sortField, sortDirection]);
 
   // Sync search back to the URL so the view is shareable
   useEffect(() => {
@@ -212,6 +247,9 @@ export function SupportingDataMaintenanceListPage() {
   const requestListParams = {
     pageNumber,
     pageSize,
+    search: debouncedSearch || undefined,
+    sortBy: sortField ?? undefined,
+    sortDir: sortDirection,
     ...filters,
   };
 
@@ -470,14 +508,28 @@ export function SupportingDataMaintenanceListPage() {
               <tr className="bg-gray-50 border-b border-gray-200">
                 {columns.map(col => {
                   const isSticky = col.key === STICKY_COLUMN_KEY;
+                  const isActive = !!col.sortField && sortField === col.sortField;
                   const base =
                     'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
                   const thClass = isSticky
-                    ? `${base} sticky left-0 z-30 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                    : base;
+                    ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                    : col.sortField
+                      ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
+                      : base;
                   return (
-                    <th key={col.key} className={thClass}>
-                      {col.label}
+                    <th
+                      key={col.key}
+                      onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
+                      className={thClass}
+                    >
+                      {col.sortField ? (
+                        <div className="flex items-center gap-1">
+                          {col.label}
+                          <SortIcon field={col.sortField} />
+                        </div>
+                      ) : (
+                        col.label
+                      )}
                     </th>
                   );
                 })}

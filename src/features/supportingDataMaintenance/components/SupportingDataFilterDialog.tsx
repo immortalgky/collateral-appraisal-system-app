@@ -4,7 +4,7 @@ import type { SupportingDataDateType, SupportingDataParams } from '../api/types'
 import Modal from '@/shared/components/Modal';
 import { Button, DateInput, Icon, TextInput } from '@/shared/components';
 import clsx from 'clsx';
-import { DATE_TYPE_OPTIONS } from '../constants/parameters';
+import { DATE_TYPE_OPTIONS, STATUS_PARAMS } from '../constants/parameters';
 
 import { useTranslation } from 'react-i18next';
 
@@ -64,13 +64,12 @@ export function SupportingDataFilterDialog({
   const [values, setValues] = useState<SupportingDataParams>(initialValues);
   const [dateRangeError, setDateRangeError] = useState<string | null>(null);
 
-  const statusOptions = [
-    { value: 'Draft', label: t('filterDialog.statusOptions.Draft') },
-    { value: 'Pending', label: t('filterDialog.statusOptions.Pending') },
-    { value: 'Approved', label: t('filterDialog.statusOptions.Approved') },
-    { value: 'Cancelled', label: t('filterDialog.statusOptions.Cancelled') },
-    { value: 'Reject', label: t('filterDialog.statusOptions.Reject') },
-  ];
+  // Driven by the single source of truth (constants/enums.ts via parameters.ts).
+  // Labels are i18n keys named after the status code, e.g. filterDialog.statusOptions.Rejected.
+  const statusOptions = STATUS_PARAMS.map(s => ({
+    value: s.value,
+    label: t(`filterDialog.statusOptions.${s.value}`),
+  }));
 
   useEffect(() => {
     if (open) {
@@ -120,7 +119,9 @@ export function SupportingDataFilterDialog({
             options={statusOptions}
             placeholder={t('filterDialog.statusPlaceholder')}
             value={values.status}
-            onChange={status => setValues(v => ({ ...v, status }))}
+            onChange={status =>
+              setValues(v => ({ ...v, status: status as SupportingDataParams['status'] }))
+            }
           />
         </section>
 
