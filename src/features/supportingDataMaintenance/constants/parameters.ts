@@ -1,4 +1,15 @@
 import type { ListBoxItem } from '@/shared/components';
+import { SUPPORTING_DECISION, SUPPORTING_STATUS } from './enums';
+
+// Re-export so callers can keep using `from '../constants/parameters'` for these.
+export {
+  SUPPORTING_STATUS,
+  SUPPORTING_DECISION,
+  ARCHIVED_STATUSES,
+  REMOVABLE_STATUSES,
+  REMARK_REQUIRED_DECISIONS,
+} from './enums';
+export type { SupportingStatus, SupportingDecision } from './enums';
 
 export const APPRAISAL_COMPANY_PARAMS: ListBoxItem[] = [
   { value: '01', label: 'Company A', id: '', isActive: true },
@@ -31,25 +42,21 @@ export const SOURCE_OF_DATA_PARAMS: { value: string; label: string }[] = [
   { value: '2', label: 'Appraisal Company' },
 ];
 
-export const STATUS_PARAMS: { value: string; label: string }[] = [
-  { value: 'Draft', label: 'Draft' },
-  { value: 'Pending', label: 'Pending' },
-  { value: 'Approved', label: 'Approved' },
-  { value: 'Cancelled', label: 'Cancelled' },
-  { value: 'Rejected', label: 'Rejected' },
-  { value: 'RoutedBack', label: 'Routed Back' },
-];
+export const STATUS_PARAMS = [
+  { value: SUPPORTING_STATUS.Draft, label: 'Draft' },
+  { value: SUPPORTING_STATUS.Pending, label: 'Pending' },
+  { value: SUPPORTING_STATUS.Approved, label: 'Approved' },
+  { value: SUPPORTING_STATUS.Cancelled, label: 'Cancelled' },
+  { value: SUPPORTING_STATUS.Rejected, label: 'Rejected' },
+  { value: SUPPORTING_STATUS.RoutedBack, label: 'Routed Back' },
+] as const;
 
-export const ARCHIVED_STATUSES = new Set(['Approved', 'Cancelled', 'Rejected']);
-
-export const REMOVABLE_STATUSES = new Set(['Approved', 'Rejected', 'Cancelled', 'Draft']);
-
-export const DECISION_PARAMS: { value: string; label: string }[] = [
-  { value: 'Approved', label: 'Approve' },
-  { value: 'Cancelled', label: 'Cancel' },
-  { value: 'Rejected', label: 'Reject' },
-  { value: 'RoutedBack', label: 'Route Back' },
-];
+export const DECISION_PARAMS = [
+  { value: SUPPORTING_DECISION.Approved, label: 'Approve' },
+  { value: SUPPORTING_DECISION.Cancelled, label: 'Cancel' },
+  { value: SUPPORTING_DECISION.Rejected, label: 'Reject' },
+  { value: SUPPORTING_DECISION.RoutedBack, label: 'Route Back' },
+] as const;
 
 export const DATE_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'createdDate', label: 'Created Date' },

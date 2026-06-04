@@ -34,7 +34,7 @@ import {
 } from '../api';
 import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
-import { ARCHIVED_STATUSES } from '../constants/parameters';
+import { ARCHIVED_STATUSES, SUPPORTING_STATUS } from '../constants/parameters';
 import { useTranslation } from 'react-i18next';
 
 function SupportingDataMaintenanceDetailListPageSkeleton() {
@@ -284,9 +284,7 @@ export function SupportingDataMaintenanceDetailListPage() {
           navigate(`/standalone/supporting-data-maintenance`);
         },
         onError: (error: any) => {
-          toast.error(
-            error.apiError?.detail || t('toasts.updateFailed')
-          );
+          toast.error(error.apiError?.detail || t('toasts.updateFailed'));
           setSaveAction(null);
         },
       },
@@ -307,9 +305,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || t('toasts.updateFailed'),
-            );
+            toast.error(error.apiError?.detail || t('toasts.updateFailed'));
             setSaveAction(null);
           },
         },
@@ -355,28 +351,31 @@ export function SupportingDataMaintenanceDetailListPage() {
   };
 
   const handleSaveDraft = async () => {
+    setSaveAction('draft');
+
     const supportingDataValues = getSupportingValues();
-    const decisionData = hasAuthorityToDecision ? decisionMethods.getValues() : null;
-    console.log('Save draft:', { supportingData, decisionData });
+
+    const payload = {
+      ...supportingDataValues,
+    };
+
     if (hasSupportingId) {
       updateDraftSupportingData(
-        { supportingId: supportingId!, data: supportingData as any },
+        { supportingId: supportingId!, data: payload as any },
         {
           onSuccess: () => {
             toast.success(t('toasts.updatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || t('toasts.updateFailed'),
-            );
+            toast.error(error.apiError?.detail || t('toasts.updateFailed'));
             setSaveAction(null);
           },
         },
       );
     } else {
       createDraftSupportingData(
-        { data: supportingData as any },
+        { data: payload as any },
         {
           onSuccess: data => {
             toast.success(t('toasts.createdSuccess'));
@@ -384,9 +383,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             navigate(`/standalone/supporting-data-maintenance/${data.supportingId}`);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || t('toasts.createFailed'),
-            );
+            toast.error(error.apiError?.detail || t('toasts.createFailed'));
             setSaveAction(null);
           },
         },
@@ -438,7 +435,10 @@ export function SupportingDataMaintenanceDetailListPage() {
             >
               <div className="flex-1 flex flex-col gap-6">
                 <div className="grid grid-cols-12 gap-4">
-                  <FormFields fields={getSupportingDataFields(t)} disabled={!hasAuthorityToEdit && hasSupportingId}/>
+                  <FormFields
+                    fields={getSupportingDataFields(t)}
+                    disabled={!hasAuthorityToEdit && hasSupportingId}
+                  />
                 </div>
               </div>
             </FormCard>
@@ -447,7 +447,7 @@ export function SupportingDataMaintenanceDetailListPage() {
           {/* Remark from routedback */}
           {supportingData?.remark && (
             <Alert
-              variant={status === 'Approved' ? 'success' : 'danger'}
+              variant={status === SUPPORTING_STATUS.Approved ? 'success' : 'danger'}
               title={`Remark`}
               dismissible={false}
             >
@@ -501,7 +501,7 @@ export function SupportingDataMaintenanceDetailListPage() {
                     >
                       <Icon style="solid" name="plus" className="size-4" />
                       {t('actions.addItem')}
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
@@ -524,7 +524,12 @@ export function SupportingDataMaintenanceDetailListPage() {
         <FormProvider {...decisionMethods}>
           <div className="flex flex-col gap-4 pr-2">
             <Section id="supporting-data-decision">
-              <FormCard title={t('formSections.decisionTitle')} subtitle="" icon="paper-plane" iconColor="blue">
+              <FormCard
+                title={t('formSections.decisionTitle')}
+                subtitle=""
+                icon="paper-plane"
+                iconColor="blue"
+              >
                 <div className="flex-1 flex flex-col gap-6">
                   <div className="grid grid-cols-12 gap-4">
                     <FormFields fields={getDecisionFields(t)} />
@@ -541,18 +546,20 @@ export function SupportingDataMaintenanceDetailListPage() {
         <ActionBar.Left>
           <CancelButton fallbackPath="/standalone/supporting-data-maintenance" />
         </ActionBar.Left>
-        {(hasAuthorityToEdit || hasAuthorityToDecision || !hasSupportingId) && (
-          <ActionBar.Right>
+        <ActionBar.Right>
+          {(hasAuthorityToEdit || !hasSupportingId) && (
             <Button
               variant="ghost"
               type="button"
-              onClick={handleSaveDraft}
+              onClick={() => handleSaveDraft()}
               isLoading={isPending && saveAction === 'draft'}
               disabled={isPending}
             >
               <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
               {t('actions.saveDraft')}
             </Button>
+          )}
+          {(hasAuthorityToEdit || hasAuthorityToDecision || !hasSupportingId) && (
             <Button
               type="button"
               onClick={() => handleFormSubmit()}
@@ -562,8 +569,8 @@ export function SupportingDataMaintenanceDetailListPage() {
             >
               {t('actions.submit')}
             </Button>
-          </ActionBar.Right>
-        )}
+          )}
+        </ActionBar.Right>
       </ActionBar>
 
       {/* Delete confirmation */}

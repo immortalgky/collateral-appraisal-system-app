@@ -1,5 +1,6 @@
 import { type FormField } from '@/shared/components/form';
 import { APPRAISAL_COMPANY_PARAMS, DECISION_PARAMS } from '../constants/parameters';
+import { REMARK_REQUIRED_DECISIONS } from '../constants/enums';
 import type { TFunction } from 'i18next';
 
 type T = TFunction<'supportingDataMaintenance'>;
@@ -55,7 +56,7 @@ export const getDecisionFields = (t: T): FormField[] => [
     wrapperClassName: 'col-span-12',
     requiredWhen: {
       field: 'decision',
-      is: ['Cancelled', 'Rejected', 'RoutedBack'],
+      is: [...REMARK_REQUIRED_DECISIONS],
       operator: 'in',
     },
     maxLength: 4000,

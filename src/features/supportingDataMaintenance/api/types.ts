@@ -1,3 +1,5 @@
+import type { SupportingDecision, SupportingStatus } from '../constants/enums';
+
 export interface CreateSupportingDataDetailRequest {
   propertyName: string | null;
   developer: string | null;
@@ -32,7 +34,7 @@ export interface GetSupportingDataMaintenanceListParams {
   search?: string;
   sortBy?: string;
   sortDir?: string;
-  status?: string;
+  status?: SupportingStatus;
   supportingNumber?: string;
   dateType?: SupportingDataDateType;
   dateFrom?: string;
@@ -45,7 +47,7 @@ export interface SupportingDataMaintenance {
   importDate?: string;
   importChannel?: string;
   movement?: string;
-  status?: string;
+  status?: SupportingStatus;
   createdDate: string;
   lastModifiedDate: string;
   lastModifiedBy: string;
@@ -78,7 +80,7 @@ export type SupportingDataDateType = 'createdDate' | 'lastModifiedDate';
 export interface SupportingDataParams {
   supportingNumber?: string;
   importChannel?: string;
-  status?: string;
+  status?: SupportingStatus;
   dateType?: SupportingDataDateType;
   dateFrom?: string;
   dateTo?: string;
@@ -102,7 +104,7 @@ export interface GetSupportingDataByIdType {
   supportingNumber?: string;
   hasAuthorityToEdit: boolean;
   hasAuthorityToDecision: boolean;
-  status: string;
+  status: SupportingStatus;
   importChannel: string;
   importDate: string;
   sourceOfData: string;
@@ -118,7 +120,7 @@ export interface UpdateSupportingDataByIdType {
   importDate: string;
   sourceOfData: string;
   description: string;
-  decision?: string;
+  decision?: SupportingDecision;
   remark?: string;
 }
 
@@ -130,6 +132,6 @@ export interface CreateSupportingDataType {
 }
 
 export interface CreateDecisionDataType {
-  decision: string;
+  decision: SupportingDecision;
   remark?: string;
 }
