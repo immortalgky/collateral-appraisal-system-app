@@ -11,6 +11,9 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useGetProjectUnits, useUpdateUnitSaleStatus } from '../api/blockUnitMaintenance';
 import { UnitRow } from '../components/UnitRow';
+import { SoldDonut } from '../components/SoldDonut';
+import { ModelBreakdown } from '../components/ModelBreakdown';
+import type { ModelStat } from '../components/ModelBreakdown';
 import { isCondo } from '@/features/blockProject/types';
 import type { ProjectType, ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
 
@@ -22,105 +25,6 @@ function projectTypePillClass(code: ProjectType): string {
   if (code === 'U') return 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200';
   return 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200';
 }
-
-// ─── Donut gauge ──────────────────────────────────────────────────────────────
-
-const SoldDonut = ({ sold, total }: { sold: number; total: number }) => {
-  const { t } = useTranslation('blockUnitMaintenance');
-  const pct = total > 0 ? (sold / total) * 100 : 0;
-  const size = 180;
-  const stroke = 18;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const arcFraction = 0.75;
-  const visibleLen = circumference * arcFraction;
-  const filledLen = (pct / 100) * visibleLen;
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-[135deg]">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#e5e7eb"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${visibleLen} ${circumference}`}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="url(#donutGrad)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${filledLen} ${circumference}`}
-        />
-        <defs>
-          <linearGradient id="donutGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#6366f1" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-xs text-gray-500">{t('detail.donutSoldLabel')}</span>
-        <span className="text-2xl font-semibold text-gray-900 tabular-nums mt-0.5">
-          {pct.toFixed(1)}%
-        </span>
-        <span className="text-xs text-gray-500 tabular-nums mt-0.5">
-          {sold} / {total}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// ─── Model breakdown panel ───────────────────────────────────────────────────
-
-interface ModelStat {
-  modelName: string;
-  count: number;
-}
-
-const ModelBreakdown = ({
-  heading,
-  stats,
-  emptyLabel,
-}: {
-  heading: string;
-  stats: ModelStat[];
-  emptyLabel: string;
-}) => {
-  const { t } = useTranslation('blockUnitMaintenance');
-  return (
-    <div>
-      <h4 className="text-sm font-semibold text-gray-900 mb-2">{heading}</h4>
-      <div className="border-t border-gray-200">
-        {stats.length === 0 ? (
-          <div className="py-3 text-xs text-gray-400">{emptyLabel}</div>
-        ) : (
-          stats.map(s => (
-            <div
-              key={s.modelName}
-              className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-            >
-              <span className="text-sm text-gray-700">{s.modelName}</span>
-              <div className="flex items-center gap-2 text-sm tabular-nums">
-                <span className="text-gray-700 font-medium">{s.count.toLocaleString('th-TH')}</span>
-                <span className="text-xs text-gray-400 w-8 text-right">
-                  {t('detail.unitSuffix')}
-                </span>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
 
 // ─── Helper: filter + group ──────────────────────────────────────────────────
 
@@ -484,14 +388,16 @@ const BlockUnitMaintenanceDetailPage = () => {
           heading={t('detail.sold')}
           stats={soldStats}
           emptyLabel={t('detail.noSold')}
+          unitSuffix={t('detail.unitSuffix')}
         />
         <div className="flex justify-center">
-          <SoldDonut sold={soldCount} total={totalUnits} />
+          <SoldDonut sold={soldCount} total={totalUnits} soldLabel={t('detail.donutSoldLabel')} />
         </div>
         <ModelBreakdown
           heading={t('detail.available')}
           stats={availableStats}
           emptyLabel={t('detail.noAvailable')}
+          unitSuffix={t('detail.unitSuffix')}
         />
       </div>
 

@@ -33,6 +33,7 @@ import enFeeApprovalConfig from './locales/en/feeApprovalConfig.json';
 import enEvaluationConfig from './locales/en/evaluationConfig.json';
 import enBlockProject from './locales/en/blockProject.json';
 import enWorkflowBuilder from './locales/en/workflowBuilder.json';
+import enBlockReappraisal from './locales/en/blockReappraisal.json';
 
 import thCommon from './locales/th/common.json';
 import thNav from './locales/th/nav.json';
@@ -64,6 +65,7 @@ import thFeeApprovalConfig from './locales/th/feeApprovalConfig.json';
 import thEvaluationConfig from './locales/th/evaluationConfig.json';
 import thBlockProject from './locales/th/blockProject.json';
 import thWorkflowBuilder from './locales/th/workflowBuilder.json';
+import thBlockReappraisal from './locales/th/blockReappraisal.json';
 
 import zhCommon from './locales/zh/common.json';
 import zhNav from './locales/zh/nav.json';
@@ -89,6 +91,7 @@ import zhPricingAnalysis from './locales/zh/pricingAnalysis.json';
 import zhAppraisal from './locales/zh/appraisal.json';
 import zhBlockProject from './locales/zh/blockProject.json';
 import zhWorkflowBuilder from './locales/zh/workflowBuilder.json';
+import zhBlockReappraisal from './locales/zh/blockReappraisal.json';
 
 export const defaultNS = 'common' as const;
 
@@ -124,6 +127,7 @@ export const resources = {
     evaluationConfig: enEvaluationConfig,
     blockProject: enBlockProject,
     workflowBuilder: enWorkflowBuilder,
+    blockReappraisal: enBlockReappraisal,
   },
   th: {
     common: thCommon,
@@ -156,6 +160,7 @@ export const resources = {
     evaluationConfig: thEvaluationConfig,
     blockProject: thBlockProject,
     workflowBuilder: thWorkflowBuilder,
+    blockReappraisal: thBlockReappraisal,
   },
   zh: {
     common: zhCommon,
@@ -185,9 +190,12 @@ export const resources = {
     userManagement: zhUserManagement,
     pricingAnalysis: zhPricingAnalysis,
     appraisal: zhAppraisal,
+    feeAppointmentApproval: enFeeAppointmentApproval,
+    feeApprovalConfig: enFeeApprovalConfig,
     evaluationConfig: enEvaluationConfig,
     blockProject: zhBlockProject,
     workflowBuilder: zhWorkflowBuilder,
+    blockReappraisal: zhBlockReappraisal,
   },
 } as const;
 

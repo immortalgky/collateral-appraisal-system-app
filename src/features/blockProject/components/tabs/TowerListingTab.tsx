@@ -116,7 +116,7 @@ function TowerCard({ tower, viewMode, thumbnailSrc, readOnly, onClick, onDelete 
             type="button"
             onClick={onDelete}
             className="absolute top-2 right-2 p-1.5 rounded-md bg-white/80 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-            title="Delete tower"
+            title={t('towerListing.aria.deleteTower')}
           >
             <Icon name="trash-can" style="regular" className="size-3.5" />
           </button>

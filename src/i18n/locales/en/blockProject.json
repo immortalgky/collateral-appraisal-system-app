@@ -238,6 +238,12 @@
       "numFloors": "No. of Floors",
       "landAreaSqWa": "Land Area (Sq.Wa)"
     },
+    "reappraisal": {
+      "title": "Update Units from Revised Excel (Re-match)",
+      "hint": "Upload an updated Excel to re-match seeded units. Rows present in the file stay unsold; rows missing are auto-marked sold. New rows are counted but not added.",
+      "normalUploadNote": "Use this upload to add new unit inventory only.",
+      "resultToast": "Re-match complete: {{matched}} unsold, {{autoSold}} auto-sold, {{added}} new (not added)"
+    },
     "aria": {
       "deleteUpload": "Delete upload"
     }
@@ -622,6 +628,12 @@
   },
   "errors": {
     "failedToLoadProject": "Failed to load project"
+  },
+  "projectTypePill": {
+    "placeholder": "Select project type"
+  },
+  "radioGroup": {
+    "specifyPlaceholder": "Please specify"
   },
   "partialDate": {
     "year": "Year",
