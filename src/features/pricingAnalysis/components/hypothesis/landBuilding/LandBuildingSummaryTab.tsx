@@ -6,6 +6,7 @@
  * Computed fields are overlaid from previewSummary (read-only display).
  */
 import { useFormContext, Controller, useFieldArray, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import { fmt } from '../../../domain/formatters';
 import type { LandBuildingFormValues } from '../../../schemas/hypothesisForm';
@@ -32,7 +33,7 @@ import {
 } from '../_shared/summaryAtoms';
 import { HypothesisResidualWaterfall } from '../../viz/HypothesisResidualWaterfall';
 import { HypothesisCostDonut } from '../../viz/HypothesisCostDonut';
-import { LB_TIPS } from '../_shared/hypothesisTooltips';
+import { getLbTooltips } from '../_shared/hypothesisTooltips';
 
 interface LandBuildingSummaryTabProps {
   previewSummary?: LandBuildingSummaryDto | null;
@@ -51,6 +52,8 @@ export function LandBuildingSummaryTab({
   costItems,
   isCalculating,
 }: LandBuildingSummaryTabProps) {
+  const { t } = useTranslation('pricingAnalysis');
+  const LB_TIPS = getLbTooltips(t);
   const { control } = useFormContext<LandBuildingFormValues>();
   const modelList = models ? Object.values(models) : [];
 

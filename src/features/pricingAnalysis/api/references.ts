@@ -33,7 +33,8 @@ const SUBJECT_TYPE_NAME_TO_VALUE: Record<string, PricingAnalysisSubjectType> = {
 function normalizeSubjectType(raw: unknown): PricingAnalysisSubjectType {
   if (typeof raw === 'number') return raw as PricingAnalysisSubjectType;
   if (typeof raw === 'string') {
-    if (raw in SUBJECT_TYPE_NAME_TO_VALUE) return SUBJECT_TYPE_NAME_TO_VALUE[raw];
+    if (Object.prototype.hasOwnProperty.call(SUBJECT_TYPE_NAME_TO_VALUE, raw))
+      return SUBJECT_TYPE_NAME_TO_VALUE[raw];
     const asNum = Number(raw);
     if (!Number.isNaN(asNum)) return asNum as PricingAnalysisSubjectType;
   }

@@ -11,6 +11,7 @@ import {
   Legend,
   ReferenceLine,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 import type { LeaseholdTableResult } from '../domain/calculateLeasehold';
 
 interface LeaseholdChartProps {
@@ -28,61 +29,67 @@ const fmtTooltip = (n: number): string =>
 
 const tooltipStyle = { fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function IncomeTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  const row = payload[0]?.payload ?? {};
-  const rental = row.rentalIncome ?? 0;
-  const netPv = row.netPvRental ?? 0;
-  const cumPct = row.cumulativePvPct ?? 0;
-  const reversion = row.reversionPvToday ?? 0;
-  return (
-    <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
-      <div className="text-gray-500 mb-1">Year {Number(label).toFixed(1)}</div>
-      <div style={{ color: '#f97316' }}>Rental Income: {fmtTooltip(rental)}</div>
-      <div style={{ color: '#22c55e' }}>Net PV Rental: {fmtTooltip(netPv)}</div>
-      <div className="border-t border-gray-100 mt-1 pt-1 font-medium text-gray-700">
-        Cumulative PV: {cumPct.toFixed(1)}%
-      </div>
-      <div style={{ color: '#6366f1' }} className="text-[10px]">
-        + Reversion PV (constant): {fmtTooltip(reversion)}
-      </div>
-    </div>
-  );
-}
+type TFn = (key: string) => string;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function PropertyTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  // The full data row is always available on payload[0].payload, even for
-  // fields that aren't bound to a chart series.
-  const row = payload[0]?.payload ?? {};
-  const landPv = row.landValuePv ?? 0;
-  const buildingPv = row.buildingAfterDeprePv ?? 0;
-  const totalPv = landPv + buildingPv;
-  const landNominal = row.landValue ?? 0;
-  const buildingNominal = row.buildingAfterDepre ?? 0;
-  const totalNominal = landNominal + buildingNominal;
-  const encumbered = row.encumberedCollateralValue ?? 0;
-  return (
-    <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
-      <div className="text-gray-500 mb-1">Year {Number(label).toFixed(1)}</div>
-      <div style={{ color: '#22c55e' }}>Land (PV today): {fmtTooltip(landPv)}</div>
-      <div style={{ color: '#3b82f6' }}>Building (PV today): {fmtTooltip(buildingPv)}</div>
-      <div className="font-medium text-gray-700">Total L&B (PV today): {fmtTooltip(totalPv)}</div>
-      <div className="border-t border-gray-100 mt-1 pt-1 text-[10px] text-gray-400">
-        <div>Land (nominal): {fmtTooltip(landNominal)}</div>
-        <div>Building (nominal): {fmtTooltip(buildingNominal)}</div>
-        <div>Total L&B (nominal): {fmtTooltip(totalNominal)}</div>
-      </div>
-      <div className="border-t border-gray-100 mt-1 pt-1" style={{ color: '#6366f1' }}>
-        <span className="font-medium">Encumbered Collateral: {fmtTooltip(encumbered)}</span>
-        <div className="text-[10px] text-gray-500 font-normal">
-          PV(remaining rent) + PV(reversion)
+function makeIncomeTooltip(t: TFn) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function IncomeTooltip({ active, payload, label }: any) {
+    if (!active || !payload?.length) return null;
+    const row = payload[0]?.payload ?? {};
+    const rental = row.rentalIncome ?? 0;
+    const netPv = row.netPvRental ?? 0;
+    const cumPct = row.cumulativePvPct ?? 0;
+    const reversion = row.reversionPvToday ?? 0;
+    return (
+      <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
+        <div className="text-gray-500 mb-1">{t('viz.leaseholdChart.tooltipYear')} {Number(label).toFixed(1)}</div>
+        <div style={{ color: '#f97316' }}>{t('viz.leaseholdChart.rentalIncome')}: {fmtTooltip(rental)}</div>
+        <div style={{ color: '#22c55e' }}>{t('viz.leaseholdChart.netPvRental')}: {fmtTooltip(netPv)}</div>
+        <div className="border-t border-gray-100 mt-1 pt-1 font-medium text-gray-700">
+          {t('viz.leaseholdChart.cumulativePv')}: {cumPct.toFixed(1)}%
+        </div>
+        <div style={{ color: '#6366f1' }} className="text-[10px]">
+          + {t('viz.leaseholdChart.reversionPvConstant')}: {fmtTooltip(reversion)}
         </div>
       </div>
-    </div>
-  );
+    );
+  };
+}
+
+function makePropertyTooltip(t: TFn) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return function PropertyTooltip({ active, payload, label }: any) {
+    if (!active || !payload?.length) return null;
+    // The full data row is always available on payload[0].payload, even for
+    // fields that aren't bound to a chart series.
+    const row = payload[0]?.payload ?? {};
+    const landPv = row.landValuePv ?? 0;
+    const buildingPv = row.buildingAfterDeprePv ?? 0;
+    const totalPv = landPv + buildingPv;
+    const landNominal = row.landValue ?? 0;
+    const buildingNominal = row.buildingAfterDepre ?? 0;
+    const totalNominal = landNominal + buildingNominal;
+    const encumbered = row.encumberedCollateralValue ?? 0;
+    return (
+      <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
+        <div className="text-gray-500 mb-1">{t('viz.leaseholdChart.tooltipYear')} {Number(label).toFixed(1)}</div>
+        <div style={{ color: '#22c55e' }}>{t('viz.leaseholdChart.landPvToday')}: {fmtTooltip(landPv)}</div>
+        <div style={{ color: '#3b82f6' }}>{t('viz.leaseholdChart.buildingPvToday')}: {fmtTooltip(buildingPv)}</div>
+        <div className="font-medium text-gray-700">{t('viz.leaseholdChart.totalLbPvToday')}: {fmtTooltip(totalPv)}</div>
+        <div className="border-t border-gray-100 mt-1 pt-1 text-[10px] text-gray-400">
+          <div>{t('viz.leaseholdChart.landNominal')}: {fmtTooltip(landNominal)}</div>
+          <div>{t('viz.leaseholdChart.buildingNominal')}: {fmtTooltip(buildingNominal)}</div>
+          <div>{t('viz.leaseholdChart.totalLbNominal')}: {fmtTooltip(totalNominal)}</div>
+        </div>
+        <div className="border-t border-gray-100 mt-1 pt-1" style={{ color: '#6366f1' }}>
+          <span className="font-medium">{t('viz.leaseholdChart.encumberedCollateral')}: {fmtTooltip(encumbered)}</span>
+          <div className="text-[10px] text-gray-500 font-normal">
+            {t('viz.leaseholdChart.encumberedNote')}
+          </div>
+        </div>
+      </div>
+    );
+  };
 }
 
 /** Generate integer year ticks across the chart's year range (every 5y by default). */
@@ -96,6 +103,11 @@ function buildYearTicks(minYear: number, maxYear: number, step = 5): number[] {
 }
 
 export function LeaseholdChart({ result }: LeaseholdChartProps) {
+  const { t } = useTranslation('pricingAnalysis');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const IncomeTooltip = makeIncomeTooltip(t as any);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const PropertyTooltip = makePropertyTooltip(t as any);
   const rows = result.rows;
   const totalNetPv = rows.reduce((sum, r) => sum + r.netCurrentRentalIncome, 0);
 
@@ -158,9 +170,9 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
       {/* Left: Property Value */}
       <div className="rounded-lg border border-gray-200 p-3">
         <div className="text-[11px] font-medium text-gray-500">
-          Collateral Value Over Lease Term
+          {t('viz.leaseholdChart.collateralValueTitle')}
         </div>
-        <div className="text-[9px] text-gray-400 mb-1">All values in today's PV baht</div>
+        <div className="text-[9px] text-gray-400 mb-1">{t('viz.leaseholdChart.pvBahtNote')}</div>
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart
             data={data}
@@ -182,7 +194,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
             <Area
               type="monotone"
               dataKey="buildingAfterDeprePv"
-              name="Building (PV today)"
+              name={t('viz.leaseholdChart.buildingPvToday')}
               stackId="property"
               stroke="#3b82f6"
               fill="#3b82f6"
@@ -192,7 +204,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
             <Area
               type="monotone"
               dataKey="landValuePv"
-              name="Total L&B (PV today)"
+              name={t('viz.leaseholdChart.totalLbPvToday')}
               stackId="property"
               stroke="#22c55e"
               fill="#22c55e"
@@ -202,7 +214,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
             <Line
               type="monotone"
               dataKey="encumberedCollateralValue"
-              name="Encumbered Collateral (PV today)"
+              name={t('viz.leaseholdChart.encumberedCollateralPv')}
               stroke="#6366f1"
               strokeWidth={2}
               strokeDasharray="4 3"
@@ -213,7 +225,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               stroke="#ef4444"
               strokeDasharray="3 3"
               label={{
-                value: 'Lease End',
+                value: t('viz.leaseholdChart.leaseEnd'),
                 position: 'insideTopRight',
                 fontSize: 9,
                 fill: '#ef4444',
@@ -225,10 +237,10 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
 
       {/* Right: Leasehold Value Composition */}
       <div className="rounded-lg border border-gray-200 p-3">
-        <div className="text-[11px] font-medium text-gray-500">Leasehold Value Composition</div>
+        <div className="text-[11px] font-medium text-gray-500">{t('viz.leaseholdChart.compositionTitle')}</div>
         <div className="text-[9px] text-gray-400 mb-1">
-          Rent: {fmtCompact(totalRentPv)} ({rentPercent.toFixed(0)}%) · Reversion:{' '}
-          {fmtCompact(reversionPvToday)} ({reversionPercent.toFixed(0)}%) · Total:{' '}
+          {t('viz.leaseholdChart.compositionRent')}: {fmtCompact(totalRentPv)} ({rentPercent.toFixed(0)}%) · {t('viz.leaseholdChart.compositionReversion')}:{' '}
+          {fmtCompact(reversionPvToday)} ({reversionPercent.toFixed(0)}%) · {t('viz.leaseholdChart.compositionTotal')}:{' '}
           {fmtCompact(totalLeaseholdValuePv)}
         </div>
         <ResponsiveContainer width="100%" height={200}>
@@ -261,7 +273,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
             <Bar
               yAxisId="left"
               dataKey="rentalIncome"
-              name="Rental Income"
+              name={t('viz.leaseholdChart.rentalIncome')}
               fill="#f97316"
               fillOpacity={0.6}
               radius={[2, 2, 0, 0]}
@@ -269,7 +281,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
             <Bar
               yAxisId="left"
               dataKey="netPvRental"
-              name="Net PV Rental"
+              name={t('viz.leaseholdChart.netPvRental')}
               fill="#22c55e"
               fillOpacity={0.6}
               radius={[2, 2, 0, 0]}
@@ -278,7 +290,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               yAxisId="right"
               type="monotone"
               dataKey="cumulativePvPct"
-              name="Cumulative PV %"
+              name={t('viz.leaseholdChart.cumulativePvPct')}
               stroke="#6366f1"
               strokeWidth={2}
               dot={false}

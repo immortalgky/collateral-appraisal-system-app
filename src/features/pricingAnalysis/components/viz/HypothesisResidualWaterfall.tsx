@@ -75,7 +75,7 @@ function buildSteps(
   const discountDrag = Math.max(0, remaining - finalRemaining);
 
   return [
-    { label: t('viz.residualWaterfall.revenuGdv'), value: revenue, type: 'start', targetId: 'hyp-section-revenue' },
+    { label: t('viz.residualWaterfall.revenueGdv'), value: revenue, type: 'start', targetId: 'hyp-section-revenue' },
     { label: t('viz.residualWaterfall.hardCost'), value: hard, type: 'subtract', targetId: 'hyp-section-hard' },
     { label: t('viz.residualWaterfall.softCost'), value: soft, type: 'subtract', targetId: 'hyp-section-soft' },
     { label: t('viz.residualWaterfall.govTax'), value: govTax, type: 'subtract', targetId: 'hyp-section-tax' },
