@@ -9,13 +9,16 @@
  */
 import { WaterfallChart, type WaterfallStep } from './WaterfallChart';
 import type { LandBuildingSummaryDto, CondominiumSummaryDto } from '../../types/hypothesis';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 type Props =
   | { variant: 'LandBuilding'; summary?: LandBuildingSummaryDto | null }
   | { variant: 'Condominium'; summary?: CondominiumSummaryDto | null };
 
 export function HypothesisResidualWaterfall(props: Props) {
-  const steps = buildSteps(props);
+  const { t } = useTranslation('pricingAnalysis');
+  const steps = buildSteps(props, t);
   if (!steps) return null;
 
   return (
@@ -23,14 +26,17 @@ export function HypothesisResidualWaterfall(props: Props) {
       steps={steps}
       title={
         props.variant === 'LandBuilding'
-          ? 'Residual Value Breakdown'
-          : 'Residual Value Breakdown (GDV → Final)'
+          ? t('viz.residualWaterfall.lb')
+          : t('viz.residualWaterfall.condo')
       }
     />
   );
 }
 
-function buildSteps(props: Props): WaterfallStep[] | null {
+function buildSteps(
+  props: Props,
+  t: TFunction<'pricingAnalysis'>,
+): WaterfallStep[] | null {
   if (props.variant === 'LandBuilding') {
     const s = props.summary;
     const revenue = s?.totalRevenue ?? 0;
@@ -45,14 +51,14 @@ function buildSteps(props: Props): WaterfallStep[] | null {
     const discountDrag = Math.max(0, current - final);
 
     return [
-      { label: 'Revenue', value: revenue, type: 'start', targetId: 'hyp-section-revenue' },
-      { label: 'Project Dev', value: devCost, type: 'subtract', targetId: 'hyp-section-dev' },
-      { label: 'Project Cost', value: projCost, type: 'subtract', targetId: 'hyp-section-project' },
-      { label: 'Gov Tax', value: govTax, type: 'subtract', targetId: 'hyp-section-tax' },
-      { label: 'Risk', value: risk, type: 'subtract', targetId: 'hyp-section-risk' },
-      { label: 'Current Value', value: current, type: 'total', targetId: 'hyp-section-final' },
-      { label: 'Discount', value: discountDrag, type: 'subtract', targetId: 'hyp-section-final' },
-      { label: 'Final Value', value: final, type: 'total', targetId: 'hyp-section-final' },
+      { label: t('viz.residualWaterfall.revenue'), value: revenue, type: 'start', targetId: 'hyp-section-revenue' },
+      { label: t('viz.residualWaterfall.projectDev'), value: devCost, type: 'subtract', targetId: 'hyp-section-dev' },
+      { label: t('viz.residualWaterfall.projectCost'), value: projCost, type: 'subtract', targetId: 'hyp-section-project' },
+      { label: t('viz.residualWaterfall.govTax'), value: govTax, type: 'subtract', targetId: 'hyp-section-tax' },
+      { label: t('viz.residualWaterfall.risk'), value: risk, type: 'subtract', targetId: 'hyp-section-risk' },
+      { label: t('viz.residualWaterfall.currentValue'), value: current, type: 'total', targetId: 'hyp-section-final' },
+      { label: t('viz.residualWaterfall.discount'), value: discountDrag, type: 'subtract', targetId: 'hyp-section-final' },
+      { label: t('viz.residualWaterfall.finalValue'), value: final, type: 'total', targetId: 'hyp-section-final' },
     ];
   }
 
@@ -69,15 +75,15 @@ function buildSteps(props: Props): WaterfallStep[] | null {
   const discountDrag = Math.max(0, remaining - finalRemaining);
 
   return [
-    { label: 'Revenue (GDV)', value: revenue, type: 'start', targetId: 'hyp-section-revenue' },
-    { label: 'Hard Cost', value: hard, type: 'subtract', targetId: 'hyp-section-hard' },
-    { label: 'Soft Cost', value: soft, type: 'subtract', targetId: 'hyp-section-soft' },
-    { label: 'Gov Tax', value: govTax, type: 'subtract', targetId: 'hyp-section-tax' },
-    { label: 'Risk & Profit', value: risk, type: 'subtract', targetId: 'hyp-section-risk' },
-    { label: 'Remaining', value: remaining, type: 'total', targetId: 'hyp-section-total-dev' },
-    { label: 'Discount', value: discountDrag, type: 'subtract', targetId: 'hyp-section-final' },
+    { label: t('viz.residualWaterfall.revenuGdv'), value: revenue, type: 'start', targetId: 'hyp-section-revenue' },
+    { label: t('viz.residualWaterfall.hardCost'), value: hard, type: 'subtract', targetId: 'hyp-section-hard' },
+    { label: t('viz.residualWaterfall.softCost'), value: soft, type: 'subtract', targetId: 'hyp-section-soft' },
+    { label: t('viz.residualWaterfall.govTax'), value: govTax, type: 'subtract', targetId: 'hyp-section-tax' },
+    { label: t('viz.residualWaterfall.riskProfit'), value: risk, type: 'subtract', targetId: 'hyp-section-risk' },
+    { label: t('viz.residualWaterfall.remaining'), value: remaining, type: 'total', targetId: 'hyp-section-total-dev' },
+    { label: t('viz.residualWaterfall.discount'), value: discountDrag, type: 'subtract', targetId: 'hyp-section-final' },
     {
-      label: 'Final Remaining',
+      label: t('viz.residualWaterfall.finalRemaining'),
       value: finalRemaining,
       type: 'total',
       targetId: 'hyp-section-final',

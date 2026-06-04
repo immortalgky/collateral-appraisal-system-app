@@ -22,6 +22,7 @@ interface DiscountedCashFlowCategoryProps {
   incomeAnalysisId?: string;
   hostMethodId?: string;
   marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }
 
 export function DiscountedCashFlowCategory({
@@ -37,6 +38,7 @@ export function DiscountedCashFlowCategory({
   incomeAnalysisId,
   hostMethodId,
   marketSurveys,
+  ensureIncomeAnalysisId,
 }: DiscountedCashFlowCategoryProps) {
   const { getValues, setValue, control } = useFormContext();
 
@@ -136,6 +138,7 @@ export function DiscountedCashFlowCategory({
               incomeAnalysisId={incomeAnalysisId}
               hostMethodId={hostMethodId}
               marketSurveys={marketSurveys}
+              ensureIncomeAnalysisId={ensureIncomeAnalysisId}
             />
           )}
 

@@ -1,16 +1,19 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 
-const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
-  required_error: `${fieldName} ${msg}`,
-  invalid_type_error: `${fieldName} ${msg}`,
-});
+// Static type-inference export (uses key-passthrough function — never an object)
+const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
 
 /** select surveys section */
-const ComparativeFactor = z
-  .object({
-    factorCode: z.string(requireMsg('Factor code')),
-  })
-  .passthrough();
+const ComparativeFactor = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+    })
+    .passthrough();
 
 /** WQS scoring section */
 const WQSSurveyScore = z
@@ -19,49 +22,81 @@ const WQSSurveyScore = z
   })
   .passthrough();
 
-const WQSScore = z.object({
-  factorCode: z.string(requireMsg('Factor code')),
-  weight: z.number(requireMsg('Weight')),
-  intensity: z.number(requireMsg('Intensity')),
-  surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
-    for (const [i, item] of items.entries()) {
-      if (item.surveyScore == null) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `Survey ${i + 1}'s score is required`, // 1-based index
-          path: [i, 'surveyScore'], // target the correct field
-        });
+const WQSScore = (t: TFunction<'pricingAnalysis'>) =>
+  z.object({
+    factorCode: z.string({
+      required_error: t('validation.factorCodeRequired'),
+      invalid_type_error: t('validation.factorCodeRequired'),
+    }),
+    weight: z.number({
+      required_error: t('validation.weightRequired'),
+      invalid_type_error: t('validation.weightRequired'),
+    }),
+    intensity: z.number({
+      required_error: t('validation.intensityRequired'),
+      invalid_type_error: t('validation.intensityRequired'),
+    }),
+    surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
+      for (const [i, item] of items.entries()) {
+        if (item.surveyScore == null) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t('validation.surveyScoreRequired', { n: i + 1 }),
+            path: [i, 'surveyScore'],
+          });
+        }
       }
-    }
-  }),
-  collateral: z.number(requireMsg('Collateral score')),
-});
+    }),
+    collateral: z.number({
+      required_error: t('validation.collateralScoreRequired'),
+      invalid_type_error: t('validation.collateralScoreRequired'),
+    }),
+  });
 
 /** Adjust final price section */
-const WQSFinalValue = z
-  .object({
-    finalValueRounded: z.number(requireMsg('Final value (rounded)')),
-    landValue: z.number(requireMsg('Land value')).optional(),
-    buildingCost: z.number(requireMsg('Building cost')).optional(),
-    appraisalPrice: z.number(requireMsg('Appraisal price')).optional(),
-  })
-  .passthrough();
+const WQSFinalValue = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      finalValueRounded: z.number({
+        required_error: t('validation.finalValueRoundedRequired'),
+        invalid_type_error: t('validation.finalValueRoundedRequired'),
+      }),
+      landValue: z
+        .number({
+          required_error: t('validation.landValueRequired'),
+          invalid_type_error: t('validation.landValueRequired'),
+        })
+        .optional(),
+      buildingCost: z.number().optional(),
+      appraisalPrice: z.number().optional(),
+    })
+    .passthrough();
 
-export const WQSDto = z
-  .object({
-    collateralType: z.string(requireMsg('Collateral type')),
-    pricingTemplateCode: z.string(requireMsg('Template')),
-    comparativeFactors: z.array(ComparativeFactor),
-    WQSScores: z.array(WQSScore),
-    WQSFinalValue: WQSFinalValue,
+export const makeWQSDto = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      collateralType: z.string({
+        required_error: t('validation.collateralTypeRequired'),
+        invalid_type_error: t('validation.collateralTypeRequired'),
+      }),
+      pricingTemplateCode: z.string({
+        required_error: t('validation.templateRequired'),
+        invalid_type_error: t('validation.templateRequired'),
+      }),
+      comparativeFactors: z.array(ComparativeFactor(t)),
+      WQSScores: z.array(WQSScore(t)),
+      WQSFinalValue: WQSFinalValue(t),
 
-    generateAt: z.string(),
-  })
-  .passthrough();
+      generateAt: z.string(),
+    })
+    .passthrough();
+
+// Static schema for type inference only — no runtime messages
+export const WQSDto = makeWQSDto(_t);
 
 export type WQSSurveyScoreFormType = z.infer<typeof WQSSurveyScore>;
-export type WQSScoreFormType = z.infer<typeof WQSScore>;
-export type WQSFinalValueFormType = z.infer<typeof WQSFinalValue>;
+export type WQSScoreFormType = z.infer<ReturnType<typeof WQSScore>>;
+export type WQSFinalValueFormType = z.infer<ReturnType<typeof WQSFinalValue>>;
 
-export type ComparativeFactorFormType = z.infer<typeof ComparativeFactor>;
+export type ComparativeFactorFormType = z.infer<ReturnType<typeof ComparativeFactor>>;
 export type WQSFormType = z.infer<typeof WQSDto>;

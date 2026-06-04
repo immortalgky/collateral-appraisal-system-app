@@ -13,6 +13,7 @@ import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { Icon } from '@/shared/components';
 import { MarketReferenceList } from './MarketReferenceList';
 import { MarketReferenceMethodPanel } from './MarketReferenceMethodPanel';
+import { useGetComparativeAnalysisTemplates } from '@features/templateManagement/api/comparativeTemplate';
 import type { ReferenceDto } from '../api/references';
 import type { PricingAnalysisSubjectType } from '../api/references';
 import type { MarketComparableDetailType } from '../schemas';
@@ -58,6 +59,14 @@ export function MarketReferenceModal({
 }: MarketReferenceModalProps) {
   const { t } = useTranslation('pricingAnalysis');
   const [openedRef, setOpenedRef] = useState<ReferenceDto | null>(null);
+
+  // Some entry points (notably the DCF / room-income reference flow) don't thread the WQS/SAG/DC
+  // comparative template list down to here and pass `undefined`, leaving the in-panel Template
+  // dropdown permanently empty. Fall back to fetching it directly — same cached query, so callers
+  // that already provide it pay nothing extra.
+  const { data: fetchedTemplateList = [] } = useGetComparativeAnalysisTemplates();
+  const resolvedTemplateList =
+    templateList && templateList.length > 0 ? templateList : fetchedTemplateList;
 
   const handleClose = () => {
     setOpenedRef(null);
@@ -111,7 +120,7 @@ export function MarketReferenceModal({
                   pricingAnalysisId={openedRef.pricingAnalysisId}
                   subjectType={openedRef.subjectType}
                   marketSurveys={marketSurveys}
-                  templateList={templateList}
+                  templateList={resolvedTemplateList}
                   subjectProperty={subjectProperty}
                   onBack={() => setOpenedRef(null)}
                 />

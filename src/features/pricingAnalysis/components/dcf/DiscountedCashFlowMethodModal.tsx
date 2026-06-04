@@ -35,6 +35,7 @@ interface DiscountedCashFlowMethodModalProps {
   incomeAnalysisId?: string;
   hostMethodId?: string;
   marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }
 export function DiscountedCashFlowMethodModal({
   editing,
@@ -48,6 +49,7 @@ export function DiscountedCashFlowMethodModal({
   incomeAnalysisId,
   hostMethodId,
   marketSurveys,
+  ensureIncomeAnalysisId,
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
@@ -262,6 +264,7 @@ export function DiscountedCashFlowMethodModal({
                 incomeAnalysisId={incomeAnalysisId}
                 hostMethodId={hostMethodId}
                 marketSurveys={marketSurveys}
+                ensureIncomeAnalysisId={ensureIncomeAnalysisId}
               />
             )}
 

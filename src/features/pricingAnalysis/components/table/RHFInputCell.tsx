@@ -51,6 +51,10 @@ interface RHFInputCellProps {
     group?: string;
   };
   options?: ListBoxItem[];
+  /** Optional element rendered inside the input on the right (number inputs only). */
+  rightIcon?: React.ReactNode;
+  /** Extra classes for the number input element (e.g. wider right padding for a rightIcon). */
+  inputClassName?: string;
   onUserChange?: (value: number | null) => number | null;
   onSelectChange?: (value: string) => void;
   accessor?: (args: {
@@ -69,6 +73,8 @@ export const RHFInputCell = ({
   text,
   dropdown,
   options,
+  rightIcon,
+  inputClassName,
   onUserChange,
   onSelectChange,
   accessor,
@@ -124,9 +130,11 @@ export const RHFInputCell = ({
         disabled={disabled}
         error={error?.message}
         inputMode="numeric"
+        rightIcon={rightIcon}
         className={clsx(
           'w-full border border-gray-300 rounded-lg px-1.5 py-0.5 text-xs focus:scroll-smooth',
           disabled && 'opacity-50 cursor-not-allowed bg-gray-100',
+          inputClassName,
         )}
       />
     );

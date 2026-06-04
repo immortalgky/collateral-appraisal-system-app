@@ -82,7 +82,8 @@
     "uploadMaxSize": "File must be ≤ 5 MB",
     "uploadFailed": "Upload failed",
     "uploadDeleted": "Upload deleted",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "uploadSuccess": "Uploaded {{n}} rows"
   },
   "footer": {
     "cancel": "Cancel",
@@ -213,7 +214,61 @@
     "viewSummary": "View Assumption Summary"
   },
   "profitRent": {
-    "title": "Profit Rent Analysis"
+    "title": "Profit Rent Analysis",
+    "loadError": "Failed to load profit rent analysis",
+    "headerTitle": "Profit Rent",
+    "appraisalDate": "Appraisal Date",
+    "leaseStart": "Lease Start",
+    "leaseEnd": "Lease End",
+    "viewRentalInfo": "Rental Information",
+    "viewRentalInfoShort": "View",
+    "landArea": "Land Area",
+    "marketRentalFee": "Market Rental Fee",
+    "monthlyTotal": "Monthly Total",
+    "discountedRate": "Discounted Rate",
+    "marketRentalFeeIncrease": "Market Rental Fee Increase",
+    "rate": "Rate",
+    "every": "Every",
+    "interval": "Interval",
+    "fromYear": "From Year",
+    "toYear": "To Year",
+    "growthRatePercent": "Growth Rate (%)",
+    "addPeriods": "Add Periods",
+    "includeBuildingCost": "Include building cost",
+    "buildingCostSummary": "Building Cost Summary",
+    "afterDepre": "After Depre.",
+    "propertyCol": "Property",
+    "areaCol": "Area",
+    "beforeDepre": "Before Depre.",
+    "estimatePriceFromPv": "Estimate Price (from PV)",
+    "buildingCostAfterDepre": "Building Cost (after depre.)",
+    "appraisalPriceWithBuilding": "Appraisal Price w/ Building",
+    "appraisalPrice": "Appraisal Price",
+    "total": "Total",
+    "unitBahtPerSqWaPerMonth": "Baht/Sq.Wa/Mo",
+    "unitBahtPerMonth": "Baht/Mo",
+    "unitSqWa": "Sq. Wa",
+    "unitYear": "Year",
+    "resetConfirmMessage": "Are you sure you want to reset this method? All calculation data will be cleared.",
+    "tableHeaders": {
+      "year": "Year",
+      "periodStart": "Period Start Date",
+      "periodEnd": "Period End Date",
+      "numberOfMonth": "Number of Month",
+      "marketRentalFeePerSqWaMonth": "Market Rental Fee (Baht/Sq.Wa/Month)",
+      "marketRentalFeePerMonth": "Market Rental Fee (Baht/month)",
+      "marketRentalFeePerYear": "Market Rental Fee (Baht/year)",
+      "contractRentalFeePerYear": "Contract Rental Fee (Baht/year)",
+      "returnsFromLease": "Returns from Lease (Baht)",
+      "discountedRate": "Discounted Rate",
+      "presentValue": "Present Value (Baht)"
+    },
+    "kpi": {
+      "totalMarketRental": "Total Market Rental",
+      "totalContractRental": "Total Contract Rental",
+      "totalReturns": "Total Returns",
+      "presentValue": "Present Value"
+    }
   },
   "comparativeAnalysis": {
     "title": "Comparative Analysis",
@@ -290,7 +345,18 @@
     "landValueRequired": "Land value is required",
     "discountRateRequired": "Discount rate is required",
     "landGrowthRateRequired": "Land growth rate is required",
-    "depreciationRateRequired": "Depreciation rate is required"
+    "depreciationRateRequired": "Depreciation rate is required",
+    "factorCodeRequired": "Factor code is required",
+    "weightRequired": "Weight is required",
+    "intensityRequired": "Intensity is required",
+    "collateralScoreRequired": "Collateral score is required",
+    "surveyScoreRequired": "Survey {{n}}'s score is required",
+    "finalValueRoundedRequired": "Final value (rounded) is required",
+    "qualitativeLevelRequired": "Qualitative level is required",
+    "appraisalPriceRoundedRequired": "Appraisal price (rounded) is required",
+    "adjustPercentRequired": "Adjusted score pct is required",
+    "descriptionRequired": "Description is required",
+    "toYearInvalid": "toYear must be >= atYear"
   },
   "empty": {
     "noData": "No data available",
@@ -335,6 +401,14 @@
       "active": "Active"
     }
   },
+  "incomeLandRef": {
+    "copyFromCost": "Copy from Cost",
+    "pickerTitle": "Select Cost method to copy",
+    "pickerHint": "The selected method's comparables and scores will be cloned into a new editable reference.",
+    "noCostMethods": "No Cost-approach WQS/SAG/DC methods found. Add one via Approaches & Methods first.",
+    "copyFailed": "Failed to copy Cost method",
+    "openRef": "Open reference"
+  },
   "groupReferences": {
     "sectionTitle": "References",
     "openReference": "Open",
@@ -351,5 +425,73 @@
       "roomIncomeRef": "Room income",
       "profitRentRef": "Rental fee"
     }
+  },
+  "viz": {
+    "sensitivity": {
+      "title": "Discount Rate Sensitivity"
+    },
+    "profitRentChart": {
+      "title": "Market vs Contract Rental & Present Value",
+      "marketRental": "Market Rental (Year)",
+      "contractRental": "Contract Rental (Year)",
+      "presentValue": "Present Value",
+      "year": "Year {{n}}"
+    },
+    "waterfall": {
+      "runningTotal": "Running Total:",
+      "defaultTitle": "Value Breakdown"
+    },
+    "residualWaterfall": {
+      "lb": "Residual Value Breakdown",
+      "condo": "Residual Value Breakdown (GDV → Final)",
+      "revenue": "Revenue",
+      "revenuGdv": "Revenue (GDV)",
+      "projectDev": "Project Dev",
+      "projectCost": "Project Cost",
+      "govTax": "Gov Tax",
+      "risk": "Risk",
+      "currentValue": "Current Value",
+      "discount": "Discount",
+      "finalValue": "Final Value",
+      "hardCost": "Hard Cost",
+      "softCost": "Soft Cost",
+      "riskProfit": "Risk & Profit",
+      "remaining": "Remaining",
+      "finalRemaining": "Final Remaining"
+    },
+    "costDonut": {
+      "title": "Cost Composition",
+      "lb": {
+        "projectDevCost": "Project Dev Cost",
+        "projectCost": "Project Cost",
+        "govTax": "Gov Tax",
+        "riskPremium": "Risk Premium"
+      },
+      "condo": {
+        "hardCost": "Hard Cost",
+        "softCost": "Soft Cost",
+        "govTax": "Gov Tax",
+        "riskProfit": "Risk & Profit"
+      }
+    }
+  },
+  "upload": {
+    "uploading": "Uploading…",
+    "dropOrBrowse": "Drop an Excel file here or",
+    "browseLink": "browse",
+    "uploadHistory": "Upload History",
+    "fileCol": "File",
+    "uploadedCol": "Uploaded",
+    "rowsCol": "Rows",
+    "statusCol": "Status",
+    "statusPresent": "Present",
+    "statusHistoric": "Historic",
+    "unitListing": "Unit Listing ({{n}} units)",
+    "modelAnalysis": "Model Analysis",
+    "parseErrors": "Excel Parse Errors — fix these rows and re-upload",
+    "parseErrorRow": "Row",
+    "parseErrorField": "Field",
+    "parseErrorValue": "Value",
+    "parseErrorReason": "Reason"
   }
 }

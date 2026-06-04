@@ -1,4 +1,5 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import i18n from '@/i18n';
 
 export type WaterfallStepType = 'start' | 'add' | 'subtract' | 'total';
 
@@ -89,6 +90,7 @@ function buildWaterfallData(steps: WaterfallStep[]): WaterfallDatum[] {
 function WaterfallTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const row: WaterfallDatum = payload[0]?.payload ?? {};
+  const t = i18n.getFixedT(null, 'pricingAnalysis');
   return (
     <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
       <div className="text-gray-500 mb-1">{label}</div>
@@ -97,7 +99,7 @@ function WaterfallTooltip({ active, payload, label }: any) {
         {fmtTooltip(row.originalValue)}
       </div>
       <div className="border-t border-gray-100 mt-1 pt-1 text-gray-600">
-        Running Total: {fmtTooltip(row.runningTotal)}
+        {t('viz.waterfall.runningTotal')} {fmtTooltip(row.runningTotal)}
       </div>
     </div>
   );

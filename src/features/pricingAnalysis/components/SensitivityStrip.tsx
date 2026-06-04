@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SensitivityStripProps {
   currentRate: number;
@@ -12,6 +13,7 @@ const fmt = (n: number): string => {
 };
 
 export function SensitivityStrip({ currentRate, calculateFinalValue }: SensitivityStripProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const scenarios = useMemo(() => {
     const offsets = [-2, -1, 0, 1, 2];
     const seen = new Set<number>();
@@ -40,7 +42,7 @@ export function SensitivityStrip({ currentRate, calculateFinalValue }: Sensitivi
     <div className="rounded-lg border border-gray-200 overflow-hidden">
       <div className="flex items-center gap-3">
         <div className="px-3 py-1.5 text-[10px] font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap shrink-0">
-          Discount Rate Sensitivity
+          {t('viz.sensitivity.title')}
         </div>
         <div
           className="flex-1 grid"

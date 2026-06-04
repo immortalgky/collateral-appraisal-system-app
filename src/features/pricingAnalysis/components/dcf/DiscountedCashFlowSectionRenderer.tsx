@@ -17,6 +17,7 @@ interface DiscountedCashFlowSectionRendererProps {
   incomeAnalysisId?: string;
   hostMethodId?: string;
   marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }
 export function DiscountedCashFlowSectionRenderer({
   name,
@@ -30,6 +31,7 @@ export function DiscountedCashFlowSectionRenderer({
   incomeAnalysisId,
   hostMethodId,
   marketSurveys,
+  ensureIncomeAnalysisId,
 }: DiscountedCashFlowSectionRendererProps) {
   switch (section.sectionType) {
     case 'income': {
@@ -46,6 +48,7 @@ export function DiscountedCashFlowSectionRenderer({
           incomeAnalysisId={incomeAnalysisId}
           hostMethodId={hostMethodId}
           marketSurveys={marketSurveys}
+          ensureIncomeAnalysisId={ensureIncomeAnalysisId}
         />
       );
     }

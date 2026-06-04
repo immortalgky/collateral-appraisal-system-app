@@ -82,7 +82,8 @@
     "uploadMaxSize": "ไฟล์ต้องมีขนาดไม่เกิน 5 MB",
     "uploadFailed": "อัปโหลดไม่สำเร็จ",
     "uploadDeleted": "ลบการอัปโหลดแล้ว",
-    "deleteFailed": "ลบไม่สำเร็จ"
+    "deleteFailed": "ลบไม่สำเร็จ",
+    "uploadSuccess": "อัปโหลด {{n}} แถวสำเร็จ"
   },
   "footer": {
     "cancel": "ยกเลิก",
@@ -213,7 +214,61 @@
     "viewSummary": "ดูสรุปสมมติฐาน"
   },
   "profitRent": {
-    "title": "การวิเคราะห์กำไรจากค่าเช่า"
+    "title": "การวิเคราะห์กำไรจากค่าเช่า",
+    "loadError": "โหลดการวิเคราะห์กำไรจากค่าเช่าไม่สำเร็จ",
+    "headerTitle": "กำไรจากค่าเช่า",
+    "appraisalDate": "วันที่ประเมิน",
+    "leaseStart": "วันเริ่มต้นเช่า",
+    "leaseEnd": "วันสิ้นสุดเช่า",
+    "viewRentalInfo": "ข้อมูลการเช่า",
+    "viewRentalInfoShort": "ดู",
+    "landArea": "พื้นที่ที่ดิน",
+    "marketRentalFee": "ค่าเช่าตลาด",
+    "monthlyTotal": "รวมรายเดือน",
+    "discountedRate": "อัตราส่วนลด",
+    "marketRentalFeeIncrease": "การเพิ่มขึ้นของค่าเช่าตลาด",
+    "rate": "อัตรา",
+    "every": "ทุก",
+    "interval": "ช่วงเวลา",
+    "fromYear": "จากปี",
+    "toYear": "ถึงปี",
+    "growthRatePercent": "อัตราการเติบโต (%)",
+    "addPeriods": "เพิ่มช่วงเวลา",
+    "includeBuildingCost": "รวมต้นทุนอาคาร",
+    "buildingCostSummary": "สรุปต้นทุนอาคาร",
+    "afterDepre": "หลังค่าเสื่อมราคา",
+    "propertyCol": "ทรัพย์สิน",
+    "areaCol": "พื้นที่",
+    "beforeDepre": "ก่อนค่าเสื่อมราคา",
+    "estimatePriceFromPv": "ราคาประมาณ (จาก PV)",
+    "buildingCostAfterDepre": "ต้นทุนอาคาร (หลังค่าเสื่อม)",
+    "appraisalPriceWithBuilding": "ราคาประเมินรวมอาคาร",
+    "appraisalPrice": "ราคาประเมิน",
+    "total": "รวม",
+    "unitBahtPerSqWaPerMonth": "บาท/ตร.วา/เดือน",
+    "unitBahtPerMonth": "บาท/เดือน",
+    "unitSqWa": "ตร.วา",
+    "unitYear": "ปี",
+    "resetConfirmMessage": "คุณแน่ใจหรือไม่ที่จะรีเซ็ตวิธีนี้? ข้อมูลการคำนวณทั้งหมดจะถูกล้าง",
+    "tableHeaders": {
+      "year": "ปี",
+      "periodStart": "วันเริ่มต้นรอบ",
+      "periodEnd": "วันสิ้นสุดรอบ",
+      "numberOfMonth": "จำนวนเดือน",
+      "marketRentalFeePerSqWaMonth": "ค่าเช่าตลาด (บาท/ตร.วา/เดือน)",
+      "marketRentalFeePerMonth": "ค่าเช่าตลาด (บาท/เดือน)",
+      "marketRentalFeePerYear": "ค่าเช่าตลาด (บาท/ปี)",
+      "contractRentalFeePerYear": "ค่าเช่าตามสัญญา (บาท/ปี)",
+      "returnsFromLease": "ผลตอบแทนจากการเช่า (บาท)",
+      "discountedRate": "อัตราส่วนลด",
+      "presentValue": "มูลค่าปัจจุบัน (บาท)"
+    },
+    "kpi": {
+      "totalMarketRental": "ค่าเช่าตลาดรวม",
+      "totalContractRental": "ค่าเช่าสัญญารวม",
+      "totalReturns": "ผลตอบแทนรวม",
+      "presentValue": "มูลค่าปัจจุบัน"
+    }
   },
   "comparativeAnalysis": {
     "title": "การวิเคราะห์เปรียบเทียบ",
@@ -290,7 +345,18 @@
     "landValueRequired": "กรุณาระบุมูลค่าที่ดิน",
     "discountRateRequired": "กรุณาระบุอัตราส่วนลด",
     "landGrowthRateRequired": "กรุณาระบุอัตราการเติบโตของที่ดิน",
-    "depreciationRateRequired": "กรุณาระบุอัตราค่าเสื่อมราคา"
+    "depreciationRateRequired": "กรุณาระบุอัตราค่าเสื่อมราคา",
+    "factorCodeRequired": "กรุณาระบุรหัสปัจจัย",
+    "weightRequired": "กรุณาระบุน้ำหนัก",
+    "intensityRequired": "กรุณาระบุความเข้ม",
+    "collateralScoreRequired": "กรุณาระบุคะแนนหลักประกัน",
+    "surveyScoreRequired": "กรุณาระบุคะแนนของการสำรวจที่ {{n}}",
+    "finalValueRoundedRequired": "กรุณาระบุมูลค่าสุทธิ (ปัดเศษ)",
+    "qualitativeLevelRequired": "กรุณาระบุระดับคุณภาพ",
+    "appraisalPriceRoundedRequired": "กรุณาระบุราคาประเมิน (ปัดเศษ)",
+    "adjustPercentRequired": "กรุณาระบุเปอร์เซ็นต์ปรับ",
+    "descriptionRequired": "กรุณาระบุรายละเอียด",
+    "toYearInvalid": "ปีสิ้นสุดต้องมากกว่าหรือเท่ากับปีเริ่มต้น"
   },
   "empty": {
     "noData": "ไม่มีข้อมูล",
@@ -335,6 +401,14 @@
       "active": "ใช้งาน"
     }
   },
+  "incomeLandRef": {
+    "copyFromCost": "คัดลอกจากวิธีต้นทุน",
+    "pickerTitle": "เลือกวิธีต้นทุนที่ต้องการคัดลอก",
+    "pickerHint": "ข้อมูลเปรียบเทียบและคะแนนของวิธีที่เลือกจะถูกคัดลอกเป็นข้อมูลอ้างอิงที่แก้ไขได้",
+    "noCostMethods": "ไม่พบวิธี WQS/SAG/DC ในแนวทางต้นทุน กรุณาเพิ่มในส่วน Approaches & Methods ก่อน",
+    "copyFailed": "คัดลอกวิธีต้นทุนไม่สำเร็จ",
+    "openRef": "เปิดข้อมูลอ้างอิง"
+  },
   "groupReferences": {
     "sectionTitle": "ข้อมูลอ้างอิง",
     "openReference": "เปิด",
@@ -351,5 +425,73 @@
       "roomIncomeRef": "รายได้ห้องพัก",
       "profitRentRef": "ค่าเช่า"
     }
+  },
+  "viz": {
+    "sensitivity": {
+      "title": "ความไวต่ออัตราส่วนลด"
+    },
+    "profitRentChart": {
+      "title": "ค่าเช่าตลาดกับสัญญา & มูลค่าปัจจุบัน",
+      "marketRental": "ค่าเช่าตลาด (ปี)",
+      "contractRental": "ค่าเช่าสัญญา (ปี)",
+      "presentValue": "มูลค่าปัจจุบัน",
+      "year": "ปี {{n}}"
+    },
+    "waterfall": {
+      "runningTotal": "ผลรวมสะสม:",
+      "defaultTitle": "การวิเคราะห์มูลค่า"
+    },
+    "residualWaterfall": {
+      "lb": "การวิเคราะห์มูลค่าส่วนเกิน",
+      "condo": "การวิเคราะห์มูลค่าส่วนเกิน (GDV → สุดท้าย)",
+      "revenue": "รายได้",
+      "revenuGdv": "รายได้ (GDV)",
+      "projectDev": "ต้นทุนพัฒนาโครงการ",
+      "projectCost": "ต้นทุนโครงการ",
+      "govTax": "ภาษีรัฐบาล",
+      "risk": "ความเสี่ยง",
+      "currentValue": "มูลค่าปัจจุบัน",
+      "discount": "ส่วนลด",
+      "finalValue": "มูลค่าสุทธิ",
+      "hardCost": "ต้นทุนหลัก",
+      "softCost": "ต้นทุนรอง",
+      "riskProfit": "ความเสี่ยงและกำไร",
+      "remaining": "มูลค่าคงเหลือ",
+      "finalRemaining": "มูลค่าคงเหลือสุดท้าย"
+    },
+    "costDonut": {
+      "title": "สัดส่วนต้นทุน",
+      "lb": {
+        "projectDevCost": "ต้นทุนพัฒนาโครงการ",
+        "projectCost": "ต้นทุนโครงการ",
+        "govTax": "ภาษีรัฐบาล",
+        "riskPremium": "ค่าความเสี่ยง"
+      },
+      "condo": {
+        "hardCost": "ต้นทุนหลัก",
+        "softCost": "ต้นทุนรอง",
+        "govTax": "ภาษีรัฐบาล",
+        "riskProfit": "ความเสี่ยงและกำไร"
+      }
+    }
+  },
+  "upload": {
+    "uploading": "กำลังอัปโหลด…",
+    "dropOrBrowse": "วางไฟล์ Excel ที่นี่ หรือ",
+    "browseLink": "เลือกไฟล์",
+    "uploadHistory": "ประวัติการอัปโหลด",
+    "fileCol": "ไฟล์",
+    "uploadedCol": "อัปโหลดเมื่อ",
+    "rowsCol": "แถว",
+    "statusCol": "สถานะ",
+    "statusPresent": "ปัจจุบัน",
+    "statusHistoric": "ประวัติ",
+    "unitListing": "รายการหน่วย ({{n}} หน่วย)",
+    "modelAnalysis": "การวิเคราะห์โมเดล",
+    "parseErrors": "ข้อผิดพลาดการอ่านไฟล์ Excel — แก้ไขแถวเหล่านี้และอัปโหลดใหม่",
+    "parseErrorRow": "แถว",
+    "parseErrorField": "ฟิลด์",
+    "parseErrorValue": "ค่า",
+    "parseErrorReason": "เหตุผล"
   }
 }

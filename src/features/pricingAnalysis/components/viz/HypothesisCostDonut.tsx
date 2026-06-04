@@ -12,6 +12,8 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 import { fmt } from '../../domain/formatters';
 import type { LandBuildingSummaryDto, CondominiumSummaryDto } from '../../types/hypothesis';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 
 const COLORS = {
   main: '#f97316', // orange-500
@@ -39,7 +41,8 @@ function scrollToTarget(targetId?: string) {
 }
 
 export function HypothesisCostDonut(props: Props) {
-  const slices = buildSlices(props);
+  const { t } = useTranslation('pricingAnalysis');
+  const slices = buildSlices(props, t);
   if (!slices) return null;
 
   const total = slices.reduce((sum, s) => sum + s.value, 0);
@@ -47,7 +50,7 @@ export function HypothesisCostDonut(props: Props) {
 
   return (
     <div className="rounded-lg border border-gray-200 p-3 h-full flex flex-col">
-      <div className="text-[11px] font-medium text-gray-500 mb-1">Cost Composition</div>
+      <div className="text-[11px] font-medium text-gray-500 mb-1">{t('viz.costDonut.title')}</div>
       <div className="flex-1 min-h-0 flex flex-col items-center gap-3 min-w-0 overflow-x-auto">
         <div className="w-[140px] h-[140px] shrink-0">
           <ResponsiveContainer width="100%" height="100%">
@@ -111,31 +114,34 @@ export function HypothesisCostDonut(props: Props) {
   );
 }
 
-function buildSlices(props: Props): Slice[] | null {
+function buildSlices(
+  props: Props,
+  t: TFunction<'pricingAnalysis'>,
+): Slice[] | null {
   if (props.variant === 'LandBuilding') {
     const s = props.summary;
     if (!s) return null;
     return [
       {
-        label: 'Project Dev Cost',
+        label: t('viz.costDonut.lb.projectDevCost'),
         value: s.totalProjectDevCost ?? 0,
         color: COLORS.main,
         targetId: 'hyp-section-dev',
       },
       {
-        label: 'Project Cost',
+        label: t('viz.costDonut.lb.projectCost'),
         value: s.totalProjectCost ?? 0,
         color: COLORS.project,
         targetId: 'hyp-section-project',
       },
       {
-        label: 'Gov Tax',
+        label: t('viz.costDonut.lb.govTax'),
         value: s.totalGovTax ?? 0,
         color: COLORS.tax,
         targetId: 'hyp-section-tax',
       },
       {
-        label: 'Risk Premium',
+        label: t('viz.costDonut.lb.riskPremium'),
         value: s.riskPremiumAmount ?? 0,
         color: COLORS.risk,
         targetId: 'hyp-section-risk',
@@ -146,20 +152,20 @@ function buildSlices(props: Props): Slice[] | null {
   if (!s) return null;
   return [
     {
-      label: 'Hard Cost',
+      label: t('viz.costDonut.condo.hardCost'),
       value: s.totalHardCost ?? 0,
       color: COLORS.main,
       targetId: 'hyp-section-hard',
     },
     {
-      label: 'Soft Cost',
+      label: t('viz.costDonut.condo.softCost'),
       value: s.totalSoftCost ?? 0,
       color: COLORS.project,
       targetId: 'hyp-section-soft',
     },
-    { label: 'Gov Tax', value: s.totalGovTax ?? 0, color: COLORS.tax, targetId: 'hyp-section-tax' },
+    { label: t('viz.costDonut.condo.govTax'), value: s.totalGovTax ?? 0, color: COLORS.tax, targetId: 'hyp-section-tax' },
     {
-      label: 'Risk & Profit',
+      label: t('viz.costDonut.condo.riskProfit'),
       value: s.riskProfitTotal ?? 0,
       color: COLORS.risk,
       targetId: 'hyp-section-risk',

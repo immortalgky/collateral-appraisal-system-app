@@ -200,14 +200,6 @@ export function MarketReferenceList({
                               : t('marketRef.noValue')}
                           </span>
                         </div>
-                        {method.finalValue != null && (
-                          <div className="flex flex-col">
-                            <span className="text-xs text-gray-500">{t('marketRef.finalValue')}</span>
-                            <span className="text-sm font-medium text-gray-700 tabular-nums">
-                              {formatNumber(method.finalValue)}
-                            </span>
-                          </div>
-                        )}
                       </div>
                       {/* Apply button — only shown when onApplyValue is provided */}
                       {!readOnly && onApplyValue && method.valuePerUnit != null && (

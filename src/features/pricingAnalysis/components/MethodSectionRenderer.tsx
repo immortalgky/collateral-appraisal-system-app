@@ -12,6 +12,7 @@ import { LeaseholdPanel } from './LeaseholdPanel';
 import { ProfitRentPanel } from './ProfitRentPanel';
 import { HypothesisPanel } from './hypothesis/HypothesisPanel';
 import { CostBuildingPanel } from './CostBuildingPanel';
+import { findRentalSourceProperty } from '../utils/leaseProperty';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -190,28 +191,35 @@ export function MethodSectionRenderer({
           }
         />
       );
-    case 'LH':
+    case 'LH': {
+      // Source rental data from the rental-bearing property (a lease-agreement
+      // property, or plain land rented out to others) rather than assuming
+      // properties[0]. A mixed group only needs at least one such property.
+      const leaseProperty = findRentalSourceProperty(serverData.groupDetail?.properties);
       return (
         <LeaseholdPanel
           {...panelProps}
           propertiesMap={serverData.propertiesMap}
-          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
-          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
+          firstPropertyId={leaseProperty?.propertyId ?? undefined}
+          firstPropertyType={leaseProperty?.propertyType ?? undefined}
           marketSurveys={filteredMarketSurveys}
           templateList={calculationMethodData.templateList}
         />
       );
-    case 'PR':
+    }
+    case 'PR': {
+      const leaseProperty = findRentalSourceProperty(serverData.groupDetail?.properties);
       return (
         <ProfitRentPanel
           {...panelProps}
           propertiesMap={serverData.propertiesMap}
-          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
-          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
+          firstPropertyId={leaseProperty?.propertyId ?? undefined}
+          firstPropertyType={leaseProperty?.propertyType ?? undefined}
           marketSurveys={filteredMarketSurveys}
           templateList={calculationMethodData.templateList}
         />
       );
+    }
     case 'Hypothesis':
       return (
         <HypothesisPanel

@@ -1,76 +1,119 @@
 import { z } from 'zod';
-const requireMsg = (fieldName: string, msg: string = 'is required.') => ({
-  required_error: `${fieldName} ${msg}`,
-  invalid_type_error: `${fieldName} ${msg}`,
-});
+import type { TFunction } from 'i18next';
 
-const ComparativeFactors = z
-  .object({
-    factorCode: z.string(requireMsg('Factor code')),
-  })
-  .passthrough();
+// Static type-inference export (uses key-passthrough function — never an object)
+const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
 
-const SaleAdjustmentGridQualitativeSurvey = z
-  .object({
-    qualitativeLevel: z.string(requireMsg('Qualitative level')),
-  })
-  .passthrough();
+const ComparativeFactors = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+    })
+    .passthrough();
 
-const SaleAdjustmentGridQualitative = z.object({
-  factorCode: z.string(requireMsg('Factor Code')),
-  qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey),
-});
+const SaleAdjustmentGridQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      qualitativeLevel: z.string({
+        required_error: t('validation.qualitativeLevelRequired'),
+        invalid_type_error: t('validation.qualitativeLevelRequired'),
+      }),
+    })
+    .passthrough();
 
-const SaleAdjustmentGridCalculation = z
-  .object({
-    weight: z.number(requireMsg('Weight')),
-  })
-  .passthrough();
+const SaleAdjustmentGridQualitative = (t: TFunction<'pricingAnalysis'>) =>
+  z.object({
+    factorCode: z.string({
+      required_error: t('validation.factorCodeRequired'),
+      invalid_type_error: t('validation.factorCodeRequired'),
+    }),
+    qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey(t)),
+  });
 
-const SaleAdjustmentGridFinalValue = z
-  .object({
-    finalValueRounded: z.number(requireMsg('Final value (rounded)')),
-  })
-  .passthrough();
+const SaleAdjustmentGridCalculation = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      weight: z.number({
+        required_error: t('validation.weightRequired'),
+        invalid_type_error: t('validation.weightRequired'),
+      }),
+    })
+    .passthrough();
 
-const SaleAdjustmentGridAdjustmentPct = z
-  .object({
-    adjustPercent: z.number(requireMsg('Adjusted score pct')),
-  })
-  .passthrough();
+const SaleAdjustmentGridFinalValue = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      finalValueRounded: z.number({
+        required_error: t('validation.finalValueRoundedRequired'),
+        invalid_type_error: t('validation.finalValueRoundedRequired'),
+      }),
+    })
+    .passthrough();
 
-const SaleAdjustmentGridAdjustmentFactor = z.object({
-  surveys: z.array(SaleAdjustmentGridAdjustmentPct),
-});
+const SaleAdjustmentGridAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      adjustPercent: z.number({
+        required_error: t('validation.adjustPercentRequired'),
+        invalid_type_error: t('validation.adjustPercentRequired'),
+      }),
+    })
+    .passthrough();
 
-const SaleAdjustmentGridAppraisalPrice = z
-  .object({
-    appraisalPriceRounded: z.number(requireMsg('Appraisal price (rounded)')),
-  })
-  .passthrough();
+const SaleAdjustmentGridAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
+  z.object({
+    surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
+  });
 
-export const SaleAdjustmentGridDto = z
-  .object({
-    collateralType: z.string(requireMsg('Collateral type')),
-    pricingTemplateCode: z.string(requireMsg('Template')),
-    comparativeFactors: z.array(ComparativeFactors),
-    /** Qualitative section */
-    saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative),
-    /** Calculation section */
-    saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation),
-    /** Adjustment Factors (adjust percentage) section */
-    saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor),
-    /** Final value section */
-    saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue,
-    /** Apprisal price section */
-    saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice,
-  })
-  .passthrough();
+const SaleAdjustmentGridAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      appraisalPriceRounded: z.number({
+        required_error: t('validation.appraisalPriceRoundedRequired'),
+        invalid_type_error: t('validation.appraisalPriceRoundedRequired'),
+      }),
+    })
+    .passthrough();
 
-export type SaleAdjustmentGridCalculationFormType = z.infer<typeof SaleAdjustmentGridCalculation>;
-export type SaleAdjustmentGridQualitativeSurveyFormType = z.infer<
-  typeof SaleAdjustmentGridQualitativeSurvey
+export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
+  z
+    .object({
+      collateralType: z.string({
+        required_error: t('validation.collateralTypeRequired'),
+        invalid_type_error: t('validation.collateralTypeRequired'),
+      }),
+      pricingTemplateCode: z.string({
+        required_error: t('validation.templateRequired'),
+        invalid_type_error: t('validation.templateRequired'),
+      }),
+      comparativeFactors: z.array(ComparativeFactors(t)),
+      /** Qualitative section */
+      saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative(t)),
+      /** Calculation section */
+      saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation(t)),
+      /** Adjustment Factors (adjust percentage) section */
+      saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor(t)),
+      /** Final value section */
+      saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue(t),
+      /** Apprisal price section */
+      saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice(t),
+    })
+    .passthrough();
+
+// Static schema for type inference only — no runtime messages
+export const SaleAdjustmentGridDto = makeSaleAdjustmentGridDto(_t);
+
+export type SaleAdjustmentGridCalculationFormType = z.infer<
+  ReturnType<typeof SaleAdjustmentGridCalculation>
 >;
-export type ComparativeFactorsFormType = z.infer<typeof ComparativeFactors>;
-export type SaleAdjustmentGridQualitativeFormType = z.infer<typeof SaleAdjustmentGridQualitative>;
+export type SaleAdjustmentGridQualitativeSurveyFormType = z.infer<
+  ReturnType<typeof SaleAdjustmentGridQualitativeSurvey>
+>;
+export type ComparativeFactorsFormType = z.infer<ReturnType<typeof ComparativeFactors>>;
+export type SaleAdjustmentGridQualitativeFormType = z.infer<
+  ReturnType<typeof SaleAdjustmentGridQualitative>
+>;
 export type SaleAdjustmentGridType = z.infer<typeof SaleAdjustmentGridDto>;

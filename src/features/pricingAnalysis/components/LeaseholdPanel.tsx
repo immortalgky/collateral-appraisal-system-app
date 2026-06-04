@@ -404,6 +404,10 @@ export function LeaseholdPanel({
     [appointment, rentalScheduleData, propertyData, isPartialUsage],
   );
 
+  // Local state: caches the analysis id obtained by an auto-save on button open,
+  // so the WQS button is available even before the user has saved the form.
+  const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
+
   const handleOnSubmit = async () => {
     if (readOnly || !pricingAnalysisId || !methodId) return;
 
@@ -452,6 +456,14 @@ export function LeaseholdPanel({
     } catch {
       toast.error(t('toasts.saveFailed'));
     }
+  };
+
+  const ensureAnalysisId = async (): Promise<string | undefined> => {
+    if (savedData?.analysis?.id) return savedData.analysis.id;
+    if (readOnly || !pricingAnalysisId || !methodId) return undefined;
+    await handleOnSubmit();
+    const res = await refetchSavedData();
+    return res.data?.analysis?.id;
   };
 
   const handleOnReset = () => setIsShowResetDialog(true);
@@ -771,26 +783,13 @@ export function LeaseholdPanel({
                 'rounded-md bg-gray-50 px-4 py-3',
               )}
             >
-              <div className="flex items-center justify-between mb-1">
+              <div className="mb-1">
                 <label className="text-[11px] text-gray-400 uppercase tracking-wide block">
                   {t('leasehold.landValue')} <span className="text-red-400">*</span>
                 </label>
-                {savedData?.analysis?.id && (
-                  <MarketReferenceButton
-                    subjectType={PricingAnalysisSubjectType.LeaseholdLandRef}
-                    anchorId={savedData.analysis.id}
-                    hostMethodId={methodId}
-                    marketSurveys={marketSurveys ?? []}
-                    templateList={templateList}
-                    subjectProperty={propertyDetail as Record<string, unknown> | undefined}
-                    onApplyValue={v =>
-                      landValueField.onChange(v)
-                    }
-                  />
-                )}
               </div>
               <div className="flex items-baseline gap-1.5">
-                <div className="w-28">
+                <div className="w-44">
                   <NumberInput
                     name={landValueField.name}
                     ref={landValueField.ref}
@@ -799,6 +798,34 @@ export function LeaseholdPanel({
                     onBlur={landValueField.onBlur}
                     decimalPlaces={2}
                     disabled={readOnly}
+                    className={!readOnly ? '!pr-14' : undefined}
+                    rightIcon={(() => {
+                      if (readOnly) return undefined;
+                      const effectiveId = savedData?.analysis?.id ?? ensuredId;
+                      return (
+                        <MarketReferenceButton
+                          compact
+                          label="WQS"
+                          subjectType={PricingAnalysisSubjectType.LeaseholdLandRef}
+                          anchorId={effectiveId ?? ''}
+                          hostMethodId={methodId}
+                          marketSurveys={marketSurveys ?? []}
+                          templateList={templateList}
+                          subjectProperty={propertyDetail as Record<string, unknown> | undefined}
+                          onApplyValue={v => landValueField.onChange(v)}
+                          onBeforeOpen={
+                            effectiveId
+                              ? undefined
+                              : async () => {
+                                  const id = await ensureAnalysisId();
+                                  if (id) setEnsuredId(id);
+                                  if (!id) throw new Error('no-id');
+                                }
+                          }
+                          className="pointer-events-auto shrink-0"
+                        />
+                      );
+                    })()}
                   />
                 </div>
                 <span className="text-xs text-gray-500">{t('leasehold.units.bahtPerSqWa')}</span>

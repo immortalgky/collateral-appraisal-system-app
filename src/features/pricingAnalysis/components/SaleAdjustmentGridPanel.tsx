@@ -3,6 +3,7 @@ import { type SubmitErrorHandler, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
+  makeSaleAdjustmentGridDto,
   SaleAdjustmentGridDto,
   type SaleAdjustmentGridType,
 } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
@@ -99,7 +100,7 @@ export function SaleAdjustmentGridPanel({
 
   const methods = useForm<SaleAdjustmentGridType>({
     mode: 'onSubmit',
-    resolver: zodResolver(SaleAdjustmentGridDto),
+    resolver: zodResolver(makeSaleAdjustmentGridDto(t)),
   });
 
   const {
@@ -248,7 +249,10 @@ export function SaleAdjustmentGridPanel({
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || (!manualSubject && !property)) return;
+    // A saved reference (e.g. opened from the group References section) has no live
+    // subject `property` but does have saved data to restore — never block a restore.
+    const hasSavedData = !!(savedComparativeFactors && savedComparativeFactors.length > 0);
+    if (!methodId || !methodType || (!manualSubject && !property && !hasSavedData)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
