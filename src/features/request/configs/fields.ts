@@ -98,6 +98,7 @@ export const requestFields: FormField[] = [
     wrapperClassName: 'col-span-1',
     maxIntegerDigits: 15,
     required: true,
+    disableWhen: { field: 'purpose', is: '02' },
   },
   {
     type: 'number-input',
