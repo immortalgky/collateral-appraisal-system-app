@@ -201,8 +201,8 @@ const AdministrationPage = () => {
       const clearInternal = isInternalDisabled && formValues.assignmentType === 'internal';
       reset({
         ...formValues,
-        assignmentType: clearInternal ? ('' as any) : formValues.assignmentType,
-        staffId: clearInternal ? null : formValues.staffId,
+        ...assignmentFormDefaults,
+        selectedStaff: assignedStaff ?? null,
         selectedCompany: assignedCompany ?? null,
         selectedFollowupStaff: followupStaff ?? null,
       });
@@ -416,7 +416,7 @@ const AdministrationPage = () => {
                         description: 'Assign to internal appraisal staff',
                         icon: 'user',
                         color: 'emerald',
-                        disabled: isInternalDisabled,
+                        disabled: isInternalDisabled || isLockedByQuotation,
                       },
                       {
                         value: 'external',
