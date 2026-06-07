@@ -2,6 +2,7 @@
   "completionChecklist": {
     "title": "Validation checks",
     "submitting": "Submitting…",
+    "submittingNoLive": "Submitting… (live updates unavailable)",
     "allPassed": "All checks passed"
   },
   "completionErrors": {
@@ -443,6 +444,10 @@
       "cancel": "Cancel",
       "submitting": "Submitting…",
       "validationErrorsTitle": "Please complete the required fields"
+    },
+    "warnings": {
+      "title": "Review before continuing",
+      "continueAnyway": "Continue anyway"
     },
     "toasts": {
       "saved": "Decision summary saved successfully",
@@ -1142,7 +1147,6 @@
   "approvalListSection": {
     "title": "Committee Approval",
     "notActiveYet": "Committee approval is not active for this appraisal yet.",
-    "approvedBanner": "This appraisal has been approved by the committee.",
     "returnedBanner": "This appraisal has been returned for revision.",
     "conditionsTitle": "Approval Conditions",
     "votesDisplay": "{{received}}/{{total}} votes",
