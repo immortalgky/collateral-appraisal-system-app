@@ -1,14 +1,13 @@
 import { useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
-import { signalrLogger } from '@shared/utils/signalrLogger';
 import i18n from '@/i18n';
 import { useQueryClient } from '@tanstack/react-query';
-import { getAccessToken } from '@shared/api/axiosInstance';
+import { useAuthStore } from '@features/auth/store';
 import { useNotificationStore } from '../store';
 import { showNotificationToast } from '../components/NotificationToast';
 import { followupKeys } from '@/features/document-followup/api/followup';
 import type { Notification } from '../types';
+import * as appHub from '@shared/realtime/appHub';
 
 const FOLLOWUP_NOTIFICATION_TYPES = new Set([
   'DocumentFollowupRaised',
@@ -17,37 +16,27 @@ const FOLLOWUP_NOTIFICATION_TYPES = new Set([
   'DocumentLineItemDeclined',
 ]);
 
-const getHubUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
-  return apiUrl.replace(/\/api\/?$/, '') + '/notificationHub';
-};
-
 export function useNotificationHub() {
-  const connectionRef = useRef<ReturnType<typeof HubConnectionBuilder.prototype.build> | null>(
-    null,
-  );
   const hasShownConnectErrorToast = useRef(false);
   const addNotification = useNotificationStore(s => s.addNotification);
+  const fetchNotifications = useNotificationStore(s => s.fetchNotifications);
   const queryClient = useQueryClient();
+  const username = useAuthStore(s => s.user?.username);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) return;
+    if (!username) return;
 
-    const connection = new HubConnectionBuilder()
-      .withUrl(getHubUrl(), {
-        accessTokenFactory: () => getAccessToken() ?? '',
-        // skipNegotiation: true,
-        // transport: HttpTransportType.WebSockets,
-        withCredentials: true,
-      })
-      .withAutomaticReconnect()
-      .configureLogging(signalrLogger)
-      .build();
+    // Start the shared connection (idempotent — safe if already started by
+    // ActivityProgressHubBootstrap or a previous render).
+    appHub.start(username).catch(err => {
+      console.error('[NotificationHub] SignalR connection failed:', err);
+      if (!hasShownConnectErrorToast.current) {
+        toast.error(i18n.t('notification:realtimeUnavailable'));
+        hasShownConnectErrorToast.current = true;
+      }
+    });
 
-    connectionRef.current = connection;
-
-    connection.on('ReceiveNotification', (notification: Notification) => {
+    const unsub = appHub.on<Notification>('ReceiveNotification', notification => {
       console.log('[NotificationHub] ReceiveNotification fired', notification);
       addNotification(notification);
       try {
@@ -60,7 +49,6 @@ export function useNotificationHub() {
       // Invalidate document followup queries when relevant notifications arrive
       if (FOLLOWUP_NOTIFICATION_TYPES.has(notification.type)) {
         const meta = notification.metadata ?? {};
-        // Narrow followup query invalidation when IDs are present in metadata
         if (typeof meta.raisingTaskId === 'string') {
           queryClient.invalidateQueries({
             queryKey: followupKeys.byTask(meta.raisingTaskId),
@@ -71,10 +59,6 @@ export function useNotificationHub() {
             queryKey: followupKeys.detail(meta.followupId),
           });
         }
-        // Refresh the request maker's task inbox only when a NEW followup task
-        // is raised (DocumentFollowupRaised). The other three types (Resolved,
-        // Cancelled, LineItemDeclined) are directed at the checker and only
-        // need the followup queries above to update the banner.
         if (notification.type === 'DocumentFollowupRaised') {
           queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
           queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
@@ -83,28 +67,37 @@ export function useNotificationHub() {
       }
     });
 
-    let cancelled = false;
+    return unsub;
+    // addNotification and queryClient are stable refs; username drives re-subscription
+  }, [username, addNotification, queryClient]);
 
-    connection
-      .start()
-      .then(() => {
-        if (!cancelled) console.log('[NotificationHub] SignalR connected');
-      })
-      .catch(err => {
-        if (!cancelled) {
-          console.error('[NotificationHub] SignalR connection failed:', err);
-          if (!hasShownConnectErrorToast.current) {
-            toast.error(i18n.t('notification:realtimeUnavailable'));
-            hasShownConnectErrorToast.current = true;
-          }
-        }
-      });
+  // Catch up after a reconnect. SignalR does not buffer server→client messages
+  // while disconnected, so anything pushed during a network blip / sleep / long
+  // outage is lost over the wire. On every RE-connect (the first connect is
+  // skipped — NotificationDropdown already fetches on mount), re-fetch the
+  // notification list and reconcile task queries so the bell shows what was
+  // missed without a manual page refresh.
+  useEffect(() => {
+    if (!username) return;
 
-    return () => {
-      cancelled = true;
-      if (connection.state !== HubConnectionState.Disconnected) {
-        connection.stop();
+    // Skip only a genuine cold first-connect (NotificationDropdown already
+    // fetches on mount). Seed from hasEverConnected() — not the current status —
+    // so that attaching mid-reconnect (status === 'reconnecting') is still
+    // treated as a re-connect and the next 'connected' triggers the catch-up,
+    // which is exactly the missed-notification case this guards.
+    let primed = appHub.hasEverConnected();
+    const unsub = appHub.onConnectionStateChange(status => {
+      if (status !== 'connected') return;
+      if (!primed) {
+        primed = true;
+        return;
       }
-    };
-  }, [addNotification, queryClient]);
+      fetchNotifications(username);
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
+    });
+
+    return unsub;
+  }, [username, fetchNotifications, queryClient]);
 }
