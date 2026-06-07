@@ -942,6 +942,7 @@
     },
     "status": {
       "Approved": "Approved",
+      "Appointed": "Appointed",
       "Rejected": "Rejected",
       "Pending": "Pending",
       "Auto": "Auto",

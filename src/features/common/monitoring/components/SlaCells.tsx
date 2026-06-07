@@ -92,13 +92,20 @@ export function SlaDueCell({ assignedDate, targetHours, slaStatus }: SlaDueCellP
   }
 
   const variant = variantOf(slaStatus);
-  const iconName = variant === 'breached' ? 'circle-exclamation' : 'clock';
+  const iconName =
+    variant === 'breached'
+      ? 'circle-exclamation'
+      : variant === 'healthy'
+        ? 'circle-check'
+        : 'clock';
   const iconColor =
     variant === 'breached'
       ? 'text-red-500'
       : variant === 'atRisk'
         ? 'text-amber-500'
-        : 'text-gray-400';
+        : variant === 'healthy'
+          ? 'text-emerald-500'
+          : 'text-gray-400';
 
   return (
     <span className="inline-flex items-center gap-1.5 text-xs tabular-nums text-gray-700">

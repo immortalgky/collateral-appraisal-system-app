@@ -110,8 +110,8 @@ export default function AppointmentInfoCard({
       ? { label: t('approval.badge.needsApproval'), cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500' }
       : (() => {
           switch (status) {
-            case 'approved':
-              return { label: t('history.status.Approved'), cls: 'bg-green-50 text-green-700', dot: 'bg-green-500' };
+            case 'appointed':
+              return { label: t('history.status.Appointed'), cls: 'bg-green-50 text-green-700', dot: 'bg-green-500' };
             case 'pending':
               return { label: t('history.status.Pending'), cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500' };
             case 'rejected':

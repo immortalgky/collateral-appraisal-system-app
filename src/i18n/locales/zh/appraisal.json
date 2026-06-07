@@ -941,6 +941,7 @@
     },
     "status": {
       "Approved": "已批准",
+      "Appointed": "已预约",
       "Rejected": "已拒绝",
       "Pending": "待批准",
       "Auto": "自动",
