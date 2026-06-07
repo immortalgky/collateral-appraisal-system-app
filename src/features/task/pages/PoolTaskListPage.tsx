@@ -111,9 +111,10 @@ interface PoolTaskListPageProps {
   // When provided by a parent, the toolbar is hidden and these values drive the query
   externalSearch?: string;
   externalFilters?: TaskFilterParams;
+  onCountChange?: (count: number) => void;
 }
 
-function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolTaskListPageProps) {
+function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCountChange }: PoolTaskListPageProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUsername = useAuthStore(s => s.user?.username);
@@ -151,6 +152,10 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
   const tasks = data?.items ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  useEffect(() => {
+    onCountChange?.(totalCount);
+  }, [totalCount, onCountChange]);
   const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
     keyof TaskFilterParams,
     string,
@@ -524,7 +529,7 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters }: PoolT
                   return (
                     <tr
                       key={task.id}
-                      className={`group transition-colors ${
+                      className={`group cursor-pointer transition-colors ${
                         isLockedBySelf
                           ? 'bg-blue-50'
                           : isLockedByOther

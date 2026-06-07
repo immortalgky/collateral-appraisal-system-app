@@ -89,6 +89,13 @@ function DueDateCell({
           {formatted}
         </span>
       );
+    if (bucket === 'healthy')
+      return (
+        <span className="inline-flex items-center gap-1 text-emerald-600 font-medium text-sm">
+          <Icon style="solid" name="circle-check" className="size-3 flex-shrink-0" />
+          {formatted}
+        </span>
+      );
     return <>{formatted}</>;
   } catch {
     return <>{dateString}</>;
