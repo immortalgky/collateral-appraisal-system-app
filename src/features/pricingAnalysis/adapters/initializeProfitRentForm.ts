@@ -20,7 +20,7 @@ export function initializeProfitRentForm(
       growthIntervalYears: analysis.growthIntervalYears,
       discountRate: analysis.discountRate,
       includeBuildingCost: analysis.includeBuildingCost,
-      growthPeriods: (analysis.growthPeriods ?? []).map((p) => ({
+      growthPeriods: (analysis.growthPeriods ?? []).map(p => ({
         id: p.id,
         fromYear: p.fromYear,
         toYear: p.toYear,

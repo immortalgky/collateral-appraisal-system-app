@@ -19,6 +19,7 @@ import {
   useCreateEvaluation,
   useUpdateEvaluation,
   useDetectDeliveryTime,
+  useGetEvaluationConfig,
 } from '../api';
 import {
   evaluationSchema,
@@ -27,6 +28,7 @@ import {
   CRITERIA_WEIGHTS,
 } from '../schemas/form';
 import type { EvaluationFormValues } from '../schemas/form';
+import type { EvaluationConfig } from '../api/types';
 import RatingGuidelinesTable from '../components/RatingGuidelinesTable';
 import EvaluationCriteriaRow from '../components/EvaluationCriteriaRow';
 import StarRating from '../components/StarRating';
@@ -44,17 +46,44 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 // ─── Total Row ────────────────────────────────────────────────────────────────
 
-function EvaluationTotalRow({ values, totalLabel }: { values: EvaluationFormValues; totalLabel: string }) {
-  // Null ratings contribute 0 — partial scores stay visible while the user is still filling in.
-  const totalScore =
-    CRITERIA_WEIGHTS[0] * (values.criteria1Rating ?? 0) +
-    CRITERIA_WEIGHTS[1] * (values.criteria2Rating ?? 0) +
-    CRITERIA_WEIGHTS[2] * (values.criteria3Rating ?? 0) +
-    CRITERIA_WEIGHTS[3] * (values.criteria4Rating ?? 0) +
-    CRITERIA_WEIGHTS[4] * (values.criteria5Rating ?? 0);
+interface EvaluationTotalRowProps {
+  values: EvaluationFormValues;
+  totalLabel: string;
+  configs?: EvaluationConfig[];
+}
 
-  const totalWeight = CRITERIA_WEIGHTS.reduce((a, b) => a + b, 0);
-  const pct = ((totalScore / 5) * 100).toFixed(0);
+function EvaluationTotalRow({ values, totalLabel, configs }: EvaluationTotalRowProps) {
+  // Resolve weights from config (slot 1..5), fall back to hardcoded CRITERIA_WEIGHTS.
+  const resolveWeight = (slot: 1 | 2 | 3 | 4 | 5): number => {
+    if (configs && configs.length > 0) {
+      const cfg = configs.find(c => c.criteriaSlot === slot);
+      if (cfg) return cfg.weight;
+    }
+    return CRITERIA_WEIGHTS[slot - 1];
+  };
+
+  // Resolve max-score from config (slot 1..5), fall back to 5.
+  const resolveMaxScore = (slot: 1 | 2 | 3 | 4 | 5): number => {
+    const cfg = configs?.find(c => c.criteriaSlot === slot);
+    return cfg?.maxScore ?? 5;
+  };
+
+  const w = [1, 2, 3, 4, 5].map(s => resolveWeight(s as 1 | 2 | 3 | 4 | 5));
+  const maxScores = [1, 2, 3, 4, 5].map(s => resolveMaxScore(s as 1 | 2 | 3 | 4 | 5));
+
+  const totalScore =
+    w[0] * (values.criteria1Rating ?? 0) +
+    w[1] * (values.criteria2Rating ?? 0) +
+    w[2] * (values.criteria3Rating ?? 0) +
+    w[3] * (values.criteria4Rating ?? 0) +
+    w[4] * (values.criteria5Rating ?? 0);
+
+  const totalWeight = w.reduce((a, b) => a + b, 0);
+  // Max attainable = Σ weightᵢ·maxScoreᵢ (≈ 5 when maxScore=5 and weights sum to 1).
+  const maxTotal = w.reduce((sum, wi, i) => sum + wi * maxScores[i], 0) || 5;
+  const pct = ((totalScore / maxTotal) * 100).toFixed(0);
+  // Normalise to the 5-star scale so StarRating stays correct if maxScore changes.
+  const starScore = (totalScore / maxTotal) * 5;
 
   return (
     <tr className="bg-gray-50 font-medium">
@@ -72,7 +101,7 @@ function EvaluationTotalRow({ values, totalLabel }: { values: EvaluationFormValu
           <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-md font-semibold">
             {pct}%
           </span>
-          <StarRating score={totalScore} />
+          <StarRating score={starScore} />
         </div>
       </td>
     </tr>
@@ -90,6 +119,10 @@ function ServiceQualityEvaluationDetailPage() {
   const { data: evaluation, isLoading: evalLoading, isError: evalError, refetch: refetchEval } = useGetEvaluationByAppraisal(
     appraisalId ?? '',
   );
+
+  // Load config once we know the bankingSegment from the header.
+  const bankingSegment = header?.bankingSegment ?? undefined;
+  const { data: configs } = useGetEvaluationConfig(bankingSegment);
 
   const { mutate: createEvaluation, isPending: isCreating } = useCreateEvaluation();
   const { mutate: updateEvaluation, isPending: isUpdating } = useUpdateEvaluation();
@@ -261,6 +294,20 @@ function ServiceQualityEvaluationDetailPage() {
   const appraisalNumber = evaluation?.appraisalNumber ?? appraisal?.appraisalNumber ?? appraisalId;
   const isCompleted = evaluation?.evaluationStatus === 'Completed';
 
+  /**
+   * Resolve the display label for a given criteria slot (1-based).
+   * Uses config label (locale-aware) if available, else falls back to CRITERIA_LABELS.
+   */
+  const getCriteriaLabel = (slot: 1 | 2 | 3 | 4 | 5): string => {
+    if (configs && configs.length > 0) {
+      const cfg = configs.find(c => c.criteriaSlot === slot);
+      if (cfg) {
+        return i18n.language.startsWith('th') ? (cfg.labelTh || cfg.labelEn) : cfg.labelEn;
+      }
+    }
+    return CRITERIA_LABELS[slot - 1];
+  };
+
   return (
     <FormProvider {...methods}>
       <div className="flex flex-col gap-4 pb-24">
@@ -283,8 +330,8 @@ function ServiceQualityEvaluationDetailPage() {
           </dl>
         </div>
 
-        {/* Rating Guidelines */}
-        <RatingGuidelinesTable />
+        {/* Rating Guidelines — pass configs so descriptions are locale-aware */}
+        <RatingGuidelinesTable configs={configs} />
 
         {/* Evaluation Form */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
@@ -325,18 +372,24 @@ function ServiceQualityEvaluationDetailPage() {
                 </tr>
               </thead>
               <tbody>
-                {CRITERIA_LABELS.map((label, i) => (
-                  <EvaluationCriteriaRow
-                    key={i}
-                    index={i as 0 | 1 | 2 | 3 | 4}
-                    criteriaLabel={label}
-                    disabled={isCompleted}
-                    forceDisabled={i === 1 ? (watchedValues.criteria2AutoLocked ?? false) : false}
-                    deliveryAutoDetected={i === 1 ? (watchedValues.criteria2IsAutoDetected ?? false) : false}
-                    deliveryDetectedDays={i === 1 ? (watchedValues.criteria2DetectedDays ?? null) : null}
-                  />
-                ))}
-                <EvaluationTotalRow values={watchedValues} totalLabel="Total" />
+                {([1, 2, 3, 4, 5] as const).map(slot => {
+                  const index = (slot - 1) as 0 | 1 | 2 | 3 | 4;
+                  const cfg = configs?.find(c => c.criteriaSlot === slot);
+                  return (
+                    <EvaluationCriteriaRow
+                      key={slot}
+                      index={index}
+                      criteriaLabel={getCriteriaLabel(slot)}
+                      disabled={isCompleted}
+                      forceDisabled={index === 1 ? (watchedValues.criteria2AutoLocked ?? false) : false}
+                      deliveryAutoDetected={index === 1 ? (watchedValues.criteria2IsAutoDetected ?? false) : false}
+                      deliveryDetectedDays={index === 1 ? (watchedValues.criteria2DetectedDays ?? null) : null}
+                      weight={cfg?.weight}
+                      guidance={cfg?.guidance}
+                    />
+                  );
+                })}
+                <EvaluationTotalRow values={watchedValues} totalLabel="Total" configs={configs} />
               </tbody>
             </table>
           </div>

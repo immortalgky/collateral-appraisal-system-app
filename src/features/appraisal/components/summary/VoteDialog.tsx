@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -24,6 +25,7 @@ interface VoteDialogProps {
 }
 
 const VoteDialog = ({ isOpen, onClose, workflowInstanceId, activityId }: VoteDialogProps) => {
+  const { t } = useTranslation('appraisal');
   const [selectedVote, setSelectedVote] = useState<VoteValue | null>(null);
   const [comments, setComments] = useState('');
   const completeActivity = useCompleteActivity();
@@ -49,14 +51,16 @@ const VoteDialog = ({ isOpen, onClose, workflowInstanceId, activityId }: VoteDia
           if (result.status === 'ValidationFailed' || result.status === 'Failed') {
             const errors = result.validationErrors ?? [];
             if (errors.length > 0) {
-              errors.forEach(err => toast.error(err));
+              errors.forEach(err => toast.error(err.message));
             } else {
-              toast.error('Failed to submit vote');
+              toast.error(t('toasts.voteSubmitFailed'));
             }
             return;
           }
 
-          toast.success(result.isCompleted ? 'Committee decision recorded' : 'Vote recorded');
+          toast.success(
+            result.isCompleted ? t('toasts.committeeDecisionRecorded') : t('toasts.voteRecorded'),
+          );
           // Refresh the approval list so members[]/conditions[] reflect the new vote.
           queryClient.invalidateQueries({
             queryKey: decisionSummaryKeys.approvalList(workflowInstanceId, activityId),
@@ -67,7 +71,7 @@ const VoteDialog = ({ isOpen, onClose, workflowInstanceId, activityId }: VoteDia
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to submit vote');
+          toast.error(detail || t('toasts.voteSubmitFailed'));
         },
       },
     );

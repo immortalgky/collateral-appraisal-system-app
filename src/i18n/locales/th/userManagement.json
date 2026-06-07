@@ -1,0 +1,470 @@
+{
+  "page": {
+    "users": {
+      "title": "ผู้ใช้งาน",
+      "subtitle": "จัดการบัญชีผู้ใช้ บทบาท และการเข้าถึง"
+    },
+    "roles": {
+      "title": "บทบาท",
+      "subtitle": "จัดการบทบาทและสิทธิ์ที่เกี่ยวข้อง"
+    },
+    "groups": {
+      "title": "กลุ่ม",
+      "subtitle": "จัดการกลุ่มผู้ใช้และความสัมพันธ์การติดตาม"
+    },
+    "permissions": {
+      "title": "สิทธิ์",
+      "subtitle": "จัดการสิทธิ์ระบบที่สามารถกำหนดให้กับบทบาทได้"
+    },
+    "teams": {
+      "title": "ทีม",
+      "subtitle": "จัดการทีมและสมาชิก"
+    },
+    "auditLogs": {
+      "title": "บันทึกการตรวจสอบ",
+      "subtitle": "ตรวจสอบประวัติการเปลี่ยนแปลงผู้ใช้ บทบาท กลุ่ม และสิทธิ์"
+    },
+    "companies": {
+      "title": "บริษัท",
+      "subtitle": "จัดการบริษัทประเมินภายนอกและรายละเอียด"
+    },
+    "accessReport": {
+      "title": "รายงานการเข้าถึง",
+      "subtitle": "ดูและส่งออกเมทริกซ์การเข้าถึงของผู้ใช้"
+    }
+  },
+  "tabs": {
+    "bank": "ธนาคาร",
+    "company": "บริษัท"
+  },
+  "sections": {
+    "general": "ทั่วไป",
+    "roles": "บทบาท",
+    "groups": "กลุ่ม",
+    "teams": "ทีม",
+    "users": "ผู้ใช้งาน",
+    "permissions": "สิทธิ์",
+    "security": "ความปลอดภัย",
+    "status": "สถานะ",
+    "monitoring": "การติดตาม",
+    "address": "ที่อยู่",
+    "bankAccount": "บัญชีธนาคาร"
+  },
+  "fields": {
+    "username": "ชื่อผู้ใช้",
+    "email": "อีเมล",
+    "firstName": "ชื่อ",
+    "lastName": "นามสกุล",
+    "position": "ตำแหน่ง",
+    "department": "แผนก",
+    "name": "ชื่อ",
+    "description": "คำอธิบาย",
+    "scope": "ขอบเขต",
+    "permissionCode": "รหัสสิทธิ์",
+    "displayName": "ชื่อที่แสดง",
+    "module": "โมดูล",
+    "password": "รหัสผ่าน",
+    "newPassword": "รหัสผ่านใหม่",
+    "confirmPassword": "ยืนยันรหัสผ่าน",
+    "currentPassword": "รหัสผ่านปัจจุบัน",
+    "confirmNewPassword": "ยืนยันรหัสผ่านใหม่",
+    "companyName": "ชื่อบริษัท",
+    "taxId": "เลขประจำตัวผู้เสียภาษี",
+    "phone": "โทรศัพท์",
+    "contactPerson": "ผู้ติดต่อ",
+    "street": "ที่อยู่",
+    "city": "เมือง",
+    "province": "จังหวัด",
+    "postalCode": "รหัสไปรษณีย์",
+    "bankAccountNo": "เลขที่บัญชีธนาคาร",
+    "bankAccountName": "ชื่อบัญชี",
+    "loanTypes": "ประเภทสินเชื่อ",
+    "isActive": "ใช้งาน",
+    "teamType": "ประเภท",
+    "teamTypeInternal": "ภายใน",
+    "teamTypeExternal": "ภายนอก",
+    "status": "สถานะ",
+    "company": "บริษัท",
+    "authSource": "แหล่งยืนยันตัวตน",
+    "lastLogin": "เข้าสู่ระบบล่าสุด",
+    "noCompany": "ไม่มีบริษัท"
+  },
+  "placeholders": {
+    "searchUsers": "ค้นหาผู้ใช้...",
+    "searchRoles": "ค้นหาบทบาท...",
+    "searchGroups": "ค้นหากลุ่ม...",
+    "searchTeams": "ค้นหาทีม...",
+    "searchCompanies": "ค้นหาบริษัท...",
+    "searchActor": "ค้นหาผู้กระทำ...",
+    "searchPermissions": "ค้นหาด้วยรหัสหรือชื่อที่แสดง...",
+    "searchPermissionsShort": "ค้นหาสิทธิ์...",
+    "searchByNameOrEmail": "ค้นหาด้วยชื่อหรืออีเมล...",
+    "searchGroupsShort": "ค้นหากลุ่ม...",
+    "roleName": "ชื่อบทบาท",
+    "roleDescription": "คำอธิบายสั้น ๆ ของบทบาทนี้",
+    "groupName": "ชื่อกลุ่ม",
+    "groupDescription": "คำอธิบายสั้น ๆ ของกลุ่มนี้",
+    "teamName": "ชื่อทีม",
+    "teamDescription": "คำอธิบายสั้น ๆ ของทีมนี้",
+    "companyName": "ชื่อบริษัท",
+    "taxId": "เช่น 0105556123456",
+    "phone": "เช่น 02-xxx-xxxx",
+    "contactPerson": "ชื่อผู้ติดต่อ",
+    "street": "ที่อยู่",
+    "city": "เมือง",
+    "province": "จังหวัด",
+    "postalCode": "รหัสไปรษณีย์",
+    "bankAccountNo": "เลขที่บัญชีธนาคาร",
+    "bankAccountName": "ชื่อผู้ถือบัญชี",
+    "loanTypes": "เช่น HOUSING, AUTO",
+    "briefDescription": "คำอธิบายสั้น ๆ",
+    "permissionCodeExample": "เช่น permissions.read",
+    "displayNameExample": "เช่น ดูสิทธิ์",
+    "permissionDescription": "คำอธิบายสั้น ๆ ว่าสิทธิ์นี้อนุญาตอะไร",
+    "firstName": "ชื่อ",
+    "lastName": "นามสกุล",
+    "position": "เช่น นักประเมินอาวุโส",
+    "department": "เช่น ฝ่ายประเมินราคา",
+    "username": "jdoe",
+    "email": "jdoe@example.com",
+    "passwordHint": "อย่างน้อย 8 ตัวอักษร ตัวพิมพ์ใหญ่/เล็ก/ตัวเลข/สัญลักษณ์",
+    "atLeast8Chars": "อย่างน้อย 8 ตัวอักษร",
+    "reEnterNewPassword": "ป้อนรหัสผ่านใหม่อีกครั้ง",
+    "enterCurrentPassword": "ป้อนรหัสผ่านปัจจุบัน"
+  },
+  "filters": {
+    "all": "ทั้งหมด",
+    "entityType": "ประเภทข้อมูล",
+    "action": "การดำเนินการ",
+    "actor": "ผู้กระทำ",
+    "from": "ตั้งแต่",
+    "to": "ถึง",
+    "search": "ค้นหา",
+    "roleName": "บทบาท",
+    "group": "กลุ่ม",
+    "team": "ทีม"
+  },
+  "counts": {
+    "members": "{{count}} สมาชิก",
+    "members_other": "{{count}} สมาชิก",
+    "results": "{{count}} รายการ",
+    "results_other": "{{count}} รายการ"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน",
+    "locked": "ถูกล็อก"
+  },
+  "hints": {
+    "loanTypesComma": "คั่นประเภทสินเชื่อหลายประเภทด้วยเครื่องหมายจุลภาค"
+  },
+  "empty": {
+    "noUsersFound": "ไม่พบผู้ใช้งาน",
+    "noRolesFound": "ไม่พบบทบาท",
+    "noGroupsFound": "ไม่พบกลุ่ม",
+    "noPermissionsFound": "ไม่พบสิทธิ์",
+    "noTeamsFound": "ไม่พบทีม",
+    "noCompaniesFound": "ไม่พบบริษัท",
+    "noAuditLogs": "ไม่พบรายการบันทึกการตรวจสอบ",
+    "noResults": "ไม่พบผลลัพธ์",
+    "noRolesAssigned": "ยังไม่มีบทบาทที่กำหนด",
+    "noGroupsAssigned": "ยังไม่มีกลุ่มที่กำหนด",
+    "noUsersAssigned": "ยังไม่มีผู้ใช้ที่กำหนด",
+    "noPermissionsAssigned": "ยังไม่มีสิทธิ์ที่กำหนด",
+    "noGroupsBeingMonitored": "ยังไม่มีกลุ่มที่ถูกติดตาม",
+    "selectUser": "เลือกผู้ใช้เพื่อดูรายละเอียด",
+    "selectRole": "เลือกบทบาทเพื่อดูรายละเอียด",
+    "selectGroup": "เลือกกลุ่มเพื่อดูรายละเอียด",
+    "selectTeam": "เลือกทีมเพื่อดูรายละเอียด",
+    "selectCompany": "เลือกบริษัทเพื่อดูรายละเอียด",
+    "noRolesAvailable": "ไม่มีบทบาทที่ใช้งานได้",
+    "noOtherGroupsFound": "ไม่พบกลุ่มอื่น",
+    "noItemsFound": "ไม่พบรายการ",
+    "noTeamsAssigned": "ยังไม่มีทีมที่กำหนด",
+    "loading": "กำลังโหลด..."
+  },
+  "aria": {
+    "addUser": "เพิ่มผู้ใช้",
+    "addRole": "เพิ่มบทบาท",
+    "addGroup": "เพิ่มกลุ่ม",
+    "addTeam": "เพิ่มทีม",
+    "addCompany": "เพิ่มบริษัท",
+    "removeItem": "ลบ {{name}}"
+  },
+  "buttons": {
+    "addPermission": "เพิ่มสิทธิ์",
+    "edit": "แก้ไข",
+    "deleteRole": "ลบบทบาท",
+    "deleteGroup": "ลบกลุ่ม",
+    "deleteTeam": "ลบทีม",
+    "deleteCompany": "ลบบริษัท",
+    "changePassword": "เปลี่ยนรหัสผ่าน",
+    "resetPassword": "รีเซ็ตรหัสผ่าน",
+    "savePermissions": "บันทึกสิทธิ์",
+    "saveUsers": "บันทึกผู้ใช้",
+    "showPasswords": "แสดงรหัสผ่าน",
+    "hidePasswords": "ซ่อนรหัสผ่าน",
+    "update": "อัปเดต",
+    "create": "สร้าง",
+    "exportCsv": "ส่งออก CSV",
+    "activate": "เปิดใช้งาน",
+    "deactivate": "ปิดใช้งาน",
+    "unlock": "ปลดล็อก"
+  },
+  "dialogs": {
+    "createRole": {
+      "title": "สร้างบทบาท"
+    },
+    "editRole": {
+      "title": "แก้ไขบทบาท"
+    },
+    "deleteRole": {
+      "title": "ลบบทบาท",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "createGroup": {
+      "title": "สร้างกลุ่ม"
+    },
+    "editGroup": {
+      "title": "แก้ไขกลุ่ม"
+    },
+    "deleteGroup": {
+      "title": "ลบกลุ่ม",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "createTeam": {
+      "title": "สร้างทีม"
+    },
+    "editTeam": {
+      "title": "แก้ไขทีม"
+    },
+    "deleteTeam": {
+      "title": "ลบทีม",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "createCompany": {
+      "title": "สร้างบริษัท"
+    },
+    "editCompany": {
+      "title": "แก้ไขบริษัท"
+    },
+    "deleteCompany": {
+      "title": "ลบบริษัท",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "createUser": {
+      "title": "สร้างผู้ใช้"
+    },
+    "editUser": {
+      "title": "แก้ไขผู้ใช้"
+    },
+    "editRoles": {
+      "title": "แก้ไขบทบาท",
+      "hint": "เลือกบทบาทที่ต้องการกำหนดให้ผู้ใช้นี้"
+    },
+    "editGroups": {
+      "title": "แก้ไขกลุ่ม",
+      "hint": "เลือกกลุ่มที่ต้องการกำหนดให้ผู้ใช้นี้"
+    },
+    "resetPassword": {
+      "title": "รีเซ็ตรหัสผ่าน",
+      "hint": "ตั้งรหัสผ่านใหม่สำหรับผู้ใช้นี้ ไม่ต้องใช้รหัสผ่านปัจจุบัน"
+    },
+    "changePassword": {
+      "title": "เปลี่ยนรหัสผ่าน"
+    },
+    "editPermission": {
+      "title": "แก้ไขสิทธิ์"
+    },
+    "addPermission": {
+      "title": "เพิ่มสิทธิ์"
+    },
+    "deletePermission": {
+      "title": "ลบสิทธิ์",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบสิทธิ์นี้? การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    },
+    "assignPermissions": {
+      "title": "กำหนดสิทธิ์"
+    },
+    "assignUsers": {
+      "title": "กำหนดผู้ใช้"
+    },
+    "selectMonitoredGroups": {
+      "title": "เลือกกลุ่มที่ต้องการติดตาม"
+    },
+    "editTeams": {
+      "title": "แก้ไขทีม",
+      "hint": "เลือกทีมที่ต้องการกำหนดให้ผู้ใช้นี้"
+    },
+    "activateUser": {
+      "title": "เปิดใช้งานผู้ใช้",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการเปิดใช้งาน \"{{name}}\""
+    },
+    "deactivateUser": {
+      "title": "ปิดใช้งานผู้ใช้",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการปิดใช้งาน \"{{name}}\"? พวกเขาจะไม่สามารถเข้าสู่ระบบได้"
+    }
+  },
+  "security": {
+    "deleteRoleWarning": "การลบบทบาทนี้จะนำออกจากผู้ใช้ทั้งหมดที่ถูกกำหนด การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "deleteGroupWarning": "การลบกลุ่มนี้จะลบการกำหนดผู้ใช้ทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "deleteTeamWarning": "การลบทีมนี้จะลบสมาชิกทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "deleteCompanyWarning": "การลบบริษัทนี้จะนำออกจากระบบ การดำเนินการนี้ไม่สามารถยกเลิกได้"
+  },
+  "selectionCount": {
+    "permissions": "เลือก {{count}} สิทธิ์",
+    "permissions_other": "เลือก {{count}} สิทธิ์",
+    "users": "เลือก {{count}} ผู้ใช้",
+    "users_other": "เลือก {{count}} ผู้ใช้",
+    "groups": "เลือก {{count}} กลุ่ม",
+    "groups_other": "เลือก {{count}} กลุ่ม",
+    "items": "เลือก {{count}} รายการ",
+    "items_other": "เลือก {{count}} รายการ"
+  },
+  "loading": {
+    "permissions": "กำลังโหลดสิทธิ์...",
+    "users": "กำลังโหลดผู้ใช้...",
+    "groups": "กำลังโหลดกลุ่ม..."
+  },
+  "columns": {
+    "displayName": "ชื่อที่แสดง",
+    "permissionCode": "รหัสสิทธิ์",
+    "module": "โมดูล",
+    "description": "คำอธิบาย",
+    "actions": "การดำเนินการ",
+    "when": "เวลา",
+    "actor": "ผู้กระทำ",
+    "action": "การดำเนินการ",
+    "entityType": "ประเภท",
+    "entityName": "ชื่อข้อมูล",
+    "changes": "การเปลี่ยนแปลง",
+    "username": "ชื่อผู้ใช้",
+    "fullName": "ชื่อ-นามสกุล",
+    "email": "อีเมล",
+    "scope": "ขอบเขต"
+  },
+  "toasts": {
+    "roleCreated": "สร้างบทบาทเรียบร้อยแล้ว",
+    "roleCreateFailed": "ไม่สามารถสร้างบทบาทได้",
+    "roleUpdated": "อัปเดตบทบาทเรียบร้อยแล้ว",
+    "roleUpdateFailed": "ไม่สามารถอัปเดตบทบาทได้",
+    "roleDeleted": "ลบบทบาทเรียบร้อยแล้ว",
+    "roleDeleteFailed": "ไม่สามารถลบบทบาทได้",
+    "permissionsUpdated": "อัปเดตสิทธิ์เรียบร้อยแล้ว",
+    "permissionsUpdateFailed": "ไม่สามารถอัปเดตสิทธิ์ได้",
+    "usersUpdated": "อัปเดตผู้ใช้เรียบร้อยแล้ว",
+    "usersUpdateFailed": "ไม่สามารถอัปเดตผู้ใช้ได้",
+    "groupCreated": "สร้างกลุ่มเรียบร้อยแล้ว",
+    "groupCreateFailed": "ไม่สามารถสร้างกลุ่มได้",
+    "groupUpdated": "อัปเดตกลุ่มเรียบร้อยแล้ว",
+    "groupUpdateFailed": "ไม่สามารถอัปเดตกลุ่มได้",
+    "groupDeleted": "ลบกลุ่มเรียบร้อยแล้ว",
+    "groupDeleteFailed": "ไม่สามารถลบกลุ่มได้",
+    "teamCreated": "สร้างทีมเรียบร้อยแล้ว",
+    "teamCreateFailed": "ไม่สามารถสร้างทีมได้",
+    "teamUpdated": "อัปเดตทีมเรียบร้อยแล้ว",
+    "teamUpdateFailed": "ไม่สามารถอัปเดตทีมได้",
+    "teamDeleted": "ลบทีมเรียบร้อยแล้ว",
+    "teamDeleteFailed": "ไม่สามารถลบทีมได้",
+    "companyCreated": "สร้างบริษัทเรียบร้อยแล้ว",
+    "companyCreateFailed": "ไม่สามารถสร้างบริษัทได้",
+    "companyUpdated": "อัปเดตบริษัทเรียบร้อยแล้ว",
+    "companyUpdateFailed": "ไม่สามารถอัปเดตบริษัทได้",
+    "companyDeleted": "ลบบริษัทเรียบร้อยแล้ว",
+    "companyDeleteFailed": "ไม่สามารถลบบริษัทได้",
+    "exportFailed": "ไม่สามารถส่งออกรายงานได้",
+    "monitoredGroupsUpdated": "อัปเดตกลุ่มที่ติดตามเรียบร้อยแล้ว",
+    "monitoredGroupsUpdateFailed": "ไม่สามารถอัปเดตกลุ่มที่ติดตามได้",
+    "userUpdated": "อัปเดตผู้ใช้เรียบร้อยแล้ว",
+    "userUpdateFailed": "ไม่สามารถอัปเดตผู้ใช้ได้",
+    "userCreated": "สร้างผู้ใช้เรียบร้อยแล้ว",
+    "rolesUpdated": "อัปเดตบทบาทเรียบร้อยแล้ว",
+    "rolesUpdateFailed": "ไม่สามารถอัปเดตบทบาทได้",
+    "groupsUpdated": "อัปเดตกลุ่มเรียบร้อยแล้ว",
+    "groupsUpdateFailed": "ไม่สามารถอัปเดตกลุ่มได้",
+    "passwordChanged": "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว",
+    "passwordChangeFailed": "ไม่สามารถเปลี่ยนรหัสผ่านได้",
+    "passwordReset": "รีเซ็ตรหัสผ่านเรียบร้อยแล้ว",
+    "passwordResetFailed": "ไม่สามารถรีเซ็ตรหัสผ่านได้",
+    "profileUpdated": "อัปเดตโปรไฟล์เรียบร้อยแล้ว",
+    "profileUpdateFailed": "ไม่สามารถอัปเดตโปรไฟล์ได้",
+    "permissionCreated": "สร้างสิทธิ์เรียบร้อยแล้ว",
+    "permissionCreateFailed": "ไม่สามารถสร้างสิทธิ์ได้",
+    "permissionUpdated": "อัปเดตสิทธิ์เรียบร้อยแล้ว",
+    "permissionUpdateFailed": "ไม่สามารถอัปเดตสิทธิ์ได้",
+    "permissionDeleted": "ลบสิทธิ์เรียบร้อยแล้ว",
+    "permissionDeleteFailed": "ไม่สามารถลบสิทธิ์ได้",
+    "teamsUpdated": "อัปเดตทีมเรียบร้อยแล้ว",
+    "teamsUpdateFailed": "ไม่สามารถอัปเดตทีมได้",
+    "userActivated": "เปิดใช้งานผู้ใช้เรียบร้อยแล้ว",
+    "userDeactivated": "ปิดใช้งานผู้ใช้เรียบร้อยแล้ว",
+    "userActivationFailed": "ไม่สามารถอัปเดตสถานะผู้ใช้ได้",
+    "userUnlocked": "ปลดล็อกบัญชีผู้ใช้เรียบร้อยแล้ว",
+    "userUnlockFailed": "ไม่สามารถปลดล็อกบัญชีผู้ใช้ได้"
+  },
+  "validation": {
+    "nameRequired": "ต้องระบุชื่อ",
+    "nameAndScopeRequired": "ต้องระบุชื่อและขอบเขต",
+    "firstAndLastNameRequired": "ต้องระบุชื่อและนามสกุล",
+    "usernameRequired": "ต้องระบุชื่อผู้ใช้",
+    "emailRequired": "ต้องระบุอีเมล",
+    "emailInvalid": "อีเมลไม่ถูกต้อง",
+    "passwordRequired": "ต้องระบุรหัสผ่าน",
+    "passwordMinLength": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+    "passwordUppercase": "รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว",
+    "passwordLowercase": "รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว",
+    "passwordDigit": "รหัสผ่านต้องมีตัวเลขอย่างน้อยหนึ่งตัว",
+    "passwordSymbol": "รหัสผ่านต้องมีอักขระพิเศษอย่างน้อยหนึ่งตัว",
+    "firstNameRequired": "ต้องระบุชื่อ",
+    "lastNameRequired": "ต้องระบุนามสกุล",
+    "selectAtLeastOneRole": "โปรดเลือกอย่างน้อยหนึ่งบทบาท",
+    "fillAllRequired": "โปรดกรอกข้อมูลในช่องที่จำเป็นทั้งหมด",
+    "currentPasswordRequired": "ต้องระบุรหัสผ่านปัจจุบัน",
+    "newPasswordMinLength": "รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร",
+    "confirmPasswordRequired": "โปรดยืนยันรหัสผ่านใหม่",
+    "passwordsDoNotMatch": "รหัสผ่านไม่ตรงกัน",
+    "passwordMinLengthReset": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
+    "passwordsDoNotMatchReset": "รหัสผ่านไม่ตรงกัน"
+  },
+  "passwordPolicy": {
+    "minLength": "อย่างน้อย {{count}} ตัวอักษร",
+    "requireUppercase": "ตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว",
+    "requireLowercase": "ตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว",
+    "requireDigit": "ตัวเลขอย่างน้อยหนึ่งตัว",
+    "requireSymbol": "อักขระพิเศษอย่างน้อยหนึ่งตัว"
+  },
+  "roles": {
+    "displayNames": {
+      "Admin": "ผู้ดูแลระบบ",
+      "IntAdmin": "ผู้ดูแลเวิร์กโฟลว์",
+      "ExtAdmin": "ผู้ดูแลบริษัทภายนอก",
+      "RM": "ผู้จัดการความสัมพันธ์",
+      "RequestMaker": "ผู้สร้างคำขอ",
+      "RequestChecker": "ผู้ตรวจสอบคำขอ",
+      "IntAppraisalStaff": "เจ้าหน้าที่ประเมินภายใน",
+      "IntAppraisalChecker": "ผู้ตรวจสอบการประเมินภายใน",
+      "IntAppraisalVerifier": "ผู้ยืนยันการประเมินภายใน",
+      "ExtAppraisalStaff": "เจ้าหน้าที่ประเมินภายนอก",
+      "ExtAppraisalChecker": "ผู้ตรวจสอบการประเมินภายนอก",
+      "ExtAppraisalVerifier": "ผู้ยืนยันการประเมินภายนอก",
+      "AppraisalCommittee": "สมาชิกคณะกรรมการประเมิน",
+      "MeetingSecretary": "เลขานุการการประชุม"
+    },
+    "descriptions": {
+      "Admin": "สิทธิ์เข้าถึงระบบเต็มรูปแบบ รวมถึงการกำหนดค่าและการจัดการผู้ใช้",
+      "IntAdmin": "ผู้ดูแลเวิร์กโฟลว์ — จัดการเวิร์กโฟลว์ภายใน การมอบหมาย และพารามิเตอร์",
+      "ExtAdmin": "ผู้ดูแลบริษัทภายนอก — จัดการผู้ประเมินและการมอบหมายงานภายนอก",
+      "RM": "ผู้จัดการความสัมพันธ์ — ตรวจสอบใบเสนอราคาและเลือกผู้ชนะเบื้องต้น",
+      "RequestMaker": "สร้างและเริ่มต้นคำขอประเมิน",
+      "RequestChecker": "ตรวจสอบและอนุมัติคำขอประเมิน",
+      "IntAppraisalStaff": "เจ้าหน้าที่ประเมินภายใน — ดำเนินการประเมินภายใน",
+      "IntAppraisalChecker": "ผู้ตรวจสอบการประเมินภายใน — ตรวจสอบงานประเมินภายใน",
+      "IntAppraisalVerifier": "ผู้ยืนยันการประเมินภายใน — อนุมัติขั้นสุดท้ายภายใน",
+      "ExtAppraisalStaff": "เจ้าหน้าที่ประเมินภายนอก — ดำเนินการประเมินภาคสนาม",
+      "ExtAppraisalChecker": "ผู้ตรวจสอบการประเมินภายนอก — ตรวจสอบงานประเมินภายนอก",
+      "ExtAppraisalVerifier": "ผู้ยืนยันการประเมินภายนอก — อนุมัติขั้นสุดท้ายภายนอก",
+      "AppraisalCommittee": "สมาชิกคณะกรรมการประเมิน — อนุมัติ/ลงคะแนนการประเมินระดับ 3",
+      "MeetingSecretary": "เลขานุการการประชุม — กำหนดการและดำเนินการประชุมอนุมัติระดับ 3"
+    }
+  }
+}

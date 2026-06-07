@@ -247,9 +247,8 @@ export function useEnrichedPricingAnalysis({
 
   // When subject is projectModel, inject flat as properties[0] so panels
   // that use properties[0] for the subject column get the resolved values.
-  const effectiveProperties = skipGroupDetail && flatContext
-    ? [flatContext as Record<string, unknown>]
-    : properties;
+  const effectiveProperties =
+    skipGroupDetail && flatContext ? [flatContext as Record<string, unknown>] : properties;
 
   return {
     groupDetail,

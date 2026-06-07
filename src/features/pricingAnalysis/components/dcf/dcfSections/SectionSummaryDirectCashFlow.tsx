@@ -12,7 +12,13 @@ export function SectionSummaryDirectCashFlow({
   totalNumberOfYears,
   isReadOnly,
 }: SectionSummaryDirectCashFlowProps) {
-  return <SummarySectionTable name={name} totalNumberOfYears={totalNumberOfYears} isReadOnly={isReadOnly} />;
+  return (
+    <SummarySectionTable
+      name={name}
+      totalNumberOfYears={totalNumberOfYears}
+      isReadOnly={isReadOnly}
+    />
+  );
 }
 
 interface SummarySectionTableProps {

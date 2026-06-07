@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  createLandAndBuildingPMAForm,
+  useLandAndBuildingPMAFormSchema,
   createLandAndBuildingPMAFormDefault,
   type createLandAndBuildingPMAFormType,
 } from '../schemas/form';
@@ -24,10 +24,11 @@ const LandBuildingPMAPage = () => {
   const isReadOnly = usePageReadOnly();
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useAppraisalId();
+  const landAndBuildingPMAFormSchema = useLandAndBuildingPMAFormSchema();
 
   const methods = useForm<createLandAndBuildingPMAFormType>({
     defaultValues: createLandAndBuildingPMAFormDefault,
-    resolver: zodResolver(createLandAndBuildingPMAForm),
+    resolver: zodResolver(landAndBuildingPMAFormSchema),
   });
   const {
     handleSubmit,
@@ -93,7 +94,7 @@ const LandBuildingPMAPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandAndBuildingPMAForm}>
+      <FormProvider methods={methods} schema={landAndBuildingPMAFormSchema}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div

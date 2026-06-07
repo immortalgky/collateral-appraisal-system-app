@@ -8,7 +8,6 @@ interface ActivityLogTableProps {
   pageSize?: number;
 }
 
-
 /** Format an ISO datetime string to "dd/MM/yyyy HH:mm" */
 const formatDateTime = (iso: string): string => {
   const d = new Date(iso);
@@ -55,7 +54,7 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
             </tr>
           </thead>
           <tbody>
-            {pageItems.map((item) => (
+            {pageItems.map(item => (
               <tr key={item.sequenceNo} className="border-b border-gray-100 last:border-0">
                 <td className="text-gray-500 font-medium">{item.sequenceNo}</td>
                 <td className="font-medium text-gray-800">
@@ -64,7 +63,9 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
                 <td>
                   {item.assignedToDisplayName || item.assignedTo ? (
                     <div>
-                      <span className="text-gray-700">{item.assignedToDisplayName ?? item.assignedTo}</span>
+                      <span className="text-gray-700">
+                        {item.assignedToDisplayName ?? item.assignedTo}
+                      </span>
                       {item.assignedToDisplayName && item.assignedTo && (
                         <div className="text-xs text-gray-400">{item.assignedTo}</div>
                       )}
@@ -73,9 +74,15 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
                     <span className="text-gray-400">—</span>
                   )}
                 </td>
-                <td className="text-gray-600 whitespace-nowrap">{formatDateTime(item.startDate)}</td>
                 <td className="text-gray-600 whitespace-nowrap">
-                  {item.endDate ? formatDateTime(item.endDate) : <span className="text-gray-400">—</span>}
+                  {formatDateTime(item.startDate)}
+                </td>
+                <td className="text-gray-600 whitespace-nowrap">
+                  {item.endDate ? (
+                    formatDateTime(item.endDate)
+                  ) : (
+                    <span className="text-gray-400">—</span>
+                  )}
                 </td>
                 <td>
                   {item.actionTaken ? (
@@ -129,14 +136,12 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
       {totalPages > 1 && (
         <div className="flex justify-center pt-3 border-t border-gray-100 mt-1">
           <div className="flex items-center gap-1.5">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
               <button
                 key={p}
                 onClick={() => setPage(p)}
                 className={`rounded-full transition-all duration-150 ${
-                  p === page
-                    ? 'w-2.5 h-2.5 bg-blue-500'
-                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                  p === page ? 'w-2.5 h-2.5 bg-blue-500' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                 }`}
               />
             ))}

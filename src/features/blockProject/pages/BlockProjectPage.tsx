@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 
 import Icon from '@shared/components/Icon';
@@ -59,34 +60,6 @@ interface TabDef {
   icon: string;
 }
 
-const CONDO_TABS: TabDef[] = [
-  { id: 'project-info', label: 'Project Info', icon: 'building-columns' },
-  { id: 'unit-listing', label: 'Unit Listing', icon: 'table-list' },
-  { id: 'towers', label: 'Tower', icon: 'building' },
-  { id: 'models', label: 'Model', icon: 'layer-group' },
-  { id: 'unit-price', label: 'Unit Price', icon: 'tags' },
-  { id: 'markets', label: 'Markets', icon: 'magnifying-glass-chart' },
-  { id: 'gallery', label: 'Gallery', icon: 'images' },
-  { id: 'photos', label: 'Photo', icon: 'camera' },
-  { id: 'laws', label: 'Laws and Regulation', icon: 'gavel' },
-];
-
-const LB_TABS: TabDef[] = [
-  { id: 'project-info', label: 'Project Info', icon: 'building-columns' },
-  { id: 'unit-listing', label: 'Unit Listing', icon: 'table-list' },
-  { id: 'project-land', label: 'Project Land', icon: 'map' },
-  { id: 'models', label: 'Model', icon: 'house' },
-  { id: 'unit-price', label: 'Unit Price', icon: 'tags' },
-  { id: 'markets', label: 'Markets', icon: 'magnifying-glass-chart' },
-  { id: 'gallery', label: 'Gallery', icon: 'images' },
-  { id: 'photos', label: 'Photo', icon: 'camera' },
-  { id: 'laws', label: 'Laws and Regulation', icon: 'gavel' },
-];
-
-function getTabs(projectType: ProjectType): TabDef[] {
-  return isCondo(projectType) ? CONDO_TABS : LB_TABS;
-}
-
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface BlockProjectPageProps {
@@ -101,14 +74,39 @@ interface BlockProjectPageProps {
  * as a prop and branch internally.
  */
 export default function BlockProjectPage({ projectType }: BlockProjectPageProps) {
+  const { t } = useTranslation('blockProject');
   const [searchParams, setSearchParams] = useSearchParams();
   const appraisalId = useAppraisalId() ?? '';
-  const tabs = getTabs(projectType);
-  const validTabIds = tabs.map(t => t.id);
+
+  const CONDO_TABS: TabDef[] = [
+    { id: 'project-info', label: t('page.tabs.projectInfo'), icon: 'building-columns' },
+    { id: 'unit-listing', label: t('page.tabs.unitListing'), icon: 'table-list' },
+    { id: 'towers', label: t('page.tabs.towers'), icon: 'building' },
+    { id: 'models', label: t('page.tabs.models'), icon: 'layer-group' },
+    { id: 'unit-price', label: t('page.tabs.unitPrice'), icon: 'tags' },
+    { id: 'markets', label: t('page.tabs.markets'), icon: 'magnifying-glass-chart' },
+    { id: 'gallery', label: t('page.tabs.gallery'), icon: 'images' },
+    { id: 'photos', label: t('page.tabs.photos'), icon: 'camera' },
+    { id: 'laws', label: t('page.tabs.laws'), icon: 'gavel' },
+  ];
+
+  const LB_TABS: TabDef[] = [
+    { id: 'project-info', label: t('page.tabs.projectInfo'), icon: 'building-columns' },
+    { id: 'unit-listing', label: t('page.tabs.unitListing'), icon: 'table-list' },
+    { id: 'project-land', label: t('page.tabs.projectLand'), icon: 'map' },
+    { id: 'models', label: t('page.tabs.models'), icon: 'house' },
+    { id: 'unit-price', label: t('page.tabs.unitPrice'), icon: 'tags' },
+    { id: 'markets', label: t('page.tabs.markets'), icon: 'magnifying-glass-chart' },
+    { id: 'gallery', label: t('page.tabs.gallery'), icon: 'images' },
+    { id: 'photos', label: t('page.tabs.photos'), icon: 'camera' },
+    { id: 'laws', label: t('page.tabs.laws'), icon: 'gavel' },
+  ];
+
+  const tabs = isCondo(projectType) ? CONDO_TABS : LB_TABS;
+  const validTabIds = tabs.map(tab => tab.id);
 
   const tabParam = searchParams.get('tab') as TabId | null;
-  const activeTab: TabId =
-    tabParam && validTabIds.includes(tabParam) ? tabParam : 'project-info';
+  const activeTab: TabId = tabParam && validTabIds.includes(tabParam) ? tabParam : 'project-info';
 
   // Seed `?tab=project-info` on first arrival so the URL is the source of truth
   // (the layout breadcrumb reads `?tab=` to render the active-tab crumb).
@@ -127,12 +125,36 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   // ── Child count queries for the type-change dialog ────────────────────────
   // TanStack Query deduplicates these with the same keys used inside tab
   // subcomponents, so no extra network requests are made.
-  const { data: project, isError: isProjectError, refetch: refetchProject } = useGetProject(appraisalId, projectType);
-  const { data: modelsData, isError: isModelsError, refetch: refetchModels } = useGetProjectModels(appraisalId);
-  const { data: towersData, isError: isTowersError, refetch: refetchTowers } = useGetProjectTowers(appraisalId);
-  const { data: unitsData, isError: isUnitsError, refetch: refetchUnits } = useGetProjectUnits(appraisalId);
-  const { data: pricingData, isError: isPricingError, refetch: refetchPricing } = useGetProjectPricingAssumptions(appraisalId);
-  const { data: landData, isError: isLandError, refetch: refetchLand } = useGetProjectLand(appraisalId);
+  const {
+    data: project,
+    isError: isProjectError,
+    refetch: refetchProject,
+  } = useGetProject(appraisalId, projectType);
+  const {
+    data: modelsData,
+    isError: isModelsError,
+    refetch: refetchModels,
+  } = useGetProjectModels(appraisalId);
+  const {
+    data: towersData,
+    isError: isTowersError,
+    refetch: refetchTowers,
+  } = useGetProjectTowers(appraisalId);
+  const {
+    data: unitsData,
+    isError: isUnitsError,
+    refetch: refetchUnits,
+  } = useGetProjectUnits(appraisalId);
+  const {
+    data: pricingData,
+    isError: isPricingError,
+    refetch: refetchPricing,
+  } = useGetProjectPricingAssumptions(appraisalId);
+  const {
+    data: landData,
+    isError: isLandError,
+    refetch: refetchLand,
+  } = useGetProjectLand(appraisalId);
 
   // Latch: once the project is confirmed to exist, keep this true so transient
   // background refetches (triggered by invalidateQueries after save) don't
@@ -156,7 +178,7 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
   };
 
   if (isProjectError) {
-    return <DataErrorState title="Failed to load project" onRetry={refetchProject} />;
+    return <DataErrorState title={t('errors.failedToLoadProject')} onRetry={refetchProject} />;
   }
 
   const renderTabContent = () => {

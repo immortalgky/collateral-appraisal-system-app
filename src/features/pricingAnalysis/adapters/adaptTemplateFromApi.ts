@@ -1,5 +1,13 @@
-import type { GetComparativeAnalysisTemplateByIdResponseType, TemplateFactorDto2Type } from '@/shared/schemas/v1';
-import type { FactorDataType, TemplateComparativeFactorType, TemplateCalculationFactorType, TemplateDetailType } from '../schemas';
+import type {
+  GetComparativeAnalysisTemplateByIdResponseType,
+  TemplateFactorDto2Type,
+} from '@/shared/schemas/v1';
+import type {
+  FactorDataType,
+  TemplateComparativeFactorType,
+  TemplateCalculationFactorType,
+  TemplateDetailType,
+} from '../schemas';
 
 /**
  * Adapt the real API template response (TemplateFactorDto2 with factorId)

@@ -3,16 +3,16 @@ import FormCard from '@/shared/components/sections/FormCard';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import GovernmentPriceTable from '../summary/GovernmentPriceTable';
 import type { GetDecisionSummaryResponse } from '../../api/decisionSummary';
+import { useTranslation } from 'react-i18next';
 
 interface DecisionSummarySectionProps {
   decisionSummary: GetDecisionSummaryResponse | undefined;
   isLoading: boolean;
 }
 
-const DecisionSummarySection = ({
-  decisionSummary,
-  isLoading,
-}: DecisionSummarySectionProps) => {
+const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummarySectionProps) => {
+  const { t } = useTranslation('appraisal');
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -26,21 +26,30 @@ const DecisionSummarySection = ({
       <div className="flex items-center gap-2 px-1">
         <Icon name="gavel" style="solid" className="w-4 h-4 text-sky-500" />
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
-          Decision & Summary
+          {t('view360.decisionSummarySection.title')}
         </h2>
       </div>
 
       {/* Appraisal Price Summary */}
-      <FormCard title="Appraisal Price Summary" icon="coins" iconColor="amber">
+      <FormCard title={t('view360.decisionSummarySection.appraisalPriceSummary')} icon="coins" iconColor="amber">
         <div className="grid grid-cols-3 gap-6">
-          <ReadOnlyField label="Total Appraisal Price" value={decisionSummary?.totalAppraisalPrice} />
-          <ReadOnlyField label="Force Selling Price" value={decisionSummary?.forceSellingPrice} />
-          <ReadOnlyField label="Building Insurance" value={decisionSummary?.buildingInsurance} />
+          <ReadOnlyField
+            label={t('view360.decisionSummarySection.totalAppraisalPrice')}
+            value={decisionSummary?.totalAppraisalPrice}
+          />
+          <ReadOnlyField
+            label={t('view360.decisionSummarySection.forceSellingPrice')}
+            value={decisionSummary?.forceSellingPrice}
+          />
+          <ReadOnlyField
+            label={t('view360.decisionSummarySection.buildingInsurance')}
+            value={decisionSummary?.buildingInsurance}
+          />
         </div>
       </FormCard>
 
       {/* Government Appraisal Price */}
-      <FormCard title="Government Appraisal Price" icon="landmark" iconColor="teal">
+      <FormCard title={t('view360.decisionSummarySection.governmentAppraisalPrice')} icon="landmark" iconColor="teal">
         {decisionSummary?.governmentPrices && decisionSummary.governmentPrices.length > 0 ? (
           <GovernmentPriceTable
             rows={decisionSummary.governmentPrices}
@@ -48,21 +57,14 @@ const DecisionSummarySection = ({
             avgPerSqWa={decisionSummary.governmentPriceAvgPerSqWa ?? 0}
           />
         ) : (
-          <p className="text-sm text-gray-500">No government price data available.</p>
+          <p className="text-sm text-gray-500">{t('view360.decisionSummarySection.noGovernmentPrice')}</p>
         )}
       </FormCard>
-
     </div>
   );
 };
 
-const ReadOnlyField = ({
-  label,
-  value,
-}: {
-  label: string;
-  value: number | null | undefined;
-}) => (
+const ReadOnlyField = ({ label, value }: { label: string; value: number | null | undefined }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">

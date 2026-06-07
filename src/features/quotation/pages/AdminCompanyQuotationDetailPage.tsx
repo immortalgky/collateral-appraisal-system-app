@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type React from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import { useGetQuotationById } from '../api/quotation';
@@ -53,6 +54,7 @@ const ValueBox = ({ value }: { value: string }) => (
 );
 
 const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
+  const { t } = useTranslation('quotation');
   const { feeAfterDiscount, vatAmount, netAmount } = deriveFeeTotals(
     item.feeAmount,
     item.discount,
@@ -67,19 +69,19 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
     <div className="space-y-2">
       {/* Fee Amount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label className="text-sm text-gray-600">Fee Amount (THB)</label>
+        <label className="text-sm text-gray-600">{t('columns.feeAmount')}</label>
         <ValueBox value={fmtCurrency(item.feeAmount)} />
       </div>
 
       {/* Discount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label className="text-sm text-gray-600">Discount (THB)</label>
+        <label className="text-sm text-gray-600">{t('columns.discount')}</label>
         <ValueBox value={fmtCurrency(item.discount)} />
       </div>
 
       {/* Negotiated Discount — always shown to mirror the company-input page */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label className="text-sm text-gray-600">Discount (Negotiate)</label>
+        <label className="text-sm text-gray-600">{t('columns.discountNegotiate')}</label>
         <ValueBox value={fmtCurrency(item.negotiatedDiscount)} />
       </div>
 
@@ -91,13 +93,13 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
             discountOverflow ? 'bg-red-50 border border-red-200' : ''
           }`}
         >
-          <span className="text-sm text-gray-600 text-right">Fee After Discount</span>
+          <span className="text-sm text-gray-600 text-right">{t('columns.feeAfterDiscount')}</span>
           <span
             className={`text-sm font-semibold text-right tabular-nums ${
               discountOverflow ? 'text-red-600' : 'text-gray-900'
             }`}
           >
-            {discountOverflow ? 'Discounts exceed fee' : fmt(feeAfterDiscount)}
+            {discountOverflow ? t('shared.discountsExceedFee') : fmt(feeAfterDiscount)}
           </span>
         </div>
 
@@ -114,7 +116,7 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
         {/* Net Amount — primary total */}
         <div className="grid grid-cols-2 gap-3 items-center border-t-2 border-primary/30 mt-1 pt-2 px-2.5 py-2 bg-primary/5 rounded-b-lg">
           <span className="text-sm font-semibold text-gray-800 text-right uppercase tracking-wide">
-            Net Amount
+            {t('columns.netAmount')}
           </span>
           <span className="text-base font-bold text-primary text-right tabular-nums">
             {fmt(netAmount)}
@@ -185,6 +187,7 @@ export const AdminCompanyQuotationDetailContent = ({
   mode,
   onClose,
 }: AdminCompanyQuotationDetailContentProps) => {
+  const { t } = useTranslation(['quotation', 'common']);
   const handleBack = onClose;
 
   const { data: quotation, isLoading, isError } = useGetQuotationById(quotationRequestId);
@@ -283,9 +286,9 @@ export const AdminCompanyQuotationDetailContent = ({
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="size-8 text-red-400" />
-        <p className="text-sm text-gray-600">Failed to load quotation.</p>
+        <p className="text-sm text-gray-600">{t('errors.failedToLoadQuotation')}</p>
         <Button variant="outline" size="sm" onClick={handleBack}>
-          Go back
+          {t('buttons.goBack')}
         </Button>
       </div>
     );
@@ -295,9 +298,9 @@ export const AdminCompanyQuotationDetailContent = ({
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="circle-exclamation" style="solid" className="size-8 text-amber-400" />
-        <p className="text-sm text-gray-600">Company quotation not found.</p>
+        <p className="text-sm text-gray-600">{t('errors.companyNotFound')}</p>
         <Button variant="outline" size="sm" onClick={handleBack}>
-          Back to quotation
+          {t('buttons.back')}
         </Button>
       </div>
     );
@@ -325,16 +328,16 @@ export const AdminCompanyQuotationDetailContent = ({
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-base font-semibold text-gray-900 leading-snug">
-              External Appraisal Company Quotation Information
+              {t('page.extQuotationTitle')}
             </div>
             <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
               <span>
-                <span className="font-medium text-gray-700">Quotation ID:</span>{' '}
+                <span className="font-medium text-gray-700">{t('page.quotationId')}:</span>{' '}
                 {quotation.quotationNumber}
               </span>
               <span>·</span>
               <span>
-                <span className="font-medium text-gray-700">Cut-Off Date:</span>{' '}
+                <span className="font-medium text-gray-700">{t('page.cutOffDate')}:</span>{' '}
                 {fmtDate(quotation.cutOffTime)}
               </span>
               <span>·</span>
@@ -350,12 +353,12 @@ export const AdminCompanyQuotationDetailContent = ({
       ) : (
         <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
           <span>
-            <span className="font-medium text-gray-700">Quotation ID:</span>{' '}
+            <span className="font-medium text-gray-700">{t('page.quotationId')}:</span>{' '}
             {quotation.quotationNumber}
           </span>
           <span>·</span>
           <span>
-            <span className="font-medium text-gray-700">Cut-Off Date:</span>{' '}
+            <span className="font-medium text-gray-700">{t('page.cutOffDate')}:</span>{' '}
             {fmtDate(quotation.cutOffTime)}
           </span>
           <span>·</span>
@@ -370,7 +373,7 @@ export const AdminCompanyQuotationDetailContent = ({
           {/* Left rail */}
           {appraisals.length === 0 ? (
             <div className="flex items-center justify-center w-full h-40 text-gray-400 text-sm">
-              No appraisals in this quotation
+              {t('empty.noAppraisalsQuotation')}
             </div>
           ) : (
             <>
@@ -386,21 +389,23 @@ export const AdminCompanyQuotationDetailContent = ({
                 {selectedAppraisal ? (
                   <div className="p-5 space-y-6">
                     {/* Section 1 — Appraisal Information */}
-                    <section aria-label="Appraisal Information">
+                    <section aria-label={t('aria.sectionAppraisalInfo')}>
                       <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        Appraisal Information
+                        {t('sections.appraisalInformation')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="block text-xs text-gray-500 mb-0.5">
-                            Appraisal Number
+                            {t('fields.appraisalNumber')}
                           </span>
                           <span className="font-medium text-gray-900">
                             {selectedAppraisal.appraisalNumber?.trim() || '—'}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-xs text-gray-500 mb-0.5">Customer Name</span>
+                          <span className="block text-xs text-gray-500 mb-0.5">
+                            {t('fields.customerName')}
+                          </span>
                           <span className="font-medium text-gray-900">
                             {selectedAppraisal.customerName ?? '—'}
                           </span>
@@ -410,9 +415,9 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 2 — Attached Documents (grouped by section, mirrors ext-company submit page) */}
                     {appraisalDocs.length > 0 && (
-                      <section aria-label="Attached Documents">
+                      <section aria-label={t('aria.sectionAttachedDocs')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                          Attach Document
+                          {t('sections.attachDocument')}
                         </h2>
                         <div className="rounded-lg border border-gray-200 overflow-hidden">
                           <table className="w-full text-xs table-fixed">
@@ -424,10 +429,18 @@ export const AdminCompanyQuotationDetailContent = ({
                             </colgroup>
                             <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
                               <tr>
-                                <th className="text-left px-3 py-2.5 font-semibold">Type</th>
-                                <th className="text-left px-3 py-2.5 font-semibold">File Name</th>
-                                <th className="text-left px-3 py-2.5 font-semibold">Uploaded At</th>
-                                <th className="text-left px-3 py-2.5 font-semibold">Notes</th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.type')}
+                                </th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.fileName')}
+                                </th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.uploadedAt')}
+                                </th>
+                                <th className="text-left px-3 py-2.5 font-semibold">
+                                  {t('columns.notes')}
+                                </th>
                               </tr>
                             </thead>
                             {docSectionGroups.map(group => (
@@ -474,9 +487,9 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 3 — Quotation Information — Appraisal Fee */}
                     {selectedItem && (
-                      <section aria-label="Quotation Information">
+                      <section aria-label={t('aria.sectionQuotationInfo')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                          Quotation Information — Appraisal Fee
+                          {t('sections.quotationInformationFee')}
                         </h2>
                         <ReadOnlyFeeGrid item={selectedItem} />
                       </section>
@@ -484,14 +497,14 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 4 — Duration */}
                     {selectedItem && (
-                      <section aria-label="Duration and Mandays">
+                      <section aria-label={t('aria.sectionDuration')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                          Duration
+                          {t('sections.duration')}
                         </h2>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm text-gray-600 mb-1">
-                              Max Appraisal Duration (days)
+                              {t('fields.maxAppraisalDuration')}
                             </label>
                             <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
                               {selectedAppraisal?.maxAppraisalDays ?? '—'}
@@ -499,7 +512,7 @@ export const AdminCompanyQuotationDetailContent = ({
                           </div>
                           <div>
                             <label className="block text-sm text-gray-600 mb-1">
-                              Estimated Mandays
+                              {t('fields.estimatedMandays')}
                             </label>
                             <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
                               {selectedItem.estimatedDays ?? '—'}
@@ -511,9 +524,9 @@ export const AdminCompanyQuotationDetailContent = ({
 
                     {/* Section 5 — Remark for this Appraisal */}
                     {selectedItem && (
-                      <section aria-label="Appraisal Remark">
+                      <section aria-label={t('aria.sectionAppraisalRemark')}>
                         <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                          Remark for this Appraisal
+                          {t('sections.appraisalRemark')}
                         </h2>
                         <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">
                           {selectedItem.itemNotes?.trim() || '—'}
@@ -523,7 +536,7 @@ export const AdminCompanyQuotationDetailContent = ({
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-40 text-sm text-gray-400">
-                    Select an appraisal from the left
+                    {t('empty.selectAppraisalLeft')}
                   </div>
                 )}
               </div>
@@ -536,13 +549,15 @@ export const AdminCompanyQuotationDetailContent = ({
           {/* Total + Participating */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <span className="text-sm font-semibold text-gray-700">Total Fee Amount:</span>
+              <span className="text-sm font-semibold text-gray-700">
+                {t('fields.totalFeeAmount')}
+              </span>
               <span className="ml-2 text-base font-bold text-primary">
                 {grandTotal > 0 ? THB.format(grandTotal) : '—'}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Participating</span>
+              <span className="text-sm font-medium text-gray-700">{t('fields.participating')}</span>
               <span
                 className={`px-3 py-1 rounded-lg text-sm font-medium border ${
                   isParticipating
@@ -550,14 +565,16 @@ export const AdminCompanyQuotationDetailContent = ({
                     : 'bg-red-50 text-red-600 border-red-200'
                 }`}
               >
-                {isParticipating ? 'Yes' : 'No'}
+                {isParticipating ? t('yesNo.yes') : t('yesNo.no')}
               </span>
             </div>
           </div>
 
           {/* Quotation Remark (read-only) */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">Quotation Remark</label>
+            <label className="block text-sm text-gray-600 mb-1">
+              {t('fields.quotationRemark')}
+            </label>
             <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">
               {companyQuotation.remarks ?? '—'}
             </div>
@@ -569,7 +586,7 @@ export const AdminCompanyQuotationDetailContent = ({
             <div className="flex items-center justify-end gap-3 pt-1">
               <Button type="button" variant="outline" onClick={handleBack}>
                 <Icon name="xmark" style="solid" className="size-4 mr-2" />
-                Cancel
+                {t('common:actions.cancel')}
               </Button>
             </div>
           )}

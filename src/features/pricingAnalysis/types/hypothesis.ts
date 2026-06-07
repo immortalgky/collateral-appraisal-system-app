@@ -7,13 +7,13 @@
 export type HypothesisVariant = 'LandBuilding' | 'Condominium';
 
 export type HypothesisCostCategory =
-  | 'CostOfBuilding'   // L&B only — requires modelName
-  | 'ProjectDevCost'   // L&B only
-  | 'ProjectCost'      // L&B only
-  | 'GovernmentTax'    // L&B only
-  | 'HardCost'         // Condo only
-  | 'SoftCost'         // Condo only
-  | 'CondoGovTax';     // Condo only
+  | 'CostOfBuilding' // L&B only — requires modelName
+  | 'ProjectDevCost' // L&B only
+  | 'ProjectCost' // L&B only
+  | 'GovernmentTax' // L&B only
+  | 'HardCost' // Condo only
+  | 'SoftCost' // Condo only
+  | 'CondoGovTax'; // Condo only
 
 /**
  * Stable semantic key for a cost item row.
@@ -22,28 +22,28 @@ export type HypothesisCostCategory =
  */
 export type HypothesisCostItemKind =
   // L&B — ProjectDevCost (1..2)
-  | 'PublicUtilityConstruction'   // 1
-  | 'LandFilling'                 // 2
+  | 'PublicUtilityConstruction' // 1
+  | 'LandFilling' // 2
   // L&B — ProjectCost (10..14)
-  | 'AllocationPermitFee'         // 10
-  | 'LandTitleDeedDivisionFee'    // 11
-  | 'ProfessionalFee'             // 12
-  | 'AdminFee'                    // 13
-  | 'SellingAdvertising'          // 14
+  | 'AllocationPermitFee' // 10
+  | 'LandTitleDeedDivisionFee' // 11
+  | 'ProfessionalFee' // 12
+  | 'AdminFee' // 13
+  | 'SellingAdvertising' // 14
   // L&B — GovernmentTax (20..21)
-  | 'TransferFee'                 // 20
-  | 'SpecificBusinessTax'         // 21
+  | 'TransferFee' // 20
+  | 'SpecificBusinessTax' // 21
   // Condo — HardCost (30..32)
-  | 'CondoBuildingConstruction'   // 30
-  | 'Furniture'                   // 31
-  | 'ExternalUtilities'           // 32
+  | 'CondoBuildingConstruction' // 30
+  | 'Furniture' // 31
+  | 'ExternalUtilities' // 32
   // Condo — SoftCost (40..42)
-  | 'CondoTitleDeedFee'           // 40
-  | 'EIA'                         // 41
-  | 'CondoRegistrationFee'        // 42
+  | 'CondoTitleDeedFee' // 40
+  | 'EIA' // 41
+  | 'CondoRegistrationFee' // 42
   // Ad-hoc / CostOfBuilding
-  | 'Other'                       // 99
-  | 'BuildingConstruction';       // 100
+  | 'Other' // 99
+  | 'BuildingConstruction'; // 100
 
 // ─── Generate ─────────────────────────────────────────────────────────────────
 

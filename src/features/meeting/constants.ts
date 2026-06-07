@@ -87,7 +87,4 @@ export const ITEM_ACTION_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
  * item to the queue). Mirrors the backend's EnsureMutableStatus guard on
  * Meeting.RemoveItem — only allowed before the meeting actually starts.
  */
-export const ITEM_REMOVE_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
-  'New',
-  'InvitationSent',
-]);
+export const ITEM_REMOVE_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['New', 'InvitationSent']);

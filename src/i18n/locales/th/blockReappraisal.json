@@ -1,0 +1,119 @@
+{
+  "page": {
+    "list": {
+      "title": "การประเมินซ้ำโครงการจัดสรร",
+      "description": "โครงการจัดสรรและหมู่บ้านที่ถึงกำหนดประเมินซ้ำ"
+    }
+  },
+  "projectType": {
+    "condo": "คอนโด",
+    "landAndBuilding": "ที่ดินและสิ่งปลูกสร้าง"
+  },
+  "columns": {
+    "oldAppraisalNumber": "เลขที่รายงานประเมินเดิม",
+    "projectName": "ชื่อโครงการ",
+    "projectSellingPrice": "ราคาขายโครงการ (บาท)",
+    "remainingTotalUnit": "คงเหลือ / ยูนิตทั้งหมด",
+    "lastAppraisedDate": "วันที่ประเมินล่าสุด",
+    "remainingDay": "วันที่เหลือ"
+  },
+  "remainingDayBadge": {
+    "overdue": "เกินกำหนด",
+    "daysLeft": "{{days}} วัน"
+  },
+  "filter": {
+    "title": "กรอง",
+    "button": "ตัวกรอง",
+    "fields": {
+      "projectName": "ชื่อโครงการ",
+      "oldAppraisalNumber": "เลขที่รายงานประเมินเดิม"
+    },
+    "placeholders": {
+      "projectName": "กรอกชื่อโครงการ",
+      "oldAppraisalNumber": "กรอกเลขที่รายงาน"
+    },
+    "chips": {
+      "projectName": "ชื่อโครงการ",
+      "oldAppraisalNumber": "เลขที่รายงาน"
+    }
+  },
+  "empty": {
+    "noMatching": "ไม่พบโครงการที่ตรงกัน",
+    "noItems": "ไม่มีโครงการที่ถึงกำหนด",
+    "tryAdjusting": "ลองปรับตัวกรองของคุณ",
+    "noneAtThisTime": "ขณะนี้ไม่มีโครงการจัดสรรที่ถึงกำหนดประเมินซ้ำ",
+    "clearFilters": "ล้างตัวกรอง"
+  },
+  "error": {
+    "loadFailed": "โหลดรายการประเมินซ้ำโครงการไม่สำเร็จ",
+    "createFailed": "สร้างคำขอประเมินไม่สำเร็จ",
+    "optOutFailed": "ทำเครื่องหมายว่าไม่ต้องประเมินไม่สำเร็จ"
+  },
+  "success": {
+    "optOut": "ทำเครื่องหมายโครงการว่าไม่ต้องประเมินซ้ำแล้ว"
+  },
+  "actions": {
+    "createRequest": "เริ่มคำขอประเมินซ้ำ",
+    "notRequired": "ไม่ต้องประเมินซ้ำ"
+  },
+  "detail": {
+    "backToList": "กลับไปยังรายการ",
+    "unnamedProject": "โครงการไม่มีชื่อ",
+    "oldAppraisalLabel": "เลขที่ประเมินเดิม:",
+    "fields": {
+      "dueDate": "วันครบกำหนด"
+    },
+    "overview": {
+      "title": "ภาพรวมยูนิต",
+      "sold": "ขายแล้ว",
+      "available": "คงเหลือ",
+      "noSold": "ยังไม่มียูนิตที่ขาย",
+      "noAvailable": "ขายหมดแล้ว",
+      "donutSoldLabel": "ยูนิตที่ขายแล้ว",
+      "unitSuffix": "ยูนิต"
+    },
+    "units": {
+      "title": "รายการยูนิต",
+      "count": "ยูนิต",
+      "empty": "ไม่พบยูนิตในโครงการนี้"
+    },
+    "error": {
+      "loadFailed": "โหลดรายละเอียดโครงการไม่สำเร็จ",
+      "notFound": "ไม่พบโครงการ"
+    },
+    "createModal": {
+      "title": "สร้างคำขอประเมิน",
+      "body": "สร้างคำขอประเมินใหม่สำหรับโครงการจัดสรรนี้หรือไม่?"
+    },
+    "successModal": {
+      "title": "สร้างคำขอประเมินแล้ว",
+      "heading": "สร้างคำขอแล้ว",
+      "requestNumber": "เลขที่คำขอ:",
+      "groupNumber": "เลขที่กลุ่ม:",
+      "alreadyInProgress": "มีคำขอสำหรับโครงการนี้ที่กำลังดำเนินการอยู่แล้ว"
+    },
+    "optOutModal": {
+      "title": "ไม่ต้องประเมินซ้ำ",
+      "body": "ทำเครื่องหมายโครงการนี้ว่าไม่ต้องประเมินซ้ำหรือไม่? โครงการจะถูกนำออกจากรายการที่ถึงกำหนด",
+      "confirm": "ยืนยัน"
+    }
+  },
+  "units": {
+    "sold": "ขายแล้ว",
+    "available": "คงเหลือ",
+    "cols": {
+      "floor": "ชั้น",
+      "towerName": "ชื่ออาคาร",
+      "regNumber": "เลขทะเบียน",
+      "roomNo": "เลขห้อง",
+      "modelType": "ประเภทแบบ",
+      "usableArea": "พื้นที่ใช้สอย (ตร.ม.)",
+      "sellingPrice": "ราคาขาย (บาท)",
+      "plotNo": "เลขแปลง",
+      "houseNo": "เลขที่บ้าน",
+      "numFloors": "จำนวนชั้น",
+      "landArea": "เนื้อที่ดิน (ตร.วา)",
+      "isSold": "สถานะ"
+    }
+  }
+}

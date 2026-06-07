@@ -1,11 +1,12 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import {
-  createRequestForm,
+  useCreateRequestForm,
   createRequestFormDefault,
   type createRequestFormType,
   type UserDtoType,
 } from '@features/request/schemas/form';
+import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider } from '@shared/components/form';
 import { type SubmitHandler, useForm } from 'react-hook-form';
@@ -72,6 +73,8 @@ const RequiredDocumentsInitializer = () => {
  * - Edit mode: When `requestId` is present in URL params
  */
 function RequestPage() {
+  const { t } = useTranslation(['request', 'common']);
+  const createRequestForm = useCreateRequestForm();
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -232,12 +235,12 @@ function RequestPage() {
     if (!requestId) return;
     deleteRequest.mutate(requestId, {
       onSuccess: () => {
-        toast.success('Request deleted successfully');
+        toast.success(t('toasts.requestDeleted'));
         skipWarning();
         navigate('/requests');
       },
       onError: (error: any) => {
-        toast.error(error.apiError?.detail || 'Failed to delete request.');
+        toast.error(error.apiError?.detail || t('toasts.requestDeleteFailed'));
         setIsDeleteDialogOpen(false);
       },
     });
@@ -272,9 +275,11 @@ function RequestPage() {
       setCopyBannerValue(appraisalValue ?? null);
 
       const valueText =
-        appraisalValue != null ? ` (value: ${appraisalValue.toLocaleString('th-TH')})` : '';
+        appraisalValue != null
+          ? t('toasts.copyValueSuffix', { n: appraisalValue.toLocaleString('th-TH') })
+          : '';
       toast.success(
-        `Copied from appraisal ${appraisalNumber}${valueText}. Review & adjust before saving. Appointment and fee were not copied.`,
+        t('toasts.copiedFromAppraisal', { number: appraisalNumber, value: valueText }),
         { duration: 6000 },
       );
     },
@@ -317,11 +322,11 @@ function RequestPage() {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Request updated successfully');
+            toast.success(t('toasts.requestUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to update request. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.requestUpdateFailed'));
             setSaveAction(null);
           },
         },
@@ -345,7 +350,7 @@ function RequestPage() {
         } as CreateRequestRequestType,
         {
           onSuccess: response => {
-            toast.success('Request created successfully');
+            toast.success(t('toasts.requestCreated'));
             setSaveAction(null);
             if (response.id) {
               skipWarning();
@@ -353,7 +358,7 @@ function RequestPage() {
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save request. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.requestCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -379,11 +384,11 @@ function RequestPage() {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.draftSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -406,7 +411,7 @@ function RequestPage() {
         } as CreateDraftRequestRequestType,
         {
           onSuccess: response => {
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.id) {
               skipWarning();
@@ -414,7 +419,7 @@ function RequestPage() {
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.draftSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -426,13 +431,13 @@ function RequestPage() {
     (id: string) => {
       submitRequest(id, {
         onSuccess: () => {
-          toast.success('Request submitted successfully');
+          toast.success(t('toasts.requestSubmitted'));
           setSaveAction(null);
           skipWarning();
           navigate('/requests');
         },
         onError: (error: any) => {
-          toast.error(error.apiError?.detail || 'Failed to submit request. Please try again.');
+          toast.error(error.apiError?.detail || t('toasts.requestSubmitFailed'));
           setSaveAction(null);
         },
       });
@@ -467,7 +472,7 @@ function RequestPage() {
                 doSubmit(requestId);
               },
               onError: (error: any) => {
-                toast.error(error.apiError?.detail || 'Failed to save request. Please try again.');
+                toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
                 setSaveAction(null);
               },
             },
@@ -493,12 +498,12 @@ function RequestPage() {
                 if (response.id) {
                   doSubmit(response.id);
                 } else {
-                  toast.error('Failed to get request ID after creation.');
+                  toast.error(t('toasts.requestCreateFailed'));
                   setSaveAction(null);
                 }
               },
               onError: (error: any) => {
-                toast.error(error.apiError?.detail || 'Failed to save request. Please try again.');
+                toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
                 setSaveAction(null);
               },
             },
@@ -506,7 +511,7 @@ function RequestPage() {
         }
       },
       () => {
-        toast.error('Please fill in all required fields before submitting.');
+        toast.error(t('toasts.validationFailed'));
         setSaveAction(null);
       },
     )();
@@ -529,16 +534,14 @@ function RequestPage() {
           className="size-16 text-red-500"
         />
         <h2 className="text-xl font-semibold text-gray-900">
-          {is404 ? 'Request not found' : 'Failed to load request'}
+          {is404 ? t('page.requestNotFound') : t('page.failedToLoad')}
         </h2>
         <p className="text-gray-500">
-          {is404
-            ? 'The request you are looking for does not exist or has been deleted.'
-            : (error as Error)?.message || 'Unknown error'}
+          {is404 ? t('page.requestNotFoundDesc') : (error as Error)?.message || 'Unknown error'}
         </p>
         <Button onClick={() => navigate('/requests')}>
           <Icon style="solid" name="arrow-left" className="size-4 mr-2" />
-          Back to Listing
+          {t('page.backToListing')}
         </Button>
       </div>
     );
@@ -551,9 +554,13 @@ function RequestPage() {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Request Information', id: 'request-information', icon: 'clipboard-list' },
-            { label: 'Title Document', id: 'title-document-info', icon: 'file-certificate' },
-            { label: 'Attachments', id: 'attach-document', icon: 'paperclip' },
+            {
+              label: t('nav.requestInformation'),
+              id: 'request-information',
+              icon: 'clipboard-list',
+            },
+            { label: t('nav.titleDocument'), id: 'title-document-info', icon: 'file-certificate' },
+            { label: t('nav.attachmentsLabel'), id: 'attach-document', icon: 'paperclip' },
           ]}
         />
       </div>
@@ -576,8 +583,8 @@ function RequestPage() {
               <div className="flex flex-col gap-6 pb-6 pr-6">
                 <Section id="request-information" anchor>
                   <FormCard
-                    title="Request Information"
-                    subtitle="Customer, property, and appointment details"
+                    title={t('sections.requestInformation')}
+                    subtitle={t('sections.requestInformationSubtitle')}
                     icon="clipboard-list"
                     iconColor="blue"
                   >
@@ -592,9 +599,11 @@ function RequestPage() {
                               className="w-4 h-4 shrink-0 text-blue-500"
                             />
                             <span>
-                              Re-appraisal of <strong>{copyBannerNumber}</strong>
+                              {t('copyBanner.reappraisalOf')} <strong>{copyBannerNumber}</strong>
                               {copyBannerValue != null
-                                ? ` (value: ${copyBannerValue.toLocaleString('th-TH')})`
+                                ? t('copyBanner.value', {
+                                    n: copyBannerValue.toLocaleString('th-TH'),
+                                  })
                                 : ''}
                             </span>
                           </div>
@@ -602,7 +611,7 @@ function RequestPage() {
                             type="button"
                             onClick={handleDismissCopyBanner}
                             className="text-blue-400 hover:text-blue-600 transition-colors shrink-0"
-                            title="Clear previous appraisal reference"
+                            title={t('copyBanner.clearTitle')}
                           >
                             <Icon name="xmark" style="solid" className="w-4 h-4" />
                           </button>
@@ -664,7 +673,7 @@ function RequestPage() {
                     disabled={isPending}
                   >
                     <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                    Save draft
+                    {t('actions.saveDraft')}
                   </Button>
                   <Button
                     variant="outline"
@@ -673,7 +682,7 @@ function RequestPage() {
                     disabled={isPending}
                   >
                     <Icon style="solid" name="check" className="size-4 mr-2" />
-                    Save
+                    {t('actions.save')}
                   </Button>
                   {!isRouteBackFollowup && (
                     <Button
@@ -683,7 +692,7 @@ function RequestPage() {
                       disabled={isPending}
                     >
                       <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                      Submit
+                      {t('actions.submit')}
                     </Button>
                   )}
                 </ActionBar.Right>
@@ -696,9 +705,9 @@ function RequestPage() {
             isOpen={isDeleteDialogOpen}
             onClose={() => setIsDeleteDialogOpen(false)}
             onConfirm={handleDelete}
-            title="Delete Request"
-            message="Are you sure you want to delete this request? This action cannot be undone."
-            confirmText="Delete"
+            title={t('confirm.deleteRequestTitle')}
+            message={t('confirm.deleteRequestMessage')}
+            confirmText={t('common:actions.delete')}
             variant="danger"
             isLoading={deleteRequest.isPending}
           />
@@ -745,10 +754,10 @@ function RequestPage() {
         isOpen={isDuplicateDialogOpen}
         onClose={() => setIsDuplicateDialogOpen(false)}
         onConfirm={handleConfirmDuplicate}
-        title="Copy Request"
-        message="Are you sure you want to copy this request?"
-        confirmText="Confirm"
-        cancelText="Cancel"
+        title={t('confirm.copyRequestTitle')}
+        message={t('confirm.copyRequestMessage')}
+        confirmText={t('common:actions.confirm')}
+        cancelText={t('common:actions.cancel')}
         variant="info"
       />
     </div>

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   closestCenter,
   DndContext,
@@ -39,11 +40,17 @@ export interface TemplateFactor {
 interface TemplateFactorManagerProps {
   factors: TemplateFactor[];
   allFactors: MarketComparableFactorDtoType[];
-  onAddFactor: (selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[]) => void;
+  onAddFactor: (
+    selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[],
+  ) => void;
   onRemoveFactor: (factorId: string) => void;
   onToggleMandatory?: (factorId: string, isMandatory: boolean) => void;
   onToggleCalculation?: (factorId: string, isCalculationFactor: boolean) => void;
-  onUpdateDefaults?: (factorId: string, defaultWeight: number | null, defaultIntensity: number | null) => void;
+  onUpdateDefaults?: (
+    factorId: string,
+    defaultWeight: number | null,
+    defaultIntensity: number | null,
+  ) => void;
   onReorder?: (reorderedFactors: TemplateFactor[]) => void;
   isAdding?: boolean;
   isRemoving?: boolean;
@@ -57,11 +64,18 @@ interface SortableRowProps {
   language: string;
   onToggleMandatory?: (factorId: string, isMandatory: boolean) => void;
   onToggleCalculation?: (factorId: string, isCalculationFactor: boolean) => void;
-  onUpdateDefaults?: (factorId: string, defaultWeight: number | null, defaultIntensity: number | null) => void;
+  onUpdateDefaults?: (
+    factorId: string,
+    defaultWeight: number | null,
+    defaultIntensity: number | null,
+  ) => void;
   onRemoveFactor: (factorId: string) => void;
   isUpdating?: boolean;
   isRemoving?: boolean;
   showDefaultWeight: boolean;
+  yesLabel: string;
+  noLabel: string;
+  unknownFactorLabel: string;
 }
 
 const InlineNumberInput = ({
@@ -97,9 +111,9 @@ const InlineNumberInput = ({
         step="any"
         autoFocus
         value={draft}
-        onChange={(e) => setDraft(e.target.value)}
+        onChange={e => setDraft(e.target.value)}
         onBlur={handleCommit}
-        onKeyDown={(e) => {
+        onKeyDown={e => {
           if (e.key === 'Enter') handleCommit();
           if (e.key === 'Escape') setEditing(false);
         }}
@@ -115,9 +129,7 @@ const InlineNumberInput = ({
       onClick={handleStart}
       className={clsx(
         'inline-flex items-center justify-center min-w-[3rem] px-2 py-0.5 rounded text-sm transition-colors',
-        value != null
-          ? 'text-gray-700 hover:bg-gray-100'
-          : 'text-gray-400 hover:bg-gray-100',
+        value != null ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 hover:bg-gray-100',
         disabled && 'opacity-50 cursor-not-allowed',
       )}
     >
@@ -137,6 +149,9 @@ const SortableRow = ({
   isUpdating,
   isRemoving,
   showDefaultWeight,
+  yesLabel,
+  noLabel,
+  unknownFactorLabel,
 }: SortableRowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: tf.factorId,
@@ -160,11 +175,9 @@ const SortableRow = ({
         <Icon name="grip-vertical" style="solid" className="size-4 text-gray-400" />
       </td>
       <td className="py-3 px-4 text-sm text-gray-500 text-center">{tf.displaySequence}</td>
-      <td className="py-3 px-4 text-sm font-mono text-gray-700">
-        {factorInfo?.factorCode ?? '-'}
-      </td>
+      <td className="py-3 px-4 text-sm font-mono text-gray-700">{factorInfo?.factorCode ?? '-'}</td>
       <td className="py-3 px-4 text-sm text-gray-900">
-        {getTranslatedFactorName(factorInfo?.translations, language) || 'Unknown Factor'}
+        {getTranslatedFactorName(factorInfo?.translations, language) || unknownFactorLabel}
       </td>
       <td className="py-3 px-4 text-center">
         {onToggleMandatory ? (
@@ -180,18 +193,16 @@ const SortableRow = ({
               isUpdating && 'opacity-50 cursor-not-allowed',
             )}
           >
-            {tf.isMandatory ? 'Yes' : 'No'}
+            {tf.isMandatory ? yesLabel : noLabel}
           </button>
         ) : (
           <span
             className={clsx(
               'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-              tf.isMandatory
-                ? 'bg-amber-50 text-amber-700'
-                : 'bg-gray-100 text-gray-500',
+              tf.isMandatory ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500',
             )}
           >
-            {tf.isMandatory ? 'Yes' : 'No'}
+            {tf.isMandatory ? yesLabel : noLabel}
           </span>
         )}
       </td>
@@ -209,18 +220,16 @@ const SortableRow = ({
               isUpdating && 'opacity-50 cursor-not-allowed',
             )}
           >
-            {tf.isCalculationFactor ? 'Yes' : 'No'}
+            {tf.isCalculationFactor ? yesLabel : noLabel}
           </button>
         ) : (
           <span
             className={clsx(
               'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-              tf.isCalculationFactor
-                ? 'bg-blue-50 text-blue-700'
-                : 'bg-gray-100 text-gray-500',
+              tf.isCalculationFactor ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500',
             )}
           >
-            {tf.isCalculationFactor ? 'Yes' : 'No'}
+            {tf.isCalculationFactor ? yesLabel : noLabel}
           </span>
         )}
       </td>
@@ -231,10 +240,12 @@ const SortableRow = ({
               <InlineNumberInput
                 value={tf.defaultWeight}
                 disabled={isUpdating}
-                onCommit={(w) => onUpdateDefaults(tf.factorId, w, tf.defaultIntensity ?? null)}
+                onCommit={w => onUpdateDefaults(tf.factorId, w, tf.defaultIntensity ?? null)}
               />
             ) : (
-              <span className="text-sm text-gray-600">{tf.defaultWeight != null ? tf.defaultWeight : '-'}</span>
+              <span className="text-sm text-gray-600">
+                {tf.defaultWeight != null ? tf.defaultWeight : '-'}
+              </span>
             )}
           </td>
           <td className="py-3 px-4 text-center">
@@ -242,10 +253,12 @@ const SortableRow = ({
               <InlineNumberInput
                 value={tf.defaultIntensity}
                 disabled={isUpdating}
-                onCommit={(i) => onUpdateDefaults(tf.factorId, tf.defaultWeight ?? null, i)}
+                onCommit={i => onUpdateDefaults(tf.factorId, tf.defaultWeight ?? null, i)}
               />
             ) : (
-              <span className="text-sm text-gray-600">{tf.defaultIntensity != null ? tf.defaultIntensity : '-'}</span>
+              <span className="text-sm text-gray-600">
+                {tf.defaultIntensity != null ? tf.defaultIntensity : '-'}
+              </span>
             )}
           </td>
         </>
@@ -277,12 +290,13 @@ const TemplateFactorManager = ({
   isUpdating,
   showDefaultWeight = false,
 }: TemplateFactorManagerProps) => {
-  const language = useLocaleStore((s) => s.language);
+  const { t } = useTranslation('templateManagement');
+  const language = useLocaleStore(s => s.language);
   const [showModal, setShowModal] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const factorMap = new Map(allFactors.map((f) => [f.id, f]));
-  const assignedFactorIds = factors.map((f) => f.factorId);
+  const factorMap = new Map(allFactors.map(f => [f.id, f]));
+  const assignedFactorIds = factors.map(f => f.factorId);
 
   // Local order state so drag reorder is instant (no waiting for cache update)
   const [localOrder, setLocalOrder] = useState<TemplateFactor[] | null>(null);
@@ -298,9 +312,7 @@ const TemplateFactorManager = ({
     return [...source].sort((a, b) => a.displaySequence - b.displaySequence);
   }, [localOrder, factors]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -311,8 +323,8 @@ const TemplateFactorManager = ({
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = sortedFactors.findIndex((f) => f.factorId === active.id);
-    const newIndex = sortedFactors.findIndex((f) => f.factorId === over.id);
+    const oldIndex = sortedFactors.findIndex(f => f.factorId === active.id);
+    const newIndex = sortedFactors.findIndex(f => f.factorId === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
     const reordered = arrayMove(sortedFactors, oldIndex, newIndex).map((f, i) => ({
@@ -324,14 +336,18 @@ const TemplateFactorManager = ({
     onReorder?.(reordered);
   };
 
-  const activeFactor = activeId ? sortedFactors.find((f) => f.factorId === activeId) : null;
+  const activeFactor = activeId ? sortedFactors.find(f => f.factorId === activeId) : null;
   const activeFactorInfo = activeFactor ? factorMap.get(activeFactor.factorId) : null;
+
+  const yesLabel = t('factorManager.yes');
+  const noLabel = t('factorManager.no');
+  const unknownFactorLabel = t('factorManager.unknownFactor');
 
   return (
     <div>
       <SectionHeader
-        title="Template Factors"
-        subtitle={`${factors.length} factor(s) assigned`}
+        title={t('factorManager.sectionTitle')}
+        subtitle={t('factorManager.sectionSubtitle', { n: factors.length })}
         icon="layer-group"
         iconColor="purple"
         rightIcon={
@@ -341,7 +357,7 @@ const TemplateFactorManager = ({
             onClick={() => setShowModal(true)}
             leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
           >
-            Add Factor
+            {t('factorManager.addFactorButton')}
           </Button>
         }
       />
@@ -349,8 +365,8 @@ const TemplateFactorManager = ({
       {sortedFactors.length === 0 ? (
         <div className="text-center py-8 border border-dashed border-gray-200 rounded-lg mt-3">
           <Icon name="layer-group" style="regular" className="size-8 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm text-gray-500">No factors assigned yet</p>
-          <p className="text-xs text-gray-400 mt-1">Click "Add Factor" to assign factors from the master list</p>
+          <p className="text-sm text-gray-500">{t('factorManager.emptyTitle')}</p>
+          <p className="text-xs text-gray-400 mt-1">{t('factorManager.emptyHint')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto mt-3">
@@ -364,26 +380,42 @@ const TemplateFactorManager = ({
               <thead>
                 <tr className="bg-primary/10">
                   <th className="text-primary text-sm font-semibold py-3 px-2 text-center first:rounded-tl-lg w-10" />
-                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-16">#</th>
-                  <th className="text-primary text-sm font-semibold py-3 px-4 text-left">Code</th>
-                  <th className="text-primary text-sm font-semibold py-3 px-4 text-left">Name</th>
-                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center">Mandatory</th>
-                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center">Calculation</th>
+                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-16">
+                    {t('factorManager.columns.seq')}
+                  </th>
+                  <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+                    {t('factorManager.columns.code')}
+                  </th>
+                  <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+                    {t('factorManager.columns.name')}
+                  </th>
+                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center">
+                    {t('factorManager.columns.mandatory')}
+                  </th>
+                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center">
+                    {t('factorManager.columns.calculation')}
+                  </th>
                   {showDefaultWeight && (
                     <>
-                      <th className="text-primary text-sm font-semibold py-3 px-4 text-center">Default Weight</th>
-                      <th className="text-primary text-sm font-semibold py-3 px-4 text-center">Default Intensity</th>
+                      <th className="text-primary text-sm font-semibold py-3 px-4 text-center">
+                        {t('factorManager.columns.defaultWeight')}
+                      </th>
+                      <th className="text-primary text-sm font-semibold py-3 px-4 text-center">
+                        {t('factorManager.columns.defaultIntensity')}
+                      </th>
                     </>
                   )}
-                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-20">Action</th>
+                  <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-20">
+                    {t('factorManager.columns.action')}
+                  </th>
                 </tr>
               </thead>
               <SortableContext
-                items={sortedFactors.map((f) => f.factorId)}
+                items={sortedFactors.map(f => f.factorId)}
                 strategy={verticalListSortingStrategy}
               >
                 <tbody>
-                  {sortedFactors.map((tf) => (
+                  {sortedFactors.map(tf => (
                     <SortableRow
                       key={tf.factorId}
                       tf={tf}
@@ -396,6 +428,9 @@ const TemplateFactorManager = ({
                       isUpdating={isUpdating}
                       isRemoving={isRemoving}
                       showDefaultWeight={showDefaultWeight}
+                      yesLabel={yesLabel}
+                      noLabel={noLabel}
+                      unknownFactorLabel={unknownFactorLabel}
                     />
                   ))}
                 </tbody>
@@ -409,25 +444,38 @@ const TemplateFactorManager = ({
                       <td className="py-3 px-2 text-center">
                         <Icon name="grip-vertical" style="solid" className="size-4 text-gray-400" />
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-500 text-center">{activeFactor.displaySequence}</td>
-                      <td className="py-3 px-4 text-sm font-mono text-gray-700">{activeFactorInfo?.factorCode ?? '-'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-500 text-center">
+                        {activeFactor.displaySequence}
+                      </td>
+                      <td className="py-3 px-4 text-sm font-mono text-gray-700">
+                        {activeFactorInfo?.factorCode ?? '-'}
+                      </td>
                       <td className="py-3 px-4 text-sm text-gray-900">
-                        {getTranslatedFactorName(activeFactorInfo?.translations, language) || 'Unknown Factor'}
+                        {getTranslatedFactorName(activeFactorInfo?.translations, language) ||
+                          unknownFactorLabel}
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={clsx(
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                          activeFactor.isMandatory ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500',
-                        )}>
-                          {activeFactor.isMandatory ? 'Yes' : 'No'}
+                        <span
+                          className={clsx(
+                            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                            activeFactor.isMandatory
+                              ? 'bg-amber-50 text-amber-700'
+                              : 'bg-gray-100 text-gray-500',
+                          )}
+                        >
+                          {activeFactor.isMandatory ? yesLabel : noLabel}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className={clsx(
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                          activeFactor.isCalculationFactor ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-500',
-                        )}>
-                          {activeFactor.isCalculationFactor ? 'Yes' : 'No'}
+                        <span
+                          className={clsx(
+                            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                            activeFactor.isCalculationFactor
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'bg-gray-100 text-gray-500',
+                          )}
+                        >
+                          {activeFactor.isCalculationFactor ? yesLabel : noLabel}
                         </span>
                       </td>
                       {showDefaultWeight && (
@@ -436,7 +484,9 @@ const TemplateFactorManager = ({
                             {activeFactor.defaultWeight != null ? activeFactor.defaultWeight : '-'}
                           </td>
                           <td className="py-3 px-4 text-sm text-gray-600 text-center">
-                            {activeFactor.defaultIntensity != null ? activeFactor.defaultIntensity : '-'}
+                            {activeFactor.defaultIntensity != null
+                              ? activeFactor.defaultIntensity
+                              : '-'}
                           </td>
                         </>
                       )}
@@ -454,7 +504,7 @@ const TemplateFactorManager = ({
         onClose={() => setShowModal(false)}
         factors={allFactors}
         excludeFactorIds={assignedFactorIds}
-        onAdd={(selections) => {
+        onAdd={selections => {
           onAddFactor(selections);
           setShowModal(false);
         }}

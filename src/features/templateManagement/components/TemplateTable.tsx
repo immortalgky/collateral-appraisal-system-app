@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
@@ -29,6 +30,7 @@ const TemplateTable = ({
   isLoading,
   isDeleting,
 }: TemplateTableProps) => {
+  const { t } = useTranslation(['templateManagement', 'common']);
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
@@ -41,44 +43,52 @@ const TemplateTable = ({
     );
   }
 
-  const filtered = templates.filter((t) => {
-    if (statusFilter === 'active' && !t.isActive) return false;
-    if (statusFilter === 'inactive' && t.isActive) return false;
+  const filtered = templates.filter(tpl => {
+    if (statusFilter === 'active' && !tpl.isActive) return false;
+    if (statusFilter === 'inactive' && tpl.isActive) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return (
-      t.templateCode.toLowerCase().includes(q) ||
-      t.templateName.toLowerCase().includes(q)
-    );
+    return tpl.templateCode.toLowerCase().includes(q) || tpl.templateName.toLowerCase().includes(q);
   });
+
+  const filterLabels: Record<'all' | 'active' | 'inactive', string> = {
+    all: t('factors.filterAll'),
+    active: t('factors.filterActive'),
+    inactive: t('factors.filterInactive'),
+  };
 
   return (
     <div>
       <div className="flex items-center gap-3 px-4 pt-4 pb-2">
         <div className="relative flex-1 max-w-sm">
-          <Icon name="magnifying-glass" style="regular" className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by code or name..."
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('templates.searchPlaceholder')}
+            aria-label={t('templates.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
         <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-sm">
-          {(['all', 'active', 'inactive'] as const).map((s) => (
+          {(['all', 'active', 'inactive'] as const).map(s => (
             <button
               key={s}
               type="button"
               onClick={() => setStatusFilter(s)}
               className={clsx(
-                'px-3 py-2 capitalize transition-colors',
+                'px-3 py-2 transition-colors',
                 statusFilter === s
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-gray-500 hover:bg-gray-50',
               )}
             >
-              {s}
+              {filterLabels[s]}
             </button>
           ))}
         </div>
@@ -87,15 +97,19 @@ const TemplateTable = ({
       {filtered.length !== templates.length && (
         <div className="px-4 pb-2">
           <span className="text-xs text-gray-400">
-            Showing {filtered.length} of {templates.length} template(s)
+            {t('templates.showingOf', { shown: filtered.length, total: templates.length })}
           </span>
         </div>
       )}
 
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-500">
-          <Icon name="rectangle-list" style="regular" className="size-8 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm">No templates found</p>
+          <Icon
+            name="rectangle-list"
+            style="regular"
+            className="size-8 mx-auto mb-2 text-gray-300"
+          />
+          <p className="text-sm">{t('templates.empty')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto">
@@ -103,17 +117,25 @@ const TemplateTable = ({
             <thead>
               <tr className="bg-primary/10">
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-36">
-                  Code
+                  {t('templates.columns.code')}
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left">Name</th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+                  {t('templates.columns.name')}
+                </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-36">
-                  Property Type
+                  {t('templates.columns.propertyType')}
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left">Description</th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-28">Factors</th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">Status</th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+                  {t('templates.columns.description')}
+                </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-28">
+                  {t('templates.columns.factors')}
+                </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">
+                  {t('templates.columns.status')}
+                </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-28">
-                  Actions
+                  {t('templates.columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -125,7 +147,9 @@ const TemplateTable = ({
                   onClick={() => navigate(`${basePath}/${template.id}`)}
                 >
                   <td className="py-3 px-4">
-                    <span className="text-sm font-mono font-medium text-gray-800">{template.templateCode}</span>
+                    <span className="text-sm font-mono font-medium text-gray-800">
+                      {template.templateCode}
+                    </span>
                   </td>
                   <td className="py-3 px-4 text-sm text-gray-900 font-medium">
                     {template.templateName}
@@ -157,7 +181,9 @@ const TemplateTable = ({
                           : 'bg-gray-100 text-gray-500',
                       )}
                     >
-                      {template.isActive ? 'Active' : 'Inactive'}
+                      {template.isActive
+                        ? t('templates.status.active')
+                        : t('templates.status.inactive')}
                     </span>
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -169,9 +195,11 @@ const TemplateTable = ({
                         variant="ghost"
                         size="xs"
                         onClick={() => navigate(`${basePath}/${template.id}`)}
-                        leftIcon={<Icon name="pen-to-square" style="regular" className="size-3.5" />}
+                        leftIcon={
+                          <Icon name="pen-to-square" style="regular" className="size-3.5" />
+                        }
                       >
-                        Edit
+                        {t('common:actions.edit')}
                       </Button>
                       {onDelete && (
                         <Button
@@ -180,7 +208,11 @@ const TemplateTable = ({
                           disabled={isDeleting}
                           onClick={() => onDelete(template.id)}
                           leftIcon={
-                            <Icon name="trash-can" style="regular" className="size-3.5 text-danger" />
+                            <Icon
+                              name="trash-can"
+                              style="regular"
+                              className="size-3.5 text-danger"
+                            />
                           }
                         />
                       )}

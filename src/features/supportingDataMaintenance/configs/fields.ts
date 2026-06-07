@@ -1,10 +1,14 @@
 import { type FormField } from '@/shared/components/form';
 import { APPRAISAL_COMPANY_PARAMS, DECISION_PARAMS } from '../constants/parameters';
+import { REMARK_REQUIRED_DECISIONS } from '../constants/enums';
+import type { TFunction } from 'i18next';
 
-export const supportingDataFields: FormField[] = [
+type T = TFunction<'supportingDataMaintenance'>;
+
+export const getSupportingDataFields = (t: T): FormField[] => [
   {
     type: 'dropdown',
-    label: 'Import Channel',
+    label: t('fields.importChannel'),
     name: 'importChannel',
     group: 'ImportChannel',
     wrapperClassName: 'col-span-2',
@@ -12,7 +16,7 @@ export const supportingDataFields: FormField[] = [
   },
   {
     type: 'date-input',
-    label: 'Import Date',
+    label: t('fields.importDate'),
     name: 'importDate',
     wrapperClassName: 'col-span-2',
     required: true,
@@ -21,33 +25,25 @@ export const supportingDataFields: FormField[] = [
   },
   {
     type: 'dropdown',
-    label: 'Source of Data',
+    label: t('fields.sourceOfData'),
     name: 'sourceOfData',
     group: 'SourceofData',
     wrapperClassName: 'col-span-2',
     required: true,
   },
   {
-    type: 'dropdown',
-    label: 'Appraisal Company',
-    name: 'appraisalCompany',
-    group: '',
-    wrapperClassName: 'col-span-2',
-    required: true,
-    options: APPRAISAL_COMPANY_PARAMS, // remove when group is ready
-  },
-  {
     type: 'text-input',
-    label: 'Description',
+    label: t('fields.description'),
     name: 'description',
     wrapperClassName: 'col-span-4',
+    maxLength: 100,
   },
 ];
 
-export const decisionFields: FormField[] = [
+export const getDecisionFields = (t: T): FormField[] => [
   {
     type: 'dropdown',
-    label: 'Decision',
+    label: t('fields.decision'),
     name: 'decision',
     options: DECISION_PARAMS,
     wrapperClassName: 'col-span-2',
@@ -55,31 +51,37 @@ export const decisionFields: FormField[] = [
   },
   {
     type: 'textarea',
-    label: 'Remark',
+    label: t('fields.remark'),
     name: 'remark',
     wrapperClassName: 'col-span-12',
-    requiredWhen: { field: 'decision', is: ['02', '03'], operator: 'in' },
+    requiredWhen: {
+      field: 'decision',
+      is: [...REMARK_REQUIRED_DECISIONS],
+      operator: 'in',
+    },
+    maxLength: 4000,
   },
 ];
 
-export const propertyInformationFields: FormField[] = [
+export const getPropertyInformationFields = (t: T): FormField[] => [
   {
     type: 'text-input',
-    label: 'Property Name',
+    label: t('fields.propertyName'),
     name: 'propertyName',
     wrapperClassName: 'col-span-3',
+    maxLength: 100,
   },
   {
     type: 'dropdown',
-    label: 'Collateral Type',
+    label: t('fields.collateralType'),
     name: 'collateralType',
-    group: 'CollateralType',
+    group: 'PropertyType',
     wrapperClassName: 'col-span-3',
     required: true,
   },
   {
     type: 'dropdown',
-    label: 'Building Type',
+    label: t('fields.buildingType'),
     name: 'buildingType',
     group: 'BuildingType',
     wrapperClassName: 'col-span-3',
@@ -87,59 +89,61 @@ export const propertyInformationFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Developer',
+    label: t('fields.developer'),
     name: 'developer',
     wrapperClassName: 'col-span-3',
+    maxLength: 50,
   },
   {
     type: 'text-input',
-    label: 'Model',
+    label: t('fields.modelName'),
     name: 'modelName',
     wrapperClassName: 'col-span-3',
+    maxLength: 50,
   },
   {
     type: 'number-input',
-    label: 'Land Area (Sq.Wa)',
+    label: t('fields.landArea'),
     name: 'landArea',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
-    maxIntegerDigits: 16,
+    maxIntegerDigits: 15,
   },
   {
     type: 'number-input',
-    label: 'Usage Area (Sq.M)',
+    label: t('fields.usableArea'),
     name: 'usableArea',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 2,
-    maxIntegerDigits: 16,
+    maxIntegerDigits: 15,
   },
 ];
 
-export const locationDetailFields: FormField[] = [
+export const getLocationDetailFields = (t: T): FormField[] => [
   {
     type: 'text-input',
-    label: 'Project Name/ Village Name',
+    label: t('fields.projectName'),
     name: 'projectName',
     wrapperClassName: 'col-span-3',
     maxLength: 100,
   },
   {
     type: 'text-input',
-    label: 'Room Floor',
+    label: t('fields.roomFloor'),
     name: 'roomFloor',
     wrapperClassName: 'col-span-3',
-    maxLength: 100,
+    maxLength: 3,
   },
   {
     type: 'text-input',
-    label: 'House Number',
+    label: t('fields.houseNo'),
     name: 'houseNo',
     wrapperClassName: 'col-span-3',
-    maxLength: 100,
+    maxLength: 30100,
   },
   {
     type: 'location-selector',
-    label: 'Sub District',
+    label: t('fields.subDistrict'),
     name: 'subDistrict',
     districtField: 'district',
     districtNameField: 'districtName',
@@ -152,28 +156,28 @@ export const locationDetailFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'District',
+    label: t('fields.district'),
     name: 'districtName',
     disabled: true,
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'text-input',
-    label: 'Province',
+    label: t('fields.province'),
     name: 'provinceName',
     disabled: true,
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'text-input',
-    label: 'Postcode',
+    label: t('fields.postcode'),
     name: 'postcode',
     disabled: true,
     wrapperClassName: 'col-span-3',
   },
   {
     type: 'number-input',
-    label: 'Latitude',
+    label: t('fields.latitude'),
     name: 'latitude',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 6,
@@ -185,7 +189,7 @@ export const locationDetailFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Longitude',
+    label: t('fields.longitude'),
     name: 'longitude',
     wrapperClassName: 'col-span-3',
     decimalPlaces: 6,
@@ -197,7 +201,7 @@ export const locationDetailFields: FormField[] = [
   },
   {
     type: 'checkbox-group',
-    label: 'Plot Location',
+    label: t('fields.plotLocation'),
     name: 'plotLocationType',
     orientation: 'horizontal',
     group: 'PlotLocation',
@@ -205,20 +209,20 @@ export const locationDetailFields: FormField[] = [
   },
   {
     type: 'textarea',
-    label: 'Other',
+    label: t('fields.other'),
     name: 'plotLocationTypeOther',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
-    maxLength: 100,
+    maxLength: 1000,
   },
 ];
 
-export const financialDetailsFields: FormField[] = [
+export const getFinancialDetailsFields = (t: T): FormField[] => [
   {
     type: 'number-input',
     name: 'pricePerUnit',
-    label: 'Price per Unit',
+    label: t('fields.pricePerUnit'),
     maxIntegerDigits: 15,
     decimalPlaces: 2,
     wrapperClassName: 'col-span-3',
@@ -226,7 +230,7 @@ export const financialDetailsFields: FormField[] = [
   {
     type: 'number-input',
     name: 'offeringPrice',
-    label: 'Offering Price',
+    label: t('fields.offeringPrice'),
     maxIntegerDigits: 15,
     decimalPlaces: 2,
     wrapperClassName: 'col-span-3',
@@ -234,27 +238,27 @@ export const financialDetailsFields: FormField[] = [
   {
     type: 'number-input',
     name: 'sellingPrice',
-    label: 'Selling Price',
+    label: t('fields.sellingPrice'),
     maxIntegerDigits: 15,
     decimalPlaces: 2,
     wrapperClassName: 'col-span-3',
   },
 ];
 
-export const contactInformationFields: FormField[] = [
+export const getContactInformationFields = (t: T): FormField[] => [
   {
     type: 'text-input',
-    label: 'Phone No',
+    label: t('fields.phoneNo'),
     name: 'phoneNo',
     wrapperClassName: 'col-span-3',
     maxLength: 40,
   },
 ];
 
-export const sourceAndReferenceFields: FormField[] = [
+export const getSourceAndReferenceFields = (t: T): FormField[] => [
   {
     type: 'datetime-input',
-    label: 'Information Date',
+    label: t('fields.informationDate'),
     name: 'informationDate',
     wrapperClassName: 'col-span-3',
     required: true,
@@ -263,34 +267,51 @@ export const sourceAndReferenceFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Website',
+    label: t('fields.website'),
     name: 'website',
     wrapperClassName: 'col-span-3',
+    maxLength: 100,
   },
   {
     type: 'text-input',
-    label: 'Source URL',
+    label: t('fields.sourceUrl'),
     name: 'sourceUrl',
     wrapperClassName: 'col-span-3',
+    maxLength: 1000,
   },
   {
     type: 'textarea',
-    label: 'Remark',
+    label: t('fields.remarkDetail'),
     name: 'remark',
     wrapperClassName: 'col-span-12',
-    maxLength: 100,
+    maxLength: 4000,
   },
 ];
 
-export const supportingDataDetailFields: FormField[] = [
+export const getSupportingDataDetailFields = (t: T): FormField[] => [
   // Property information
-  ...propertyInformationFields,
+  ...getPropertyInformationFields(t),
   // Location detail
-  ...locationDetailFields,
+  ...getLocationDetailFields(t),
   // Financial details
-  ...financialDetailsFields,
+  ...getFinancialDetailsFields(t),
   // Contact information
-  ...contactInformationFields,
+  ...getContactInformationFields(t),
   // Source & reference
-  ...sourceAndReferenceFields,
+  ...getSourceAndReferenceFields(t),
 ];
+
+// ── Legacy static exports kept for backward compat (labels in English) ──
+// These are used by schemas/form.ts for buildFormSchema; labels are display-
+// only in the form engine so they won't cause runtime errors if left in English.
+// Components have been migrated to the get* factory functions above.
+const identityT = ((key: string) => key.split('.').pop() ?? key) as unknown as T;
+
+export const supportingDataFields = getSupportingDataFields(identityT);
+export const decisionFields = getDecisionFields(identityT);
+export const propertyInformationFields = getPropertyInformationFields(identityT);
+export const locationDetailFields = getLocationDetailFields(identityT);
+export const financialDetailsFields = getFinancialDetailsFields(identityT);
+export const contactInformationFields = getContactInformationFields(identityT);
+export const sourceAndReferenceFields = getSourceAndReferenceFields(identityT);
+export const supportingDataDetailFields = getSupportingDataDetailFields(identityT);

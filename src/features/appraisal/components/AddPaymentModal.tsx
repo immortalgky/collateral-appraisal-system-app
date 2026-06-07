@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,6 +35,7 @@ export default function AddPaymentModal({
   requestedAt,
   readOnly = false,
 }: AddPaymentModalProps) {
+  const { t } = useTranslation(['appraisal', 'common']);
   const {
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -77,13 +79,15 @@ export default function AddPaymentModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title={isEditing ? 'Edit Payment' : 'Add Payment'}
+      title={
+        isEditing ? t('payment.addPaymentModal.titleEdit') : t('payment.addPaymentModal.titleAdd')
+      }
       size="sm"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
         {/* Payment Date */}
         <DateInput
-          label="Payment Date"
+          label={t('payment.addPaymentModal.dateLabel')}
           required
           value={paymentDate}
           onChange={value => setValue('paymentDate', value || '')}
@@ -94,7 +98,7 @@ export default function AddPaymentModal({
 
         {/* Amount */}
         <NumberInput
-          label="Amount"
+          label={t('payment.addPaymentModal.amountLabel')}
           required
           maxIntegerDigits={15}
           decimalPlaces={2}
@@ -108,11 +112,11 @@ export default function AddPaymentModal({
         {/* Action Buttons */}
         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
           <Button type="button" variant="ghost" onClick={handleClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           {!readOnly && (
             <Button type="submit" variant="primary" isLoading={isSubmitting}>
-              {isEditing ? 'Save' : 'Add Payment'}
+              {isEditing ? t('common:actions.save') : t('payment.addPayment')}
             </Button>
           )}
         </div>

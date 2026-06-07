@@ -106,7 +106,9 @@ export const dashboardApi = {
   },
 
   getQuotationTaskSummary: async () => {
-    const { data } = await axios.get<QuotationTaskSummaryResponse>('/dashboard/quotation-task-summary');
+    const { data } = await axios.get<QuotationTaskSummaryResponse>(
+      '/dashboard/quotation-task-summary',
+    );
     return data;
   },
 };

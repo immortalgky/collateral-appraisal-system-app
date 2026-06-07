@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import FormCard from '@/shared/components/sections/FormCard';
 import CreateRequestFileInput from '../components/CreateRequestFileInput';
 import DocumentUploader from '../components/DocumentUploader';
@@ -8,10 +9,11 @@ interface AttachDocumentFormProps {
 }
 
 const AttachDocumentForm = ({ getOrCreateSession }: AttachDocumentFormProps) => {
+  const { t } = useTranslation('request');
   const isReadOnly = useFormReadOnly();
 
   return (
-    <FormCard title="Attach Document" icon="paperclip" iconColor="teal">
+    <FormCard title={t('forms.attachDocument')} icon="paperclip" iconColor="teal">
       <div className="flex flex-col gap-6">
         {!isReadOnly && <CreateRequestFileInput getOrCreateSession={getOrCreateSession} />}
         <DocumentUploader getOrCreateSession={getOrCreateSession} />

@@ -40,9 +40,7 @@ function createWrapper() {
   });
 
   return function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
@@ -55,7 +53,7 @@ function createMockFile(name: string, size: number, type: string): File {
 // Helper to create a mock FileList
 function createMockFileList(files: File[]): FileList {
   const dataTransfer = new DataTransfer();
-  files.forEach((file) => dataTransfer.items.add(file));
+  files.forEach(file => dataTransfer.items.add(file));
   return dataTransfer.files;
 }
 
@@ -87,7 +85,7 @@ describe('useUploadDocumentLegacy', () => {
         () => {
           expect(result.current.isSuccess).toBe(true);
         },
-        { timeout: MOCK_TIMEOUT }
+        { timeout: MOCK_TIMEOUT },
       );
 
       // Check returned data
@@ -122,7 +120,7 @@ describe('useUploadDocumentLegacy', () => {
         () => {
           expect(result.current.isSuccess).toBe(true);
         },
-        { timeout: MOCK_TIMEOUT }
+        { timeout: MOCK_TIMEOUT },
       );
 
       // Should return data for all files
@@ -164,7 +162,7 @@ describe('useUploadDocumentLegacy', () => {
         () => {
           expect(result.current.isSuccess).toBe(true);
         },
-        { timeout: MOCK_TIMEOUT }
+        { timeout: MOCK_TIMEOUT },
       );
     });
   });
@@ -211,7 +209,7 @@ describe('useDownloadDocument', () => {
         () => {
           expect(result.current.isSuccess).toBe(true);
         },
-        { timeout: MOCK_TIMEOUT }
+        { timeout: MOCK_TIMEOUT },
       );
 
       // Should return a Blob
@@ -242,7 +240,7 @@ describe('useDownloadDocument', () => {
         () => {
           expect(result.current.isSuccess).toBe(true);
         },
-        { timeout: MOCK_TIMEOUT }
+        { timeout: MOCK_TIMEOUT },
       );
     });
   });
@@ -264,7 +262,7 @@ describe('useCreateRequest', () => {
           appraisalNo: 'APR-001',
           status: 'pending',
         });
-      })
+      }),
     );
 
     const { result } = renderHook(() => useCreateRequest(), {
@@ -286,11 +284,8 @@ describe('useCreateRequest', () => {
   it('should handle 400 Bad Request error', async () => {
     server.use(
       http.post('*/api/requests', () => {
-        return HttpResponse.json(
-          { message: 'Invalid request data' },
-          { status: 400 }
-        );
-      })
+        return HttpResponse.json({ message: 'Invalid request data' }, { status: 400 });
+      }),
     );
 
     const { result } = renderHook(() => useCreateRequest(), {
@@ -311,7 +306,7 @@ describe('useCreateRequest', () => {
     server.use(
       http.post('*/api/requests', () => {
         return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-      })
+      }),
     );
 
     const { result } = renderHook(() => useCreateRequest(), {
@@ -331,11 +326,8 @@ describe('useCreateRequest', () => {
   it('should handle 500 Internal Server Error', async () => {
     server.use(
       http.post('*/api/requests', () => {
-        return HttpResponse.json(
-          { message: 'Internal Server Error' },
-          { status: 500 }
-        );
-      })
+        return HttpResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+      }),
     );
 
     const { result } = renderHook(() => useCreateRequest(), {
@@ -356,7 +348,7 @@ describe('useCreateRequest', () => {
     server.use(
       http.post('*/api/requests', () => {
         return HttpResponse.error();
-      })
+      }),
     );
 
     const { result } = renderHook(() => useCreateRequest(), {
@@ -405,7 +397,7 @@ describe('Query Hook Example', () => {
           ],
           total: 2,
         });
-      })
+      }),
     );
 
     const { result } = renderHook(() => useGetRequests(), {

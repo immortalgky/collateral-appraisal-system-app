@@ -1,9 +1,11 @@
+import '@/features/document-followup/i18n';
 import { createPortal } from 'react-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useGetDocumentTypes, getDocumentTypeName } from '@/features/request/api/documentTypes';
-import { raiseFollowupSchema, type RaiseFollowupFormValues } from '../schemas/followup';
+import { makeRaiseFollowupSchema, type RaiseFollowupFormValues } from '../schemas/followup';
 import { useRaiseFollowup } from '../hooks/useRaiseFollowup';
 
 interface RaiseFollowupDialogProps {
@@ -19,6 +21,7 @@ export function RaiseFollowupDialog({
   workflowInstanceId,
   taskId,
 }: RaiseFollowupDialogProps) {
+  const { t } = useTranslation(['documentFollowup', 'common']);
   const { data: documentTypes = [] } = useGetDocumentTypes();
   const raiseFollowup = useRaiseFollowup();
 
@@ -29,7 +32,7 @@ export function RaiseFollowupDialog({
     reset,
     formState: { errors },
   } = useForm<RaiseFollowupFormValues>({
-    resolver: zodResolver(raiseFollowupSchema),
+    resolver: zodResolver(makeRaiseFollowupSchema(t)),
     defaultValues: {
       lineItems: [{ documentType: '', notes: '' }],
     },
@@ -72,17 +75,14 @@ export function RaiseFollowupDialog({
               <Icon name="file-circle-plus" style="solid" className="size-5 text-amber-600" />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-900">
-                Request Additional Documents
-              </h3>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Specify the documents needed from the request maker
-              </p>
+              <h3 className="text-base font-semibold text-gray-900">{t('raiseDialog.title')}</h3>
+              <p className="text-xs text-gray-500 mt-0.5">{t('raiseDialog.subtitle')}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleClose}
+            aria-label={t('aria.closeDialog')}
             className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <Icon name="xmark" style="solid" className="size-4" />
@@ -99,7 +99,7 @@ export function RaiseFollowupDialog({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-gray-600">
-                    Document Request #{index + 1}
+                    {t('raiseDialog.requestLabel', { number: index + 1 })}
                   </span>
                   {fields.length > 1 && (
                     <button
@@ -115,13 +115,13 @@ export function RaiseFollowupDialog({
                 {/* Document Type */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Document Type <span className="text-danger">*</span>
+                    {t('raiseDialog.documentTypeLabel')} <span className="text-danger">*</span>
                   </label>
                   <select
                     {...register(`lineItems.${index}.documentType`)}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
                   >
-                    <option value="">Select document type...</option>
+                    <option value="">{t('raiseDialog.documentTypePlaceholder')}</option>
                     {documentTypes.map(dt => (
                       <option key={dt.code} value={dt.code}>
                         {getDocumentTypeName(documentTypes, dt.code ?? '')}
@@ -138,12 +138,12 @@ export function RaiseFollowupDialog({
                 {/* Notes */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Notes / Instructions <span className="text-danger">*</span>
+                    {t('raiseDialog.notesLabel')} <span className="text-danger">*</span>
                   </label>
                   <textarea
                     {...register(`lineItems.${index}.notes`)}
                     rows={3}
-                    placeholder="Describe what is needed and why..."
+                    placeholder={t('raiseDialog.notesPlaceholder')}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
                   />
                   {errors.lineItems?.[index]?.notes && (
@@ -169,7 +169,7 @@ export function RaiseFollowupDialog({
             className="mt-3 flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"
           >
             <Icon name="plus" style="solid" className="size-3.5" />
-            Add another document request
+            {t('raiseDialog.addAnother')}
           </button>
 
           {/* Footer */}
@@ -180,7 +180,7 @@ export function RaiseFollowupDialog({
               disabled={raiseFollowup.isPending}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
             >
-              Cancel
+              {t('common:actions.cancel')}
             </button>
             <button
               type="submit"
@@ -190,12 +190,12 @@ export function RaiseFollowupDialog({
               {raiseFollowup.isPending ? (
                 <>
                   <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                  Submitting...
+                  {t('raiseDialog.submitting')}
                 </>
               ) : (
                 <>
                   <Icon name="paper-plane" style="solid" className="size-4" />
-                  Send Request
+                  {t('raiseDialog.sendRequest')}
                 </>
               )}
             </button>
@@ -203,7 +203,7 @@ export function RaiseFollowupDialog({
         </form>
       </div>
       <div className="modal-backdrop bg-black/40" onClick={handleClose}>
-        <button type="button">close</button>
+        <button type="button">{t('aria.closeDialog')}</button>
       </div>
     </div>,
     document.body,

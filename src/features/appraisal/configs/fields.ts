@@ -733,6 +733,13 @@ export const otherInformationField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+  {
+    type: 'boolean-toggle',
+    label: 'Land is rented out to others',
+    name: 'isRentedOut',
+    options: ['No', 'Yes'],
+    wrapperClassName: 'col-span-12',
+  },
 ];
 
 export const remarkLandField: FormField[] = [

@@ -7,7 +7,11 @@ interface UseAssumptionEditorProps {
   activeAssumption: DCFAssumption | null;
 }
 
-export function useAssumptionEditor({ section, category, activeAssumption }: UseAssumptionEditorProps) {
+export function useAssumptionEditor({
+  section,
+  category,
+  activeAssumption,
+}: UseAssumptionEditorProps) {
   if (!activeAssumption) {
     return { modalInitialData: null };
   }

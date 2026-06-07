@@ -107,10 +107,17 @@ const MarketComparableForm = () => {
   const latitude = useWatch({ name: 'latitude' });
   const longitude = useWatch({ name: 'longitude' });
   const initialLat =
-    latitude != null && latitude !== '' && !Number.isNaN(Number(latitude)) ? Number(latitude) : null;
+    latitude != null && latitude !== '' && !Number.isNaN(Number(latitude))
+      ? Number(latitude)
+      : null;
   const initialLon =
-    longitude != null && longitude !== '' && !Number.isNaN(Number(longitude)) ? Number(longitude) : null;
-  const pickerButton = useMemo(() => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />, []);
+    longitude != null && longitude !== '' && !Number.isNaN(Number(longitude))
+      ? Number(longitude)
+      : null;
+  const pickerButton = useMemo(
+    () => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />,
+    [],
+  );
 
   // Initialize market comparable template code
   useEffect(() => {

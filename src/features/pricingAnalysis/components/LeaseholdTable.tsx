@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 import type { LeaseholdTableResult } from '../domain/calculateLeasehold';
 
@@ -15,6 +16,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
   const { rows, totalIncomeOverLeaseTerm, valueAtLeaseExpiry, finalValue, finalValueRounded } =
     result;
 
+  const { t } = useTranslation('pricingAnalysis');
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
 
   const colHl = 'bg-blue-50/60';
@@ -41,7 +43,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
           <thead>
             <tr className="bg-gray-50">
               <th className="sticky left-0 z-10 bg-gray-50 px-3 py-2 text-left text-gray-600 font-medium min-w-[360px] border-b border-gray-200">
-                Year
+                {t('leasehold.table.year')}
               </th>
               {rows.map((r, i) => (
                 <th key={r.year} className={headCls(i)} {...cp(i)}>
@@ -54,7 +56,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Detail label row */}
             <tr className="bg-gray-100">
               <td className="sticky left-0 z-10 bg-gray-100 px-3 py-1.5 border-b border-gray-200">
-                <span className="text-gray-700 font-semibold">Detail</span>
+                <span className="text-gray-700 font-semibold">{t('leasehold.table.detail')}</span>
               </td>
               {rows.map((r, i) => (
                 <td
@@ -68,7 +70,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Land Value */}
             <tr className="hover:bg-gray-50/50">
               <td className={stickyCell}>
-                <span className="font-medium text-gray-700">Land Value</span>
+                <span className="font-medium text-gray-700">{t('leasehold.table.landValue')}</span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -85,7 +87,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Building Value */}
             <tr className="hover:bg-gray-50/50">
               <td className={stickyCell}>
-                <span className="text-gray-700">Building Value</span>
+                <span className="text-gray-700">{t('leasehold.table.buildingValue')}</span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -97,7 +99,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Depreciation */}
             <tr className="hover:bg-gray-50/50">
               <td className={stickyCell}>
-                <span className="text-gray-700">Depreciation</span>
+                <span className="text-gray-700">{t('leasehold.table.depreciationAmount')}</span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -120,7 +122,9 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Building value after depreciation */}
             <tr className="hover:bg-gray-50/50">
               <td className={stickyCell}>
-                <span className="text-gray-700">Building after depreciation</span>
+                <span className="text-gray-700">
+                  {t('leasehold.table.buildingAfterDepreciation')}
+                </span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -133,7 +137,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             <tr className="bg-gray-50 font-medium">
               <td className={stickyCellBold}>
                 <span className="text-gray-800 font-semibold">
-                  Total value of land and buildings
+                  {t('leasehold.table.totalLandAndBuilding')}
                 </span>
               </td>
               {rows.map((r, i) => (
@@ -146,7 +150,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Rental Income */}
             <tr className="hover:bg-gray-50/50">
               <td className={stickyCell}>
-                <span className="text-gray-700">Rental income</span>
+                <span className="text-gray-700">{t('leasehold.table.rentalIncome')}</span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -158,7 +162,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* PV Factor */}
             <tr className="hover:bg-gray-50/50">
               <td className={stickyCell}>
-                <span className="text-gray-700">PV Factor</span>
+                <span className="text-gray-700">{t('leasehold.table.pvFactor')}</span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -170,7 +174,9 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
             {/* Net Current Rental Income */}
             <tr className="bg-gray-50 font-medium">
               <td className={stickyCellBold}>
-                <span className="text-gray-800 font-semibold">Net Current Rental Income</span>
+                <span className="text-gray-800 font-semibold">
+                  {t('leasehold.table.netCurrentRentalIncome')}
+                </span>
               </td>
               {rows.map((r, i) => (
                 <td key={r.year} className={dataBoldCls(i)} {...cp(i)}>
@@ -186,7 +192,7 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
       <div className="text-xs border-t border-gray-300">
         <div className="flex bg-gray-50 border-b border-gray-200">
           <div className="px-3 py-2 text-gray-800 font-medium min-w-[360px]">
-            Total income over the lease term
+            {t('leasehold.table.totalIncomeOverLeaseTerm')}
           </div>
           <div className="px-3 py-2 text-right text-gray-800 font-medium flex-1">
             {fmt(totalIncomeOverLeaseTerm)}
@@ -194,21 +200,23 @@ export function LeaseholdTable({ result }: LeaseholdTableProps) {
         </div>
         <div className="flex bg-gray-50 border-b border-gray-200">
           <div className="px-3 py-2 text-gray-800 font-medium min-w-[360px]">
-            Total value of land and buildings when the lease expires
+            {t('leasehold.table.valueAtLeaseExpiry')}
           </div>
           <div className="px-3 py-2 text-right text-gray-800 font-medium flex-1">
             {fmt(valueAtLeaseExpiry)}
           </div>
         </div>
         <div className="flex bg-gray-100 border-b border-gray-200">
-          <div className="px-3 py-2 text-gray-900 font-semibold min-w-[360px]">Final Value</div>
+          <div className="px-3 py-2 text-gray-900 font-semibold min-w-[360px]">
+            {t('leasehold.table.finalValuePv')}
+          </div>
           <div className="px-3 py-2 text-right text-gray-900 font-semibold flex-1">
             {fmt(finalValue)}
           </div>
         </div>
         <div className="flex bg-gray-200">
           <div className="px-3 py-2 text-gray-900 font-bold min-w-[360px]">
-            Final Value (Rounded)
+            {t('leasehold.table.finalValueRounded')}
           </div>
           <div className="px-3 py-2 text-right text-gray-900 font-bold text-sm flex-1">
             {fmt(finalValueRounded)}

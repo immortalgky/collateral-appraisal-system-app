@@ -18,13 +18,13 @@ export function ApprovalNode({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as ActivityNodeData;
   const props = nodeData.properties as ApprovalProperties;
   const decisions = Object.keys(props?.decisionConditions ?? {});
-  const outputs =
-    decisions.length > 0 ? decisions.map((d) => ({ id: d, label: d })) : undefined;
+  const outputs = decisions.length > 0 ? decisions.map(d => ({ id: d, label: d })) : undefined;
 
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Approval'}
       subtitle="Committee vote"

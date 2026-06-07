@@ -17,8 +17,14 @@ const plotLocationOptions = [
   { value: 'frontZoneOfProject', label: 'Front Zone of the Project' },
   { value: 'houseNotFacingEmpire', label: 'House Not Facing Empire' },
   { value: 'privateZone', label: 'Private Zone' },
-  { value: 'adjacentToTransformer', label: 'Adjacent to / Near Transformer / High Voltage Power Lines' },
-  { value: 'adjacentToSewageTreatment', label: 'Adjacent to Sewage Treatment Plant / Garbage Disposal Area' },
+  {
+    value: 'adjacentToTransformer',
+    label: 'Adjacent to / Near Transformer / High Voltage Power Lines',
+  },
+  {
+    value: 'adjacentToSewageTreatment',
+    label: 'Adjacent to Sewage Treatment Plant / Garbage Disposal Area',
+  },
   { value: 'other', label: 'Other' },
 ];
 
@@ -32,10 +38,7 @@ export default function PlotLocationForm() {
 
       {/* Form Fields */}
       <div className="flex-1 flex flex-col gap-6">
-        <CheckboxGroup
-          name="plotLocation"
-          options={plotLocationOptions}
-        />
+        <CheckboxGroup name="plotLocation" options={plotLocationOptions} />
 
         {/* Other field */}
         <div className="grid grid-cols-6 gap-4">

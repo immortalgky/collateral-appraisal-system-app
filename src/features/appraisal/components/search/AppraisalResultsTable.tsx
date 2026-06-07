@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
 import Badge from '@/shared/components/Badge';
@@ -28,6 +29,7 @@ function AppraisalResultsTable({
   onRowClick,
   loadingRowId,
 }: AppraisalResultsTableProps) {
+  const { t } = useTranslation('appraisal');
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
 
@@ -64,7 +66,9 @@ function AppraisalResultsTable({
       const days = Math.floor(Math.abs(item.remainingHours) / 24);
       const hours = Math.abs(item.remainingHours) % 24;
       const timeStr = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
-      return item.remainingHours < 0 ? `Overdue ${timeStr}` : `${timeStr} left`;
+      return item.remainingHours < 0
+        ? t('list.sla.overdue', { time: timeStr })
+        : t('list.sla.left', { time: timeStr });
     }
     return item.slaStatus;
   };
@@ -110,8 +114,8 @@ function AppraisalResultsTable({
               <td colSpan={columns.length + 1} className="text-center py-16">
                 <div className="flex flex-col items-center gap-2">
                   <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                  <p className="text-gray-500 font-medium">No appraisals found</p>
-                  <p className="text-xs text-gray-400">Try adjusting your search or filters</p>
+                  <p className="text-gray-500 font-medium">{t('list.empty')}</p>
+                  <p className="text-xs text-gray-400">{t('list.emptyHint')}</p>
                 </div>
               </td>
             </tr>

@@ -11,13 +11,11 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useGetProjectUnits, useUpdateUnitSaleStatus } from '../api/blockUnitMaintenance';
 import { UnitRow } from '../components/UnitRow';
+import { SoldDonut } from '../components/SoldDonut';
+import { ModelBreakdown } from '../components/ModelBreakdown';
+import type { ModelStat } from '../components/ModelBreakdown';
 import { isCondo } from '@/features/blockProject/types';
-import type {
-  ProjectType,
-  ProjectUnitDetail,
-  PurchaseMethod,
-  UnitEditState,
-} from '../types';
+import type { ProjectType, ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
 
 const LOAN_BANK_LIST_ID = 'block-unit-maint-loan-banks';
 
@@ -27,101 +25,6 @@ function projectTypePillClass(code: ProjectType): string {
   if (code === 'U') return 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200';
   return 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200';
 }
-
-// ─── Donut gauge ──────────────────────────────────────────────────────────────
-
-const SoldDonut = ({ sold, total }: { sold: number; total: number }) => {
-  const pct = total > 0 ? (sold / total) * 100 : 0;
-  const size = 180;
-  const stroke = 18;
-  const radius = (size - stroke) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const arcFraction = 0.75;
-  const visibleLen = circumference * arcFraction;
-  const filledLen = (pct / 100) * visibleLen;
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="-rotate-[135deg]">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="#e5e7eb"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${visibleLen} ${circumference}`}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="url(#donutGrad)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${filledLen} ${circumference}`}
-        />
-        <defs>
-          <linearGradient id="donutGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#a78bfa" />
-            <stop offset="100%" stopColor="#6366f1" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-xs text-gray-500">Sold Unit</span>
-        <span className="text-2xl font-semibold text-gray-900 tabular-nums mt-0.5">
-          {pct.toFixed(1)}%
-        </span>
-        <span className="text-xs text-gray-500 tabular-nums mt-0.5">
-          {sold} / {total}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// ─── Model breakdown panel ───────────────────────────────────────────────────
-
-interface ModelStat {
-  modelName: string;
-  count: number;
-}
-
-const ModelBreakdown = ({
-  heading,
-  stats,
-  emptyLabel,
-}: {
-  heading: string;
-  stats: ModelStat[];
-  emptyLabel: string;
-}) => (
-  <div>
-    <h4 className="text-sm font-semibold text-gray-900 mb-2">{heading}</h4>
-    <div className="border-t border-gray-200">
-      {stats.length === 0 ? (
-        <div className="py-3 text-xs text-gray-400">{emptyLabel}</div>
-      ) : (
-        stats.map(s => (
-          <div
-            key={s.modelName}
-            className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-          >
-            <span className="text-sm text-gray-700">{s.modelName}</span>
-            <div className="flex items-center gap-2 text-sm tabular-nums">
-              <span className="text-gray-700 font-medium">
-                {s.count.toLocaleString('th-TH')}
-              </span>
-              <span className="text-xs text-gray-400 w-8 text-right">Unit</span>
-            </div>
-          </div>
-        ))
-      )}
-    </div>
-  </div>
-);
 
 // ─── Helper: filter + group ──────────────────────────────────────────────────
 
@@ -260,10 +163,7 @@ const BlockUnitMaintenanceDetailPage = () => {
     [edits],
   );
 
-  const dirtyIds = useMemo(
-    () => units.filter(u => isDirty(u.id)).map(u => u.id),
-    [units, isDirty],
-  );
+  const dirtyIds = useMemo(() => units.filter(u => isDirty(u.id)).map(u => u.id), [units, isDirty]);
   const hasDirty = dirtyIds.length > 0;
 
   // ─── Unsaved-changes guard (router + tab close) ─────────────────────────
@@ -300,8 +200,7 @@ const BlockUnitMaintenanceDetailPage = () => {
     });
   };
 
-  const handleBulkCash = () =>
-    applyBulk({ isSold: true, purchaseBy: 'Cash', loanBankName: '' });
+  const handleBulkCash = () => applyBulk({ isSold: true, purchaseBy: 'Cash', loanBankName: '' });
 
   const handleBulkLoan = () =>
     applyBulk({
@@ -380,10 +279,7 @@ const BlockUnitMaintenanceDetailPage = () => {
   const totalUnits = liveUnits.length;
   const soldCount = liveUnits.filter(u => u.isSold).length;
   const soldStats = useMemo(() => groupByModel(liveUnits, u => u.isSold), [liveUnits]);
-  const availableStats = useMemo(
-    () => groupByModel(liveUnits, u => !u.isSold),
-    [liveUnits],
-  );
+  const availableStats = useMemo(() => groupByModel(liveUnits, u => !u.isSold), [liveUnits]);
 
   // Distinct loan bank names from the live data — used for autocomplete.
   const loanBankSuggestions = useMemo(() => {
@@ -422,10 +318,8 @@ const BlockUnitMaintenanceDetailPage = () => {
 
   // Master checkbox state for the currently-filtered list.
   const filteredIds = useMemo(() => filteredUnits.map(u => u.id), [filteredUnits]);
-  const allFilteredSelected =
-    filteredIds.length > 0 && filteredIds.every(id => selected.has(id));
-  const someFilteredSelected =
-    filteredIds.some(id => selected.has(id)) && !allFilteredSelected;
+  const allFilteredSelected = filteredIds.length > 0 && filteredIds.every(id => selected.has(id));
+  const someFilteredSelected = filteredIds.some(id => selected.has(id)) && !allFilteredSelected;
 
   const handleToggleSelectAll = () => {
     setSelected(prev => {
@@ -468,16 +362,16 @@ const BlockUnitMaintenanceDetailPage = () => {
           <Icon style="solid" name="chevron-left" className="size-3.5" />
         </Button>
         <Icon style="solid" name="folder-open" className="size-4 text-cyan-500" />
-        <h2 className="text-base font-semibold text-gray-900">
-          {project?.projectName ?? '—'}
-        </h2>
+        <h2 className="text-base font-semibold text-gray-900">{project?.projectName ?? '—'}</h2>
         {project?.appraisalReportNo && (
           <span className="px-2 py-0.5 text-[11px] font-medium bg-teal-50 text-teal-700 rounded">
             ID: {project.appraisalReportNo}
           </span>
         )}
         {project && projectTypeLabel && (
-          <span className={`px-2 py-0.5 text-[11px] font-medium rounded ${projectTypePillClass(project.projectType)}`}>
+          <span
+            className={`px-2 py-0.5 text-[11px] font-medium rounded ${projectTypePillClass(project.projectType)}`}
+          >
             {projectTypeLabel.toUpperCase()}
           </span>
         )}
@@ -494,14 +388,16 @@ const BlockUnitMaintenanceDetailPage = () => {
           heading={t('detail.sold')}
           stats={soldStats}
           emptyLabel={t('detail.noSold')}
+          unitSuffix={t('detail.unitSuffix')}
         />
         <div className="flex justify-center">
-          <SoldDonut sold={soldCount} total={totalUnits} />
+          <SoldDonut sold={soldCount} total={totalUnits} soldLabel={t('detail.donutSoldLabel')} />
         </div>
         <ModelBreakdown
           heading={t('detail.available')}
           stats={availableStats}
           emptyLabel={t('detail.noAvailable')}
+          unitSuffix={t('detail.unitSuffix')}
         />
       </div>
 
@@ -515,12 +411,7 @@ const BlockUnitMaintenanceDetailPage = () => {
             leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
           />
         </div>
-        <StatusChips
-          value={statusFilter}
-          onChange={setStatusFilter}
-          counts={chipCounts}
-          t={t}
-        />
+        <StatusChips value={statusFilter} onChange={setStatusFilter} counts={chipCounts} t={t} />
         {(search || statusFilter !== 'all') && (
           <Button
             variant="ghost"
@@ -587,21 +478,43 @@ const BlockUnitMaintenanceDetailPage = () => {
                         if (el) el.indeterminate = someFilteredSelected;
                       }}
                       onChange={handleToggleSelectAll}
-                      aria-label="Select all"
+                      aria-label={t('units.selectAll')}
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">#</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Floor</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Tower Name</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Reg. Number</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Room No</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model Type</th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m.)</th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price (Baht)</th>
-                  <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">{t('units.col.isSold')}</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">{t('units.col.purchaseBy')}</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">{t('units.col.loanBankName')}</th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    #
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('detail.cols.floor')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.towerName')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.regNumber')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.roomNo')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.modelType')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.usableAreaSqm')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.sellingPriceBaht')}
+                  </th>
+                  <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('units.col.isSold')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('units.col.purchaseBy')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('units.col.loanBankName')}
+                  </th>
                 </tr>
               ) : (
                 <tr>
@@ -613,21 +526,43 @@ const BlockUnitMaintenanceDetailPage = () => {
                         if (el) el.indeterminate = someFilteredSelected;
                       }}
                       onChange={handleToggleSelectAll}
-                      aria-label="Select all"
+                      aria-label={t('units.selectAll')}
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">#</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Plot No</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">House No</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model Name</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">No. of Floors</th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (Sq.Wa)</th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m.)</th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price (Baht)</th>
-                  <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">{t('units.col.isSold')}</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">{t('units.col.purchaseBy')}</th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">{t('units.col.loanBankName')}</th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    #
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.plotNo')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.houseNo')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.modelName')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.numFloors')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.landAreaSqWa')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.usableAreaSqm')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.sellingPriceBaht')}
+                  </th>
+                  <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('units.col.isSold')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('units.col.purchaseBy')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('units.col.loanBankName')}
+                  </th>
                 </tr>
               )}
             </thead>

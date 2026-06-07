@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Icon } from '@/shared/components';
+import { useTranslation } from 'react-i18next';
 import { MethodFooterActions } from '../../MethodFooterActions';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import {
@@ -30,10 +31,11 @@ import toast from 'react-hot-toast';
 
 type LandBuildingTabId = 'unitDetails' | 'costOfBuilding' | 'summary';
 
-const TABS = [
-  { id: 'unitDetails' as const, label: 'Unit Details', icon: 'table' },
-  { id: 'costOfBuilding' as const, label: 'Cost of Building', icon: 'building' },
-  { id: 'summary' as const, label: 'Summary', icon: 'chart-bar' },
+// Tab labels are translated inside the component — keep empty stubs here
+const TABS_CONFIG = [
+  { id: 'unitDetails' as const, labelKey: 'hypothesis.tabs.unitDetails', icon: 'table' },
+  { id: 'costOfBuilding' as const, labelKey: 'hypothesis.tabs.costOfBuilding', icon: 'building' },
+  { id: 'summary' as const, labelKey: 'hypothesis.tabs.summary', icon: 'chart-bar' },
 ];
 
 /**
@@ -102,8 +104,7 @@ function deriveModelsFromSavedData(
   const totalDevCost = savedData.landBuildingSummary?.totalProjectDevCost ?? 0;
   if (totalDevCost > 0) {
     for (const agg of grouped.values()) {
-      agg.devCostRatioPercent =
-        (agg.totalValueAfterDepreciationAllUnits * 100) / totalDevCost;
+      agg.devCostRatioPercent = (agg.totalValueAfterDepreciationAllUnits * 100) / totalDevCost;
     }
   }
 
@@ -221,10 +222,16 @@ export function LandBuildingTabs({
   onReset,
   onCancel,
 }: LandBuildingTabsProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const [activeTab, setActiveTab] = useState<LandBuildingTabId>('unitDetails');
   const [previewSummary, setPreviewSummary] = useState<LandBuildingSummaryDto | null>(null);
-  const [previewModels, setPreviewModels] = useState<Record<string, LandBuildingModelAggregate> | null>(null);
-  const [previewTotalLandAreaFromTitles, setPreviewTotalLandAreaFromTitles] = useState<number | null>(null);
+  const [previewModels, setPreviewModels] = useState<Record<
+    string,
+    LandBuildingModelAggregate
+  > | null>(null);
+  const [previewTotalLandAreaFromTitles, setPreviewTotalLandAreaFromTitles] = useState<
+    number | null
+  >(null);
   const [previewCostItems, setPreviewCostItems] = useState<CostItemDto[] | null>(null);
 
   const isInitialized = useRef(false);
@@ -324,7 +331,7 @@ export function LandBuildingTabs({
     previewMutation.mutate(
       { pricingAnalysisId, methodId, request },
       {
-        onSuccess: (result) => {
+        onSuccess: result => {
           if (result.landBuildingSummary) setPreviewSummary(result.landBuildingSummary);
           if (result.models) setPreviewModels(result.models);
           if (result.totalLandAreaFromTitles !== undefined)
@@ -339,7 +346,10 @@ export function LandBuildingTabs({
   // Watch inputs and debounce preview calls
   useEffect(() => {
     const key = JSON.stringify(watchedFields);
-    if (prevWatchKey.current === null) { prevWatchKey.current = key; return; }
+    if (prevWatchKey.current === null) {
+      prevWatchKey.current = key;
+      return;
+    }
     if (key === prevWatchKey.current) return;
     prevWatchKey.current = key;
 
@@ -349,7 +359,12 @@ export function LandBuildingTabs({
       runPreviewRef.current();
     }, 400);
   }, [watchedFields]);
-  useEffect(() => () => { if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current); }, []);
+  useEffect(
+    () => () => {
+      if (debounceTimerRef.current !== null) clearTimeout(debounceTimerRef.current);
+    },
+    [],
+  );
 
   // Single-shot init: reset the form from saved data, then immediately fire the
   // initial preview so per-model aggregates (Cost of Building, Summary tab) populate
@@ -459,13 +474,15 @@ export function LandBuildingTabs({
     try {
       const result = await saveMutation.mutateAsync({ pricingAnalysisId, methodId, request });
       const finalValue = result.landBuildingSummary?.totalAssetValueRounded ?? 0;
-      reset(mapSavedToFormValues({
-        ...savedData,
-        landBuildingSummary: result.landBuildingSummary ?? savedData.landBuildingSummary,
-      }));
+      reset(
+        mapSavedToFormValues({
+          ...savedData,
+          landBuildingSummary: result.landBuildingSummary ?? savedData.landBuildingSummary,
+        }),
+      );
       onSaveSuccess(finalValue);
     } catch {
-      toast.error('Failed to save');
+      toast.error(t('hypothesis.toasts.saveFailed'));
     }
   };
 
@@ -473,15 +490,14 @@ export function LandBuildingTabs({
   // Fall back to a client-side aggregate when preview hasn't run yet (e.g. cache hits)
   // so Cost of Building / Summary tab don't flash empty state. Preview will overwrite
   // with server-computed values once it returns.
-  const effectiveModels =
-    previewModels ?? deriveModelsFromSavedData(savedData);
+  const effectiveModels = previewModels ?? deriveModelsFromSavedData(savedData);
   const effectiveTotalLandAreaFromTitles =
     previewTotalLandAreaFromTitles ?? savedData.totalLandAreaFromTitles ?? null;
 
   return (
     <FormProvider methods={methods} schema={LandBuildingFormSchema}>
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
@@ -489,7 +505,7 @@ export function LandBuildingTabs({
       >
         {/* Tab bar */}
         <nav className="shrink-0 flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100 self-start">
-          {TABS.map(tab => {
+          {TABS_CONFIG.map(tab => {
             const isActive = activeTab === tab.id;
             return (
               <button
@@ -508,7 +524,7 @@ export function LandBuildingTabs({
                   style="solid"
                   className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
                 />
-                {tab.label}
+                {t(tab.labelKey as Parameters<typeof t>[0])}
               </button>
             );
           })}
@@ -527,11 +543,7 @@ export function LandBuildingTabs({
             />
           )}
 
-          {activeTab === 'costOfBuilding' && (
-            <CostOfBuildingTab
-              models={effectiveModels}
-            />
-          )}
+          {activeTab === 'costOfBuilding' && <CostOfBuildingTab models={effectiveModels} />}
 
           {activeTab === 'summary' && (
             <LandBuildingSummaryTab

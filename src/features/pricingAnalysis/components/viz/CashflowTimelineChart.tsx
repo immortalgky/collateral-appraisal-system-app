@@ -54,9 +54,7 @@ function CashflowTooltip({ active, payload, label }: any) {
         NOI: {fmtFull(row.noi ?? 0)}
       </div>
       {row.terminalBar > 0 && (
-        <div style={{ color: '#8b5cf6' }}>
-          Terminal value: {fmtFull(row.terminalBar)}
-        </div>
+        <div style={{ color: '#8b5cf6' }}>Terminal value: {fmtFull(row.terminalBar)}</div>
       )}
       <div style={{ color: '#0ea5e9' }} className="mt-1">
         PV contribution: {fmtFull(row.presentValue ?? 0)}
@@ -102,13 +100,7 @@ export function CashflowTimelineChart({
           <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={fmtCompact} width={45} />
           <Tooltip content={<CashflowTooltip />} cursor={{ fill: '#f3f4f6' }} />
           <Legend wrapperStyle={{ fontSize: 9, paddingTop: 2 }} />
-          <Bar
-            dataKey="noiBar"
-            name="NOI"
-            stackId="cf"
-            fill="#3b82f6"
-            radius={[0, 0, 0, 0]}
-          />
+          <Bar dataKey="noiBar" name="NOI" stackId="cf" fill="#3b82f6" radius={[0, 0, 0, 0]} />
           <Bar
             dataKey="terminalBar"
             name="Terminal value"

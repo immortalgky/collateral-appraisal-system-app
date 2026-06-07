@@ -10,12 +10,13 @@ export function SwitchNode({ id, data, selected }: NodeProps) {
   const nodeData = data as unknown as ActivityNodeData;
   const props = nodeData.properties as SwitchProperties;
   const cases = props?.cases ?? [];
-  const allOutputs = [...cases, 'default'].map((k) => ({ id: k, label: k }));
+  const allOutputs = [...cases, 'default'].map(k => ({ id: k, label: k }));
 
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Switch'}
       subtitle={props?.expression || undefined}

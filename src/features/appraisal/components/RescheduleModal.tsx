@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -36,6 +37,7 @@ export default function RescheduleModal({
   isLoading = false,
   readOnly = false,
 }: RescheduleModalProps) {
+  const { t } = useTranslation('appraisal');
   const methods = useForm<RescheduleFormData>({
     resolver: zodResolver(RescheduleFormSchema),
     defaultValues: {
@@ -77,8 +79,12 @@ export default function RescheduleModal({
     onSubmit(data);
   };
 
-  const modalTitle = isNewAppointment ? 'Schedule Appointment' : 'Reschedule Appointment';
-  const submitButtonText = isNewAppointment ? 'Schedule' : 'Save';
+  const modalTitle = isNewAppointment
+    ? t('appointment.scheduleModal.titleNew')
+    : t('appointment.scheduleModal.titleReschedule');
+  const submitButtonText = isNewAppointment
+    ? t('appointment.scheduleModal.submitNew')
+    : t('appointment.scheduleModal.submitReschedule');
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={modalTitle} size="md">
@@ -86,7 +92,7 @@ export default function RescheduleModal({
         <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
           {/* Date Time Input */}
           <DateTimeInput
-            label="Appointment Date & Time"
+            label={t('appointment.scheduleModal.dateTimeLabel')}
             required
             value={dateTime}
             onChange={value => setValue('dateTime', value || '')}
@@ -96,10 +102,10 @@ export default function RescheduleModal({
 
           {/* Location Input */}
           <Textarea
-            label="Location"
+            label={t('appointment.scheduleModal.locationLabel')}
             required
             rows={3}
-            placeholder="Enter appointment location details"
+            placeholder={t('appointment.scheduleModal.locationPlaceholder')}
             {...register('location')}
             error={errors.location?.message}
             disabled={readOnly}
@@ -108,9 +114,9 @@ export default function RescheduleModal({
           {/* Reason Input - only shown when rescheduling */}
           {!isNewAppointment && (
             <Textarea
-              label="Reason for Rescheduling"
+              label={t('appointment.scheduleModal.reasonLabel')}
               rows={2}
-              placeholder="Enter reason for rescheduling (optional)"
+              placeholder={t('appointment.scheduleModal.reasonPlaceholder')}
               {...register('reason')}
               error={errors.reason?.message}
               disabled={readOnly}

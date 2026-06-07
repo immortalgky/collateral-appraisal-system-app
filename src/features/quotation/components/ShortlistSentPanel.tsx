@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
@@ -23,6 +24,7 @@ const fmtDateTime = (iso: string | null | undefined): string => {
 };
 
 const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
+  const { t } = useTranslation('quotation');
   const { mutate: recall, isPending } = useRecallShortlist(quotation.id);
   const hasTentativeWinner = !!quotation.tentativeWinnerQuotationId;
   const [drawerCompanyQuotationId, setDrawerCompanyQuotationId] = useState<string | null>(null);
@@ -32,8 +34,8 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
 
   const handleRecall = () => {
     recall(undefined, {
-      onSuccess: () => toast.success('Shortlist recalled — you can now revise and re-send'),
-      onError: (err: any) => toast.error(err?.apiError?.detail ?? 'Failed to recall shortlist'),
+      onSuccess: () => toast.success(t('toasts.shortlistRecalled')),
+      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.recallFailed')),
     });
   };
 
@@ -53,7 +55,9 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
               <Icon name="share-from-square" style="solid" className="size-4 text-purple-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">Shortlist Sent to RM</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {t('shortlist.shortlistSentToRm')}
+              </span>
               {quotation.shortlistSentToRmAt && (
                 <span className="ml-2 text-xs text-purple-700">
                   {new Date(quotation.shortlistSentToRmAt).toLocaleString('th-TH')}
@@ -66,31 +70,25 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
             size="sm"
             onClick={handleRecall}
             disabled={isPending || hasTentativeWinner}
-            title={
-              hasTentativeWinner ? 'Cannot recall once a tentative winner is picked' : undefined
-            }
+            title={hasTentativeWinner ? t('shortlist.recallDisabledHint') : undefined}
           >
             {isPending ? (
               <Icon name="spinner" style="solid" className="size-3.5 animate-spin mr-1.5" />
             ) : (
               <Icon name="rotate-left" style="solid" className="size-3.5 mr-1.5" />
             )}
-            Recall Shortlist
+            {t('buttons.recallShortlist')}
           </Button>
         </div>
 
         {hasTentativeWinner && (
           <div className="px-4 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
             <Icon name="circle-info" style="solid" className="size-4 text-indigo-500 shrink-0" />
-            <p className="text-xs text-indigo-700">
-              RM has already picked a tentative winner — recall is disabled. Use "Reject Tentative
-              Winner" to restart the selection.
-            </p>
+            <p className="text-xs text-indigo-700">{t('shortlist.recallDisabledHint')}</p>
           </div>
         )}
 
-        {/* RM negotiation recommendation — surfaced once RM picks a tentative winner so the
-            admin sees what the RM wants before deciding whether to Open Negotiation. */}
+        {/* RM negotiation recommendation */}
         {hasTentativeWinner && (quotation.rmRequestsNegotiation || quotation.rmNegotiationNote) && (
           <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
             <div className="flex items-start gap-2">
@@ -101,10 +99,10 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
               />
               <div className="text-sm flex-1">
                 <div className="font-medium text-orange-900">
-                  RM Negotiation Recommendation
+                  {t('negotiation.rmNegotiationRecommendation')}
                   {quotation.rmRequestsNegotiation && (
                     <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-200 text-orange-800 uppercase tracking-wide">
-                      Negotiation Requested
+                      {t('negotiation.negotiationRequested')}
                     </span>
                   )}
                 </div>
@@ -113,7 +111,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                     {quotation.rmNegotiationNote}
                   </p>
                 ) : (
-                  <p className="mt-1 text-orange-700 italic">No note provided.</p>
+                  <p className="mt-1 text-orange-700 italic">{t('negotiation.noNoteProvided')}</p>
                 )}
               </div>
             </div>
@@ -125,27 +123,27 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Company
+                  {t('columns.company')}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Fee Amount
+                  {t('columns.totalFeeAmount')}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Discount
+                  {t('columns.totalDiscount')}
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Net Amount
+                  {t('columns.totalNetAmount')}
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total Estimate Manday
+                  {t('columns.totalEstimateManday')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Submitted At
+                  {t('columns.submittedAt')}
                 </th>
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  {t('columns.status')}
                 </th>
-                <th className="px-4 py-3 w-10" aria-label="Detail" />
+                <th className="px-4 py-3 w-10" aria-label={t('columns.detail')} />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -175,7 +173,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                         {quotation.tentativeWinnerQuotationId === cq.id && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">
                             <Icon name="crown" style="solid" className="size-3" />
-                            Tentative Winner
+                            {t('shortlist.tentativeWinner')}
                           </span>
                         )}
                       </div>
@@ -219,7 +217,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                         ].includes(cq.status) && (
                           <button
                             type="button"
-                            aria-label={`View ${cq.companyName} quotation detail`}
+                            aria-label={t('aria.viewDetail', { company: cq.companyName })}
                             onClick={() => setDrawerCompanyQuotationId(cq.id)}
                             className="p-1 rounded hover:bg-gray-100 transition-colors"
                           >
@@ -237,7 +235,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
               {shortlisted.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-500">
-                    No shortlisted companies
+                    {t('empty.noShortlisted')}
                   </td>
                 </tr>
               )}
@@ -249,7 +247,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
       <SlideOverPanel
         isOpen={!!drawerCompanyQuotationId}
         onClose={() => setDrawerCompanyQuotationId(null)}
-        title="External Appraisal Company Quotation Information"
+        title={t('page.extQuotationTitle')}
         subtitle={drawerCompany?.companyName ?? undefined}
         width="2xl"
       >

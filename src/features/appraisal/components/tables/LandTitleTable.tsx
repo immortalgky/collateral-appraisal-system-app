@@ -93,7 +93,9 @@ const LandTitleTable = ({
           <p className="text-sm font-medium text-gray-500">No land title data</p>
           {!readOnly && (
             <>
-              <p className="text-xs text-gray-400 mt-0.5 mb-3">Click the button below to add a title</p>
+              <p className="text-xs text-gray-400 mt-0.5 mb-3">
+                Click the button below to add a title
+              </p>
               <button
                 type="button"
                 onClick={() => setModalState({ type: 'add' })}
@@ -283,11 +285,18 @@ const TableCell = ({ name, index, value, field, row, allFields, control }: Table
   // Check if field uses parameterGroup (no inline options)
   const hasGroup = 'group' in field && field.group;
   const hasOptions = 'options' in field && field.options;
-  const groupFieldTypes = ['dropdown', 'radio-group', 'checkbox-group', 'boolean-toggle', 'string-toggle'];
+  const groupFieldTypes = [
+    'dropdown',
+    'radio-group',
+    'checkbox-group',
+    'boolean-toggle',
+    'string-toggle',
+  ];
 
   if (hasGroup && !hasOptions && groupFieldTypes.includes(field.type)) {
     const dependentField = allFields.find(
-      f => 'showWhen' in f && f.showWhen && 'field' in f.showWhen && f.showWhen.field === field.name,
+      f =>
+        'showWhen' in f && f.showWhen && 'field' in f.showWhen && f.showWhen.field === field.name,
     );
     const depValue = dependentField ? row[dependentField.name] : null;
     return (

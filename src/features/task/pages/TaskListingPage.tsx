@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetPoolTasks, useGetTasks, useGetTasksForKanban } from '../api';
@@ -19,9 +19,11 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
-import { columnDefs, DEFAULT_CONFIG } from '../config/columnDefs';
+import { columnDefs, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
+import { useColumnWidths } from '../hooks/useColumnWidths';
 import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
+import { ColumnResizeHandle } from '../components/ColumnResizeHandle';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { FavoritesRow } from '@features/menuFavorites';
 
@@ -106,6 +108,35 @@ function TaskListingPage() {
     reorderColumns,
     resetToDefault,
   } = useColumnVisibility('task-columns-all', DEFAULT_CONFIG);
+
+  const { widths: colWidths, setWidth: setColWidth, resetWidths } = useColumnWidths(
+    'task-columns-all',
+    DEFAULT_CONFIG,
+  );
+
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const ACTIONS_COL_WIDTH = 32; // w-8 = 2rem = 32px
+
+  const totalTableWidth =
+    visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH;
+
+  const getAutoFitWidth = useCallback(
+    (_key: string, colIndex: number): (() => number | null) =>
+      () => {
+        const tbl = tableRef.current;
+        if (!tbl) return null;
+        const rows = tbl.querySelectorAll('tr');
+        let max = 0;
+        rows.forEach(row => {
+          const cell = row.children[colIndex] as HTMLElement | undefined;
+          if (cell) max = Math.max(max, cell.scrollWidth);
+        });
+        if (max === 0) return null;
+        return Math.min(Math.max(max + 24, MIN_COLUMN_WIDTH), MAX_AUTOFIT_WIDTH);
+      },
+    [],
+  );
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
   const [poolSearch, setPoolSearch] = useState('');
@@ -469,7 +500,7 @@ function TaskListingPage() {
                   alwaysVisible={alwaysVisible}
                   onToggle={toggleColumn}
                   onReorder={reorderColumns}
-                  onReset={resetToDefault}
+                  onReset={() => { resetToDefault(); resetWidths(); }}
                 />
               </div>
             )}
@@ -608,15 +639,25 @@ function TaskListingPage() {
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
               <div className="flex-1 min-h-0 overflow-auto">
-                <table className="w-full min-w-max text-sm">
+                <table
+                  ref={tableRef}
+                  className="table-fixed text-sm"
+                  style={{ width: totalTableWidth }}
+                >
+                  <colgroup>
+                    {visibleColumns.map(key => (
+                      <col key={key} style={{ width: colWidths[key] }} />
+                    ))}
+                    <col style={{ width: ACTIONS_COL_WIDTH }} />
+                  </colgroup>
                   <thead className="sticky top-0 z-20">
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      {visibleColumns.map(key => {
+                      {visibleColumns.map((key, colIndex) => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
                         const isSticky = key === DEFAULT_CONFIG.stickyColumn;
                         const base =
-                          'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                          'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
                         const thClass = isSticky
                           ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                           : col.sortField
@@ -636,6 +677,11 @@ function TaskListingPage() {
                             ) : (
                               col.label
                             )}
+                            <ColumnResizeHandle
+                              width={colWidths[key]}
+                              onResize={px => setColWidth(key, px)}
+                              getAutoFitWidth={getAutoFitWidth(key, colIndex)}
+                            />
                           </th>
                         );
                       })}
@@ -703,8 +749,8 @@ function TaskListingPage() {
                                 key={key}
                                 className={
                                   isSticky
-                                    ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                                    : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs')
+                                    ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
+                                    : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap')
                                 }
                                 onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >

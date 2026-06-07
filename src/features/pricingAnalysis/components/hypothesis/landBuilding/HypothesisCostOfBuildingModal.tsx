@@ -59,8 +59,11 @@ function PreviewCard() {
   const year = useWatch({ name: 'year' }) ?? 0;
   const annualPct = useWatch({ name: 'annualDepreciationPercent' }) ?? 0;
   const depreciationMethod = useWatch({ name: 'depreciationMethod' }) ?? 'Gross';
-  const depreciationPeriods: Array<{ atYear?: unknown; toYear?: unknown; depreciationPerYear?: unknown }> =
-    useWatch({ name: 'depreciationPeriods' }) ?? [];
+  const depreciationPeriods: Array<{
+    atYear?: unknown;
+    toYear?: unknown;
+    depreciationPerYear?: unknown;
+  }> = useWatch({ name: 'depreciationPeriods' }) ?? [];
 
   /** B03 */
   const priceBeforeDepre = toN(area) * toN(pricePerSqM);
@@ -78,16 +81,14 @@ function PreviewCard() {
   })();
 
   /** B07 */
-  const depreciationAmt = priceBeforeDepre * totalDeprecPct / 100;
+  const depreciationAmt = (priceBeforeDepre * totalDeprecPct) / 100;
   /** B08 */
   const valueAfterDepre = priceBeforeDepre - depreciationAmt;
 
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-center">
-        <div className="text-[10px] font-medium text-blue-500 uppercase tracking-wide">
-          Before
-        </div>
+        <div className="text-[10px] font-medium text-blue-500 uppercase tracking-wide">Before</div>
         <div className="text-sm font-semibold text-blue-700">
           ฿{priceBeforeDepre.toLocaleString()}
         </div>
@@ -110,9 +111,7 @@ function PreviewCard() {
       <Icon style="solid" name="arrow-right" className="size-3.5 text-gray-300 shrink-0" />
 
       <div className="flex-1 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-center">
-        <div className="text-[10px] font-medium text-green-500 uppercase tracking-wide">
-          After
-        </div>
+        <div className="text-[10px] font-medium text-green-500 uppercase tracking-wide">After</div>
         <div className="text-sm font-semibold text-green-700">
           ฿{valueAfterDepre.toLocaleString()}
         </div>
@@ -178,13 +177,20 @@ export function HypothesisCostOfBuildingModal({
   const isGross = depreciationMethod === 'Gross';
 
   // Field array for depreciation periods — lives inside the modal's own form
-  const { fields: periodFields, append: appendPeriod, remove: removePeriod } = useFieldArray({
+  const {
+    fields: periodFields,
+    append: appendPeriod,
+    remove: removePeriod,
+  } = useFieldArray({
     control,
     name: 'depreciationPeriods',
   });
 
-  const watchedPeriods: Array<{ atYear?: number | null; toYear?: number | null; depreciationPerYear?: number | null }> =
-    watch('depreciationPeriods') ?? [];
+  const watchedPeriods: Array<{
+    atYear?: number | null;
+    toYear?: number | null;
+    depreciationPerYear?: number | null;
+  }> = watch('depreciationPeriods') ?? [];
 
   // Footer stats for period sub-table
   const periodTotalYears = watchedPeriods.reduce(
@@ -205,7 +211,7 @@ export function HypothesisCostOfBuildingModal({
     if (currentRows.length > 0) {
       setValue('depreciationPeriods', []);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGross, isOpen]);
 
   // When switching TO Period from an empty list: seed one default row
@@ -220,7 +226,7 @@ export function HypothesisCostOfBuildingModal({
       }
     }
     prevMethodRef.current = depreciationMethod ?? 'Gross';
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [depreciationMethod, isOpen]);
 
   const onSubmit = useCallback(
@@ -418,10 +424,9 @@ export function HypothesisCostOfBuildingModal({
                                 >
                                   <td className="px-2 py-1.5">
                                     <NumberInput
-                                      {...register(
-                                        `depreciationPeriods.${idx}.atYear`,
-                                        { valueAsNumber: true },
-                                      )}
+                                      {...register(`depreciationPeriods.${idx}.atYear`, {
+                                        valueAsNumber: true,
+                                      })}
                                       value={atYearVal}
                                       maxIntegerDigits={3}
                                       decimalPlaces={0}
@@ -429,10 +434,9 @@ export function HypothesisCostOfBuildingModal({
                                   </td>
                                   <td className="px-2 py-1.5">
                                     <NumberInput
-                                      {...register(
-                                        `depreciationPeriods.${idx}.toYear`,
-                                        { valueAsNumber: true },
-                                      )}
+                                      {...register(`depreciationPeriods.${idx}.toYear`, {
+                                        valueAsNumber: true,
+                                      })}
                                       value={toYearVal}
                                       maxIntegerDigits={3}
                                       decimalPlaces={0}
@@ -447,9 +451,7 @@ export function HypothesisCostOfBuildingModal({
                                       value={depPerYearVal}
                                       maxIntegerDigits={3}
                                       decimalPlaces={2}
-                                      rightIcon={
-                                        <span className="text-xs text-gray-400">%</span>
-                                      }
+                                      rightIcon={<span className="text-xs text-gray-400">%</span>}
                                     />
                                   </td>
                                   <td className="px-2 py-1.5 text-center">
@@ -469,10 +471,7 @@ export function HypothesisCostOfBuildingModal({
                         {periodFields.length > 0 && (
                           <tfoot>
                             <tr className="bg-gray-50 border-t border-gray-200">
-                              <td
-                                colSpan={2}
-                                className="px-3 py-2 text-xs text-gray-500 italic"
-                              >
+                              <td colSpan={2} className="px-3 py-2 text-xs text-gray-500 italic">
                                 Summary
                               </td>
                               <td className="px-3 py-2 text-right">

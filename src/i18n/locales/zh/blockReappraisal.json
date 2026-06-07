@@ -1,0 +1,119 @@
+{
+  "page": {
+    "list": {
+      "title": "Block Project Reappraisal",
+      "description": "Block and village projects due for reappraisal"
+    }
+  },
+  "projectType": {
+    "condo": "Condo",
+    "landAndBuilding": "Land & Building"
+  },
+  "columns": {
+    "oldAppraisalNumber": "Old Appraisal Report No.",
+    "projectName": "Project Name",
+    "projectSellingPrice": "Project Selling Price (Baht)",
+    "remainingTotalUnit": "Remaining / Total Unit",
+    "lastAppraisedDate": "Last Appraised Date",
+    "remainingDay": "Remaining Day"
+  },
+  "remainingDayBadge": {
+    "overdue": "逾期",
+    "daysLeft": "{{days}}天"
+  },
+  "filter": {
+    "title": "Filter",
+    "button": "Filters",
+    "fields": {
+      "projectName": "Project Name",
+      "oldAppraisalNumber": "Old Appraisal Report No."
+    },
+    "placeholders": {
+      "projectName": "Enter project name",
+      "oldAppraisalNumber": "Enter report number"
+    },
+    "chips": {
+      "projectName": "Project Name",
+      "oldAppraisalNumber": "Report No."
+    }
+  },
+  "empty": {
+    "noMatching": "No matching projects",
+    "noItems": "No projects due",
+    "tryAdjusting": "Try adjusting your filters.",
+    "noneAtThisTime": "No block projects are due for reappraisal at this time.",
+    "clearFilters": "Clear filters"
+  },
+  "error": {
+    "loadFailed": "Failed to load block reappraisal list",
+    "createFailed": "Failed to create appraisal request",
+    "optOutFailed": "Failed to mark as not required"
+  },
+  "success": {
+    "optOut": "Project marked as reappraisal not required"
+  },
+  "actions": {
+    "createRequest": "Initiate reappraisal request",
+    "notRequired": "Reappraisal Not Required"
+  },
+  "detail": {
+    "backToList": "Back to list",
+    "unnamedProject": "Unnamed Project",
+    "oldAppraisalLabel": "Old Appraisal No.:",
+    "fields": {
+      "dueDate": "Due Date"
+    },
+    "overview": {
+      "title": "Unit Overview",
+      "sold": "Sold",
+      "available": "Available",
+      "noSold": "No units sold yet",
+      "noAvailable": "All units sold",
+      "donutSoldLabel": "Sold Unit",
+      "unitSuffix": "Unit"
+    },
+    "units": {
+      "title": "Unit List",
+      "count": "units",
+      "empty": "No units found for this project"
+    },
+    "error": {
+      "loadFailed": "Failed to load project details",
+      "notFound": "Project not found"
+    },
+    "createModal": {
+      "title": "Create Appraisal Request",
+      "body": "Create a new appraisal request for this block project?"
+    },
+    "successModal": {
+      "title": "Appraisal Request Created",
+      "heading": "Request Created",
+      "requestNumber": "Request Number:",
+      "groupNumber": "Group Number:",
+      "alreadyInProgress": "A request for this project is already in progress."
+    },
+    "optOutModal": {
+      "title": "Reappraisal Not Required",
+      "body": "Mark this project as not requiring reappraisal? It will be removed from the due list.",
+      "confirm": "Confirm"
+    }
+  },
+  "units": {
+    "sold": "Sold",
+    "available": "Available",
+    "cols": {
+      "floor": "Floor",
+      "towerName": "Tower Name",
+      "regNumber": "Reg. Number",
+      "roomNo": "Room No",
+      "modelType": "Model Type",
+      "usableArea": "Usable Area (sq.m.)",
+      "sellingPrice": "Selling Price (Baht)",
+      "plotNo": "Plot No",
+      "houseNo": "House No",
+      "numFloors": "No. of Floors",
+      "landArea": "Land Area (Sq.Wa)",
+      "isSold": "Status"
+    }
+  }
+}

@@ -1,21 +1,21 @@
 {
   "page": {
-    "title": "Log Viewer",
-    "subtitle": "Search and inspect structured application logs by level, message, or business ID"
+    "title": "ดูบันทึกระบบ (Log)",
+    "subtitle": "ค้นหาและตรวจสอบบันทึกแอปพลิเคชันแบบมีโครงสร้างตามระดับ ข้อความ หรือรหัสธุรกิจ"
   },
   "columns": {
-    "timeStamp": "Timestamp",
-    "level": "Level",
-    "message": "Message",
-    "exception": "Exception",
+    "timeStamp": "เวลา",
+    "level": "ระดับ",
+    "message": "ข้อความ",
+    "exception": "ข้อยกเว้น (Exception)",
     "correlationId": "Correlation ID",
-    "appraisalId": "Appraisal ID",
-    "requestId": "Request ID",
-    "entityId": "Entity ID",
+    "appraisalId": "รหัสการประเมิน",
+    "requestId": "รหัสคำขอ",
+    "entityId": "รหัสเอนทิตี",
     "workflowInstanceId": "Workflow Instance ID",
-    "collateralId": "Collateral ID",
-    "documentId": "Document ID",
-    "machineName": "Machine"
+    "collateralId": "รหัสหลักประกัน",
+    "documentId": "รหัสเอกสาร",
+    "machineName": "เครื่อง"
   },
   "levels": {
     "Verbose": "Verbose",
@@ -26,23 +26,23 @@
     "Fatal": "Fatal"
   },
   "filters": {
-    "searchPlaceholder": "Search message...",
-    "levelLabel": "Level",
+    "searchPlaceholder": "ค้นหาข้อความ...",
+    "levelLabel": "ระดับ",
     "correlationIdPlaceholder": "Correlation ID",
-    "appraisalIdPlaceholder": "Appraisal ID",
-    "requestIdPlaceholder": "Request ID",
-    "entityIdPlaceholder": "Entity ID",
-    "from": "From",
-    "to": "To",
-    "clear": "Clear filters"
+    "appraisalIdPlaceholder": "รหัสการประเมิน",
+    "requestIdPlaceholder": "รหัสคำขอ",
+    "entityIdPlaceholder": "รหัสเอนทิตี",
+    "from": "ตั้งแต่",
+    "to": "ถึง",
+    "clear": "ล้างตัวกรอง"
   },
   "drawer": {
-    "title": "Log Entry Details",
-    "copy": "Copy",
-    "copied": "Copied!"
+    "title": "รายละเอียดรายการบันทึก",
+    "copy": "คัดลอก",
+    "copied": "คัดลอกแล้ว!"
   },
   "error": {
-    "failedToLoad": "Failed to load logs"
+    "failedToLoad": "โหลดบันทึกไม่สำเร็จ"
   },
-  "emptyState": "No log entries found"
+  "emptyState": "ไม่พบรายการบันทึก"
 }

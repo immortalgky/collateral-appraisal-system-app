@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   useAppraisalId,
   useAppraisalRequestId,
@@ -28,7 +29,11 @@ import {
   useGetUserById,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import { assignmentFormDefaults, assignmentFormSchema, type AssignmentFormType, } from '../schemas/administration';
+import {
+  assignmentFormDefaults,
+  useAssignmentFormSchema,
+  type AssignmentFormType,
+} from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
 import SearchStaffModal from '../components/SearchStaffModal';
@@ -42,6 +47,8 @@ import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.t
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const AdministrationPage = () => {
+  const { t } = useTranslation('appraisal');
+  const assignmentSchema = useAssignmentFormSchema();
   const appraisalId = useAppraisalId();
   const requestId = useAppraisalRequestId();
   const currentUser = useAuthStore(state => state.user);
@@ -86,7 +93,7 @@ const AdministrationPage = () => {
     formState: { errors, isDirty },
   } = useForm<AssignmentFormType>({
     defaultValues: assignmentFormDefaults,
-    resolver: zodResolver(assignmentFormSchema),
+    resolver: zodResolver(assignmentSchema),
   });
 
   //const { blocker } = useUnsavedChangesWarning(isDirty);
@@ -238,28 +245,29 @@ const AdministrationPage = () => {
     if (!appraisalId) return;
 
     if (!workflowInstanceId) {
-      toast.error(
-        'Assignment requires an active workflow task. Open this page from the Tasks list to assign.',
-      );
+      toast.error(t('administration.toasts.noWorkflowTask'));
       return;
     }
 
     if (!isTaskOwner) {
-      toast.error('Only the task owner can assign this appraisal.');
+      toast.error(t('administration.toasts.notTaskOwner'));
       return;
     }
 
     // Guard: assignment is locked while an active quotation owns this appraisal
     if (isLockedByQuotation) {
       toast.error(
-        `Assignment locked — appraisal is in Quotation #${activeNonTerminalQuotation?.quotationNumber ?? ''} (${activeNonTerminalQuotation?.status ?? ''}). Cancel the quotation or remove this appraisal from it to change.`,
+        t('administration.toasts.quotationLocked', {
+          quotationNumber: activeNonTerminalQuotation?.quotationNumber ?? '',
+          status: activeNonTerminalQuotation?.status ?? '',
+        }),
       );
       return;
     }
 
     // Guard: quotation method requires a finalized quotation with a winner
     if (data.assignmentMethod === 'quotation' && (!isQuotationFinalized || !quotationWinner)) {
-      toast.error('The quotation must be finalized with a winner before routing externally.');
+      toast.error(t('administration.toasts.quotationNotFinalized'));
       return;
     }
 
@@ -301,11 +309,11 @@ const AdministrationPage = () => {
       },
       {
         onSuccess: () => {
-          toast.success('Assignment created successfully');
+          toast.success(t('administration.toasts.assignmentCreated'));
           navigate('/tasks');
         },
         onError: (error: any) => {
-          toast.error(error.apiError?.detail || 'Failed to create assignment. Please try again.');
+          toast.error(error.apiError?.detail || t('administration.toasts.assignmentFailed'));
         },
       },
     );
@@ -335,19 +343,21 @@ const AdministrationPage = () => {
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
                 <Icon name="lock" style="solid" className="size-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-amber-800">Assignment locked</p>
+                  <p className="text-sm font-medium text-amber-800">
+                    {t('administration.assignmentLocked')}
+                  </p>
                   <p className="text-xs text-amber-700 mt-0.5">
-                    This appraisal is in Quotation{' '}
-                    <strong>#{activeNonTerminalQuotation.quotationNumber}</strong> (
-                    {activeNonTerminalQuotation.status}). Cancel the quotation or remove this
-                    appraisal from it to change.
+                    {t('administration.assignmentLockedDesc', {
+                      quotationNumber: activeNonTerminalQuotation.quotationNumber,
+                      status: activeNonTerminalQuotation.status,
+                    })}
                   </p>
                 </div>
                 <a
                   href="#quotation-section"
                   className="shrink-0 flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 underline underline-offset-2"
                 >
-                  Open quotation
+                  {t('administration.openQuotation')}
                   <Icon name="arrow-down" style="solid" className="size-3" />
                 </a>
               </div>
@@ -355,8 +365,8 @@ const AdministrationPage = () => {
 
             {/* Assignment Type Card */}
             <FormCard
-              title="Assignment Type"
-              subtitle="Select whether to assign internally or to an external company"
+              title={t('administration.assignmentType.title')}
+              subtitle={t('administration.assignmentType.subtitle')}
               icon="users-gear"
               iconColor="blue"
             >
@@ -373,16 +383,16 @@ const AdministrationPage = () => {
                     {[
                       {
                         value: 'internal',
-                        label: 'Internal Appraisal',
-                        description: 'Assign to internal appraisal staff',
+                        label: t('administration.assignmentType.internal'),
+                        description: t('administration.assignmentType.internalDesc'),
                         icon: 'user',
                         color: 'emerald',
                         disabled: isInternalDisabled,
                       },
                       {
                         value: 'external',
-                        label: 'External Company',
-                        description: 'Assign to external appraisal company',
+                        label: t('administration.assignmentType.external'),
+                        description: t('administration.assignmentType.externalDesc'),
                         icon: 'building',
                         color: 'purple',
                         disabled: false,
@@ -459,7 +469,7 @@ const AdministrationPage = () => {
                     className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
                   />
                   <p className="text-xs text-amber-700">
-                    Internal assignment is not available for facility limits exceeding 50M
+                    {t('administration.assignmentType.internalDisabledHint')}
                   </p>
                 </div>
               )}
@@ -469,17 +479,17 @@ const AdministrationPage = () => {
             <FormCard
               title={
                 assignmentType === 'internal'
-                  ? 'Internal Assignment Details'
-                  : 'External Assignment Details'
+                  ? t('administration.assignmentDetails.titleInternal')
+                  : t('administration.assignmentDetails.titleExternal')
               }
-              subtitle="Configure assignment method and select assignee"
+              subtitle={t('administration.assignmentDetails.subtitle')}
               icon={assignmentType === 'internal' ? 'user' : 'building'}
               iconColor={assignmentType === 'internal' ? 'emerald' : 'purple'}
             >
               {/* Assignment Method */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Assignment Method
+                  {t('administration.assignmentDetails.methodLabel')}
                 </label>
                 <Controller
                   name="assignmentMethod"
@@ -489,14 +499,14 @@ const AdministrationPage = () => {
                     const baseOptions = [
                       {
                         value: 'manual',
-                        label: 'Manual Selection',
-                        description: 'Select specific assignee',
+                        label: t('administration.assignmentDetails.manual'),
+                        description: t('administration.assignmentDetails.manualDesc'),
                         icon: 'hand-pointer',
                       },
                       {
                         value: 'roundrobin',
-                        label: 'Round-robin',
-                        description: 'System auto-assigns based on workload',
+                        label: t('administration.assignmentDetails.roundrobin'),
+                        description: t('administration.assignmentDetails.roundrobinDesc'),
                         icon: 'rotate',
                       },
                     ];
@@ -508,8 +518,8 @@ const AdministrationPage = () => {
                             ...baseOptions,
                             {
                               value: 'quotation',
-                              label: 'Request Quotation',
-                              description: 'Request quotation from company first',
+                              label: t('administration.assignmentDetails.quotation'),
+                              description: t('administration.assignmentDetails.quotationDesc'),
                               icon: 'file-invoice-dollar',
                             },
                           ]
@@ -601,7 +611,7 @@ const AdministrationPage = () => {
               {assignmentMethod === 'manual' && assignmentType === 'internal' && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Staff Member <span className="text-danger">*</span>
+                    {t('administration.manualStaff.label')} <span className="text-danger">*</span>
                   </label>
                   {selectedStaff ? (
                     <StaffDisplay
@@ -624,7 +634,7 @@ const AdministrationPage = () => {
                         className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
                       >
                         <span className="text-sm text-gray-500">
-                          Click to search and select staff member...
+                          {t('administration.manualStaff.placeholder')}
                         </span>
                         <Icon
                           name="magnifying-glass"
@@ -644,7 +654,7 @@ const AdministrationPage = () => {
               {assignmentMethod === 'manual' && assignmentType === 'external' && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select External Company <span className="text-danger">*</span>
+                    {t('administration.manualCompany.label')} <span className="text-danger">*</span>
                   </label>
                   {selectedCompany ? (
                     <CompanyDisplay
@@ -667,7 +677,7 @@ const AdministrationPage = () => {
                         className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
                       >
                         <span className="text-sm text-gray-500">
-                          Click to search and select external company...
+                          {t('administration.manualCompany.placeholder')}
                         </span>
                         <Icon
                           name="magnifying-glass"
@@ -707,7 +717,7 @@ const AdministrationPage = () => {
                           assignmentType === 'internal' ? 'text-emerald-900' : 'text-purple-900',
                         )}
                       >
-                        Round-robin Assignment
+                        {t('administration.roundrobinInfo.title')}
                       </p>
                       <p
                         className={clsx(
@@ -716,8 +726,8 @@ const AdministrationPage = () => {
                         )}
                       >
                         {assignmentType === 'internal'
-                          ? 'The system will automatically assign this appraisal to the next available staff member based on current workload distribution.'
-                          : 'The system will automatically assign this appraisal to the next external company based on the rotation schedule.'}
+                          ? t('administration.roundrobinInfo.internalDesc')
+                          : t('administration.roundrobinInfo.externalDesc')}
                       </p>
                     </div>
                   </div>
@@ -728,7 +738,7 @@ const AdministrationPage = () => {
               {assignmentType === 'external' && (
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Internal Followup Staff{' '}
+                    {t('administration.followupStaff.label')}{' '}
                     {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
                   </label>
 
@@ -748,14 +758,14 @@ const AdministrationPage = () => {
                         {[
                           {
                             value: 'manual',
-                            label: 'Manual Select',
-                            description: 'Select specific staff',
+                            label: t('administration.followupStaff.manualLabel'),
+                            description: t('administration.followupStaff.manualDesc'),
                             icon: 'hand-pointer',
                           },
                           {
                             value: 'roundrobin',
-                            label: 'Round Robin',
-                            description: 'System auto-assigns',
+                            label: t('administration.followupStaff.roundrobinLabel'),
+                            description: t('administration.followupStaff.roundrobinDesc'),
                             icon: 'rotate',
                           },
                         ].map(option => (
@@ -824,11 +834,10 @@ const AdministrationPage = () => {
                         />
                         <div>
                           <p className="text-sm font-medium text-purple-900">
-                            Round-robin Assignment
+                            {t('administration.roundrobinInfo.title')}
                           </p>
                           <p className="text-sm mt-1 text-purple-700">
-                            The system will automatically assign a followup staff member based on
-                            round-robin distribution.
+                            {t('administration.followupStaff.roundrobinInfo')}
                           </p>
                         </div>
                       </div>
@@ -860,7 +869,7 @@ const AdministrationPage = () => {
                             className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
                           >
                             <span className="text-sm text-gray-500">
-                              Click to search and select internal followup staff...
+                              {t('administration.followupStaff.placeholder')}
                             </span>
                             <Icon
                               name="magnifying-glass"
@@ -952,7 +961,7 @@ const AdministrationPage = () => {
                 {isDirty && (
                   <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                    Unsaved changes
+                    {t('administration.unsavedChanges')}
                   </span>
                 )}
               </div>
@@ -964,12 +973,12 @@ const AdministrationPage = () => {
                   {isCreating ? (
                     <>
                       <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
-                      Assigning...
+                      {t('administration.assigning')}
                     </>
                   ) : (
                     <>
                       <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
-                      Assign
+                      {t('administration.assign')}
                     </>
                   )}
                 </Button>

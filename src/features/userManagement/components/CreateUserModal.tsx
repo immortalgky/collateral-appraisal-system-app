@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
@@ -36,6 +37,7 @@ const EMPTY_FORM: FormState = {
 };
 
 const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const createUser = useCreateUser();
   const { data: rolesData } = useGetRoles({ pageSize: 200 });
@@ -58,19 +60,18 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
     }));
 
   const validate = (): string | null => {
-    if (!form.username.trim()) return 'Username is required';
-    if (!form.email.trim()) return 'Email is required';
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Email is not valid';
-    if (!form.password) return 'Password is required';
-    if (form.password.length < 8) return 'Password must be at least 8 characters';
-    if (!/[A-Z]/.test(form.password)) return 'Password must contain an uppercase letter';
-    if (!/[a-z]/.test(form.password)) return 'Password must contain a lowercase letter';
-    if (!/[0-9]/.test(form.password)) return 'Password must contain a digit';
-    if (!/[^A-Za-z0-9]/.test(form.password))
-      return 'Password must contain a non-alphanumeric character';
-    if (!form.firstName.trim()) return 'First name is required';
-    if (!form.lastName.trim()) return 'Last name is required';
-    if (form.roles.length === 0) return 'Select at least one role';
+    if (!form.username.trim()) return t('validation.usernameRequired');
+    if (!form.email.trim()) return t('validation.emailRequired');
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return t('validation.emailInvalid');
+    if (!form.password) return t('validation.passwordRequired');
+    if (form.password.length < 8) return t('validation.passwordMinLength');
+    if (!/[A-Z]/.test(form.password)) return t('validation.passwordUppercase');
+    if (!/[a-z]/.test(form.password)) return t('validation.passwordLowercase');
+    if (!/[0-9]/.test(form.password)) return t('validation.passwordDigit');
+    if (!/[^A-Za-z0-9]/.test(form.password)) return t('validation.passwordSymbol');
+    if (!form.firstName.trim()) return t('validation.firstNameRequired');
+    if (!form.lastName.trim()) return t('validation.lastNameRequired');
+    if (form.roles.length === 0) return t('validation.selectAtLeastOneRole');
     return null;
   };
 
@@ -94,7 +95,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
       },
       {
         onSuccess: data => {
-          toast.success('User created');
+          toast.success(t('toasts.userCreated'));
           handleClose();
           if (data?.id) onCreated?.(data.id);
         },
@@ -102,7 +103,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
           const detail =
             err?.response?.data?.detail ||
             err?.response?.data?.title ||
-            'Failed to create user';
+            t('toasts.userUpdateFailed');
           toast.error(detail);
         },
       },
@@ -110,51 +111,51 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create User" size="md">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.createUser.title')} size="md">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
         <TextInput
-          label="Username"
+          label={t('fields.username')}
           value={form.username}
           onChange={e => setField('username', e.currentTarget.value)}
           required
-          placeholder="jdoe"
+          placeholder={t('placeholders.username')}
         />
         <TextInput
-          label="Email"
+          label={t('fields.email')}
           type="email"
           value={form.email}
           onChange={e => setField('email', e.currentTarget.value)}
           required
-          placeholder="jdoe@example.com"
+          placeholder={t('placeholders.email')}
         />
         <TextInput
-          label="First Name"
+          label={t('fields.firstName')}
           value={form.firstName}
           onChange={e => setField('firstName', e.currentTarget.value)}
           required
         />
         <TextInput
-          label="Last Name"
+          label={t('fields.lastName')}
           value={form.lastName}
           onChange={e => setField('lastName', e.currentTarget.value)}
           required
         />
         <TextInput
-          label="Password"
+          label={t('fields.password')}
           type="password"
           value={form.password}
           onChange={e => setField('password', e.currentTarget.value)}
           required
-          placeholder="At least 8 chars, upper/lower/digit/symbol"
+          placeholder={t('placeholders.passwordHint')}
           autoComplete="new-password"
         />
         <TextInput
-          label="Position"
+          label={t('fields.position')}
           value={form.position}
           onChange={e => setField('position', e.currentTarget.value)}
         />
         <TextInput
-          label="Department"
+          label={t('fields.department')}
           value={form.department}
           onChange={e => setField('department', e.currentTarget.value)}
           className="sm:col-span-2"
@@ -162,10 +163,10 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
 
         <div className="sm:col-span-2">
           <div className="block text-xs font-medium text-gray-700 mb-1">
-            Roles <span className="text-red-500">*</span>
+            {t('sections.roles')} <span className="text-red-500">*</span>
           </div>
           {allRoles.length === 0 ? (
-            <div className="text-xs text-gray-400">No roles available</div>
+            <div className="text-xs text-gray-400">{t('empty.noRolesAvailable')}</div>
           ) : (
             <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
               {allRoles.map(role => (
@@ -183,15 +184,10 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
       </div>
       <div className="flex justify-end gap-2 px-6 pb-6">
         <Button variant="ghost" size="sm" onClick={handleClose}>
-          Cancel
+          {t('common:actions.cancel')}
         </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          isLoading={createUser.isPending}
-          onClick={handleCreate}
-        >
-          Create
+        <Button variant="primary" size="sm" isLoading={createUser.isPending} onClick={handleCreate}>
+          {t('buttons.create')}
         </Button>
       </div>
     </Modal>

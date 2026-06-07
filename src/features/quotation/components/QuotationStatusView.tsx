@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
@@ -58,6 +59,7 @@ interface QuotationStatusViewProps {
  *   <QuotationStatusView quotation={quotationDetail} />
  */
 const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
+  const { t } = useTranslation('quotation');
   const status = quotation.status;
 
   // ─── Cancel quotation state ───────────────────────────────────────────────
@@ -72,7 +74,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
 
   const handleConfirmCancel = () => {
     if (!CANCELLABLE_STATUSES.has(status)) {
-      toast.error(`Quotation is no longer cancellable (status: ${status}).`);
+      toast.error(t('toasts.noLongerCancellable', { status }));
       closeCancelModal();
       return;
     }
@@ -80,12 +82,12 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
       { reason: cancelReason.trim() || null },
       {
         onSuccess: () => {
-          toast.success('Quotation cancelled');
+          toast.success(t('toasts.quotationCancelled'));
           closeCancelModal();
         },
         onError: (err: unknown) => {
           const e = err as { apiError?: { detail?: string } };
-          toast.error(e?.apiError?.detail ?? 'Failed to cancel quotation');
+          toast.error(e?.apiError?.detail ?? t('toasts.cancelFailed'));
         },
       },
     );
@@ -101,46 +103,60 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
           className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Icon name="ban" style="solid" className="size-3" />
-          Cancel Quotation
+          {t('shared.cancelQuotation')}
         </button>
       </div>
-      <Modal isOpen={showCancelConfirm} onClose={closeCancelModal} title="Cancel Quotation" size="sm">
+      <Modal
+        isOpen={showCancelConfirm}
+        onClose={closeCancelModal}
+        title={t('cancel.title')}
+        size="sm"
+      >
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
-            <Icon name="triangle-exclamation" style="solid" className="size-4 text-red-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-red-700">
-              This will cancel quotation <strong>{quotation.quotationNumber}</strong>. All invited
-              companies will be notified. This action cannot be undone.
-            </p>
+            <Icon
+              name="triangle-exclamation"
+              style="solid"
+              className="size-4 text-red-500 shrink-0 mt-0.5"
+            />
+            <p
+              className="text-sm text-red-700"
+              dangerouslySetInnerHTML={{
+                __html: t('cancel.body', {
+                  number: `<strong>${quotation.quotationNumber}</strong>`,
+                }),
+              }}
+            />
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">
-              Reason <span className="text-gray-400">(optional)</span>
+              {t('fields.reasonOptional')}{' '}
+              <span className="text-gray-400">{t('fields.notesOptional')}</span>
             </label>
             <textarea
               rows={3}
               maxLength={500}
               value={cancelReason}
               onChange={e => setCancelReason(e.target.value)}
-              placeholder="Why is this quotation being cancelled?"
+              placeholder={t('placeholders.cancelReason')}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             />
             <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={closeCancelModal} disabled={isCancelling}>
-              Go Back
+              {t('buttons.goBack')}
             </Button>
             <Button variant="danger" onClick={handleConfirmCancel} disabled={isCancelling}>
               {isCancelling ? (
                 <>
                   <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  Cancelling...
+                  {t('cancel.cancelling')}
                 </>
               ) : (
                 <>
                   <Icon name="ban" style="solid" className="size-4 mr-2" />
-                  Cancel Quotation
+                  {t('cancel.cancelButton')}
                 </>
               )}
             </Button>
@@ -167,17 +183,26 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                 <Icon name="clock" style="solid" className="size-4 text-purple-700" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-gray-900">{quotation.quotationNumber}</span>
+                <span className="text-sm font-semibold text-gray-900">
+                  {quotation.quotationNumber}
+                </span>
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-500">Closes</div>
-              <div className={clsx('text-sm font-medium', hoursLeft < 24 ? 'text-red-600' : 'text-gray-800')}>
+              <div className="text-xs text-gray-500">{t('shared.closes')}</div>
+              <div
+                className={clsx(
+                  'text-sm font-medium',
+                  hoursLeft < 24 ? 'text-red-600' : 'text-gray-800',
+                )}
+              >
                 {fmtDateTime(quotation.cutOffTime)}
               </div>
               {hoursLeft < 48 && (
-                <div className="text-xs text-amber-600">{hoursLeft}h remaining</div>
+                <div className="text-xs text-amber-600">
+                  {t('shared.hoursRemaining', { n: hoursLeft })}
+                </div>
               )}
             </div>
           </div>
@@ -187,7 +212,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <div className="text-xs text-gray-500 flex items-center gap-1">
-                  Companies Invited
+                  {t('shared.companiesInvited')}
                   <InvitedCompaniesPopover
                     companies={quotation.invitedCompanies ?? []}
                     totalInvited={quotation.totalCompaniesInvited}
@@ -196,13 +221,13 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                 <div className="font-medium text-gray-900">{quotation.totalCompaniesInvited}</div>
               </div>
               <div>
-                <div className="text-xs text-gray-500">Responses</div>
+                <div className="text-xs text-gray-500">{t('shared.responses')}</div>
                 <div className="font-medium text-gray-900">
                   {quotation.totalQuotationsReceived} / {quotation.totalCompaniesInvited}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500">Appraisals</div>
+                <div className="text-xs text-gray-500">{t('shared.appraisals')}</div>
                 <div className="font-medium text-gray-900">{quotation.totalAppraisals}</div>
               </div>
             </div>
@@ -214,13 +239,27 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Fee Amount</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Discount</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Net Amount</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Total Estimate Manday</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.company')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.totalFeeAmount')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.totalDiscount')}
+                    </th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.totalNetAmount')}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.totalEstimateManday')}
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.submittedAt')}
+                    </th>
+                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t('columns.status')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -228,12 +267,18 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                     const cq = companyQuotations.find(q => q.companyId === inv.companyId);
                     const items = cq?.items ?? [];
                     const hasItems = items.length > 0;
-                    const totalFeeAmount = items.reduce((sum, item) => sum + (item.feeAmount ?? 0), 0);
+                    const totalFeeAmount = items.reduce(
+                      (sum, item) => sum + (item.feeAmount ?? 0),
+                      0,
+                    );
                     const totalDiscount = items.reduce(
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce((sum, item) => sum + (item.estimatedDays ?? 0), 0);
+                    const totalEstimateManday = items.reduce(
+                      (sum, item) => sum + (item.estimatedDays ?? 0),
+                      0,
+                    );
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -269,7 +314,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                             <QuotationStatusBadge status={cq.status} />
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                              Pending
+                              {t('invitedCompanies.pending')}
                             </span>
                           )}
                         </td>
@@ -306,11 +351,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
       cq => cq.id === quotation.tentativeWinnerQuotationId,
     );
     return (
-      <WinnerTentativeView
-        quotation={quotation}
-        winner={winner}
-        cancelFooter={cancelFooter}
-      />
+      <WinnerTentativeView quotation={quotation} winner={winner} cancelFooter={cancelFooter} />
     );
   }
 
@@ -346,19 +387,20 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-600">
-          <p>
-            Quotation awarded to{' '}
-            <strong className="text-gray-900">{winner?.companyName ?? '—'}</strong>.
-          </p>
+          <p
+            dangerouslySetInnerHTML={{
+              __html: t('shared.quotationAwarded', {
+                company: `<strong class="text-gray-900">${winner?.companyName ?? '—'}</strong>`,
+              }),
+            }}
+          />
           {finalPrice != null && (
             <p className="mt-1">
-              Final price:{' '}
+              {t('shared.finalPrice')}{' '}
               <strong className="text-green-700">{fmtCurrency(finalPrice)}</strong>
             </p>
           )}
-          <p className="mt-2 text-xs text-gray-400">
-            Click "Assign" to route externally to this company.
-          </p>
+          <p className="mt-2 text-xs text-gray-400">{t('shared.assignHint')}</p>
         </div>
       </div>
     );
@@ -374,15 +416,22 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
               <Icon name="ban" style="solid" className="size-4 text-red-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">{quotation.quotationNumber}</span>
+              <span className="text-sm font-semibold text-gray-900">
+                {quotation.quotationNumber}
+              </span>
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-500">
-          {quotation.cancellationReason
-            ? <>Cancelled: <span className="text-gray-700">{quotation.cancellationReason}</span></>
-            : 'This quotation was cancelled.'}
+          {quotation.cancellationReason ? (
+            <>
+              {t('shared.cancelledWith')}{' '}
+              <span className="text-gray-700">{quotation.cancellationReason}</span>
+            </>
+          ) : (
+            t('shared.quotationCancelled')
+          )}
         </div>
       </div>
     );
@@ -404,9 +453,14 @@ interface WinnerTentativeViewProps {
 }
 
 const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativeViewProps) => {
+  const { t } = useTranslation('quotation');
   const { isOpen: isRejectOpen, onOpen: openReject, onClose: closeReject } = useDisclosure();
   const { isOpen: isFinalizeOpen, onOpen: openFinalize, onClose: closeFinalize } = useDisclosure();
-  const { isOpen: isNegotiateOpen, onOpen: openNegotiate, onClose: closeNegotiate } = useDisclosure();
+  const {
+    isOpen: isNegotiateOpen,
+    onOpen: openNegotiate,
+    onClose: closeNegotiate,
+  } = useDisclosure();
 
   return (
     <>
@@ -425,7 +479,7 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
                 className="text-red-600 border-red-300 hover:bg-red-50"
               >
                 <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-                Reject Winner
+                {t('buttons.rejectWinner')}
               </Button>
               <Button
                 variant="outline"
@@ -434,16 +488,16 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
                 disabled={(winner.negotiationRounds ?? 0) >= 3}
                 title={
                   (winner.negotiationRounds ?? 0) >= 3
-                    ? 'Maximum negotiation rounds reached'
+                    ? t('negotiation.maxRoundsReached')
                     : undefined
                 }
               >
                 <Icon name="handshake" style="solid" className="size-3.5 mr-1.5 text-orange-500" />
-                Open Negotiation
+                {t('buttons.openNegotiation')}
               </Button>
               <Button size="sm" onClick={openFinalize} className="bg-green-600 hover:bg-green-700">
                 <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-                Award
+                {t('buttons.award')}
               </Button>
             </div>
           )}

@@ -1,11 +1,24 @@
+import '@features/pricingAnalysis/i18n';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppraisalId, useBasePath, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import { useTranslation } from 'react-i18next';
+import {
+  useAppraisalId,
+  useBasePath,
+  useIsCiAppraisal,
+} from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
-import { DispatchCtx, ServerDataCtx, StateCtx, } from '@features/pricingAnalysis/store/selectionContext';
-import { approachMethodReducer, type SelectionState, } from '@features/pricingAnalysis/store/selectionReducer';
+import {
+  DispatchCtx,
+  ServerDataCtx,
+  StateCtx,
+} from '@features/pricingAnalysis/store/selectionContext';
+import {
+  approachMethodReducer,
+  type SelectionState,
+} from '@features/pricingAnalysis/store/selectionReducer';
 import { useEnrichedPricingAnalysis } from '@features/pricingAnalysis/hooks/useEnrichedPricingAnalysis';
 import { useEnrichedCalculationMethod } from '@features/pricingAnalysis/hooks/useEnrichedCalculationMethod';
 import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectionActions';
@@ -90,20 +103,18 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
   const isReadOnly = _baseReadOnly || isCiAppraisal;
 
   // Resolve the effective subject from prop or route params
-  const resolvedSubject: PricingAnalysisSubject = subject ?? (
-    params.modelId
+  const resolvedSubject: PricingAnalysisSubject =
+    subject ??
+    (params.modelId
       ? { kind: 'projectModel', modelId: params.modelId }
-      : { kind: 'propertyGroup', groupId: params.groupId ?? '' }
-  );
+      : { kind: 'propertyGroup', groupId: params.groupId ?? '' });
 
   // The "canonical" id used by PricingAnalysisContent as the group context.
   // For the model subject we pass the modelId as the groupId placeholder so
   // PricingAnalysisContent can still call useSelectionActions (which only uses
   // groupId for its cancelPricingAccordion navigation — we override that below).
   const subjectId =
-    resolvedSubject.kind === 'projectModel'
-      ? resolvedSubject.modelId
-      : resolvedSubject.groupId;
+    resolvedSubject.kind === 'projectModel' ? resolvedSubject.modelId : resolvedSubject.groupId;
 
   const [createState, setCreateState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [createError, setCreateError] = useState<string>('');
@@ -132,7 +143,7 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
       createModelAnalysisMutation.mutate(
         { appraisalId, modelId: resolvedSubject.modelId },
         {
-          onSuccess: (data) => {
+          onSuccess: data => {
             const newId = data?.id;
             if (!newId) {
               creatingRef.current = false;
@@ -146,12 +157,9 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
             });
             // routePrefix is always supplied by the wrapper components in router.tsx
             const prefix = resolvedSubject.routePrefix ?? '';
-            navigate(
-              `${basePath}/${prefix}/pricing-analysis/${newId}`,
-              { replace: true },
-            );
+            navigate(`${basePath}/${prefix}/pricing-analysis/${newId}`, { replace: true });
           },
-          onError: (err) => {
+          onError: err => {
             creatingRef.current = false;
             setCreateState('error');
             const anyErr = err as { message?: string };
@@ -174,10 +182,9 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
           queryClient.invalidateQueries({
             queryKey: propertyGroupKeys.detail(appraisalId, resolvedSubject.groupId),
           });
-          navigate(
-            `${basePath}/groups/${resolvedSubject.groupId}/pricing-analysis/${newId}`,
-            { replace: true },
-          );
+          navigate(`${basePath}/groups/${resolvedSubject.groupId}/pricing-analysis/${newId}`, {
+            replace: true,
+          });
         })
         .catch(err => {
           creatingRef.current = false;
@@ -188,12 +195,14 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReadOnly, pricingAnalysisId, subjectId, appraisalId]);
 
+  const { t } = useTranslation('pricingAnalysis');
+
   // Readonly mode with no pricing analysis — show empty state
   if (isReadOnly && !pricingAnalysisId) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
         <Icon name="eye" style="solid" className="text-2xl text-gray-400" />
-        <p className="text-sm text-gray-500 font-medium">No pricing analysis available</p>
+        <p className="text-sm text-gray-500 font-medium">{t('page.noAnalysisAvailable')}</p>
       </div>
     );
   }
@@ -203,7 +212,7 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
         <Icon name="circle-exclamation" style="solid" className="text-2xl text-danger" />
-        <p className="text-sm text-gray-700 font-medium">Failed to create pricing analysis</p>
+        <p className="text-sm text-gray-700 font-medium">{t('page.failedToCreate')}</p>
         <p className="text-xs text-gray-400">{createError}</p>
         <button
           type="button"
@@ -213,7 +222,7 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
           }}
           className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors"
         >
-          Retry
+          {t('page.retry')}
         </button>
       </div>
     );
@@ -224,7 +233,7 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
         <Icon name="spinner" className="text-2xl text-primary animate-spin" />
-        <p className="text-sm text-gray-500">Creating pricing analysis...</p>
+        <p className="text-sm text-gray-500">{t('page.creating')}</p>
       </div>
     );
   }
@@ -267,10 +276,19 @@ function PricingAnalysisContent({
   isModelSubject?: boolean;
   returnTo?: string;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   const [activeTab, setActiveTab] = useState<TabId>('properties');
   // Tab label: "Properties" for group subjects; "Model" for projectModel subjects.
   // Tab id stays 'properties' in both cases to avoid breaking reducer/URL state.
-  const TABS = isModelSubject ? PROJECT_MODEL_TABS : PROPERTY_GROUP_TABS;
+  const TABS: Tab[] = isModelSubject
+    ? [
+        { id: 'properties', label: t('page.tabs.model'), icon: 'layer-group' },
+        { id: 'markets', label: t('page.tabs.markets'), icon: 'chart-line' },
+      ]
+    : [
+        { id: 'properties', label: t('page.tabs.properties'), icon: 'buildings' },
+        { id: 'markets', label: t('page.tabs.markets'), icon: 'chart-line' },
+      ];
   const [pendingSystemCalcMode, setPendingSystemCalcMode] = useState<boolean | null>(null);
 
   // (1) Fetch all server data
@@ -328,7 +346,14 @@ function PricingAnalysisContent({
 
     // Always start in summary mode — user opens the edit modal explicitly
     dispatch({ type: 'SUMMARY_ENTER' });
-  }, [groupDetail, pricingConfiguration, pricingSelection, allFactors, pricingAnalysisId, isModelSubject]);
+  }, [
+    groupDetail,
+    pricingConfiguration,
+    pricingSelection,
+    allFactors,
+    pricingAnalysisId,
+    isModelSubject,
+  ]);
 
   // (4) Selection actions
   const selectionActions = useSelectionActions({
@@ -403,8 +428,8 @@ function PricingAnalysisContent({
           } as SetFinalValueRequestType,
         },
         {
-          onSuccess: () => toast.success('Value saved'),
-          onError: () => toast.error('Failed to save value'),
+          onSuccess: () => toast.success(t('toasts.valueSaved')),
+          onError: () => toast.error(t('toasts.valueFailed')),
         },
       );
     },
@@ -432,9 +457,9 @@ function PricingAnalysisContent({
     try {
       // await onChangechangeSystemCalculation();
       selectionActions.changeSystemCalculation(pendingSystemCalcMode);
-      toast.success('Changed');
+      toast.success(t('toasts.changed'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed.');
+      toast.error(error.apiError?.detail || t('toasts.saveFailed'));
     } finally {
       setPendingSystemCalcMode(null);
     }
@@ -524,7 +549,7 @@ function PricingAnalysisContent({
           className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
         >
           <Icon name="arrow-left" style="solid" className="size-3.5" />
-          <span className="font-medium">Back</span>
+          <span className="font-medium">{t('page.back')}</span>
         </button>
         <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">
           {TABS.map(tab => {
@@ -559,9 +584,13 @@ function PricingAnalysisContent({
         isOpen={pendingSystemCalcMode !== null}
         onClose={() => setPendingSystemCalcMode(null)}
         onConfirm={handleConfirmChangeCalculation}
-        title="Change Calculation Mode"
-        message={`Switch to ${pendingSystemCalcMode ? 'System' : 'Manual'} calculation? This will affect existing results.`}
-        confirmText="Confirm"
+        title={t('confirm.changeCalculationTitle')}
+        message={t('confirm.changeCalculationMessage', {
+          mode: pendingSystemCalcMode
+            ? t('calculationMode.systemToggle')
+            : t('calculationMode.manualToggle'),
+        })}
+        confirmText={t('confirm.confirmText')}
         variant="warning"
       />
     </div>

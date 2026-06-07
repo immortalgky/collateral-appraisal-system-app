@@ -13,8 +13,8 @@ export const MapPreview = ({ latitude, longitude, address, className }: MapPrevi
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
-  const hasCoordinates = latitude !== null && latitude !== undefined &&
-                         longitude !== null && longitude !== undefined;
+  const hasCoordinates =
+    latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined;
 
   // Default to Bangkok coordinates if no location provided
   const lat = latitude ?? 13.7563;
@@ -38,10 +38,12 @@ export const MapPreview = ({ latitude, longitude, address, className }: MapPrevi
 
   if (!hasCoordinates) {
     return (
-      <div className={clsx(
-        'relative rounded-xl overflow-hidden border border-gray-100 bg-gray-50',
-        className
-      )}>
+      <div
+        className={clsx(
+          'relative rounded-xl overflow-hidden border border-gray-100 bg-gray-50',
+          className,
+        )}
+      >
         <div className="aspect-[16/9] flex flex-col items-center justify-center text-gray-400 p-4">
           <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
             <Icon name="map-location-dot" className="text-lg" style="solid" />
@@ -57,10 +59,12 @@ export const MapPreview = ({ latitude, longitude, address, className }: MapPrevi
 
   if (hasError) {
     return (
-      <div className={clsx(
-        'relative rounded-xl overflow-hidden border border-gray-100 bg-gray-50',
-        className
-      )}>
+      <div
+        className={clsx(
+          'relative rounded-xl overflow-hidden border border-gray-100 bg-gray-50',
+          className,
+        )}
+      >
         <div className="aspect-[16/9] flex flex-col items-center justify-center text-gray-400 p-4">
           <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mb-2">
             <Icon name="triangle-exclamation" className="text-lg text-red-500" style="solid" />
@@ -73,10 +77,7 @@ export const MapPreview = ({ latitude, longitude, address, className }: MapPrevi
   }
 
   return (
-    <div className={clsx(
-      'relative rounded-xl overflow-hidden border border-gray-100',
-      className
-    )}>
+    <div className={clsx('relative rounded-xl overflow-hidden border border-gray-100', className)}>
       {/* Loading skeleton */}
       {isLoading && (
         <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center z-10">
@@ -98,11 +99,7 @@ export const MapPreview = ({ latitude, longitude, address, className }: MapPrevi
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
         <div className="flex items-end justify-between gap-2">
           <div className="flex-1 min-w-0">
-            {address && (
-              <p className="text-[10px] text-white/80 truncate">
-                {address}
-              </p>
-            )}
+            {address && <p className="text-[10px] text-white/80 truncate">{address}</p>}
             <p className="text-[10px] text-white/60 mt-0.5">
               {lat.toFixed(6)}, {lng.toFixed(6)}
             </p>

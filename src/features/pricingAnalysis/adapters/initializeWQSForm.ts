@@ -8,7 +8,8 @@ interface setWQSInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
-  property: Record<string, unknown>;
+  /** Optional for manual-subject references (room/profit-rent) with no backing property. */
+  property?: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
@@ -52,12 +53,12 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
   });
 }
 
-function buildFinalValue(property: Record<string, unknown>) {
+function buildFinalValue(property?: Record<string, unknown>) {
   return {
-    landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-    usableArea: property.totalBuildingArea
+    landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+    usableArea: property?.totalBuildingArea
       ? Number(property.totalBuildingArea)
-      : property.usableArea
+      : property?.usableArea
         ? Number(property.usableArea)
         : property.standardUsableArea
           ? Number(property.standardUsableArea)
@@ -86,8 +87,7 @@ export function initializeWQSForm({
   allFactors,
   reset,
 }: setWQSInitialValueProps) {
-  if (!collateralType || !methodId || !methodType || !property || !comparativeSurveys || !reset)
-    return;
+  if (!collateralType || !methodId || !methodType || !comparativeSurveys || !reset) return;
 
   const factorIdMap = new Map<string, string>();
   for (const f of allFactors ?? []) {

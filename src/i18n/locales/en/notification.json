@@ -1,0 +1,14 @@
+{
+  "title": "Notifications",
+  "subtitle": "View and manage your notifications",
+  "markAllRead": "Mark all as read",
+  "viewAll": "View All",
+  "realtimeUnavailable": "Real-time notifications unavailable",
+  "timeAgo": {
+    "justNow": "just now",
+    "minutes": "{{n}}m ago",
+    "hours": "{{n}}h ago",
+    "days": "{{n}}d ago",
+    "weeks": "{{n}}w ago"
+  }
+}

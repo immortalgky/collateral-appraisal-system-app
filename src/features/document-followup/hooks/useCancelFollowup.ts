@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { cancelFollowup, followupKeys } from '../api/followup';
 
 interface CancelFollowupParams {
@@ -10,6 +11,7 @@ interface CancelFollowupParams {
 
 export function useCancelFollowup() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('documentFollowup');
 
   return useMutation({
     mutationFn: ({ followupId, reason }: CancelFollowupParams) =>
@@ -22,13 +24,10 @@ export function useCancelFollowup() {
         queryKey: followupKeys.detail(variables.followupId),
       });
       queryClient.invalidateQueries({ queryKey: followupKeys.all });
-      toast.success('Document request cancelled');
+      toast.success(t('toasts.cancelSuccess'));
     },
     onError: (error: any) => {
-      const msg =
-        error?.apiError?.detail ??
-        error?.apiError?.message ??
-        'Failed to cancel document request';
+      const msg = error?.apiError?.detail ?? error?.apiError?.message ?? t('toasts.cancelFailed');
       toast.error(msg);
     },
   });

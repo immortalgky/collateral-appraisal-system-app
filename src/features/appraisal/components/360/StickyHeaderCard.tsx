@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import type { GetDecisionSummaryResponse } from '../../api/decisionSummary';
@@ -12,7 +13,13 @@ interface StickyHeaderCardProps {
   contactNumber?: string;
 }
 
-const StickyHeaderCard = ({ appraisal, decisionSummary, customerName, contactNumber }: StickyHeaderCardProps) => {
+const StickyHeaderCard = ({
+  appraisal,
+  decisionSummary,
+  customerName,
+  contactNumber,
+}: StickyHeaderCardProps) => {
+  const { t } = useTranslation('appraisal');
   return (
     <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm rounded-2xl">
       <div className="px-6 py-4">
@@ -46,18 +53,18 @@ const StickyHeaderCard = ({ appraisal, decisionSummary, customerName, contactNum
           {/* Right: Key prices */}
           <div className="flex items-center gap-5">
             <PriceDisplay
-              label="Total Appraisal Price"
+              label={t('view360.header.totalAppraisalPrice')}
               value={decisionSummary?.totalAppraisalPrice}
               primary
             />
             <div className="h-10 w-px bg-gray-200" />
             <PriceDisplay
-              label="Force Selling Price"
+              label={t('view360.header.forceSellingPrice')}
               value={decisionSummary?.forceSellingPrice}
             />
             <div className="h-10 w-px bg-gray-200" />
             <PriceDisplay
-              label="Building Insurance"
+              label={t('view360.header.buildingInsurance')}
               value={decisionSummary?.buildingInsurance}
             />
           </div>
@@ -80,9 +87,7 @@ const PriceDisplay = ({
     <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">{label}</p>
     <p
       className={
-        primary
-          ? 'text-lg font-bold text-teal-700'
-          : 'text-sm font-semibold text-gray-900'
+        primary ? 'text-lg font-bold text-teal-700' : 'text-sm font-semibold text-gray-900'
       }
     >
       {value != null ? formatNumber(value, 2) : '-'}

@@ -2,6 +2,7 @@ import { Icon } from '@/shared/components';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGetSupportingDataDetailList } from '../api';
 import type { SupportingDataDetailItem } from '../api/types';
 import { SupportingDataTableRow } from './SupportingDataTableRow';
@@ -16,30 +17,14 @@ interface SupportingDataTableProps {
   onDeleteSupportingData: (id: string) => void;
 }
 
-// ── Column config (local; mirrors SupportingDataMaintenanceListPage pattern) ──
-type ColumnDef = {
-  key: string;
-  label: string;
-  thClassName?: string;
-};
-
-const columns: ColumnDef[] = [
-  { key: 'no', label: 'No.', thClassName: 'w-16' },
-  { key: 'propertyName', label: 'Property Name' },
-  { key: 'collateralType', label: 'Type' },
-  { key: 'address', label: 'Address', thClassName: 'w-1/3' },
-  { key: 'coordinates', label: 'Coordinates' },
-  { key: 'actions', label: '', thClassName: 'w-12 text-center' },
-];
-
-const STICKY_COLUMN_KEY = '';
-
 export function SupportingDataTable({
   supportingId,
   isReadOnly,
   onSelectSupportingData,
   onDeleteSupportingData,
 }: SupportingDataTableProps) {
+  const { t } = useTranslation('supportingDataMaintenance');
+
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
@@ -53,6 +38,24 @@ export function SupportingDataTable({
   const totalCount = data?.count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
+  // ── Column config ──
+  type ColumnDef = {
+    key: string;
+    label: string;
+    thClassName?: string;
+  };
+
+  const columns: ColumnDef[] = [
+    { key: 'no', label: t('columns.no'), thClassName: 'w-16' },
+    { key: 'propertyName', label: t('columns.propertyName') },
+    { key: 'collateralType', label: t('columns.type') },
+    { key: 'address', label: t('columns.address'), thClassName: 'w-1/3' },
+    { key: 'coordinates', label: t('columns.coordinates') },
+    { key: 'actions', label: '', thClassName: 'w-12 text-center' },
+  ];
+
+  const STICKY_COLUMN_KEY = '';
+
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -60,7 +63,7 @@ export function SupportingDataTable({
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">Failed to load supporting data</p>
+          <p className="text-sm font-medium text-gray-800">{t('errors.failedToLoad')}</p>
           <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
         </div>
       </div>
@@ -99,11 +102,11 @@ export function SupportingDataTable({
                       <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-gray-700">No supporting data</p>
+                      <p className="text-sm font-semibold text-gray-700">
+                        {t('empty.noSupportingData')}
+                      </p>
                       <p className="text-xs text-gray-400 mt-1">
-                        {isReadOnly
-                          ? 'No items have been added yet.'
-                          : 'Click "Add Item" or "Import Excel" to add supporting data.'}
+                        {isReadOnly ? t('empty.noItemsAdded') : t('empty.addItemPrompt')}
                       </p>
                     </div>
                   </div>
@@ -111,7 +114,6 @@ export function SupportingDataTable({
               </tr>
             ) : (
               items.map((item, localIndex) => {
-                // Pass ABSOLUTE index so the parent doesn't have to know about pagination.
                 const absoluteIndex = pageNumber * pageSize + localIndex;
                 return (
                   <SupportingDataTableRow

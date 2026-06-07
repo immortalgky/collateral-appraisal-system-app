@@ -1,0 +1,643 @@
+{
+  "page": {
+    "tabs": {
+      "projectInfo": "ข้อมูลโครงการ",
+      "unitListing": "รายการยูนิต",
+      "towers": "อาคาร",
+      "models": "แบบ",
+      "unitPrice": "ราคายูนิต",
+      "markets": "ตลาด",
+      "gallery": "แกลเลอรี",
+      "photos": "รูปภาพ",
+      "laws": "กฎหมายและข้อบังคับ",
+      "projectLand": "ที่ดินโครงการ"
+    }
+  },
+  "projectInfo": {
+    "title": "ข้อมูลโครงการ",
+    "sections": {
+      "projectInformation": "ข้อมูลโครงการ",
+      "projectLocation": "ที่ตั้งโครงการ",
+      "projectDetail": "รายละเอียดโครงการ"
+    },
+    "fields": {
+      "projectName": "ชื่อโครงการ",
+      "projectDescription": "คำอธิบายโครงการ",
+      "developer": "ผู้พัฒนา",
+      "projectSaleLaunchDate": "วันเปิดขายโครงการ",
+      "projectSaleLaunchDatePlaceholder": "ปปปป หรือ ปปปป-ดด หรือ ปปปป-ดด-วว",
+      "rai": "ไร่",
+      "ngan": "งาน",
+      "squareWa": "ตารางวา",
+      "unitForSale": "ยูนิตที่ขาย",
+      "numberOfPhase": "จำนวนเฟส",
+      "houseNumber": "บ้านเลขที่",
+      "road": "ถนน",
+      "soi": "ซอย",
+      "subDistrict": "ตำบล/แขวง",
+      "district": "อำเภอ/เขต",
+      "province": "จังหวัด",
+      "postcode": "รหัสไปรษณีย์",
+      "latitude": "ละติจูด",
+      "longitude": "ลองจิจูด",
+      "utilities": "สาธารณูปโภค",
+      "utilitiesOther": "สาธารณูปโภคอื่น ๆ",
+      "facilities": "สิ่งอำนวยความสะดวก",
+      "facilitiesOther": "สิ่งอำนวยความสะดวกอื่น ๆ",
+      "remark": "หมายเหตุ",
+      "builtOnTitleDeedNumber": "เลขที่โฉนดที่ดินที่ตั้ง",
+      "landOffice": "สำนักงานที่ดิน",
+      "licenseExpirationDate": "วันหมดอายุใบอนุญาต",
+      "projectType": "ประเภทโครงการ",
+      "specifyPlaceholder": "โปรดระบุ..."
+    }
+  },
+  "towerDetail": {
+    "title": "รายละเอียดอาคาร",
+    "sections": {
+      "towerInformation": "ข้อมูลอาคาร",
+      "condominiumCondition": "สภาพอาคารชุด",
+      "location": "ที่ตั้ง",
+      "structureDecoration": "โครงสร้างและการตกแต่ง",
+      "roof": "หลังคา",
+      "legal": "ด้านกฎหมาย"
+    },
+    "fields": {
+      "towerName": "ชื่ออาคาร",
+      "condoRegistrationNumber": "เลขทะเบียนอาคารชุด",
+      "numberOfUnits": "จำนวนยูนิต",
+      "numberOfFloors": "จำนวนชั้น",
+      "condition": "สภาพ",
+      "isObligation": "มีภาระผูกพัน",
+      "obligation": "ภาระผูกพัน",
+      "documentValidation": "การตรวจสอบเอกสาร",
+      "locationCorrect": "ที่ตั้งถูกต้อง",
+      "distance": "ระยะทาง (ม.)",
+      "roadWidth": "ความกว้างถนน (ม.)",
+      "rightOfWay": "สิทธิทางผ่าน (ม.)",
+      "roadSurface": "ผิวถนน",
+      "otherRoadSurface": "ผิวถนนอื่น ๆ",
+      "decoration": "การตกแต่ง",
+      "otherDecoration": "การตกแต่งอื่น ๆ",
+      "buildingAge": "อายุอาคาร",
+      "buildingForm": "รูปแบบอาคาร",
+      "constructionMaterials": "วัสดุก่อสร้าง",
+      "otherRoofType": "ประเภทหลังคาอื่น ๆ",
+      "isExpropriated": "ถูกเวนคืน",
+      "inLineExpropriated": "อยู่ในแนวเวนคืน",
+      "royalDecreeReference": "อ้างอิงพระราชกฤษฎีกา",
+      "expropriationRemark": "หมายเหตุการเวนคืน",
+      "inForestBoundary": "อยู่ในแนวเขตป่า",
+      "forestBoundaryRemark": "หมายเหตุแนวเขตป่า"
+    },
+    "navAnchors": {
+      "images": "รูปภาพ",
+      "towerInfo": "ข้อมูลอาคาร",
+      "remark": "หมายเหตุ"
+    }
+  },
+  "modelDetail": {
+    "title": "รายละเอียดแบบ",
+    "sections": {
+      "modelInformation": "ข้อมูลแบบ",
+      "roomLayout": "รูปแบบห้อง",
+      "floor": "พื้น",
+      "areaDetail": "รายละเอียดพื้นที่",
+      "remark": "หมายเหตุ",
+      "landArea": "เนื้อที่ดิน",
+      "buildingType": "ประเภทอาคาร",
+      "decoration": "การตกแต่ง",
+      "encroachment": "การรุกล้ำ",
+      "materialStyle": "วัสดุและสไตล์",
+      "isResidential": "ที่พักอาศัย",
+      "generalStructure": "โครงสร้างทั่วไป",
+      "roofCeiling": "หลังคาและฝ้าเพดาน",
+      "wall": "ผนัง",
+      "surface": "พื้นผิว",
+      "constructionUse": "การก่อสร้างและการใช้ประโยชน์",
+      "depreciation": "ค่าเสื่อมราคา"
+    },
+    "fields": {
+      "modelName": "ชื่อแบบ",
+      "modelDescription": "คำอธิบายแบบ",
+      "tower": "อาคาร",
+      "selectTower": "เลือกอาคาร...",
+      "noTowers": "ยังไม่มีอาคาร — กรุณาเพิ่มอาคารก่อน",
+      "hasMezzanine": "มีชั้นลอย",
+      "startingPriceMin": "ราคาเริ่มต้นต่ำสุด (บาท)",
+      "startingPriceMax": "ราคาเริ่มต้นสูงสุด (บาท)",
+      "usableAreaMin": "พื้นที่ใช้สอยต่ำสุด (ตร.ม.)",
+      "usableAreaMax": "พื้นที่ใช้สอยสูงสุด (ตร.ม.)",
+      "standardUsableArea": "พื้นที่ใช้สอยมาตรฐาน (ตร.ม.)",
+      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "roomLayout": "รูปแบบห้อง",
+      "otherRoomLayout": "รูปแบบห้องอื่น ๆ",
+      "numberOfHouses": "จำนวนหลัง",
+      "landAreaMin": "เนื้อที่ดินต่ำสุด (ตร.วา)",
+      "landAreaMax": "เนื้อที่ดินสูงสุด (ตร.วา)",
+      "standardLandArea": "เนื้อที่ดินมาตรฐาน (ตร.วา)"
+    },
+    "navAnchors": {
+      "images": "รูปภาพ",
+      "modelInfo": "ข้อมูลแบบ"
+    }
+  },
+  "landDetail": {
+    "title": "รายละเอียดที่ดิน",
+    "sections": {
+      "landInformation": "ข้อมูลที่ดิน",
+      "landLocation": "ที่ตั้งที่ดิน",
+      "plotLocation": "ที่ตั้งแปลง",
+      "landfill": "การถมที่ดิน",
+      "roadSurface": "ถนนและผิวถนน",
+      "landAccessUtilities": "การเข้าถึงที่ดินและสาธารณูปโภค",
+      "limitation": "ข้อจำกัด",
+      "assessment": "การประเมิน",
+      "sizeAndBoundary": "ขนาดและแนวเขต",
+      "otherInformation": "ข้อมูลอื่น ๆ",
+      "remark": "หมายเหตุ"
+    },
+    "navAnchors": {
+      "landTitle": "โฉนดที่ดิน",
+      "landDetail": "รายละเอียดที่ดิน"
+    },
+    "landInformationHeader": "ข้อมูลที่ดิน"
+  },
+  "pricingAssumption": {
+    "sections": {
+      "locationAssumptions": "สมมติฐานที่ตั้ง",
+      "floorAssumptions": "สมมติฐานชั้น",
+      "landAssumption": "สมมติฐานที่ดิน",
+      "forceSaleValue": "มูลค่าการขายบังคับ"
+    },
+    "locationDescription": "คำอธิบายที่ตั้ง",
+    "locationMethodPlaceholder": "เลือกวิธีการปรับราคา",
+    "locationHint": "เลือกวิธีการปรับราคา แล้วกำหนดค่าปรับสำหรับแต่ละที่ตั้งที่ใช้กับแต่ละยูนิต",
+    "floorHint": "การเพิ่มราคาสำหรับทุก N ชั้นจากชั้นฐาน",
+    "landHint": "การปรับราคาที่ดินที่ใช้กับแต่ละยูนิตตามเนื้อที่ดิน",
+    "forceSaleHint": "ปัจจัยส่วนลดที่ใช้กับราคายูนิตที่คำนวณแล้วสำหรับการประเมินราคาขายบังคับ",
+    "forceSaleInfoHint": "กรอกค่าระหว่าง 0 ถึง 100 ราคายูนิตที่คำนวณแล้วจะถูกคูณด้วยเปอร์เซ็นต์นี้เพื่อหาราคาขายบังคับ",
+    "fields": {
+      "corner": "มุม",
+      "edge": "ริม",
+      "poolView": "วิวสระน้ำ",
+      "south": "ทิศใต้",
+      "other": "อื่น ๆ",
+      "nearGardenClubhouse": "ใกล้สวน/คลับเฮ้าส์",
+      "locationMethod": "วิธีการที่ตั้ง",
+      "cornerBaht": "มุม (บาท)",
+      "edgeBaht": "ริม (บาท)",
+      "otherBaht": "อื่น ๆ (บาท)",
+      "poolViewBaht": "วิวสระน้ำ (บาท)",
+      "southBaht": "ทิศใต้ (บาท)",
+      "forceSalePercentage": "เปอร์เซ็นต์ขายบังคับ (%)",
+      "everyXFloor": "ทุก X ชั้น",
+      "amountBaht": "จำนวนเงิน (บาท)",
+      "nearGardenBaht": "ใกล้สวน (บาท)",
+      "landIncreaseDecreaseRate": "อัตราเพิ่ม/ลดที่ดิน (%)"
+    }
+  },
+  "unitListing": {
+    "importUnits": "นำเข้ายูนิต",
+    "uploadHistory": "ประวัติการอัปโหลด",
+    "unitListing": "รายการยูนิต",
+    "noUploadHistory": "ไม่มีประวัติการอัปโหลด",
+    "noUnits": "ไม่มีข้อมูลยูนิต — อัปโหลดสเปรดชีตเพื่อนำเข้ายูนิต",
+    "unitsCount": "{{count}} ยูนิต",
+    "confirmReplace": {
+      "title": "แทนที่ยูนิตที่มีอยู่?",
+      "message": "การอัปโหลดไฟล์ใหม่จะแทนที่ข้อมูลยูนิตทั้งหมดที่มีอยู่ ไม่สามารถย้อนกลับได้",
+      "confirm": "แทนที่"
+    },
+    "confirmDelete": {
+      "title": "ลบการอัปโหลด?",
+      "confirm": "ลบ"
+    },
+    "summary": {
+      "towers": "อาคาร:",
+      "models": "แบบ:",
+      "totalUnits": "ยูนิตทั้งหมด:"
+    },
+    "cols": {
+      "no": "ลำดับ",
+      "fileName": "ชื่อไฟล์",
+      "dateTime": "วันที่/เวลา",
+      "status": "สถานะ",
+      "used": "ใช้แล้ว",
+      "sqNo": "ลำดับที่",
+      "floor": "ชั้น",
+      "towerName": "ชื่ออาคาร",
+      "regNumber": "เลขทะเบียน",
+      "roomNo": "เลขห้อง",
+      "modelType": "ประเภทแบบ",
+      "usableAreaSqm": "พื้นที่ใช้สอย (ตร.ม.)",
+      "sellingPriceBaht": "ราคาขาย (บาท)",
+      "plotNo": "เลขแปลง",
+      "houseNo": "เลขที่บ้าน",
+      "modelName": "ชื่อแบบ",
+      "numFloors": "จำนวนชั้น",
+      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)"
+    },
+    "reappraisal": {
+      "title": "อัปเดตยูนิตจาก Excel ที่แก้ไข (Re-match)",
+      "hint": "อัปโหลด Excel ที่อัปเดตเพื่อ re-match ยูนิตที่ seed ไว้ แถวที่มีในไฟล์จะคงสถานะยังไม่ขาย แถวที่ขาดหายจะถูกทำเครื่องหมายเป็นขายแล้วโดยอัตโนมัติ แถวใหม่จะถูกนับแต่ไม่ถูกเพิ่ม",
+      "normalUploadNote": "ใช้การอัปโหลดนี้เพื่อเพิ่มสินค้าคงคลังยูนิตใหม่เท่านั้น",
+      "resultToast": "Re-match เสร็จสิ้น: {{matched}} ยังไม่ขาย, {{autoSold}} ขายอัตโนมัติ, {{added}} ใหม่ (ไม่ถูกเพิ่ม)"
+    },
+    "aria": {
+      "deleteUpload": "ลบการอัปโหลด"
+    }
+  },
+  "towerListing": {
+    "grid": "กริด",
+    "list": "รายการ",
+    "addTower": "เพิ่มอาคาร",
+    "noTowers": "ยังไม่มีอาคาร",
+    "noTowersHint": "คลิก \"เพิ่มอาคาร\" เพื่อสร้างอาคารแรก",
+    "unnamedTower": "อาคารไม่มีชื่อ",
+    "failedToLoad": "โหลดข้อมูลอาคารไม่สำเร็จ",
+    "failedToLoadHint": "กรุณาลองรีเฟรชหน้า",
+    "cols": {
+      "image": "รูปภาพ",
+      "towerName": "ชื่ออาคาร",
+      "numberOfUnits": "จำนวนยูนิต",
+      "numberOfFloors": "จำนวนชั้น"
+    },
+    "card": {
+      "numberOfUnits": "จำนวนยูนิต",
+      "numberOfFloors": "จำนวนชั้น"
+    },
+    "confirmDelete": {
+      "title": "ลบอาคาร",
+      "confirm": "ลบ"
+    },
+    "aria": {
+      "deleteTower": "ลบอาคาร"
+    }
+  },
+  "modelListing": {
+    "grid": "กริด",
+    "list": "รายการ",
+    "addModel": "เพิ่มแบบ",
+    "noModels": "ยังไม่มีแบบ",
+    "noModelsHint": "คลิก \"เพิ่มแบบ\" เพื่อสร้างแบบแรก",
+    "unnamedModel": "แบบไม่มีชื่อ",
+    "failedToLoad": "โหลดข้อมูลแบบไม่สำเร็จ",
+    "failedToLoadHint": "กรุณาลองรีเฟรชหน้า",
+    "pendingAnalysis": "รอการวิเคราะห์",
+    "runPricing": "คำนวณราคา",
+    "viewPricing": "ดูราคา",
+    "running": "กำลังคำนวณ…",
+    "usableArea": "พื้นที่ใช้สอย",
+    "startingPrice": "ราคาเริ่มต้น",
+    "roomType": "ประเภทห้อง",
+    "landArea": "เนื้อที่ดิน",
+    "houses": "บ้าน",
+    "cols": {
+      "image": "รูปภาพ",
+      "modelName": "ชื่อแบบ",
+      "usableArea": "พื้นที่ใช้สอย",
+      "startingPrice": "ราคาเริ่มต้น",
+      "roomType": "ประเภทห้อง",
+      "landAreaStd": "เนื้อที่ดิน (มาตรฐาน)",
+      "houses": "บ้าน",
+      "standardPrice": "ราคามาตรฐาน"
+    },
+    "confirmDelete": {
+      "title": "ลบแบบ",
+      "confirm": "ลบ"
+    },
+    "aria": {
+      "deleteModel": "ลบแบบ",
+      "viewPricingAnalysis": "ดูการวิเคราะห์ราคา",
+      "runPricingAnalysis": "รันการวิเคราะห์ราคา"
+    }
+  },
+  "unitPrice": {
+    "modelAssumptions": "สมมติฐานแบบ",
+    "noModelAssumptions": "ไม่มีสมมติฐานแบบ — กรุณาเพิ่มแบบก่อน",
+    "calculatedUnitPrices": "ราคายูนิตที่คำนวณแล้ว",
+    "noUnitsUploaded": "ยังไม่มียูนิตที่อัปโหลด — กรุณาอัปโหลดรายการยูนิตก่อน",
+    "totalUnits": "{{n}} ยูนิต",
+    "total": "รวม — {{n}} ยูนิต",
+    "cols": {
+      "seqNo": "ลำดับที่",
+      "floor": "ชั้น",
+      "towerName": "ชื่ออาคาร",
+      "regNumber": "เลขทะเบียน",
+      "roomNo": "เลขห้อง",
+      "plotNo": "เลขแปลง",
+      "houseNo": "เลขที่บ้าน",
+      "model": "แบบ",
+      "numberOfFloors": "จำนวนชั้น",
+      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)",
+      "usableAreaSqm": "พื้นที่ใช้สอย (ตร.ม.)",
+      "sellingPrice": "ราคาขาย",
+      "corner": "มุม",
+      "edge": "ริม",
+      "poolView": "วิวสระน้ำ",
+      "south": "ทิศใต้",
+      "other": "อื่น ๆ",
+      "nearGardenClubhouse": "ใกล้สวน/คลับเฮ้าส์",
+      "adjustPriceLocation": "ราคาปรับ/ที่ตั้ง",
+      "standardPrice": "ราคามาตรฐาน",
+      "priceIncrementFloor": "ราคาเพิ่ม/ชั้น",
+      "landDiffSqWa": "ผลต่างที่ดิน (ตร.วา)",
+      "landPlusMinus": "ที่ดิน +/- (บาท)",
+      "locationAdj": "ปรับที่ตั้ง",
+      "appraisalValue": "มูลค่าประเมิน",
+      "roundedValue": "มูลค่าปัดเศษ",
+      "forceSalePrice": "ราคาขายบังคับ",
+      "coverageAmount": "จำนวนเงินคุ้มครอง",
+      "usableAreaSqm2": "พื้นที่ใช้สอย (ตร.ม.)",
+      "standardLandSqWa": "ที่ดินมาตรฐาน (ตร.วา)",
+      "standardPriceBahtSqm": "ราคามาตรฐาน (บาท/ตร.ม.)",
+      "coverageAmountBahtSqm": "จำนวนเงินคุ้มครอง (บาท/ตร.ม.)",
+      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "description": "คำอธิบาย"
+    }
+  },
+  "changeProjectType": {
+    "title": "เปลี่ยนประเภทโครงการ",
+    "selectNewType": "เลือกประเภทโครงการใหม่",
+    "current": "ปัจจุบัน",
+    "warningTitle": "ข้อมูลต่อไปนี้จะถูกลบออกอย่างถาวร:",
+    "cancel": "ยกเลิก",
+    "changeType": "เปลี่ยนประเภท",
+    "changing": "กำลังเปลี่ยน...",
+    "warnings": {
+      "modelsDeleted_one": "{{count}} แบบจะถูกลบ",
+      "modelsDeleted_other": "{{count}} แบบจะถูกลบ",
+      "towersDeleted_one": "{{count}} อาคารจะถูกลบ",
+      "towersDeleted_other": "{{count}} อาคารจะถูกลบ",
+      "unitsDeleted_one": "{{count}} ยูนิตจะถูกลบ",
+      "unitsDeleted_other": "{{count}} ยูนิตจะถูกลบ",
+      "landDeleted": "รายละเอียดที่ดินโครงการจะถูกลบ",
+      "pricingReset": "สมมติฐานการกำหนดราคาจะถูกรีเซ็ต"
+    }
+  },
+  "options": {
+    "locationMethod": {
+      "AdjustPriceSqm": "ปรับราคา (บาท/ตร.ม.)",
+      "AdjustPricePercentage": "ปรับราคา (%)",
+      "Lumpsum": "เหมาจ่าย (บาทคงที่)"
+    },
+    "locationMethodBySqWa": {
+      "AdjustPriceSqm": "01 - ปรับราคา/ตร.ม.",
+      "Lumpsum": "02 - เหมาจ่าย"
+    },
+    "locationMethodByM": {
+      "AdjustPriceSqm": "01 - ปรับราคา/ตร.วา",
+      "Lumpsum": "02 - เหมาจ่าย"
+    },
+    "condoFireInsurance": {
+      "LessThan8Floors": "ความสูงคอนโด < 8 ชั้น",
+      "GreaterThan8Floors": "ความสูงคอนโด > 8 ชั้น",
+      "LessThan8FloorsWithMezzanine": "ความสูงคอนโด < 8 ชั้น และมีชั้นลอย",
+      "GreaterThan8FloorsWithMezzanine": "ความสูงคอนโด > 8 ชั้น และมีชั้นลอย"
+    },
+    "condoProjectType": {
+      "Condominium": "คอนโดมิเนียม",
+      "Apartment": "อพาร์ตเมนต์",
+      "ServicedApartment": "เซอร์วิสอพาร์ตเมนต์"
+    },
+    "lbProjectType": {
+      "VillageHousing": "หมู่บ้านจัดสรร",
+      "TownHouseProject": "โครงการทาวน์เฮ้าส์",
+      "DetachedHouseProject": "โครงการบ้านเดี่ยว",
+      "MixedProject": "โครงการผสม"
+    },
+    "lbProjectStatus": {
+      "Active": "เปิดดำเนินการ",
+      "Completed": "เสร็จสิ้น",
+      "OnHold": "พักดำเนินการ",
+      "Cancelled": "ยกเลิก"
+    },
+    "lbFloorSurface": {
+      "PolishedConcrete": "คอนกรีตขัดมัน",
+      "GlazedTiles": "กระเบื้องเคลือบ",
+      "Parquet": "ไม้พาร์เก้",
+      "Marble": "หินอ่อน",
+      "Granite": "หินแกรนิต",
+      "Laminate": "ลามิเนต",
+      "Other": "อื่น ๆ"
+    },
+    "lbFloorStructure": {
+      "ReinforcedConcrete": "คอนกรีตเสริมเหล็ก",
+      "WoodJoist": "โครงไม้",
+      "SteelDeck": "เหล็กเดค",
+      "Other": "อื่น ๆ"
+    },
+    "lbFireInsurance": {
+      "OneTwoStoreyTownhouse": "ทาวน์เฮ้าส์ 1-2 ชั้น",
+      "ThreeStoreyTownhouse": "ทาวน์เฮ้าส์ 3 ชั้น",
+      "SemiDetachedHouse": "บ้านแฝด",
+      "SingleHouseAreaLessThan150": "บ้านเดี่ยว พื้นที่ < 150 ตร.ม.",
+      "SingleHouseArea150To200": "บ้านเดี่ยว พื้นที่ ≥ 150 < 200 ตร.ม.",
+      "SingleHouseArea200To400": "บ้านเดี่ยว พื้นที่ ≥ 200 < 400 ตร.ม.",
+      "SingleHouseArea400To500": "บ้านเดี่ยว พื้นที่ ≥ 400 < 500 ตร.ม.",
+      "SingleHouseAreaGreaterThan500": "บ้านเดี่ยว พื้นที่ > 500 ตร.ม."
+    },
+    "depreciationMethod": {
+      "Period": "ตามระยะเวลา",
+      "Gross": "รวม"
+    },
+    "yesNo": {
+      "yes": "ใช่",
+      "no": "ไม่ใช่"
+    },
+    "correctIncorrect": {
+      "correct": "ถูกต้อง",
+      "incorrect": "ไม่ถูกต้อง"
+    }
+  },
+  "fields": {
+    "projectInfo": {
+      "projectName": "ชื่อโครงการ",
+      "projectDescription": "คำอธิบายโครงการ",
+      "developer": "ผู้พัฒนา",
+      "projectSaleLaunchDate": "วันเปิดขายโครงการ",
+      "rai": "ไร่",
+      "ngan": "งาน",
+      "squareWa": "ตารางวา",
+      "unitForSale": "ยูนิตที่ขาย",
+      "numberOfPhase": "จำนวนเฟส",
+      "builtOnTitleDeedNumber": "เลขที่โฉนดที่ดินที่ตั้ง",
+      "landOffice": "สำนักงานที่ดิน",
+      "licenseExpirationDate": "วันหมดอายุใบอนุญาต",
+      "houseNumber": "บ้านเลขที่",
+      "road": "ถนน",
+      "soi": "ซอย",
+      "subDistrict": "ตำบล/แขวง",
+      "district": "อำเภอ/เขต",
+      "province": "จังหวัด",
+      "postcode": "รหัสไปรษณีย์",
+      "latitude": "ละติจูด",
+      "longitude": "ลองจิจูด",
+      "utilities": "สาธารณูปโภค",
+      "utilitiesOther": "สาธารณูปโภคอื่น ๆ",
+      "facilities": "สิ่งอำนวยความสะดวก",
+      "facilitiesOther": "สิ่งอำนวยความสะดวกอื่น ๆ",
+      "remark": "หมายเหตุ"
+    },
+    "tower": {
+      "towerName": "ชื่ออาคาร",
+      "condoRegistrationNumber": "เลขทะเบียนอาคารชุด",
+      "numberOfUnits": "จำนวนยูนิต",
+      "numberOfFloors": "จำนวนชั้น",
+      "condition": "สภาพ",
+      "isObligation": "มีภาระผูกพัน",
+      "obligation": "ภาระผูกพัน",
+      "documentValidation": "การตรวจสอบเอกสาร",
+      "locationCorrect": "ที่ตั้งถูกต้อง",
+      "distance": "ระยะทาง (ม.)",
+      "roadWidth": "ความกว้างถนน (ม.)",
+      "rightOfWay": "สิทธิทางผ่าน (ม.)",
+      "roadSurface": "ผิวถนน",
+      "otherRoadSurface": "ผิวถนนอื่น ๆ",
+      "decoration": "การตกแต่ง",
+      "otherDecoration": "การตกแต่งอื่น ๆ",
+      "buildingAge": "อายุอาคาร",
+      "buildingForm": "รูปแบบอาคาร",
+      "constructionMaterials": "วัสดุก่อสร้าง",
+      "otherRoofType": "ประเภทหลังคาอื่น ๆ",
+      "isExpropriated": "ถูกเวนคืน",
+      "inLineExpropriated": "อยู่ในแนวเวนคืน",
+      "royalDecreeReference": "อ้างอิงพระราชกฤษฎีกา",
+      "expropriationRemark": "หมายเหตุการเวนคืน",
+      "inForestBoundary": "อยู่ในแนวเขตป่า",
+      "forestBoundaryRemark": "หมายเหตุแนวเขตป่า",
+      "remark": "หมายเหตุ"
+    },
+    "model": {
+      "modelName": "ชื่อแบบ",
+      "modelDescription": "คำอธิบายแบบ",
+      "hasMezzanine": "มีชั้นลอย",
+      "startingPriceMin": "ราคาเริ่มต้นต่ำสุด (บาท)",
+      "startingPriceMax": "ราคาเริ่มต้นสูงสุด (บาท)",
+      "usableAreaMin": "พื้นที่ใช้สอยต่ำสุด (ตร.ม.)",
+      "usableAreaMax": "พื้นที่ใช้สอยสูงสุด (ตร.ม.)",
+      "standardUsableArea": "พื้นที่ใช้สอยมาตรฐาน (ตร.ม.)",
+      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "roomLayout": "รูปแบบห้อง",
+      "otherRoomLayout": "รูปแบบห้องอื่น ๆ",
+      "remark": "หมายเหตุ",
+      "numberOfHouses": "จำนวนหลัง",
+      "landAreaMin": "เนื้อที่ดินต่ำสุด (ตร.วา)",
+      "landAreaMax": "เนื้อที่ดินสูงสุด (ตร.วา)",
+      "standardLandArea": "เนื้อที่ดินมาตรฐาน (ตร.วา)",
+      "groundFloorMaterials": "วัสดุพื้นชั้นล่าง",
+      "otherGroundFloor": "วัสดุพื้นชั้นล่างอื่น ๆ",
+      "upperFloorMaterials": "วัสดุพื้นชั้นบน",
+      "otherUpperFloor": "วัสดุพื้นชั้นบนอื่น ๆ",
+      "bathroomFloorMaterials": "วัสดุพื้นห้องน้ำ",
+      "otherBathroomFloor": "วัสดุพื้นห้องน้ำอื่น ๆ"
+    },
+    "land": {
+      "propertyName": "ชื่อทรัพย์สิน",
+      "subDistrict": "ตำบล/แขวง",
+      "district": "อำเภอ/เขต",
+      "province": "จังหวัด",
+      "landDescription": "คำอธิบายที่ดิน"
+    },
+    "pricing": {
+      "locationMethod": "วิธีการที่ตั้ง",
+      "cornerAdjustment": "มุม (บาท)",
+      "edgeAdjustment": "ริม (บาท)",
+      "otherAdjustment": "อื่น ๆ (บาท)",
+      "poolViewAdjustment": "วิวสระน้ำ (บาท)",
+      "southAdjustment": "ทิศใต้ (บาท)",
+      "forceSalePercentage": "เปอร์เซ็นต์ขายบังคับ (%)",
+      "floorIncrementEveryXFloor": "ทุก X ชั้น",
+      "floorIncrementAmount": "จำนวนเงิน (บาท)",
+      "nearGardenAdjustment": "ใกล้สวน (บาท)",
+      "landIncreaseDecreaseRate": "อัตราเพิ่ม/ลดที่ดิน (%)"
+    }
+  },
+  "validation": {
+    "invalidPartialDate": "กรุณาใช้รูปแบบ ปปปป, ปปปป-ดด, หรือ ปปปป-ดด-วว",
+    "towerRequired": "ต้องระบุอาคารสำหรับโครงการคอนโด"
+  },
+  "toasts": {
+    "project": {
+      "saveSuccess": "บันทึกข้อมูลโครงการแล้ว",
+      "saveDraftSuccess": "บันทึกฉบับร่างสำเร็จ",
+      "saveFailed": "บันทึกข้อมูลโครงการไม่สำเร็จ",
+      "changeTypeFailed": "เปลี่ยนประเภทโครงการไม่สำเร็จ"
+    },
+    "tower": {
+      "saveSuccess": "บันทึกอาคารสำเร็จ",
+      "updateSuccess": "อัปเดตอาคารสำเร็จ",
+      "saveDraftSuccess": "บันทึกฉบับร่างสำเร็จ",
+      "saveDraftFailed": "บันทึกฉบับร่างไม่สำเร็จ",
+      "createFailed": "สร้างอาคารไม่สำเร็จ",
+      "updateFailed": "อัปเดตอาคารไม่สำเร็จ",
+      "deleteSuccess": "ลบอาคารสำเร็จ",
+      "deleteFailed": "ลบอาคารไม่สำเร็จ"
+    },
+    "model": {
+      "saveSuccess": "บันทึกแบบสำเร็จ",
+      "updateSuccess": "อัปเดตแบบสำเร็จ",
+      "saveDraftSuccess": "บันทึกฉบับร่างสำเร็จ",
+      "saveDraftFailed": "บันทึกฉบับร่างไม่สำเร็จ",
+      "createFailed": "สร้างแบบไม่สำเร็จ",
+      "updateFailed": "อัปเดตแบบไม่สำเร็จ",
+      "deleteSuccess": "ลบแบบสำเร็จ",
+      "deleteFailed": "ลบแบบไม่สำเร็จ",
+      "pricingNoId": "ไม่มี ID การวิเคราะห์ราคาที่ส่งคืนจากเซิร์ฟเวอร์",
+      "pricingCreateFailed": "สร้างการวิเคราะห์ราคาไม่สำเร็จ"
+    },
+    "land": {
+      "saveSuccess": "บันทึกที่ดินโครงการแล้ว",
+      "saveDraftSuccess": "บันทึกฉบับร่างสำเร็จ",
+      "saveFailed": "บันทึกที่ดินโครงการไม่สำเร็จ"
+    },
+    "units": {
+      "importSuccess": "นำเข้ายูนิตสำเร็จ",
+      "uploadFailed": "อัปโหลดไม่สำเร็จ กรุณาตรวจสอบรูปแบบไฟล์",
+      "deleteSuccess": "ลบการอัปโหลดแล้ว",
+      "deleteFailed": "ลบการอัปโหลดไม่สำเร็จ",
+      "invalidFileType": "ประเภทไฟล์ไม่ถูกต้อง รองรับเฉพาะ {{extensions}}",
+      "fileTooLarge": "ขนาดไฟล์เกิน 10 MB"
+    },
+    "pricing": {
+      "saveSuccess": "บันทึกสมมติฐานราคาและคำนวณราคายูนิตใหม่แล้ว",
+      "saveDraftSuccess": "บันทึกสมมติฐานราคาเป็นฉบับร่างแล้ว",
+      "saveFailed": "บันทึกสมมติฐานไม่สำเร็จ"
+    }
+  },
+  "dialogs": {
+    "deleteTower": {
+      "title": "ลบอาคาร",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบอาคารนี้? ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    },
+    "deleteModel": {
+      "title": "ลบแบบ",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบแบบนี้? ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    },
+    "deleteTowerListing": {
+      "title": "ลบอาคาร",
+      "confirm": "ลบ"
+    },
+    "deleteModelListing": {
+      "title": "ลบแบบ",
+      "confirm": "ลบ"
+    }
+  },
+  "errors": {
+    "failedToLoadProject": "โหลดข้อมูลโครงการไม่สำเร็จ"
+  },
+  "projectTypePill": {
+    "placeholder": "เลือกประเภทโครงการ"
+  },
+  "radioGroup": {
+    "specifyPlaceholder": "โปรดระบุ"
+  },
+  "partialDate": {
+    "year": "ปี",
+    "month": "เดือน",
+    "day": "วัน"
+  }
+}

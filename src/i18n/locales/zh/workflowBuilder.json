@@ -1,0 +1,428 @@
+{
+  "page": {
+    "listTitle": "Workflow Definitions",
+    "createNew": "Create New Workflow",
+    "empty": "No workflow definitions yet. Create your first one!"
+  },
+  "list": {
+    "columns": {
+      "name": "Name",
+      "category": "Category",
+      "version": "Version",
+      "status": "Status",
+      "created": "Created",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "edit": "Edit"
+    }
+  },
+  "errors": {
+    "failedToLoadDefinitions": "Failed to load workflow definitions.",
+    "failedToParseSchema": "Failed to parse workflow schema",
+    "failedToCreate": "Failed to create workflow",
+    "failedToSaveDraft": "Failed to save draft",
+    "failedToSaveBeforePublishing": "Failed to save before publishing",
+    "failedToPublish": "Failed to publish workflow",
+    "breakingChangesUpdated": "Breaking changes updated — please review again",
+    "noVersionToSave": "No version found to save",
+    "noVersionToPublish": "No version found to publish",
+    "validationFailed": "Validation failed",
+    "saveFailed": "Save failed",
+    "migrationFailed": "Migration failed",
+    "failedToLoadPreview": "Failed to load preview. You can still publish without impact analysis.",
+    "publishFailed": "Publish failed",
+    "failedToCreateDraft": "Failed to create a new draft version"
+  },
+  "toasts": {
+    "workflowCreated": "Workflow created",
+    "draftSaved": "Draft saved",
+    "workflowPublished": "Workflow published (v{{version}})",
+    "noInstancesSelected": "No instances selected for migration.",
+    "draftVersionCreated": "New draft version created — you can now edit"
+  },
+  "toolbar": {
+    "backToList": "Back to list",
+    "workflowNamePlaceholder": "Workflow Name",
+    "unsaved": "Unsaved",
+    "autoLayout": "Auto Layout",
+    "settings": "Settings",
+    "saveDraft": "Save Draft",
+    "publish": "Publish",
+    "autoLayoutTitle": "Auto-arrange nodes",
+    "settingsTitle": "Workflow Settings",
+    "editNewVersion": "Edit (new version)"
+  },
+  "settings": {
+    "title": "Workflow Settings",
+    "name": "Name",
+    "description": "Description",
+    "category": "Category",
+    "author": "Author",
+    "version": "Version",
+    "tags": "Tags (comma-separated)",
+    "close": "Close"
+  },
+  "unsavedChanges": {
+    "confirm": "You have unsaved changes. Are you sure you want to leave?"
+  },
+  "palette": {
+    "title": "Activities",
+    "subtitle": "Drag to canvas"
+  },
+  "panel": {
+    "activityProperties": "Activity Properties",
+    "transitionProperties": "Transition Properties",
+    "deleteActivity": "Delete Activity",
+    "deleteTransition": "Delete Transition"
+  },
+  "forms": {
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "activityName": "Activity Name",
+      "assigneeRole": "Assignee Role",
+      "assigneeGroup": "Assignee Group",
+      "initialAssignmentStrategy": "Initial Assignment Strategy",
+      "revisitAssignmentStrategy": "Revisit Assignment Strategy",
+      "timeoutDuration": "Timeout Duration (ISO 8601)",
+      "requiredRoles": "Required Roles (comma-separated)",
+      "assigneeVariable": "Assignee Variable",
+      "teamIdVariable": "Team ID Variable",
+      "teamConstrained": "Team Constrained",
+      "completionMessage": "Completion Message",
+      "selectionMethod": "Selection Method",
+      "loanTypeVariable": "Loan Type Variable",
+      "conditionExpression": "Condition Expression",
+      "expression": "Expression",
+      "forkType": "Fork Type",
+      "maxConcurrency": "Max Concurrency (0 = unlimited)",
+      "forkNode": "Fork Node",
+      "joinType": "Join Type",
+      "timeoutMinutes": "Timeout (minutes, 0 = none)",
+      "mergeStrategy": "Merge Strategy",
+      "timeoutAction": "Timeout Action",
+      "transitionType": "Transition Type",
+      "condition": "Condition",
+      "memberSourceType": "Source Type",
+      "valueExpression": "Value Expression",
+      "quorumType": "Quorum Type",
+      "quorumValue": "Quorum Value",
+      "majorityType": "Majority Type",
+      "majorityValue": "Majority Value",
+      "timeoutDurationApproval": "Timeout Duration (ISO 8601)",
+      "meetingName": "Meeting Name",
+      "notes": "Notes",
+      "signalName": "Signal Name",
+      "correlationKey": "Correlation Key",
+      "completionVariable": "Completion Variable (optional)",
+      "propertyType": "Property Type",
+      "propertyAddress": "Property Address",
+      "estimatedValue": "Estimated Value",
+      "purpose": "Purpose",
+      "requestorId": "Requestor ID (optional)",
+      "reviewDeadline": "Review Deadline (ISO 8601)",
+      "autoApprovalThreshold": "Auto-Approval Threshold",
+      "timerName": "Timer Name",
+      "duration": "Duration (ISO 8601)",
+      "scheduledTime": "Scheduled Time (optional)",
+      "allowEarlyCancellation": "Allow Early Cancellation"
+    },
+    "placeholders": {
+      "workflowStart": "Workflow Start",
+      "describeStartPoint": "Describe this start point...",
+      "workflowEnd": "Workflow End",
+      "workflowCompletedSuccessfully": "Workflow completed successfully",
+      "assigneeRoleHint": "e.g. Admin",
+      "assigneeGroupHint": "e.g. Admin",
+      "timeoutDurationHint": "PT72H",
+      "assigneeVariableHint": "e.g. internalFollowupStaffId",
+      "teamIdVariableHint": "e.g. assignedCompanyId",
+      "loanTypeVariableHint": "loanType",
+      "conditionExpressionHint": "e.g. amount > 50000",
+      "expressionHint": "e.g. facilityLimit",
+      "caseValueHint": "e.g. > 30000000",
+      "branchNameHint": "Branch name",
+      "signalNameHint": "e.g. AppraisalCreated",
+      "correlationKeyHint": "e.g. requestId",
+      "completionVariableHint": "e.g. appraisalCompleted",
+      "reviewDeadlineHint": "e.g. 2025-12-31T00:00:00Z",
+      "timerNameHint": "e.g. review-window",
+      "durationHint": "PT24H",
+      "scheduledTimeHint": "ISO 8601 datetime",
+      "activityNameHint": "e.g. PendingApproval",
+      "committeeCodeHint": "Committee code",
+      "maxValueHint": "Max value (blank = null)",
+      "decisionNameHint": "Decision name",
+      "conditionHint": "Condition expression",
+      "voteOptionHint": "Vote option (e.g. route_back)",
+      "voteMovementHint": "F/B/C",
+      "conditionBuilderVariableHint": "variable",
+      "conditionBuilderValueHint": "value",
+      "decisionBuilderConditionHint": "decision == 'proceed'",
+      "meetingNameHint": "e.g. Committee Approval Meeting",
+      "meetingNotesHint": "Optional meeting notes",
+      "routingConditionNameHint": "Condition name",
+      "routingExpressionHint": "Expression",
+      "selectForkNode": "Select fork node...",
+      "selectTargetActivity": "Select target activity…",
+      "actionValueHint": "e.g. approve",
+      "actionLabelHint": "e.g. Approve",
+      "actionConditionHint": "e.g. status == 'pending'",
+      "inputMappingKeyHint": "Key",
+      "inputMappingValueHint": "Value / variable",
+      "selectType": "Select type",
+      "selectPurpose": "Select purpose"
+    },
+    "hints": {
+      "conditionRouting": "Routes to \"true\" or \"false\" output based on this expression",
+      "switchCases": "Each case becomes a labeled output handle. A <1>default</1> handle is always added for unmatched values.",
+      "completionVariableHint": "If set, skip suspend when this variable is truthy",
+      "reviewDeadlineHint": "Optional — ISO date string",
+      "autoApprovalHint": "Requests below this value are auto-approved. 0 = disabled.",
+      "scheduledTimeHint": "Leave blank to use duration from trigger time",
+      "internalFollowupRouting": "Routes to <1>staff_selected</1> when internal followup staff is found, or <1>no_match</1> otherwise.",
+      "dynamicPropertiesCount": "This activity type has {{count}} configurable properties. Edit them via the raw JSON schema for now."
+    },
+    "sections": {
+      "assignment": "Assignment",
+      "decisionConditions": "Decision Conditions",
+      "actions": "Actions",
+      "additionalOptions": "Additional Options",
+      "teamAssignment": "Team Assignment",
+      "inputMappings": "Input Mappings",
+      "routingConditions": "Routing Conditions",
+      "branches": "Branches",
+      "cases": "Cases",
+      "memberSource": "Member Source",
+      "quorumMajority": "Quorum & Majority",
+      "voteMovements": "Vote Movements",
+      "properties": "Properties"
+    },
+    "checkboxes": {
+      "canRaiseFollowup": "Can Raise Followup",
+      "canRaiseQuotation": "Can Raise Quotation"
+    },
+    "badges": {
+      "startActivity": "Start Activity",
+      "taskActivity": "Task Activity",
+      "routingActivity": "Routing Activity",
+      "endActivity": "End Activity",
+      "companySelection": "Company Selection",
+      "ifElse": "If / Else",
+      "switch": "Switch",
+      "fork": "Fork",
+      "join": "Join",
+      "approvalActivity": "Approval Activity",
+      "meetingActivity": "Meeting Activity",
+      "awaitSignalActivity": "Await Signal Activity",
+      "internalFollowupSelection": "Internal Followup Selection",
+      "requestSubmission": "Request Submission",
+      "adminReviewActivity": "Admin Review Activity",
+      "timerActivity": "Timer Activity"
+    },
+    "buttons": {
+      "addDecision": "+ Add Decision",
+      "addAction": "+ Add Action",
+      "addMapping": "+ Add Mapping",
+      "addCondition": "+ Add Condition",
+      "addCase": "+ Add Case",
+      "addBranch": "+ Add Branch",
+      "addThreshold": "+ Add Threshold",
+      "addVoteMovement": "+ Add Vote Movement",
+      "rawMode": "Raw",
+      "builderMode": "Builder"
+    },
+    "actionFields": {
+      "value": "Value",
+      "label": "Label",
+      "assignmentMode": "Assignment Mode",
+      "movement": "Movement",
+      "condition": "Condition (optional)"
+    },
+    "assignmentModes": {
+      "system": "System",
+      "user": "User"
+    },
+    "movements": {
+      "forward": "Forward (F)",
+      "backward": "Backward (B)",
+      "complete": "Complete (C)"
+    },
+    "strategies": {
+      "startedBy": "Started By",
+      "roundRobin": "Round Robin",
+      "previousOwner": "Previous Owner",
+      "pool": "Pool",
+      "variableAssignee": "Variable Assignee"
+    },
+    "selectionMethods": {
+      "roundrobin": "Round Robin",
+      "manual": "Manual"
+    },
+    "forkTypes": {
+      "parallel": "Parallel",
+      "inclusive": "Inclusive"
+    },
+    "joinTypes": {
+      "all": "All (wait for all branches)",
+      "any": "Any (first branch to complete)",
+      "nOfM": "N of M"
+    },
+    "mergeStrategies": {
+      "merge": "Merge all outputs",
+      "first": "Use first completed",
+      "last": "Use last completed"
+    },
+    "timeoutActions": {
+      "continue": "Continue",
+      "cancel": "Cancel",
+      "error": "Error"
+    },
+    "transitionTypes": {
+      "normal": "Normal (unconditional)",
+      "conditional": "Conditional"
+    },
+    "memberSourceTypes": {
+      "inline": "Inline",
+      "committee": "Committee",
+      "threshold": "Threshold"
+    },
+    "quorumTypes": {
+      "count": "Count",
+      "percent": "Percent"
+    },
+    "thresholds": {
+      "title": "Thresholds"
+    },
+    "connection": {
+      "from": "From:",
+      "to": "To:"
+    },
+    "propertyTypes": {
+      "residential": "Residential",
+      "commercial": "Commercial",
+      "industrial": "Industrial",
+      "land": "Land"
+    },
+    "purposes": {
+      "mortgage": "Mortgage",
+      "insurance": "Insurance",
+      "taxAssessment": "Tax Assessment",
+      "sale": "Sale"
+    },
+    "defaultDecision": {
+      "none": "None"
+    }
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "activityNameRequired": "Activity name is required",
+    "assigneeGroupRequired": "Assignee group is required",
+    "timeoutRequired": "Timeout is required",
+    "decisionNameRequired": "Decision name is required",
+    "conditionRequired": "Condition is required",
+    "conditionNameRequired": "Condition name is required",
+    "conditionExpressionRequired": "Condition expression is required",
+    "expressionRequired": "Expression is required",
+    "branchNameRequired": "Branch name is required",
+    "caseValueRequired": "Case value is required",
+    "memberSourceRequired": "Member source type is required",
+    "timeoutRequired2": "Timeout is required",
+    "signalNameRequired": "Signal name is required",
+    "correlationKeyRequired": "Correlation key is required",
+    "propertyTypeRequired": "Property type is required",
+    "propertyAddressRequired": "Property address is required",
+    "purposeRequired": "Purpose is required",
+    "durationRequired": "Duration is required",
+    "workflowNameRequired": "Workflow name is required"
+  },
+  "publish": {
+    "title": "Publish Workflow",
+    "breakingChanges": "Breaking Changes",
+    "noBreakingChanges": "No breaking changes detected ✓",
+    "runningInstances": "Running Instances",
+    "runningInstancesAffected_one": "{{count}} running instance affected —",
+    "runningInstancesAffected_other": "{{count}} running instances affected —",
+    "safeCount": "{{count}} safe",
+    "unsafeCount": "{{count}} need manual action",
+    "unsafePinnedNotice": "Unsafe instances will stay pinned on the current (now deprecated) version. You can migrate them manually after publishing.",
+    "columns": {
+      "instance": "Instance",
+      "currentActivity": "Current Activity",
+      "started": "Started",
+      "status": "Status"
+    },
+    "publishAndMigrate": "Publish & Migrate",
+    "publishButton": "Publish",
+    "cancel": "Cancel"
+  },
+  "migrate": {
+    "title": "Migrate Running Instances",
+    "bulkSafeLabel": "All Safe → Migrate",
+    "bulkUnsafeLabel": "All Unsafe → Pin",
+    "clearAll": "Clear all",
+    "footer": "{{bump}} migrating · {{remap}} remapping · {{skip}} pinned",
+    "applyMigration": "Apply migration",
+    "selectInstancePrompt": "Select an instance to configure its migration action.",
+    "breakingChangesTitle": "Breaking changes",
+    "actions": {
+      "migrateLabel": "Migrate to new version",
+      "pinLabel": "Leave pinned on old version",
+      "manualRemap": "Manual remap",
+      "cancelInstance": "Cancel instance",
+      "cancelInstanceHint": "— use the cancel endpoint separately",
+      "recommended": "recommended"
+    },
+    "resultModal": {
+      "title": "Migration Complete",
+      "migrated": "migrated",
+      "failed": "failed",
+      "skipped": "skipped",
+      "errorsTitle": "Errors",
+      "done": "Done"
+    },
+    "table": {
+      "noInstances": "No running instances on the previous version — nothing to migrate.",
+      "columns": {
+        "instance": "Instance",
+        "name": "Name",
+        "currentActivity": "Current Activity",
+        "started": "Started",
+        "status": "Status",
+        "action": "Action"
+      },
+      "actionLabels": {
+        "none": "—",
+        "migrate": "Migrate",
+        "pinned": "Pinned",
+        "remap": "Remap: {{activityId}}"
+      },
+      "classification": {
+        "unknown": "Unknown"
+      }
+    }
+  },
+  "versionHistory": {
+    "title": "Version History",
+    "noVersions": "No versions found.",
+    "current": "current",
+    "close": "Close",
+    "migrateButton": "Migrate",
+    "viewButton": "View",
+    "runningBadge_one": "{{count}} running",
+    "runningBadge_other": "{{count}} running",
+    "publishedBy": "Published {{date}} by {{by}}",
+    "createdBy": "Created {{date}} by {{by}}",
+    "by": "By {{by}}"
+  },
+  "canvas": {
+    "toolbar": {
+      "autoLayout": "Auto Layout"
+    }
+  }
+}

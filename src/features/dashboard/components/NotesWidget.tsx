@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
@@ -17,6 +18,7 @@ function NoteRow({
   onEdit: (note: NoteItem) => void;
   onDelete: (note: NoteItem) => void;
 }) {
+  const { t } = useTranslation('dashboard');
   const [hovered, setHovered] = useState(false);
 
   const relativeTime = (() => {
@@ -51,7 +53,7 @@ function NoteRow({
         <button
           type="button"
           onClick={() => onEdit(note)}
-          aria-label="Edit note"
+          aria-label={t('notes.aria.editNote')}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-500 transition-colors"
         >
           <Icon name="pen" style="solid" className="size-3.5" />
@@ -59,7 +61,7 @@ function NoteRow({
         <button
           type="button"
           onClick={() => onDelete(note)}
-          aria-label="Delete note"
+          aria-label={t('notes.aria.deleteNote')}
           className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
         >
           <Icon name="trash" style="solid" className="size-3.5" />
@@ -86,6 +88,7 @@ function NotesSkeleton() {
 }
 
 function NotesWidget() {
+  const { t } = useTranslation('dashboard');
   const { data, isLoading } = useNotes();
   const deleteNote = useDeleteNote();
 
@@ -121,14 +124,14 @@ function NotesWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
-          <h3 className="font-semibold text-gray-800">Notes</h3>
+          <h3 className="font-semibold text-gray-800">{t('notes.title')}</h3>
           <button
             type="button"
             onClick={handleOpenNew}
             className="text-sm font-medium text-blue-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors"
           >
             <Icon name="plus" style="solid" className="size-3.5" />
-            Add new
+            {t('notes.addNew')}
           </button>
         </div>
 
@@ -137,7 +140,7 @@ function NotesWidget() {
           {isLoading ? (
             <NotesSkeleton />
           ) : notes.length > 0 ? (
-            notes.map((note) => (
+            notes.map(note => (
               <NoteRow
                 key={note.id}
                 note={note}
@@ -150,34 +153,28 @@ function NotesWidget() {
               <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                 <Icon name="note-sticky" style="regular" className="size-5 text-gray-400" />
               </div>
-              <p className="text-sm text-gray-500 mb-3">
-                No notes — start jotting.
-              </p>
+              <p className="text-sm text-gray-500 mb-3">{t('notes.emptyMessage')}</p>
               <button
                 type="button"
                 onClick={handleOpenNew}
                 className="text-sm font-medium text-blue-500 hover:text-blue-600 transition-colors"
               >
-                Add new
+                {t('notes.addNew')}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <NoteEditorDialog
-        open={editorOpen}
-        note={editingNote}
-        onClose={() => setEditorOpen(false)}
-      />
+      <NoteEditorDialog open={editorOpen} note={editingNote} onClose={() => setEditorOpen(false)} />
 
       <ConfirmDialog
         isOpen={confirmNote !== null}
         onClose={() => setConfirmNote(null)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Note"
-        message="This note will be permanently deleted. Continue?"
-        confirmText="Delete"
+        title={t('notes.delete.title')}
+        message={t('notes.delete.message')}
+        confirmText={t('notes.delete.confirm')}
         variant="danger"
         isLoading={deleteNote.isPending}
       />

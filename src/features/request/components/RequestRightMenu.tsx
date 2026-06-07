@@ -2,6 +2,7 @@ import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import clsx from 'clsx';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/features/auth/store';
@@ -60,6 +61,7 @@ const RequestRightMenu = ({
   onLocalCommentsChange,
   requestData,
 }: RequestRightMenuProps) => {
+  const { t } = useTranslation(['request', 'common']);
   const [activeTab, setActiveTab] = useState<'overview' | 'comments'>('overview');
   const [newComment, setNewComment] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -73,8 +75,13 @@ const RequestRightMenu = ({
   const { control } = useFormContext();
 
   // Only use form state for overview tab data (titles, creator, requestor)
-  const requestDocuments = (useWatch({ control, name: 'documents' }) || []) as { fileName?: string | null }[];
-  const titles = (useWatch({ control, name: 'titles' }) || []) as { titleDocuments?: unknown[]; documents?: { fileName?: string | null }[] }[];
+  const requestDocuments = (useWatch({ control, name: 'documents' }) || []) as {
+    fileName?: string | null;
+  }[];
+  const titles = (useWatch({ control, name: 'titles' }) || []) as {
+    titleDocuments?: unknown[];
+    documents?: { fileName?: string | null }[];
+  }[];
   const creator = useWatch({ control, name: 'creator' }) as UserDtoType;
   const requestor = useWatch({ control, name: 'requestor' }) as UserDtoType;
 
@@ -89,9 +96,7 @@ const RequestRightMenu = ({
   // Determine comment source based on mode
   // Edit mode: use API data directly
   // Create mode: use local state
-  const comments: CommentItem[] = requestId
-    ? (apiCommentsData?.comments ?? [])
-    : localComments;
+  const comments: CommentItem[] = requestId ? (apiCommentsData?.comments ?? []) : localComments;
 
   // Notify parent when local comments change (for create mode)
   useEffect(() => {
@@ -130,7 +135,10 @@ const RequestRightMenu = ({
       tempId: `temp-${Date.now()}`,
       comment: newComment.trim(),
       commentedBy: currentUser?.username || 'anonymous',
-      commentedByName: `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim() || currentUser?.username || 'Anonymous User',
+      commentedByName:
+        `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim() ||
+        currentUser?.username ||
+        'Anonymous User',
       commentedAt: new Date().toISOString(),
       lastModifiedAt: null,
     };
@@ -154,10 +162,10 @@ const RequestRightMenu = ({
           onSuccess: () => {
             setNewComment('');
             queryClient.invalidateQueries({ queryKey: ['comments', requestId] });
-            toast.success('Comment added');
+            toast.success(t('toasts.commentAdded'));
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to add comment');
+            toast.error(error.apiError?.detail || t('toasts.commentAddFailed'));
           },
         },
       );
@@ -203,7 +211,7 @@ const RequestRightMenu = ({
             queryClient.invalidateQueries({ queryKey: ['comments', requestId] });
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to update comment');
+            toast.error(error.apiError?.detail || t('toasts.commentUpdateFailed'));
           },
         },
       );
@@ -226,7 +234,7 @@ const RequestRightMenu = ({
             queryClient.invalidateQueries({ queryKey: ['comments', requestId] });
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to delete comment');
+            toast.error(error.apiError?.detail || t('toasts.commentDeleteFailed'));
           },
         },
       );
@@ -245,7 +253,7 @@ const RequestRightMenu = ({
     <div className="relative flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between p-4 border-b border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-900">Request Details</h3>
+        <h3 className="text-sm font-semibold text-gray-900">{t('rightMenu.title')}</h3>
         {onClose && (
           <button
             type="button"
@@ -270,7 +278,7 @@ const RequestRightMenu = ({
                 : 'text-gray-500 hover:text-gray-700',
             )}
           >
-            Overview
+            {t('rightMenu.tabOverview')}
           </button>
           <button
             type="button"
@@ -282,7 +290,7 @@ const RequestRightMenu = ({
                 : 'text-gray-500 hover:text-gray-700',
             )}
           >
-            Comments
+            {t('rightMenu.tabComments')}
             {comments.length > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-primary text-white rounded-full">
                 {comments.length}
@@ -303,7 +311,7 @@ const RequestRightMenu = ({
           <div className="flex flex-col gap-5">
             {/* Status */}
             <div>
-              <SidebarLabel>Status</SidebarLabel>
+              <SidebarLabel>{t('rightMenu.status')}</SidebarLabel>
               <div className="flex items-center gap-2 mt-2">
                 <Badge type="status" value={requestData?.status || 'Draft'} />
               </div>
@@ -311,17 +319,17 @@ const RequestRightMenu = ({
 
             {/* Key Dates */}
             <div>
-              <SidebarLabel>Key Dates</SidebarLabel>
+              <SidebarLabel>{t('rightMenu.keyDates')}</SidebarLabel>
               <div className="mt-2 space-y-2">
                 <InfoRow
                   icon="calendar-plus"
-                  label="Created"
+                  label={t('rightMenu.dateCreated')}
                   value={formatDate(requestData?.createdAt)}
                   muted={!requestData?.createdAt}
                 />
                 <InfoRow
                   icon="calendar-check"
-                  label="Completed"
+                  label={t('rightMenu.dateCompleted')}
                   value={formatDate(requestData?.completedAt)}
                   muted={!requestData?.completedAt}
                 />
@@ -330,28 +338,36 @@ const RequestRightMenu = ({
 
             {/* Quick Stats */}
             <div>
-              <SidebarLabel>Summary</SidebarLabel>
+              <SidebarLabel>{t('rightMenu.summary')}</SidebarLabel>
               <div className="mt-2 grid grid-cols-2 gap-2">
-                <StatCard label="Titles" value={String(titles.length)} icon="file-certificate" />
-                <StatCard label="Attachments" value={String(totalAttachments)} icon="paperclip" />
+                <StatCard
+                  label={t('rightMenu.titles')}
+                  value={String(titles.length)}
+                  icon="file-certificate"
+                />
+                <StatCard
+                  label={t('rightMenu.attachments')}
+                  value={String(totalAttachments)}
+                  icon="paperclip"
+                />
               </div>
             </div>
 
             {/* People */}
             <div>
-              <SidebarLabel>People</SidebarLabel>
+              <SidebarLabel>{t('rightMenu.people')}</SidebarLabel>
               <div className="mt-2 space-y-2">
                 <PersonRow
-                  label="Requestor"
-                  name={requestor.username || currentUser?.name || 'Not set'}
+                  label={t('rightMenu.requestor')}
+                  name={requestor.username || currentUser?.name || t('rightMenu.notSet')}
                   avatar={null}
                   isMe={requestor.username === currentUser?.username}
                   onClick={onRequestorClick}
                   editable
                 />
                 <PersonRow
-                  label="Creator"
-                  name={creator.username || currentUser?.name || 'Not set'}
+                  label={t('rightMenu.creator')}
+                  name={creator.username || currentUser?.name || t('rightMenu.notSet')}
                   avatar={null}
                   isMe={creator.username === currentUser?.username}
                 />
@@ -366,7 +382,10 @@ const RequestRightMenu = ({
                 // Skeleton loading - alternating left/right bubbles
                 <div className="space-y-3">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className={clsx('flex', i % 2 === 0 ? 'justify-end' : 'justify-start')}>
+                    <div
+                      key={i}
+                      className={clsx('flex', i % 2 === 0 ? 'justify-end' : 'justify-start')}
+                    >
                       {i % 2 !== 0 && (
                         <div className="flex items-start gap-2 max-w-[80%]">
                           <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 animate-pulse" />
@@ -399,8 +418,8 @@ const RequestRightMenu = ({
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
                     <Icon style="regular" name="comments" className="size-5 text-gray-400" />
                   </div>
-                  <p className="text-sm text-gray-500">No comments yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Add a comment below</p>
+                  <p className="text-sm text-gray-500">{t('rightMenu.noComments')}</p>
+                  <p className="text-xs text-gray-400 mt-1">{t('rightMenu.noCommentsHint')}</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -431,7 +450,7 @@ const RequestRightMenu = ({
                                     onClick={handleCancelEdit}
                                     className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
                                   >
-                                    Cancel
+                                    {t('common:actions.cancel')}
                                   </button>
                                   <button
                                     type="button"
@@ -439,7 +458,7 @@ const RequestRightMenu = ({
                                     disabled={!editText.trim()}
                                     className="px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/80 transition-colors disabled:opacity-50"
                                   >
-                                    Save
+                                    {t('common:actions.save')}
                                   </button>
                                 </div>
                               </div>
@@ -448,7 +467,9 @@ const RequestRightMenu = ({
                                 <div className="bg-primary text-white rounded-2xl rounded-tr-sm px-3 py-2 min-w-0 overflow-hidden">
                                   <p className="text-xs break-words break-all">{comment.comment}</p>
                                   {comment.lastModifiedAt && (
-                                    <span className="text-[10px] text-white/70 italic">(edited)</span>
+                                    <span className="text-[10px] text-white/70 italic">
+                                      {t('rightMenu.edited')}
+                                    </span>
                                   )}
                                 </div>
                                 {/* Hover actions - appear to the left of bubble */}
@@ -457,7 +478,7 @@ const RequestRightMenu = ({
                                     type="button"
                                     onClick={() => handleEditClick(index, comment)}
                                     className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-primary hover:bg-primary-50 transition-all"
-                                    title="Edit"
+                                    title={t('common:actions.edit')}
                                   >
                                     <Icon style="regular" name="pen" className="size-2.5" />
                                   </button>
@@ -465,14 +486,16 @@ const RequestRightMenu = ({
                                     type="button"
                                     onClick={() => setDeleteConfirmIndex(index)}
                                     className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-danger-500 hover:bg-danger-50 transition-all"
-                                    title="Delete"
+                                    title={t('common:actions.delete')}
                                   >
                                     <Icon style="solid" name="xmark" className="size-3" />
                                   </button>
                                 </div>
                               </div>
                             )}
-                            <p className="text-[10px] text-gray-400 mt-0.5 text-right">{timeDisplay}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 text-right">
+                              {timeDisplay}
+                            </p>
                           </div>
                         ) : (
                           // Others' comment - left-aligned, gray bubble with avatar
@@ -490,7 +513,9 @@ const RequestRightMenu = ({
                               <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
                                 <p className="text-xs break-words break-all">{comment.comment}</p>
                                 {comment.lastModifiedAt && (
-                                  <span className="text-[10px] text-gray-400 italic">(edited)</span>
+                                  <span className="text-[10px] text-gray-400 italic">
+                                    {t('rightMenu.edited')}
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -511,7 +536,7 @@ const RequestRightMenu = ({
                   value={newComment}
                   onChange={e => setNewComment(e.target.value)}
                   onKeyDown={handleKeyPress}
-                  placeholder="Add a comment..."
+                  placeholder={t('rightMenu.commentPlaceholder')}
                   className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
                 />
                 <button
@@ -533,10 +558,10 @@ const RequestRightMenu = ({
         isOpen={deleteConfirmIndex !== null}
         onClose={() => setDeleteConfirmIndex(null)}
         onConfirm={confirmDelete}
-        title="Delete Comment"
-        message="Are you sure you want to delete this comment? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('confirm.deleteCommentTitle')}
+        message={t('confirm.deleteCommentMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
     </div>

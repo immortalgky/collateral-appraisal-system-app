@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FavoritesRow } from '@features/menuFavorites';
@@ -10,12 +10,14 @@ import PoolTaskListPage from '../pages/PoolTaskListPage';
 import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
-import { columnDefs, getActivityColumnConfig } from '../config/columnDefs';
+import { columnDefs, getActivityColumnConfig, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useColumnVisibility } from '../hooks/useColumnVisibility';
+import { useColumnWidths } from '../hooks/useColumnWidths';
 import { ColumnVisibilityDropdown } from './ColumnVisibilityDropdown';
+import { ColumnResizeHandle } from './ColumnResizeHandle';
 import { TaskFilterDialog } from './TaskFilterDialog';
 import { TaskKanbanBoard } from './TaskKanbanBoard';
 
@@ -93,6 +95,37 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     reorderColumns,
     resetToDefault,
   } = useColumnVisibility('task-columns-' + activityId, columnConfig);
+
+  const { widths: colWidths, setWidth: setColWidth, resetWidths } = useColumnWidths(
+    'task-columns-' + activityId,
+    columnConfig,
+  );
+
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const ACTIONS_COL_WIDTH = 32; // w-8 = 2rem = 32px
+
+  const totalTableWidth = useMemo(
+    () => visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH,
+    [visibleColumns, colWidths],
+  );
+
+  const getAutoFitWidth = useCallback(
+    (_key: string, colIndex: number): (() => number | null) =>
+      () => {
+        const tbl = tableRef.current;
+        if (!tbl) return null;
+        const rows = tbl.querySelectorAll('tr');
+        let max = 0;
+        rows.forEach(row => {
+          const cell = row.children[colIndex] as HTMLElement | undefined;
+          if (cell) max = Math.max(max, cell.scrollWidth);
+        });
+        if (max === 0) return null;
+        return Math.min(Math.max(max + 24, MIN_COLUMN_WIDTH), MAX_AUTOFIT_WIDTH);
+      },
+    [],
+  );
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupByField>('status');
@@ -399,7 +432,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                   alwaysVisible={alwaysVisible}
                   onToggle={toggleColumn}
                   onReorder={reorderColumns}
-                  onReset={resetToDefault}
+                  onReset={() => { resetToDefault(); resetWidths(); }}
                 />
               </div>
             )}
@@ -538,18 +571,28 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
               <div className="flex-1 min-h-0 overflow-auto">
-                <table className="w-full min-w-max text-sm">
+                <table
+                  ref={tableRef}
+                  className="table-fixed text-sm"
+                  style={{ width: totalTableWidth }}
+                >
+                  <colgroup>
+                    {visibleColumns.map(key => (
+                      <col key={key} style={{ width: colWidths[key] }} />
+                    ))}
+                    <col style={{ width: ACTIONS_COL_WIDTH }} />
+                  </colgroup>
                   <thead className="sticky top-0 z-20">
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      {visibleColumns.map(key => {
+                      {visibleColumns.map((key, colIndex) => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
                         const isSticky = key === columnConfig.stickyColumn;
                         const thClass = isSticky
-                          ? stickyThBase
+                          ? `relative ${stickyThBase}`
                           : col.sortField
-                            ? `${sortableThBase} ${isActive ? 'text-primary' : ''}`
-                            : plainThBase;
+                            ? `relative ${sortableThBase} ${isActive ? 'text-primary' : ''}`
+                            : `relative ${plainThBase}`;
                         return (
                           <th
                             key={key}
@@ -564,6 +607,11 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                             ) : (
                               col.label
                             )}
+                            <ColumnResizeHandle
+                              width={colWidths[key]}
+                              onResize={px => setColWidth(key, px)}
+                              getAutoFitWidth={getAutoFitWidth(key, colIndex)}
+                            />
                           </th>
                         );
                       })}
@@ -630,7 +678,9 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                               <td
                                 key={key}
                                 className={
-                                  isSticky ? stickyTdClass : (col.tdClassName ?? defaultTdClass)
+                                  isSticky
+                                    ? `${stickyTdClass} overflow-hidden whitespace-nowrap`
+                                    : (col.tdClassName ?? `${defaultTdClass} overflow-hidden whitespace-nowrap`)
                                 }
                                 onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >

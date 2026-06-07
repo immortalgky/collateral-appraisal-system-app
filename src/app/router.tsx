@@ -49,12 +49,20 @@ import {
 } from '@shared/contexts/PageReadOnlyContext';
 import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
 import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
+import FeeAppointmentApprovalTaskPage from '@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage';
+import FeeApprovalTierPage from '@/features/feeApprovalConfig/pages/FeeApprovalTierPage';
+import AppointmentApprovalRulePage from '@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage';
+import EvaluationConfigPage from '@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
 import MigrateInstancesPage from '@features/workflowBuilder/pages/MigrateInstancesPage';
 import PermissionListPage from '@features/userManagement/pages/PermissionListPage';
 import RoleListPage from '@features/userManagement/pages/RoleListPage';
 import GroupListPage from '@features/userManagement/pages/GroupListPage';
 import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
+import TeamListPage from '@features/userManagement/pages/TeamListPage';
+import AuditLogPage from '@features/userManagement/pages/AuditLogPage';
+import CompanyListPage from '@features/userManagement/pages/CompanyListPage';
+import AccessReportPage from '@features/userManagement/pages/AccessReportPage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
 import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
 import BlockProjectPage from '@/features/blockProject/pages/BlockProjectPage';
@@ -88,14 +96,21 @@ import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
 import LogViewerPage from '@features/common/logViewer/pages/LogViewerPage';
 import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
+import ReappraisalListPage from '@/features/reappraisal/pages/ReappraisalListPage';
+import ReappraisalDetailPage from '@/features/reappraisal/pages/ReappraisalDetailPage';
+import GenerateReappraisalTestPage from '@/features/reappraisal/pages/GenerateReappraisalTestPage';
 import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
 import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
 import MonitoringPage from '@/features/common/monitoring/pages/MonitoringPage';
 import HistorySearchPage from '@/features/common/historySearch/pages/HistorySearchPage';
 import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage';
 import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
+import BlockReappraisalListPage from '@/features/blockReappraisal/pages/BlockReappraisalListPage';
+import BlockReappraisalDetailPage from '@/features/blockReappraisal/pages/BlockReappraisalDetailPage';
 import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
 import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
+import StepValidationRulesPage from '@features/workflowAdmin/pages/StepValidationRulesPage';
+import ReportTestPage from '@features/reportGeneration/pages/ReportTestPage';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -299,7 +314,31 @@ export const router = createBrowserRouter([
           { path: 'roles', element: <RoleListPage /> },
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
+          {
+            path: 'teams',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageTeams" />,
+            children: [{ index: true, element: <TeamListPage /> }],
+          },
+          {
+            path: 'audit-logs',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanViewAuthAudit" />,
+            children: [{ index: true, element: <AuditLogPage /> }],
+          },
+          {
+            path: 'companies',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageCompanies" />,
+            children: [{ index: true, element: <CompanyListPage /> }],
+          },
+          {
+            path: 'access-report',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanViewAuthAudit" />,
+            children: [{ index: true, element: <AccessReportPage /> }],
+          },
           { path: 'committees', element: <CommitteeAdminPage /> },
+          { path: 'reports/test', element: <ReportTestPage /> },
+          { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
+          { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
+          { path: 'evaluation-config', element: <EvaluationConfigPage /> },
           { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
           // Menu management — gated by MENU_MANAGE permission
           {
@@ -316,6 +355,14 @@ export const router = createBrowserRouter([
             path: 'logs',
             element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="LOGS_VIEW" />,
             children: [{ index: true, element: <LogViewerPage /> }],
+          },
+          // Step validation rules — gated by WORKFLOW_ADMIN permission
+          {
+            path: 'workflow-step-validation',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <StepValidationRulesPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {
@@ -438,6 +485,24 @@ export const router = createBrowserRouter([
       {
         path: 'standalone/supporting-data-maintenance/:supportingId/data/:id',
         element: <CreateSupportingDataPage />,
+      },
+      // ─── Block Project Reappraisal ──────────────────────────────────────────
+      {
+        path: 'standalone/block-reappraisal',
+        element: <BlockReappraisalListPage />,
+      },
+      {
+        path: 'standalone/block-reappraisal/:collateralMasterId',
+        element: <BlockReappraisalDetailPage />,
+      },
+      // ─── Periodical Reappraisal (AS400) ────────────────────────────────────
+      {
+        path: 'reappraisal',
+        children: [
+          { index: true, element: <ReappraisalListPage /> },
+          { path: ':id', element: <ReappraisalDetailPage /> },
+          { path: 'generate-test-file', element: <GenerateReappraisalTestPage /> },
+        ],
       },
       // Catch-all route for 404 pages
       {
@@ -1413,6 +1478,10 @@ export const router = createBrowserRouter([
       {
         path: 'provide-documents',
         element: <ProvideDocumentsTaskPage />,
+      },
+      {
+        path: 'fee-appointment-approval',
+        element: <FeeAppointmentApprovalTaskPage />,
       },
       // ─── Quotation task sub-routes ────────────────────────────────────────
       // ext-collect-submissions: ExtCompany submits their bid

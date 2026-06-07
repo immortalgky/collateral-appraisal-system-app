@@ -12,7 +12,7 @@ export const PropertyType = {
   VESSEL: 'Vessel',
 } as const;
 
-export type PropertyType = typeof PropertyType[keyof typeof PropertyType];
+export type PropertyType = (typeof PropertyType)[keyof typeof PropertyType];
 
 export interface PropertyPhoto {
   documentId: string;

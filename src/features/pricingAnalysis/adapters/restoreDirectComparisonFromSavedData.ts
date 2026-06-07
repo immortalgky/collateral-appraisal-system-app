@@ -13,7 +13,8 @@ import type { DirectComparisonCalculation } from '../types/directComparison';
 
 interface RestoreDirectComparisonFromSavedDataProps {
   methodId: string;
-  property: Record<string, unknown>;
+  /** Optional for manual-subject references (room/profit-rent) with no backing property. */
+  property?: Record<string, unknown>;
   comparativeSurveys: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
   linkedComparables?: LinkedComparableType[];
@@ -56,6 +57,8 @@ export function restoreDirectComparisonFromSavedData({
     id: cf.id,
     factorId: cf.factorId,
     factorCode: cf.factorCode ?? factorCodeMap.get(cf.factorId) ?? '',
+    // collateralValue: persisted manual subject value for reference analyses (M3 fix)
+    collateralValue: (cf as any).collateralValue ?? null,
   }));
 
   // Scoring factors: only isSelectedForScoring for calculation section
@@ -179,10 +182,10 @@ export function restoreDirectComparisonFromSavedData({
         finalValueRounded: 0,
       },
       directComparisonAppraisalPrice: {
-        landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-        usableArea: property.totalBuildingArea
+        landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        usableArea: property?.totalBuildingArea
           ? Number(property.totalBuildingArea)
-          : property.usableArea
+          : property?.usableArea
             ? Number(property.usableArea)
             : undefined,
         appraisalPrice: 0,

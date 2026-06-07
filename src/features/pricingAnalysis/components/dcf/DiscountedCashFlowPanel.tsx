@@ -5,6 +5,7 @@ import {
   type UseFormGetFieldState,
   type UseFormSetValue,
 } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
@@ -37,6 +38,7 @@ import { SensitivityStrip } from '../SensitivityStrip';
 import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
 import toast from 'react-hot-toast';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { findLeaseProperty, isLeasePropertyType } from '../../utils/leaseProperty';
 import DataErrorState from '@/shared/components/DataErrorState';
 
 interface DiscountedCashFlowPanelProps {
@@ -49,6 +51,8 @@ interface DiscountedCashFlowPanelProps {
   };
   properties: Record<string, unknown>[] | undefined;
   templateList: unknown;
+  /** Passed through for the market-reference launcher on the HBU land price field */
+  marketSurveys?: import('@/features/pricingAnalysis/schemas').MarketComparableDetailType[];
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -60,11 +64,14 @@ interface DiscountedCashFlowPanelProps {
 export function DiscountedCashFlowPanel({
   activeMethod,
   properties,
+  marketSurveys,
+  templateList: _templateList,
   onCalculationSave,
   onCalculationMethodDirty: _onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DiscountedCashFlowPanelProps) {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const methods = useForm<DCFFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(DCFForm),
@@ -91,9 +98,8 @@ export function DiscountedCashFlowPanel({
 
   const appraisalId = useAppraisalId() ?? '';
   const propertyId =
-    ((properties ?? []).find(p => ['LS', 'LSL', 'LSB'].includes(p.propertyType))
-      ?.propertyId as string) ??
-    properties?.[0].propertyId ??
+    (findLeaseProperty(properties)?.propertyId as string) ??
+    properties?.[0]?.propertyId ??
     '';
 
   const saveMutation = useSaveIncomeAnalysis();
@@ -330,20 +336,61 @@ export function DiscountedCashFlowPanel({
           appraisalValue: result.appraisalPriceRounded ?? result.finalValueRounded ?? 0,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Save failed';
+      const message = err instanceof Error ? err.message : t('toasts.saveFailed');
       setSaveError(message);
-      toast.error(`Failed to save: ${message}`);
+      toast.error(`${t('toasts.saveFailed')}: ${message}`);
     }
   });
+
+  /**
+   * Ensures the income analysis exists (saved) and returns its id.
+   * If already saved, returns immediately. Otherwise performs a silent save
+   * so the room-income reference button can use the id as anchorId.
+   * Used as `onBeforeOpen` on the room MarketReferenceButton.
+   */
+  const ensureIncomeAnalysisId = useCallback(async (): Promise<string | undefined> => {
+    if (incomeAnalysisQuery.data?.id) return incomeAnalysisQuery.data.id;
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId) {
+      toast.error(t('toasts.missingIds'));
+      return undefined;
+    }
+    try {
+      const values = methods.getValues();
+      const request = mapDCFFormToSaveRequest(values);
+      const result = await saveMutation.mutateAsync({
+        pricingAnalysisId: activeMethod.pricingAnalysisId,
+        methodId: activeMethod.methodId,
+        appraisalId,
+        propertyId,
+        request,
+      });
+      reset(mapIncomeAnalysisToDCFForm(result));
+      return result.id;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('toasts.saveFailed');
+      toast.error(`${t('toasts.saveFailed')}: ${message}`);
+      return undefined;
+    }
+  }, [
+    incomeAnalysisQuery.data?.id,
+    activeMethod?.pricingAnalysisId,
+    activeMethod?.methodId,
+    appraisalId,
+    propertyId,
+    methods,
+    saveMutation,
+    reset,
+    t,
+  ]);
 
   if (isPricingTemplatesError || isTemplateDtoError) {
     const handleRetry = () => {
       if (isPricingTemplatesError) refetchPricingTemplates();
       if (isTemplateDtoError) refetchTemplateDto();
     };
-    return <DataErrorState title="Failed to load DCF templates" onRetry={handleRetry} />;
+    return <DataErrorState title={t('errors.loadFailed')} onRetry={handleRetry} />;
   }
 
   return (
@@ -355,7 +402,7 @@ export function DiscountedCashFlowPanel({
         }}
       >
         {incomeAnalysisQuery.isLoading && (
-          <div className="py-6 text-sm text-gray-500">Loading…</div>
+          <div className="py-6 text-sm text-gray-500">{t('empty.noData')}</div>
         )}
 
         <PricingAnalysisTemplateSelector
@@ -398,6 +445,10 @@ export function DiscountedCashFlowPanel({
                   properties={properties ?? []}
                   isReadOnly={isReadOnly}
                   onStructuralChange={requestImmediatePreview}
+                  incomeAnalysisId={incomeAnalysisQuery.data?.id}
+                  hostMethodId={activeMethod?.methodId}
+                  marketSurveys={marketSurveys}
+                  ensureIncomeAnalysisId={ensureIncomeAnalysisId}
                 />
               </div>
               {previewMutation.isPending && (
@@ -414,7 +465,18 @@ export function DiscountedCashFlowPanel({
               showAssumptionSummary={showAssumptionSummary}
               onShowAssumptionSummary={() => setShowAssumptionSummary(!showAssumptionSummary)}
             />
-            <DiscountedCashFlowHighestBestUsed isReadOnly={isReadOnly} />
+            <DiscountedCashFlowHighestBestUsed
+              isReadOnly={isReadOnly}
+              incomeAnalysisId={incomeAnalysisQuery.data?.id}
+              hostMethodId={activeMethod?.methodId}
+              pricingAnalysisId={activeMethod?.pricingAnalysisId}
+              marketSurveys={marketSurveys}
+              subjectProperty={
+                (properties ?? []).find(p => isLeasePropertyType(p.propertyType)) ??
+                properties?.[0]
+              }
+              ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+            />
 
             {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}
 

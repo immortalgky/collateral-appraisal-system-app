@@ -16,7 +16,13 @@ interface LandTitleModalProps {
 
 const createLandTitleForm = buildFormSchema(landtitlesFields);
 
-const LandTitleModal = ({ fields, defaultValues, onCancel, onSave, readOnly = false }: LandTitleModalProps) => {
+const LandTitleModal = ({
+  fields,
+  defaultValues,
+  onCancel,
+  onSave,
+  readOnly = false,
+}: LandTitleModalProps) => {
   const form = useForm({
     resolver: zodResolver(createLandTitleForm),
     defaultValues: defaultValues ?? {},

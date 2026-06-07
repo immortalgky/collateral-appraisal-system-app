@@ -40,8 +40,7 @@ export const AssignmentStrategy = {
   TEAM_CONSTRAINED: 'team_constrained',
 } as const;
 
-export type AssignmentStrategy =
-  (typeof AssignmentStrategy)[keyof typeof AssignmentStrategy];
+export type AssignmentStrategy = (typeof AssignmentStrategy)[keyof typeof AssignmentStrategy];
 
 export const VersionStatus = {
   DRAFT: 'Draft',
@@ -301,10 +300,7 @@ export interface WorkflowDefinition {
 
 // === Versioning & Migration types ===
 
-export type BreakingChangeType =
-  | 'ActivityRemoved'
-  | 'PropertyChanged'
-  | 'TransitionRemoved';
+export type BreakingChangeType = 'ActivityRemoved' | 'PropertyChanged' | 'TransitionRemoved';
 
 export type ChangeImpact = 'Low' | 'Medium' | 'High' | 'Critical';
 
@@ -488,9 +484,7 @@ export function createDefaultTimerProperties(): TimerProperties {
   };
 }
 
-export function createDefaultPropertiesForType(
-  type: ActivityType | string,
-): ActivityProperties {
+export function createDefaultPropertiesForType(type: ActivityType | string): ActivityProperties {
   switch (type) {
     case ActivityType.START:
       return {};

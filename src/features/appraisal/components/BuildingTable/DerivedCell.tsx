@@ -11,7 +11,14 @@ interface DerivedCellProps {
   modifier?: (v: number | string | boolean) => number | string | boolean;
 }
 
-const DerivedCell = ({ arrayName, rowIndex, fieldName, row, render, modifier }: DerivedCellProps) => {
+const DerivedCell = ({
+  arrayName,
+  rowIndex,
+  fieldName,
+  row,
+  render,
+  modifier,
+}: DerivedCellProps) => {
   const cellName = `${arrayName}.${rowIndex}.${fieldName}`;
 
   const value = useWatch({ name: cellName });

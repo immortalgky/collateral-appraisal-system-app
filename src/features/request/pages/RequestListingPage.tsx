@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useRelativeTime } from '@/shared/hooks/useFormatters';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useDeleteRequest, useGetRequests } from '../api';
@@ -12,10 +13,18 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 
-type SortField = 'requestNumber' | 'status' | 'purpose' | 'channel' | 'priority' | 'customerName' | 'createdAt';
+type SortField =
+  | 'requestNumber'
+  | 'status'
+  | 'purpose'
+  | 'channel'
+  | 'priority'
+  | 'customerName'
+  | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
 function RequestListingPage() {
+  const { t } = useTranslation(['request', 'common']);
   const navigate = useNavigate();
   const formatRelativeTime = useRelativeTime();
 
@@ -67,7 +76,13 @@ function RequestListingPage() {
   };
 
   // Fetch requests - backend handles filtering and sorting
-  const { data, isLoading: isQueryLoading, isFetching, isError, error } = useGetRequests(requestParams);
+  const {
+    data,
+    isLoading: isQueryLoading,
+    isFetching,
+    isError,
+    error,
+  } = useGetRequests(requestParams);
 
   // Extract paginated result
   const paginatedResult = data?.result ?? data;
@@ -108,10 +123,10 @@ function RequestListingPage() {
       deleteRequest.mutate(deleteConfirm.id, {
         onSuccess: () => {
           setDeleteConfirm({ isOpen: false, id: null });
-          toast.success('Request deleted successfully');
+          toast.success(t('toasts.requestDeleted'));
         },
         onError: (error: any) => {
-          toast.error(error.apiError?.detail || 'Failed to delete request. Please try again.');
+          toast.error(error.apiError?.detail || t('toasts.requestDeleteListFailed'));
         },
       });
     }
@@ -162,7 +177,7 @@ function RequestListingPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Failed to load requests</p>
+        <p className="text-gray-600">{t('page.failedToLoad')}</p>
         <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
       </div>
     );
@@ -174,16 +189,16 @@ function RequestListingPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Requests</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">Manage and track appraisal requests</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" onClick={() => navigate('/requests/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
-          New Request
+          {t('page.newRequest')}
         </Button>
       </div>
 
@@ -215,7 +230,7 @@ function RequestListingPage() {
           />
           <input
             type="text"
-            placeholder="Search requests..."
+            placeholder={t('filters.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"
@@ -228,7 +243,7 @@ function RequestListingPage() {
           onChange={e => setStatusFilter(e.target.value)}
           className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-28"
         >
-          <option value="">All Status</option>
+          <option value="">{t('filters.allStatus')}</option>
           {statusOptions.map(status => (
             <option key={status} value={status}>
               {status}
@@ -242,7 +257,7 @@ function RequestListingPage() {
           onChange={e => setPurposeFilter(e.target.value)}
           className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-28"
         >
-          <option value="">All Purpose</option>
+          <option value="">{t('filters.allPurpose')}</option>
           {purposeParams.map(p => (
             <option key={p.code} value={p.code}>
               {p.description}
@@ -263,18 +278,24 @@ function RequestListingPage() {
       {hasFilters && (
         <div className="shrink-0 flex items-center gap-2 flex-wrap">
           {statusFilter && (
-            <Badge type="status" value={statusFilter} size="sm" removable onRemove={() => setStatusFilter('')}>
-              Status: {statusFilter}
+            <Badge
+              type="status"
+              value={statusFilter}
+              size="sm"
+              removable
+              onRemove={() => setStatusFilter('')}
+            >
+              {t('filters.statusBadge', { value: statusFilter })}
             </Badge>
           )}
           {purposeFilter && (
             <Badge size="sm" removable onRemove={() => setPurposeFilter('')}>
-              Purpose: {purposeFilter}
+              {t('filters.purposeBadge', { value: purposeFilter })}
             </Badge>
           )}
           {searchTerm && (
             <Badge size="sm" removable onRemove={() => setSearchTerm('')}>
-              Search: &ldquo;{searchTerm}&rdquo;
+              {t('filters.searchBadge', { value: searchTerm })}
             </Badge>
           )}
         </div>
@@ -291,7 +312,7 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'requestNumber' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Request #
+                    {t('columns.requestNumber')}
                     <SortIcon field="requestNumber" />
                   </div>
                 </th>
@@ -300,7 +321,7 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'customerName' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Customer
+                    {t('columns.customer')}
                     <SortIcon field="customerName" />
                   </div>
                 </th>
@@ -309,7 +330,7 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'status' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Status
+                    {t('columns.status')}
                     <SortIcon field="status" />
                   </div>
                 </th>
@@ -318,7 +339,7 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'priority' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Priority
+                    {t('columns.priority')}
                     <SortIcon field="priority" />
                   </div>
                 </th>
@@ -327,7 +348,7 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'purpose' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Purpose
+                    {t('columns.purpose')}
                     <SortIcon field="purpose" />
                   </div>
                 </th>
@@ -336,7 +357,7 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'channel' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Channel
+                    {t('columns.channel')}
                     <SortIcon field="channel" />
                   </div>
                 </th>
@@ -345,14 +366,18 @@ function RequestListingPage() {
                   className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'createdAt' ? 'bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center gap-1.5">
-                    Created At
+                    {t('columns.createdAt')}
                     <SortIcon field="createdAt" />
                   </div>
                 </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 w-20">Actions</th>
+                <th className="text-center font-medium text-gray-600 px-4 py-2.5 w-20">
+                  {t('columns.actions')}
+                </th>
               </tr>
             </thead>
-            <tbody className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}>
+            <tbody
+              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+            >
               {isFirstLoad ? (
                 <TableRowSkeleton
                   columns={[
@@ -372,9 +397,9 @@ function RequestListingPage() {
                   <td colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">No requests found</p>
+                      <p className="text-gray-500 font-medium">{t('empty.noRequests')}</p>
                       <p className="text-xs text-gray-400">
-                        {hasFilters ? 'Try different filters' : 'Create your first request'}
+                        {hasFilters ? t('empty.noRequestsFiltered') : t('empty.noRequestsCreate')}
                       </p>
                     </div>
                   </td>
@@ -424,21 +449,21 @@ function RequestListingPage() {
                       </Badge>
                     </td>
                     <td className="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">
-                      {request.createdAt
-                        ? (() => {
-                            const { relative, absolute } = formatRelativeTime(request.createdAt);
-                            return <span title={absolute}>{relative}</span>;
-                          })()
-                        : (
-                          <span className="text-gray-300 italic">-</span>
-                        )}
+                      {request.createdAt ? (
+                        (() => {
+                          const { relative, absolute } = formatRelativeTime(request.createdAt);
+                          return <span title={absolute}>{relative}</span>;
+                        })()
+                      ) : (
+                        <span className="text-gray-300 italic">-</span>
+                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center justify-center">
                         <button
                           onClick={e => request.id && handleDelete(e, request.id)}
                           className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                          title="Delete"
+                          title={t('actions.delete')}
                         >
                           <Icon style="regular" name="trash-can" className="size-4" />
                         </button>
@@ -476,10 +501,10 @@ function RequestListingPage() {
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
         onConfirm={handleConfirmDelete}
-        title="Delete Request"
-        message="Are you sure you want to delete this request? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('confirm.deleteRequestTitle')}
+        message={t('confirm.deleteRequestMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
     </div>

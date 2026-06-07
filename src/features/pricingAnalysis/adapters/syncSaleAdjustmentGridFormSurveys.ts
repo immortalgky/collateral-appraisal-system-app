@@ -1,10 +1,11 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-} from '@features/pricingAnalysis/schemas';
+import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import type { SaleAdjustmentGridType } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue.ts';
 
 interface SetSaleAdjustmentGridInitialValueOnSelectSurveyProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -47,7 +48,10 @@ export function syncSaleAdjustmentGridFormSurveys({
 
     saleAdjustmentGridCalculations: (() => {
       // Build lookup of existing calculations by marketId
-      const prevCalcMap = new Map<string, (typeof current.saleAdjustmentGridCalculations)[number]>();
+      const prevCalcMap = new Map<
+        string,
+        (typeof current.saleAdjustmentGridCalculations)[number]
+      >();
       for (const c of current.saleAdjustmentGridCalculations ?? []) {
         prevCalcMap.set(c.marketId, c);
       }
@@ -83,10 +87,14 @@ export function syncSaleAdjustmentGridFormSurveys({
     })(),
     saleAdjustmentGridAdjustmentFactors: (() => {
       // Build lookup: factorCode -> marketId -> existing adjustment data
-      const prevAdjMap = new Map<string, Map<string, { adjustPercent: number; adjustAmount: number }>>();
+      const prevAdjMap = new Map<
+        string,
+        Map<string, { adjustPercent: number; adjustAmount: number }>
+      >();
       for (const af of current.saleAdjustmentGridAdjustmentFactors ?? []) {
         const inner = new Map<string, { adjustPercent: number; adjustAmount: number }>();
-        for (const s of af.surveys ?? []) inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
+        for (const s of af.surveys ?? [])
+          inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
         prevAdjMap.set(af.factorCode, inner);
       }
       // Build lookup for remarks

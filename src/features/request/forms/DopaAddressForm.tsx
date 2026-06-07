@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
-import { dopaAddressFields } from '../configs/fields';
+import { makeDopaAddressFields } from '../configs/fields';
 import TitleInformationHeader from '../components/TitleInformationHeader';
 import { useFormContext } from 'react-hook-form';
 
@@ -9,6 +11,8 @@ interface DopaAdressFormProps {
 }
 
 const DopaAddressForm = ({ index, isReadOnly }: DopaAdressFormProps) => {
+  const { t } = useTranslation('request');
+  const fields = useMemo(() => makeDopaAddressFields(t), [t]);
   const { getValues, setValue } = useFormContext();
 
   const prefix = `titles.${index}.dopaAddress`;
@@ -32,12 +36,12 @@ const DopaAddressForm = ({ index, isReadOnly }: DopaAdressFormProps) => {
   return (
     <>
       <TitleInformationHeader
-        title="DOPA address"
+        title={t('titleAddress.dopaHeader')}
         onCopy={handleCopy}
         isReadOnly={isReadOnly}
         className="col-span-6"
       />
-      <FormFields fields={dopaAddressFields} namePrefix={'titles'} index={index} />
+      <FormFields fields={fields} namePrefix={'titles'} index={index} />
     </>
   );
 };

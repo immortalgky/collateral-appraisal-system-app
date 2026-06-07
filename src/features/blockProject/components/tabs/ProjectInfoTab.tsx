@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import type { AxiosError } from 'axios';
 
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
@@ -18,7 +19,11 @@ import { isCondo } from '../../types';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
 import ChangeProjectTypeDialog, { type ChildCounts } from '../ChangeProjectTypeDialog';
-import { condoProjectInfoFormDefaults, lbProjectInfoFormDefaults, projectInfoForm, } from '../../schemas/form';
+import {
+  condoProjectInfoFormDefaults,
+  lbProjectInfoFormDefaults,
+  projectInfoForm,
+} from '../../schemas/form';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -37,6 +42,7 @@ export default function ProjectInfoTab({
   hasExistingProject,
   childCounts,
 }: ProjectInfoTabProps) {
+  const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const basePath = useBasePath();
   const isReadOnly = usePageReadOnly();
@@ -47,11 +53,12 @@ export default function ProjectInfoTab({
   // Defensive: clears pending selection if projectType prop changes without unmount.
   // Under normal flow the router navigates to a new route on type change, which
   // remounts this component and resets state automatically.
-  useEffect(() => { setPendingType(null); }, [projectType]);
+  useEffect(() => {
+    setPendingType(null);
+  }, [projectType]);
 
   const schema = projectInfoForm(projectType);
-  const defaults =
-    isCondo(projectType) ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
+  const defaults = isCondo(projectType) ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
 
   const { data: project, isLoading } = useGetProject(appraisalId ?? '', projectType);
   const { mutate: saveProject, isPending } = useSaveProject();
@@ -145,12 +152,14 @@ export default function ProjectInfoTab({
       { appraisalId, data: { ...data, projectType }, isDraft },
       {
         onSuccess: () => {
-          toast.success(isDraft ? 'Draft saved successfully' : 'Project information saved');
+          toast.success(
+            isDraft ? t('toasts.project.saveDraftSuccess') : t('toasts.project.saveSuccess'),
+          );
           reset(data);
         },
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Failed to save project information');
+          toast.error(error?.apiError?.detail ?? t('toasts.project.saveFailed'));
         },
       },
     );

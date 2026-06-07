@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -50,18 +51,25 @@ interface CompanyPickerProps {
 }
 
 function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPickerProps) {
+  const { t } = useTranslation('quotation');
   const [query, setQuery] = useState('');
   const selectedIds = new Set(selected.map(c => c.id));
 
   // Appeal exclusion: hide the most-recent prior company so the user can't reselect it
   const excludedCompanyId = useAppealExclusionStore(s => s.excludedCompanyId);
 
-  const { data: rawCompanies, isLoading, isError, refetch } = useGetLoanTypeMatchedCompanies(undefined, true);
+  const {
+    data: rawCompanies,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetLoanTypeMatchedCompanies(undefined, true);
 
   const companies: SelectedCompany[] = useMemo(
-    () => (rawCompanies ?? [])
-      .filter(c => c.id !== excludedCompanyId)
-      .map(c => ({ id: c.id, companyName: c.name })),
+    () =>
+      (rawCompanies ?? [])
+        .filter(c => c.id !== excludedCompanyId)
+        .map(c => ({ id: c.id, companyName: c.name })),
     [rawCompanies, excludedCompanyId],
   );
 
@@ -74,8 +82,8 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
   if (isError) {
     return (
       <DataErrorState
-        title="Failed to load companies"
-        message="Company list could not be retrieved. The form cannot be submitted without it."
+        title={t('errors.failedToLoad')}
+        message={t('errors.failedToLoad')}
         onRetry={() => refetch()}
       />
     );
@@ -85,9 +93,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
     <div className="flex flex-col gap-2">
       {excludedCompanyId && (
         <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
-          <span>
-            1 prior company excluded (appeal flow — most recent appraiser of this collateral).
-          </span>
+          <span>{t('shared.priorCompanyExcluded')}</span>
         </div>
       )}
 
@@ -105,7 +111,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
                 type="button"
                 onClick={() => onToggle(c)}
                 className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
-                aria-label={`Remove ${c.companyName}`}
+                aria-label={t('aria.removeCompany', { company: c.companyName })}
               >
                 <Icon name="xmark" style="solid" className="size-2.5" />
               </button>
@@ -126,40 +132,49 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
             type="text"
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search company name..."
+            placeholder={t('shared.searchCompanyName')}
             className="w-full pl-8 pr-3 py-1.5 text-sm border-0 outline-none bg-transparent"
           />
         </div>
-        {!isLoading && filtered.length > 0 && (() => {
-          const allVisibleSelected = filtered.every(c => selectedIds.has(c.id));
-          const someVisibleSelected = filtered.some(c => selectedIds.has(c.id));
-          return (
-            <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={allVisibleSelected}
-                ref={el => {
-                  if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
-                }}
-                onChange={() => onSetAllVisible(filtered, !allVisibleSelected)}
-                className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
-                aria-label="Select all visible companies"
-              />
-              <span className="text-xs text-gray-600">
-                {allVisibleSelected ? 'Clear all' : 'Select all'}
-                {query.trim() && <span className="text-gray-400"> ({filtered.length} matching)</span>}
-              </span>
-            </div>
-          );
-        })()}
+        {!isLoading &&
+          filtered.length > 0 &&
+          (() => {
+            const allVisibleSelected = filtered.every(c => selectedIds.has(c.id));
+            const someVisibleSelected = filtered.some(c => selectedIds.has(c.id));
+            return (
+              <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  ref={el => {
+                    if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                  }}
+                  onChange={() => onSetAllVisible(filtered, !allVisibleSelected)}
+                  className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
+                  aria-label={t('aria.selectAllVisibleCompanies')}
+                />
+                <span className="text-xs text-gray-600">
+                  {allVisibleSelected ? t('picker.clearAll') : t('picker.selectAll')}
+                  {query.trim() && (
+                    <span className="text-gray-400">
+                      {' '}
+                      {t('picker.matchingCount', { count: filtered.length })}
+                    </span>
+                  )}
+                </span>
+              </div>
+            );
+          })()}
         <div className="max-h-96 overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
               <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-              <span className="text-xs">Loading companies...</span>
+              <span className="text-xs">{t('shared.searchCompanyName')}</span>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4 italic">No companies found</p>
+            <p className="text-xs text-gray-400 text-center py-4 italic">
+              {t('empty.noCompaniesInvited')}
+            </p>
           ) : (
             <div className="divide-y divide-gray-50">
               {filtered.map(c => {
@@ -203,6 +218,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
 
 function NewQuotationPage() {
   const navigate = useNavigate();
+  const { t } = useTranslation(['quotation', 'common']);
   const currentUser = useAuthStore(state => state.user);
 
   // Note: appeal exclusion on this non-task quotation flow is NOT wired in v1.1.
@@ -288,9 +304,7 @@ function NewQuotationPage() {
   };
 
   const handleUpdateMaxDays = (id: string, maxAppraisalDays: number | null) => {
-    setSelectedAppraisals(prev =>
-      prev.map(a => (a.id === id ? { ...a, maxAppraisalDays } : a)),
-    );
+    setSelectedAppraisals(prev => prev.map(a => (a.id === id ? { ...a, maxAppraisalDays } : a)));
   };
 
   const handleToggleCompany = (c: SelectedCompany) => {
@@ -344,11 +358,11 @@ function NewQuotationPage() {
         }
       }
 
-      toast.success('Quotation draft created');
+      toast.success(t('toasts.draftCreated'));
       navigate(`/quotations/${id}`);
     } catch (err: unknown) {
       const apiErr = err as { apiError?: { detail?: string } };
-      toast.error(apiErr?.apiError?.detail ?? 'Failed to create quotation');
+      toast.error(apiErr?.apiError?.detail ?? t('toasts.draftCreateFailed'));
     }
   };
 
@@ -360,13 +374,13 @@ function NewQuotationPage() {
           type="button"
           onClick={() => navigate('/quotations')}
           className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
-          aria-label="Back to quotations"
+          aria-label={t('buttons.back')}
         >
           <Icon name="arrow-left" style="solid" className="size-4" />
         </button>
         <div>
-          <h2 className="text-base font-semibold text-gray-900">New Quotation</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Create a standalone RFQ draft</p>
+          <h2 className="text-base font-semibold text-gray-900">{t('page.newTitle')}</h2>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.newSubtitle')}</p>
         </div>
       </div>
 
@@ -375,11 +389,9 @@ function NewQuotationPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
           <div>
             <div className="text-sm font-medium text-gray-800">
-              Appraisals to include <span className="text-danger">*</span>
+              {t('fields.appraisalsToInclude')} <span className="text-danger">*</span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Search and add one or more appraisals to this RFQ
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('fields.appraisalsToIncludeHint')}</p>
           </div>
           {/* Compact summary list (always visible) */}
           {selectedAppraisals.length > 0 && (
@@ -406,14 +418,9 @@ function NewQuotationPage() {
           )}
 
           {/* Open picker popup */}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPicker(true)}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => setShowPicker(true)}>
             <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-            Add or change appraisals
+            {t('buttons.addOrChangeAppraisals')}
           </Button>
 
           {errors.appraisalIds?.message && (
@@ -425,11 +432,9 @@ function NewQuotationPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
           <div>
             <div className="text-sm font-medium text-gray-800">
-              Invited companies <span className="text-danger">*</span>
+              {t('fields.invitedCompanies')} <span className="text-danger">*</span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Select external companies to invite for this quotation
-            </p>
+            <p className="text-xs text-gray-500 mt-0.5">{t('fields.invitedCompaniesHint')}</p>
           </div>
           <CompanyPicker
             selected={selectedCompanies}
@@ -446,9 +451,9 @@ function NewQuotationPage() {
             control={control}
             render={({ field }) => (
               <DateTimePickerInput
-                label="Cut Off Time"
+                label={t('fields.cutOffTime')}
                 required
-                helperText="Deadline for companies to submit their quotation responses"
+                helperText={t('fields.cutOffTimeHelper')}
                 placeholder="dd/mm/yyyy hh:mm"
                 disablePastDates
                 value={field.value || null}
@@ -468,11 +473,11 @@ function NewQuotationPage() {
             onClick={() => navigate('/quotations')}
             disabled={isPending}
           >
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button type="submit" disabled={isPending} isLoading={isPending}>
             {!isPending && <Icon name="file-circle-plus" style="solid" className="size-4 mr-1.5" />}
-            Create Draft
+            {t('buttons.createDraft')}
           </Button>
         </div>
       </form>
@@ -481,7 +486,7 @@ function NewQuotationPage() {
       <Modal
         isOpen={showPicker}
         onClose={() => setShowPicker(false)}
-        title="Add or change appraisals"
+        title={t('buttons.addOrChangeAppraisals')}
         size="3xl"
       >
         <div className="flex flex-col gap-4">
@@ -497,7 +502,7 @@ function NewQuotationPage() {
           <div className="flex justify-end pt-2 border-t border-gray-100">
             <Button onClick={() => setShowPicker(false)}>
               <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
-              Done
+              {t('buttons.done')}
             </Button>
           </div>
         </div>

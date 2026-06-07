@@ -1,7 +1,14 @@
+import { useTranslation } from 'react-i18next';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDashboardStore } from '../store';
-import { WIDGET_CONFIGS, getColSpanClass, type Widget, type ColumnSpan } from '../types';
+import {
+  WIDGET_CONFIGS,
+  getColSpanClass,
+  type Widget,
+  type WidgetType,
+  type ColumnSpan,
+} from '../types';
 import Icon from '@shared/components/Icon';
 
 type DraggableWidgetProps = {
@@ -10,18 +17,39 @@ type DraggableWidgetProps = {
   isSidebar?: boolean;
 };
 
+type WidgetConfigKey =
+  | 'totalAppraisals'
+  | 'taskSummary'
+  | 'progressSummary'
+  | 'teamWorkload'
+  | 'recentTask'
+  | 'externalTaskSummary'
+  | 'quotationTaskSummary'
+  | 'calendar'
+  | 'reminders'
+  | 'notes';
+
+const WIDGET_TYPE_TO_CONFIG_KEY: Record<WidgetType, WidgetConfigKey> = {
+  'total-appraisals': 'totalAppraisals',
+  'task-summary': 'taskSummary',
+  'progress-summary': 'progressSummary',
+  'team-workload': 'teamWorkload',
+  'recent-task': 'recentTask',
+  'external-task-summary': 'externalTaskSummary',
+  'quotation-task-summary': 'quotationTaskSummary',
+  calendar: 'calendar',
+  reminders: 'reminders',
+  notes: 'notes',
+};
+
 function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidgetProps) {
+  const { t } = useTranslation('dashboard');
   const { isEditMode, removeWidget, resizeWidget } = useDashboardStore();
   const config = WIDGET_CONFIGS[widget.type];
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: widget.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: widget.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -32,11 +60,26 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
 
   // Available size options based on min/max constraints (only for main widgets)
   const sizeOptions: ColumnSpan[] = [3, 4, 6, 8, 12].filter(
-    (size) => size >= config.minCols && size <= config.maxCols
+    size => size >= config.minCols && size <= config.maxCols,
   ) as ColumnSpan[];
 
   const handleSizeChange = (newSize: ColumnSpan) => {
     resizeWidget(widget.id, newSize);
+  };
+
+  const getSizeLabel = (size: ColumnSpan): string => {
+    switch (size) {
+      case 3:
+        return t('draggable.size.quarter');
+      case 4:
+        return t('draggable.size.third');
+      case 6:
+        return t('draggable.size.half');
+      case 8:
+        return t('draggable.size.twoThirds');
+      case 12:
+        return t('draggable.size.full');
+    }
   };
 
   // Sidebar widgets are full width in sidebar, main widgets use grid columns
@@ -44,6 +87,8 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
   const containerClass = isSidebar
     ? ''
     : `${getColSpanClass(widget.cols)} h-full ${isDragging ? 'ring-2 ring-blue-400 ring-offset-2' : ''}`;
+
+  const configKey = WIDGET_TYPE_TO_CONFIG_KEY[widget.type];
 
   return (
     <div
@@ -62,7 +107,9 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
               className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 cursor-grab active:cursor-grabbing bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5"
             >
               <Icon name="grip-dots-vertical" style="solid" className="size-3.5 text-gray-400" />
-              <span className="text-xs font-medium text-gray-500">{config.title}</span>
+              <span className="text-xs font-medium text-gray-500">
+                {t(`widgetConfigs.${configKey}.title`)}
+              </span>
             </div>
 
             {/* Remove button */}
@@ -77,7 +124,7 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
             {/* Size selector - only show for main widgets with multiple size options */}
             {!isSidebar && sizeOptions.length > 1 && (
               <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 bg-white border border-gray-200 rounded-lg px-2 py-1 shadow-sm flex items-center gap-1">
-                {sizeOptions.map((size) => (
+                {sizeOptions.map(size => (
                   <button
                     key={size}
                     type="button"
@@ -88,7 +135,7 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    {size === 3 ? '1/4' : size === 4 ? '1/3' : size === 6 ? '1/2' : size === 8 ? '2/3' : 'Full'}
+                    {getSizeLabel(size)}
                   </button>
                 ))}
               </div>

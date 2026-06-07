@@ -96,6 +96,7 @@ const routeLabels: Record<string, { label: string; icon: string }> = {
   documents: { label: 'Document Checklist', icon: 'file-circle-check' },
   groups: { label: 'Groups', icon: 'layer-group' },
   'provide-documents': { label: 'Provide Additional Documents', icon: 'file-circle-plus' },
+  'fee-appointment-approval': { label: 'Fee & Appointment Approval', icon: 'clipboard-check' },
 };
 
 // Structural sub-routes under property / property-pma / block-condo / block-village.
@@ -597,6 +598,11 @@ export const TaskIndexRedirect = () => {
   // Followup task lands on the provide-documents page
   if (taskData?.activityId === 'provide-additional-documents') {
     return <Navigate to={`/tasks/${taskId}/provide-documents`} replace />;
+  }
+
+  // Fee & appointment approval task
+  if (taskData?.activityId === 'fee-appointment-approval') {
+    return <Navigate to={`/tasks/${taskId}/fee-appointment-approval`} replace />;
   }
 
   if (requestId) {

@@ -1,12 +1,5 @@
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import i18n from '@/i18n';
 
 export type WaterfallStepType = 'start' | 'add' | 'subtract' | 'total';
 
@@ -57,7 +50,7 @@ interface WaterfallDatum {
 
 function buildWaterfallData(steps: WaterfallStep[]): WaterfallDatum[] {
   let running = 0;
-  return steps.map((step) => {
+  return steps.map(step => {
     const color = step.color ?? DEFAULT_COLORS[step.type];
     let base: number;
     let segment: number;
@@ -97,6 +90,7 @@ function buildWaterfallData(steps: WaterfallStep[]): WaterfallDatum[] {
 function WaterfallTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const row: WaterfallDatum = payload[0]?.payload ?? {};
+  const t = i18n.getFixedT(null, 'pricingAnalysis');
   return (
     <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
       <div className="text-gray-500 mb-1">{label}</div>
@@ -105,17 +99,21 @@ function WaterfallTooltip({ active, payload, label }: any) {
         {fmtTooltip(row.originalValue)}
       </div>
       <div className="border-t border-gray-100 mt-1 pt-1 text-gray-600">
-        Running Total: {fmtTooltip(row.runningTotal)}
+        {t('viz.waterfall.runningTotal')} {fmtTooltip(row.runningTotal)}
       </div>
     </div>
   );
 }
 
-export function WaterfallChart({ steps, title = 'Value Breakdown', onStepClick }: WaterfallChartProps) {
+export function WaterfallChart({
+  steps,
+  title = 'Value Breakdown',
+  onStepClick,
+}: WaterfallChartProps) {
   const data = buildWaterfallData(steps);
 
   const handleBarClick = (datum: WaterfallDatum) => {
-    const step = steps.find((s) => s.label === datum.label);
+    const step = steps.find(s => s.label === datum.label);
     if (!step) return;
     if (onStepClick) {
       onStepClick(step);
@@ -132,42 +130,34 @@ export function WaterfallChart({ steps, title = 'Value Breakdown', onStepClick }
       <div className="text-[11px] font-medium text-gray-500 mb-1">{title}</div>
       <div className="flex-1 min-h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-          <XAxis
-            dataKey="label"
-            tick={{ fontSize: 9, fill: '#9ca3af' }}
-            interval={0}
-          />
-          <YAxis
-            tick={{ fontSize: 9, fill: '#9ca3af' }}
-            tickFormatter={fmtCompact}
-            width={45}
-          />
-          <Tooltip content={<WaterfallTooltip />} />
-          {/* Invisible base bar that offsets the visible segment */}
-          <Bar dataKey="base" stackId="waterfall" fill="transparent" legendType="none" />
-          {/* Visible colored segment */}
-          <Bar
-            dataKey="segment"
-            stackId="waterfall"
-            legendType="none"
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onClick={(data: any) => data?.payload && handleBarClick(data.payload)}
-            shape={({ x, y, width, height, payload }: any) => (
-              <rect
-                x={x}
-                y={y}
-                width={width}
-                height={height}
-                fill={payload.color}
-                rx={2}
-                style={{ cursor: payload.targetId ? 'pointer' : 'default' }}
-              />
-            )}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+          <BarChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 9, fill: '#9ca3af' }} interval={0} />
+            <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={fmtCompact} width={45} />
+            <Tooltip content={<WaterfallTooltip />} />
+            {/* Invisible base bar that offsets the visible segment */}
+            <Bar dataKey="base" stackId="waterfall" fill="transparent" legendType="none" />
+            {/* Visible colored segment */}
+            <Bar
+              dataKey="segment"
+              stackId="waterfall"
+              legendType="none"
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onClick={(data: any) => data?.payload && handleBarClick(data.payload)}
+              shape={({ x, y, width, height, payload }: any) => (
+                <rect
+                  x={x}
+                  y={y}
+                  width={width}
+                  height={height}
+                  fill={payload.color}
+                  rx={2}
+                  style={{ cursor: payload.targetId ? 'pointer' : 'default' }}
+                />
+              )}
+            />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

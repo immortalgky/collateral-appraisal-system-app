@@ -47,6 +47,11 @@ export interface HistorySearchMapProps {
    */
   appraisingCollateralPins?: AppraisalPinDto[];
   /**
+   * Optional `appraisalNumber` of the appraising-collateral pin to emphasise as the
+   * "main" pin (distinct purple marker). Forwarded to MapView.
+   */
+  primaryAppraisalNumber?: string | null;
+  /**
    * Appraising-MC pins from the current appraisal (Feature 2 — 360 page).
    * Rendered via the 'mc-appraising' marker layer, supplementing history search results.
    */
@@ -113,7 +118,14 @@ const PAGE_SIZE = 50;
  * user preview details before deciding to navigate away.
  */
 export function HistorySearchMap(props: HistorySearchMapProps) {
-  const { mode, onPinSelect, pinScope = 'all', appraisingCollateralPins, appraisingMcPins } = props;
+  const {
+    mode,
+    onPinSelect,
+    pinScope = 'all',
+    appraisingCollateralPins,
+    primaryAppraisalNumber,
+    appraisingMcPins,
+  } = props;
   const { t } = useTranslation('historySearch');
   const { isExternal } = useUserVisibility();
 
@@ -463,6 +475,7 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
             onPinHover={setHoveredPinId}
             onCoincidentPins={setChooserPins}
             appraisingCollateralPins={appraisingCollateralPins}
+            primaryAppraisalNumber={primaryAppraisalNumber}
             appraisingMcPins={appraisingMcPins}
             cluster={mode === 'standalone'}
           />
@@ -514,15 +527,19 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                   </button>
                 </div>
                 <ul className="flex-1 overflow-y-auto divide-y divide-gray-100">
-                  {chooserPins.map(pin => {
+                  {chooserPins.map((pin, idx) => {
                     const isAppraisal = isAppraisalPin(pin);
                     const primary = isAppraisal
                       ? (pin.appraisalNumber ?? t('common.na'))
                       : (pin.surveyName || pin.appraisalNumber || t('common.na'));
                     const secondary = isAppraisal ? pin.customerName : pin.propertyType;
-                    const key = isAppraisal ? pin.appraisalId : pin.marketComparableId;
+                    // appraisalId can be empty/shared for appraising pins (reappraisal
+                    // candidates, or a 360 page's own properties) — index keeps keys unique.
+                    const baseKey = isAppraisal
+                      ? (pin.appraisalId || pin.appraisalNumber || `${pin.lat},${pin.lon}`)
+                      : pin.marketComparableId;
                     return (
-                      <li key={key}>
+                      <li key={`${baseKey}-${idx}`}>
                         <button
                           type="button"
                           onClick={() => {

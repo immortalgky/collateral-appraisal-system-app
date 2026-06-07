@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 
 // ─── Status ───────────────────────────────────────────────────────────────────
 
@@ -231,13 +232,25 @@ export const QuotationRequestDetailSchema = z.object({
 
 export type QuotationRequestDetailDto = z.infer<typeof QuotationRequestDetailSchema>;
 
-// ─── Form schemas ─────────────────────────────────────────────────────────────
+// ─── Form schemas (t-factory versions) ────────────────────────────────────────
+
+export const makeOpenNegotiationFormSchema = (t: TFunction<'quotation'>) =>
+  z.object({
+    message: z.string().min(1, t('validation.messageRequired')),
+  });
 
 export const openNegotiationFormSchema = z.object({
   message: z.string().min(1, 'Message is required'),
 });
 
 export type OpenNegotiationFormValues = z.infer<typeof openNegotiationFormSchema>;
+
+export const makeRespondNegotiationFormSchema = (t: TFunction<'quotation'>) =>
+  z.object({
+    verb: z.enum(['Accept', 'Counter', 'Reject']),
+    counterPrice: z.number().positive(t('validation.mustBePositive')).nullable().optional(),
+    message: z.string().nullable().optional(),
+  });
 
 export const respondNegotiationFormSchema = z.object({
   verb: z.enum(['Accept', 'Counter', 'Reject']),
@@ -247,17 +260,34 @@ export const respondNegotiationFormSchema = z.object({
 
 export type RespondNegotiationFormValues = z.infer<typeof respondNegotiationFormSchema>;
 
+export const makeFinalizeFormSchema = (_t: TFunction<'quotation'>) =>
+  z.object({
+    reason: z.string().nullable().optional(),
+  });
+
 export const finalizeFormSchema = z.object({
   reason: z.string().nullable().optional(),
 });
 
 export type FinalizeFormValues = z.infer<typeof finalizeFormSchema>;
 
+export const makeRejectTentativeFormSchema = (t: TFunction<'quotation'>) =>
+  z.object({
+    reason: z.string().min(1, t('validation.reasonRequired')),
+  });
+
 export const rejectTentativeFormSchema = z.object({
   reason: z.string().min(1, 'Reason is required'),
 });
 
 export type RejectTentativeFormValues = z.infer<typeof rejectTentativeFormSchema>;
+
+export const makePickWinnerFormSchema = (t: TFunction<'quotation'>) =>
+  z.object({
+    reason: z.string().min(1, t('validation.selectionRequired')),
+    requestNegotiation: z.boolean().optional().default(false),
+    negotiationNote: z.string().max(500, t('validation.noteMax')).nullable().optional(),
+  });
 
 export const pickWinnerFormSchema = z.object({
   reason: z.string().min(1, 'Please provide a reason for your selection'),
@@ -272,6 +302,33 @@ export const pickWinnerFormSchema = z.object({
 export type PickWinnerFormValues = z.infer<typeof pickWinnerFormSchema>;
 
 /** Per-appraisal line item within the submit form. */
+export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
+  z
+    .object({
+      appraisalId: z.string().uuid(),
+      estimatedDays: z
+        .number({ required_error: t('validation.daysRequired') })
+        .int(t('validation.mustBeWhole'))
+        .positive(t('validation.mustBePositive')),
+      feeAmount: z.number().nonnegative().optional(),
+      discount: z.number().nonnegative().optional(),
+      negotiatedDiscount: z.number().nonnegative().nullable().optional(),
+      vatPercent: z.number().nonnegative().optional(),
+      itemNotes: z.string().nullable().optional(),
+    })
+    .superRefine((item, ctx) => {
+      if (item.feeAmount === undefined) return;
+      const discount = item.discount ?? 0;
+      const negotiated = item.negotiatedDiscount ?? 0;
+      if (discount + negotiated > item.feeAmount) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['negotiatedDiscount'],
+          message: t('validation.discountExceedsFee'),
+        });
+      }
+    });
+
 export const submitQuotationItemSchema = z
   .object({
     appraisalId: z.string().uuid(),
@@ -302,6 +359,20 @@ export const submitQuotationItemSchema = z
   });
 
 export type SubmitQuotationItemValues = z.infer<typeof submitQuotationItemSchema>;
+
+export const makeSubmitQuotationFormSchema = (t: TFunction<'quotation'>) =>
+  z.object({
+    quotationNumber: z.string(),
+    items: z.array(makeSubmitQuotationItemSchema(t)).min(1, t('validation.atLeastOneItem')),
+    validUntil: z.string().nullable().optional(),
+    proposedStartDate: z.string().nullable().optional(),
+    proposedCompletionDate: z.string().nullable().optional(),
+    remarks: z.string().nullable().optional(),
+    termsAndConditions: z.string().nullable().optional(),
+    contactName: z.string().nullable().optional(),
+    contactEmail: z.string().email(t('validation.invalidEmail')).nullable().optional(),
+    contactPhone: z.string().nullable().optional(),
+  });
 
 export const submitQuotationFormSchema = z.object({
   // Kept in the schema so the save/submit payloads still wire through an empty string,
@@ -396,6 +467,12 @@ export const QuotationActivityLogRowSchema = z.object({
 export type QuotationActivityLogRow = z.infer<typeof QuotationActivityLogRowSchema>;
 
 // ─── Edit Draft Quotation (Admin) ─────────────────────────────────────────────
+
+export const makeEditDraftQuotationSchema = (t: TFunction<'quotation'>) =>
+  z.object({
+    cutOffTime: z.string().min(1, t('validation.cutOffRequired')),
+    companyIds: z.array(z.string().uuid()).min(0),
+  });
 
 export const EditDraftQuotationSchema = z.object({
   cutOffTime: z.string().min(1, 'Cut off time is required'),

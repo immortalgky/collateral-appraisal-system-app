@@ -1,4 +1,5 @@
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -20,6 +21,7 @@ const RemoveItemDialog = ({
   appraisalId,
   appraisalNo,
 }: RemoveItemDialogProps) => {
+  const { t } = useTranslation('meeting');
   const removeItem = useRemoveMeetingItem();
   const label = appraisalNo ?? appraisalId.slice(0, 8);
 
@@ -32,19 +34,19 @@ const RemoveItemDialog = ({
       { id: meetingId, appraisalId },
       {
         onSuccess: () => {
-          toast.success(`Appraisal ${label} returned to the queue`);
+          toast.success(t('toasts.itemRemoved', { label }));
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to remove appraisal');
+          toast.error(detail || t('toasts.itemRemoveFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Remove Appraisal" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.removeAppraisal')} size="sm">
       <div className="space-y-4">
         <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
           <Icon
@@ -52,10 +54,7 @@ const RemoveItemDialog = ({
             style="solid"
             className="w-5 h-5 text-amber-500 shrink-0 mt-0.5"
           />
-          <p className="text-sm text-amber-800">
-            Remove <strong>{label}</strong> from this meeting? It will be returned to the meeting
-            queue and can be added to another meeting later.
-          </p>
+          <p className="text-sm text-amber-800">{t('removeDialog.confirm', { label })}</p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
@@ -65,7 +64,7 @@ const RemoveItemDialog = ({
             onClick={handleClose}
             disabled={removeItem.isPending}
           >
-            Cancel
+            {t('buttons.cancel')}
           </Button>
           <Button
             variant="danger"
@@ -73,7 +72,7 @@ const RemoveItemDialog = ({
             onClick={handleConfirm}
             disabled={removeItem.isPending}
           >
-            {removeItem.isPending ? 'Removing...' : 'Remove'}
+            {removeItem.isPending ? t('removeDialog.removing') : t('buttons.remove')}
           </Button>
         </div>
       </div>

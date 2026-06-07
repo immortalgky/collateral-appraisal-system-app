@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 64" width="48" height="64">
+  <defs>
+    <filter id="ds" x="-30%" y="-15%" width="160%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#4c1d95" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+  <!-- Pin teardrop — main / subject appraisal (purple, distinct from orange candidates) -->
+  <path d="M 24 4 C 12 4 4 13 4 24 c 0 14 20 36 20 36 s 20 -22 20 -36 c 0 -11 -8 -20 -20 -20 z"
+        fill="#7c3aed" stroke="#5b21b6" stroke-width="1" stroke-opacity="0.5" filter="url(#ds)"/>
+  <circle cx="24" cy="22" r="8" fill="#ffffff"/>
+  <!-- Center dot marks it as the focal/main pin -->
+  <circle cx="24" cy="22" r="3.4" fill="#7c3aed"/>
+</svg>

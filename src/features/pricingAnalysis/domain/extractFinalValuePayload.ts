@@ -15,7 +15,8 @@ export function extractFinalValuePayload(
 
   if (!finalValueSection) return null;
 
-  const appraisalPrice = finalValueSection.appraisalPrice ?? finalValueSection.appraisalValue ?? null;
+  const appraisalPrice =
+    finalValueSection.appraisalPrice ?? finalValueSection.appraisalValue ?? null;
   const appraisalPriceRounded = finalValueSection.appraisalPriceRounded ?? null;
 
   if (appraisalPriceRounded == null && appraisalPrice == null) return null;

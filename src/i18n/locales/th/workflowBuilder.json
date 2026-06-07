@@ -1,0 +1,428 @@
+{
+  "page": {
+    "listTitle": "คำนิยามเวิร์กโฟลว์",
+    "createNew": "สร้างเวิร์กโฟลว์ใหม่",
+    "empty": "ยังไม่มีคำนิยามเวิร์กโฟลว์ สร้างอันแรกของคุณเลย!"
+  },
+  "list": {
+    "columns": {
+      "name": "ชื่อ",
+      "category": "หมวดหมู่",
+      "version": "เวอร์ชัน",
+      "status": "สถานะ",
+      "created": "สร้างเมื่อ",
+      "actions": "การดำเนินการ"
+    },
+    "status": {
+      "active": "ใช้งานอยู่",
+      "inactive": "ไม่ได้ใช้งาน"
+    },
+    "actions": {
+      "edit": "แก้ไข"
+    }
+  },
+  "errors": {
+    "failedToLoadDefinitions": "โหลดคำนิยามเวิร์กโฟลว์ไม่สำเร็จ",
+    "failedToParseSchema": "แยกวิเคราะห์สคีมาเวิร์กโฟลว์ไม่สำเร็จ",
+    "failedToCreate": "สร้างเวิร์กโฟลว์ไม่สำเร็จ",
+    "failedToSaveDraft": "บันทึกฉบับร่างไม่สำเร็จ",
+    "failedToSaveBeforePublishing": "บันทึกก่อนเผยแพร่ไม่สำเร็จ",
+    "failedToPublish": "เผยแพร่เวิร์กโฟลว์ไม่สำเร็จ",
+    "breakingChangesUpdated": "การเปลี่ยนแปลงที่กระทบมีการอัปเดต — กรุณาตรวจสอบอีกครั้ง",
+    "noVersionToSave": "ไม่พบเวอร์ชันที่จะบันทึก",
+    "noVersionToPublish": "ไม่พบเวอร์ชันที่จะเผยแพร่",
+    "validationFailed": "การตรวจสอบล้มเหลว",
+    "saveFailed": "การบันทึกล้มเหลว",
+    "migrationFailed": "การโยกย้ายล้มเหลว",
+    "failedToLoadPreview": "โหลดตัวอย่างไม่สำเร็จ คุณยังสามารถเผยแพร่ได้โดยไม่มีการวิเคราะห์ผลกระทบ",
+    "publishFailed": "การเผยแพร่ล้มเหลว",
+    "failedToCreateDraft": "สร้างเวอร์ชันฉบับร่างใหม่ไม่สำเร็จ"
+  },
+  "toasts": {
+    "workflowCreated": "สร้างเวิร์กโฟลว์แล้ว",
+    "draftSaved": "บันทึกฉบับร่างแล้ว",
+    "workflowPublished": "เผยแพร่เวิร์กโฟลว์แล้ว (v{{version}})",
+    "noInstancesSelected": "ไม่มีอินสแตนซ์ที่เลือกสำหรับการโยกย้าย",
+    "draftVersionCreated": "สร้างเวอร์ชันฉบับร่างใหม่แล้ว — ตอนนี้คุณสามารถแก้ไขได้"
+  },
+  "toolbar": {
+    "backToList": "กลับสู่รายการ",
+    "workflowNamePlaceholder": "ชื่อเวิร์กโฟลว์",
+    "unsaved": "ยังไม่บันทึก",
+    "autoLayout": "จัดเรียงอัตโนมัติ",
+    "settings": "การตั้งค่า",
+    "saveDraft": "บันทึกฉบับร่าง",
+    "publish": "เผยแพร่",
+    "editNewVersion": "แก้ไข (เวอร์ชันใหม่)",
+    "autoLayoutTitle": "จัดเรียงโหนดอัตโนมัติ",
+    "settingsTitle": "การตั้งค่าเวิร์กโฟลว์"
+  },
+  "settings": {
+    "title": "การตั้งค่าเวิร์กโฟลว์",
+    "name": "ชื่อ",
+    "description": "คำอธิบาย",
+    "category": "หมวดหมู่",
+    "author": "ผู้เขียน",
+    "version": "เวอร์ชัน",
+    "tags": "แท็ก (คั่นด้วยจุลภาค)",
+    "close": "ปิด"
+  },
+  "unsavedChanges": {
+    "confirm": "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก คุณต้องการออกหรือไม่?"
+  },
+  "palette": {
+    "title": "กิจกรรม",
+    "subtitle": "ลากไปยังแคนวาส"
+  },
+  "panel": {
+    "activityProperties": "คุณสมบัติกิจกรรม",
+    "transitionProperties": "คุณสมบัติการเปลี่ยนผ่าน",
+    "deleteActivity": "ลบกิจกรรม",
+    "deleteTransition": "ลบการเปลี่ยนผ่าน"
+  },
+  "forms": {
+    "fields": {
+      "name": "ชื่อ",
+      "description": "คำอธิบาย",
+      "activityName": "ชื่อกิจกรรม",
+      "assigneeRole": "บทบาทผู้รับมอบหมาย",
+      "assigneeGroup": "กลุ่มผู้รับมอบหมาย",
+      "initialAssignmentStrategy": "กลยุทธ์การมอบหมายเริ่มต้น",
+      "revisitAssignmentStrategy": "กลยุทธ์การมอบหมายเมื่อกลับมาทบทวน",
+      "timeoutDuration": "ระยะเวลาหมดอายุ (ISO 8601)",
+      "requiredRoles": "บทบาทที่จำเป็น (คั่นด้วยจุลภาค)",
+      "assigneeVariable": "ตัวแปรผู้รับมอบหมาย",
+      "teamIdVariable": "ตัวแปรรหัสทีม",
+      "teamConstrained": "จำกัดเฉพาะทีม",
+      "completionMessage": "ข้อความเมื่อเสร็จสิ้น",
+      "selectionMethod": "วิธีการเลือก",
+      "loanTypeVariable": "ตัวแปรประเภทสินเชื่อ",
+      "conditionExpression": "นิพจน์เงื่อนไข",
+      "expression": "นิพจน์",
+      "forkType": "ประเภทการแยก",
+      "maxConcurrency": "การทำงานพร้อมกันสูงสุด (0 = ไม่จำกัด)",
+      "forkNode": "โหนดแยก",
+      "joinType": "ประเภทการรวม",
+      "timeoutMinutes": "หมดอายุ (นาที, 0 = ไม่มี)",
+      "mergeStrategy": "กลยุทธ์การรวม",
+      "timeoutAction": "การดำเนินการเมื่อหมดอายุ",
+      "transitionType": "ประเภทการเปลี่ยนผ่าน",
+      "condition": "เงื่อนไข",
+      "memberSourceType": "ประเภทแหล่งที่มาสมาชิก",
+      "valueExpression": "นิพจน์ค่า",
+      "quorumType": "ประเภทองค์ประชุม",
+      "quorumValue": "ค่าองค์ประชุม",
+      "majorityType": "ประเภทเสียงข้างมาก",
+      "majorityValue": "ค่าเสียงข้างมาก",
+      "timeoutDurationApproval": "ระยะเวลาหมดอายุ (ISO 8601)",
+      "meetingName": "ชื่อการประชุม",
+      "notes": "หมายเหตุ",
+      "signalName": "ชื่อสัญญาณ",
+      "correlationKey": "คีย์สหสัมพันธ์",
+      "completionVariable": "ตัวแปรการเสร็จสิ้น (ไม่บังคับ)",
+      "propertyType": "ประเภทอสังหาริมทรัพย์",
+      "propertyAddress": "ที่อยู่อสังหาริมทรัพย์",
+      "estimatedValue": "มูลค่าประเมิน",
+      "purpose": "วัตถุประสงค์",
+      "requestorId": "รหัสผู้ขอ (ไม่บังคับ)",
+      "reviewDeadline": "กำหนดเส้นตายการตรวจสอบ (ISO 8601)",
+      "autoApprovalThreshold": "เกณฑ์อนุมัติอัตโนมัติ",
+      "timerName": "ชื่อตัวจับเวลา",
+      "duration": "ระยะเวลา (ISO 8601)",
+      "scheduledTime": "เวลาที่กำหนด (ไม่บังคับ)",
+      "allowEarlyCancellation": "อนุญาตให้ยกเลิกก่อนกำหนด"
+    },
+    "placeholders": {
+      "workflowStart": "จุดเริ่มต้นเวิร์กโฟลว์",
+      "describeStartPoint": "อธิบายจุดเริ่มต้นนี้...",
+      "workflowEnd": "จุดสิ้นสุดเวิร์กโฟลว์",
+      "workflowCompletedSuccessfully": "เวิร์กโฟลว์เสร็จสิ้นเรียบร้อย",
+      "assigneeRoleHint": "เช่น Admin",
+      "assigneeGroupHint": "เช่น Admin",
+      "timeoutDurationHint": "PT72H",
+      "assigneeVariableHint": "เช่น internalFollowupStaffId",
+      "teamIdVariableHint": "เช่น assignedCompanyId",
+      "loanTypeVariableHint": "loanType",
+      "conditionExpressionHint": "เช่น amount > 50000",
+      "expressionHint": "เช่น facilityLimit",
+      "caseValueHint": "เช่น > 30000000",
+      "branchNameHint": "ชื่อสาขา",
+      "signalNameHint": "เช่น AppraisalCreated",
+      "correlationKeyHint": "เช่น requestId",
+      "completionVariableHint": "เช่น appraisalCompleted",
+      "reviewDeadlineHint": "เช่น 2025-12-31T00:00:00Z",
+      "timerNameHint": "เช่น review-window",
+      "durationHint": "PT24H",
+      "scheduledTimeHint": "วันที่และเวลา ISO 8601",
+      "activityNameHint": "เช่น PendingApproval",
+      "committeeCodeHint": "รหัสคณะกรรมการ",
+      "maxValueHint": "ค่าสูงสุด (เว้นว่าง = ไม่มี)",
+      "decisionNameHint": "ชื่อการตัดสินใจ",
+      "conditionHint": "นิพจน์เงื่อนไข",
+      "voteOptionHint": "ตัวเลือกการโหวต (เช่น route_back)",
+      "voteMovementHint": "F/B/C",
+      "conditionBuilderVariableHint": "ตัวแปร",
+      "conditionBuilderValueHint": "ค่า",
+      "decisionBuilderConditionHint": "decision == 'proceed'",
+      "meetingNameHint": "เช่น การประชุมอนุมัติคณะกรรมการ",
+      "meetingNotesHint": "หมายเหตุการประชุม (ไม่บังคับ)",
+      "routingConditionNameHint": "ชื่อเงื่อนไข",
+      "routingExpressionHint": "นิพจน์",
+      "selectForkNode": "เลือกโหนดแยก...",
+      "selectTargetActivity": "เลือกกิจกรรมเป้าหมาย…",
+      "actionValueHint": "เช่น approve",
+      "actionLabelHint": "เช่น อนุมัติ",
+      "actionConditionHint": "เช่น status == 'pending'",
+      "inputMappingKeyHint": "คีย์",
+      "inputMappingValueHint": "ค่า / ตัวแปร",
+      "selectType": "เลือกประเภท",
+      "selectPurpose": "เลือกวัตถุประสงค์"
+    },
+    "hints": {
+      "conditionRouting": "กำหนดเส้นทางไปยังเอาต์พุต \"true\" หรือ \"false\" ตามนิพจน์นี้",
+      "switchCases": "แต่ละกรณีกลายเป็นแฮนเดิลเอาต์พุตที่มีป้ายกำกับ แฮนเดิล <1>default</1> จะถูกเพิ่มเสมอสำหรับค่าที่ไม่ตรงกัน",
+      "completionVariableHint": "หากตั้งค่าไว้ จะข้ามการระงับเมื่อตัวแปรนี้เป็น truthy",
+      "reviewDeadlineHint": "ไม่บังคับ — สตริงวันที่ ISO",
+      "autoApprovalHint": "คำขอที่ต่ำกว่าค่านี้จะได้รับการอนุมัติอัตโนมัติ 0 = ปิดใช้งาน",
+      "scheduledTimeHint": "ปล่อยว่างเพื่อใช้ระยะเวลาจากเวลาที่ทริกเกอร์",
+      "internalFollowupRouting": "กำหนดเส้นทางไปยัง <1>staff_selected</1> เมื่อพบพนักงานติดตามภายใน หรือ <1>no_match</1> มิฉะนั้น",
+      "dynamicPropertiesCount": "ประเภทกิจกรรมนี้มี {{count}} คุณสมบัติที่กำหนดค่าได้ แก้ไขผ่านสคีมา JSON ดิบในตอนนี้"
+    },
+    "sections": {
+      "assignment": "การมอบหมาย",
+      "decisionConditions": "เงื่อนไขการตัดสินใจ",
+      "actions": "การดำเนินการ",
+      "additionalOptions": "ตัวเลือกเพิ่มเติม",
+      "teamAssignment": "การมอบหมายทีม",
+      "inputMappings": "การแมปข้อมูลนำเข้า",
+      "routingConditions": "เงื่อนไขการกำหนดเส้นทาง",
+      "branches": "สาขา",
+      "cases": "กรณี",
+      "memberSource": "แหล่งที่มาสมาชิก",
+      "quorumMajority": "องค์ประชุมและเสียงข้างมาก",
+      "voteMovements": "การเคลื่อนไหวของการโหวต",
+      "properties": "คุณสมบัติ"
+    },
+    "checkboxes": {
+      "canRaiseFollowup": "สามารถยกประเด็นติดตามได้",
+      "canRaiseQuotation": "สามารถยกประเด็นใบเสนอราคาได้"
+    },
+    "badges": {
+      "startActivity": "กิจกรรมเริ่มต้น",
+      "taskActivity": "กิจกรรมงาน",
+      "routingActivity": "กิจกรรมกำหนดเส้นทาง",
+      "endActivity": "กิจกรรมสิ้นสุด",
+      "companySelection": "การเลือกบริษัท",
+      "ifElse": "ถ้า / มิฉะนั้น",
+      "switch": "สวิตช์",
+      "fork": "การแยก",
+      "join": "การรวม",
+      "approvalActivity": "กิจกรรมการอนุมัติ",
+      "meetingActivity": "กิจกรรมการประชุม",
+      "awaitSignalActivity": "กิจกรรมรอสัญญาณ",
+      "internalFollowupSelection": "การเลือกติดตามภายใน",
+      "requestSubmission": "การยื่นคำขอ",
+      "adminReviewActivity": "กิจกรรมการตรวจสอบของผู้ดูแล",
+      "timerActivity": "กิจกรรมตัวจับเวลา"
+    },
+    "buttons": {
+      "addDecision": "+ เพิ่มการตัดสินใจ",
+      "addAction": "+ เพิ่มการดำเนินการ",
+      "addMapping": "+ เพิ่มการแมป",
+      "addCondition": "+ เพิ่มเงื่อนไข",
+      "addCase": "+ เพิ่มกรณี",
+      "addBranch": "+ เพิ่มสาขา",
+      "addThreshold": "+ เพิ่มเกณฑ์",
+      "addVoteMovement": "+ เพิ่มการเคลื่อนไหวการโหวต",
+      "rawMode": "ดิบ",
+      "builderMode": "ตัวสร้าง"
+    },
+    "actionFields": {
+      "value": "ค่า",
+      "label": "ป้ายกำกับ",
+      "assignmentMode": "โหมดการมอบหมาย",
+      "movement": "การเคลื่อนไหว",
+      "condition": "เงื่อนไข (ไม่บังคับ)"
+    },
+    "assignmentModes": {
+      "system": "ระบบ",
+      "user": "ผู้ใช้"
+    },
+    "movements": {
+      "forward": "ไปข้างหน้า (F)",
+      "backward": "ถอยหลัง (B)",
+      "complete": "เสร็จสิ้น (C)"
+    },
+    "strategies": {
+      "startedBy": "ผู้เริ่มต้น",
+      "roundRobin": "วนเวียน",
+      "previousOwner": "เจ้าของก่อนหน้า",
+      "pool": "กลุ่ม",
+      "variableAssignee": "ผู้รับมอบหมายตัวแปร"
+    },
+    "selectionMethods": {
+      "roundrobin": "วนเวียน",
+      "manual": "ด้วยตนเอง"
+    },
+    "forkTypes": {
+      "parallel": "คู่ขนาน",
+      "inclusive": "รวมทั้งหมด"
+    },
+    "joinTypes": {
+      "all": "ทั้งหมด (รอทุกสาขา)",
+      "any": "ใดก็ได้ (สาขาแรกที่เสร็จ)",
+      "nOfM": "N จาก M"
+    },
+    "mergeStrategies": {
+      "merge": "รวมเอาต์พุตทั้งหมด",
+      "first": "ใช้ที่เสร็จก่อน",
+      "last": "ใช้ที่เสร็จล่าสุด"
+    },
+    "timeoutActions": {
+      "continue": "ดำเนินต่อ",
+      "cancel": "ยกเลิก",
+      "error": "ข้อผิดพลาด"
+    },
+    "transitionTypes": {
+      "normal": "ปกติ (ไม่มีเงื่อนไข)",
+      "conditional": "มีเงื่อนไข"
+    },
+    "memberSourceTypes": {
+      "inline": "กำหนดเอง",
+      "committee": "คณะกรรมการ",
+      "threshold": "เกณฑ์"
+    },
+    "quorumTypes": {
+      "count": "จำนวน",
+      "percent": "เปอร์เซ็นต์"
+    },
+    "thresholds": {
+      "title": "เกณฑ์"
+    },
+    "connection": {
+      "from": "จาก:",
+      "to": "ถึง:"
+    },
+    "propertyTypes": {
+      "residential": "ที่อยู่อาศัย",
+      "commercial": "เชิงพาณิชย์",
+      "industrial": "อุตสาหกรรม",
+      "land": "ที่ดิน"
+    },
+    "purposes": {
+      "mortgage": "จำนอง",
+      "insurance": "ประกันภัย",
+      "taxAssessment": "ประเมินภาษี",
+      "sale": "การขาย"
+    },
+    "defaultDecision": {
+      "none": "ไม่มี"
+    }
+  },
+  "validation": {
+    "nameRequired": "กรุณาระบุชื่อ",
+    "activityNameRequired": "กรุณาระบุชื่อกิจกรรม",
+    "assigneeGroupRequired": "กรุณาระบุกลุ่มผู้รับมอบหมาย",
+    "timeoutRequired": "กรุณาระบุระยะเวลาหมดอายุ",
+    "decisionNameRequired": "กรุณาระบุชื่อการตัดสินใจ",
+    "conditionRequired": "กรุณาระบุเงื่อนไข",
+    "conditionNameRequired": "กรุณาระบุชื่อเงื่อนไข",
+    "conditionExpressionRequired": "กรุณาระบุนิพจน์เงื่อนไข",
+    "expressionRequired": "กรุณาระบุนิพจน์",
+    "branchNameRequired": "กรุณาระบุชื่อสาขา",
+    "caseValueRequired": "กรุณาระบุค่ากรณี",
+    "memberSourceRequired": "กรุณาระบุประเภทแหล่งที่มาสมาชิก",
+    "timeoutRequired2": "กรุณาระบุระยะเวลาหมดอายุ",
+    "signalNameRequired": "กรุณาระบุชื่อสัญญาณ",
+    "correlationKeyRequired": "กรุณาระบุคีย์สหสัมพันธ์",
+    "propertyTypeRequired": "กรุณาระบุประเภทอสังหาริมทรัพย์",
+    "propertyAddressRequired": "กรุณาระบุที่อยู่อสังหาริมทรัพย์",
+    "purposeRequired": "กรุณาระบุวัตถุประสงค์",
+    "durationRequired": "กรุณาระบุระยะเวลา",
+    "workflowNameRequired": "กรุณาระบุชื่อเวิร์กโฟลว์"
+  },
+  "publish": {
+    "title": "เผยแพร่เวิร์กโฟลว์",
+    "breakingChanges": "การเปลี่ยนแปลงที่กระทบ",
+    "noBreakingChanges": "ไม่พบการเปลี่ยนแปลงที่กระทบ ✓",
+    "runningInstances": "อินสแตนซ์ที่กำลังทำงาน",
+    "runningInstancesAffected_one": "{{count}} อินสแตนซ์ที่ได้รับผลกระทบ —",
+    "runningInstancesAffected_other": "{{count}} อินสแตนซ์ที่ได้รับผลกระทบ —",
+    "safeCount": "{{count}} ปลอดภัย",
+    "unsafeCount": "{{count}} ต้องดำเนินการด้วยตนเอง",
+    "unsafePinnedNotice": "อินสแตนซ์ที่ไม่ปลอดภัยจะยังคงอยู่ในเวอร์ชันปัจจุบัน (ที่เลิกใช้แล้ว) คุณสามารถโยกย้ายได้ด้วยตนเองหลังจากเผยแพร่",
+    "columns": {
+      "instance": "อินสแตนซ์",
+      "currentActivity": "กิจกรรมปัจจุบัน",
+      "started": "เริ่มต้น",
+      "status": "สถานะ"
+    },
+    "publishAndMigrate": "เผยแพร่และโยกย้าย",
+    "publishButton": "เผยแพร่",
+    "cancel": "ยกเลิก"
+  },
+  "migrate": {
+    "title": "โยกย้ายอินสแตนซ์ที่กำลังทำงาน",
+    "bulkSafeLabel": "ทั้งหมดที่ปลอดภัย → โยกย้าย",
+    "bulkUnsafeLabel": "ทั้งหมดที่ไม่ปลอดภัย → ปักหมุด",
+    "clearAll": "ล้างทั้งหมด",
+    "footer": "{{bump}} กำลังโยกย้าย · {{remap}} กำลังจัดแมปใหม่ · {{skip}} ปักหมุด",
+    "applyMigration": "ใช้การโยกย้าย",
+    "selectInstancePrompt": "เลือกอินสแตนซ์เพื่อกำหนดค่าการดำเนินการโยกย้าย",
+    "breakingChangesTitle": "การเปลี่ยนแปลงที่กระทบ",
+    "actions": {
+      "migrateLabel": "โยกย้ายไปยังเวอร์ชันใหม่",
+      "pinLabel": "ปล่อยให้ปักหมุดอยู่ในเวอร์ชันเก่า",
+      "manualRemap": "จัดแมปใหม่ด้วยตนเอง",
+      "cancelInstance": "ยกเลิกอินสแตนซ์",
+      "cancelInstanceHint": "— ใช้ endpoint ยกเลิกแยกต่างหาก",
+      "recommended": "แนะนำ"
+    },
+    "resultModal": {
+      "title": "การโยกย้ายเสร็จสมบูรณ์",
+      "migrated": "โยกย้ายแล้ว",
+      "failed": "ล้มเหลว",
+      "skipped": "ข้าม",
+      "errorsTitle": "ข้อผิดพลาด",
+      "done": "เสร็จสิ้น"
+    },
+    "table": {
+      "noInstances": "ไม่มีอินสแตนซ์ที่กำลังทำงานในเวอร์ชันก่อนหน้า — ไม่มีอะไรต้องโยกย้าย",
+      "columns": {
+        "instance": "อินสแตนซ์",
+        "name": "ชื่อ",
+        "currentActivity": "กิจกรรมปัจจุบัน",
+        "started": "เริ่มต้น",
+        "status": "สถานะ",
+        "action": "การดำเนินการ"
+      },
+      "actionLabels": {
+        "none": "—",
+        "migrate": "โยกย้าย",
+        "pinned": "ปักหมุด",
+        "remap": "จัดแมปใหม่: {{activityId}}"
+      },
+      "classification": {
+        "unknown": "ไม่ทราบ"
+      }
+    }
+  },
+  "versionHistory": {
+    "title": "ประวัติเวอร์ชัน",
+    "noVersions": "ไม่พบเวอร์ชัน",
+    "current": "ปัจจุบัน",
+    "close": "ปิด",
+    "migrateButton": "โยกย้าย",
+    "viewButton": "ดู",
+    "runningBadge_one": "{{count}} กำลังทำงาน",
+    "runningBadge_other": "{{count}} กำลังทำงาน",
+    "publishedBy": "เผยแพร่ {{date}} โดย {{by}}",
+    "createdBy": "สร้าง {{date}} โดย {{by}}",
+    "by": "โดย {{by}}"
+  },
+  "canvas": {
+    "toolbar": {
+      "autoLayout": "จัดเรียงอัตโนมัติ"
+    }
+  }
+}

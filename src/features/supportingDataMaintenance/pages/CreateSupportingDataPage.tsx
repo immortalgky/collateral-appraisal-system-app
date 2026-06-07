@@ -18,25 +18,29 @@ import {
   useGetSupportingDataDetailById,
   useUpdateSupportingDetailData,
 } from '../api';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { mapSupportingDataDetailResponseToForm } from '../utils/mapper';
+import SupportingDataDetailPhotoSection, {
+  type SupportingDataDetailPhotoSectionRef,
+} from '../components/SupportingDataDetailPhotoSection';
+import { useTranslation } from 'react-i18next';
 
 export function CreateSupportingDataPage() {
-  const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
+  const { t } = useTranslation('supportingDataMaintenance');
 
   const { supportingId, id } = useParams<{ supportingId: string; id?: string }>();
 
-  const isEditMode = Boolean(id);
+  const hasSupportingId = Boolean(id);
 
   const { data: supportingData, isLoading } = useGetSupportingDataDetailById(supportingId, id);
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       return mapSupportingDataDetailResponseToForm(supportingData);
     }
     return defaultSupportingDataDetail;
-  }, [isEditMode, supportingData]);
+  }, [hasSupportingId, supportingData]);
 
   // ------------------------------------------------------------------
   // Form
@@ -53,14 +57,17 @@ export function CreateSupportingDataPage() {
     formState: { dirtyFields },
   } = methods;
 
+  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false;
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   useEffect(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       reset(mapSupportingDataDetailResponseToForm(supportingData));
     }
-  }, [isEditMode, supportingData, reset]);
+  }, [hasSupportingId, supportingData, reset]);
+
+  const photoSectionRef = useRef<SupportingDataDetailPhotoSectionRef>(null);
 
   const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingDetailData();
   const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingDetailData();
@@ -72,7 +79,7 @@ export function CreateSupportingDataPage() {
   const onSubmit: SubmitHandler<createSupportingDataDetailFormType> = data => {
     setSaveAction('submit');
 
-    if (isEditMode && id) {
+    if (hasSupportingId && id) {
       updateSupportingData(
         {
           supportingId: supportingId!,
@@ -82,11 +89,11 @@ export function CreateSupportingDataPage() {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Supporting data updated successfully');
+            toast.success(t('toasts.detailUpdatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to update data. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.detailUpdateFailed'));
             setSaveAction(null);
           },
         },
@@ -99,8 +106,11 @@ export function CreateSupportingDataPage() {
         },
         {
           onSuccess: async (response: any) => {
-            // await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Supporting data created successfully');
+            await photoSectionRef.current?.linkImagesToDetail(
+              response.supportingId ?? supportingId!,
+              response.id,
+            );
+            toast.success(t('toasts.detailCreatedSuccess'));
             setSaveAction(null);
             skipWarning();
             navigate(
@@ -108,7 +118,7 @@ export function CreateSupportingDataPage() {
             );
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to create data. Please try again.');
+            toast.error(error.apiError?.detail || t('toasts.detailCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -116,57 +126,7 @@ export function CreateSupportingDataPage() {
     }
   };
 
-  const handleSaveDraft = () => {
-    setSaveAction('draft');
-    const data = getValues();
-
-    if (isEditMode && id) {
-      updateSupportingData(
-        {
-          supportingId: supportingId!,
-          id,
-          data: data as any,
-        },
-        {
-          onSuccess: () => {
-            reset(getValues());
-            toast.success('Draft saved successfully');
-            setSaveAction(null);
-          },
-          onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
-            setSaveAction(null);
-          },
-        },
-      );
-    } else {
-      createSupportingData(
-        {
-          supportingId: supportingId!,
-          data: data as any,
-        },
-        {
-          onSuccess: async (response: any) => {
-            // await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
-            setSaveAction(null);
-            if (response.propertyId) {
-              skipWarning();
-              navigate(
-                `/standalone/supporting-data-maintenance/${response.supportingId}/data/${response.id}`,
-              );
-            }
-          },
-          onError: (error: any) => {
-            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
-            setSaveAction(null);
-          },
-        },
-      );
-    }
-  };
-
-  if (isLoading || (isEditMode && !supportingData)) {
+  if (isLoading || (hasSupportingId && !supportingData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -181,9 +141,9 @@ export function CreateSupportingDataPage() {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
+            { label: t('nav.photos'), id: 'photos', icon: 'images' },
             {
-              label: 'Supporting Data Detail',
+              label: t('nav.supportingDataDetail'),
               id: 'supporting-data-detail-section',
               icon: 'file-circle-info',
             },
@@ -209,16 +169,16 @@ export function CreateSupportingDataPage() {
                   <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                     <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">{t('nav.photos')}</h2>
                 </div>
                 <div className="h-px bg-gray-200 mb-4" />
-                {/* {appraisalId && (
-              <PropertyPhotoSection
-                ref={photoSectionRef}
-                appraisalId={appraisalId}
-                propertyId={propertyId}
-              />
-            )} */}
+                <SupportingDataDetailPhotoSection
+                  ref={photoSectionRef}
+                  supportingId={supportingId!}
+                  disabled={!hasAuthorityToEdit && hasSupportingId}
+                  detailId={id}
+                  images={supportingData?.images}
+                />
               </Section>
 
               {/* Supporting Data Detail Header */}
@@ -231,14 +191,18 @@ export function CreateSupportingDataPage() {
                       className="w-5 h-5 text-amber-600"
                     />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Supporting Data Detail</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {t('formSections.supportingDataDetailHeader')}
+                  </h2>
                 </div>
                 <div className="h-px bg-gray-200" />
               </Section>
 
               {/* Supporting Data Form */}
               <Section id="supporting-data-detail" anchor className="flex flex-col gap-6 min-w-0">
-                <SupportingDataMaintenanceDetailForm />
+                <SupportingDataMaintenanceDetailForm
+                  disabled={!hasAuthorityToEdit && hasSupportingId}
+                />
               </Section>
             </div>
           </div>
@@ -246,33 +210,25 @@ export function CreateSupportingDataPage() {
           {/* Sticky Action Buttons */}
           <ActionBar>
             <ActionBar.Left>
-              <CancelButton />
-              {!isReadOnly && (
+              <CancelButton
+                fallbackPath={`/standalone/supporting-data-maintenance/${supportingId}`}
+              />
+              {hasAuthorityToEdit && (
                 <>
                   <ActionBar.Divider />
                   <ActionBar.UnsavedIndicator show={hasDirtyFields} />
                 </>
               )}
             </ActionBar.Left>
-            {!isReadOnly && (
+            {(hasAuthorityToEdit || !hasSupportingId) && (
               <ActionBar.Right>
                 <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  // isLoading={isPending && saveAction === 'draft'}
-                  // disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
-                </Button>
-                <Button
                   type="submit"
-                  // isLoading={isPending && saveAction === 'submit'}
-                  // disabled={isPending}
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('actions.save')}
                 </Button>
               </ActionBar.Right>
             )}

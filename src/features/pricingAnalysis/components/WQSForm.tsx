@@ -14,6 +14,7 @@ interface WQSProps {
   template?: TemplateDetailType;
   allFactors: FactorDataType[];
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
+  manualSubject?: boolean;
 }
 export const WQSForm = ({
   isCostApproach,
@@ -24,6 +25,7 @@ export const WQSForm = ({
   template,
   allFactors,
   onSelectComparativeMarketSurvey,
+  manualSubject,
 }: WQSProps) => {
   const fieldPath = wqsFieldPath;
 
@@ -42,6 +44,7 @@ export const WQSForm = ({
             comparativeMarketSurveys={comparativeMarketSurveys}
             fieldPath={fieldPath}
             onSelectComparativeMarketSurvey={onSelectComparativeMarketSurvey}
+            manualSubject={manualSubject}
           />
           {comparativeMarketSurveys.length > 0 && (
             <>

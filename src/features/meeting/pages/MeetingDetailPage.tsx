@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -43,6 +44,7 @@ const formatDateTime = (iso: string | null): string => {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const MeetingDetailPage = () => {
+  const { t } = useTranslation('meeting');
   const navigate = useNavigate();
   const { meetingId } = useParams<{ meetingId: string }>();
   const { data: meeting, isLoading } = useGetMeetingDetail(meetingId);
@@ -84,7 +86,7 @@ const MeetingDetailPage = () => {
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate('/meetings')} type="button">
             <Icon name="arrow-left" style="solid" className="size-3.5 mr-1.5" />
-            Back
+            {t('buttons.back')}
           </Button>
           <div>
             <div className="flex items-center gap-3 flex-wrap">
@@ -101,21 +103,21 @@ const MeetingDetailPage = () => {
             {isEditable && (
               <Button variant="ghost" size="sm" type="button" onClick={editDialog.onOpen}>
                 <Icon name="pen" style="solid" className="size-3.5 mr-1.5" />
-                Edit
+                {t('buttons.edit')}
               </Button>
             )}
 
             {CUT_OFF_ELIGIBLE.has(status) && (
               <Button size="sm" type="button" onClick={cutOffDialog.onOpen}>
                 <Icon name="scissors" style="solid" className="size-3.5 mr-1.5" />
-                Cut Off
+                {t('buttons.cutOff')}
               </Button>
             )}
 
             {isNew && totalItems > 0 && (
               <Button size="sm" type="button" onClick={sendInvitationDialog.onOpen}>
                 <Icon name="envelope" style="solid" className="size-3.5 mr-1.5" />
-                Send Invitation
+                {t('buttons.sendInvitation')}
               </Button>
             )}
 
@@ -127,14 +129,14 @@ const MeetingDetailPage = () => {
                 onClick={resendInvitationDialog.onOpen}
               >
                 <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-                Resend Invitation
+                {t('buttons.resendInvitation')}
               </Button>
             )}
 
             {CANCEL_ELIGIBLE.has(status) && (
               <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
                 <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-                Cancel
+                {t('buttons.cancel')}
               </Button>
             )}
           </div>
@@ -146,21 +148,16 @@ const MeetingDetailPage = () => {
         <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
           <Icon name="circle-check" style="solid" className="w-5 h-5 text-emerald-500 shrink-0" />
           <p className="text-sm font-medium text-emerald-700">
-            Meeting ended
-            {meeting.endedAt ? ` on ${formatDateTime(meeting.endedAt)}` : ''}.
+            {meeting.endedAt
+              ? t('banners.endedAt', { date: formatDateTime(meeting.endedAt) })
+              : t('banners.ended')}
           </p>
         </div>
       )}
       {isInProgress && (
         <div className="flex items-center gap-2 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <Icon
-            name="circle-play"
-            style="solid"
-            className="w-5 h-5 text-blue-500 shrink-0"
-          />
-          <p className="text-sm font-medium text-blue-700">
-            Meeting is in progress. Release decision items to approval, or route them back to staff.
-          </p>
+          <Icon name="circle-play" style="solid" className="w-5 h-5 text-blue-500 shrink-0" />
+          <p className="text-sm font-medium text-blue-700">{t('banners.inProgress')}</p>
         </div>
       )}
       {isRoutedBack && (
@@ -170,9 +167,7 @@ const MeetingDetailPage = () => {
             style="solid"
             className="w-5 h-5 text-amber-500 shrink-0"
           />
-          <p className="text-sm font-medium text-amber-700">
-            One or more items have been routed back. Release all decision items to close the meeting.
-          </p>
+          <p className="text-sm font-medium text-amber-700">{t('banners.routedBack')}</p>
         </div>
       )}
       {isCancelled && (
@@ -183,52 +178,56 @@ const MeetingDetailPage = () => {
             className="w-5 h-5 text-red-500 shrink-0 mt-0.5"
           />
           <div>
-            <p className="text-sm font-medium text-red-700">
-              Meeting cancelled. Items returned to the queue.
-            </p>
+            <p className="text-sm font-medium text-red-700">{t('banners.cancelled')}</p>
             {meeting.cancelReason && (
-              <p className="text-xs text-red-600 mt-0.5">Reason: {meeting.cancelReason}</p>
+              <p className="text-xs text-red-600 mt-0.5">
+                {t('banners.cancelReason', { reason: meeting.cancelReason })}
+              </p>
             )}
           </div>
         </div>
       )}
 
       {/* Meeting Schedule */}
-      <FormCard title="Meeting Schedule" icon="calendar" iconColor="blue">
+      <FormCard title={t('sections.schedule')} icon="calendar" iconColor="blue">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase">Start</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase">{t('detail.start')}</dt>
             <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.startAt)}</dd>
           </div>
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase">End</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase">{t('detail.end')}</dt>
             <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.endAt)}</dd>
           </div>
           {meeting.fromText && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase">From</dt>
+              <dt className="text-xs font-medium text-gray-500 uppercase">{t('detail.from')}</dt>
               <dd className="mt-1 text-sm text-gray-900">{meeting.fromText}</dd>
             </div>
           )}
           {meeting.toText && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase">To</dt>
+              <dt className="text-xs font-medium text-gray-500 uppercase">{t('detail.to')}</dt>
               <dd className="mt-1 text-sm text-gray-900">{meeting.toText}</dd>
             </div>
           )}
           <div>
-            <dt className="text-xs font-medium text-gray-500 uppercase">Location</dt>
+            <dt className="text-xs font-medium text-gray-500 uppercase">{t('detail.location')}</dt>
             <dd className="mt-1 text-sm text-gray-900">{meeting.location ?? '—'}</dd>
           </div>
           {meeting.cutOffAt && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase">Cut-Off At</dt>
+              <dt className="text-xs font-medium text-gray-500 uppercase">
+                {t('detail.cutOffAt')}
+              </dt>
               <dd className="mt-1 text-sm text-gray-900">{formatDateTime(meeting.cutOffAt)}</dd>
             </div>
           )}
           {meeting.invitationSentAt && (
             <div>
-              <dt className="text-xs font-medium text-gray-500 uppercase">Invitation Sent</dt>
+              <dt className="text-xs font-medium text-gray-500 uppercase">
+                {t('detail.invitationSent')}
+              </dt>
               <dd className="mt-1 text-sm text-gray-900">
                 {formatDateTime(meeting.invitationSentAt)}
               </dd>
@@ -236,7 +235,7 @@ const MeetingDetailPage = () => {
           )}
           {meeting.notes && (
             <div className="sm:col-span-2">
-              <dt className="text-xs font-medium text-gray-500 uppercase">Notes</dt>
+              <dt className="text-xs font-medium text-gray-500 uppercase">{t('detail.notes')}</dt>
               <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{meeting.notes}</dd>
             </div>
           )}
@@ -244,7 +243,7 @@ const MeetingDetailPage = () => {
       </FormCard>
 
       {/* Committee / Members */}
-      <FormCard title="Committee Members" icon="users" iconColor="purple">
+      <FormCard title={t('sections.committeeMembers')} icon="users" iconColor="purple">
         <MeetingMembersTable
           meetingId={meeting.id}
           members={meeting.members}
@@ -253,7 +252,7 @@ const MeetingDetailPage = () => {
       </FormCard>
 
       {/* Agenda */}
-      <FormCard title="Agenda" icon="list-check" iconColor="amber">
+      <FormCard title={t('sections.agenda')} icon="list-check" iconColor="amber">
         <AgendaForm
           meetingId={meeting.id}
           initialValues={{
@@ -268,14 +267,14 @@ const MeetingDetailPage = () => {
 
       {/* Items */}
       <FormCard
-        title={`Appraisals (${totalItems})`}
+        title={t('sections.appraisals', { n: totalItems })}
         icon="folder-open"
         iconColor="emerald"
         rightIcon={
           hasAdmin && isEditable ? (
             <Button size="sm" type="button" onClick={addItemsDialog.onOpen}>
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-              Add Appraisals
+              {t('buttons.addAppraisals')}
             </Button>
           ) : undefined
         }

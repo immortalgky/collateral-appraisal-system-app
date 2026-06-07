@@ -23,15 +23,21 @@ export type AddPricingAnalysisMethodResponseType = z.infer<typeof schemas.AddMet
 export const SaveComparativeAnalysisRequest = schemas.SaveComparativeAnalysisRequest;
 export const SaveComparativeAnalysisResponse = schemas.SaveComparativeAnalysisResponse;
 export type ComparativeFactorInputType = z.infer<typeof schemas.ComparativeFactorInput>;
-export type SaveComparativeAnalysisRequestType = z.infer<typeof schemas.SaveComparativeAnalysisRequest>;
-export type SaveComparativeAnalysisResponseType = z.infer<typeof schemas.SaveComparativeAnalysisResponse>;
+export type SaveComparativeAnalysisRequestType = z.infer<
+  typeof schemas.SaveComparativeAnalysisRequest
+>;
+export type SaveComparativeAnalysisResponseType = z.infer<
+  typeof schemas.SaveComparativeAnalysisResponse
+>;
 
 // -- Comparative Factors --
 export const GetComparativeFactorsResponse = schemas.GetComparativeFactorsResponse;
 export type ComparativeFactorType = z.infer<typeof schemas.ComparativeFactorDto>;
 export type FactorScoreType = z.infer<typeof schemas.FactorScoreDto>;
 export type CalculationType = z.infer<typeof schemas.CalculationDto>;
-export type GetComparativeFactorsResponseType = z.infer<typeof schemas.GetComparativeFactorsResponse>;
+export type GetComparativeFactorsResponseType = z.infer<
+  typeof schemas.GetComparativeFactorsResponse
+>;
 
 // -- Link/Unlink Comparables --
 export type LinkedComparableType = z.infer<typeof schemas.LinkedComparableDto>;
@@ -40,7 +46,9 @@ export type LinkComparableResponseType = z.infer<typeof schemas.LinkComparableRe
 
 // -- Market Comparable --
 export const GetMarketComparableByIdResponse = schemas.GetMarketComparableByIdResponse;
-export type GetMarketComparableByIdResponseType = z.infer<typeof schemas.GetMarketComparableByIdResponse>;
+export type GetMarketComparableByIdResponseType = z.infer<
+  typeof schemas.GetMarketComparableByIdResponse
+>;
 export type MarketComparableDetailType = z.infer<typeof schemas.MarketComparableDetailDto>;
 export type MarketComparableDataType = z.infer<typeof schemas.MarketComparableDto>;
 
@@ -66,8 +74,12 @@ export type UpdateMethodResponseType = z.infer<typeof schemas.UpdateMethodRespon
 export type UpdateApproachRequestType = z.infer<typeof schemas.UpdateApproachRequest>;
 
 // -- Complete Pricing Analysis --
-export type CompletePricingAnalysisRequestType = z.infer<typeof schemas.CompletePricingAnalysisRequest>;
-export type CompletePricingAnalysisResponseType = z.infer<typeof schemas.CompletePricingAnalysisResponse>;
+export type CompletePricingAnalysisRequestType = z.infer<
+  typeof schemas.CompletePricingAnalysisRequest
+>;
+export type CompletePricingAnalysisResponseType = z.infer<
+  typeof schemas.CompletePricingAnalysisResponse
+>;
 
 // ==================== Local-only types (not from server) ====================
 
@@ -147,4 +159,8 @@ export type GetPricingTemplatesByMethodResponseType = z.infer<
 >;
 
 // -- Leasehold Analysis --
-export { LeaseholdFormSchema, type LeaseholdFormType, type LandGrowthPeriodFormType } from './leaseholdForm';
+export {
+  LeaseholdFormSchema,
+  type LeaseholdFormType,
+  type LandGrowthPeriodFormType,
+} from './leaseholdForm';

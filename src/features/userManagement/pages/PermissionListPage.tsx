@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
@@ -50,6 +51,7 @@ const emptyForm: PermissionFormData = {
 };
 
 const PermissionListPage = () => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   // Pagination component is 0-based; backend is 1-based — we store 0-based internally
@@ -113,20 +115,23 @@ const PermissionListPage = () => {
     if (!deleteConfirm.id) return;
     deletePermission.mutate(deleteConfirm.id, {
       onSuccess: () => {
-        toast.success('Permission deleted successfully');
+        toast.success(t('toasts.permissionDeleted'));
         handleCloseDelete();
       },
-      onError: () => toast.error('Failed to delete permission'),
+      onError: () => toast.error(t('toasts.permissionDeleteFailed')),
     });
   };
 
-  const updateField = <K extends keyof PermissionFormData>(key: K, value: PermissionFormData[K]) => {
+  const updateField = <K extends keyof PermissionFormData>(
+    key: K,
+    value: PermissionFormData[K],
+  ) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = () => {
     if (!form.permissionCode || !form.displayName || !form.module) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('validation.fillAllRequired'));
       return;
     }
 
@@ -140,10 +145,10 @@ const PermissionListPage = () => {
         },
         {
           onSuccess: () => {
-            toast.success('Permission updated successfully');
+            toast.success(t('toasts.permissionUpdated'));
             setShowModal(false);
           },
-          onError: () => toast.error('Failed to update permission'),
+          onError: () => toast.error(t('toasts.permissionUpdateFailed')),
         },
       );
     } else {
@@ -155,10 +160,10 @@ const PermissionListPage = () => {
       };
       createPermission.mutate(request, {
         onSuccess: () => {
-          toast.success('Permission created successfully');
+          toast.success(t('toasts.permissionCreated'));
           setShowModal(false);
         },
-        onError: () => toast.error('Failed to create permission'),
+        onError: () => toast.error(t('toasts.permissionCreateFailed')),
       });
     }
   };
@@ -168,8 +173,8 @@ const PermissionListPage = () => {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8">
       <SectionHeader
-        title="Permissions"
-        subtitle="Manage system permissions that can be assigned to roles"
+        title={t('page.permissions.title')}
+        subtitle={t('page.permissions.subtitle')}
         icon="shield-halved"
         iconColor="blue"
         rightIcon={
@@ -179,7 +184,7 @@ const PermissionListPage = () => {
             onClick={handleOpenCreate}
             leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
           >
-            Add Permission
+            {t('buttons.addPermission')}
           </Button>
         }
       />
@@ -197,7 +202,7 @@ const PermissionListPage = () => {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search by code or display name..."
+              placeholder={t('placeholders.searchPermissions')}
               className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
@@ -209,19 +214,19 @@ const PermissionListPage = () => {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Display Name
+                  {t('columns.displayName')}
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Permission Code
+                  {t('columns.permissionCode')}
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Module
+                  {t('columns.module')}
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Description
+                  {t('columns.description')}
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Actions
+                  {t('columns.actions')}
                 </th>
               </tr>
             </thead>
@@ -231,14 +236,23 @@ const PermissionListPage = () => {
               ) : permissions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12 text-gray-400 text-sm">
-                    <Icon name="shield-halved" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
-                    <p>No permissions found</p>
+                    <Icon
+                      name="shield-halved"
+                      style="regular"
+                      className="size-8 mx-auto mb-2 opacity-40"
+                    />
+                    <p>{t('empty.noPermissionsFound')}</p>
                   </td>
                 </tr>
               ) : (
                 permissions.map(permission => (
-                  <tr key={permission.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">{permission.displayName}</td>
+                  <tr
+                    key={permission.id}
+                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      {permission.displayName}
+                    </td>
                     <td className="px-4 py-3">
                       <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
                         {permission.permissionCode}
@@ -258,7 +272,7 @@ const PermissionListPage = () => {
                           type="button"
                           onClick={() => handleOpenEdit(permission)}
                           className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                          title="Edit"
+                          title={t('common:actions.edit')}
                         >
                           <Icon name="pen-to-square" style="regular" className="size-4" />
                         </button>
@@ -266,7 +280,7 @@ const PermissionListPage = () => {
                           type="button"
                           onClick={() => handleOpenDelete(permission.id)}
                           className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
-                          title="Delete"
+                          title={t('common:actions.delete')}
                         >
                           <Icon name="trash-can" style="regular" className="size-4" />
                         </button>
@@ -296,45 +310,47 @@ const PermissionListPage = () => {
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingPermission ? 'Edit Permission' : 'Add Permission'}
+        title={
+          editingPermission ? t('dialogs.editPermission.title') : t('dialogs.addPermission.title')
+        }
         size="md"
       >
         <div className="grid grid-cols-1 gap-4 p-6">
           <TextInput
-            label="Permission Code"
+            label={t('fields.permissionCode')}
             value={form.permissionCode}
             onChange={e => updateField('permissionCode', e.currentTarget.value)}
             disabled={!!editingPermission}
             required
-            placeholder="e.g., permissions.read"
+            placeholder={t('placeholders.permissionCodeExample')}
           />
           <TextInput
-            label="Display Name"
+            label={t('fields.displayName')}
             value={form.displayName}
             onChange={e => updateField('displayName', e.currentTarget.value)}
             required
-            placeholder="e.g., View Permissions"
+            placeholder={t('placeholders.displayNameExample')}
           />
           <Dropdown
-            label="Module"
+            label={t('fields.module')}
             value={form.module}
             onChange={(val: string | null) => updateField('module', val ?? '')}
             options={MODULE_OPTIONS}
             required
           />
           <TextInput
-            label="Description"
+            label={t('fields.description')}
             value={form.description}
             onChange={e => updateField('description', e.currentTarget.value)}
-            placeholder="Brief description of what this permission allows"
+            placeholder={t('placeholders.permissionDescription')}
           />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowModal(false)}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSubmit}>
-            {editingPermission ? 'Update' : 'Create'}
+            {editingPermission ? t('buttons.update') : t('buttons.create')}
           </Button>
         </div>
       </Modal>
@@ -344,9 +360,9 @@ const PermissionListPage = () => {
         isOpen={deleteConfirm.isOpen}
         onClose={handleCloseDelete}
         onConfirm={handleConfirmDelete}
-        title="Delete Permission"
-        message="Are you sure you want to delete this permission? This action cannot be undone."
-        confirmText="Delete"
+        title={t('dialogs.deletePermission.title')}
+        message={t('dialogs.deletePermission.message')}
+        confirmText={t('common:actions.delete')}
         isLoading={deletePermission.isPending}
       />
     </div>

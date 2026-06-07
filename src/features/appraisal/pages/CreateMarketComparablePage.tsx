@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -46,6 +47,7 @@ import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateMarketComparablePage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -72,9 +74,8 @@ const CreateMarketComparablePage = () => {
   const copyFromId = searchParams.get('copyFrom');
   const sourceId = marketId ?? copyFromId ?? undefined;
 
-  const { data: marketComparable, isLoading: isLoadingComparable } = useGetMarketComparableById(
-    sourceId,
-  );
+  const { data: marketComparable, isLoading: isLoadingComparable } =
+    useGetMarketComparableById(sourceId);
   const { data: template, isLoading: isLoadingTemplate } = useGetMarketComparableTemplateById(
     marketComparable?.marketComparable.templateId,
   );
@@ -216,7 +217,7 @@ const CreateMarketComparablePage = () => {
             });
           }
           skipWarning();
-          toast.success('Market comparable updated successfully');
+          toast.success(t('toasts.marketComparableUpdated'));
           navigate(`${basePath}/${parentSegment}?tab=markets`);
         },
         onError: (error: any) => {
@@ -271,7 +272,7 @@ const CreateMarketComparablePage = () => {
           await photoSectionRef.current?.linkImagesToComparable(response.id);
 
           skipWarning();
-          toast.success('Market comparable created successfully');
+          toast.success(t('toasts.marketComparableCreated'));
           if (appraisalId) {
             navigate(`${basePath}/${parentSegment}/market-comparable/${response.id}`);
           } else {

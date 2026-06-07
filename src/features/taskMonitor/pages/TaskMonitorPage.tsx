@@ -11,7 +11,7 @@ import PeopleMonitorTable from '../components/PeopleMonitorTable';
 import type { GetMonitoredPeopleParams, SortDir } from '../types';
 
 function TaskMonitorPage() {
-  const { t } = useTranslation('nav');
+  const { t } = useTranslation(['taskMonitor', 'nav']);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [search, setSearch] = useState(searchParams.get('search') ?? '');
@@ -60,14 +60,14 @@ function TaskMonitorPage() {
       {/* ── Page header ── */}
       <div className="shrink-0 mb-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-gray-900">{t('taskMonitor.title')}</h2>
+          <h2 className="text-sm font-semibold text-gray-900">{t('nav:taskMonitor.title')}</h2>
           {!isLoading && totalCount > 0 && (
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
               {totalCount}
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">{t('taskMonitor.description')}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{t('nav:taskMonitor.description')}</p>
       </div>
 
       {/* ── Search bar ── */}
@@ -82,7 +82,7 @@ function TaskMonitorPage() {
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search user code or name..."
+            placeholder={t('filters.peopleSearchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
           />
         </div>
@@ -95,7 +95,7 @@ function TaskMonitorPage() {
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-800">Failed to load monitored people</p>
+            <p className="text-sm font-medium text-gray-800">{t('errors.loadPeopleFailed')}</p>
             <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
           </div>
         </div>

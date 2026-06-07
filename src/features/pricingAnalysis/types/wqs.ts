@@ -77,9 +77,9 @@ export interface WQSFinalValue {
   landArea?: number;
   usableArea?: number;
   // stored fields (backend persists these)
-  landValue?: number;       // user-edited land price
-  buildingCost?: number;    // user-edited building cost
-  appraisalPrice?: number;  // user-edited final total (hasBuildingCost only)
+  landValue?: number; // user-edited land price
+  buildingCost?: number; // user-edited building cost
+  appraisalPrice?: number; // user-edited final total (hasBuildingCost only)
 }
 
 export interface WQS {

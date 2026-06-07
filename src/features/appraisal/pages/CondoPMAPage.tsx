@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
-  createCondoPMAForm,
+  useCondoPMAFormSchema,
   createCondoPMAFormDefault,
   type createCondoPMAFormType,
 } from '../schemas/form';
@@ -24,10 +24,11 @@ const CondoPMAPage = () => {
   const isReadOnly = usePageReadOnly();
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useAppraisalId();
+  const condoPMAFormSchema = useCondoPMAFormSchema();
 
   const methods = useForm<createCondoPMAFormType>({
     defaultValues: createCondoPMAFormDefault,
-    resolver: zodResolver(createCondoPMAForm),
+    resolver: zodResolver(condoPMAFormSchema),
   });
   const {
     handleSubmit,
@@ -90,7 +91,7 @@ const CondoPMAPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createCondoPMAForm}>
+      <FormProvider methods={methods} schema={condoPMAFormSchema}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div

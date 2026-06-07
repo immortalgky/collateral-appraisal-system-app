@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { AppraisalSummaryDto, SharedDocumentEntryDto } from '../schemas/quotation';
 import { useRemoveAppraisalFromDraft } from '../api/quotation';
@@ -32,6 +33,7 @@ const AppraisalContextPanel = ({
   allowRemove = false,
   sharedDocuments = [],
 }: AppraisalContextPanelProps) => {
+  const { t } = useTranslation('quotation');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [viewerDoc, setViewerDoc] = useState<SharedDocumentEntryDto | null>(null);
   const { mutate: removeAppraisal, isPending: isRemoving } =
@@ -40,11 +42,11 @@ const AppraisalContextPanel = ({
   const handleRemove = (id: string, appraisalNumber: string | null | undefined) => {
     removeAppraisal(id, {
       onSuccess: () => {
-        toast.success(`Appraisal ${appraisalNumber ?? id} removed from quotation`);
+        toast.success(t('toasts.appraisalRemoved', { number: appraisalNumber ?? id }));
       },
       onError: (err: unknown) => {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(apiErr?.apiError?.detail ?? 'Failed to remove appraisal');
+        toast.error(apiErr?.apiError?.detail ?? t('toasts.appraisalRemoveFailed'));
       },
     });
   };
@@ -52,7 +54,7 @@ const AppraisalContextPanel = ({
   if (appraisals.length === 0) {
     return (
       <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-        No appraisals linked to this quotation.
+        {t('empty.noAppraisals')}
       </div>
     );
   }
@@ -65,9 +67,9 @@ const AppraisalContextPanel = ({
           <div className="size-7 rounded-lg bg-blue-200 flex items-center justify-center">
             <Icon name="file-certificate" style="solid" className="size-3.5 text-blue-700" />
           </div>
-          <span className="text-sm font-semibold text-gray-800">Appraisals in this Quotation</span>
+          <span className="text-sm font-semibold text-gray-800">{t('appraisalPanel.title')}</span>
           <span className="ml-auto text-xs text-blue-600 font-medium">
-            {appraisals.length} {appraisals.length === 1 ? 'appraisal' : 'appraisals'}
+            {t('appraisalPanel.appraisalCount_other', { count: appraisals.length })}
           </span>
         </div>
 
@@ -123,10 +125,12 @@ const AppraisalContextPanel = ({
                           ? 'opacity-50 cursor-not-allowed text-gray-400'
                           : 'text-red-500 hover:bg-red-50 hover:text-red-600',
                       )}
-                      aria-label={`Remove appraisal ${ap.appraisalNumber ?? ap.appraisalId}`}
+                      aria-label={t('aria.removeAppraisal', {
+                        number: ap.appraisalNumber ?? ap.appraisalId,
+                      })}
                     >
                       <Icon name="trash" style="solid" className="size-3" />
-                      Remove
+                      {t('appraisalPanel.remove')}
                     </button>
                   )}
                 </div>
@@ -136,19 +140,19 @@ const AppraisalContextPanel = ({
                   <div className="px-10 pb-3 bg-gray-50">
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
                       <div>
-                        <span className="text-gray-400">Appraisal No.</span>
+                        <span className="text-gray-400">{t('appraisalPanel.appraisalNo')}</span>
                         <p className="font-medium text-gray-800">{ap.appraisalNumber ?? '—'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-400">Property Type</span>
+                        <span className="text-gray-400">{t('appraisalPanel.propertyType')}</span>
                         <p className="font-medium text-gray-800">{ap.propertyType ?? '—'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-400">Address</span>
+                        <span className="text-gray-400">{t('appraisalPanel.address')}</span>
                         <p className="font-medium text-gray-800">{ap.address ?? '—'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-400">Loan Type</span>
+                        <span className="text-gray-400">{t('appraisalPanel.loanType')}</span>
                         <p className="font-medium text-gray-800">{ap.loanType ?? '—'}</p>
                       </div>
                     </div>
@@ -167,7 +171,9 @@ const AppraisalContextPanel = ({
                                 style="solid"
                                 className="size-3.5 text-gray-400 shrink-0"
                               />
-                              <p className="text-xs text-gray-500">(no documents shared)</p>
+                              <p className="text-xs text-gray-500">
+                                {t('empty.noDocumentsShared')}
+                              </p>
                             </div>
                           );
                         }
@@ -205,18 +211,20 @@ const AppraisalContextPanel = ({
                             {requestLevelDocs.length > 0 && (
                               <div>
                                 <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">
-                                  Request Documents
+                                  {t('appraisalPanel.requestDocuments')}
                                 </p>
                                 {requestLevelDocs.map(d => renderDocRow(d, 'text-blue-400'))}
                               </div>
                             )}
                             {requestLevelDocs.length === 0 && titleLevelDocs.length === 0 && (
-                              <p className="text-xs text-gray-400">(no documents shared)</p>
+                              <p className="text-xs text-gray-400">
+                                {t('empty.noDocumentsShared')}
+                              </p>
                             )}
                             {titleLevelDocs.length > 0 && (
                               <div>
                                 <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">
-                                  Title Documents
+                                  {t('appraisalPanel.titleDocuments')}
                                 </p>
                                 {titleLevelDocs.map(d => renderDocRow(d, 'text-indigo-400'))}
                               </div>

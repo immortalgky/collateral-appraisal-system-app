@@ -24,6 +24,7 @@
   "filters": {
     "eventTypePlaceholder": "Filter by event type...",
     "statusLabel": "Status",
+    "allStatuses": "All statuses",
     "from": "From",
     "to": "To",
     "clear": "Clear filters"
@@ -47,5 +48,6 @@
     "copied": "Copied!",
     "noPayload": "No payload"
   },
-  "emptyState": "No webhook deliveries found"
+  "emptyState": "No webhook deliveries found",
+  "loadFailed": "Failed to load webhook deliveries"
 }

@@ -2,7 +2,11 @@ import { useState } from 'react';
 import Icon from '@/shared/components/Icon';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { useGetIncomeAnalysis } from '@features/pricingAnalysis/api';
-import type { IncomeSectionDto, IncomeCategoryDto, IncomeAssumptionDto } from '@features/pricingAnalysis/types/income';
+import type {
+  IncomeSectionDto,
+  IncomeCategoryDto,
+  IncomeAssumptionDto,
+} from '@features/pricingAnalysis/types/income';
 
 interface Props {
   pricingAnalysisId: string;
@@ -120,7 +124,11 @@ const SummaryRow = ({
 }) => (
   <div className="flex items-center justify-between">
     <span className="text-xs text-gray-500">{label}</span>
-    <span className={highlight ? 'text-sm font-bold text-teal-700' : 'text-xs font-medium text-gray-800'}>
+    <span
+      className={
+        highlight ? 'text-sm font-bold text-teal-700' : 'text-xs font-medium text-gray-800'
+      }
+    >
       {value != null ? formatNumber(value, 2) : '-'}
     </span>
   </div>

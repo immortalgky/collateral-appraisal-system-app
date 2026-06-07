@@ -8,6 +8,8 @@ import type {
   PaginatedEvaluationList,
   UpdateEvaluationBody,
   DetectDeliveryTimeResponse,
+  EvaluationConfig,
+  EvaluationConfigDto,
 } from './types';
 
 // ─── Query Key Factory ────────────────────────────────────────────────────────
@@ -20,6 +22,65 @@ export const evaluationKeys = {
   detail: (appraisalId: string) => [...evaluationKeys.details(), appraisalId] as const,
   detectDelivery: (appraisalId: string) =>
     [...evaluationKeys.all, 'detect-delivery', appraisalId] as const,
+};
+
+export const evaluationConfigKeys = {
+  all: ['appraisal-evaluation-configs'] as const,
+  bySegment: (bankingSegment: string) =>
+    [...evaluationConfigKeys.all, bankingSegment] as const,
+};
+
+// ─── Helper — parse raw DTO to typed EvaluationConfig ─────────────────────────
+
+function parseConfig(dto: EvaluationConfigDto): EvaluationConfig {
+  let guidance: EvaluationConfig['guidance'] = {};
+  let thresholds: EvaluationConfig['thresholds'] = null;
+
+  try {
+    guidance = JSON.parse(dto.guidanceJson) as EvaluationConfig['guidance'];
+  } catch {
+    // leave empty — fallback in components
+  }
+
+  if (dto.thresholdsJson) {
+    try {
+      thresholds = JSON.parse(dto.thresholdsJson) as EvaluationConfig['thresholds'];
+    } catch {
+      thresholds = null;
+    }
+  }
+
+  return {
+    id: dto.id,
+    bankingSegment: dto.bankingSegment,
+    criteriaSlot: dto.criteriaSlot,
+    criteriaKey: dto.criteriaKey,
+    labelEn: dto.labelEn,
+    labelTh: dto.labelTh,
+    weight: dto.weight,
+    maxScore: dto.maxScore,
+    guidance,
+    thresholds,
+    displayOrder: dto.displayOrder,
+  };
+}
+
+// ─── GET /appraisal-evaluation-configs?bankingSegment= ────────────────────────
+
+export const useGetEvaluationConfig = (bankingSegment?: string) => {
+  return useQuery({
+    queryKey: bankingSegment
+      ? evaluationConfigKeys.bySegment(bankingSegment)
+      : evaluationConfigKeys.all,
+    queryFn: async (): Promise<EvaluationConfig[]> => {
+      const { data } = await axios.get<EvaluationConfigDto[]>('/appraisal-evaluation-configs', {
+        params: bankingSegment ? { bankingSegment } : undefined,
+      });
+      return (data ?? []).map(parseConfig);
+    },
+    enabled: !!bankingSegment,
+    staleTime: 5 * 60_000,
+  });
 };
 
 // ─── GET /appraisal-evaluations (paginated list) ──────────────────────────────

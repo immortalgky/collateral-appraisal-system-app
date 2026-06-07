@@ -16,9 +16,7 @@ interface IncomeScenarioResults {
   finalValueRounded: number;
 }
 
-function isSummarySection(
-  section: DCFSection | DCFSummarySection,
-): section is DCFSummarySection {
+function isSummarySection(section: DCFSection | DCFSummarySection): section is DCFSummarySection {
   return 'grossRevenue' in section;
 }
 
@@ -33,11 +31,11 @@ export function useIncomeScenarioResults(): IncomeScenarioResults {
 
   return useMemo(() => {
     const incomeSections = (sections as (DCFSection | DCFSummarySection)[]).filter(
-      (s) => !isSummarySection(s) && s.sectionType === 'income',
+      s => !isSummarySection(s) && s.sectionType === 'income',
     ) as DCFSection[];
 
     const expenseSections = (sections as (DCFSection | DCFSummarySection)[]).filter(
-      (s) => !isSummarySection(s) && s.sectionType === 'expenses',
+      s => !isSummarySection(s) && s.sectionType === 'expenses',
     ) as DCFSection[];
 
     const summarySections = (sections as (DCFSection | DCFSummarySection)[]).filter(
@@ -48,10 +46,7 @@ export function useIncomeScenarioResults(): IncomeScenarioResults {
     const cashflowData: CashflowTimelineDataPoint[] = Array.from(
       { length: totalNumberOfYears },
       (_, i) => {
-        const income = incomeSections.reduce(
-          (sum, s) => sum + (s.totalSectionValues?.[i] ?? 0),
-          0,
-        );
+        const income = incomeSections.reduce((sum, s) => sum + (s.totalSectionValues?.[i] ?? 0), 0);
         const expenses = expenseSections.reduce(
           (sum, s) => sum + Math.abs(s.totalSectionValues?.[i] ?? 0),
           0,
@@ -75,9 +70,7 @@ export function useIncomeScenarioResults(): IncomeScenarioResults {
     const totalPv = cashflowData.reduce((sum, d) => sum + d.presentValue, 0);
 
     const noiRatio =
-      cashflowData[0]?.income > 0
-        ? (cashflowData[0]?.noi / cashflowData[0].income) * 100
-        : 0;
+      cashflowData[0]?.income > 0 ? (cashflowData[0]?.noi / cashflowData[0].income) * 100 : 0;
 
     const toKpiValue = (n: number | null | undefined): number | null =>
       n != null && Number.isFinite(n) ? n : null;

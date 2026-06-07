@@ -8,9 +8,21 @@ import {
 
 // ============================== API ===============================
 
+const SupportingDetailImageSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  storageUrl: z.string(),
+  fileName: z.string().nullable(),
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  displaySequence: z.number(),
+});
+
+export type SupportingDetailImageType = z.infer<typeof SupportingDetailImageSchema>;
+
 const GetSupportingDataById = z.object({
   id: z.string(),
-  isEditable: z.boolean(), // to check authority to edit data of user
+  hasAuthorityToEdit: z.boolean(), // to check authority to edit data of user
   propertyName: z.string().nullable(),
   developer: z.string().nullable(),
   modelName: z.string().nullable(),
@@ -35,6 +47,7 @@ const GetSupportingDataById = z.object({
   website: z.string().nullable(),
   sourceUrl: z.string().nullable(),
   remark: z.string().nullable(),
+  images: z.array(SupportingDetailImageSchema).default([]),
 });
 
 export type GetSupportingDataDetailByIdType = z.infer<typeof GetSupportingDataById>;
@@ -51,15 +64,14 @@ export const createSupportingDataForm = buildFormSchema(supportingDataFields);
 export type createSupportingDataFormType = z.infer<typeof createSupportingDataForm>;
 
 export const defaultSupportingData: createSupportingDataFormType = {
-  importChannel: '',
-  importDate: '',
+  importChannel: null,
+  importDate: null,
   sourceOfData: null,
-  appraisalCompany: null,
   description: null,
 };
 
 export const defaultDecision: decisionFormType = {
-  decision: '',
+  decision: null,
   remark: null,
 };
 
@@ -67,8 +79,8 @@ export const defaultSupportingDataDetail: createSupportingDataDetailFormType = {
   propertyName: null,
   developer: null,
   modelName: null,
-  collateralType: '',
-  buildingType: '',
+  collateralType: null,
+  buildingType: null,
   landArea: null,
   usableArea: null,
   projectName: null,
@@ -84,7 +96,7 @@ export const defaultSupportingDataDetail: createSupportingDataDetailFormType = {
   offeringPrice: null,
   sellingPrice: null,
   phoneNo: null,
-  informationDate: '',
+  informationDate: null,
   website: null,
   sourceUrl: null,
   remark: null,

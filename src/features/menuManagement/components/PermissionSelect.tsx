@@ -1,10 +1,14 @@
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGetPermissions } from '@features/userManagement/api/permissions';
 
 interface PermissionSelectProps {
   value: string;
   onChange: (code: string) => void;
+  /** Overrides the translated search placeholder when provided */
   placeholder?: string;
+  /** Label rendered as the empty <option> when allowEmpty is true */
+  emptyLabel?: string;
   allowEmpty?: boolean;
   disabled?: boolean;
   id?: string;
@@ -17,11 +21,13 @@ interface PermissionSelectProps {
 export function PermissionSelect({
   value,
   onChange,
-  placeholder = 'Select permission...',
+  placeholder,
+  emptyLabel,
   allowEmpty = false,
   disabled = false,
   id,
 }: PermissionSelectProps) {
+  const { t } = useTranslation('menuManagement');
   const [search, setSearch] = useState('');
   const { data, isLoading } = useGetPermissions({ pageSize: 200 });
 
@@ -42,7 +48,7 @@ export function PermissionSelect({
         type="text"
         value={search}
         onChange={e => setSearch(e.target.value)}
-        placeholder="Search permissions..."
+        placeholder={placeholder ?? t('permissionSelect.searchPlaceholder')}
         disabled={disabled}
         className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
       />
@@ -53,8 +59,10 @@ export function PermissionSelect({
         disabled={disabled || isLoading}
         className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-gray-50"
       >
-        {allowEmpty && <option value="">{placeholder}</option>}
-        {isLoading && <option disabled>Loading...</option>}
+        {allowEmpty && (
+          <option value="">{emptyLabel ?? t('permissionSelect.editPermissionEmpty')}</option>
+        )}
+        {isLoading && <option disabled>{t('permissionSelect.loading')}</option>}
         {filtered.map(p => (
           <option key={p.id} value={p.permissionCode}>
             {p.permissionCode} — {p.displayName}

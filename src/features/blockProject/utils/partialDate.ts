@@ -25,9 +25,5 @@ export function isValidPartialDate(value: string | null | undefined): boolean {
   // Full date — verify it's a real calendar day.
   const [y, m, d] = value.split('-').map(Number);
   const date = new Date(Date.UTC(y, m - 1, d));
-  return (
-    date.getUTCFullYear() === y &&
-    date.getUTCMonth() === m - 1 &&
-    date.getUTCDate() === d
-  );
+  return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }

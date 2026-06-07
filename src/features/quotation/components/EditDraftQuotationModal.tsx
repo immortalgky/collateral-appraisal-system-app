@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -48,6 +49,7 @@ type DocSelections = Record<string, Record<string, SharedDocumentSelectionDto['l
  * Enhancement #5: removals of existing rows are marked (not deleted) until Save.
  */
 const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotationModalProps) => {
+  const { t } = useTranslation(['quotation', 'common']);
   const [cutOffTime, setCutOffTime] = useState<string | null>(null);
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -104,7 +106,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
   }, [allCompanies, searchQuery]);
 
   // Seed form once per open
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!isOpen) return;
     setCutOffTime(quotation.cutOffTime ?? null);
@@ -227,23 +229,21 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
   // Called when a row's max-days input changes
   const handleUpdateMaxDays = (id: string, maxAppraisalDays: number | null) => {
-    setAppraisals(prev =>
-      prev.map(a => (a.id === id ? { ...a, maxAppraisalDays } : a)),
-    );
+    setAppraisals(prev => prev.map(a => (a.id === id ? { ...a, maxAppraisalDays } : a)));
   };
 
   const handleSave = async () => {
     if (!cutOffTime) {
-      toast.error('Cut off time is required');
+      toast.error(t('toasts.cutOffRequired'));
       return;
     }
     if (selectedCompanies.length === 0) {
-      toast.error('At least one company must be invited');
+      toast.error(t('toasts.companyRequired'));
       return;
     }
     const activeAppraisals = appraisals.filter(a => !markedForRemovalIds.has(a.id));
     if (activeAppraisals.length === 0) {
-      toast.error('At least one appraisal is required');
+      toast.error(t('toasts.appraisalRequired'));
       return;
     }
 
@@ -253,7 +253,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         await removeAppraisalAsync(id);
       } catch (err: unknown) {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(apiErr?.apiError?.detail ?? `Failed to remove appraisal`);
+        toast.error(apiErr?.apiError?.detail ?? t('toasts.appraisalRemoveFailed'));
         return;
       }
     }
@@ -264,7 +264,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         await addAppraisalAsync(id);
       } catch (err: unknown) {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(apiErr?.apiError?.detail ?? `Failed to add appraisal`);
+        toast.error(apiErr?.apiError?.detail ?? t('toasts.appraisalRemoveFailed'));
         return;
       }
     }
@@ -292,11 +292,11 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         appraisals: appraisalEntries,
       });
       await setSharedDocsAsync(docPayload);
-      toast.success('Draft updated');
+      toast.success(t('toasts.draftUpdated'));
       onClose();
     } catch (err: unknown) {
       const apiErr = err as { apiError?: { detail?: string } };
-      toast.error(apiErr?.apiError?.detail ?? 'Failed to update draft');
+      toast.error(apiErr?.apiError?.detail ?? t('toasts.draftUpdateFailed'));
     }
   };
 
@@ -306,230 +306,246 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
   return (
     <>
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Draft Quotation" size="3xl">
-      <div className="flex flex-col gap-5">
-        {/* Cut Off Time */}
-        <DateTimePickerInput
-          label="Cut Off Time"
-          required
-          helperText="Deadline for companies to submit their quotation responses"
-          disablePastDates
-          value={cutOffTime}
-          onChange={v => setCutOffTime(v)}
-        />
+      <Modal isOpen={isOpen} onClose={onClose} title={t('draft.editModal')} size="3xl">
+        <div className="flex flex-col gap-5">
+          {/* Cut Off Time */}
+          <DateTimePickerInput
+            label={t('fields.cutOffTime')}
+            required
+            helperText={t('fields.cutOffTimeHelper')}
+            disablePastDates
+            value={cutOffTime}
+            onChange={v => setCutOffTime(v)}
+          />
 
-        {/* Compact appraisal summary + lazy picker */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Appraisals ({activeAppraisalCount})
-          </label>
+          {/* Compact appraisal summary + lazy picker */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t('columns.appraisals')} ({activeAppraisalCount})
+            </label>
 
-          {/* Compact summary list — always visible; picker hides its internal selected panel via hideSelectedPanel */}
-          {appraisals.length > 0 && (
-            <div className="rounded-lg border border-gray-200 overflow-hidden mb-2">
-              {/* "Set max days for all" bar */}
-              <SetMaxDaysBar
-                appraisals={appraisals}
-                markedForRemovalIds={markedForRemovalIds}
-                onUpdateMaxDays={handleUpdateMaxDays}
-              />
-              <div className="divide-y divide-gray-100">
-                {appraisals.map(a => (
-                  <SelectedAppraisalRow
-                    key={a.id}
-                    appraisal={a}
-                    isExpanded={expandedSummaryIds.has(a.id)}
-                    onToggleExpanded={handleToggleSummaryExpanded}
-                    onUpdateMaxDays={handleUpdateMaxDays}
-                    docSelections={docSelections}
-                    onToggleDoc={handleToggleDoc}
-                    isMarkedForRemoval={markedForRemovalIds.has(a.id)}
-                    onUndoRemoval={handleUndoRemoval}
-                    onRemove={handleRemoveAppraisal}
-                  />
+            {/* Compact summary list — always visible; picker hides its internal selected panel via hideSelectedPanel */}
+            {appraisals.length > 0 && (
+              <div className="rounded-lg border border-gray-200 overflow-hidden mb-2">
+                {/* "Set max days for all" bar */}
+                <SetMaxDaysBar
+                  appraisals={appraisals}
+                  markedForRemovalIds={markedForRemovalIds}
+                  onUpdateMaxDays={handleUpdateMaxDays}
+                />
+                <div className="divide-y divide-gray-100">
+                  {appraisals.map(a => (
+                    <SelectedAppraisalRow
+                      key={a.id}
+                      appraisal={a}
+                      isExpanded={expandedSummaryIds.has(a.id)}
+                      onToggleExpanded={handleToggleSummaryExpanded}
+                      onUpdateMaxDays={handleUpdateMaxDays}
+                      docSelections={docSelections}
+                      onToggleDoc={handleToggleDoc}
+                      isMarkedForRemoval={markedForRemovalIds.has(a.id)}
+                      onUndoRemoval={handleUndoRemoval}
+                      onRemove={handleRemoveAppraisal}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Open picker popup */}
+            <Button variant="outline" size="sm" onClick={() => setShowPicker(true)}>
+              <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
+              {t('buttons.addOrChangeAppraisals')}
+            </Button>
+          </div>
+
+          {/* Selected companies chips */}
+          {selectedCompanies.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                {t('fields.selectedCompanies')} ({selectedCompanies.length})
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {selectedCompanies.map(c => (
+                  <div
+                    key={c.id}
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
+                  >
+                    <Icon name="building" style="solid" className="size-3.5" />
+                    <span className="font-medium">{c.companyName}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCompany(c.id)}
+                      className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                      aria-label={t('aria.removeCompany', { company: c.companyName })}
+                    >
+                      <Icon name="xmark" style="solid" className="size-3" />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Open picker popup */}
-          <Button variant="outline" size="sm" onClick={() => setShowPicker(true)}>
-            <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-            Add or change appraisals
-          </Button>
-        </div>
-
-        {/* Selected companies chips */}
-        {selectedCompanies.length > 0 && (
+          {/* Company selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Selected Companies ({selectedCompanies.length})
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {selectedCompanies.map(c => (
-                <div
-                  key={c.id}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
-                >
-                  <Icon name="building" style="solid" className="size-3.5" />
-                  <span className="font-medium">{c.companyName}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveCompany(c.id)}
-                    className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
-                    aria-label={`Remove ${c.companyName}`}
-                  >
-                    <Icon name="xmark" style="solid" className="size-3" />
-                  </button>
-                </div>
-              ))}
+            <div className="block text-sm font-medium text-gray-700 mb-1.5">
+              {t('fields.invitedCompanies')} <span className="text-danger">*</span>
             </div>
-          </div>
-        )}
-
-        {/* Company selection */}
-        <div>
-          <div className="block text-sm font-medium text-gray-700 mb-1.5">
-            Invited Companies <span className="text-danger">*</span>
-          </div>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="p-2 border-b border-gray-100">
-              <div className="relative">
-                <Icon
-                  name="magnifying-glass"
-                  style="regular"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400"
-                />
-                <input
-                  type="text"
-                  placeholder="Search company name..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-sm border-0 focus:ring-0 outline-none"
-                />
-              </div>
-            </div>
-            {!isLoadingCompanies && filteredCompanies.length > 0 && (() => {
-              const selectedSet = new Set(selectedCompanies.map(c => c.id));
-              const allVisibleSelected = filteredCompanies.every(c => selectedSet.has(c.id));
-              const someVisibleSelected = filteredCompanies.some(c => selectedSet.has(c.id));
-              return (
-                <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={allVisibleSelected}
-                    ref={el => {
-                      if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
-                    }}
-                    onChange={() => handleSetAllVisibleCompanies(filteredCompanies, !allVisibleSelected)}
-                    className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
-                    aria-label="Select all visible companies"
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="p-2 border-b border-gray-100">
+                <div className="relative">
+                  <Icon
+                    name="magnifying-glass"
+                    style="regular"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400"
                   />
-                  <span className="text-xs text-gray-600">
-                    {allVisibleSelected ? 'Clear all' : 'Select all'}
-                    {searchQuery.trim() && (
-                      <span className="text-gray-400"> ({filteredCompanies.length} matching)</span>
-                    )}
-                  </span>
+                  <input
+                    type="text"
+                    placeholder={t('shared.searchCompanyName')}
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 text-sm border-0 focus:ring-0 outline-none"
+                  />
                 </div>
-              );
-            })()}
-            <div className="max-h-96 overflow-y-auto">
-              {isLoadingCompanies ? (
-                <div className="flex items-center justify-center px-4 py-6 gap-2 text-gray-400">
-                  <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                  <span className="text-xs">Loading...</span>
-                </div>
-              ) : filteredCompanies.length === 0 ? (
-                <div className="px-4 py-6 text-center text-sm text-gray-500">
-                  No companies found
-                </div>
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  {filteredCompanies.map(c => {
-                    const selected = isCompanySelected(c.id);
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => handleToggleCompany(c)}
-                        className={clsx(
-                          'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                          selected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+              </div>
+              {!isLoadingCompanies &&
+                filteredCompanies.length > 0 &&
+                (() => {
+                  const selectedSet = new Set(selectedCompanies.map(c => c.id));
+                  const allVisibleSelected = filteredCompanies.every(c => selectedSet.has(c.id));
+                  const someVisibleSelected = filteredCompanies.some(c => selectedSet.has(c.id));
+                  return (
+                    <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={allVisibleSelected}
+                        ref={el => {
+                          if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                        }}
+                        onChange={() =>
+                          handleSetAllVisibleCompanies(filteredCompanies, !allVisibleSelected)
+                        }
+                        className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
+                        aria-label={t('aria.selectAllVisibleCompanies')}
+                      />
+                      <span className="text-xs text-gray-600">
+                        {allVisibleSelected ? t('picker.clearAll') : t('picker.selectAll')}
+                        {searchQuery.trim() && (
+                          <span className="text-gray-400">
+                            {' '}
+                            {t('picker.matchingCount', { count: filteredCompanies.length })}
+                          </span>
                         )}
-                      >
-                        <div
+                      </span>
+                    </div>
+                  );
+                })()}
+              <div className="max-h-96 overflow-y-auto">
+                {isLoadingCompanies ? (
+                  <div className="flex items-center justify-center px-4 py-6 gap-2 text-gray-400">
+                    <Icon name="spinner" style="solid" className="size-4 animate-spin" />
+                    <span className="text-xs">{t('common:status.loading')}</span>
+                  </div>
+                ) : filteredCompanies.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-sm text-gray-500">
+                    {t('empty.noCompaniesInvited')}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {filteredCompanies.map(c => {
+                      const selected = isCompanySelected(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => handleToggleCompany(c)}
                           className={clsx(
-                            'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                            selected
-                              ? 'bg-purple-500 border-purple-500'
-                              : 'border-gray-300 bg-white',
+                            'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
+                            selected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
                           )}
                         >
-                          {selected && (
-                            <Icon name="check" style="solid" className="size-3 text-white" />
-                          )}
-                        </div>
-                        <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                          <Icon name="building" style="solid" className="size-4 text-purple-600" />
-                        </div>
-                        <span className="text-sm font-medium text-gray-900 truncate flex-1">
-                          {c.companyName}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+                          <div
+                            className={clsx(
+                              'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
+                              selected
+                                ? 'bg-purple-500 border-purple-500'
+                                : 'border-gray-300 bg-white',
+                            )}
+                          >
+                            {selected && (
+                              <Icon name="check" style="solid" className="size-3 text-white" />
+                            )}
+                          </div>
+                          <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                            <Icon
+                              name="building"
+                              style="solid"
+                              className="size-4 text-purple-600"
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-gray-900 truncate flex-1">
+                            {c.companyName}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isPending || !cutOffTime || selectedCompanies.length === 0 || activeAppraisalCount === 0}
-            isLoading={isPending}
-          >
-            {!isPending && <Icon name="floppy-disk" style="solid" className="size-4 mr-1.5" />}
-            Save Changes
-          </Button>
+          {/* Footer */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="outline" onClick={onClose} disabled={isPending}>
+              {t('common:actions.cancel')}
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={
+                isPending ||
+                !cutOffTime ||
+                selectedCompanies.length === 0 ||
+                activeAppraisalCount === 0
+              }
+              isLoading={isPending}
+            >
+              {!isPending && <Icon name="floppy-disk" style="solid" className="size-4 mr-1.5" />}
+              {t('buttons.saveChanges')}
+            </Button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
 
-    {/* Picker popup — child modal stacks above the edit modal */}
-    <Modal
-      isOpen={showPicker}
-      onClose={() => setShowPicker(false)}
-      title="Add or change appraisals"
-      size="3xl"
-    >
-      <div className="flex flex-col gap-4">
-        <AppraisalPicker
-          selected={appraisals}
-          onAdd={handleAddAppraisal}
-          onRemove={handleRemoveAppraisal}
-          onUpdateMaxDays={handleUpdateMaxDays}
-          docSelections={docSelections}
-          onToggleDoc={handleToggleDoc}
-          excludeQuotationRequestId={quotation.id}
-          markedForRemovalIds={markedForRemovalIds}
-          onUndoRemoval={handleUndoRemoval}
-          hideSelectedPanel
-        />
-        <div className="flex justify-end pt-2 border-t border-gray-100">
-          <Button onClick={() => setShowPicker(false)}>
-            <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
-            Done
-          </Button>
+      {/* Picker popup — child modal stacks above the edit modal */}
+      <Modal
+        isOpen={showPicker}
+        onClose={() => setShowPicker(false)}
+        title={t('buttons.addOrChangeAppraisals')}
+        size="3xl"
+      >
+        <div className="flex flex-col gap-4">
+          <AppraisalPicker
+            selected={appraisals}
+            onAdd={handleAddAppraisal}
+            onRemove={handleRemoveAppraisal}
+            onUpdateMaxDays={handleUpdateMaxDays}
+            docSelections={docSelections}
+            onToggleDoc={handleToggleDoc}
+            excludeQuotationRequestId={quotation.id}
+            markedForRemovalIds={markedForRemovalIds}
+            onUndoRemoval={handleUndoRemoval}
+            hideSelectedPanel
+          />
+          <div className="flex justify-end pt-2 border-t border-gray-100">
+            <Button onClick={() => setShowPicker(false)}>
+              <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
+              {t('buttons.done')}
+            </Button>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
     </>
   );
 };

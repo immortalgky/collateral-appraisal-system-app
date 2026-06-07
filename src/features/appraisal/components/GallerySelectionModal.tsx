@@ -36,9 +36,7 @@ export const GallerySelectionModal = ({
   // Use stable reference for empty array
   const stableInitialIds = initialSelectedIds ?? EMPTY_ARRAY;
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    new Set(stableInitialIds)
-  );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(stableInitialIds));
   const [searchQuery, setSearchQuery] = useState('');
 
   // Memoize the initial IDs to prevent unnecessary re-renders
@@ -50,7 +48,7 @@ export const GallerySelectionModal = ({
       setSelectedIds(new Set(stableInitialIds));
       setSearchQuery('');
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialIdsKey]);
 
   // Prevent body scroll when modal is open
@@ -71,7 +69,7 @@ export const GallerySelectionModal = ({
       image =>
         image.fileName?.toLowerCase().includes(query) ||
         image.description?.toLowerCase().includes(query) ||
-        image.photoCategory?.toLowerCase().includes(query)
+        image.photoCategory?.toLowerCase().includes(query),
     );
   }, [images, searchQuery]);
 
@@ -124,9 +122,7 @@ export const GallerySelectionModal = ({
             </div>
             <div>
               <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-              <p className="text-sm text-gray-500 mt-0.5">
-                {images.length} photos available
-              </p>
+              <p className="text-sm text-gray-500 mt-0.5">{images.length} photos available</p>
             </div>
           </div>
           <button
@@ -168,8 +164,8 @@ export const GallerySelectionModal = ({
             {/* Stats & Select All */}
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-500">
-                Showing <span className="font-medium text-gray-700">{filteredImages.length}</span> of{' '}
-                <span className="font-medium text-gray-700">{images.length}</span>
+                Showing <span className="font-medium text-gray-700">{filteredImages.length}</span>{' '}
+                of <span className="font-medium text-gray-700">{images.length}</span>
               </div>
 
               {multiSelect && filteredImages.length > 0 && (
@@ -185,12 +181,10 @@ export const GallerySelectionModal = ({
                         'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
                         isAllSelected
                           ? 'bg-primary border-primary'
-                          : 'border-gray-300 hover:border-primary'
+                          : 'border-gray-300 hover:border-primary',
                       )}
                     >
-                      {isAllSelected && (
-                        <Icon name="check" className="text-xs text-white" />
-                      )}
+                      {isAllSelected && <Icon name="check" className="text-xs text-white" />}
                     </div>
                     Select All
                   </button>
@@ -225,9 +219,7 @@ export const GallerySelectionModal = ({
               </div>
               <p className="text-lg font-medium text-gray-500">No photos found</p>
               <p className="text-sm text-gray-400 mt-1">
-                {searchQuery
-                  ? 'Try a different search term'
-                  : 'Upload photos to the gallery first'}
+                {searchQuery ? 'Try a different search term' : 'Upload photos to the gallery first'}
               </p>
             </div>
           ) : (
@@ -242,7 +234,7 @@ export const GallerySelectionModal = ({
                       'group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200',
                       isSelected
                         ? 'ring-3 ring-primary ring-offset-2 scale-[0.98]'
-                        : 'hover:ring-2 hover:ring-gray-300 hover:shadow-lg'
+                        : 'hover:ring-2 hover:ring-gray-300 hover:shadow-lg',
                     )}
                   >
                     <img
@@ -255,9 +247,7 @@ export const GallerySelectionModal = ({
                     <div
                       className={clsx(
                         'absolute inset-0 transition-opacity duration-200',
-                        isSelected
-                          ? 'bg-primary/20'
-                          : 'bg-black/0 group-hover:bg-black/20'
+                        isSelected ? 'bg-primary/20' : 'bg-black/0 group-hover:bg-black/20',
                       )}
                     />
 
@@ -267,7 +257,7 @@ export const GallerySelectionModal = ({
                         'absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-lg',
                         isSelected
                           ? 'bg-primary text-white scale-100'
-                          : 'bg-white/90 text-gray-400 border border-gray-200 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100'
+                          : 'bg-white/90 text-gray-400 border border-gray-200 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100',
                       )}
                     >
                       {isSelected ? (

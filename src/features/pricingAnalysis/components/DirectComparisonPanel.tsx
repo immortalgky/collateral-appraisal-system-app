@@ -1,6 +1,7 @@
 import { useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
+import { useTranslation } from 'react-i18next';
+import { makeDirectComparisonDto, DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
 import { useEffect, useState } from 'react';
 import type {
   CalculationType,
@@ -52,6 +53,7 @@ interface DirectComparisonPanelProps {
   savedAppraisalPrice?: number | null;
   savedHasBuildingCost?: boolean | null;
   savedIncludeLandArea?: boolean | null;
+  manualSubject?: boolean;
   onCalculationSave: (payload: {
     approachType: string;
     methodType: string;
@@ -78,10 +80,12 @@ export function DirectComparisonPanel({
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
+  manualSubject,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: DirectComparisonPanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'DC_COST';
 
@@ -92,7 +96,7 @@ export function DirectComparisonPanel({
 
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
-    resolver: zodResolver(DirectComparisonDto),
+    resolver: zodResolver(makeDirectComparisonDto(t)),
   });
 
   const {
@@ -133,7 +137,7 @@ export function DirectComparisonPanel({
   /** Form handler — skips full Zod validation so we can save factors/scores independently */
   const handleOnSubmit = async () => {
     if (!activeMethod?.pricingAnalysisId || !methodId) {
-      toast.error('Pricing analysis ID or method ID not found!');
+      toast.error(t('toasts.missingIds'));
       return;
     }
 
@@ -164,10 +168,10 @@ export function DirectComparisonPanel({
           appraisalValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('toasts.saved'));
       reset(value);
     } catch {
-      toast.error('Failed to save comparative analysis');
+      toast.error(t('toasts.failedSave'));
     }
   };
 
@@ -198,7 +202,7 @@ export function DirectComparisonPanel({
       methodId: methodId!,
       methodType: methodType!,
       comparativeSurveys,
-      property: property!,
+      property: property,
       template,
       allFactors,
       reset,
@@ -231,22 +235,25 @@ export function DirectComparisonPanel({
       setIsGenerated(false);
       setPricingTemplate(undefined);
       reset();
-      toast.success('Method reset successfully');
+      toast.success(t('toasts.resetSuccess'));
     } catch {
-      toast.error('Failed to reset method');
+      toast.error(t('toasts.failedReset'));
     }
   };
 
   // Auto-show table when linked comparables already exist from the API
   useEffect(() => {
     if (isGenerated || comparativeSurveys.length === 0) return;
-    if (!methodId || !methodType || !property) return;
+    // A saved reference (e.g. opened from the group References section) has no live
+    // subject `property` but does have saved data to restore — never block a restore.
+    const hasSavedData = !!(savedComparativeFactors && savedComparativeFactors.length > 0);
+    if (!methodId || !methodType || (!manualSubject && !property && !hasSavedData)) return;
 
     // Restore from saved data if available
     if (savedComparativeFactors && savedComparativeFactors.length > 0) {
       restoreDirectComparisonFromSavedData({
         methodId,
-        property,
+        property: property ?? {},
         comparativeSurveys,
         allFactors,
         linkedComparables,
@@ -264,18 +271,14 @@ export function DirectComparisonPanel({
       }
       // Restore toggles BEFORE the rounded inputs so we pick the right target path.
       if (savedHasBuildingCost != null) {
-        setValue(
-          'directComparisonAppraisalPrice.hasBuildingCost' as any,
-          savedHasBuildingCost,
-          { shouldDirty: false },
-        );
+        setValue('directComparisonAppraisalPrice.hasBuildingCost' as any, savedHasBuildingCost, {
+          shouldDirty: false,
+        });
       }
       if (savedIncludeLandArea != null) {
-        setValue(
-          'directComparisonAppraisalPrice.includeLandArea' as any,
-          savedIncludeLandArea,
-          { shouldDirty: false },
-        );
+        setValue('directComparisonAppraisalPrice.includeLandArea' as any, savedIncludeLandArea, {
+          shouldDirty: false,
+        });
       }
       // Restore the user-rounded Appraisal Price into the visible input.
       // With building cost: appraisalPriceIncludeBuildingCostRounded.
@@ -289,11 +292,9 @@ export function DirectComparisonPanel({
       }
       // With building cost, also restore "Land Price (rounded)" which is bound to appraisalPriceRounded.
       if (hbc && savedLandValue != null && savedLandValue !== 0) {
-        setValue(
-          'directComparisonAppraisalPrice.appraisalPriceRounded' as any,
-          savedLandValue,
-          { shouldDirty: true },
-        );
+        setValue('directComparisonAppraisalPrice.appraisalPriceRounded' as any, savedLandValue, {
+          shouldDirty: true,
+        });
       }
       if (savedBuildingCost != null && savedBuildingCost !== 0) {
         setValue('directComparisonAppraisalPrice.buildingCost' as any, savedBuildingCost, {
@@ -325,7 +326,7 @@ export function DirectComparisonPanel({
       methodId,
       methodType,
       comparativeSurveys,
-      property,
+      property: property,
       template: undefined,
       allFactors,
       reset,
@@ -353,7 +354,7 @@ export function DirectComparisonPanel({
   // Re-init form when comparative surveys change (e.g. user selects/deselects from modal)
   useEffect(() => {
     if (!isGenerated) return;
-    if (!methodId || !methodType || !property) return;
+    if (!methodId || !methodType || (!manualSubject && !property)) return;
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
@@ -406,7 +407,7 @@ export function DirectComparisonPanel({
       >
         <PricingAnalysisTemplateSelector
           icon="house-building"
-          methodName="Direct Comparison"
+          methodName={t('directComparison.methodName')}
           onGenerate={handleOnGenerate}
           collateralType={{
             fieldName: 'collateralType',
@@ -431,7 +432,7 @@ export function DirectComparisonPanel({
             <div className="flex-1 min-h-0 overflow-auto">
               <DirectComparisonForm
                 {...methods}
-                property={property}
+                property={property ?? {}}
                 buildingCost={buildingCost}
                 isCostApproach={isCostApproach}
                 marketSurveys={marketSurveys}
@@ -439,6 +440,7 @@ export function DirectComparisonPanel({
                 template={pricingTemplate}
                 allFactors={allFactors}
                 onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+                manualSubject={manualSubject}
               />
             </div>
             <MethodFooterActions
@@ -453,7 +455,7 @@ export function DirectComparisonPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>

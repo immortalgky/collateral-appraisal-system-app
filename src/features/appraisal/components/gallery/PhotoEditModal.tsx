@@ -27,7 +27,13 @@ const getFileType = (image: GalleryImage): string => {
   return '-';
 };
 
-const PhotoEditModal = ({ isOpen, image, onClose, onSave, isLoading = false }: PhotoEditModalProps) => {
+const PhotoEditModal = ({
+  isOpen,
+  image,
+  onClose,
+  onSave,
+  isLoading = false,
+}: PhotoEditModalProps) => {
   const [caption, setCaption] = useState('');
 
   useEffect(() => {
@@ -73,15 +79,10 @@ const PhotoEditModal = ({ isOpen, image, onClose, onSave, isLoading = false }: P
                 <span
                   className={clsx(
                     'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium',
-                    image.isInUse
-                      ? 'bg-green-50 text-green-700'
-                      : 'bg-gray-100 text-gray-600'
+                    image.isInUse ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600',
                   )}
                 >
-                  <Icon
-                    name={image.isInUse ? 'check-circle' : 'clock'}
-                    className="text-[10px]"
-                  />
+                  <Icon name={image.isInUse ? 'check-circle' : 'clock'} className="text-[10px]" />
                   {image.isInUse ? 'In Use' : 'Not Used'}
                 </span>
               </div>
@@ -105,7 +106,10 @@ const PhotoEditModal = ({ isOpen, image, onClose, onSave, isLoading = false }: P
 
             {/* Description / Caption (editable) */}
             <div>
-              <label htmlFor="photo-caption" className="text-xs font-medium text-gray-500 mb-1 block">
+              <label
+                htmlFor="photo-caption"
+                className="text-xs font-medium text-gray-500 mb-1 block"
+              >
                 Description
               </label>
               <textarea
