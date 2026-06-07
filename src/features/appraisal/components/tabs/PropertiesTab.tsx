@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
@@ -29,6 +29,7 @@ import {
   useUpdatePropertyGroup,
 } from '../../api/propertyGroup';
 import { GroupContainer } from '../GroupContainer';
+import { PropertiesMapModal } from '../PropertiesMapModal';
 import { MoveToGroupModal } from '../MoveToGroupModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import { PropertyContextMenu } from '../PropertyContextMenu';
@@ -91,6 +92,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [highlightPropertyId, setHighlightPropertyId] = useState<string | null>(null);
+
+  // Properties map modal — holds the id of the property whose pin was clicked.
+  const [mapSelectedId, setMapSelectedId] = useState<string | null>(null);
+  const handleShowOnMap = useCallback((propertyId: string) => setMapSelectedId(propertyId), []);
+  const allProperties = useMemo(() => groups.flatMap(g => g.items), [groups]);
 
   const [activeProperty, setActiveProperty] = useState<PropertyItem | null>(null);
 
@@ -577,6 +583,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onPaste={handlePasteProperty}
                 onDelete={handleDeleteProperty}
                 onGoToPricingAnalysis={handleGoToPricingAnalysis}
+                onShowOnMap={handleShowOnMap}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
               />
@@ -620,6 +627,14 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         onClose={() => setDeleteModalState({ isOpen: false, property: null, groupId: null })}
         onConfirm={handleDeleteConfirm}
         isLoading={removePropertyMutation.isPending}
+      />
+
+      <PropertiesMapModal
+        isOpen={mapSelectedId != null}
+        onClose={() => setMapSelectedId(null)}
+        appraisalId={appraisalId}
+        properties={allProperties}
+        selectedPropertyId={mapSelectedId ?? ''}
       />
 
       {/* Context Menu (for grid view) */}

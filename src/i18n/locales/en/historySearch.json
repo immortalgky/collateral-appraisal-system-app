@@ -166,6 +166,10 @@
   "map": {
     "noApiKey": "Google Maps API key is not configured.",
     "loading": "Loading map...",
+    "loadFailed": "The map could not be loaded. Please check your connection and try again.",
+    "retry": "Retry",
+    "myLocation": "My location",
+    "radius": "Radius",
     "searchThisArea": "Search this area"
   },
   "locationPicker": {

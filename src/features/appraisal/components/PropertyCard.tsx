@@ -16,10 +16,12 @@ interface PropertyCardProps {
   property: PropertyItem;
   groupId: string;
   onContextMenu: (e: React.MouseEvent, property: PropertyItem, groupId: string) => void;
+  /** Opens the in-app properties map centred on this property. */
+  onShowOnMap?: (propertyId: string) => void;
 }
 
 export const PropertyCard = React.memo(
-  ({ property, groupId, onContextMenu }: PropertyCardProps) => {
+  ({ property, groupId, onContextMenu, onShowOnMap }: PropertyCardProps) => {
     const readOnly = usePageReadOnly();
     const navigate = useNavigate();
     const appraisalId = useAppraisalId();
@@ -81,7 +83,12 @@ export const PropertyCard = React.memo(
           <Icon name="grip-vertical" className="text-gray-400 text-sm" />
         </div>
 
-        <PropertyCardContent property={property} onClick={handleCardClick} size="compact" />
+        <PropertyCardContent
+          property={property}
+          onClick={handleCardClick}
+          size="compact"
+          onLocationClick={onShowOnMap ? () => onShowOnMap(property.id) : undefined}
+        />
       </div>
     );
   },
