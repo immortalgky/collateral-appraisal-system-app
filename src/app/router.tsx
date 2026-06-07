@@ -453,7 +453,7 @@ export const router = createBrowserRouter([
         element: <BlockUnitMaintenancePage />,
       },
       {
-        path: 'standalone/block-unit-maintenance/:projectId',
+        path: 'standalone/block-unit-maintenance/:collateralMasterId',
         element: <BlockUnitMaintenanceDetailPage />,
       },
       // ─── Service Quality Evaluation Routes ──────────────────────────────────

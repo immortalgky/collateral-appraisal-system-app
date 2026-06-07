@@ -14,8 +14,11 @@ import {
   useGetProjectUnitUploads,
   useUploadProjectUnits,
   useUploadReappraisalUnits,
+  useReappraisalPreview,
   useDeleteProjectUnitUpload,
 } from '../../api/projectUnit';
+import type { ReappraisalPreviewResult } from '../../api/projectUnit';
+import UnitVerificationDialog from '../UnitVerificationDialog';
 import { isCondo } from '../../types';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
 import type { AxiosError } from 'axios';
@@ -329,6 +332,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { mutate: uploadUnits, isPending: isUploading } = useUploadProjectUnits();
   const { mutate: uploadReappraisalUnits, isPending: isReappraisalUploading } =
     useUploadReappraisalUnits();
+  const { mutate: previewReappraisal, isPending: isPreviewing } = useReappraisalPreview();
   const { mutate: deleteUpload, isPending: isDeleting } = useDeleteProjectUnitUpload();
 
   const units = unitsData?.units ?? [];
@@ -337,6 +341,10 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingDeleteUpload, setPendingDeleteUpload] = useState<ProjectUnitUpload | null>(null);
+  const [verificationState, setVerificationState] = useState<{
+    file: File;
+    result: ReappraisalPreviewResult;
+  } | null>(null);
 
   const doUpload = (file: File) => {
     if (!appraisalId) return;
@@ -386,6 +394,9 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     const file = e.target.files?.[0];
     if (readOnly || !file || !appraisalId) return;
 
+    // Reset the input so re-selecting the same file re-triggers the change event
+    e.target.value = '';
+
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     let validationError: string | null = null;
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
@@ -400,17 +411,11 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
       return;
     }
 
-    uploadReappraisalUnits(
+    previewReappraisal(
       { appraisalId, file },
       {
-        onSuccess: data => {
-          toast.success(
-            t('unitListing.reappraisal.resultToast', {
-              matched: data.matchedUnsold,
-              autoSold: data.autoSold,
-              added: data.added,
-            }),
-          );
+        onSuccess: result => {
+          setVerificationState({ file, result });
         },
         onError: (err: unknown) => {
           const error = err as AppError;
@@ -418,6 +423,27 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         },
       },
     );
+  };
+
+  const handleVerificationApply = () => {
+    if (!verificationState || !appraisalId) return;
+    uploadReappraisalUnits(
+      { appraisalId, file: verificationState.file },
+      {
+        onSuccess: () => {
+          toast.success(t('unitVerification.applySuccess'));
+          setVerificationState(null);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? t('toasts.units.uploadFailed'));
+        },
+      },
+    );
+  };
+
+  const handleVerificationClose = () => {
+    setVerificationState(null);
   };
 
   const handleConfirmDelete = () => {
@@ -446,7 +472,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
             <UploadArea
               onChange={handleReappraisalFileChange}
               accept=".xlsx,.xls,.csv"
-              isLoading={isReappraisalUploading}
+              isLoading={isPreviewing || isReappraisalUploading}
               disabled={readOnly}
               supportedText=".xlsx, .xls, .csv (max 10MB)"
             />
@@ -518,6 +544,17 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         variant="danger"
         isLoading={isDeleting}
       />
+
+      {verificationState && (
+        <UnitVerificationDialog
+          isOpen={true}
+          onClose={handleVerificationClose}
+          onApply={handleVerificationApply}
+          result={verificationState.result}
+          projectType={projectType}
+          isApplying={isReappraisalUploading}
+        />
+      )}
     </div>
   );
 }

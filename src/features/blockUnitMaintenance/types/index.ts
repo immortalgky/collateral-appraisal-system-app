@@ -6,8 +6,7 @@ export type { ProjectType };
 // ─── List ─────────────────────────────────────────────────────────────────────
 
 export interface BlockUnitMaintenanceListItem {
-  projectId: string;
-  appraisalId: string;
+  collateralMasterId: string;
   appraisalReportNo: string | null;
   customerName: string | null;
   projectName: string | null;
@@ -30,7 +29,7 @@ export interface PaginatedBlockUnitMaintenance {
 // ─── Project Header (detail page hero) ────────────────────────────────────────
 
 export interface BlockUnitMaintenanceProject {
-  projectId: string;
+  collateralMasterId: string;
   appraisalReportNo: string | null;
   projectName: string | null;
   projectType: ProjectType;
