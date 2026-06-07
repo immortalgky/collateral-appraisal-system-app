@@ -4,6 +4,10 @@
   "markAllRead": "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
   "viewAll": "ดูทั้งหมด",
   "realtimeUnavailable": "ไม่สามารถใช้การแจ้งเตือนแบบเรียลไทม์ได้",
+  "connection": {
+    "online": "ออนไลน์",
+    "offline": "ออฟไลน์"
+  },
   "timeAgo": {
     "justNow": "เมื่อสักครู่",
     "minutes": "{{n}} นาทีที่แล้ว",

@@ -1,20 +1,53 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
 import { useNotificationStore } from '../store';
 import { notificationTypeConfig } from '../types';
 import { timeAgo } from '../utils/timeAgo';
 import { useAuthStore } from '@features/auth/store';
+import { downloadReportJobPdf } from '@features/reportGeneration/api/reports';
 import clsx from 'clsx';
+
+const REPORT_DOWNLOAD_RE = /^\/reports\/jobs\/([^/]+)\/download$/;
 
 export default function NotificationDropdown() {
   const { t } = useTranslation('notification');
   const { notifications, markAsRead, markAllAsRead, fetchNotifications } = useNotificationStore();
   const username = useAuthStore(s => s.user?.username ?? '');
+  const navigate = useNavigate();
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const recent = notifications.slice(0, 5);
+
+  /**
+   * Handle a notification item click.
+   * - If actionUrl matches the report download pattern → download PDF via API
+   *   (avoids routing to a non-existent page and keeps auth headers).
+   * - Otherwise → navigate to actionUrl if present.
+   * - Always marks the notification as read.
+   */
+  async function handleNotificationClick(notificationId: string, actionUrl: string | null) {
+    void markAsRead(notificationId);
+    if (!actionUrl) return;
+
+    const match = REPORT_DOWNLOAD_RE.exec(actionUrl);
+    if (match) {
+      const jobId = match[1]!;
+      try {
+        const blob = await downloadReportJobPdf(jobId);
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank', 'noopener');
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      } catch {
+        toast.error('Failed to download report. It may have expired.');
+      }
+      return;
+    }
+
+    navigate(actionUrl);
+  }
 
   useEffect(() => {
     if (username) {
@@ -71,7 +104,7 @@ export default function NotificationDropdown() {
                   <button
                     key={notification.id}
                     type="button"
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification.id, notification.actionUrl)}
                     className={clsx(
                       'w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-base-300 transition-colors',
                       !notification.isRead && 'bg-blue-50/30',
