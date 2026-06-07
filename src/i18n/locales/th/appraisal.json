@@ -2,6 +2,7 @@
   "completionChecklist": {
     "title": "การตรวจสอบ",
     "submitting": "กำลังส่ง…",
+    "submittingNoLive": "กำลังส่ง… (ไม่สามารถแสดงความคืบหน้าแบบเรียลไทม์)",
     "allPassed": "ผ่านการตรวจสอบทั้งหมด"
   },
   "completionErrors": {
@@ -446,6 +447,10 @@
       "cancel": "ยกเลิก",
       "submitting": "กำลังส่ง…",
       "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
+    },
+    "warnings": {
+      "title": "กรุณาตรวจสอบก่อนดำเนินการต่อ",
+      "continueAnyway": "ดำเนินการต่อ"
     },
     "toasts": {
       "saved": "บันทึกสรุปการตัดสินใจสำเร็จ",
@@ -1155,7 +1160,6 @@
   "approvalListSection": {
     "title": "การอนุมัติของคณะกรรมการ",
     "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",
-    "approvedBanner": "การประเมินนี้ได้รับการอนุมัติจากคณะกรรมการแล้ว",
     "returnedBanner": "การประเมินนี้ถูกส่งกลับเพื่อแก้ไข",
     "conditionsTitle": "เงื่อนไขการอนุมัติ",
     "votesDisplay": "{{received}}/{{total}} คะแนนเสียง",

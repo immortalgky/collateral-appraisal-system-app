@@ -2,6 +2,7 @@
   "completionChecklist": {
     "title": "验证检查",
     "submitting": "提交中…",
+    "submittingNoLive": "提交中…（实时进度不可用）",
     "allPassed": "所有检查已通过"
   },
   "completionErrors": {
@@ -1155,7 +1156,6 @@
   "approvalListSection": {
     "title": "委员会审批",
     "notActiveYet": "此评估的委员会审批尚未启动。",
-    "approvedBanner": "此评估已获委员会批准。",
     "returnedBanner": "此评估已被退回修改。",
     "conditionsTitle": "审批条件",
     "votesDisplay": "{{received}}/{{total}} 票",

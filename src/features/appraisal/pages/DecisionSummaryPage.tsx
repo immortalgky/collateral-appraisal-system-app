@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import ActivityCompletionChecklist from '../components/ActivityCompletionChecklist';
 import ActivityCompletionErrors from '../components/ActivityCompletionErrors';
 import { useActivityProgressStore } from '../store/activityProgressStore';
-import type { StructuredValidationError } from '../api/workflow';
+import type { StructuredValidationError, StructuredWarning } from '../api/workflow';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -22,6 +22,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 
+import Alert from '@/shared/components/Alert';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -32,6 +33,7 @@ import { FormProvider, FormFields, type FormField } from '@/shared/components/fo
 import { FormReadOnlyContext } from '@/shared/components/form/context';
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useConnectionStatus } from '@/features/notification/hooks/useConnectionStatus';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
 import { useCompleteActivity, useGetActivityActions } from '../api/workflow';
 import {
@@ -423,6 +425,20 @@ const SectionReadOnlyWrap = ({
     <>{children}</>
   );
 
+// ==================== Helpers ====================
+
+/**
+ * Splits an admin-authored warning message into individual sentence bullets.
+ * Splits on '. ' (period-space) so single sentences pass through as one bullet.
+ * Re-appends a period to each sentence so each reads as a complete statement.
+ */
+const splitWarningMessage = (message: string): string[] =>
+  message
+    .split(/\.\s+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => (s.endsWith('.') ? s : `${s}.`));
+
 // ==================== Page Component ====================
 
 const DecisionSummaryPage = () => {
@@ -456,6 +472,7 @@ const DecisionSummaryPage = () => {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
   const [failures, setFailures] = useState<StructuredValidationError[]>([]);
+  const [warnings, setWarnings] = useState<StructuredWarning[]>([]);
   const resetProgressStore = useActivityProgressStore(s => s.reset);
 
   // Routing variables from context (for appraisal-initiation refresh)
@@ -469,6 +486,9 @@ const DecisionSummaryPage = () => {
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
   const { mutate: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
   const completeActivity = useCompleteActivity();
+  // SignalR hub status — when not connected, live step progress won't arrive, so the
+  // submitting fallback message is adjusted instead of waiting on step animations.
+  const hubStatus = useConnectionStatus();
   const { data: actionsData } = useGetActivityActions(workflowInstanceId, activityId);
 
   const selectedAction = useMemo(
@@ -583,9 +603,15 @@ const DecisionSummaryPage = () => {
     }
   }, [mapDataToForm, reset]);
 
-  const doCompleteActivity = () => {
-    // Clear previous state before each attempt so a retry shows a fresh checklist
+  const doCompleteActivity = (acknowledgedWarningTokens?: string[]) => {
+    const isAckCall = acknowledgedWarningTokens !== undefined;
+    // On a fresh (non-ack) call, reset all prior feedback.
+    // On an ack re-call, only reset failures so the warning panel stays visible
+    // until the server responds.
     setFailures([]);
+    if (!isAckCall) {
+      setWarnings([]);
+    }
     resetProgressStore();
 
     const targetId = selectedAction?.targetActivityId;
@@ -610,9 +636,15 @@ const DecisionSummaryPage = () => {
           }),
         },
         nextAssignmentOverrides: overrides,
+        acknowledgedWarningTokens,
       },
       {
         onSuccess: result => {
+          if (result.status === 'WarningsRequireAcknowledgement') {
+            // Non-blocking warnings — keep dialog open and show warning panel
+            setWarnings(result.warnings ?? []);
+            return;
+          }
           if (result.status === 'ValidationFailed' || result.status === 'Failed') {
             // Keep dialog open; show structured errors in the panel
             const errs = result.validationErrors ?? [];
@@ -626,6 +658,7 @@ const DecisionSummaryPage = () => {
             return;
           }
           // Success — close dialog and navigate away
+          setWarnings([]);
           setIsConfirmOpen(false);
           toast.success(t('decisionSummary.toasts.submitted'));
           navigate('/tasks');
@@ -1047,6 +1080,7 @@ const DecisionSummaryPage = () => {
         onClose={() => {
           setIsConfirmOpen(false);
           setFailures([]);
+          setWarnings([]);
           resetProgressStore();
         }}
         onConfirm={() => handleSubmit(onSubmit)()}
@@ -1057,17 +1091,64 @@ const DecisionSummaryPage = () => {
         variant="primary"
         isLoading={isSaving || completeActivity.isPending}
         hasError={failures.length > 0}
+        hasWarning={warnings.length > 0 && failures.length === 0}
+        customFooter={
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setIsConfirmOpen(false);
+                setWarnings([]);
+                resetProgressStore();
+              }}
+              disabled={completeActivity.isPending}
+              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {t('decisionSummary.confirmDialog.cancel')}
+            </button>
+            <button
+              type="button"
+              onClick={() => doCompleteActivity(warnings.map(w => w.ackToken))}
+              disabled={completeActivity.isPending}
+              className="flex-1 px-4 py-2.5 bg-primary hover:bg-primary/80 text-white font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {completeActivity.isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Icon name="spinner" style="solid" className="size-4 animate-spin shrink-0" />
+                  <span className="truncate">{t('decisionSummary.confirmDialog.submitting')}</span>
+                </span>
+              ) : (
+                t('decisionSummary.warnings.continueAnyway')
+              )}
+            </button>
+          </>
+        }
       >
         {failures.length > 0 ? (
           <>
+            {/* Not pending: renders nothing when no live steps arrived (e.g. SignalR
+                disconnected), or the settled/failed checklist when steps did arrive. */}
             <ActivityCompletionChecklist />
             <ActivityCompletionErrors
               errors={failures}
               title={t('decisionSummary.confirmDialog.validationErrorsTitle')}
             />
           </>
+        ) : warnings.length > 0 ? (
+          <Alert variant="warning" title={t('decisionSummary.warnings.title')} className="mt-3 text-left">
+            <ul className="mt-2 space-y-2">
+              {warnings.flatMap((w, wi) =>
+                splitWarningMessage(w.message).map((sentence, si) => (
+                  <li key={`${wi}-${si}`} className="flex items-start gap-2 text-sm text-amber-800">
+                    <span className="mt-[5px] size-1.5 shrink-0 rounded-full bg-amber-500" />
+                    <span>{sentence}</span>
+                  </li>
+                )),
+              )}
+            </ul>
+          </Alert>
         ) : isSaving || completeActivity.isPending ? (
-          <ActivityCompletionChecklist />
+          <ActivityCompletionChecklist pending liveUnavailable={hubStatus !== 'connected'} />
         ) : null}
       </ConfirmDialog>
     </div>

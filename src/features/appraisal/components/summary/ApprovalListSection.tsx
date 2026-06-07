@@ -12,15 +12,6 @@ import {
   type GetApprovalListResponse,
 } from '../../api/decisionSummary';
 
-/** Client-derived status from quorum/majority/route_back — backend does not emit a status string. */
-type DerivedStatus = 'Approved' | 'Returned' | 'Pending';
-
-const deriveStatus = (data: GetApprovalListResponse): DerivedStatus => {
-  if (data.members.some(m => m.vote === 'route_back')) return 'Returned';
-  if (data.quorumMet && data.majorityMet) return 'Approved';
-  return 'Pending';
-};
-
 // ==================== Presentational Component ====================
 
 interface ApprovalListSectionBaseProps {
@@ -73,7 +64,9 @@ const ApprovalListSectionBase = ({ data, isLoading, isError }: ApprovalListSecti
     return null;
   }
 
-  const status = deriveStatus(data);
+  // Authoritative, voting-mode-aware status from the backend — never re-derive from quorum/majority
+  // here (that showed "Approved" before a WaitForAll round had actually resolved).
+  const status = data.status;
   const members: ApprovalMember[] = data.members;
   return (
     <FormCard title={t('approvalListSection.title')} icon="users-gear" iconColor="blue">
@@ -104,15 +97,8 @@ const ApprovalListSectionBase = ({ data, isLoading, isError }: ApprovalListSecti
           </div>
         </div>
 
-        {/* Status banner */}
-        {status === 'Approved' && (
-          <div className="flex items-center gap-2 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-            <Icon name="circle-check" style="solid" className="w-5 h-5 text-emerald-500 shrink-0" />
-            <p className="text-sm font-medium text-emerald-700">
-              {t('approvalListSection.approvedBanner')}
-            </p>
-          </div>
-        )}
+        {/* Status banner — Returned only; the "approved" banner was removed (the status chip + the
+            workflow completion already convey approval, and it previously showed prematurely). */}
         {status === 'Returned' && (
           <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg">
             <Icon name="rotate-left" style="solid" className="w-5 h-5 text-amber-500 shrink-0" />
