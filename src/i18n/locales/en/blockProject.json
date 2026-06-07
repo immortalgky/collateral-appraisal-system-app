@@ -248,6 +248,32 @@
       "deleteUpload": "Delete upload"
     }
   },
+  "unitVerification": {
+    "title": "Units",
+    "resultLabel": "Result",
+    "unitSuffix": "Unit",
+    "summary": {
+      "total": "Total",
+      "sold": "Sold",
+      "newlySold": "Newly Sold",
+      "available": "Available",
+      "matchDifference": "Match Difference"
+    },
+    "status": {
+      "Sold": "Sold",
+      "NewlySold": "Newly Sold",
+      "Available": "Available",
+      "MatchDifference": "Match Difference"
+    },
+    "cols": {
+      "status": "Status"
+    },
+    "matchDifferenceHint": "Resolve {{count}} match difference(s): fix the Excel and re-upload.",
+    "apply": "Apply",
+    "applying": "Applying...",
+    "cancel": "Cancel",
+    "applySuccess": "Units updated successfully"
+  },
   "towerListing": {
     "grid": "Grid",
     "list": "List",

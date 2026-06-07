@@ -248,6 +248,32 @@
       "deleteUpload": "Delete upload"
     }
   },
+  "unitVerification": {
+    "title": "单元",
+    "resultLabel": "结果",
+    "unitSuffix": "套",
+    "summary": {
+      "total": "合计",
+      "sold": "已售",
+      "newlySold": "新售出",
+      "available": "可售",
+      "matchDifference": "数据不匹配"
+    },
+    "status": {
+      "Sold": "已售",
+      "NewlySold": "新售出",
+      "Available": "可售",
+      "MatchDifference": "数据不匹配"
+    },
+    "cols": {
+      "status": "状态"
+    },
+    "matchDifferenceHint": "发现 {{count}} 处数据不匹配，请修正 Excel 后重新上传。",
+    "apply": "应用",
+    "applying": "提交中...",
+    "cancel": "取消",
+    "applySuccess": "单元更新成功"
+  },
   "towerListing": {
     "grid": "Grid",
     "list": "List",

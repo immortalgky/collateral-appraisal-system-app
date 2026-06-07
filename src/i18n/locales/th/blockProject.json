@@ -248,6 +248,32 @@
       "deleteUpload": "ลบการอัปโหลด"
     }
   },
+  "unitVerification": {
+    "title": "ยูนิต",
+    "resultLabel": "ผลลัพธ์",
+    "unitSuffix": "ยูนิต",
+    "summary": {
+      "total": "ทั้งหมด",
+      "sold": "ขายแล้ว",
+      "newlySold": "ขายใหม่",
+      "available": "ยังไม่ขาย",
+      "matchDifference": "ข้อมูลไม่ตรง"
+    },
+    "status": {
+      "Sold": "ขายแล้ว",
+      "NewlySold": "ขายใหม่",
+      "Available": "ยังไม่ขาย",
+      "MatchDifference": "ข้อมูลไม่ตรง"
+    },
+    "cols": {
+      "status": "สถานะ"
+    },
+    "matchDifferenceHint": "พบ {{count}} รายการที่ข้อมูลไม่ตรงกัน: แก้ไข Excel แล้วอัปโหลดใหม่",
+    "apply": "ยืนยัน",
+    "applying": "กำลังบันทึก...",
+    "cancel": "ยกเลิก",
+    "applySuccess": "อัปเดตยูนิตสำเร็จ"
+  },
   "towerListing": {
     "grid": "กริด",
     "list": "รายการ",

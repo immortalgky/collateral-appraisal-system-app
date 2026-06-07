@@ -114,11 +114,11 @@ const StatusChips = ({
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 const BlockUnitMaintenanceDetailPage = () => {
-  const { projectId } = useParams<{ projectId: string }>();
+  const { collateralMasterId } = useParams<{ collateralMasterId: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation('blockUnitMaintenance');
 
-  const { data, isLoading, isError } = useGetProjectUnits(projectId ?? null);
+  const { data, isLoading, isError } = useGetProjectUnits(collateralMasterId ?? null);
   const { mutateAsync: updateUnits, isPending } = useUpdateUnitSaleStatus();
 
   const project = data?.project;
@@ -235,7 +235,7 @@ const BlockUnitMaintenanceDetailPage = () => {
   };
 
   const handleSave = async () => {
-    if (!projectId) return;
+    if (!collateralMasterId) return;
     const validationError = validate();
     if (validationError) {
       toast.error(validationError);
@@ -252,7 +252,7 @@ const BlockUnitMaintenanceDetailPage = () => {
       };
     });
     try {
-      await updateUnits({ projectId, payload: { items } });
+      await updateUnits({ collateralMasterId, payload: { items } });
       toast.success(t('success.saved'));
     } catch {
       toast.error(t('errors.saveFailed'));
