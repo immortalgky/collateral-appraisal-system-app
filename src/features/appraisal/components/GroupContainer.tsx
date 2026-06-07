@@ -32,6 +32,7 @@ interface GroupContainerProps {
   onPaste: (groupId: string) => void;
   onDelete: (property: PropertyItem, groupId: string) => void;
   onGoToPricingAnalysis: (groupId: string) => void;
+  onShowOnMap: (propertyId: string) => void;
   hasClipboard: boolean;
   isDeletingGroup?: boolean;
 }
@@ -49,6 +50,7 @@ export const GroupContainer = React.memo(
     onPaste,
     onDelete,
     onGoToPricingAnalysis,
+    onShowOnMap,
     hasClipboard,
     isDeletingGroup = false,
   }: GroupContainerProps) => {
@@ -286,6 +288,7 @@ export const GroupContainer = React.memo(
                                   property={property}
                                   groupId={group.id}
                                   onContextMenu={onContextMenu}
+                                  onShowOnMap={onShowOnMap}
                                 />
                               );
                             }
@@ -328,6 +331,7 @@ export const GroupContainer = React.memo(
                                       property={p}
                                       groupId={group.id}
                                       onContextMenu={onContextMenu}
+                                      onShowOnMap={onShowOnMap}
                                     />
                                   ))}
                                 </div>

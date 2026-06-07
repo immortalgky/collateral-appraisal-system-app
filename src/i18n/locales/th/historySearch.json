@@ -166,6 +166,10 @@
   "map": {
     "noApiKey": "ยังไม่ได้กำหนด Google Maps API key",
     "loading": "กำลังโหลดแผนที่...",
+    "loadFailed": "ไม่สามารถโหลดแผนที่ได้ กรุณาตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง",
+    "retry": "ลองใหม่",
+    "myLocation": "ตำแหน่งของฉัน",
+    "radius": "รัศมี",
     "searchThisArea": "ค้นหาบริเวณนี้"
   },
   "locationPicker": {

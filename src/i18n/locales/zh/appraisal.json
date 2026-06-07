@@ -487,6 +487,16 @@
     }
   },
   "properties": {
+    "map": {
+      "title": "物业位置",
+      "empty": "无可显示的地图内容",
+      "emptyHint": "此评估中没有物业或市场比较对象设置了坐标。",
+      "legendSelected": "选定物业",
+      "legendOthers": "其他物业",
+      "legendComparables": "市场比较对象",
+      "pinView": "在地图上查看",
+      "pinNoLocation": "未设置位置"
+    },
     "addNewGroup": "添加新组",
     "noGroups": "暂无房产组",
     "noGroupsHint": "点击\"添加新组\"创建第一个组",

@@ -484,6 +484,16 @@
     }
   },
   "properties": {
+    "map": {
+      "title": "Property locations",
+      "empty": "Nothing to map",
+      "emptyHint": "No properties or market comparables in this appraisal have coordinates set.",
+      "legendSelected": "Selected property",
+      "legendOthers": "Other properties",
+      "legendComparables": "Market comparables",
+      "pinView": "View on map",
+      "pinNoLocation": "No location set"
+    },
     "addNewGroup": "Add New Group",
     "noGroups": "No property groups yet",
     "noGroupsHint": "Click \"Add New Group\" to create your first group",
