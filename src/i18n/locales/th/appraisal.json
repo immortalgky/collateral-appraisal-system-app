@@ -965,6 +965,7 @@
     },
     "submitButton": "ส่งขออนุมัติ — {{summary}}",
     "submitConfirm": "ส่ง",
+    "cancelRescheduleButton": "ยกเลิกการเลื่อนนัด",
     "summary": {
       "dateChange": "เปลี่ยนวันนัด 1 ครั้ง",
       "fees_one": "{{count}} รายการค่าธรรมเนียม",
@@ -972,7 +973,9 @@
     },
     "toasts": {
       "submitted": "ส่งขออนุมัติจากธนาคารแล้ว",
-      "submitFailed": "ส่งขออนุมัติไม่สำเร็จ"
+      "submitFailed": "ส่งขออนุมัติไม่สำเร็จ",
+      "rescheduleCancelled": "ยกเลิกการเลื่อนนัดแล้ว",
+      "rescheduleCancelFailed": "ไม่สามารถยกเลิกการเลื่อนนัดได้"
     }
   },
   "createPage": {
