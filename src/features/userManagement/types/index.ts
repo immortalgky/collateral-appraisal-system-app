@@ -425,10 +425,7 @@ export interface CompanyListItem {
 }
 
 export interface CompanyListResult {
-  items: CompanyListItem[];
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
+  companies: CompanyListItem[];
 }
 
 export interface GetCompaniesParams {
