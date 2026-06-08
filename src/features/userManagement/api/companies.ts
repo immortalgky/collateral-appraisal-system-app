@@ -86,8 +86,8 @@ export const useGetEligibleCompanies = () => {
   return useQuery({
     queryKey: ['eligibleCompanies'],
     queryFn: async (): Promise<EligibleCompany[]> => {
-      const { data } = await axios.get<EligibleCompany[]>('/companies/eligible');
-      return data;
+      const { data } = await axios.get<{ companies: EligibleCompany[] }>('/companies/eligible');
+      return data.companies ?? [];
     },
     staleTime: 30_000,
   });
