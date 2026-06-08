@@ -338,7 +338,7 @@ function BlockReappraisalDetailPage() {
   const isCondo = detail.projectType === 'Condo';
 
   return (
-    <div className="flex flex-col h-full min-h-0 min-w-0 gap-4">
+    <div className="flex flex-col min-h-full min-w-0 gap-4">
       {/* ── Page header ── */}
       <div className="shrink-0 flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -441,7 +441,7 @@ function BlockReappraisalDetailPage() {
       </section>
 
       {/* ── Units table (read-only) ── */}
-      <section className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <section className="flex-1 min-h-[24rem] bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="shrink-0 px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <h3 className="text-xs font-semibold text-gray-700">{t('detail.units.title')}</h3>
           <span className="text-xs text-gray-400 tabular-nums">
@@ -451,7 +451,7 @@ function BlockReappraisalDetailPage() {
 
         <div className="flex-1 min-h-0 overflow-auto">
           {detail.structure.units.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 gap-2">
+            <div className="flex flex-col items-center justify-center h-full gap-2">
               <Icon style="regular" name="folder-open" className="size-8 text-gray-300" />
               <p className="text-xs text-gray-400">{t('detail.units.empty')}</p>
             </div>
