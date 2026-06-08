@@ -962,6 +962,7 @@
     },
     "submitButton": "Submit for Approval — {{summary}}",
     "submitConfirm": "Submit",
+    "cancelRescheduleButton": "Cancel Reschedule",
     "summary": {
       "dateChange": "1 date change",
       "fees_one": "{{count}} fee",
@@ -969,7 +970,9 @@
     },
     "toasts": {
       "submitted": "Submitted for bank approval",
-      "submitFailed": "Failed to submit for approval"
+      "submitFailed": "Failed to submit for approval",
+      "rescheduleCancelled": "Reschedule cancelled",
+      "rescheduleCancelFailed": "Failed to cancel reschedule"
     }
   },
   "createPage": {

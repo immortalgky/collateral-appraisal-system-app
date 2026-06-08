@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import axios from '@shared/api/axiosInstance';
 import type {
   AppointmentDto2Type,
@@ -105,6 +107,44 @@ export const useCancelAppointment = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'appointments'],
       });
+    },
+  });
+};
+
+/**
+ * Cancel a pending reschedule (draft state), reverting to the previous date.
+ * PATCH /appraisals/{appraisalId}/appointments/{appointmentId}/cancel-reschedule
+ */
+export const useCancelRescheduleAppointment = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation('appraisal');
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      appointmentId,
+      ...body
+    }: {
+      appraisalId: string;
+      appointmentId: string;
+      changedBy: string;
+      reason?: string | null;
+    }): Promise<void> => {
+      await axios.patch(
+        `/appraisals/${appraisalId}/appointments/${appointmentId}/cancel-reschedule`,
+        body,
+      );
+    },
+    onSuccess: (_, variables) => {
+      toast.success(t('approval.toasts.rescheduleCancelled'));
+      queryClient.invalidateQueries({ queryKey: ['appraisal', variables.appraisalId, 'appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appraisal', variables.appraisalId, 'fees'] });
+    },
+    onError: (error: unknown) => {
+      const apiError = error as { apiError?: { detail?: string }; message?: string };
+      const message =
+        apiError?.apiError?.detail ?? apiError?.message ?? t('approval.toasts.rescheduleCancelFailed');
+      toast.error(message);
     },
   });
 };
