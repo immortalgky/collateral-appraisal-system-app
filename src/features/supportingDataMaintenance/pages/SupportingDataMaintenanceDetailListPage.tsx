@@ -27,6 +27,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCreateDraftSupportingData,
   useDeleteSupportingDetailData,
+  useDeleteSupportingDetailsByBatchData,
   useGetSupportingDataById,
   useSubmitSupportingData,
   useUpdateDraftSupportingData,
@@ -198,9 +199,51 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { mutate: updateDraftSupportingData, isPending: isUpdating } =
     useUpdateDraftSupportingData();
   const { mutate: deleteSupportingData, isPending: isDeleting } = useDeleteSupportingDetailData();
+  const { mutate: deleteSupportingDetailsByBatch, isPending: isDeletingBatch } =
+    useDeleteSupportingDetailsByBatchData();
   const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
+
+  // ── Batch delete state ──
+  const [isBatchDeleteMode, setIsBatchDeleteMode] = useState(false);
+  const [selectedDetailIds, setSelectedDetailIds] = useState<string[]>([]);
+  const [batchDeleteConfirmOpen, setBatchDeleteConfirmOpen] = useState(false);
+
+  const toggleDetailSelection = (id: string) => {
+    setSelectedDetailIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAll = (pageIds: string[]) => {
+    const allSelected = pageIds.every(id => selectedDetailIds.includes(id));
+    if (allSelected) {
+      setSelectedDetailIds(prev => prev.filter(id => !pageIds.includes(id)));
+    } else {
+      setSelectedDetailIds(prev => [...new Set([...prev, ...pageIds])]);
+    }
+  };
+
+  const exitBatchMode = () => {
+    setIsBatchDeleteMode(false);
+    setSelectedDetailIds([]);
+  };
+
+  const handleConfirmBatchDelete = () => {
+    if (!supportingId || selectedDetailIds.length === 0) return;
+    deleteSupportingDetailsByBatch(
+      { supportingId, supportingDetailIds: selectedDetailIds },
+      {
+        onSuccess: () => {
+          toast.success(t('toasts.detailDeletedSuccess'));
+          exitBatchMode();
+        },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || t('toasts.detailDeleteFailed'));
+        },
+      },
+    );
+    setBatchDeleteConfirmOpen(false);
+  };
 
   // File management (Excel bulk upload of supporting details)
   const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
@@ -209,7 +252,8 @@ export function SupportingDataMaintenanceDetailListPage() {
 
   const { mutateAsync: bulkUpload, isPending: isUploading } = useBulkUploadSupportingDetails();
 
-  const isPending = isCreatingDraft || isUpdating || isSubmitting || isDeleting || isUploading;
+  const isPending =
+    isCreatingDraft || isUpdating || isSubmitting || isDeleting || isUploading || isDeletingBatch;
 
   useBreadcrumb(hasSupportingId ? supportingData?.supportingNumber : undefined, '');
 
@@ -482,40 +526,106 @@ export function SupportingDataMaintenanceDetailListPage() {
                         e.target.value = '';
                       }}
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={handleOpenFilePicker}
-                      disabled={isUploading || isPending}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
-                    >
-                      <Icon
-                        style="solid"
-                        name={isUploading ? 'spinner' : 'file-arrow-up'}
-                        className={`size-4 ${isUploading ? 'animate-spin' : ''}`}
-                      />
-                      {isUploading ? 'Uploading…' : 'Import Excel'}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleAddSupportingDetailData}
-                      disabled={isPending}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors cursor-pointer"
-                    >
-                      <Icon style="solid" name="plus" className="size-4" />
-                      {t('actions.addItem')}
-                    </Button>
+
+                    {isBatchDeleteMode ? (
+                      /* ── Batch mode toolbar ── */
+                      <>
+                        {/* Delete button — disabled until at least one item is selected */}
+                        <Button
+                          type="button"
+                          variant="danger"
+                          onClick={() => setBatchDeleteConfirmOpen(true)}
+                          disabled={selectedDetailIds.length === 0 || isPending}
+                          isLoading={isDeletingBatch}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium"
+                        >
+                          <Icon style="solid" name="trash" className="size-4" />
+                          {selectedDetailIds.length > 0
+                            ? `${t('common:actions.delete')} (${selectedDetailIds.length})`
+                            : t('common:actions.delete')}
+                        </Button>
+
+                        {/* Clear selection — scope is batch mode only, not whole page */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={exitBatchMode}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-60"
+                        >
+                          <Icon style="solid" name="xmark" className="size-3.5" />
+                          {t('actions.clearSelection', { defaultValue: 'Clear Selection' })}
+                        </Button>
+                      </>
+                    ) : (
+                      /* ── Normal mode toolbar ── */
+                      <>
+                        {/* Batch delete entry point — labeled so intent is clear */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setIsBatchDeleteMode(true)}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
+                        >
+                          <Icon style="solid" name="trash" className="size-4" />
+                          {t('actions.deleteItems', { defaultValue: 'Delete Items' })}
+                        </Button>
+
+                        <div className="h-5 w-px bg-gray-200" />
+
+                        <Button
+                          type="button"
+                          onClick={handleOpenFilePicker}
+                          disabled={isUploading || isPending}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <Icon
+                            style="solid"
+                            name={isUploading ? 'spinner' : 'file-arrow-up'}
+                            className={`size-4 ${isUploading ? 'animate-spin' : ''}`}
+                          />
+                          {isUploading ? 'Uploading...' : 'Import Excel'}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={handleAddSupportingDetailData}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors cursor-pointer"
+                        >
+                          <Icon style="solid" name="plus" className="size-4" />
+                          {t('actions.addItem')}
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
               </div>
             }
           >
             <div className="flex flex-col gap-2 w-full">
+              {/* Batch mode hint banner */}
+              {isBatchDeleteMode && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">
+                  <Icon style="solid" name="circle-info" className="size-4 shrink-0" />
+                  <span>
+                    {selectedDetailIds.length === 0
+                      ? 'Tick the checkboxes to select items you want to delete.'
+                      : `${selectedDetailIds.length} item(s) selected. Click Delete to confirm.`}
+                  </span>
+                </div>
+              )}
+
               <SupportingDataTable
                 supportingId={supportingId}
                 isReadOnly={!hasAuthorityToEdit}
                 onSelectSupportingData={handleSelectSupportingData}
                 onDeleteSupportingData={handleDeleteSupportingData}
+                isBatchMode={isBatchDeleteMode}
+                selectedDetailIds={selectedDetailIds}
+                onToggleDetailSelection={toggleDetailSelection}
+                onToggleSelectAll={toggleSelectAll}
               />
             </div>
           </FormCard>
@@ -544,7 +654,7 @@ export function SupportingDataMaintenanceDetailListPage() {
         </FormProvider>
       )}
 
-      {/* Action panel (Save Draft / Submit)             */}
+      {/* Action bar */}
       <ActionBar>
         <ActionBar.Left>
           <CancelButton fallbackPath="/standalone/supporting-data-maintenance" />
@@ -576,13 +686,25 @@ export function SupportingDataMaintenanceDetailListPage() {
         </ActionBar.Right>
       </ActionBar>
 
-      {/* Delete confirmation */}
+      {/* Single delete confirmation */}
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
         onConfirm={confirmDelete}
         title={t('confirm.deleteTitle')}
         message={t('confirm.deleteMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+      />
+
+      {/* Batch delete confirmation */}
+      <ConfirmDialog
+        isOpen={batchDeleteConfirmOpen}
+        onClose={() => setBatchDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmBatchDelete}
+        title={t('confirm.deleteTitle')}
+        message={`Delete ${selectedDetailIds.length} selected item(s)? This cannot be undone.`}
         confirmText={t('common:actions.delete')}
         cancelText={t('common:actions.cancel')}
         variant="danger"

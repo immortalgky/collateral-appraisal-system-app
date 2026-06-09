@@ -144,19 +144,15 @@ export const useDeleteSupportingDetailsByBatchData = () => {
     mutationFn: async (params: {
       supportingId: string;
       supportingDetailIds: string[];
-      id: string;
-    }): Promise<{ isSuccessful: boolean }> => {
-      const { data } = await axios.delete(`/supporting-data/${params.supportingId}/details/batch`, {
+    }): Promise<void> => {
+      await axios.delete(`/supporting-data/${params.supportingId}/details/batch`, {
         data: { SupportingDetailIds: params.supportingDetailIds },
       });
-      return data;
     },
     onSuccess: (_data, variables) => {
+      // Refresh the detail list and parent record — no single dataDetail to invalidate
       queryClient.invalidateQueries({
         queryKey: supportingDataMaintenanceKeys.dataLists(variables.supportingId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.id),
       });
       queryClient.invalidateQueries({
         queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
