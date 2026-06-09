@@ -1,7 +1,14 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
+import type { ComponentProps } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
-import type { AppraisalPinDto, HistorySearchFormValues, HistorySearchPeriod, MarketComparablePinDto, PinFilterState } from './types';
+import type {
+  AppraisalPinDto,
+  HistorySearchFormValues,
+  HistorySearchPeriod,
+  MarketComparablePinDto,
+  PinFilterState,
+} from './types';
 import { useHistorySearch } from './hooks/useHistorySearch';
 import { useUserVisibility } from './hooks/useUserVisibility';
 import { SearchPanel } from './components/SearchPanel';
@@ -17,6 +24,9 @@ import { isAppraisalPin } from './types';
 import { formValuesToParams, paramsToFormValues } from './urlState';
 import { useAddressStore } from '@/shared/store';
 import { findAddressBySubDistrictCode, findProvinceNameByCode } from '@/shared/data/thaiAddresses';
+import { useGeolocation } from '@/shared/hooks/useGeolocation';
+import { isWithinThailand, MAP_CONTROL_CLASS } from '@/shared/constants/mapConfig';
+import { MapTypeToggleButton } from '@/shared/components/MapTypeToggleButton';
 
 // ─── Public component API ─────────────────────────────────────────────────────
 
@@ -76,7 +86,10 @@ function buildFormDefaults(props: HistorySearchMapProps): Partial<HistorySearchF
 }
 
 // FORM_DEFAULTS mirrors the same values in SearchPanel to build a full reset payload
-const ATTRIBUTE_DEFAULTS: Omit<HistorySearchFormValues, 'centerLat' | 'centerLon' | 'radiusKm' | 'period'> = {
+const ATTRIBUTE_DEFAULTS: Omit<
+  HistorySearchFormValues,
+  'centerLat' | 'centerLon' | 'radiusKm' | 'period'
+> = {
   appraisalReportNo: '',
   titleDeedNo: '',
   collateralType: '', // default "All" — collateral type is an optional filter
@@ -142,6 +155,11 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
    * Only one pin is selected at a time.
    */
   const [selectedPin, setSelectedPin] = useState<AnyPin | null>(null);
+  // The Google map instance, captured once ready, so overlay controls (the
+  // satellite⇄map toggle) can drive it from outside MapView.
+  const [mapInstance, setMapInstance] = useState<Parameters<
+    NonNullable<ComponentProps<typeof MapView>['onMapReady']>
+  >[0] | null>(null);
   // Pins sharing one location — shown in a chooser so the user can pick which to open.
   const [chooserPins, setChooserPins] = useState<AnyPin[] | null>(null);
   // When pinScope='marketComparablesOnly', green/collateral layers are locked off.
@@ -180,6 +198,7 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
   const restoredRef = useRef(false);
 
   const { search, result, isPending, isError } = useHistorySearch();
+  const { locate, locating } = useGeolocation();
 
   // Bumped on each new result so MapView pans/zooms to fit the returned pins.
   const [fitToken, setFitToken] = useState(0);
@@ -211,7 +230,9 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
         // Green-only filters (server ignores these for MC).
         ...(values.appraisalReportNo && { appraisalReportNo: values.appraisalReportNo }),
         ...(values.titleDeedNo && { titleDeedNo: values.titleDeedNo }),
-        ...(values.collateralType && { collateralTypes: expandCollateralType(values.collateralType) }),
+        ...(values.collateralType && {
+          collateralTypes: expandCollateralType(values.collateralType),
+        }),
         ...(values.customerName && { customerName: values.customerName }),
         ...(values.landAreaFromSqWa && { landAreaFromSqWa: parseFloat(values.landAreaFromSqWa) }),
         ...(values.landAreaToSqWa && { landAreaToSqWa: parseFloat(values.landAreaToSqWa) }),
@@ -297,6 +318,27 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
     setSearchOpen(false);
   }, [movedCenter, lastQuery, fireSearch]);
 
+  // ── "My location" ──────────────────────────────────────────────────────────
+  // Run a radius search centred on the given coords, keeping any other criteria
+  // already in play. Shared by the on-open auto-locate and the manual button.
+  const runNearbySearch = useCallback(
+    (coords: { lat: number; lon: number }) => {
+      const base =
+        lastQuery ??
+        ({ ...ATTRIBUTE_DEFAULTS, ...buildFormDefaults(props) } as HistorySearchFormValues);
+      fireSearch({ ...base, centerLat: String(coords.lat), centerLon: String(coords.lon) }, 0);
+      setSearchOpen(false);
+    },
+    [lastQuery, fireSearch, props],
+  );
+
+  const handleLocateMe = useCallback(async () => {
+    const coords = await locate();
+    // Silent fallback: denied/unavailable, or a fix outside Thailand (data is TH-only).
+    if (!coords || !isWithinThailand(coords.lat, coords.lon)) return;
+    runNearbySearch(coords);
+  }, [locate, runNearbySearch]);
+
   // ── Filter chip handlers ───────────────────────────────────────────────────
   const handleRemoveChip = useCallback(
     (field: RemovableField) => {
@@ -356,7 +398,21 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
     if (mode !== 'standalone') return;
 
     const { values, page, hasAny } = paramsToFormValues(searchParams);
-    if (!hasAny) return;
+
+    // No saved/shared criteria in the URL → default to a search near the user's
+    // current location. Geolocation is async and may prompt; bail silently on
+    // denial/unavailable/out-of-Thailand (handled in handleLocateMe → runNearbySearch).
+    if (!hasAny) {
+      let cancelled = false;
+      void (async () => {
+        const coords = await locate();
+        if (cancelled || !coords || !isWithinThailand(coords.lat, coords.lon)) return;
+        runNearbySearch(coords);
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }
 
     // Build full form values from URL, merging prop defaults
     const propDefaults = buildFormDefaults(props);
@@ -381,7 +437,9 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
           merged.provinceName = a.provinceName;
         }
       } else if (merged.district) {
-        const a = useAddressStore.getState().titleAddresses.find(x => x.districtCode === merged.district);
+        const a = useAddressStore
+          .getState()
+          .titleAddresses.find(x => x.districtCode === merged.district);
         if (a) {
           merged.districtName = a.districtName;
           merged.provinceName = a.provinceName;
@@ -392,8 +450,8 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
       fireSearch(merged, page);
     }, 50);
     return () => clearTimeout(id);
-  // Only run once on mount
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formDefaults: Partial<HistorySearchFormValues> = {
@@ -410,20 +468,72 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
 
   // In mcOnly mode, suppress green pins the same way external users see them.
   const suppressAppraisalPins = isExternal || mcOnly;
-  const visibleAppraisalPins = pinFilters.showCollateral && !suppressAppraisalPins
-    ? (result?.appraisals.items ?? [])
-    : [];
+  const visibleAppraisalPins =
+    pinFilters.showCollateral && !suppressAppraisalPins ? (result?.appraisals.items ?? []) : [];
   // An MC that belongs to THIS appraisal (an appraising/red pin) should not also
   // render as an existing/blue search-result pin — show it red only.
   const appraisingMcIds = new Set((appraisingMcPins ?? []).map(p => p.marketComparableId));
   const visibleMcPins = pinFilters.showMarketComparables
-    ? (result?.marketComparables.items ?? []).filter(p => !appraisingMcIds.has(p.marketComparableId))
+    ? (result?.marketComparables.items ?? []).filter(
+        p => !appraisingMcIds.has(p.marketComparableId),
+      )
     : [];
 
-  // Current radius from lastQuery (for the circle)
-  const currentRadiusKm = lastQuery
-    ? (parseFloat(lastQuery.radiusKm) || 1)
-    : (props.initialRadiusKm ?? 1);
+  // Radius (km) shown by the on-map slider and drawn as the circle. `sliderRadiusKm`
+  // is the numeric truth (drives the circle + search); `radiusText` mirrors it for
+  // the editable number field so the user can type freely (e.g. clear and retype).
+  // Both are seeded from the initial prop and re-synced whenever a search runs.
+  // Matches the floor/cap that fireSearch applies (line ~221), so the slider,
+  // number field, and circle never disagree with the searched radius.
+  const RADIUS_MIN = 0.1;
+  const RADIUS_MAX = 50;
+  const [sliderRadiusKm, setSliderRadiusKm] = useState(props.initialRadiusKm ?? 1);
+  const [radiusText, setRadiusText] = useState(String(props.initialRadiusKm ?? 1));
+  useEffect(() => {
+    if (lastQuery) {
+      const km = parseFloat(lastQuery.radiusKm) || 1;
+      setSliderRadiusKm(km);
+      setRadiusText(String(km));
+    }
+  }, [lastQuery]);
+
+  const clampRadius = (km: number) => Math.min(Math.max(km, RADIUS_MIN), RADIUS_MAX);
+
+  // Re-run the search at the given radius, keeping the current centre + criteria.
+  // Used by the on-map radius slider (fires on release, not on every drag tick).
+  const searchWithRadius = useCallback(
+    (km: number) => {
+      if (!mapCenter) return;
+      const base =
+        lastQuery ??
+        ({ ...ATTRIBUTE_DEFAULTS, ...buildFormDefaults(props) } as HistorySearchFormValues);
+      fireSearch(
+        {
+          ...base,
+          centerLat: String(mapCenter.lat),
+          centerLon: String(mapCenter.lon),
+          radiusKm: String(km),
+        },
+        0,
+      );
+    },
+    [mapCenter, lastQuery, fireSearch, props],
+  );
+
+  // Slider drag → update circle + mirror into the text field (no search yet).
+  const handleSliderChange = (km: number) => {
+    setSliderRadiusKm(km);
+    setRadiusText(String(km));
+  };
+
+  // Commit the typed radius (Enter/blur): clamp, sync slider, and re-run the search.
+  const commitRadiusText = () => {
+    const parsed = parseFloat(radiusText);
+    const km = isNaN(parsed) ? sliderRadiusKm : clampRadius(parsed);
+    setSliderRadiusKm(km);
+    setRadiusText(String(km));
+    searchWithRadius(km);
+  };
 
   // Close popovers on outside click. We attach a single mousedown listener that
   // checks both refs; the toggle buttons set `data-popover-toggle` so we ignore
@@ -445,7 +555,11 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
       if (searchOpen && searchPopoverRef.current && !searchPopoverRef.current.contains(target)) {
         setSearchOpen(false);
       }
-      if (pinLayersOpen && pinLayersPopoverRef.current && !pinLayersPopoverRef.current.contains(target)) {
+      if (
+        pinLayersOpen &&
+        pinLayersPopoverRef.current &&
+        !pinLayersPopoverRef.current.contains(target)
+      ) {
         setPinLayersOpen(false);
       }
     }
@@ -468,7 +582,7 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
             onAppraisalPinClick={handleAppraisalPinClick}
             onMarketComparablePinClick={handleMcClick}
             fitToken={fitToken}
-            radiusKm={mapCenter ? currentRadiusKm : undefined}
+            radiusKm={mapCenter ? sliderRadiusKm : undefined}
             onUserMovedMap={handleUserMovedMap}
             highlightedPinId={hoveredPinId}
             panToPinId={rowHoverPinId}
@@ -478,7 +592,118 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
             primaryAppraisalNumber={primaryAppraisalNumber}
             appraisingMcPins={appraisingMcPins}
             cluster={mode === 'standalone'}
+            onMapReady={setMapInstance}
           />
+
+          {/* Bottom-left control cluster: satellite⇄map toggle + "My location"
+              button (recenters + searches near the user's current position;
+              auto-runs once on first open too). */}
+          <div className="absolute bottom-3 left-3 z-10 flex items-center gap-2">
+            {mapInstance && <MapTypeToggleButton map={mapInstance} className="p-2 text-sm" />}
+            <button
+              type="button"
+              onClick={handleLocateMe}
+              disabled={locating}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium ${MAP_CONTROL_CLASS} disabled:opacity-60 disabled:cursor-not-allowed`}
+              title={t('map.myLocation')}
+            >
+            {locating ? (
+              <svg
+                aria-hidden="true"
+                className="w-4 h-4 animate-spin"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                />
+              </svg>
+            ) : (
+              <svg
+                aria-hidden="true"
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8a4 4 0 100 8 4 4 0 000-8z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 2v3m0 14v3m10-10h-3M5 12H2"
+                />
+              </svg>
+            )}
+            {t('map.myLocation')}
+            </button>
+          </div>
+
+          {/* Radius slider (bottom-center) — quick way to widen/narrow the search
+              circle without opening the panel. Only shown once a centre exists.
+              The circle tracks the slider live; the search re-fires on release. */}
+          {mapCenter && lastQuery && !selectedPin && !chooserPins?.length && (
+            <div
+              className={`absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 rounded-full px-4 py-2 ${MAP_CONTROL_CLASS}`}
+            >
+              <span className="whitespace-nowrap text-xs font-medium text-gray-600">
+                {t('map.radius')}
+              </span>
+              <input
+                type="range"
+                min={RADIUS_MIN}
+                max={RADIUS_MAX}
+                step={0.1}
+                value={sliderRadiusKm}
+                onChange={e => handleSliderChange(parseFloat(e.target.value))}
+                onMouseUp={() => searchWithRadius(sliderRadiusKm)}
+                onTouchEnd={() => searchWithRadius(sliderRadiusKm)}
+                onKeyUp={() => searchWithRadius(sliderRadiusKm)}
+                className="w-40 cursor-pointer accent-blue-600"
+                aria-label={t('map.radius')}
+              />
+              <input
+                type="number"
+                min={RADIUS_MIN}
+                max={RADIUS_MAX}
+                step={0.1}
+                value={radiusText}
+                onChange={e => {
+                  setRadiusText(e.target.value);
+                  // Live circle update while typing (clamped so a huge entry can't
+                  // blow up the circle); the value is re-clamped + searched on commit.
+                  const v = parseFloat(e.target.value);
+                  if (!isNaN(v)) setSliderRadiusKm(clampRadius(v));
+                }}
+                onBlur={commitRadiusText}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitRadiusText();
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+                className="w-14 rounded border border-gray-300 px-1.5 py-0.5 text-right text-xs font-semibold tabular-nums text-gray-800 focus:border-blue-500 focus:outline-none"
+                aria-label={t('map.radius')}
+              />
+              <span className="text-xs font-medium text-gray-500">km</span>
+            </div>
+          )}
 
           {/* "Search this area" floating button — appears after a user pan/zoom */}
           {movedCenter && !selectedPin && (
@@ -489,7 +714,12 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                 className="pointer-events-auto flex items-center gap-1.5 px-4 py-2 bg-white border border-blue-300 text-blue-700 text-sm font-medium rounded-full shadow-lg hover:bg-blue-50 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                  />
                 </svg>
                 {t('map.searchThisArea')}
               </button>
@@ -531,12 +761,12 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                     const isAppraisal = isAppraisalPin(pin);
                     const primary = isAppraisal
                       ? (pin.appraisalNumber ?? t('common.na'))
-                      : (pin.surveyName || pin.appraisalNumber || t('common.na'));
+                      : pin.surveyName || pin.appraisalNumber || t('common.na');
                     const secondary = isAppraisal ? pin.customerName : pin.propertyType;
                     // appraisalId can be empty/shared for appraising pins (reappraisal
                     // candidates, or a 360 page's own properties) — index keeps keys unique.
                     const baseKey = isAppraisal
-                      ? (pin.appraisalId || pin.appraisalNumber || `${pin.lat},${pin.lon}`)
+                      ? pin.appraisalId || pin.appraisalNumber || `${pin.lat},${pin.lon}`
                       : pin.marketComparableId;
                     return (
                       <li key={`${baseKey}-${idx}`}>
@@ -554,9 +784,13 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                             className="w-3.5 h-4 shrink-0"
                           />
                           <span className="min-w-0 flex-1">
-                            <span className="block text-xs font-medium text-gray-800 truncate">{primary}</span>
+                            <span className="block text-xs font-medium text-gray-800 truncate">
+                              {primary}
+                            </span>
                             {secondary && (
-                              <span className="block text-[11px] text-gray-500 truncate">{secondary}</span>
+                              <span className="block text-[11px] text-gray-500 truncate">
+                                {secondary}
+                              </span>
                             )}
                           </span>
                         </button>
@@ -581,7 +815,12 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
               title={t('searchPanel.title')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                />
               </svg>
               {t('searchPanel.title')}
             </button>
@@ -591,13 +830,19 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
               onClick={() => setPinLayersOpen(o => !o)}
               className={[
                 'flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors',
-                pinLayersOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50',
+                pinLayersOpen
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50',
               ].join(' ')}
               title={t('pinFilter.title')}
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M 12 2 L 2 11 L 4 11 L 4 22 L 20 22 L 20 11 L 22 11 Z" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M 12 2 L 2 11 L 4 11 L 4 22 L 20 22 L 20 11 L 22 11 Z"
+                />
               </svg>
               {t('pinFilter.title')}
             </button>
@@ -610,12 +855,18 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                 title={t('resultsList.title')}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                  />
                 </svg>
                 {t('resultsList.title')}
                 {result && (
                   <span className="ml-0.5 bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none">
-                    {(suppressAppraisalPins ? 0 : result.appraisals.count) + result.marketComparables.count}
+                    {(suppressAppraisalPins ? 0 : result.appraisals.count) +
+                      result.marketComparables.count}
                   </span>
                 )}
               </button>
@@ -698,7 +949,11 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                 <div className="flex items-center gap-4 text-xs">
                   {!suppressAppraisalPins && (
                     <span className="flex items-center gap-1.5 text-gray-600">
-                      <img src={buildPinIcon('collateralExisting')} alt="" className="w-3 h-4 shrink-0" />
+                      <img
+                        src={buildPinIcon('collateralExisting')}
+                        alt=""
+                        className="w-3 h-4 shrink-0"
+                      />
                       {t('resultsList.tabs.appraisal')}
                       <span className="text-gray-400">
                         ({result ? result.appraisals.count : '…'})
@@ -746,9 +1001,9 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
                 onMarketComparableClick={handleMcClick}
                 highlightedPinId={hoveredPinId}
                 onRowHover={pinId => {
-              setHoveredPinId(pinId);
-              setRowHoverPinId(pinId);
-            }}
+                  setHoveredPinId(pinId);
+                  setRowHoverPinId(pinId);
+                }}
               />
             </div>
           )}

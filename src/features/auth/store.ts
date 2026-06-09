@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { broadcastLogout, setAccessToken } from '@shared/api/axiosInstance';
+import * as appHub from '@shared/realtime/appHub';
 import type { User } from './types';
 
 type AuthStore = {
@@ -35,6 +36,9 @@ export const useAuthStore = create<AuthStore>(set => ({
   },
 
   logout: () => {
+    // Tear down the realtime connection so it stops reconnecting with a stale
+    // token (otherwise the orphaned connection lingers for the session).
+    appHub.stop().catch(() => {});
     // Broadcast an explicit logout so other tabs clear auth + redirect.
     broadcastLogout();
     set({ user: null, isAuthenticated: false });

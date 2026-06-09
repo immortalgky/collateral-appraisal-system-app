@@ -2,6 +2,7 @@
   "completionChecklist": {
     "title": "Validation checks",
     "submitting": "Submitting…",
+    "submittingNoLive": "Submitting… (live updates unavailable)",
     "allPassed": "All checks passed"
   },
   "completionErrors": {
@@ -444,6 +445,10 @@
       "submitting": "Submitting…",
       "validationErrorsTitle": "Please complete the required fields"
     },
+    "warnings": {
+      "title": "Review before continuing",
+      "continueAnyway": "Continue anyway"
+    },
     "toasts": {
       "saved": "Decision summary saved successfully",
       "saveFailed": "Failed to save decision summary. Please try again.",
@@ -484,6 +489,16 @@
     }
   },
   "properties": {
+    "map": {
+      "title": "Property locations",
+      "empty": "Nothing to map",
+      "emptyHint": "No properties or market comparables in this appraisal have coordinates set.",
+      "legendSelected": "Selected property",
+      "legendOthers": "Other properties",
+      "legendComparables": "Market comparables",
+      "pinView": "View on map",
+      "pinNoLocation": "No location set"
+    },
     "addNewGroup": "Add New Group",
     "noGroups": "No property groups yet",
     "noGroupsHint": "Click \"Add New Group\" to create your first group",
@@ -927,6 +942,7 @@
     },
     "status": {
       "Approved": "Approved",
+      "Appointed": "Appointed",
       "Rejected": "Rejected",
       "Pending": "Pending",
       "Auto": "Auto",
@@ -946,6 +962,7 @@
     },
     "submitButton": "Submit for Approval — {{summary}}",
     "submitConfirm": "Submit",
+    "cancelRescheduleButton": "Cancel Reschedule",
     "summary": {
       "dateChange": "1 date change",
       "fees_one": "{{count}} fee",
@@ -953,7 +970,9 @@
     },
     "toasts": {
       "submitted": "Submitted for bank approval",
-      "submitFailed": "Failed to submit for approval"
+      "submitFailed": "Failed to submit for approval",
+      "rescheduleCancelled": "Reschedule cancelled",
+      "rescheduleCancelFailed": "Failed to cancel reschedule"
     }
   },
   "createPage": {
@@ -1142,7 +1161,6 @@
   "approvalListSection": {
     "title": "Committee Approval",
     "notActiveYet": "Committee approval is not active for this appraisal yet.",
-    "approvedBanner": "This appraisal has been approved by the committee.",
     "returnedBanner": "This appraisal has been returned for revision.",
     "conditionsTitle": "Approval Conditions",
     "votesDisplay": "{{received}}/{{total}} votes",

@@ -200,10 +200,10 @@ function MenuItem({
         {isChild && (
           <div className={clsx('w-2 h-2 rounded-full', isActive ? 'bg-primary' : 'bg-gray-300')} />
         )}
-        <span className={clsx('text-xs font-medium text-gray-700 dark:text-gray-200')}>{item.name}</span>
+        <span className={clsx('flex-1 min-w-0 text-xs font-medium text-gray-700 dark:text-gray-200')}>{item.name}</span>
         {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
         {!collapsed && (
-          <span className="ml-auto">
+          <span className="flex-shrink-0">
             <SidebarStarButton item={item} />
           </span>
         )}

@@ -4,6 +4,10 @@
   "markAllRead": "全部标记为已读",
   "viewAll": "查看全部",
   "realtimeUnavailable": "实时通知不可用",
+  "connection": {
+    "online": "在线",
+    "offline": "离线"
+  },
   "timeAgo": {
     "justNow": "刚刚",
     "minutes": "{{n}} 分钟前",

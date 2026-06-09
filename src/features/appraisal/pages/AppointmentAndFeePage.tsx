@@ -15,6 +15,7 @@ import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
   useCancelAppointment,
+  useCancelRescheduleAppointment,
   useCreateAppointment,
   useGetAppointment,
   useRescheduleAppointment,
@@ -73,6 +74,7 @@ export default function AppointmentAndFeePage() {
   const createAppointment = useCreateAppointment();
   const rescheduleAppointment = useRescheduleAppointment();
   const cancelAppointment = useCancelAppointment();
+  const cancelRescheduleAppointment = useCancelRescheduleAppointment();
 
   // Submit-for-approval hook
   const submitApproval = useSubmitFeeAppointmentApproval(appraisalId);
@@ -145,6 +147,15 @@ export default function AppointmentAndFeePage() {
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('appointment.toasts.cancelFailed'));
     }
+  };
+
+  const handleCancelReschedule = () => {
+    if (!appointment) return;
+    cancelRescheduleAppointment.mutate({
+      appraisalId,
+      appointmentId: appointment.id,
+      changedBy: currentUser?.username ?? '',
+    });
   };
 
   const handleApproveFeeItem = async (feeId: string, itemId: string) => {
@@ -330,6 +341,7 @@ export default function AppointmentAndFeePage() {
             appointment={appointment}
             onReschedule={() => !readOnly && setIsRescheduleModalOpen(true)}
             onCancel={() => !readOnly && setIsCancelAppointmentModalOpen(true)}
+            onCancelReschedule={!readOnly ? handleCancelReschedule : undefined}
             approvalDraft={approvalState.draftDateChange}
             approvalSubmitted={approvalState.submittedDateChange}
             onViewHistory={() => setIsHistoryDrawerOpen(true)}

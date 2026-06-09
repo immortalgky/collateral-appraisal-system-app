@@ -1,20 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
 import SectionHeader from '@shared/components/sections/SectionHeader';
-import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
-import { fetchReportPdf, downloadReportPdf } from '../api/reports';
+import ReportActionButtons from '../components/ReportActionButtons';
 
 const REPORT_TYPES = [
   { value: 'appointment-quotation-request', label: 'Appointment Quotation Request' },
+  // Unified entry: auto-picks the per-property summary forms and merges them into one PDF
+  // (block-only / construction-only / else land-building + condo + machine).
+  { value: 'appraisal-summary', label: 'Appraisal Summary' },
+  { value: 'external-appraisal-report', label: 'External Appraisal Report' },
+  { value: 'internal-report-construction', label: 'Internal Appraisal Report – Construction' },
+  { value: 'internal-report-block', label: 'Internal Appraisal Report – Block' },
+  { value: 'meeting-invitation', label: 'Meeting Invitation (entity = MeetingId)' },
+  { value: 'meeting-minute', label: 'Meeting Minute (entity = MeetingId)' },
 ] as const;
 
 const ReportTestPage = () => {
   const [entityId, setEntityId] = useState('');
   const [reportTypeKey, setReportTypeKey] = useState<string>(REPORT_TYPES[0].value);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
-  const [isViewing, setIsViewing] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   // Keep a ref to the current object URL so the cleanup effect always revokes
   // the most-recent one, even if state has already changed.
@@ -36,40 +40,6 @@ const ReportTestPage = () => {
       objectUrlRef.current = null;
     }
     setObjectUrl(null);
-  };
-
-  const handleView = async () => {
-    if (!entityId.trim()) {
-      toast.error('Please enter an Appraisal ID.');
-      return;
-    }
-    setIsViewing(true);
-    revokeCurrentUrl();
-    try {
-      const blob = await fetchReportPdf(reportTypeKey, entityId.trim());
-      const url = URL.createObjectURL(blob);
-      objectUrlRef.current = url;
-      setObjectUrl(url);
-    } catch {
-      toast.error('Failed to load PDF. Check the Appraisal ID and try again.');
-    } finally {
-      setIsViewing(false);
-    }
-  };
-
-  const handleDownload = async () => {
-    if (!entityId.trim()) {
-      toast.error('Please enter an Appraisal ID.');
-      return;
-    }
-    setIsDownloading(true);
-    try {
-      await downloadReportPdf(reportTypeKey, entityId.trim());
-    } catch {
-      toast.error('Failed to download PDF. Check the Appraisal ID and try again.');
-    } finally {
-      setIsDownloading(false);
-    }
   };
 
   return (
@@ -113,26 +83,23 @@ const ReportTestPage = () => {
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Mode-aware actions — reads generationMode from /reports/definitions and routes
+            Sync → open inline, Async → enqueue a background job (realtime + polling + bell). */}
         <div className="flex items-center gap-2 mt-4">
-          <Button
-            variant="primary"
-            size="sm"
-            isLoading={isViewing}
-            onClick={handleView}
-            leftIcon={<Icon name="eye" style="regular" className="size-3.5" />}
-          >
-            View
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            isLoading={isDownloading}
-            onClick={handleDownload}
-            leftIcon={<Icon name="arrow-down-to-line" style="regular" className="size-3.5" />}
-          >
-            Download
-          </Button>
+          {entityId.trim() ? (
+            <ReportActionButtons
+              reportTypeKey={reportTypeKey}
+              entityId={entityId.trim()}
+              onSyncBlobReady={(_blob, url) => {
+                if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
+                objectUrlRef.current = url;
+                setObjectUrl(url);
+              }}
+            />
+          ) : (
+            <p className="text-xs text-gray-400">Enter an Appraisal ID to view or generate.</p>
+          )}
+
           {objectUrl && (
             <button
               type="button"

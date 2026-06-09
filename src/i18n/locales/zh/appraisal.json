@@ -2,6 +2,7 @@
   "completionChecklist": {
     "title": "验证检查",
     "submitting": "提交中…",
+    "submittingNoLive": "提交中…（实时进度不可用）",
     "allPassed": "所有检查已通过"
   },
   "completionErrors": {
@@ -487,6 +488,16 @@
     }
   },
   "properties": {
+    "map": {
+      "title": "物业位置",
+      "empty": "无可显示的地图内容",
+      "emptyHint": "此评估中没有物业或市场比较对象设置了坐标。",
+      "legendSelected": "选定物业",
+      "legendOthers": "其他物业",
+      "legendComparables": "市场比较对象",
+      "pinView": "在地图上查看",
+      "pinNoLocation": "未设置位置"
+    },
     "addNewGroup": "添加新组",
     "noGroups": "暂无房产组",
     "noGroupsHint": "点击\"添加新组\"创建第一个组",
@@ -930,6 +941,7 @@
     },
     "status": {
       "Approved": "已批准",
+      "Appointed": "已预约",
       "Rejected": "已拒绝",
       "Pending": "待批准",
       "Auto": "自动",
@@ -1145,7 +1157,6 @@
   "approvalListSection": {
     "title": "委员会审批",
     "notActiveYet": "此评估的委员会审批尚未启动。",
-    "approvedBanner": "此评估已获委员会批准。",
     "returnedBanner": "此评估已被退回修改。",
     "conditionsTitle": "审批条件",
     "votesDisplay": "{{received}}/{{total}} 票",

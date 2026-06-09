@@ -22,6 +22,7 @@ export interface ProcessConfigRow {
   parametersJson: string | null;
   runIfExpression: string | null;
   isActive: boolean;
+  severity?: 'Error' | 'Warning';
 }
 
 export interface ValidationError {

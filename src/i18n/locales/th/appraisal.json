@@ -2,6 +2,7 @@
   "completionChecklist": {
     "title": "การตรวจสอบ",
     "submitting": "กำลังส่ง…",
+    "submittingNoLive": "กำลังส่ง… (ไม่สามารถแสดงความคืบหน้าแบบเรียลไทม์)",
     "allPassed": "ผ่านการตรวจสอบทั้งหมด"
   },
   "completionErrors": {
@@ -447,6 +448,10 @@
       "submitting": "กำลังส่ง…",
       "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
     },
+    "warnings": {
+      "title": "กรุณาตรวจสอบก่อนดำเนินการต่อ",
+      "continueAnyway": "ดำเนินการต่อ"
+    },
     "toasts": {
       "saved": "บันทึกสรุปการตัดสินใจสำเร็จ",
       "saveFailed": "ไม่สามารถบันทึกสรุปการตัดสินใจได้ กรุณาลองใหม่",
@@ -487,6 +492,16 @@
     }
   },
   "properties": {
+    "map": {
+      "title": "ตำแหน่งทรัพย์สิน",
+      "empty": "ไม่มีข้อมูลให้แสดงบนแผนที่",
+      "emptyHint": "ไม่มีทรัพย์สินหรือข้อมูลเปรียบเทียบตลาดในการประเมินนี้ที่มีพิกัด",
+      "legendSelected": "ทรัพย์สินที่เลือก",
+      "legendOthers": "ทรัพย์สินอื่น",
+      "legendComparables": "ข้อมูลเปรียบเทียบตลาด",
+      "pinView": "ดูบนแผนที่",
+      "pinNoLocation": "ไม่ได้ระบุตำแหน่ง"
+    },
     "addNewGroup": "เพิ่มกลุ่มใหม่",
     "noGroups": "ยังไม่มีกลุ่มทรัพย์สิน",
     "noGroupsHint": "คลิก \"เพิ่มกลุ่มใหม่\" เพื่อสร้างกลุ่มแรก",
@@ -930,6 +945,7 @@
     },
     "status": {
       "Approved": "อนุมัติแล้ว",
+      "Appointed": "นัดหมายแล้ว",
       "Rejected": "ปฏิเสธแล้ว",
       "Pending": "รออนุมัติ",
       "Auto": "อัตโนมัติ",
@@ -949,6 +965,7 @@
     },
     "submitButton": "ส่งขออนุมัติ — {{summary}}",
     "submitConfirm": "ส่ง",
+    "cancelRescheduleButton": "ยกเลิกการเลื่อนนัด",
     "summary": {
       "dateChange": "เปลี่ยนวันนัด 1 ครั้ง",
       "fees_one": "{{count}} รายการค่าธรรมเนียม",
@@ -956,7 +973,9 @@
     },
     "toasts": {
       "submitted": "ส่งขออนุมัติจากธนาคารแล้ว",
-      "submitFailed": "ส่งขออนุมัติไม่สำเร็จ"
+      "submitFailed": "ส่งขออนุมัติไม่สำเร็จ",
+      "rescheduleCancelled": "ยกเลิกการเลื่อนนัดแล้ว",
+      "rescheduleCancelFailed": "ไม่สามารถยกเลิกการเลื่อนนัดได้"
     }
   },
   "createPage": {
@@ -1145,7 +1164,6 @@
   "approvalListSection": {
     "title": "การอนุมัติของคณะกรรมการ",
     "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",
-    "approvedBanner": "การประเมินนี้ได้รับการอนุมัติจากคณะกรรมการแล้ว",
     "returnedBanner": "การประเมินนี้ถูกส่งกลับเพื่อแก้ไข",
     "conditionsTitle": "เงื่อนไขการอนุมัติ",
     "votesDisplay": "{{received}}/{{total}} คะแนนเสียง",

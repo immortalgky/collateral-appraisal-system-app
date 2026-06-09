@@ -669,7 +669,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                               taskId: task.id,
                             });
                           }}
-                          className={`group cursor-default transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
+                          className={`group cursor-pointer transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];

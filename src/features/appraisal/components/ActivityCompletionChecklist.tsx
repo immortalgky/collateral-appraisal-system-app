@@ -2,21 +2,46 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { useActivityProgressStore } from '../store/activityProgressStore';
 
+interface ActivityCompletionChecklistProps {
+  /**
+   * True while the completion mutation is in flight. Drives whether spinners are
+   * shown: once the request settles, no spinner should linger even if SignalR never
+   * delivered live steps (e.g. the hub was disconnected).
+   */
+  pending?: boolean;
+  /**
+   * True when the SignalR hub isn't connected, so live step-by-step progress won't
+   * arrive. Only affects the submitting message wording.
+   */
+  liveUnavailable?: boolean;
+}
+
 /**
  * Renders the live pipeline step checklist inside the completion ConfirmDialog.
- * Reads from activityProgressStore — no props needed.
+ * Reads from activityProgressStore; props only convey the mutation/hub lifecycle.
  */
-const ActivityCompletionChecklist = () => {
+const ActivityCompletionChecklist = ({
+  pending = false,
+  liveUnavailable = false,
+}: ActivityCompletionChecklistProps) => {
   const { t } = useTranslation('appraisal');
   const steps = useActivityProgressStore(s => s.steps);
   const overall = useActivityProgressStore(s => s.overall);
 
-  // No steps yet — pipeline hasn't sent PipelineStarted (or no steps configured)
+  // No steps yet — pipeline hasn't sent PipelineStarted (or no steps configured).
   if (steps.length === 0) {
+    // Request has settled with no live steps (e.g. SignalR disconnected): don't spin
+    // forever — the error/success result is shown elsewhere.
+    if (!pending) return null;
+
     return (
       <div className="flex items-center justify-center gap-2 rounded-xl border border-gray-100 bg-gray-50 py-5 text-sm text-gray-500">
         <Icon name="spinner" style="solid" className="size-4 shrink-0 animate-spin text-primary" />
-        <span>{t('completionChecklist.submitting')}</span>
+        <span>
+          {liveUnavailable
+            ? t('completionChecklist.submittingNoLive')
+            : t('completionChecklist.submitting')}
+        </span>
       </div>
     );
   }
@@ -38,18 +63,21 @@ const ActivityCompletionChecklist = () => {
       <ul className="space-y-0.5">
         {steps.map(step => {
           const isRunning = step.status === 'running';
+          // A step left 'running' after the request settled (connection dropped
+          // mid-pipeline) must not spin forever — show it as a neutral incomplete marker.
+          const showSpin = isRunning && pending;
           return (
             <li
               key={step.stepName}
               className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-colors ${
-                isRunning ? 'bg-primary/5' : ''
+                showSpin ? 'bg-primary/5' : ''
               }`}
             >
               <span className="flex size-5 shrink-0 items-center justify-center">
-                {step.status === 'pending' && (
+                {(step.status === 'pending' || (isRunning && !pending)) && (
                   <span className="size-3.5 rounded-full border-2 border-gray-300" />
                 )}
-                {isRunning && (
+                {showSpin && (
                   <Icon name="spinner" style="solid" className="size-4 animate-spin text-primary" />
                 )}
                 {step.status === 'passed' && (
@@ -64,9 +92,9 @@ const ActivityCompletionChecklist = () => {
               </span>
               <span
                 className={`text-sm leading-tight ${
-                  step.status === 'pending'
+                  step.status === 'pending' || (isRunning && !pending)
                     ? 'text-gray-400'
-                    : isRunning
+                    : showSpin
                       ? 'font-medium text-gray-800'
                       : step.status === 'passed'
                         ? 'text-gray-500'

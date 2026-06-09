@@ -290,10 +290,10 @@ const BlockUnitMaintenancePage = () => {
                   const pct = total > 0 ? Math.round((sold / total) * 100) : 0;
                   return (
                     <tr
-                      key={item.projectId}
+                      key={item.collateralMasterId}
                       className="hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() =>
-                        navigate(`/standalone/block-unit-maintenance/${item.projectId}`)
+                        navigate(`/standalone/block-unit-maintenance/${item.collateralMasterId}`)
                       }
                     >
                       <td className="px-4 py-2.5">

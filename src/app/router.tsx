@@ -111,6 +111,7 @@ import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMain
 import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
 import StepValidationRulesPage from '@features/workflowAdmin/pages/StepValidationRulesPage';
 import ReportTestPage from '@features/reportGeneration/pages/ReportTestPage';
+import OperationalReportRoute from '@features/common/operationalReports/pages/OperationalReportRoute';
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -233,6 +234,19 @@ export const router = createBrowserRouter([
       {
         path: 'monitoring',
         element: <MonitoringPage />,
+      },
+      // ─── Operational Reports (RCAS001–012) ─────────────────────────────────
+      // Menu items at /reports/operational/rcasNNN are server-seeded and gated
+      // by REPORT_OP_VIEW. The :slug param is matched to a ReportConfig in
+      // OperationalReportRoute, so a single route handles all 12 reports.
+      {
+        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_OP_VIEW" />,
+        children: [
+          {
+            path: 'reports/operational/:slug',
+            element: <OperationalReportRoute />,
+          },
+        ],
       },
       // History Search (Pin) — FSD §2.6.7 geo-filtered appraisal + MC map view
       {
@@ -453,7 +467,7 @@ export const router = createBrowserRouter([
         element: <BlockUnitMaintenancePage />,
       },
       {
-        path: 'standalone/block-unit-maintenance/:projectId',
+        path: 'standalone/block-unit-maintenance/:collateralMasterId',
         element: <BlockUnitMaintenanceDetailPage />,
       },
       // ─── Service Quality Evaluation Routes ──────────────────────────────────

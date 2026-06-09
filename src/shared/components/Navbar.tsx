@@ -8,13 +8,17 @@ import { broadcastLogout } from '@shared/api/axiosInstance';
 import { queryClient } from '@app/queryClient';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
-import ThemeToggle from '@shared/components/ThemeToggle';
+// import ThemeToggle from '@shared/components/ThemeToggle'; // hidden for now
 import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
 import SearchPreviewModal from '@shared/components/search/SearchPreviewModal';
 import type { SearchFilter } from '@shared/types/search';
 import NotificationDropdown from '@features/notification/components/NotificationDropdown';
+import ConnectionStatusIndicator, {
+  ConnectionStatusDot,
+} from '@features/notification/components/ConnectionStatusIndicator';
+import * as appHub from '@shared/realtime/appHub';
 import { HeaderFavoritesDropdown } from '@features/menuFavorites/components/HeaderFavoritesDropdown';
 
 const searchFilters = [
@@ -51,6 +55,10 @@ function handleLogout(href: string) {
   // to redirect to /login, which cancels the server logout navigation.
   // Clear storage directly without triggering React re-renders.
   // Use broadcastLogout so other tabs also clear auth + redirect.
+  // Tear down the realtime connection synchronously (stop() sets the
+  // intentional-stop flag + clears the restart timer before the redirect) so
+  // no auto-restart fires during the unload window.
+  appHub.stop().catch(() => {});
   broadcastLogout();
   queryClient.clear();
   sessionStorage.clear();
@@ -248,8 +256,8 @@ export default function Navbar({
             {/* Language Switcher */}
             <LanguageSwitcher />
 
-            {/* Theme Toggle */}
-            <ThemeToggle />
+            {/* Theme Toggle - hidden for now */}
+            {/* <ThemeToggle /> */}
 
             {/* Favorites button */}
             <HeaderFavoritesDropdown />
@@ -258,26 +266,34 @@ export default function Navbar({
             <NotificationDropdown />
 
             {/* Separator */}
-            <div aria-hidden="true" className="hidden lg:block lg:h-8 lg:w-px lg:bg-gray-200 dark:lg:bg-base-300" />
+            <div
+              aria-hidden="true"
+              className="hidden lg:block lg:h-8 lg:w-px lg:bg-gray-200 dark:lg:bg-base-300"
+            />
 
             {/* Profile dropdown */}
             <Menu as="div" className="relative">
               <MenuButton className="flex items-center gap-3 p-1.5 rounded-xl hover:bg-gray-50 dark:hover:bg-base-200 transition-all">
                 <span className="sr-only">Open user menu</span>
-                <Avatar
-                  src={currentUser?.avatarUrl}
-                  name={
-                    `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() ||
-                    'User'
-                  }
-                  size="md"
-                  className="rounded-xl ring-2 ring-gray-100"
-                />
+                <span className="relative inline-block">
+                  <Avatar
+                    src={currentUser?.avatarUrl}
+                    name={
+                      `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() ||
+                      'User'
+                    }
+                    size="md"
+                    className="rounded-xl ring-2 ring-gray-100"
+                  />
+                  <ConnectionStatusDot ring className="absolute -bottom-0.5 -right-0.5 h-3 w-3" />
+                </span>
                 <span className="hidden lg:flex lg:flex-col lg:items-start">
                   <span className="text-sm font-semibold text-gray-900 dark:text-base-content">
                     {`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`}
                   </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">{currentUser?.position}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {currentUser?.position}
+                  </span>
                 </span>
                 <Icon
                   name="chevron-down"
@@ -292,8 +308,16 @@ export default function Navbar({
                 {/* User info header */}
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-base-300">
                   <p className="text-sm font-medium text-gray-900 dark:text-base-content">{`${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`}</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{currentUser?.email}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                    {currentUser?.email}
+                  </p>
                 </div>
+
+                {/* Realtime connection status + control */}
+                <div className="border-b border-gray-100 dark:border-base-300">
+                  <ConnectionStatusIndicator />
+                </div>
+
                 {userNavigation.map(item =>
                   item.name === 'Sign out' ? (
                     <MenuItem

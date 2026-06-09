@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useGetPoolTasks, useGetTasks, useGetTasksForKanban } from '../api';
+import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
 import {
   bucketForSlaStatus,
   getRowVariantClasses,
@@ -237,13 +237,15 @@ function TaskListingPage() {
 
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+  const isListEmpty = !isLoading && listTasks.length === 0;
 
-  const { data: poolTotalData, isError: poolTotalCountIsError } = useGetPoolTasks({
-    pageNumber: 0,
-    pageSize: 1,
-    activityId: filters.activityId,
-  });
-  const poolTotalCount = poolTotalData?.count ?? 0;
+  const [poolTotalCount, setPoolTotalCount] = useState<number | null>(null);
+
+  const { data: taskCounts } = useGetTaskCounts();
+  const poolBaseline = filters.activityId
+    ? (taskCounts?.get(filters.activityId)?.poolCount ?? 0)
+    : (taskCounts ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.poolCount, 0) : 0);
+  const poolBadge = activeTab === 'pool' && poolTotalCount != null ? poolTotalCount : poolBaseline;
 
   const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
     keyof TaskFilterParams,
@@ -315,14 +317,14 @@ function TaskListingPage() {
         <div className="shrink-0">
           <div className="flex items-center gap-3">
             <h2 className="text-sm font-semibold text-gray-900">All Tasks</h2>
-            {activeTab === 'personal' && !isListLoading && totalCount > 0 && (
+            {activeTab === 'personal' && !isListLoading && (
               <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
                 {totalCount}
               </span>
             )}
-            {activeTab === 'pool' && (poolTotalCount > 0 || poolTotalCountIsError) && (
+            {activeTab === 'pool' && (
               <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
-                {poolTotalCountIsError ? <span title="Failed to load count">!</span> : poolTotalCount}
+                {poolBadge}
               </span>
             )}
           </div>
@@ -353,7 +355,7 @@ function TaskListingPage() {
         >
           <Icon style="solid" name="user" className="size-3" />
           My
-          {!isListLoading && totalCount > 0 && (
+          {!isListLoading && (
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
                 activeTab === 'personal'
@@ -376,15 +378,13 @@ function TaskListingPage() {
         >
           <Icon style="solid" name="users" className="size-3" />
           Pool
-          {(poolTotalCount > 0 || poolTotalCountIsError) && (
-            <span
-              className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
-                activeTab === 'pool' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              {poolTotalCountIsError ? <span title="Failed to load count">!</span> : poolTotalCount}
-            </span>
-          )}
+          <span
+            className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
+              activeTab === 'pool' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
+            }`}
+          >
+            {poolBadge}
+          </span>
           {activeTab === 'pool' && (
             <span className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary rounded-t-full" />
           )}
@@ -595,6 +595,7 @@ function TaskListingPage() {
             activityId={filters.activityId}
             externalSearch={debouncedPoolSearch}
             externalFilters={poolFilters}
+            onCountChange={setPoolTotalCount}
           />
         </>
       )}
@@ -638,7 +639,7 @@ function TaskListingPage() {
           {/* Content */}
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-              <div className="flex-1 min-h-0 overflow-auto">
+              <div className={`min-h-0 ${isListEmpty ? 'overflow-hidden' : 'flex-1 overflow-auto'}`}>
                 <table
                   ref={tableRef}
                   className="table-fixed text-sm"
@@ -694,37 +695,6 @@ function TaskListingPage() {
                         columns={visibleColumns.map(() => ({ width: 'w-24' }))}
                         rows={8}
                       />
-                    ) : listTasks.length === 0 ? (
-                      <tr>
-                        <td colSpan={visibleColumns.length + 1} className="py-24">
-                          <div className="flex flex-col items-center gap-4">
-                            <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                              <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm font-semibold text-gray-700">
-                                {hasFilters ? 'No matching tasks' : 'All clear'}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {hasFilters
-                                  ? 'Try adjusting your search or filters.'
-                                  : 'You have no tasks assigned right now.'}
-                              </p>
-                            </div>
-                            {hasFilters && (
-                              <button
-                                onClick={() => {
-                                  setSearchTerm('');
-                                  setFilters({});
-                                }}
-                                className="text-xs text-primary hover:underline font-medium"
-                              >
-                                Clear filters
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
                     ) : (
                       listTasks.map(task => (
                         <tr
@@ -739,7 +709,7 @@ function TaskListingPage() {
                               taskId: task.id,
                             });
                           }}
-                          className={`group cursor-default transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
+                          className={`group cursor-pointer transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
@@ -771,6 +741,37 @@ function TaskListingPage() {
                   </tbody>
                 </table>
               </div>
+
+              {isListEmpty && (
+                <div className="flex-1 min-h-0 flex items-center justify-center p-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+                      <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-700">
+                        {hasFilters ? 'No matching tasks' : 'All clear'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {hasFilters
+                          ? 'Try adjusting your search or filters.'
+                          : 'You have no tasks assigned right now.'}
+                      </p>
+                    </div>
+                    {hasFilters && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setFilters({});
+                        }}
+                        className="text-xs text-primary hover:underline font-medium"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <Pagination
                 currentPage={pageNumber}

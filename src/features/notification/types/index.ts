@@ -6,7 +6,9 @@ export type NotificationType =
   | 'DocumentFollowupRaised'
   | 'DocumentFollowupResolved'
   | 'DocumentFollowupCancelled'
-  | 'DocumentLineItemDeclined';
+  | 'DocumentLineItemDeclined'
+  | 'ReportReady'
+  | 'ReportFailed';
 
 export interface Notification {
   id: string;
@@ -47,4 +49,14 @@ export const notificationTypeConfig: Record<
     color: 'text-gray-500 bg-gray-50',
   },
   DocumentLineItemDeclined: { icon: 'hand', iconStyle: 'solid', color: 'text-red-500 bg-red-50' },
+  ReportReady: {
+    icon: 'file-check',
+    iconStyle: 'solid',
+    color: 'text-emerald-500 bg-emerald-50',
+  },
+  ReportFailed: {
+    icon: 'file-xmark',
+    iconStyle: 'solid',
+    color: 'text-red-500 bg-red-50',
+  },
 };

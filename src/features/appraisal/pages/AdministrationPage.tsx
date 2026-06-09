@@ -226,6 +226,7 @@ const AdministrationPage = () => {
       const formValues = mapAssignmentResponseToForm(currentAssignment);
       reset({
         ...formValues,
+        ...assignmentFormDefaults,
         selectedStaff: assignedStaff ?? null,
         selectedCompany: assignedCompany ?? null,
         selectedFollowupStaff: followupStaff ?? null,
@@ -387,7 +388,7 @@ const AdministrationPage = () => {
                         description: t('administration.assignmentType.internalDesc'),
                         icon: 'user',
                         color: 'emerald',
-                        disabled: isInternalDisabled,
+                        disabled: isInternalDisabled || isLockedByQuotation,
                       },
                       {
                         value: 'external',

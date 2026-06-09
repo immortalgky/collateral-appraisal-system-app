@@ -4,6 +4,10 @@
   "markAllRead": "Mark all as read",
   "viewAll": "View All",
   "realtimeUnavailable": "Real-time notifications unavailable",
+  "connection": {
+    "online": "Online",
+    "offline": "Offline"
+  },
   "timeAgo": {
     "justNow": "just now",
     "minutes": "{{n}}m ago",

@@ -236,10 +236,13 @@ export const useLinkAppraisalComparable = () => {
  * Get collateral + MC map pins for an appraisal (Feature 2 — 360 page map).
  * GET /appraisals/{appraisalId}/map-pins
  */
-export const useGetAppraisalMapPins = (appraisalId: string | undefined) => {
+export const useGetAppraisalMapPins = (
+  appraisalId: string | undefined,
+  options?: { enabled?: boolean },
+) => {
   return useQuery({
     queryKey: marketComparableKeys.appraisalMapPins(appraisalId),
-    enabled: !!appraisalId,
+    enabled: !!appraisalId && (options?.enabled ?? true),
     queryFn: async (): Promise<AppraisalMapPinsResponse> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/map-pins`);
       return data;

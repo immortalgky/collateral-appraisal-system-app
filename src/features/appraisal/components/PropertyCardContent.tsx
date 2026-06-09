@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
+import { isWithinThailand } from '@/shared/constants/mapConfig';
 
 const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
 
@@ -14,6 +16,24 @@ interface PropertyCardContentProps {
   showArrow?: boolean;
   /** Card size variant — 'sm' for compact lists, 'md' for standard cards */
   size?: CardSize;
+  /**
+   * When provided, the corner pin opens the in-app map instead of external
+   * Google Maps. Disabled (greyed) when the property has no coordinates.
+   */
+  onLocationClick?: () => void;
+}
+
+/**
+ * True when the property has real coordinates inside Thailand. Must match the
+ * filter in PropertiesMapModal so the pin is only enabled for properties that
+ * will actually appear on the map.
+ */
+function hasCoordinates(property: PropertyItem): boolean {
+  return (
+    property.latitude != null &&
+    property.longitude != null &&
+    isWithinThailand(property.latitude, property.longitude)
+  );
 }
 
 const sizeConfig = {
@@ -60,8 +80,13 @@ export function PropertyCardContent({
   onClick,
   showArrow = true,
   size = 'sm',
+  onLocationClick,
 }: PropertyCardContentProps) {
+  const { t } = useTranslation('appraisal');
   const cfg = sizeConfig[size];
+  const located = hasCoordinates(property);
+  const pinPosition = size === 'compact' ? 'top-1 left-1 p-0.5' : 'top-2 left-2 p-1';
+  const pinIconSize = size === 'compact' ? 'text-[8px]' : 'text-[10px]';
 
   return (
     <div
@@ -95,22 +120,40 @@ export function PropertyCardContent({
             />
           </div>
         )}
-        {size !== 'xs' && (
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.address)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={e => e.stopPropagation()}
-            className={`absolute bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all ${size === 'compact' ? 'top-1 left-1 p-0.5' : 'top-2 left-2 p-1'}`}
-            title="Open in Google Maps"
-          >
-            <Icon
-              name="location-dot"
-              className={`text-green-500 ${size === 'compact' ? 'text-[8px]' : 'text-[10px]'}`}
-              style="solid"
-            />
-          </a>
-        )}
+        {size !== 'xs' &&
+          (onLocationClick ? (
+            located ? (
+              <button
+                type="button"
+                onClick={e => {
+                  e.stopPropagation();
+                  onLocationClick();
+                }}
+                className={`absolute bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all ${pinPosition}`}
+                title={t('properties.map.pinView')}
+              >
+                <Icon name="location-dot" className={`text-green-500 ${pinIconSize}`} style="solid" />
+              </button>
+            ) : (
+              <span
+                className={`absolute bg-white/80 rounded-full shadow-sm cursor-not-allowed ${pinPosition}`}
+                title={t('properties.map.pinNoLocation')}
+              >
+                <Icon name="location-dot" className={`text-gray-300 ${pinIconSize}`} style="solid" />
+              </span>
+            )
+          ) : (
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className={`absolute bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all ${pinPosition}`}
+              title="Open in Google Maps"
+            >
+              <Icon name="location-dot" className={`text-green-500 ${pinIconSize}`} style="solid" />
+            </a>
+          ))}
         {size !== 'xs' && property.photos && property.photos.length > 0 && (
           <div
             className={`absolute flex items-center gap-1 bg-black/50 text-white rounded-full text-[10px] ${size === 'compact' ? 'bottom-1 right-1 px-1 py-0' : 'bottom-2 right-2 px-1.5 py-0.5'}`}

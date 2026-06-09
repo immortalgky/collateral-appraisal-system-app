@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@/shared/components';
+import { addMapTypeToggle } from '@/shared/components/createMapTypeToggle';
 import { useGoogleMaps } from '@/shared/components/MapLocationPicker';
+import { BANGKOK_CENTER, MAP_TYPE_OPTIONS, THAILAND_MAP_RESTRICTION } from '@/shared/constants/mapConfig';
 import type { MarketComparableDetailType } from '../schemas';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -158,12 +160,15 @@ export function SurveySelectionMap({
     if (!ready || !containerRef.current || mapRef.current) return;
     const g = (window as any).google;
     mapRef.current = new g.maps.Map(containerRef.current, {
-      center: { lat: 13.7563, lng: 100.5018 }, // Bangkok fallback
+      center: BANGKOK_CENTER,
       zoom: 11,
-      mapTypeControl: false,
+      ...MAP_TYPE_OPTIONS,
       streetViewControl: false,
       fullscreenControl: false,
+      restriction: THAILAND_MAP_RESTRICTION,
     });
+    // Overlays sit at top-left and bottom-left, so place the toggle top-right.
+    addMapTypeToggle(mapRef.current, g.maps, 'TOP_RIGHT');
     infoRef.current = new g.maps.InfoWindow();
   }, [ready]);
 

@@ -8,6 +8,8 @@ interface AppointmentInfoCardProps {
   appointment: AppointmentDto2Type | null;
   onReschedule: () => void;
   onCancel?: () => void;
+  /** Called to discard a pending (draft) reschedule and revert to the previous date */
+  onCancelReschedule?: () => void;
   /** When true, shows "Needs approval" badge on the appointment */
   approvalDraft?: boolean;
   /** When true, shows "Pending approval" badge and disables reschedule */
@@ -26,6 +28,7 @@ export default function AppointmentInfoCard({
   appointment,
   onReschedule,
   onCancel,
+  onCancelReschedule,
   approvalDraft = false,
   approvalSubmitted = false,
   onViewHistory,
@@ -110,8 +113,8 @@ export default function AppointmentInfoCard({
       ? { label: t('approval.badge.needsApproval'), cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500' }
       : (() => {
           switch (status) {
-            case 'approved':
-              return { label: t('history.status.Approved'), cls: 'bg-green-50 text-green-700', dot: 'bg-green-500' };
+            case 'appointed':
+              return { label: t('history.status.Appointed'), cls: 'bg-green-50 text-green-700', dot: 'bg-green-500' };
             case 'pending':
               return { label: t('history.status.Pending'), cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-500' };
             case 'rejected':
@@ -241,16 +244,29 @@ export default function AppointmentInfoCard({
                 <span className="text-sm font-medium">{t('appointment.cancelButton')}</span>
               </button>
             )}
-            <button
-              type="button"
-              onClick={!approvalSubmitted ? onReschedule : undefined}
-              disabled={approvalSubmitted}
-              title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
-            >
-              <Icon name="clock-rotate-left" style="solid" className="w-4 h-4" />
-              <span className="text-sm font-medium">{t('appointment.rescheduleButton')}</span>
-            </button>
+            {approvalDraft && onCancelReschedule ? (
+              <button
+                type="button"
+                onClick={!approvalSubmitted ? onCancelReschedule : undefined}
+                disabled={approvalSubmitted}
+                title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-300 bg-white text-amber-700 hover:bg-amber-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
+              >
+                <Icon name="rotate-left" style="solid" className="w-4 h-4" />
+                <span className="text-sm font-medium">{t('approval.cancelRescheduleButton')}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={!approvalSubmitted ? onReschedule : undefined}
+                disabled={approvalSubmitted}
+                title={approvalSubmitted ? t('approval.banner.awaiting') : undefined}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
+              >
+                <Icon name="clock-rotate-left" style="solid" className="w-4 h-4" />
+                <span className="text-sm font-medium">{t('appointment.rescheduleButton')}</span>
+              </button>
+            )}
           </div>
         )}
       </div>

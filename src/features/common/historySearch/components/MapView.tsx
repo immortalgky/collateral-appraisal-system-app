@@ -4,6 +4,7 @@ import { MarkerClusterer } from '@googlemaps/markerclusterer';
 import type { AnyPin, AppraisalPinDto, MarketComparablePinDto, PinFilterState } from '../types';
 import { buildPinIcon } from '../icons';
 import { useGoogleMaps } from '@/shared/components/MapLocationPicker';
+import { BANGKOK_CENTER, MAP_TYPE_OPTIONS, THAILAND_MAP_RESTRICTION } from '@/shared/constants/mapConfig';
 
 // ─── Minimal Google Maps type shim ───────────────────────────────────────────
 // We declare only the subset of the Maps JS API we actually use so the
@@ -76,6 +77,8 @@ interface GMap {
   fitBounds(bounds: GMapLatLngBounds, padding?: number): void;
   addListener(event: string, handler: (e: GMapMouseEvent) => void): GMapMapsEventListener;
   getCenter(): { lat(): number; lng(): number } | null;
+  getMapTypeId(): string | undefined;
+  setMapTypeId(id: string): void;
 }
 
 interface GMapPoint {
@@ -171,10 +174,26 @@ interface MapViewProps {
    */
   primaryAppraisalNumber?: string | null;
   /**
+   * Optional resolver for the hover tooltip (native `title`) of
+   * appraising-collateral markers. Defaults to the pin's `appraisalNumber`.
+   * Lets a caller show a friendlier label (e.g. property name) without changing
+   * the tooltip for other callers.
+   */
+  appraisingCollateralTitle?: (pin: AppraisalPinDto) => string;
+  /**
+   * When true, after framing all pins the map recenters on the primary
+   * appraising-collateral pin (the one matching `primaryAppraisalNumber`), so
+   * the selection sits in the middle while the fit zoom still shows its
+   * surroundings. Opt-in; other callers keep the plain fit-to-all behaviour.
+   */
+  centerOnPrimary?: boolean;
+  /**
    * MC pins for the current appraisal (Feature 2 — 360 page).
    * Rendered using the 'mc-appraising' marker when showMcAppraising is true.
    */
   appraisingMcPins?: MarketComparablePinDto[];
+  /** Called once with the map instance after it's created (e.g. to mount external controls). */
+  onMapReady?: (map: GMap) => void;
 }
 
 /**
@@ -205,8 +224,11 @@ export function MapView({
   onCoincidentPins,
   appraisingCollateralPins,
   primaryAppraisalNumber,
+  appraisingCollateralTitle,
+  centerOnPrimary,
   appraisingMcPins,
   cluster = true,
+  onMapReady,
 }: MapViewProps) {
   const { t } = useTranslation('historySearch');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -223,6 +245,10 @@ export function MapView({
   // Appraising-pin markers tracked separately — they bypass the clusterer so they
   // are always visible at any zoom level (context pins for the current appraisal).
   const appraisingMarkersRef = useRef<GMapMarker[]>([]);
+  // The emphasised "main" pin marker(s) — kept so the highlight effect can restore
+  // their elevated z-index after resetting all markers (otherwise the main pin
+  // sinks behind coincident siblings after any hover cycle).
+  const mainMarkersRef = useRef<GMapMarker[]>([]);
   // Latest onCoincidentPins ref so the clusterer's onClusterClick always calls the current one
   const onCoincidentPinsRef = useRef(onCoincidentPins);
   // Suppress the idle listener for programmatic moves (fitBounds/setCenter). Timestamp-based
@@ -250,6 +276,7 @@ export function MapView({
     // Clear appraising markers (not in clusterer — removed individually).
     appraisingMarkersRef.current.forEach(m => m.setMap(null));
     appraisingMarkersRef.current = [];
+    mainMarkersRef.current = [];
     markerMapRef.current.clear();
     markerToPinRef.current.clear();
     pinPositionRef.current.clear();
@@ -259,16 +286,15 @@ export function MapView({
     if (!containerRef.current || !window.google?.maps) return;
     if (mapRef.current) return; // already initialized
 
-    const defaultCenter = center
-      ? { lat: center.lat, lng: center.lon }
-      : { lat: 13.7563, lng: 100.5018 }; // Bangkok
+    const defaultCenter = center ? { lat: center.lat, lng: center.lon } : BANGKOK_CENTER;
 
     mapRef.current = new window.google.maps.Map(containerRef.current, {
       center: defaultCenter,
       zoom: 13,
-      mapTypeControl: false,
+      ...MAP_TYPE_OPTIONS,
       streetViewControl: false,
       fullscreenControl: true,
+      restriction: THAILAND_MAP_RESTRICTION,
     });
 
     mapRef.current.addListener('click', (e: GMapMouseEvent) => {
@@ -288,8 +314,8 @@ export function MapView({
         onUserMovedMapRef.current({ lat: mapCenter.lat(), lon: mapCenter.lng() });
       }
     });
-  // onMapClick / onUserMovedMap intentionally excluded — stable references expected from parent
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // onMapClick / onUserMovedMap intentionally excluded — stable references expected from parent
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [center]);
 
   const renderMarkers = useCallback(() => {
@@ -314,7 +340,9 @@ export function MapView({
       appraisalPins.forEach(p => entries.push({ id: p.appraisalId, pin: p, isAppraisal: true }));
     }
     if (pinFilters.showMarketComparables) {
-      marketComparablePins.forEach(p => entries.push({ id: p.marketComparableId, pin: p, isAppraisal: false }));
+      marketComparablePins.forEach(p =>
+        entries.push({ id: p.marketComparableId, pin: p, isAppraisal: false }),
+      );
     }
 
     const groups = new Map<string, Entry[]>();
@@ -325,7 +353,10 @@ export function MapView({
       else groups.set(key, [e]);
     }
 
-    const makeIndividualMarker = ({ id, pin, isAppraisal }: Entry, position: { lat: number; lng: number }) => {
+    const makeIndividualMarker = (
+      { id, pin, isAppraisal }: Entry,
+      position: { lat: number; lng: number },
+    ) => {
       const marker = new google.maps.Marker({
         position,
         map: mapRef.current!,
@@ -362,7 +393,12 @@ export function MapView({
           map: mapRef.current!,
           icon: group.some(g => g.isAppraisal) ? appraisalIcon : mcIcon,
           title: String(group.length),
-          label: { text: String(group.length), color: '#ffffff', fontSize: '11px', fontWeight: '700' },
+          label: {
+            text: String(group.length),
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: '700',
+          },
         });
         marker.addListener('click', () => onCoincidentPinsRef.current?.(groupPins));
         marker.addListener('mouseover', () => onPinHover?.(group[0].id));
@@ -416,10 +452,18 @@ export function MapView({
             position,
             map: mapRef.current!,
             icon: hasMain ? mainCollateralIcon : appraisingCollateralIcon,
-            label: { text: String(groupPins.length), color: '#ffffff', fontSize: '11px', fontWeight: '700' },
+            label: {
+              text: String(groupPins.length),
+              color: '#ffffff',
+              fontSize: '11px',
+              fontWeight: '700',
+            },
             optimized: false,
           });
-          if (hasMain) marker.setZIndex(1000);
+          if (hasMain) {
+            marker.setZIndex(1000);
+            mainMarkersRef.current.push(marker);
+          }
           marker.addListener('click', () => onCoincidentPinsRef.current?.(groupPins));
           appraisingMarkersRef.current.push(marker);
           markerMapRef.current.set(trackKey, marker);
@@ -434,11 +478,14 @@ export function MapView({
           position,
           map: mapRef.current!,
           icon: isMain ? mainCollateralIcon : appraisingCollateralIcon,
-          title: pin.appraisalNumber ?? '',
+          title: appraisingCollateralTitle ? appraisingCollateralTitle(pin) : (pin.appraisalNumber ?? ''),
           optimized: false,
         });
         // Keep the main pin above its sibling candidate pins.
-        if (isMain) marker.setZIndex(1000);
+        if (isMain) {
+          marker.setZIndex(1000);
+          mainMarkersRef.current.push(marker);
+        }
         marker.addListener('click', () => onAppraisalPinClick(pin));
         appraisingMarkersRef.current.push(marker);
         // Appraising-collateral pins on the 360 page all share the page's
@@ -512,7 +559,7 @@ export function MapView({
               lastProgrammaticMoveRef.current = Date.now();
               mapRef.current.fitBounds(bounds);
             }
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           }) as any,
         });
       } else {
@@ -529,6 +576,7 @@ export function MapView({
     onPinHover,
     appraisingCollateralPins,
     primaryAppraisalNumber,
+    appraisingCollateralTitle,
     appraisingMcPins,
     cluster,
   ]);
@@ -536,13 +584,25 @@ export function MapView({
   // Load the Google Maps script via the shared hook (marker + places — places
   // is for the MapLocationPicker which lives elsewhere, but we share one
   // cached script per page so the libraries union is loaded together).
-  const { ready: mapsReady } = useGoogleMaps(apiKey, ['marker', 'places']);
+  const {
+    ready: mapsReady,
+    failed: mapsFailed,
+    retry: retryMaps,
+  } = useGoogleMaps(apiKey, ['marker', 'places']);
 
   useEffect(() => {
     if (mapsReady) initMap();
-  // initMap is stable per center value; re-run is safe
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // initMap is stable per center value; re-run is safe
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapsReady]);
+
+  // Hand the map instance to the parent so it can mount overlay controls (the
+  // satellite⇄map toggle is rendered next to the "my location" button). Kept in
+  // its own effect — independent of initMap, which early-returns when the map
+  // already exists (e.g. after a hot reload) and would otherwise never notify.
+  useEffect(() => {
+    if (mapsReady && mapRef.current) onMapReady?.(mapRef.current);
+  }, [mapsReady, onMapReady]);
 
   // Re-center map when center prop changes (programmatic — suppress idle)
   useEffect(() => {
@@ -563,10 +623,22 @@ export function MapView({
   // Latest fit inputs, read by fitToAllPins() after async events (search, resize).
   // Updated every render so the stable callback always sees the current pins/filters.
   const fitInputsRef = useRef({
-    appraisalPins, marketComparablePins, appraisingCollateralPins, appraisingMcPins, pinFilters,
+    appraisalPins,
+    marketComparablePins,
+    appraisingCollateralPins,
+    appraisingMcPins,
+    pinFilters,
+    primaryAppraisalNumber,
+    centerOnPrimary,
   });
   fitInputsRef.current = {
-    appraisalPins, marketComparablePins, appraisingCollateralPins, appraisingMcPins, pinFilters,
+    appraisalPins,
+    marketComparablePins,
+    appraisingCollateralPins,
+    appraisingMcPins,
+    pinFilters,
+    primaryAppraisalNumber,
+    centerOnPrimary,
   };
 
   // Frame ALL visible pins (own + result pins). Single/coincident → center; otherwise
@@ -574,7 +646,13 @@ export function MapView({
   const fitToAllPins = useCallback(() => {
     if (!mapRef.current || !window.google?.maps) return;
     const {
-      appraisalPins, marketComparablePins, appraisingCollateralPins, appraisingMcPins, pinFilters,
+      appraisalPins,
+      marketComparablePins,
+      appraisingCollateralPins,
+      appraisingMcPins,
+      pinFilters,
+      primaryAppraisalNumber,
+      centerOnPrimary,
     } = fitInputsRef.current;
 
     const pins: { lat: number; lon: number }[] = [
@@ -605,6 +683,17 @@ export function MapView({
     pins.forEach(p => bounds.extend({ lat: p.lat, lng: p.lon }));
     // Padding keeps pins off the very edge of the viewport.
     mapRef.current.fitBounds(bounds, 64);
+
+    // Opt-in: recenter on the primary (clicked) collateral pin while keeping the
+    // fit zoom, so the selection sits in the middle of its surroundings.
+    if (centerOnPrimary && primaryAppraisalNumber != null) {
+      const primary = (appraisingCollateralPins ?? []).find(
+        p => p.appraisalNumber === primaryAppraisalNumber,
+      );
+      if (primary) {
+        mapRef.current.setCenter({ lat: primary.lat, lng: primary.lon });
+      }
+    }
   }, []);
 
   // Pan/zoom the map to fit ALL visible pins after each search (fitToken bump) so
@@ -683,13 +772,17 @@ export function MapView({
       marker.setZIndex(0);
       marker.setAnimation(null);
     });
+    // Restore the emphasised "main" pin's elevation — the blanket reset above
+    // would otherwise drop it behind coincident sibling pins.
+    mainMarkersRef.current.forEach(marker => marker.setZIndex(1000));
 
     if (highlightedPinId) {
       const target = markerMapRef.current.get(highlightedPinId);
       if (target) {
         target.setZIndex(999);
         // BOUNCE animation (value = 1 in the Maps JS API)
-        const bounceValue = (google.maps as unknown as { Animation: GMapAnimation }).Animation?.BOUNCE ?? 1;
+        const bounceValue =
+          (google.maps as unknown as { Animation: GMapAnimation }).Animation?.BOUNCE ?? 1;
         target.setAnimation(bounceValue);
         // Stop bouncing after 700 ms (one bounce cycle)
         const id = setTimeout(() => {
@@ -742,12 +835,52 @@ export function MapView({
   if (!apiKey) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-gray-50 gap-3 p-6 text-center">
-        <svg className="w-12 h-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        <svg
+          aria-hidden="true"
+          className="w-12 h-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+          />
         </svg>
         <p className="text-sm font-medium text-gray-500">{t('map.noApiKey')}</p>
         <p className="text-xs text-gray-400 font-mono">VITE_GOOGLE_MAPS_API_KEY</p>
         <p className="text-xs text-gray-400">Set this in .env.development to enable the map.</p>
+      </div>
+    );
+  }
+
+  if (mapsFailed) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-gray-50 gap-3 p-6 text-center">
+        <svg
+          aria-hidden="true"
+          className="w-12 h-12 text-gray-300"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+          />
+        </svg>
+        <p className="text-sm font-medium text-gray-500">{t('map.loadFailed')}</p>
+        <button
+          type="button"
+          onClick={retryMaps}
+          className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+        >
+          {t('map.retry')}
+        </button>
       </div>
     );
   }

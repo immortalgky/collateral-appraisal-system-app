@@ -36,9 +36,7 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 let accessToken: string | null = null;
 
 // --- BroadcastChannel for multi-tab sync (feature-detected) ---
-type AuthChannelMessage =
-  | { type: 'token_update'; token: string | null }
-  | { type: 'logout' };
+type AuthChannelMessage = { type: 'token_update'; token: string | null } | { type: 'logout' };
 
 type AuthChannel = {
   postMessage: (message: AuthChannelMessage) => void;
@@ -116,6 +114,50 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+/**
+ * Decode a JWT's `exp` (seconds since epoch) and report whether it is expired
+ * (or expires within `skewSeconds`). Returns true on any decode failure so a
+ * malformed/unparsable token is treated as needing a refresh. */
+function isTokenExpired(token: string, skewSeconds = 30): boolean {
+  try {
+    const segment = token.split('.')[1];
+    if (!segment) return true;
+    // base64url → base64, restoring '=' padding to a multiple of 4.
+    const b64 = segment.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '==='.slice((b64.length + 3) % 4);
+    const json = atob(padded);
+    const exp = JSON.parse(json).exp as number | undefined;
+    if (typeof exp !== 'number') return true;
+    return Date.now() >= (exp - skewSeconds) * 1000;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Return a usable access token, refreshing first if the in-memory token is
+ * missing or (about to be) expired. Reuses the same single-flight refresh
+ * promise as the 401 interceptor so concurrent callers share one refresh.
+ *
+ * Used by the SignalR accessTokenFactory so reconnects after idle/sleep don't
+ * negotiate with a stale token and 401-loop.
+ */
+export async function getFreshAccessToken(): Promise<string | null> {
+  if (accessToken && !isTokenExpired(accessToken)) {
+    return accessToken;
+  }
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  const newToken = await refreshPromise;
+  if (newToken) {
+    setAccessToken(newToken);
+  }
+  return newToken;
+}
+
 // Create axios instance with base URL and default headers
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
@@ -157,12 +199,7 @@ axiosInstance.interceptors.response.use(
     // Skip refresh entirely for auth endpoints: a 401 from /auth/login is a
     // credential failure (not a stale token) and refresh/token endpoints
     // would loop or mask the real error.
-    if (
-      response &&
-      response.status === 401 &&
-      config &&
-      !isAuthEndpoint(config.url)
-    ) {
+    if (response && response.status === 401 && config && !isAuthEndpoint(config.url)) {
       // Only attempt refresh once per request
       if ((config as any)._retried) {
         broadcastLogout();
@@ -185,8 +222,8 @@ axiosInstance.interceptors.response.use(
       if (newToken) {
         setAccessToken(newToken);
         if (!config.headers) {
-        config.headers = new AxiosHeaders();
-      }
+          config.headers = new AxiosHeaders();
+        }
         config.headers.Authorization = `Bearer ${newToken}`;
         return axiosInstance(config);
       }

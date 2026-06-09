@@ -78,6 +78,13 @@ export interface StructuredValidationError {
   message: string;
 }
 
+/** Non-blocking warning that requires user acknowledgement before proceeding. */
+export interface StructuredWarning {
+  stepName: string;
+  message: string;
+  ackToken: string;
+}
+
 export interface CompleteActivityResponse {
   workflowInstanceId: string;
   status: string;
@@ -86,6 +93,7 @@ export interface CompleteActivityResponse {
   nextAssignee: string | null;
   isCompleted: boolean;
   validationErrors: StructuredValidationError[] | null;
+  warnings?: StructuredWarning[] | null;
 }
 
 export interface TaskHistoryItem {
@@ -197,6 +205,7 @@ export const useCompleteActivity = () => {
       activityId,
       input,
       nextAssignmentOverrides,
+      acknowledgedWarningTokens,
     }: {
       workflowInstanceId: string;
       activityId: string;
@@ -209,10 +218,11 @@ export const useCompleteActivity = () => {
           overrideReason?: string;
         }
       >;
+      acknowledgedWarningTokens?: string[];
     }): Promise<CompleteActivityResponse> => {
       const { data } = await axios.post(
         `/api/workflows/instances/${workflowInstanceId}/activities/${activityId}/complete`,
-        { input, nextAssignmentOverrides },
+        { input, nextAssignmentOverrides, acknowledgedWarningTokens },
       );
       return data;
     },

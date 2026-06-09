@@ -30,6 +30,18 @@ interface ConfirmDialogProps {
    * The confirm button keeps its variant colour (so Cancel/retry stay normal).
    */
   hasError?: boolean;
+  /**
+   * When true (and not loading, not hasError), the header shows an amber warning
+   * icon instead of the variant icon. Also replaces the built-in footer buttons
+   * with `customFooter` when provided, so the caller can supply a single
+   * "Continue anyway" primary action without a competing "Submit" button.
+   */
+  hasWarning?: boolean;
+  /**
+   * Replaces the built-in Cancel/Confirm button row when `hasWarning` is true.
+   * Ignored in all other states so existing callers are unaffected.
+   */
+  customFooter?: ReactNode;
   /** Text shown on the confirm button while loading (defaults to "Processing..."). */
   loadingText?: string;
 }
@@ -47,6 +59,8 @@ const ConfirmDialog = ({
   showActivityProgress = false,
   children,
   hasError = false,
+  hasWarning = false,
+  customFooter,
   loadingText,
 }: ConfirmDialogProps) => {
   const progressMessage = useLoadingStore(s => s.message);
@@ -95,13 +109,21 @@ const ConfirmDialog = ({
         <div className="flex flex-col items-center text-center">
           <div
             className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${
-              isLoading ? 'bg-primary/10' : hasError ? 'bg-danger/10' : styles.iconBg
+              isLoading
+                ? 'bg-primary/10'
+                : hasError
+                  ? 'bg-danger/10'
+                  : hasWarning
+                    ? 'bg-amber-50'
+                    : styles.iconBg
             }`}
           >
             {isLoading ? (
               <Icon name="spinner" style="solid" className="size-7 text-primary animate-spin" />
             ) : hasError ? (
               <Icon name="triangle-exclamation" style="solid" className="size-7 text-danger" />
+            ) : hasWarning ? (
+              <Icon name="triangle-exclamation" style="solid" className="size-7 text-amber-500" />
             ) : (
               <Icon name={styles.icon} style="solid" className={`size-7 ${styles.iconColor}`} />
             )}
@@ -114,31 +136,35 @@ const ConfirmDialog = ({
               {bodyMessage}
             </p>
           )}
-          <div className="flex gap-3 w-full">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {cancelText}
-            </button>
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={isLoading}
-              className={`flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${styles.confirmBtn}`}
-            >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Icon name="spinner" style="solid" className="size-4 animate-spin shrink-0" />
-                  <span className="truncate">{loadingText ?? 'Processing...'}</span>
-                </span>
-              ) : (
-                confirmText
-              )}
-            </button>
-          </div>
+          {hasWarning && !isLoading && customFooter ? (
+            <div className="flex gap-3 w-full">{customFooter}</div>
+          ) : (
+            <div className="flex gap-3 w-full">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isLoading}
+                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cancelText}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                disabled={isLoading}
+                className={`flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${styles.confirmBtn}`}
+              >
+                {isLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Icon name="spinner" style="solid" className="size-4 animate-spin shrink-0" />
+                    <span className="truncate">{loadingText ?? 'Processing...'}</span>
+                  </span>
+                ) : (
+                  confirmText
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </div>
       <div

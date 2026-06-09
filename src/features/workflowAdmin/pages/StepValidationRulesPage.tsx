@@ -323,6 +323,7 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
   const [parametersJson, setParametersJson] = useState(editing?.parametersJson ?? '');
   const [runIfExpression, setRunIfExpression] = useState(editing?.runIfExpression ?? '');
   const [isActive, setIsActive] = useState(editing?.isActive ?? true);
+  const [severity, setSeverity] = useState<'Error' | 'Warning'>(editing?.severity ?? 'Error');
   const [exampleOpen, setExampleOpen] = useState(false);
 
   // Reset when editing prop changes (same modal reused for different rows)
@@ -332,6 +333,7 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
     setParametersJson(editing?.parametersJson ?? '');
     setRunIfExpression(editing?.runIfExpression ?? '');
     setIsActive(editing?.isActive ?? true);
+    setSeverity(editing?.severity ?? 'Error');
     setExampleOpen(false);
   }, [editing]);
 
@@ -363,6 +365,7 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
       parametersJson: parametersJson || null,
       runIfExpression: runIfExpression || null,
       isActive,
+      severity,
     };
     onSave(row);
   };
@@ -446,6 +449,21 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
             </label>
           </div>
         </div>
+
+        {/* Severity — only relevant for Validation steps */}
+        {(catalog.find(c => c.name === processorName)?.kind ?? '') === 'Validation' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+            <select
+              value={severity}
+              onChange={e => setSeverity(e.target.value as 'Error' | 'Warning')}
+              className={inputClass}
+            >
+              <option value="Error">Error (blocks completion)</option>
+              <option value="Warning">Warning (requires acknowledgement)</option>
+            </select>
+          </div>
+        )}
 
         {/* Parameters — rendered from schema shape */}
         {processorName && (
@@ -692,6 +710,9 @@ const StepValidationRulesPage = () => {
                       Kind
                     </th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                      Severity
+                    </th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Run-If
                     </th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
@@ -742,6 +763,21 @@ const StepValidationRulesPage = () => {
                         </td>
                         <td className="px-4 py-3 text-gray-500 text-xs">
                           {getCatalogKind(row.processorName)}
+                        </td>
+                        <td className="px-4 py-3">
+                          {getCatalogKind(row.processorName) === 'Validation' ? (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                (row.severity ?? 'Error') === 'Warning'
+                                  ? 'bg-amber-50 text-amber-700'
+                                  : 'bg-red-50 text-red-700'
+                              }`}
+                            >
+                              {row.severity ?? 'Error'}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 text-xs italic">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-gray-500 font-mono text-xs max-w-xs truncate">
                           {row.runIfExpression ?? <span className="italic text-gray-300">always</span>}

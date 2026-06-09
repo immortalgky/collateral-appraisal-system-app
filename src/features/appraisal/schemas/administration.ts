@@ -98,14 +98,14 @@ export const useAssignmentFormSchema = () => {
  * Default values for the assignment form
  */
 export const assignmentFormDefaults: AssignmentFormType = {
-  assignmentType: 'internal',
-  assignmentMethod: 'manual',
+  assignmentType: 'external',
+  assignmentMethod: 'quotation',
   staffId: null,
   companyId: null,
   selectedStaff: null,
   selectedCompany: null,
   followupStaffId: null,
   selectedFollowupStaff: null,
-  followupStaffMethod: 'manual',
+  followupStaffMethod: 'roundrobin',
   remarks: '',
 };
