@@ -137,6 +137,34 @@ export const useDeleteSupportingDetailData = () => {
   });
 };
 
+export const useDeleteSupportingDetailsByBatchData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      supportingDetailIds: string[];
+      id: string;
+    }): Promise<{ isSuccessful: boolean }> => {
+      const { data } = await axios.delete(`/supporting-data/${params.supportingId}/details/batch`, {
+        data: { SupportingDetailIds: params.supportingDetailIds },
+      });
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataLists(variables.supportingId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataDetail(variables.supportingId, variables.id),
+      });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+      });
+    },
+  });
+};
+
 export const useDeleteSupportingData = () => {
   const queryClient = useQueryClient();
 

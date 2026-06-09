@@ -3,7 +3,7 @@ import clsx from 'clsx';
 
 type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info';
 type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
-type BadgeType = 'status' | 'priority' | 'channel' | 'property' | 'vote';
+type BadgeType = 'status' | 'priority' | 'channel' | 'property' | 'vote' | 'supportingDataStatus';
 type BadgeStyle = 'soft' | 'solid' | 'outline' | 'minimal' | 'ghost';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -106,6 +106,14 @@ const typeColorMap: Record<BadgeType, Record<string, ColorKey>> = {
     'not started': 'blue',
     'in progress': 'cyan',
     overdue: 'red',
+  },
+  supportingDataStatus: {
+    draft: 'amber',
+    pending: 'purple',
+    'routed back': 'red',
+    approved: 'emerald',
+    cancelled: 'gray',
+    rejected: 'red',
   },
   priority: {
     high: 'red',

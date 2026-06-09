@@ -34,8 +34,9 @@ import {
 } from '../api';
 import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
-import { ARCHIVED_STATUSES, SUPPORTING_STATUS } from '../constants/parameters';
+import { SUPPORTING_STATUS } from '../constants/parameters';
 import { useTranslation } from 'react-i18next';
+import useBreadcrumb from '@/shared/hooks/useBreadcrumb';
 
 function SupportingDataMaintenanceDetailListPageSkeleton() {
   return (
@@ -209,6 +210,8 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { mutateAsync: bulkUpload, isPending: isUploading } = useBulkUploadSupportingDetails();
 
   const isPending = isCreatingDraft || isUpdating || isSubmitting || isDeleting || isUploading;
+
+  useBreadcrumb(hasSupportingId ? supportingData?.supportingNumber : undefined, '');
 
   const handleFile = async (file: File) => {
     // Client-side guards (mirrors the server-side checks)
@@ -507,7 +510,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               </div>
             }
           >
-            <div className="w-full">
+            <div className="flex flex-col gap-2 w-full">
               <SupportingDataTable
                 supportingId={supportingId}
                 isReadOnly={!hasAuthorityToEdit}

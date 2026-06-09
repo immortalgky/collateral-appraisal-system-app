@@ -326,7 +326,9 @@ export const router = createBrowserRouter([
           },
           {
             path: 'companies',
-            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageCompanies" />,
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageCompanies" />
+            ),
             children: [{ index: true, element: <CompanyListPage /> }],
           },
           {
@@ -359,9 +361,7 @@ export const router = createBrowserRouter([
           // Step validation rules — gated by WORKFLOW_ADMIN permission
           {
             path: 'workflow-step-validation',
-            element: (
-              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
-            ),
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />,
             children: [{ index: true, element: <StepValidationRulesPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
@@ -468,23 +468,13 @@ export const router = createBrowserRouter([
       // support data maintenance
       {
         path: 'standalone/supporting-data-maintenance',
-        element: <SupportingDataMaintenanceListPage />,
-      },
-      {
-        path: 'standalone/supporting-data-maintenance/new',
-        element: <SupportingDataMaintenanceDetailListPage />,
-      },
-      {
-        path: 'standalone/supporting-data-maintenance/:supportingId',
-        element: <SupportingDataMaintenanceDetailListPage />,
-      },
-      {
-        path: 'standalone/supporting-data-maintenance/:supportingId/data/new',
-        element: <CreateSupportingDataPage />,
-      },
-      {
-        path: 'standalone/supporting-data-maintenance/:supportingId/data/:id',
-        element: <CreateSupportingDataPage />,
+        children: [
+          { index: true, element: <SupportingDataMaintenanceListPage /> },
+          { path: 'new', element: <SupportingDataMaintenanceDetailListPage /> },
+          { path: ':supportingId', element: <SupportingDataMaintenanceDetailListPage /> },
+          { path: ':supportingId/data/new', element: <CreateSupportingDataPage /> },
+          { path: ':supportingId/data/:id', element: <CreateSupportingDataPage /> },
+        ],
       },
       // ─── Block Project Reappraisal ──────────────────────────────────────────
       {
