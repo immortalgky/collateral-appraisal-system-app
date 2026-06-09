@@ -192,8 +192,16 @@ export const useSubmitSupportingData = () => {
       });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      // Invalidate the list so status badge updates
       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
+      // Invalidate the detail cache so hasAuthorityToDecision / hasAuthorityToEdit
+      // reflect the new status immediately when navigating back to this record
+      if (variables.supportingId) {
+        queryClient.invalidateQueries({
+          queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+        });
+      }
     },
   });
 };
