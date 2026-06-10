@@ -311,7 +311,7 @@
     "closes": "Closes",
     "hoursRemaining": "{{n}}h remaining",
     "stats": {
-      "companiesInvited": "Companies Invited",
+      "companiesInvited": "Invited Companies",
       "responses": "Responses",
       "appraisals": "Appraisals",
       "cutOffTime": "Cut Off Time"
@@ -343,7 +343,7 @@
     },
     "editDraft": {
       "appraisalCount": "{{n}} (use Add / Remove to change appraisals)",
-      "companiesInvited": "Companies Invited",
+      "companiesInvited": "Invited Companies",
       "eligibleFor": "eligible for",
       "companySearchPlaceholder": "Search company name...",
       "noEligibleCompanies": "No eligible companies for this segment",
