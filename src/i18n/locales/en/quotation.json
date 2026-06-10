@@ -71,7 +71,7 @@
     "customerName": "Customer Name",
     "propertyDetail": "Property Detail",
     "rm": "RM",
-    "maxAppraisalDuration": "Max Appraisal Duration (day)",
+    "maxAppraisalDuration": "Max Appraisal Duration (Days)",
     "email": "Email",
     "companyName": "Company Name",
     "activityName": "Activity Name",
@@ -105,7 +105,7 @@
   "fields": {
     "appraisalNumber": "Appraisal Number",
     "customerName": "Customer Name",
-    "maxAppraisalDuration": "Max Appraisal Duration (days)",
+    "maxAppraisalDuration": "Max Appraisal Duration (Days)",
     "estimatedMandays": "Estimated Mandays",
     "quotationRemark": "Quotation Remark",
     "participating": "Participating",
