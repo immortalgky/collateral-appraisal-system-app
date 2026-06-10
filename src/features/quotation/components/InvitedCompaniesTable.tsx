@@ -18,7 +18,7 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
           <Icon name="building" style="solid" className="size-3.5 text-teal-600" />
         </div>
         <h2 className="text-sm font-semibold text-gray-700">
-          {t('invitedCompanies.title')} ({companies.length})
+          {t('invitedCompanies.tableTitle')} ({companies.length})
         </h2>
       </div>
 
