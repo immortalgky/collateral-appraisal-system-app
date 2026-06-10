@@ -31,7 +31,7 @@ const CompanyListPage = () => {
     pageSize: 50,
   });
 
-  const companies = data?.items ?? [];
+  const companies = data?.companies ?? [];
   const createCompany = useCreateAdminCompany();
 
   const handleOpenCreate = () => {

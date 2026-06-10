@@ -32,8 +32,8 @@ export const useGetAdminCompanyById = (id: string | null) => {
   return useQuery({
     queryKey: [QUERY_KEY, id],
     queryFn: async (): Promise<Company> => {
-      const { data } = await axios.get<Company>(`/companies/${id}`);
-      return data;
+      const { data } = await axios.get<{ company: Company }>(`/companies/${id}`);
+      return data.company;
     },
     enabled: !!id,
   });
