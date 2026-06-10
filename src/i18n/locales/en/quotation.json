@@ -448,8 +448,8 @@
     "properties": "Properties",
     "requestedAt": "Requested At",
     "selectAllHint": "Selected {{page}} on this page. {{total}} appraisals match your filters — refine filters or paginate to select more.",
-    "maxDaysAll": "Set max days for all:",
-    "maxDays": "Max days:",
+    "maxDaysAll": "Set max appraisal duration (day) for all:",
+    "maxDays": "Max appraisal duration (day):",
     "maxDaysPlaceholder": "e.g. 7",
     "docsCount": "{{n}} docs"
   },
