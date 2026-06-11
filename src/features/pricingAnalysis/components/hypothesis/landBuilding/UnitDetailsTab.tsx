@@ -341,17 +341,11 @@ export function UnitDetailsTab({
             <table className="w-full text-xs min-w-[600px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Model</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">Units</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">
-                    Avg Area (Sq.Wa)
-                  </th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">
-                    Total Area (Sq.Wa)
-                  </th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">
-                    Total Revenue (Baht)
-                  </th>
+                  <th className="text-left px-3 py-2 font-medium text-gray-500">{t('upload.colModel')}</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colUnits')}</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colAvgArea')}</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colTotalArea')}</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colTotalRevenue')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
