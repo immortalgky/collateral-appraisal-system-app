@@ -48,7 +48,10 @@
     "status": "สถานะ",
     "monitoring": "การติดตาม",
     "address": "ที่อยู่",
-    "bankAccount": "บัญชีธนาคาร"
+    "bankAccount": "บัญชีธนาคาร",
+    "account": "บัญชีผู้ใช้",
+    "profile": "ข้อมูลส่วนตัว",
+    "access": "สิทธิ์การเข้าถึง"
   },
   "fields": {
     "username": "ชื่อผู้ใช้",
@@ -85,9 +88,11 @@
     "teamTypeExternal": "ภายนอก",
     "status": "สถานะ",
     "company": "บริษัท",
-    "authSource": "แหล่งยืนยันตัวตน",
+    "authSource": "การยืนยันตัวตน",
     "lastLogin": "เข้าสู่ระบบล่าสุด",
-    "noCompany": "ไม่มีบริษัท"
+    "noCompany": "ไม่มีบริษัท",
+    "authSourceLocal": "รหัสผ่านภายในระบบ",
+    "authSourceLdap": "LDAP / Active Directory"
   },
   "placeholders": {
     "searchUsers": "ค้นหาผู้ใช้...",
@@ -107,6 +112,7 @@
     "teamName": "ชื่อทีม",
     "teamDescription": "คำอธิบายสั้น ๆ ของทีมนี้",
     "companyName": "ชื่อบริษัท",
+    "selectCompany": "เลือกบริษัท",
     "taxId": "เช่น 0105556123456",
     "phone": "เช่น 02-xxx-xxxx",
     "contactPerson": "ชื่อผู้ติดต่อ",
@@ -127,8 +133,6 @@
     "department": "เช่น ฝ่ายประเมินราคา",
     "username": "jdoe",
     "email": "jdoe@example.com",
-    "passwordHint": "อย่างน้อย 8 ตัวอักษร ตัวพิมพ์ใหญ่/เล็ก/ตัวเลข/สัญลักษณ์",
-    "atLeast8Chars": "อย่างน้อย 8 ตัวอักษร",
     "reEnterNewPassword": "ป้อนรหัสผ่านใหม่อีกครั้ง",
     "enterCurrentPassword": "ป้อนรหัสผ่านปัจจุบัน"
   },
@@ -142,7 +146,11 @@
     "search": "ค้นหา",
     "roleName": "บทบาท",
     "group": "กลุ่ม",
-    "team": "ทีม"
+    "team": "ทีม",
+    "allRoles": "ทุกบทบาท",
+    "allGroups": "ทุกกลุ่ม",
+    "allTeams": "ทุกทีม",
+    "allCompanies": "ทุกบริษัท"
   },
   "counts": {
     "members": "{{count}} สมาชิก",
@@ -156,7 +164,10 @@
     "locked": "ถูกล็อก"
   },
   "hints": {
-    "loanTypesComma": "คั่นประเภทสินเชื่อหลายประเภทด้วยเครื่องหมายจุลภาค"
+    "loanTypesComma": "คั่นประเภทสินเชื่อหลายประเภทด้วยเครื่องหมายจุลภาค",
+    "ldapPassword": "รหัสผ่านถูกจัดการโดย Active Directory — ผู้ใช้เข้าสู่ระบบด้วยบัญชี AD ของตน",
+    "switchToLocalPassword": "กำลังเปลี่ยนเป็นการเข้าสู่ระบบภายใน — โปรดรีเซ็ตรหัสผ่านในส่วนความปลอดภัยเพื่อให้ผู้ใช้เข้าสู่ระบบได้",
+    "teamNotApplicableCompany": "ทีมไม่มีผลกับผู้ใช้ของบริษัท — {{company}} ทำหน้าที่เป็นทีมของผู้ใช้"
   },
   "empty": {
     "noUsersFound": "ไม่พบผู้ใช้งาน",
@@ -177,11 +188,13 @@
     "selectGroup": "เลือกกลุ่มเพื่อดูรายละเอียด",
     "selectTeam": "เลือกทีมเพื่อดูรายละเอียด",
     "selectCompany": "เลือกบริษัทเพื่อดูรายละเอียด",
+    "selectPermission": "เลือกสิทธิ์เพื่อดูรายละเอียด",
     "noRolesAvailable": "ไม่มีบทบาทที่ใช้งานได้",
     "noOtherGroupsFound": "ไม่พบกลุ่มอื่น",
     "noItemsFound": "ไม่พบรายการ",
     "noTeamsAssigned": "ยังไม่มีทีมที่กำหนด",
-    "loading": "กำลังโหลด..."
+    "loading": "กำลังโหลด...",
+    "clearFilters": "ล้างตัวกรอง"
   },
   "aria": {
     "addUser": "เพิ่มผู้ใช้",
@@ -209,7 +222,11 @@
     "exportCsv": "ส่งออก CSV",
     "activate": "เปิดใช้งาน",
     "deactivate": "ปิดใช้งาน",
-    "unlock": "ปลดล็อก"
+    "unlock": "ปลดล็อก",
+    "loadMore": "โหลดเพิ่ม",
+    "loadingMore": "กำลังโหลด...",
+    "retrieveFromLdap": "ดึงข้อมูลจาก LDAP",
+    "deletePermission": "ลบสิทธิ์"
   },
   "dialogs": {
     "createRole": {
@@ -309,7 +326,8 @@
     "deleteRoleWarning": "การลบบทบาทนี้จะนำออกจากผู้ใช้ทั้งหมดที่ถูกกำหนด การดำเนินการนี้ไม่สามารถยกเลิกได้",
     "deleteGroupWarning": "การลบกลุ่มนี้จะลบการกำหนดผู้ใช้ทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้",
     "deleteTeamWarning": "การลบทีมนี้จะลบสมาชิกทั้งหมด การดำเนินการนี้ไม่สามารถยกเลิกได้",
-    "deleteCompanyWarning": "การลบบริษัทนี้จะนำออกจากระบบ การดำเนินการนี้ไม่สามารถยกเลิกได้"
+    "deleteCompanyWarning": "การลบบริษัทนี้จะนำออกจากระบบ การดำเนินการนี้ไม่สามารถยกเลิกได้",
+    "deletePermissionWarning": "การลบสิทธิ์นี้จะนำออกจากทุกบทบาท การดำเนินการนี้ไม่สามารถย้อนกลับได้"
   },
   "selectionCount": {
     "permissions": "เลือก {{count}} สิทธิ์",
@@ -400,7 +418,10 @@
     "userDeactivated": "ปิดใช้งานผู้ใช้เรียบร้อยแล้ว",
     "userActivationFailed": "ไม่สามารถอัปเดตสถานะผู้ใช้ได้",
     "userUnlocked": "ปลดล็อกบัญชีผู้ใช้เรียบร้อยแล้ว",
-    "userUnlockFailed": "ไม่สามารถปลดล็อกบัญชีผู้ใช้ได้"
+    "userUnlockFailed": "ไม่สามารถปลดล็อกบัญชีผู้ใช้ได้",
+    "ldapUserNotFound": "ไม่พบผู้ใช้ใน LDAP/AD",
+    "ldapInfoLoaded": "โหลดข้อมูลจาก LDAP แล้ว",
+    "ldapLookupFailed": "ค้นหาข้อมูล LDAP ไม่สำเร็จ"
   },
   "validation": {
     "nameRequired": "ต้องระบุชื่อ",
@@ -418,11 +439,13 @@
     "firstNameRequired": "ต้องระบุชื่อ",
     "lastNameRequired": "ต้องระบุนามสกุล",
     "selectAtLeastOneRole": "โปรดเลือกอย่างน้อยหนึ่งบทบาท",
+    "companyRequired": "โปรดเลือกบริษัท",
     "fillAllRequired": "โปรดกรอกข้อมูลในช่องที่จำเป็นทั้งหมด",
     "currentPasswordRequired": "ต้องระบุรหัสผ่านปัจจุบัน",
     "newPasswordMinLength": "รหัสผ่านใหม่ต้องมีอย่างน้อย 8 ตัวอักษร",
     "confirmPasswordRequired": "โปรดยืนยันรหัสผ่านใหม่",
     "passwordsDoNotMatch": "รหัสผ่านไม่ตรงกัน",
+    "passwordPolicyNotMet": "รหัสผ่านไม่เป็นไปตามข้อกำหนดของนโยบาย",
     "passwordMinLengthReset": "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร",
     "passwordsDoNotMatchReset": "รหัสผ่านไม่ตรงกัน"
   },
@@ -431,7 +454,42 @@
     "requireUppercase": "ตัวพิมพ์ใหญ่อย่างน้อยหนึ่งตัว",
     "requireLowercase": "ตัวพิมพ์เล็กอย่างน้อยหนึ่งตัว",
     "requireDigit": "ตัวเลขอย่างน้อยหนึ่งตัว",
-    "requireSymbol": "อักขระพิเศษอย่างน้อยหนึ่งตัว"
+    "requireSymbol": "อักขระพิเศษอย่างน้อยหนึ่งตัว",
+    "requireUniqueChars": "อักขระที่แตกต่างกันอย่างน้อย {{count}} ตัว"
+  },
+  "forcedPasswordChange": {
+    "title": "ตั้งรหัสผ่านใหม่",
+    "subtitle": "คุณต้องเปลี่ยนรหัสผ่านก่อนใช้งานต่อ",
+    "signOut": "ออกจากระบบแทน"
+  },
+  "passwordPolicyConfig": {
+    "title": "นโยบายรหัสผ่าน",
+    "subtitle": "กำหนดกฎที่รหัสผ่านทุกอันต้องเป็นไปตามทั้งระบบ",
+    "complexity": "ความซับซ้อน",
+    "lifecycle": "วงจรการใช้งาน",
+    "lockout": "การล็อกบัญชี",
+    "blocklist": "รหัสผ่านที่ห้ามใช้",
+    "requiredLength": "ความยาวขั้นต่ำ",
+    "requiredUniqueChars": "จำนวนอักขระที่แตกต่างกันขั้นต่ำ",
+    "requireDigit": "ต้องมีตัวเลข (0-9)",
+    "requireLowercase": "ต้องมีตัวพิมพ์เล็ก (a-z)",
+    "requireUppercase": "ต้องมีตัวพิมพ์ใหญ่ (A-Z)",
+    "requireNonAlphanumeric": "ต้องมีอักขระพิเศษ",
+    "expiryDays": "รหัสผ่านหมดอายุหลังจาก (วัน)",
+    "expiryHint": "0 = ไม่หมดอายุ รหัสผ่านที่หมดอายุจะบังคับให้เปลี่ยนเมื่อเข้าสู่ระบบครั้งถัดไป",
+    "historyCount": "ห้ามใช้รหัสผ่านซ้ำย้อนหลัง N ครั้ง",
+    "historyHint": "0 = ไม่ตรวจสอบประวัติ",
+    "lockoutEnabled": "เปิดใช้งานการล็อกบัญชี",
+    "maxFailedAccessAttempts": "จำนวนครั้งที่ผิดก่อนถูกล็อก",
+    "lockoutMinutes": "ระยะเวลาล็อก (นาที)",
+    "lockoutMinutesHint": "0 = ล็อกจนกว่าผู้ดูแลระบบจะปลดล็อก",
+    "lockoutRestartNote": "การตั้งค่าการล็อกบัญชีจะมีผลหลังจากรีสตาร์ทเซิร์ฟเวอร์แอปพลิเคชันแต่ละเครื่อง",
+    "propagationNote": "การเปลี่ยนแปลงความซับซ้อน วันหมดอายุ ประวัติ และรายการต้องห้าม จะมีผลภายในประมาณหนึ่งนาทีบนทุกเซิร์ฟเวอร์",
+    "blocklistLabel": "รหัสผ่านที่ห้ามใช้ (บรรทัดละหนึ่งรายการ)",
+    "blocklistHint": "ไม่คำนึงถึงตัวพิมพ์ใหญ่เล็ก รหัสผ่านเหล่านี้จะถูกปฏิเสธ",
+    "save": "บันทึกนโยบาย",
+    "saved": "อัปเดตนโยบายรหัสผ่านแล้ว",
+    "saveFailed": "ไม่สามารถอัปเดตนโยบายรหัสผ่านได้"
   },
   "roles": {
     "displayNames": {
@@ -466,5 +524,12 @@
       "AppraisalCommittee": "สมาชิกคณะกรรมการประเมิน — อนุมัติ/ลงคะแนนการประเมินระดับ 3",
       "MeetingSecretary": "เลขานุการการประชุม — กำหนดการและดำเนินการประชุมอนุมัติระดับ 3"
     }
+  },
+  "sort": {
+    "sortBy": "เรียงตาม",
+    "name": "ชื่อ",
+    "members": "สมาชิก",
+    "username": "ชื่อผู้ใช้",
+    "module": "โมดูล"
   }
 }

@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import Autocomplete, { type AutocompleteItem } from '@shared/components/inputs/Autocomplete';
 import { useGetPermissions } from '@features/userManagement/api/permissions';
 
 interface PermissionSelectProps {
@@ -7,16 +8,14 @@ interface PermissionSelectProps {
   onChange: (code: string) => void;
   /** Overrides the translated search placeholder when provided */
   placeholder?: string;
-  /** Label rendered as the empty <option> when allowEmpty is true */
+  /** Placeholder shown for an optional permission (e.g. "None (read-only)") */
   emptyLabel?: string;
   allowEmpty?: boolean;
-  disabled?: boolean;
-  id?: string;
 }
 
 /**
- * Searchable select populated from GET /auth/permissions.
- * Returns the permissionCode string (not the permission ID).
+ * Type-ahead autocomplete populated from GET /auth/permissions.
+ * Returns the permissionCode string (not the permission ID); '' clears it.
  */
 export function PermissionSelect({
   value,
@@ -24,51 +23,42 @@ export function PermissionSelect({
   placeholder,
   emptyLabel,
   allowEmpty = false,
-  disabled = false,
-  id,
 }: PermissionSelectProps) {
   const { t } = useTranslation('menuManagement');
-  const [search, setSearch] = useState('');
-  const { data, isLoading } = useGetPermissions({ pageSize: 200 });
+  const { data, isLoading } = useGetPermissions({ pageSize: 500 });
 
-  const filtered = useMemo(() => {
-    const items = data?.items ?? [];
-    if (!search) return items;
-    const lower = search.toLowerCase();
-    return items.filter(
-      p =>
-        p.permissionCode.toLowerCase().includes(lower) ||
-        p.displayName.toLowerCase().includes(lower),
-    );
-  }, [data, search]);
+  const items: AutocompleteItem[] = useMemo(
+    () =>
+      (data?.items ?? []).map(p => ({
+        value: p.permissionCode,
+        label: `${p.permissionCode} — ${p.displayName}`,
+      })),
+    [data],
+  );
+
+  const displayText = useMemo(
+    () => items.find(i => i.value === value)?.label ?? value,
+    [items, value],
+  );
+
+  const resolvedPlaceholder =
+    placeholder ??
+    (allowEmpty
+      ? (emptyLabel ?? t('permissionSelect.editPermissionEmpty'))
+      : t('permissionSelect.searchPlaceholder'));
 
   return (
-    <div className="space-y-1">
-      <input
-        type="text"
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        placeholder={placeholder ?? t('permissionSelect.searchPlaceholder')}
-        disabled={disabled}
-        className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
-      />
-      <select
-        id={id}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        disabled={disabled || isLoading}
-        className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:bg-gray-50"
-      >
-        {allowEmpty && (
-          <option value="">{emptyLabel ?? t('permissionSelect.editPermissionEmpty')}</option>
-        )}
-        {isLoading && <option disabled>{t('permissionSelect.loading')}</option>}
-        {filtered.map(p => (
-          <option key={p.id} value={p.permissionCode}>
-            {p.permissionCode} — {p.displayName}
-          </option>
-        ))}
-      </select>
-    </div>
+    <Autocomplete
+      items={items}
+      value={value}
+      onChange={onChange}
+      displayText={value ? displayText : undefined}
+      placeholder={resolvedPlaceholder}
+      isLoading={isLoading}
+      showAllOnFocus
+      filterItems={(item, text) => item.label.toLowerCase().includes(text.toLowerCase())}
+      ariaLabel={t('permissionSelect.searchPlaceholder')}
+      menuClassName="w-full"
+    />
   );
 }

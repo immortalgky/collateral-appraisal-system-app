@@ -6,6 +6,7 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import { useChangePassword, useGetPasswordPolicy } from '../api/users';
+import PasswordPolicyChecklist from './PasswordPolicyChecklist';
 
 interface ChangePasswordModalProps {
   isOpen: boolean;
@@ -72,54 +73,6 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
     });
   };
 
-  // Derive which policy rules pass against the current new-password value
-  const pw = form.newPassword;
-  const policyChecks = policy
-    ? [
-        {
-          key: 'length',
-          label: t('passwordPolicy.minLength', { count: policy.requiredLength }),
-          passed: pw.length >= policy.requiredLength,
-        },
-        ...(policy.requireUppercase
-          ? [
-              {
-                key: 'upper',
-                label: t('passwordPolicy.requireUppercase'),
-                passed: /[A-Z]/.test(pw),
-              },
-            ]
-          : []),
-        ...(policy.requireLowercase
-          ? [
-              {
-                key: 'lower',
-                label: t('passwordPolicy.requireLowercase'),
-                passed: /[a-z]/.test(pw),
-              },
-            ]
-          : []),
-        ...(policy.requireDigit
-          ? [
-              {
-                key: 'digit',
-                label: t('passwordPolicy.requireDigit'),
-                passed: /[0-9]/.test(pw),
-              },
-            ]
-          : []),
-        ...(policy.requireNonAlphanumeric
-          ? [
-              {
-                key: 'symbol',
-                label: t('passwordPolicy.requireSymbol'),
-                passed: /[^a-zA-Z0-9]/.test(pw),
-              },
-            ]
-          : []),
-      ]
-    : [];
-
   const inputType = showPasswords ? 'text' : 'password';
 
   return (
@@ -161,28 +114,12 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
               errors.newPassword ? 'border-danger' : 'border-gray-200'
             }`}
-            placeholder={t('placeholders.atLeast8Chars')}
           />
           {errors.newPassword && <p className="mt-1 text-xs text-danger">{errors.newPassword}</p>}
         </div>
 
         {/* Password policy checklist */}
-        {policyChecks.length > 0 && form.newPassword.length > 0 && (
-          <ul className="flex flex-col gap-1">
-            {policyChecks.map(check => (
-              <li key={check.key} className="flex items-center gap-1.5 text-xs">
-                <Icon
-                  name={check.passed ? 'circle-check' : 'circle-xmark'}
-                  style="solid"
-                  className={`size-3.5 shrink-0 ${check.passed ? 'text-green-500' : 'text-gray-300'}`}
-                />
-                <span className={check.passed ? 'text-green-700' : 'text-gray-400'}>
-                  {check.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
+        <PasswordPolicyChecklist password={form.newPassword} />
 
         {/* Confirm password */}
         <div>

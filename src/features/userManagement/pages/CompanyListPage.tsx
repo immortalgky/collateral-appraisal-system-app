@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import CompanyDetailPanel from '../components/CompanyDetailPanel';
+import ListSortMenu from '../components/ListSortMenu';
 import { useGetAdminCompanies, useCreateAdminCompany } from '../api/companies';
 
 const CompanyListPage = () => {
@@ -16,6 +16,8 @@ const CompanyListPage = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState('name');
+  const [sortAsc, setSortAsc] = useState(true);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ name: '' });
@@ -31,8 +33,22 @@ const CompanyListPage = () => {
     pageSize: 50,
   });
 
-  const companies = data?.companies ?? [];
+  const companies = useMemo(() => data?.companies ?? [], [data?.companies]);
+  const sortedCompanies = useMemo(
+    () =>
+      [...companies].sort((a, b) => {
+        const cmp =
+          sortKey === 'members' ? a.userCount - b.userCount : a.name.localeCompare(b.name);
+        return sortAsc ? cmp : -cmp;
+      }),
+    [companies, sortKey, sortAsc],
+  );
   const createCompany = useCreateAdminCompany();
+
+  const SORT_OPTIONS = [
+    { key: 'name', label: t('sort.name') },
+    { key: 'members', label: t('sort.members') },
+  ];
 
   const handleOpenCreate = () => {
     setCreateForm({ name: '' });
@@ -58,15 +74,20 @@ const CompanyListPage = () => {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4">
-      <SectionHeader
-        title={t('page.companies.title')}
-        subtitle={t('page.companies.subtitle')}
-        icon="building"
-        iconColor="emerald"
-      />
+    <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.companies.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {companies.length}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.companies.subtitle')}</p>
+        </div>
+      </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Left panel */}
         <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
           {/* Search + Add */}
@@ -94,10 +115,19 @@ const CompanyListPage = () => {
             >
               <Icon name="plus" style="solid" className="size-3.5" />
             </button>
+            <ListSortMenu
+              options={SORT_OPTIONS}
+              sortKey={sortKey}
+              asc={sortAsc}
+              onChange={(key, asc) => {
+                setSortKey(key);
+                setSortAsc(asc);
+              }}
+            />
           </div>
 
           {/* Company list */}
-          <div className="overflow-y-auto max-h-[calc(100vh-280px)] divide-y divide-gray-50">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-50">
             {isLoading ? (
               <table className="w-full">
                 <tbody>
@@ -110,7 +140,7 @@ const CompanyListPage = () => {
                 <span>{t('empty.noCompaniesFound')}</span>
               </div>
             ) : (
-              companies.map(company => (
+              sortedCompanies.map(company => (
                 <button
                   key={company.id}
                   type="button"
@@ -131,6 +161,9 @@ const CompanyListPage = () => {
                   {company.phone && (
                     <div className="text-xs text-gray-400 truncate mt-0.5">{company.phone}</div>
                   )}
+                  <div className="mt-0.5 text-xs text-gray-400">
+                    {t('counts.members', { count: company.userCount })}
+                  </div>
                 </button>
               ))
             )}

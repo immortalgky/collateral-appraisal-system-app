@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -10,6 +9,7 @@ import TextInput from '@shared/components/inputs/TextInput';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import RoleDetailPanel from '../components/RoleDetailPanel';
+import ListSortMenu from '../components/ListSortMenu';
 import { useGetRoles, useCreateRole } from '../api/roles';
 import type { RoleScope } from '../types';
 
@@ -21,6 +21,8 @@ const RoleListPage = () => {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState('name');
+  const [sortAsc, setSortAsc] = useState(true);
 
   // Create modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -48,8 +50,22 @@ const RoleListPage = () => {
     pageSize: 50,
   });
 
-  const roles = data?.items ?? [];
+  const roles = useMemo(() => data?.items ?? [], [data?.items]);
+  const sortedRoles = useMemo(
+    () =>
+      [...roles].sort((a, b) => {
+        const cmp =
+          sortKey === 'members' ? a.userCount - b.userCount : a.name.localeCompare(b.name);
+        return sortAsc ? cmp : -cmp;
+      }),
+    [roles, sortKey, sortAsc],
+  );
   const createRole = useCreateRole();
+
+  const SORT_OPTIONS = [
+    { key: 'name', label: t('sort.name') },
+    { key: 'members', label: t('sort.members') },
+  ];
 
   const SCOPE_OPTIONS = [
     { value: 'Bank', label: t('tabs.bank') },
@@ -86,15 +102,20 @@ const RoleListPage = () => {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4">
-      <SectionHeader
-        title={t('page.roles.title')}
-        subtitle={t('page.roles.subtitle')}
-        icon="user-shield"
-        iconColor="purple"
-      />
+    <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.roles.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {data?.totalCount ?? roles.length}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.roles.subtitle')}</p>
+        </div>
+      </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Left panel — role list */}
         <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
           {/* Scope toggle tabs */}
@@ -141,10 +162,19 @@ const RoleListPage = () => {
             >
               <Icon name="plus" style="solid" className="size-3.5" />
             </button>
+            <ListSortMenu
+              options={SORT_OPTIONS}
+              sortKey={sortKey}
+              asc={sortAsc}
+              onChange={(key, asc) => {
+                setSortKey(key);
+                setSortAsc(asc);
+              }}
+            />
           </div>
 
           {/* Role list */}
-          <div className="overflow-y-auto max-h-[calc(100vh-280px)] divide-y divide-gray-50">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-50">
             {isLoading ? (
               <table className="w-full">
                 <tbody>
@@ -157,7 +187,7 @@ const RoleListPage = () => {
                 <span>{t('empty.noRolesFound')}</span>
               </div>
             ) : (
-              roles.map(role => (
+              sortedRoles.map(role => (
                 <button
                   key={role.id}
                   type="button"
@@ -173,6 +203,9 @@ const RoleListPage = () => {
                   {role.description && (
                     <div className="text-xs text-gray-400 truncate mt-0.5">{role.description}</div>
                   )}
+                  <div className="mt-0.5 text-xs text-gray-400">
+                    {t('counts.members', { count: role.userCount })}
+                  </div>
                 </button>
               ))
             )}

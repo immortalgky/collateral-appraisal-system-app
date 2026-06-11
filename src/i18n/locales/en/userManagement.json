@@ -48,7 +48,10 @@
     "status": "Status",
     "monitoring": "Monitoring",
     "address": "Address",
-    "bankAccount": "Bank Account"
+    "bankAccount": "Bank Account",
+    "account": "Account",
+    "profile": "Profile",
+    "access": "Access"
   },
   "fields": {
     "username": "Username",
@@ -72,6 +75,7 @@
     "taxId": "Tax ID",
     "phone": "Phone",
     "contactPerson": "Contact Person",
+    "hostCompanyCode": "Host Company Code",
     "street": "Street",
     "city": "City",
     "province": "Province",
@@ -85,9 +89,11 @@
     "teamTypeExternal": "External",
     "status": "Status",
     "company": "Company",
-    "authSource": "Auth Source",
+    "authSource": "Authentication",
     "lastLogin": "Last Login",
-    "noCompany": "No Company"
+    "noCompany": "No Company",
+    "authSourceLocal": "Local password",
+    "authSourceLdap": "LDAP / Active Directory"
   },
   "placeholders": {
     "searchUsers": "Search users...",
@@ -107,9 +113,11 @@
     "teamName": "Team name",
     "teamDescription": "Brief description of this team",
     "companyName": "Company name",
+    "selectCompany": "Select a company",
     "taxId": "e.g. 0105556123456",
     "phone": "e.g. 02-xxx-xxxx",
     "contactPerson": "Contact person name",
+    "hostCompanyCode": "e.g. HC001",
     "street": "Street address",
     "city": "City",
     "province": "Province",
@@ -127,8 +135,6 @@
     "department": "e.g., Appraisal Division",
     "username": "jdoe",
     "email": "jdoe@example.com",
-    "passwordHint": "At least 8 chars, upper/lower/digit/symbol",
-    "atLeast8Chars": "At least 8 characters",
     "reEnterNewPassword": "Re-enter new password",
     "enterCurrentPassword": "Enter current password"
   },
@@ -142,7 +148,11 @@
     "search": "Search",
     "roleName": "Role",
     "group": "Group",
-    "team": "Team"
+    "team": "Team",
+    "allRoles": "All roles",
+    "allGroups": "All groups",
+    "allTeams": "All teams",
+    "allCompanies": "All companies"
   },
   "counts": {
     "members": "{{count}} member",
@@ -156,7 +166,10 @@
     "locked": "Locked"
   },
   "hints": {
-    "loanTypesComma": "Separate multiple loan types with a comma"
+    "loanTypesComma": "Separate multiple loan types with a comma",
+    "ldapPassword": "Password is managed by Active Directory — the user signs in with their AD credentials.",
+    "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
+    "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team."
   },
   "empty": {
     "noUsersFound": "No users found",
@@ -177,11 +190,13 @@
     "selectGroup": "Select a group to view details",
     "selectTeam": "Select a team to view details",
     "selectCompany": "Select a company to view details",
+    "selectPermission": "Select a permission to view details",
     "noRolesAvailable": "No roles available",
     "noOtherGroupsFound": "No other groups found",
     "noItemsFound": "No items found",
     "noTeamsAssigned": "No teams assigned",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "clearFilters": "Clear filters"
   },
   "aria": {
     "addUser": "Add user",
@@ -209,7 +224,11 @@
     "exportCsv": "Export CSV",
     "activate": "Activate",
     "deactivate": "Deactivate",
-    "unlock": "Unlock"
+    "unlock": "Unlock",
+    "loadMore": "Load more",
+    "loadingMore": "Loading...",
+    "retrieveFromLdap": "Retrieve from LDAP",
+    "deletePermission": "Delete Permission"
   },
   "dialogs": {
     "createRole": {
@@ -309,7 +328,8 @@
     "deleteRoleWarning": "Deleting this role will remove it from all assigned users. This action cannot be undone.",
     "deleteGroupWarning": "Deleting this group will remove all user assignments. This action cannot be undone.",
     "deleteTeamWarning": "Deleting this team will remove all member assignments. This action cannot be undone.",
-    "deleteCompanyWarning": "Deleting this company will remove it from the system. This action cannot be undone."
+    "deleteCompanyWarning": "Deleting this company will remove it from the system. This action cannot be undone.",
+    "deletePermissionWarning": "Deleting this permission will remove it from all roles. This action cannot be undone."
   },
   "selectionCount": {
     "permissions": "{{count}} permission selected",
@@ -400,7 +420,10 @@
     "userDeactivated": "User deactivated",
     "userActivationFailed": "Failed to update user status",
     "userUnlocked": "User account unlocked",
-    "userUnlockFailed": "Failed to unlock user account"
+    "userUnlockFailed": "Failed to unlock user account",
+    "ldapUserNotFound": "User not found in LDAP/AD",
+    "ldapInfoLoaded": "Loaded info from LDAP",
+    "ldapLookupFailed": "LDAP lookup failed"
   },
   "validation": {
     "nameRequired": "Name is required",
@@ -418,11 +441,13 @@
     "firstNameRequired": "First name is required",
     "lastNameRequired": "Last name is required",
     "selectAtLeastOneRole": "Select at least one role",
+    "companyRequired": "Please select a company",
     "fillAllRequired": "Please fill in all required fields",
     "currentPasswordRequired": "Current password is required",
     "newPasswordMinLength": "New password must be at least 8 characters",
     "confirmPasswordRequired": "Please confirm your new password",
     "passwordsDoNotMatch": "Passwords do not match",
+    "passwordPolicyNotMet": "Password does not meet the policy requirements",
     "passwordMinLengthReset": "Password must be at least 8 characters",
     "passwordsDoNotMatchReset": "Passwords do not match"
   },
@@ -431,7 +456,42 @@
     "requireUppercase": "One uppercase letter",
     "requireLowercase": "One lowercase letter",
     "requireDigit": "One digit",
-    "requireSymbol": "One special character"
+    "requireSymbol": "One special character",
+    "requireUniqueChars": "At least {{count}} different characters"
+  },
+  "forcedPasswordChange": {
+    "title": "Set a new password",
+    "subtitle": "You must change your password before continuing.",
+    "signOut": "Sign out instead"
+  },
+  "passwordPolicyConfig": {
+    "title": "Password Policy",
+    "subtitle": "Configure the rules every password must meet across the system.",
+    "complexity": "Complexity",
+    "lifecycle": "Lifecycle",
+    "lockout": "Account Lockout",
+    "blocklist": "Blocked Passwords",
+    "requiredLength": "Minimum length",
+    "requiredUniqueChars": "Minimum different characters",
+    "requireDigit": "Require a digit (0-9)",
+    "requireLowercase": "Require a lowercase letter (a-z)",
+    "requireUppercase": "Require an uppercase letter (A-Z)",
+    "requireNonAlphanumeric": "Require a special character",
+    "expiryDays": "Password expires after (days)",
+    "expiryHint": "0 = never expires. Expired passwords force a change at next login.",
+    "historyCount": "Prevent reuse of last N passwords",
+    "historyHint": "0 = no history check.",
+    "lockoutEnabled": "Enable account lockout",
+    "maxFailedAccessAttempts": "Failed attempts before lockout",
+    "lockoutMinutes": "Lockout duration (minutes)",
+    "lockoutMinutesHint": "0 = locked until an administrator unlocks the account.",
+    "lockoutRestartNote": "Lockout settings take effect after each application server is restarted.",
+    "propagationNote": "Complexity, expiry, history, and blocklist changes apply within about a minute across all servers.",
+    "blocklistLabel": "Forbidden passwords (one per line)",
+    "blocklistHint": "Case-insensitive. These exact passwords are rejected.",
+    "save": "Save policy",
+    "saved": "Password policy updated.",
+    "saveFailed": "Failed to update password policy."
   },
   "roles": {
     "displayNames": {
@@ -466,5 +526,12 @@
       "AppraisalCommittee": "Appraisal committee member — approves/votes on tier-3 appraisals",
       "MeetingSecretary": "Meeting secretary — schedules and runs tier-3 approval meetings"
     }
+  },
+  "sort": {
+    "sortBy": "Sort by",
+    "name": "Name",
+    "members": "Members",
+    "username": "Username",
+    "module": "Module"
   }
 }

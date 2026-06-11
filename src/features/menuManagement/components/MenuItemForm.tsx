@@ -1,6 +1,9 @@
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import TextInput from '@shared/components/inputs/TextInput';
+import NumberInput from '@shared/components/inputs/NumberInput';
+import Dropdown from '@shared/components/inputs/Dropdown';
 import { IconPicker } from './IconPicker';
 import { PermissionSelect } from './PermissionSelect';
 import type { MenuItemAdminDto, MenuScope, IconStyle } from '../types';
@@ -130,189 +133,178 @@ export function MenuItemForm({
     }));
   };
 
+  const [viewError, setViewError] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // PermissionSelect wraps a non-native Autocomplete, so the View permission's
+    // required-ness isn't enforced by the browser — guard it here.
+    if (!values.viewPermissionCode.trim()) {
+      setViewError(true);
+      return;
+    }
     onSubmit(values);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Item Key */}
-      <div>
-        <label htmlFor={ids.itemKey} className="block text-sm font-medium text-gray-700 mb-1">
-          {t('form.itemKey')} <span className="text-red-500">*</span>
-        </label>
-        <input
-          id={ids.itemKey}
-          type="text"
-          value={values.itemKey}
-          onChange={e => setValues(v => ({ ...v, itemKey: e.target.value }))}
-          disabled={isSystem}
-          required
-          placeholder={t('form.itemKeyPlaceholder')}
-          className={clsx(
-            'w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30',
-            isSystem && 'bg-gray-50 cursor-not-allowed text-gray-500',
-          )}
-        />
-        {isSystem && <p className="text-xs text-amber-600 mt-1">{t('form.itemKeyLocked')}</p>}
-      </div>
-
-      {/* Scope */}
-      <div>
-        <label htmlFor={ids.scope} className="block text-sm font-medium text-gray-700 mb-1">
-          {t('form.scope')}
-        </label>
-        <select
-          id={ids.scope}
-          value={values.scope}
-          onChange={e => setValues(v => ({ ...v, scope: e.target.value as MenuScope }))}
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
-        >
-          {SCOPES.map(s => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Parent */}
-      <div>
-        <label htmlFor={ids.parent} className="block text-sm font-medium text-gray-700 mb-1">
-          {t('form.parent')}
-        </label>
-        <select
-          id={ids.parent}
-          value={values.parentId ?? ''}
-          onChange={e => setValues(v => ({ ...v, parentId: e.target.value || null }))}
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
-        >
-          <option value="">{t('form.parentNone')}</option>
-          {parentOptions.map(opt => (
-            <option key={opt.id} value={opt.id}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Path */}
-      <div>
-        <label htmlFor={ids.path} className="block text-sm font-medium text-gray-700 mb-1">
-          {t('form.path')}
-        </label>
-        <input
-          id={ids.path}
-          type="text"
-          value={values.path ?? ''}
-          onChange={e => setValues(v => ({ ...v, path: e.target.value || null }))}
-          placeholder={t('form.pathPlaceholder')}
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        <p className="text-xs text-gray-400 mt-1">{t('form.pathHint')}</p>
-      </div>
-
-      {/* Icon — composite control, use role=group + aria-label */}
-      <div role="group" aria-labelledby={`${fieldId}-icon-label`}>
-        <span id={`${fieldId}-icon-label`} className="block text-sm font-medium text-gray-700 mb-1">
-          {t('form.icon')}
-        </span>
-        <IconPicker
-          value={values.iconName}
-          styleValue={values.iconStyle}
-          onChangeIcon={name => setValues(v => ({ ...v, iconName: name }))}
-          onChangeStyle={style => setValues(v => ({ ...v, iconStyle: style }))}
-        />
-      </div>
-
-      {/* Icon Color — composite control, use role=group */}
-      <div role="group" aria-labelledby={`${fieldId}-color-label`}>
-        <span
-          id={`${fieldId}-color-label`}
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          {t('form.iconColor')}
-        </span>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setValues(v => ({ ...v, iconColor: null }))}
-            className={clsx(
-              'w-7 h-7 rounded-full border-2 bg-gray-200 flex items-center justify-center',
-              !values.iconColor ? 'border-gray-700' : 'border-transparent',
-            )}
-            title={t('form.iconColorNone')}
-            aria-label={t('form.iconColorNone')}
-          >
-            <span className="text-gray-500 text-xs">—</span>
-          </button>
-          {COLOR_VALUES.map(opt => {
-            const label = t(`colors.${opt.key}`);
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setValues(v => ({ ...v, iconColor: opt.value }))}
-                title={label}
-                aria-label={label}
-                aria-pressed={values.iconColor === opt.value}
-                className={clsx(
-                  'w-7 h-7 rounded-full border-2',
-                  COLOR_BG_MAP[opt.value] ?? 'bg-gray-400',
-                  values.iconColor === opt.value
-                    ? 'border-gray-700 scale-110'
-                    : 'border-transparent',
-                )}
-              />
-            );
-          })}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
+        {/* Item Key */}
+        <div>
+          <TextInput
+            id={ids.itemKey}
+            label={t('form.itemKey')}
+            required
+            value={values.itemKey}
+            onChange={e => setValues(v => ({ ...v, itemKey: e.target.value }))}
+            disabled={isSystem}
+            placeholder={t('form.itemKeyPlaceholder')}
+          />
+          {isSystem && <p className="text-xs text-amber-600 mt-1">{t('form.itemKeyLocked')}</p>}
         </div>
-      </div>
 
-      {/* Sort Order */}
-      <div>
-        <label htmlFor={ids.sortOrder} className="block text-sm font-medium text-gray-700 mb-1">
-          {t('form.sortOrder')}
-        </label>
-        <input
+        {/* Scope */}
+        <Dropdown
+          id={ids.scope}
+          label={t('form.scope')}
+          value={values.scope}
+          onChange={(val: string) => setValues(v => ({ ...v, scope: val as MenuScope }))}
+          options={SCOPES.map(s => ({ value: s, label: s }))}
+          showValuePrefix={false}
+        />
+
+        {/* Parent */}
+        <Dropdown
+          id={ids.parent}
+          label={t('form.parent')}
+          value={values.parentId ?? ''}
+          onChange={(val: string) => setValues(v => ({ ...v, parentId: val || null }))}
+          options={[
+            { value: '', label: t('form.parentNone') },
+            ...parentOptions.map(opt => ({ value: opt.id, label: opt.label })),
+          ]}
+          placeholder={t('form.parentNone')}
+          showValuePrefix={false}
+        />
+
+        {/* Sort Order */}
+        <NumberInput
           id={ids.sortOrder}
-          type="number"
+          label={t('form.sortOrder')}
           value={values.sortOrder}
           min={1}
-          onChange={e => setValues(v => ({ ...v, sortOrder: Number(e.target.value) }))}
-          className="w-32 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          decimalPlaces={0}
+          thousandSeparator={false}
+          onChange={e => setValues(v => ({ ...v, sortOrder: e.target.value ?? 0 }))}
         />
-      </div>
 
-      {/* View Permission — composite control */}
-      <div role="group" aria-labelledby={`${fieldId}-view-perm-label`}>
-        <span
-          id={`${fieldId}-view-perm-label`}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          {t('form.viewPermission')} <span className="text-red-500">*</span>
-        </span>
-        <PermissionSelect
-          value={values.viewPermissionCode}
-          onChange={code => setValues(v => ({ ...v, viewPermissionCode: code }))}
-        />
-      </div>
+        {/* Path */}
+        <div className="md:col-span-2">
+          <TextInput
+            id={ids.path}
+            label={t('form.path')}
+            value={values.path ?? ''}
+            onChange={e => setValues(v => ({ ...v, path: e.target.value || null }))}
+            placeholder={t('form.pathPlaceholder')}
+          />
+          <p className="text-xs text-gray-400 mt-1">{t('form.pathHint')}</p>
+        </div>
 
-      {/* Edit Permission — composite control */}
-      <div role="group" aria-labelledby={`${fieldId}-edit-perm-label`}>
-        <span
-          id={`${fieldId}-edit-perm-label`}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          {t('form.editPermission')}
-        </span>
-        <PermissionSelect
-          value={values.editPermissionCode ?? ''}
-          onChange={code => setValues(v => ({ ...v, editPermissionCode: code || null }))}
-          allowEmpty
-          emptyLabel={t('permissionSelect.editPermissionEmpty')}
-        />
+        {/* View Permission — composite control */}
+        <div role="group" aria-labelledby={`${fieldId}-view-perm-label`}>
+          <span
+            id={`${fieldId}-view-perm-label`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t('form.viewPermission')} <span className="text-red-500">*</span>
+          </span>
+          <PermissionSelect
+            value={values.viewPermissionCode}
+            onChange={code => {
+              setValues(v => ({ ...v, viewPermissionCode: code }));
+              if (code) setViewError(false);
+            }}
+          />
+          {viewError && (
+            <p className="text-xs text-red-500 mt-1">{t('form.viewPermissionRequired')}</p>
+          )}
+        </div>
+
+        {/* Edit Permission — composite control */}
+        <div role="group" aria-labelledby={`${fieldId}-edit-perm-label`}>
+          <span
+            id={`${fieldId}-edit-perm-label`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t('form.editPermission')}
+          </span>
+          <PermissionSelect
+            value={values.editPermissionCode ?? ''}
+            onChange={code => setValues(v => ({ ...v, editPermissionCode: code || null }))}
+            allowEmpty
+            emptyLabel={t('permissionSelect.editPermissionEmpty')}
+          />
+        </div>
+
+        {/* Icon — composite control, use role=group + aria-label */}
+        <div role="group" aria-labelledby={`${fieldId}-icon-label`} className="md:col-span-2">
+          <span
+            id={`${fieldId}-icon-label`}
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            {t('form.icon')}
+          </span>
+          <IconPicker
+            value={values.iconName}
+            styleValue={values.iconStyle}
+            onChangeIcon={name => setValues(v => ({ ...v, iconName: name }))}
+            onChangeStyle={style => setValues(v => ({ ...v, iconStyle: style }))}
+          />
+        </div>
+
+        {/* Icon Color — composite control, use role=group */}
+        <div role="group" aria-labelledby={`${fieldId}-color-label`} className="md:col-span-2">
+          <span
+            id={`${fieldId}-color-label`}
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            {t('form.iconColor')}
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setValues(v => ({ ...v, iconColor: null }))}
+              className={clsx(
+                'w-7 h-7 rounded-full border-2 bg-gray-200 flex items-center justify-center',
+                !values.iconColor ? 'border-gray-700' : 'border-transparent',
+              )}
+              title={t('form.iconColorNone')}
+              aria-label={t('form.iconColorNone')}
+            >
+              <span className="text-gray-500 text-xs">—</span>
+            </button>
+            {COLOR_VALUES.map(opt => {
+              const label = t(`colors.${opt.key}`);
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setValues(v => ({ ...v, iconColor: opt.value }))}
+                  title={label}
+                  aria-label={label}
+                  aria-pressed={values.iconColor === opt.value}
+                  className={clsx(
+                    'w-7 h-7 rounded-full border-2',
+                    COLOR_BG_MAP[opt.value] ?? 'bg-gray-400',
+                    values.iconColor === opt.value
+                      ? 'border-gray-700 scale-110'
+                      : 'border-transparent',
+                  )}
+                />
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Labels (tabbed) */}
@@ -351,9 +343,8 @@ export function MenuItemForm({
                 <label htmlFor={ids.labelInput(lang)} className="sr-only">
                   {t('form.labelAriaInput', { lang: lang.toUpperCase() })}
                 </label>
-                <input
+                <TextInput
                   id={ids.labelInput(lang)}
-                  type="text"
                   value={getTranslation(values.translations, lang)}
                   onChange={e => updateTranslation(lang, e.target.value)}
                   required={lang === 'en'}
@@ -362,7 +353,6 @@ export function MenuItemForm({
                       ? t('form.labelPlaceholderEn')
                       : t('form.labelPlaceholderOther', { lang: lang.toUpperCase() })
                   }
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
             ))}

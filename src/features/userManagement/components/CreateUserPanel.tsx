@@ -2,9 +2,9 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
+import Dropdown from '@shared/components/inputs/Dropdown';
 import Icon from '@shared/components/Icon';
 import AssignmentTable from './AssignmentTable';
 import PasswordPolicyChecklist from './PasswordPolicyChecklist';
@@ -15,10 +15,9 @@ import { useGetGroups } from '../api/groups';
 import { useGetTeams } from '../api/teams';
 import { useGetAdminCompanies } from '../api/companies';
 
-interface CreateUserModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+interface CreateUserPanelProps {
   onCreated?: (userId: string) => void;
+  onCancel: () => void;
 }
 
 type AuthSource = 'Local' | 'LDAP';
@@ -59,16 +58,32 @@ const EMPTY_FORM: FormState = {
   authSource: 'Local',
 };
 
-const SectionLabel = ({ icon, children }: { icon: string; children: React.ReactNode }) => (
+const ICON_COLORS = {
+  blue: 'bg-blue-50 text-blue-500',
+  rose: 'bg-rose-50 text-rose-500',
+  cyan: 'bg-cyan-50 text-cyan-500',
+  amber: 'bg-amber-50 text-amber-500',
+  violet: 'bg-violet-50 text-violet-500',
+} as const;
+
+const SectionLabel = ({
+  icon,
+  color,
+  children,
+}: {
+  icon: string;
+  color: keyof typeof ICON_COLORS;
+  children: React.ReactNode;
+}) => (
   <div className="mb-3 flex items-center gap-2">
-    <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
-      <Icon name={icon} style="solid" className="size-3 text-primary" />
+    <div className={clsx('flex size-6 items-center justify-center rounded-md', ICON_COLORS[color])}>
+      <Icon name={icon} style="solid" className="size-3" />
     </div>
     <span className="text-sm font-semibold text-gray-800">{children}</span>
   </div>
 );
 
-const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) => {
+const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [accessTab, setAccessTab] = useState<AccessTab>('roles');
@@ -93,12 +108,6 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
   const teamOptions = (teamsData?.items ?? []).filter(tm => tm.scope === form.scope);
   const companies = companiesData?.companies ?? [];
 
-  const handleClose = () => {
-    setForm(EMPTY_FORM);
-    setAccessTab('roles');
-    onClose();
-  };
-
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
@@ -112,7 +121,6 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
       groups: [],
       teams: [],
       companyId: scope === 'Bank' ? '' : prev.companyId,
-      position: scope === 'Company' ? '' : prev.position,
       department: scope === 'Company' ? '' : prev.department,
     }));
     setAccessTab('roles');
@@ -190,7 +198,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
         email: form.email.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
-        position: isCompany ? null : form.position.trim() || null,
+        position: form.position.trim() || null,
         department: isCompany ? null : form.department.trim() || null,
         companyId: isCompany ? form.companyId : null,
         roles: form.roles,
@@ -201,7 +209,6 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
       {
         onSuccess: data => {
           toast.success(t('toasts.userCreated'));
-          handleClose();
           if (data?.id) onCreated?.(data.id);
         },
         onError: (err: unknown) => {
@@ -220,11 +227,27 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.createUser.title')} size="2xl">
-      <div className="p-6 space-y-5">
+    <div className="flex min-h-full flex-col">
+      {/* Header */}
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
+        <h3 className="text-sm font-semibold text-gray-800">{t('dialogs.createUser.title')}</h3>
+        <button
+          type="button"
+          onClick={onCancel}
+          aria-label={t('common:actions.cancel')}
+          className="text-gray-400 transition-colors hover:text-gray-600"
+        >
+          <Icon name="xmark" style="solid" className="size-4" />
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 space-y-5 p-6">
         {/* Scope — Bank vs Company drives roles/groups/teams and profile fields */}
         <section>
-          <SectionLabel icon="building">{t('fields.scope')}</SectionLabel>
+          <SectionLabel icon="building" color="blue">
+            {t('fields.scope')}
+          </SectionLabel>
           <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
             {(['Bank', 'Company'] as Scope[]).map(s => (
               <button
@@ -244,7 +267,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
 
         {/* Authentication */}
         <section>
-          <SectionLabel icon="shield-halved">
+          <SectionLabel icon="shield-halved" color="rose">
             {t('fields.authSource', 'Authentication')}
           </SectionLabel>
           <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
@@ -273,7 +296,9 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
 
         {/* Account */}
         <section>
-          <SectionLabel icon="circle-user">{t('sections.account', 'Account')}</SectionLabel>
+          <SectionLabel icon="circle-user" color="cyan">
+            {t('sections.account', 'Account')}
+          </SectionLabel>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <TextInput
@@ -341,7 +366,9 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
 
         {/* Profile */}
         <section>
-          <SectionLabel icon="id-card">{t('sections.profile', 'Profile')}</SectionLabel>
+          <SectionLabel icon="id-card" color="amber">
+            {t('sections.profile', 'Profile')}
+          </SectionLabel>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <TextInput
               label={t('fields.firstName')}
@@ -356,23 +383,22 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
               required
             />
             {isCompany ? (
-              <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  {t('fields.company')} <span className="text-red-500">*</span>
-                </label>
-                <select
+              <>
+                <Dropdown
+                  label={t('fields.company')}
+                  required
                   value={form.companyId}
-                  onChange={e => setField('companyId', e.target.value)}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                >
-                  <option value="">{t('placeholders.selectCompany')}</option>
-                  {companies.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  onChange={val => setField('companyId', (val as string) ?? '')}
+                  options={companies.map(c => ({ value: c.id, label: c.name }))}
+                  placeholder={t('placeholders.selectCompany')}
+                  showValuePrefix={false}
+                />
+                <TextInput
+                  label={t('fields.position')}
+                  value={form.position}
+                  onChange={e => setField('position', e.currentTarget.value)}
+                />
+              </>
             ) : (
               <>
                 <TextInput
@@ -392,7 +418,9 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
 
         {/* Access — roles / groups / teams */}
         <section>
-          <SectionLabel icon="user-shield">{t('sections.access', 'Access')}</SectionLabel>
+          <SectionLabel icon="user-shield" color="violet">
+            {t('sections.access', 'Access')}
+          </SectionLabel>
           <div className="flex gap-1 border-b border-gray-100 mb-3">
             {ACCESS_TABS.map(tab => (
               <button
@@ -425,11 +453,16 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
               columns={[
                 { key: 'name', label: t('fields.name'), sortable: true },
                 { key: 'scope', label: t('fields.scope'), sortable: true },
+                {
+                  key: 'description',
+                  label: t('fields.description'),
+                  render: r => r.description || '—',
+                },
               ]}
               selectedIds={form.roles}
               onChange={ids => setField('roles', ids)}
               searchPlaceholder={t('placeholders.searchRoles')}
-              searchFields={r => [r.name, r.scope]}
+              searchFields={r => [r.name, r.scope, r.description ?? '']}
             />
           )}
           {accessTab === 'groups' && (
@@ -440,11 +473,16 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
               columns={[
                 { key: 'name', label: t('fields.name'), sortable: true },
                 { key: 'scope', label: t('fields.scope'), sortable: true },
+                {
+                  key: 'description',
+                  label: t('fields.description'),
+                  render: g => g.description || '—',
+                },
               ]}
               selectedIds={form.groups}
               onChange={ids => setField('groups', ids)}
               searchPlaceholder={t('placeholders.searchGroups')}
-              searchFields={g => [g.name, g.scope]}
+              searchFields={g => [g.name, g.scope, g.description ?? '']}
             />
           )}
           {accessTab === 'teams' && (
@@ -460,26 +498,32 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
                   sortable: true,
                   render: tm => t(tm.scope === 'Bank' ? 'tabs.bank' : 'tabs.company'),
                 },
+                {
+                  key: 'description',
+                  label: t('fields.description'),
+                  render: tm => tm.description || '—',
+                },
               ]}
               selectedIds={form.teams}
               onChange={ids => setField('teams', ids)}
               searchPlaceholder={t('placeholders.searchTeams')}
-              searchFields={tm => [tm.name, tm.scope]}
+              searchFields={tm => [tm.name, tm.scope, tm.description ?? '']}
             />
           )}
         </section>
       </div>
 
-      <div className="flex justify-end gap-2 px-6 pb-6">
-        <Button variant="ghost" size="sm" onClick={handleClose}>
+      {/* Footer */}
+      <div className="sticky bottom-0 flex justify-end gap-2 border-t border-gray-100 bg-white px-6 py-4">
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           {t('common:actions.cancel')}
         </Button>
         <Button variant="primary" size="sm" isLoading={createUser.isPending} onClick={handleCreate}>
           {t('buttons.create')}
         </Button>
       </div>
-    </Modal>
+    </div>
   );
 };
 
-export default CreateUserModal;
+export default CreateUserPanel;

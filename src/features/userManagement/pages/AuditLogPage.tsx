@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
@@ -36,9 +35,7 @@ const ChangesCell = ({ changesJson }: { changesJson: string | null }) => {
     const removed = parsed.removed ?? [];
     return (
       <div className="flex flex-wrap gap-1">
-        {parsed.setName && (
-          <span className="text-xs text-gray-500 mr-1">{parsed.setName}:</span>
-        )}
+        {parsed.setName && <span className="text-xs text-gray-500 mr-1">{parsed.setName}:</span>}
         {added.map((val, i) => (
           <span
             key={`add-${i}`}
@@ -112,13 +109,18 @@ const AuditLogPage = () => {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
-      <SectionHeader
-        title={t('page.auditLogs.title')}
-        subtitle={t('page.auditLogs.subtitle')}
-        icon="clock-rotate-left"
-        iconColor="purple"
-      />
+    <div className="h-full flex flex-col min-h-0 min-w-0">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.auditLogs.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {totalCount}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.auditLogs.subtitle')}</p>
+        </div>
+      </div>
 
       {/* Filter bar */}
       <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-4">

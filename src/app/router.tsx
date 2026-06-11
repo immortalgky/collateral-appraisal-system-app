@@ -52,6 +52,7 @@ import ProvideDocumentsTaskPage from '@/features/document-followup/pages/Provide
 import FeeAppointmentApprovalTaskPage from '@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage';
 import FeeApprovalTierPage from '@/features/feeApprovalConfig/pages/FeeApprovalTierPage';
 import AppointmentApprovalRulePage from '@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage';
+import PasswordPolicyConfigPage from '@/features/userManagement/admin/pages/PasswordPolicyConfigPage';
 import EvaluationConfigPage from '@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage';
 import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
 import MigrateInstancesPage from '@features/workflowBuilder/pages/MigrateInstancesPage';
@@ -342,6 +343,13 @@ export const router = createBrowserRouter([
             path: 'companies',
             element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="COMPANY_MANAGE" />,
             children: [{ index: true, element: <CompanyListPage /> }],
+          },
+          {
+            path: 'password-policy',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="PASSWORD_POLICY_MANAGE" />
+            ),
+            children: [{ index: true, element: <PasswordPolicyConfigPage /> }],
           },
           {
             path: 'access-report',

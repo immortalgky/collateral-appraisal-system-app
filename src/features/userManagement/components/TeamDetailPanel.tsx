@@ -8,14 +8,9 @@ import TextInput from '@shared/components/inputs/TextInput';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import AssignmentTable from './AssignmentTable';
-import {
-  useGetTeamById,
-  useUpdateTeam,
-  useUpdateTeamMembers,
-  useDeleteTeam,
-} from '../api/teams';
+import { useGetTeamById, useUpdateTeam, useUpdateTeamMembers, useDeleteTeam } from '../api/teams';
 import { useGetUsers } from '../api/users';
-import type { AdminUserListItem, TeamType } from '../types';
+import type { AdminUserListItem, TeamScope } from '../types';
 
 interface TeamDetailPanelProps {
   teamId: string;
@@ -32,22 +27,27 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
 
   // Fetch all users for assignment
   const { data: usersData } = useGetUsers({ pageSize: 500 });
-  const allUsers: AdminUserListItem[] = useMemo(
-    () => usersData?.items ?? [],
-    [usersData],
-  );
+  const allUsers: AdminUserListItem[] = useMemo(() => usersData?.items ?? [], [usersData]);
 
   // Edit general modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState<{ name: string; type: TeamType; isActive: boolean }>({
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    scope: TeamScope;
+    description: string;
+  }>({
     name: '',
-    type: 'Internal',
-    isActive: true,
+    scope: 'Bank',
+    description: '',
   });
 
   const handleOpenEdit = () => {
     if (!team) return;
-    setEditForm({ name: team.name, type: team.type, isActive: team.isActive });
+    setEditForm({
+      name: team.name,
+      scope: team.scope,
+      description: team.description ?? '',
+    });
     setShowEditModal(true);
   };
 
@@ -57,7 +57,12 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
       return;
     }
     updateTeam.mutate(
-      { id: teamId, name: editForm.name, type: editForm.type, isActive: editForm.isActive },
+      {
+        id: teamId,
+        name: editForm.name,
+        scope: editForm.scope,
+        description: editForm.description.trim() || null,
+      },
       {
         onSuccess: () => {
           toast.success(t('toasts.teamUpdated'));
@@ -100,7 +105,7 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
         setShowDelete(false);
         onDeleted();
       },
-      onError: () => toast.error(t('toasts.teamDeleteFailed')),
+      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.teamDeleteFailed')),
     });
   };
 
@@ -123,7 +128,9 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="circle-info" style="solid" className="size-4 text-blue-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+              <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
           </div>
           <button
@@ -141,26 +148,21 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
             <div className="text-sm font-medium text-gray-900">{team.name}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-0.5">{t('fields.teamType')}</div>
+            <div className="text-xs text-gray-400 mb-0.5">{t('fields.scope')}</div>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                team.type === 'Internal' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'
+                team.scope === 'Bank' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'
               }`}
             >
-              {t(team.type === 'Internal' ? 'fields.teamTypeInternal' : 'fields.teamTypeExternal')}
+              {t(team.scope === 'Bank' ? 'tabs.bank' : 'tabs.company')}
             </span>
           </div>
-          <div>
-            <div className="text-xs text-gray-400 mb-0.5">{t('fields.isActive')}</div>
-            <span
-              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
-                team.isActive ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
-              }`}
-            >
-              <span className={`size-1.5 rounded-full ${team.isActive ? 'bg-green-500' : 'bg-gray-400'}`} />
-              {team.isActive ? t('status.active') : t('status.inactive')}
-            </span>
-          </div>
+          {team.description && (
+            <div>
+              <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
+              <div className="text-sm text-gray-700">{team.description}</div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -168,7 +170,9 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="users" style="solid" className="size-4 text-violet-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50">
+              <Icon name="users" style="solid" className="size-3 text-violet-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.users')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {team.members.length}
@@ -209,7 +213,9 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
       {/* Security Section */}
       <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
-          <Icon name="triangle-exclamation" style="solid" className="size-4 text-danger" />
+          <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+            <Icon name="triangle-exclamation" style="solid" className="size-3 text-danger" />
+          </span>
           <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
         </div>
         <div className="px-4 py-3">
@@ -245,29 +251,26 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
           />
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              {t('fields.teamType')}
+              {t('fields.scope')}
             </label>
             <select
-              value={editForm.type}
-              onChange={e => setEditForm(prev => ({ ...prev, type: e.target.value as TeamType }))}
+              value={editForm.scope}
+              onChange={e => setEditForm(prev => ({ ...prev, scope: e.target.value as TeamScope }))}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             >
-              <option value="Internal">{t('fields.teamTypeInternal')}</option>
-              <option value="External">{t('fields.teamTypeExternal')}</option>
+              <option value="Bank">{t('tabs.bank')}</option>
+              <option value="Company">{t('tabs.company')}</option>
             </select>
           </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="team-isActive"
-              checked={editForm.isActive}
-              onChange={e => setEditForm(prev => ({ ...prev, isActive: e.target.checked }))}
-              className="size-4 rounded border-gray-300 text-primary focus:ring-primary"
-            />
-            <label htmlFor="team-isActive" className="text-sm text-gray-700">
-              {t('fields.isActive')}
-            </label>
-          </div>
+          <TextInput
+            label={t('fields.description')}
+            value={editForm.description}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, description: value }));
+            }}
+            placeholder={t('placeholders.teamDescription')}
+          />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>
