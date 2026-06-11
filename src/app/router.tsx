@@ -330,24 +330,22 @@ export const router = createBrowserRouter([
           { path: 'users', element: <UserProfilePage /> },
           {
             path: 'teams',
-            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageTeams" />,
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="TEAM_MANAGE" />,
             children: [{ index: true, element: <TeamListPage /> }],
           },
           {
             path: 'audit-logs',
-            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanViewAuthAudit" />,
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="AUTH_AUDIT_VIEW" />,
             children: [{ index: true, element: <AuditLogPage /> }],
           },
           {
             path: 'companies',
-            element: (
-              <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanManageCompanies" />
-            ),
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="COMPANY_MANAGE" />,
             children: [{ index: true, element: <CompanyListPage /> }],
           },
           {
             path: 'access-report',
-            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="CanViewAuthAudit" />,
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="AUTH_AUDIT_VIEW" />,
             children: [{ index: true, element: <AccessReportPage /> }],
           },
           { path: 'committees', element: <CommitteeAdminPage /> },
