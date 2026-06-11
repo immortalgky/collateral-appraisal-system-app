@@ -53,6 +53,11 @@ export const reportKeys = {
 // ──────────────────────────────────────────────────────────────────────────────
 // Sync report APIs (existing — kept as-is)
 // ──────────────────────────────────────────────────────────────────────────────
+//
+// NOTE: `entityId` here is a human number, not a Guid — an AppraisalNumber, or a MeetingNo
+// like "12/2567" for Meeting reports. It is interpolated RAW into the path on purpose: the
+// backend route is a catch-all (`/reports/{reportTypeKey}/{*entityId}`) that needs the slash
+// intact. Do NOT encodeURIComponent it — an encoded "%2F" is rejected by ASP.NET in the path.
 
 /**
  * Fetches a report PDF as a Blob (Bearer auth auto-attached by axiosInstance).
@@ -101,13 +106,15 @@ export const getReportDefinitions = async (): Promise<ReportDefinition[]> => {
   return data;
 };
 
-/** POST /reports/{reportTypeKey}/{entityId}/jobs → 202 { jobId } */
+/** POST /reports/{reportTypeKey}/jobs/{entityId} → 202 { jobId }.
+ *  entityId is the trailing catch-all segment (see the raw-interpolation note above) so a
+ *  MeetingNo's slash survives, mirroring the sync GET route. */
 export const enqueueReportJob = async (
   reportTypeKey: string,
   entityId: string,
 ): Promise<{ jobId: string }> => {
   const { data } = await axios.post<{ jobId: string }>(
-    `/reports/${reportTypeKey}/${entityId}/jobs`,
+    `/reports/${reportTypeKey}/jobs/${entityId}`,
   );
   return data;
 };
