@@ -113,7 +113,7 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
         setShowDelete(false);
         onDeleted();
       },
-      onError: () => toast.error(t('toasts.roleDeleteFailed')),
+      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.roleDeleteFailed')),
     });
   };
 
@@ -136,7 +136,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="circle-info" style="solid" className="size-4 text-blue-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+              <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
           </div>
           <button
@@ -176,7 +178,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="shield-halved" style="solid" className="size-4 text-emerald-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-emerald-50">
+              <Icon name="shield-halved" style="solid" className="size-3 text-emerald-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.permissions')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {role.permissions.length}
@@ -216,7 +220,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="users" style="solid" className="size-4 text-violet-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50">
+              <Icon name="users" style="solid" className="size-3 text-violet-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.users')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {roleUsers.length}
@@ -261,7 +267,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       {/* Security Section */}
       <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
-          <Icon name="triangle-exclamation" style="solid" className="size-4 text-danger" />
+          <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+            <Icon name="triangle-exclamation" style="solid" className="size-3 text-danger" />
+          </span>
           <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
         </div>
         <div className="px-4 py-4">

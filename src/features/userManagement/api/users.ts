@@ -15,6 +15,7 @@ import type {
   SetUserActivationRequest,
   CreateUserRequest,
   CreateUserResponse,
+  LdapLookupResponse,
   PasswordPolicy,
 } from '../types';
 
@@ -69,6 +70,9 @@ export const useGetUsers = (params: GetUsersParams = {}) => {
           Search: params.search || undefined,
           Scope: params.scope || undefined,
           role: params.role || undefined,
+          groupId: params.groupId || undefined,
+          teamId: params.teamId || undefined,
+          companyId: params.companyId || undefined,
           isActive: params.isActive,
           PageNumber: params.pageNumber ?? 1,
           PageSize: params.pageSize ?? 20,
@@ -137,6 +141,18 @@ export const useCreateUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+};
+
+/** Admin: look up a username in LDAP/AD to pre-fill the create-user form (no password validation) */
+export const useLdapLookup = () => {
+  return useMutation({
+    mutationFn: async (username: string): Promise<LdapLookupResponse> => {
+      const { data } = await axios.get<LdapLookupResponse>('/auth/users/ldap-lookup', {
+        params: { username },
+      });
+      return data;
     },
   });
 };
@@ -214,10 +230,13 @@ export const useUnlockUser = () => {
   });
 };
 
+/** React Query key for the public password-policy (complexity rules for the checklist). */
+export const passwordPolicyQueryKey = ['passwordPolicy'] as const;
+
 /** Get the global password policy */
 export const useGetPasswordPolicy = () => {
   return useQuery({
-    queryKey: ['passwordPolicy'],
+    queryKey: passwordPolicyQueryKey,
     queryFn: async (): Promise<PasswordPolicy> => {
       const { data } = await axios.get<PasswordPolicy>('/auth/password-policy');
       return data;

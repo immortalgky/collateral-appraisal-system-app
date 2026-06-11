@@ -5,6 +5,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import UserAssignmentModal from './UserAssignmentModal';
@@ -16,7 +17,7 @@ import {
   useUpdateGroupMonitoring,
   useDeleteGroup,
 } from '../api/groups';
-import type { RoleUser } from '../types';
+import type { RoleUser, GroupScope } from '../types';
 
 interface GroupDetailPanelProps {
   groupId: string;
@@ -34,11 +35,20 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
 
   // General edit modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', description: '' });
+  const [editForm, setEditForm] = useState<{
+    name: string;
+    description: string;
+    scope: GroupScope;
+  }>({ name: '', description: '', scope: 'Bank' });
+
+  const SCOPE_OPTIONS = [
+    { value: 'Bank', label: t('tabs.bank') },
+    { value: 'Company', label: t('tabs.company') },
+  ];
 
   const handleOpenEdit = () => {
     if (!group) return;
-    setEditForm({ name: group.name, description: group.description });
+    setEditForm({ name: group.name, description: group.description, scope: group.scope });
     setShowEditModal(true);
   };
 
@@ -48,7 +58,7 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       return;
     }
     updateGroup.mutate(
-      { id: groupId, name: editForm.name, description: editForm.description },
+      { id: groupId, name: editForm.name, description: editForm.description, scope: editForm.scope },
       {
         onSuccess: () => {
           toast.success(t('toasts.groupUpdated'));
@@ -113,7 +123,7 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
         setShowDelete(false);
         onDeleted();
       },
-      onError: () => toast.error(t('toasts.groupDeleteFailed')),
+      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.groupDeleteFailed')),
     });
   };
 
@@ -136,7 +146,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="circle-info" style="solid" className="size-4 text-blue-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+              <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
           </div>
           <button
@@ -176,7 +188,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="users" style="solid" className="size-4 text-violet-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50">
+              <Icon name="users" style="solid" className="size-3 text-violet-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.users')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {group.users.length}
@@ -218,7 +232,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="eye" style="solid" className="size-4 text-amber-500" />
+            <span className="flex size-6 items-center justify-center rounded-md bg-amber-50">
+              <Icon name="eye" style="solid" className="size-3 text-amber-500" />
+            </span>
             <span className="text-sm font-semibold text-gray-800">{t('sections.monitoring')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {group.monitoredGroups.length}
@@ -256,7 +272,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       {/* Security Section */}
       <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
-          <Icon name="triangle-exclamation" style="solid" className="size-4 text-danger" />
+          <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+            <Icon name="triangle-exclamation" style="solid" className="size-3 text-danger" />
+          </span>
           <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
         </div>
         <div className="px-4 py-3">
@@ -289,6 +307,15 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
             }}
             required
             placeholder={t('placeholders.groupName')}
+          />
+          <Dropdown
+            label={t('fields.scope')}
+            value={editForm.scope}
+            onChange={(val: string | null) =>
+              setEditForm(prev => ({ ...prev, scope: (val ?? 'Bank') as GroupScope }))
+            }
+            options={SCOPE_OPTIONS}
+            required
           />
           <TextInput
             label={t('fields.description')}

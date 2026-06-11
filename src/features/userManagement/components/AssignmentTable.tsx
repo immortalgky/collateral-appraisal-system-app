@@ -45,7 +45,7 @@ const AssignmentTable = <T,>({
     let result = q
       ? items.filter(item => {
           const fields = searchFields ? searchFields(item) : [getLabel(item)];
-          return fields.some(f => f.toLowerCase().includes(q));
+          return fields.some(f => (f ?? '').toLowerCase().includes(q));
         })
       : items;
 
@@ -84,16 +84,18 @@ const AssignmentTable = <T,>({
   };
 
   const toggleRow = (id: string) => {
-    onChange(
-      selectedIds.includes(id) ? selectedIds.filter(s => s !== id) : [...selectedIds, id],
-    );
+    onChange(selectedIds.includes(id) ? selectedIds.filter(s => s !== id) : [...selectedIds, id]);
   };
 
+  // Three-stage cycle matching the task-list standard: unsorted → asc → desc → unsorted.
   const handleSort = (key: string) => {
-    if (sortKey === key) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-    } else {
+    if (sortKey !== key) {
       setSortKey(key);
+      setSortDir('asc');
+    } else if (sortDir === 'asc') {
+      setSortDir('desc');
+    } else {
+      setSortKey(null);
       setSortDir('asc');
     }
   };
@@ -153,9 +155,9 @@ const AssignmentTable = <T,>({
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-primary/10 z-10">
-                <tr>
-                  <th className="w-10 py-2.5 px-3">
+              <thead className="sticky top-0 z-10 bg-gray-50">
+                <tr className="border-b border-gray-200">
+                  <th className="w-10 py-2.5 px-3 bg-gray-50">
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
@@ -166,44 +168,45 @@ const AssignmentTable = <T,>({
                       className="rounded border-gray-300 text-primary focus:ring-primary/20"
                     />
                   </th>
-                  {columns.map(col => (
-                    <th
-                      key={col.key}
-                      className={clsx(
-                        'py-2.5 px-3 text-left text-xs font-semibold text-primary',
-                        col.sortable && 'cursor-pointer select-none hover:text-primary/80',
-                      )}
-                      onClick={col.sortable ? () => handleSort(col.key) : undefined}
-                    >
-                      <span className="inline-flex items-center gap-1">
-                        {col.label}
-                        {col.sortable && (
-                          <span className="inline-flex flex-col gap-px">
+                  {columns.map(col => {
+                    const isActive = sortKey === col.key;
+                    return (
+                      <th
+                        key={col.key}
+                        className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50"
+                        aria-sort={
+                          isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
+                        }
+                      >
+                        {col.sortable ? (
+                          <button
+                            type="button"
+                            onClick={() => handleSort(col.key)}
+                            className={clsx(
+                              'group inline-flex items-center gap-1 transition-colors hover:text-gray-700',
+                              isActive && 'text-primary',
+                            )}
+                          >
+                            <span>{col.label}</span>
                             <Icon
-                              name="chevron-up"
                               style="solid"
+                              name={
+                                isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'
+                              }
                               className={clsx(
-                                'size-2',
-                                sortKey === col.key && sortDir === 'asc'
+                                'size-2.5',
+                                isActive
                                   ? 'text-primary'
-                                  : 'text-gray-300',
+                                  : 'text-gray-300 group-hover:text-gray-500',
                               )}
                             />
-                            <Icon
-                              name="chevron-down"
-                              style="solid"
-                              className={clsx(
-                                'size-2',
-                                sortKey === col.key && sortDir === 'desc'
-                                  ? 'text-primary'
-                                  : 'text-gray-300',
-                              )}
-                            />
-                          </span>
+                          </button>
+                        ) : (
+                          col.label
                         )}
-                      </span>
-                    </th>
-                  ))}
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">

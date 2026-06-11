@@ -23,6 +23,9 @@ export const useAuthStore = create<AuthStore>(set => ({
   error: null,
 
   setUser: user => set({ user, isAuthenticated: !!user }),
+
+  // Convenience selector: whether the signed-in user must change their password first.
+  // Lives on the user object (sourced from /auth/me) — read via useAuthStore(s => s.user?.mustChangePassword).
   setToken: token => {
     setAccessToken(token);
     set({ isAuthenticated: true });

@@ -31,6 +31,7 @@ const defaultForm = (): EditForm => ({
   province: '',
   postalCode: '',
   contactPerson: '',
+  hostCompanyCode: '',
   loanTypesStr: '',
   isActive: true,
   bankAccountNo: '',
@@ -59,6 +60,7 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       province: company.province ?? '',
       postalCode: company.postalCode ?? '',
       contactPerson: company.contactPerson ?? '',
+      hostCompanyCode: company.hostCompanyCode ?? '',
       loanTypesStr: (company.loanTypes ?? []).join(', '),
       isActive: company.isActive,
       bankAccountNo: company.bankAccountNo ?? '',
@@ -90,6 +92,7 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
         province: editForm.province || null,
         postalCode: editForm.postalCode || null,
         contactPerson: editForm.contactPerson || null,
+        hostCompanyCode: editForm.hostCompanyCode || null,
         loanTypes,
         isActive: editForm.isActive,
         bankAccountNo: editForm.bankAccountNo || null,
@@ -153,6 +156,7 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
           <InfoRow label={t('fields.phone')} value={company.phone} />
           <InfoRow label={t('fields.email')} value={company.email} />
           <InfoRow label={t('fields.contactPerson')} value={company.contactPerson} />
+          <InfoRow label={t('fields.hostCompanyCode')} value={company.hostCompanyCode} />
           <div>
             <div className="text-xs text-gray-400 mb-0.5">{t('fields.status')}</div>
             <span
@@ -270,6 +274,15 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
             onChange={e => setEditForm(prev => ({ ...prev, contactPerson: e.currentTarget.value }))}
             placeholder={t('placeholders.contactPerson')}
           />
+          <TextInput
+            label={t('fields.hostCompanyCode')}
+            value={editForm.hostCompanyCode ?? ''}
+            onChange={e =>
+              setEditForm(prev => ({ ...prev, hostCompanyCode: e.currentTarget.value }))
+            }
+            placeholder={t('placeholders.hostCompanyCode')}
+            maxLength={10}
+          />
           <div className="flex items-center gap-3 pt-5">
             <input
               type="checkbox"
@@ -324,7 +337,9 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
             <TextInput
               label={t('fields.loanTypes')}
               value={editForm.loanTypesStr}
-              onChange={e => setEditForm(prev => ({ ...prev, loanTypesStr: e.currentTarget.value }))}
+              onChange={e =>
+                setEditForm(prev => ({ ...prev, loanTypesStr: e.currentTarget.value }))
+              }
               placeholder={t('placeholders.loanTypes')}
             />
             <p className="text-xs text-gray-400 mt-1">{t('hints.loanTypesComma')}</p>

@@ -65,7 +65,8 @@
     "labelPlaceholderOther": "ป้ายกำกับ {{lang}} (ไม่บังคับ)",
     "labelAriaInput": "ป้ายกำกับ {{lang}}",
     "submit": "บันทึก",
-    "submitting": "กำลังบันทึก..."
+    "submitting": "กำลังบันทึก...",
+    "viewPermissionRequired": "จำเป็นต้องระบุสิทธิ์การดู"
   },
   "colors": {
     "Blue": "น้ำเงิน",
@@ -98,22 +99,66 @@
     "activityLabel": "กิจกรรม",
     "activityLoadingOption": "กำลังโหลด…",
     "activityNoneOption": "ไม่พบกิจกรรม",
-    "overridesHint": "การแทนที่ใช้เฉพาะแถบด้านข้างการประเมินเมื่อผู้ใช้เข้าสู่งานสำหรับกิจกรรมนี้ แถวที่ไม่ได้เลือกจะใช้สิทธิ์ตามบทบาท",
+    "overridesHint": "การแทนที่ทำได้เพียงจำกัดสิทธิ์ — ซ่อนเมนูหรือทำให้อ่านอย่างเดียวเมื่อผู้ใช้เข้าสู่งานของกิจกรรมนี้ ไม่สามารถเพิ่มสิทธิ์ได้ เมนูจะแสดงได้ก็ต่อเมื่อบทบาทของผู้ใช้อนุญาตอยู่แล้ว แถวที่ไม่จำกัดสิทธิ์จะใช้สิทธิ์ตามบทบาท",
     "columns": {
       "appraisalMenu": "เมนูการประเมิน",
       "itemKey": "คีย์รายการ",
       "visible": "มองเห็น",
       "editable": "แก้ไขได้",
-      "status": "สถานะ"
+      "status": "สถานะ",
+      "hidden": "ซ่อน",
+      "readOnly": "อ่านอย่างเดียว",
+      "access": "สิทธิ์สำหรับงานนี้"
     },
     "status": {
       "unsaved": "ยังไม่บันทึก",
       "roleDefault": "ค่าเริ่มต้นตามบทบาท",
-      "activityOverride": "แทนที่ตามกิจกรรม"
+      "activityOverride": "แทนที่ตามกิจกรรม",
+      "inherit": "สืบทอดตามบทบาท",
+      "restricted": "จำกัดสิทธิ์"
     },
     "actions": {
       "reset": "รีเซ็ต",
-      "saveChanges": "บันทึกการเปลี่ยนแปลง"
+      "saveChanges": "บันทึกการเปลี่ยนแปลง",
+      "discard": "ยกเลิก"
+    },
+    "access": {
+      "inherit": "สืบทอด",
+      "readonly": "อ่านอย่างเดียว",
+      "hidden": "ซ่อน"
+    },
+    "effective": {
+      "label": "ผลลัพธ์",
+      "editable": "แก้ไขได้",
+      "readonly": "อ่านอย่างเดียว",
+      "hidden": "ซ่อน",
+      "noRoleAccess": "บทบาทไม่มีสิทธิ์",
+      "roleNote": "บทบาทไม่มีสิทธิ์ดู — การแทนที่ไม่มีผล"
+    },
+    "preview": {
+      "title": "ตัวอย่างแถบเมนู",
+      "asRole": "แสดงผลสำหรับบทบาท: {{role}}",
+      "intentNote": "แสดงเจตนาการแทนที่ — เลือกบทบาทเพื่อดูผลจริง",
+      "empty": "ไม่มีเมนูที่แสดงสำหรับการเลือกนี้",
+      "selectRole": "เลือกบทบาทเพื่อดูผลจริง"
+    },
+    "filter": {
+      "search": "ค้นหาเมนู…",
+      "onlyRestricted": "เฉพาะที่จำกัด"
+    },
+    "bulk": {
+      "hideAll": "ซ่อนทั้งหมด",
+      "readonlyAll": "อ่านอย่างเดียวทั้งหมด",
+      "resetAll": "รีเซ็ตเป็นสืบทอด"
+    },
+    "summary": "จำกัด {{restricted}} · สืบทอด {{inherit}}",
+    "previewAsRole": "แสดงตัวอย่างเป็นบทบาท",
+    "previewAsRolePlaceholder": "เลือกบทบาท…",
+    "unsavedCount": "ยังไม่บันทึก {{count}} รายการ",
+    "restrictions": "จำกัด {{count}} รายการ",
+    "confirmSwitch": {
+      "title": "ยกเลิกการเปลี่ยนแปลงที่ยังไม่บันทึก?",
+      "message": "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึกสำหรับกิจกรรมนี้ การสลับจะทำให้การเปลี่ยนแปลงหายไป"
     }
   },
   "toasts": {
@@ -129,5 +174,24 @@
     "loadNavFailed": "โหลดการนำทางไม่สำเร็จ",
     "loadNavFailedDetail": "โหลดการนำทางไม่สำเร็จ แถบด้านข้างอาจว่างเปล่า",
     "syncMenuFailed": "ซิงค์เมนูไม่สำเร็จ"
+  },
+  "tree": {
+    "columns": {
+      "path": "เส้นทาง",
+      "editPermission": "สิทธิ์แก้ไข"
+    },
+    "expand": "ขยาย",
+    "collapse": "ยุบ",
+    "expandAll": "ขยายทั้งหมด",
+    "collapseAll": "ยุบทั้งหมด",
+    "export": "ส่งออก JSON",
+    "searchPlaceholder": "ค้นหาเมนู…",
+    "count": "{{count}} รายการ",
+    "unknownPerm": "ไม่พบสิทธิ์",
+    "missingI18n": "ขาดการแปล: {{langs}}",
+    "missingI18nShort": "ไม่มี {{langs}}",
+    "hiddenForRole": "ซ่อนสำหรับบทบาท",
+    "noReorderHint": "ล้างการค้นหาและขยายทั้งหมดเพื่อจัดเรียง",
+    "emptyFiltered": "ไม่พบเมนูที่ตรงกับการค้นหา"
   }
 }

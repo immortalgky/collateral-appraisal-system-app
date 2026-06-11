@@ -65,7 +65,8 @@
     "labelPlaceholderOther": "{{lang}} label (optional)",
     "labelAriaInput": "{{lang}} label",
     "submit": "Save",
-    "submitting": "Saving..."
+    "submitting": "Saving...",
+    "viewPermissionRequired": "View permission is required"
   },
   "colors": {
     "Blue": "Blue",
@@ -98,22 +99,66 @@
     "activityLabel": "Activity",
     "activityLoadingOption": "Loading…",
     "activityNoneOption": "No activities found",
-    "overridesHint": "Overrides apply only to the Appraisal sidebar when a user enters a task for this activity. Unchecked rows fall back to role-based permissions.",
+    "overridesHint": "Overrides only restrict — they hide a menu or make it read-only when a user enters a task for this activity. They never grant: a tab is only available if the user's role already permits it. Rows with no restriction inherit role-based permissions.",
     "columns": {
       "appraisalMenu": "Appraisal Menu",
       "itemKey": "Item Key",
       "visible": "Visible",
       "editable": "Editable",
-      "status": "Status"
+      "status": "Status",
+      "hidden": "Hidden",
+      "readOnly": "Read-only",
+      "access": "Access for this task"
     },
     "status": {
       "unsaved": "Unsaved",
       "roleDefault": "Role default",
-      "activityOverride": "Activity override"
+      "activityOverride": "Activity override",
+      "inherit": "Inherit role",
+      "restricted": "Restricted"
     },
     "actions": {
       "reset": "Reset",
-      "saveChanges": "Save Changes"
+      "saveChanges": "Save Changes",
+      "discard": "Discard"
+    },
+    "access": {
+      "inherit": "Inherit",
+      "readonly": "Read-only",
+      "hidden": "Hidden"
+    },
+    "effective": {
+      "label": "Effective",
+      "editable": "Editable",
+      "readonly": "Read-only",
+      "hidden": "Hidden",
+      "noRoleAccess": "No role access",
+      "roleNote": "Role can't view — override has no effect"
+    },
+    "preview": {
+      "title": "Sidebar preview",
+      "asRole": "Showing result for role: {{role}}",
+      "intentNote": "Showing override intent — pick a role for the real result",
+      "empty": "No menus visible for this selection",
+      "selectRole": "Select a role to see the real result"
+    },
+    "filter": {
+      "search": "Search menus…",
+      "onlyRestricted": "Only restricted"
+    },
+    "bulk": {
+      "hideAll": "Hide all",
+      "readonlyAll": "Read-only all",
+      "resetAll": "Reset to inherit"
+    },
+    "summary": "{{restricted}} restricted · {{inherit}} inherit",
+    "previewAsRole": "Preview as role",
+    "previewAsRolePlaceholder": "Select a role…",
+    "unsavedCount": "{{count}} unsaved",
+    "restrictions": "{{count}} restricted",
+    "confirmSwitch": {
+      "title": "Discard unsaved changes?",
+      "message": "You have unsaved override changes for this activity. Switching will discard them."
     }
   },
   "toasts": {
@@ -129,5 +174,24 @@
     "loadNavFailed": "Failed to load navigation",
     "loadNavFailedDetail": "Failed to load navigation. The sidebar may be empty.",
     "syncMenuFailed": "Failed to sync menu"
+  },
+  "tree": {
+    "columns": {
+      "path": "Path",
+      "editPermission": "Edit permission"
+    },
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "export": "Export JSON",
+    "searchPlaceholder": "Search menus…",
+    "count": "{{count}} items",
+    "unknownPerm": "Unknown permission",
+    "missingI18n": "Missing translations: {{langs}}",
+    "missingI18nShort": "no {{langs}}",
+    "hiddenForRole": "Hidden for role",
+    "noReorderHint": "Clear search and expand all to reorder",
+    "emptyFiltered": "No menus match your search"
   }
 }

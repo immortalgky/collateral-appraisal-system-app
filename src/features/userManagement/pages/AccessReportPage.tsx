@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
@@ -18,16 +17,16 @@ const AccessReportPage = () => {
   const [pageSize, setPageSize] = useState(20);
   const [isExporting, setIsExporting] = useState(false);
 
-  const [filters, setFilters] = useState<Omit<GetUserAccessMatrixParams, 'pageNumber' | 'pageSize'>>(
-    {
-      scope: '',
-      companyId: '',
-      roleName: '',
-      groupId: '',
-      teamId: '',
-      search: '',
-    },
-  );
+  const [filters, setFilters] = useState<
+    Omit<GetUserAccessMatrixParams, 'pageNumber' | 'pageSize'>
+  >({
+    scope: '',
+    companyId: '',
+    roleName: '',
+    groupId: '',
+    teamId: '',
+    search: '',
+  });
 
   const { data, isLoading } = useGetUserAccessMatrix({
     ...filters,
@@ -60,13 +59,18 @@ const AccessReportPage = () => {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 h-full flex flex-col">
-      <SectionHeader
-        title={t('page.accessReport.title')}
-        subtitle={t('page.accessReport.subtitle')}
-        icon="table-list"
-        iconColor="primary"
-      />
+    <div className="h-full flex flex-col min-h-0 min-w-0">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.accessReport.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {totalCount}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.accessReport.subtitle')}</p>
+        </div>
+      </div>
 
       {/* Filter bar */}
       <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -189,9 +193,7 @@ const AccessReportPage = () => {
 
       {/* Table + Export */}
       <div className="flex items-center justify-between mt-4 mb-2">
-        <p className="text-xs text-gray-500">
-          {t('counts.results', { count: totalCount })}
-        </p>
+        <p className="text-xs text-gray-500">{t('counts.results', { count: totalCount })}</p>
         <Button
           variant="outline"
           size="sm"

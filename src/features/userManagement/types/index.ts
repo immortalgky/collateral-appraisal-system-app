@@ -63,6 +63,8 @@ export interface RoleListItem {
   name: string;
   description: string;
   scope: RoleScope;
+  permissionCount: number;
+  userCount: number;
 }
 
 export interface RoleListResult {
@@ -132,6 +134,7 @@ export interface GroupListItem {
   description: string;
   scope: GroupScope;
   companyId: string | null;
+  userCount: number;
 }
 
 export interface GroupListResult {
@@ -158,6 +161,7 @@ export interface CreateGroupRequest {
 export interface UpdateGroupRequest {
   name: string;
   description: string;
+  scope: GroupScope;
 }
 
 export interface UpdateGroupUsersRequest {
@@ -168,7 +172,7 @@ export interface UpdateGroupMonitoringRequest {
   monitoredGroupIds: string[];
 }
 
-export type TeamType = 'Internal' | 'External';
+export type TeamScope = 'Bank' | 'Company';
 
 // ─── User / Profile ──────────────────────────────────────────────────────────
 
@@ -187,7 +191,7 @@ export interface UserGroup {
 export interface UserTeam {
   id: string;
   name: string;
-  type: TeamType;
+  scope: TeamScope;
 }
 
 export interface UserProfile {
@@ -199,7 +203,7 @@ export interface UserProfile {
   avatarUrl: string | null;
   position: string | null;
   department: string | null;
-  authSource: 'Local' | 'External';
+  authSource: 'Local' | 'LDAP';
   companyId: string | null;
   roles: UserRole[];
   groups: UserGroup[];
@@ -212,6 +216,16 @@ export interface PasswordPolicy {
   requireUppercase: boolean;
   requireNonAlphanumeric: boolean;
   requiredUniqueChars: number;
+}
+
+/** Full, admin-editable password policy (returned by /auth/admin/password-policy). */
+export interface PasswordPolicyConfig extends PasswordPolicy {
+  expiryDays: number;
+  historyCount: number;
+  blocklist: string;
+  lockoutEnabled: boolean;
+  maxFailedAccessAttempts: number;
+  lockoutMinutes: number;
 }
 
 export interface UpdateProfileRequest {
@@ -244,7 +258,7 @@ export interface AdminUserListItem {
 
 export interface AdminUserDetail extends AdminUserListItem {
   avatarUrl: string | null;
-  authSource: 'Local' | 'External';
+  authSource: 'Local' | 'LDAP';
   companyName: string | null;
   groups: UserGroup[];
   teams: UserTeam[];
@@ -262,6 +276,9 @@ export interface GetUsersParams {
   search?: string;
   scope?: 'Bank' | 'Company';
   role?: string;
+  groupId?: string;
+  teamId?: string;
+  companyId?: string;
   isActive?: boolean;
   pageNumber?: number;
   pageSize?: number;
@@ -270,9 +287,11 @@ export interface GetUsersParams {
 export interface AdminUpdateUserRequest {
   firstName: string;
   lastName: string;
+  email: string;
   position?: string | null;
   department?: string | null;
   companyId?: string | null;
+  authSource?: 'Local' | 'LDAP';
 }
 
 export interface UpdateUserRolesRequest {
@@ -301,10 +320,24 @@ export interface CreateUserRequest {
   department?: string | null;
   companyId?: string | null;
   roles: string[];
+  groupIds?: string[];
+  teamIds?: string[];
+  authSource?: 'Local' | 'LDAP';
 }
 
 export interface CreateUserResponse {
   id: string;
+}
+
+/** Directory attributes returned when looking up a username in LDAP/AD (no password validation) */
+export interface LdapLookupResponse {
+  found: boolean;
+  username: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  department?: string | null;
+  position?: string | null;
 }
 
 // ─── Team ────────────────────────────────────────────────────────────────────
@@ -319,16 +352,16 @@ export interface TeamMember {
 export interface TeamDetail {
   id: string;
   name: string;
-  type: TeamType;
-  isActive: boolean;
+  scope: TeamScope;
+  description: string | null;
   members: TeamMember[];
 }
 
 export interface TeamListItem {
   id: string;
   name: string;
-  type: TeamType;
-  isActive: boolean;
+  scope: TeamScope;
+  description: string | null;
   memberCount: number;
 }
 
@@ -341,20 +374,21 @@ export interface TeamListResult {
 
 export interface GetTeamsParams {
   search?: string;
+  scope?: TeamScope;
   pageNumber?: number;
   pageSize?: number;
 }
 
 export interface CreateTeamRequest {
   name: string;
-  type?: TeamType;
-  isActive?: boolean;
+  scope?: TeamScope;
+  description?: string | null;
 }
 
 export interface UpdateTeamRequest {
   name: string;
-  type: TeamType;
-  isActive: boolean;
+  scope: TeamScope;
+  description?: string | null;
 }
 
 export interface UpdateTeamMembersRequest {
@@ -409,6 +443,7 @@ export interface Company {
   province: string | null;
   postalCode: string | null;
   contactPerson: string | null;
+  hostCompanyCode: string | null;
   loanTypes: string[];
   isActive: boolean;
   bankAccountNo: string | null;
@@ -422,6 +457,7 @@ export interface CompanyListItem {
   phone: string | null;
   email: string | null;
   isActive: boolean;
+  userCount: number;
 }
 
 export interface CompanyListResult {
@@ -445,6 +481,7 @@ export interface CreateCompanyRequest {
   province?: string | null;
   postalCode?: string | null;
   contactPerson?: string | null;
+  hostCompanyCode?: string | null;
   loanTypes?: string[];
   isActive?: boolean;
   bankAccountNo?: string | null;
@@ -461,6 +498,7 @@ export interface UpdateCompanyRequest {
   province?: string | null;
   postalCode?: string | null;
   contactPerson?: string | null;
+  hostCompanyCode?: string | null;
   loanTypes?: string[];
   isActive?: boolean;
   bankAccountNo?: string | null;

@@ -83,8 +83,8 @@ export interface ActivitySummary {
 
 /**
  * GET /admin/activity-menu-overrides/{activityId} row.
- * `hasOverride=false` means the backend is falling back to role-based behavior
- * for this menu item — the IsVisible/CanEdit fields carry the defaults (true/false).
+ * `hasOverride=false` means there is no override and the item inherits the role —
+ * the backend carries the no-op defaults `isVisible:true, canEdit:true` for that case.
  */
 export interface ActivityOverrideRow {
   menuItemId: string;

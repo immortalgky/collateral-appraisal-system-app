@@ -5,11 +5,13 @@ import { useCurrentUser } from '../api.ts';
 import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationHub } from '@features/notification/hooks/useNotificationHub';
 import { useReportJobReconciler } from '@features/reportGeneration/hooks/useReportJobReconciler';
+import ForcedPasswordChange from './ForcedPasswordChange';
 import type { JSX } from 'react';
 
 export function ProtectedRoute({ component }: { component: JSX.Element }) {
   const { t } = useTranslation('auth');
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const mustChangePassword = useAuthStore(state => state.user?.mustChangePassword ?? false);
   const hasToken = !!getAccessToken();
   const { isLoading } = useCurrentUser();
 
@@ -37,6 +39,12 @@ export function ProtectedRoute({ component }: { component: JSX.Element }) {
         />
       </div>
     );
+  }
+
+  // Newly created / admin-reset accounts must set a new password before using the app.
+  // Block every protected route until the change succeeds (which clears the flag on /auth/me).
+  if (isAuthenticated && mustChangePassword) {
+    return <ForcedPasswordChange />;
   }
 
   return component;

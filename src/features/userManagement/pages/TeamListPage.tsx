@@ -1,27 +1,37 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import TeamDetailPanel from '../components/TeamDetailPanel';
+import ListSortMenu from '../components/ListSortMenu';
 import { useGetTeams, useCreateTeam } from '../api/teams';
-import type { TeamType } from '../types';
+import type { TeamScope } from '../types';
+
+type ScopeTab = 'Bank' | 'Company';
 
 const TeamListPage = () => {
   const { t } = useTranslation(['userManagement', 'common']);
+  const [activeTab, setActiveTab] = useState<ScopeTab>('Bank');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState('name');
+  const [sortAsc, setSortAsc] = useState(true);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [createForm, setCreateForm] = useState<{ name: string; type: TeamType }>({
+  const [createForm, setCreateForm] = useState<{
+    name: string;
+    scope: TeamScope;
+    description: string;
+  }>({
     name: '',
-    type: 'Internal',
+    scope: 'Bank',
+    description: '',
   });
 
   useEffect(() => {
@@ -29,17 +39,38 @@ const TeamListPage = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Reset selection when switching scope tab.
+  useEffect(() => {
+    setSelectedTeamId(null);
+  }, [activeTab]);
+
   const { data, isLoading } = useGetTeams({
     search: debouncedSearch || undefined,
     pageNumber: 1,
     pageSize: 50,
   });
 
-  const teams = data?.items ?? [];
+  // Teams have no scope param on the API; filter client-side by the active tab.
+  const teams = useMemo(
+    () =>
+      (data?.items ?? [])
+        .filter(tm => tm.scope === activeTab)
+        .sort((a, b) => {
+          const cmp =
+            sortKey === 'members' ? a.memberCount - b.memberCount : a.name.localeCompare(b.name);
+          return sortAsc ? cmp : -cmp;
+        }),
+    [data?.items, activeTab, sortKey, sortAsc],
+  );
   const createTeam = useCreateTeam();
 
+  const SORT_OPTIONS = [
+    { key: 'name', label: t('sort.name') },
+    { key: 'members', label: t('sort.members') },
+  ];
+
   const handleOpenCreate = () => {
-    setCreateForm({ name: '', type: 'Internal' });
+    setCreateForm({ name: '', scope: activeTab, description: '' });
     setShowCreateModal(true);
   };
 
@@ -51,8 +82,8 @@ const TeamListPage = () => {
     createTeam.mutate(
       {
         name: createForm.name,
-        type: createForm.type,
-        isActive: true,
+        scope: createForm.scope,
+        description: createForm.description.trim() || null,
       },
       {
         onSuccess: (data: any) => {
@@ -66,17 +97,41 @@ const TeamListPage = () => {
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-4">
-      <SectionHeader
-        title={t('page.teams.title')}
-        subtitle={t('page.teams.subtitle')}
-        icon="people-group"
-        iconColor="cyan"
-      />
+    <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.teams.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {teams.length}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.teams.subtitle')}</p>
+        </div>
+      </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-1 min-h-0">
         {/* Left panel */}
         <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
+          {/* Bank / Company tabs */}
+          <div className="flex border-b border-gray-100">
+            {(['Bank', 'Company'] as ScopeTab[]).map(tab => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className={clsx(
+                  'flex-1 py-2.5 text-sm font-medium transition-colors',
+                  activeTab === tab
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-gray-500 hover:text-gray-700',
+                )}
+              >
+                {tab === 'Bank' ? t('tabs.bank') : t('tabs.company')}
+              </button>
+            ))}
+          </div>
+
           {/* Search + Add */}
           <div className="px-3 pt-3 pb-2 flex gap-2">
             <div className="relative flex-1">
@@ -102,10 +157,19 @@ const TeamListPage = () => {
             >
               <Icon name="plus" style="solid" className="size-3.5" />
             </button>
+            <ListSortMenu
+              options={SORT_OPTIONS}
+              sortKey={sortKey}
+              asc={sortAsc}
+              onChange={(key, asc) => {
+                setSortKey(key);
+                setSortAsc(asc);
+              }}
+            />
           </div>
 
           {/* Team list */}
-          <div className="overflow-y-auto max-h-[calc(100vh-240px)] divide-y divide-gray-50">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-50">
             {isLoading ? (
               <table className="w-full">
                 <tbody>
@@ -131,33 +195,11 @@ const TeamListPage = () => {
                   )}
                 >
                   <div className="text-sm font-medium text-gray-800 truncate">{team.name}</div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    {/* Type badge */}
-                    <span
-                      className={clsx(
-                        'shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium',
-                        team.type === 'Internal'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-violet-50 text-violet-700',
-                      )}
-                    >
-                      {t(team.type === 'Internal' ? 'fields.teamTypeInternal' : 'fields.teamTypeExternal')}
-                    </span>
-                    {/* Active badge */}
-                    <span
-                      className={clsx(
-                        'shrink-0 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium',
-                        team.isActive
-                          ? 'bg-green-50 text-green-700'
-                          : 'bg-gray-100 text-gray-500',
-                      )}
-                    >
-                      {team.isActive ? t('status.active') : t('status.inactive')}
-                    </span>
-                    {/* Member count */}
-                    <span className="shrink-0 text-xs text-gray-400 ml-auto">
-                      {t('counts.members', { count: team.memberCount })}
-                    </span>
+                  {team.description && (
+                    <div className="mt-0.5 text-xs text-gray-400 truncate">{team.description}</div>
+                  )}
+                  <div className="mt-0.5 text-xs text-gray-400">
+                    {t('counts.members', { count: team.memberCount })}
                   </div>
                 </button>
               ))
@@ -202,17 +244,28 @@ const TeamListPage = () => {
           />
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              {t('fields.teamType')}
+              {t('fields.scope')}
             </label>
             <select
-              value={createForm.type}
-              onChange={e => setCreateForm(prev => ({ ...prev, type: e.target.value as TeamType }))}
+              value={createForm.scope}
+              onChange={e =>
+                setCreateForm(prev => ({ ...prev, scope: e.target.value as TeamScope }))
+              }
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             >
-              <option value="Internal">{t('fields.teamTypeInternal')}</option>
-              <option value="External">{t('fields.teamTypeExternal')}</option>
+              <option value="Bank">{t('tabs.bank')}</option>
+              <option value="Company">{t('tabs.company')}</option>
             </select>
           </div>
+          <TextInput
+            label={t('fields.description')}
+            value={createForm.description}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setCreateForm(prev => ({ ...prev, description: value }));
+            }}
+            placeholder={t('placeholders.teamDescription')}
+          />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowCreateModal(false)}>
