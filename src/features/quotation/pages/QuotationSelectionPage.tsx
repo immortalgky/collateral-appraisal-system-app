@@ -277,7 +277,7 @@ const QuotationSelectionPage = () => {
 
   const handleSendConfirm = (emailData: {
     from: string;
-    to: string;
+    to?: string;
     cc?: string;
     bcc?: string;
     subject: string;

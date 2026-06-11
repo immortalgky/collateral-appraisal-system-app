@@ -3,7 +3,21 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Modal from './Modal';
 import Button from './Button';
+import Icon from './Icon';
 import { emailFormSchema, type EmailFormValues } from '@/shared/schemas/email';
+import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import DocumentPickerModal from '@/features/meeting/components/DocumentPickerModal';
+import type { PickedDocument } from '@/features/meeting/components/DocumentPickerModal';
+
+/**
+ * When provided, replaces the free-text attachment chip input with a document
+ * picker sourced from the given meeting's document library. Quotation flows that
+ * use `showAttachments={false}` are unaffected — this prop is only consulted
+ * when `showAttachments` is also true.
+ */
+interface AttachmentPickerConfig {
+  meetingId: string;
+}
 
 interface EmailCompositionModalProps {
   isOpen: boolean;
@@ -13,6 +27,8 @@ interface EmailCompositionModalProps {
   showCc?: boolean;
   showBcc?: boolean;
   showAttachments?: boolean;
+  /** When set, replaces the free-text input with a document picker for the given meeting. */
+  attachmentPicker?: AttachmentPickerConfig;
   subjectLabel?: string;
   isPending?: boolean;
   onSubmit: (values: EmailFormValues) => void;
@@ -29,6 +45,7 @@ const EmailCompositionModal = ({
   showCc = false,
   showBcc = false,
   showAttachments = false,
+  attachmentPicker,
   subjectLabel = 'Subject',
   isPending = false,
   onSubmit,
@@ -58,6 +75,10 @@ const EmailCompositionModal = ({
   const [attachmentInput, setAttachmentInput] = useState('');
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
+  // Single source of truth for picker mode: docs the user has selected
+  const [pickedDocs, setPickedDocs] = useState<PickedDocument[]>([]);
+  const pickerDisclosure = useDisclosure();
+
   useEffect(() => {
     if (isOpen) {
       reset({
@@ -71,6 +92,7 @@ const EmailCompositionModal = ({
         ...defaultValues,
       });
       setAttachmentInput('');
+      setPickedDocs([]);
     }
   }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -96,6 +118,17 @@ const EmailCompositionModal = ({
       'attachments',
       attachments.filter((_: string, i: number) => i !== index),
     );
+  };
+
+  const handlePickerConfirm = (picked: PickedDocument[]) => {
+    setPickedDocs(picked);
+    setValue('attachments', picked.map(p => p.id));
+  };
+
+  const handleRemovePickedAttachment = (id: string) => {
+    const next = pickedDocs.filter(d => d.id !== id);
+    setPickedDocs(next);
+    setValue('attachments', next.map(d => d.id));
   };
 
   const handleClose = () => {
@@ -182,33 +215,73 @@ const EmailCompositionModal = ({
                 Attachments
               </label>
               <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-1.5 min-h-[38px] border border-gray-300 rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-blue-500">
-                  {attachments.map((chip: string, i: number) => (
-                    <span
-                      key={i}
-                      className="bg-blue-100 text-blue-800 rounded-full px-3 py-0.5 text-sm flex items-center gap-1"
+                {attachmentPicker ? (
+                  /* ── Picker mode: document IDs + locked auto-PDF chip ── */
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap gap-1.5 min-h-[38px]">
+                      {/* Locked chip — auto-attached invitation PDF (display-only, NOT in submitted attachments) */}
+                      <span className="bg-gray-100 text-gray-500 border border-gray-300 rounded-full px-3 py-0.5 text-sm flex items-center gap-1.5 cursor-default select-none">
+                        <Icon name="lock" style="solid" className="size-3 text-gray-400" />
+                        Meeting Invitation (PDF)
+                      </span>
+                      {/* User-picked document chips — sourced from pickedDocs (single source of truth) */}
+                      {pickedDocs.map((doc) => (
+                        <span
+                          key={doc.id}
+                          className="bg-blue-100 text-blue-800 rounded-full px-3 py-0.5 text-sm flex items-center gap-1"
+                        >
+                          <Icon name="file" style="regular" className="size-3" />
+                          {doc.name}
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePickedAttachment(doc.id)}
+                            className="ml-0.5 text-blue-600 hover:text-blue-800 leading-none"
+                            aria-label={`Remove ${doc.name}`}
+                          >
+                            &times;
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={pickerDisclosure.onOpen}
+                      className="self-start inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700 transition-colors"
                     >
-                      {chip}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveAttachment(i)}
-                        className="ml-0.5 text-blue-600 hover:text-blue-800 leading-none"
-                        aria-label={`Remove ${chip}`}
+                      <Icon name="paperclip" style="solid" className="size-3.5" />
+                      Add attachment
+                    </button>
+                  </div>
+                ) : (
+                  /* ── Free-text chip mode (original behavior) ── */
+                  <div className="flex flex-wrap items-center gap-1.5 min-h-[38px] border border-gray-300 rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-blue-500">
+                    {attachments.map((chip: string, i: number) => (
+                      <span
+                        key={i}
+                        className="bg-blue-100 text-blue-800 rounded-full px-3 py-0.5 text-sm flex items-center gap-1"
                       >
-                        &times;
-                      </button>
-                    </span>
-                  ))}
-                  <input
-                    ref={attachmentInputRef}
-                    type="text"
-                    value={attachmentInput}
-                    onChange={e => setAttachmentInput(e.target.value)}
-                    onKeyDown={handleAttachmentKeyDown}
-                    placeholder={attachments.length === 0 ? 'Type and press Enter to add' : ''}
-                    className="flex-1 min-w-[120px] text-sm outline-none bg-transparent py-0.5"
-                  />
-                </div>
+                        {chip}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(i)}
+                          className="ml-0.5 text-blue-600 hover:text-blue-800 leading-none"
+                          aria-label={`Remove ${chip}`}
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      ref={attachmentInputRef}
+                      type="text"
+                      value={attachmentInput}
+                      onChange={e => setAttachmentInput(e.target.value)}
+                      onKeyDown={handleAttachmentKeyDown}
+                      placeholder={attachments.length === 0 ? 'Type and press Enter to add' : ''}
+                      className="flex-1 min-w-[120px] text-sm outline-none bg-transparent py-0.5"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -251,6 +324,16 @@ const EmailCompositionModal = ({
           </Button>
         </div>
       </form>
+      {/* Document picker (only in picker mode) */}
+      {attachmentPicker && (
+        <DocumentPickerModal
+          isOpen={pickerDisclosure.isOpen}
+          onClose={pickerDisclosure.onClose}
+          meetingId={attachmentPicker.meetingId}
+          selectedIds={pickedDocs.map(d => d.id)}
+          onConfirm={handlePickerConfirm}
+        />
+      )}
     </Modal>
   );
 };

@@ -70,7 +70,8 @@
     "cancelMeeting": "取消会议",
     "confirmCutOff": "确认截止",
     "addMemberSubmit": "添加委员",
-    "cancelMemberAdd": "取消"
+    "cancelMemberAdd": "取消",
+    "documents": "文件"
   },
   "actions": {
     "cutOff": "截止",
@@ -292,5 +293,31 @@
   },
   "confirm": {
     "removeMember": "将 {{name}} 从本次会议中移除？"
+  },
+  "documents": {
+    "title": "会议文件",
+    "generate": "生成",
+    "invitation": "邀请函",
+    "minutes": "会议纪要",
+    "uploadNew": "上传新文件",
+    "loading": "正在加载文件...",
+    "empty": "暂无文件",
+    "colFileName": "文件名",
+    "colType": "类型",
+    "colSource": "来源",
+    "colActions": "操作",
+    "download": "下载",
+    "remove": "移除",
+    "generated": "文件已生成",
+    "generateFailed": "生成文件失败",
+    "uploaded": "文件已上传并关联",
+    "uploadFailed": "上传文件失败",
+    "downloadFailed": "下载文件失败",
+    "removed": "文件已移除",
+    "removeFailed": "移除文件失败",
+    "pickerTitle": "选择附件",
+    "pickerHint": "选择要附在邮件中的文件",
+    "pickerSelected": "已选 {{count}} 项",
+    "pickerConfirm": "确认"
   }
 }

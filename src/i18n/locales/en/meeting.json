@@ -70,7 +70,8 @@
     "cancelMeeting": "Cancel Meeting",
     "confirmCutOff": "Confirm Cut-Off",
     "addMemberSubmit": "Add Member",
-    "cancelMemberAdd": "Cancel"
+    "cancelMemberAdd": "Cancel",
+    "documents": "Documents"
   },
   "actions": {
     "cutOff": "Cut Off",
@@ -292,5 +293,31 @@
   },
   "confirm": {
     "removeMember": "Remove {{name}} from this meeting?"
+  },
+  "documents": {
+    "title": "Meeting Documents",
+    "generate": "Generate",
+    "invitation": "Invitation",
+    "minutes": "Minutes",
+    "uploadNew": "Upload new",
+    "loading": "Loading documents...",
+    "empty": "No documents yet",
+    "colFileName": "File Name",
+    "colType": "Type",
+    "colSource": "Source",
+    "colActions": "Actions",
+    "download": "Download",
+    "remove": "Remove",
+    "generated": "Document generated",
+    "generateFailed": "Failed to generate document",
+    "uploaded": "File uploaded and linked",
+    "uploadFailed": "Failed to upload file",
+    "downloadFailed": "Failed to download file",
+    "removed": "Document removed",
+    "removeFailed": "Failed to remove document",
+    "pickerTitle": "Select Attachments",
+    "pickerHint": "Select documents to attach to the email",
+    "pickerSelected": "{{count}} selected",
+    "pickerConfirm": "Confirm"
   }
 }

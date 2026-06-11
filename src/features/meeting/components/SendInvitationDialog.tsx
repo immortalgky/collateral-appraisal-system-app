@@ -58,7 +58,7 @@ const SendInvitationDialog = ({
     to: memberEmails ?? 'committee@lhbank.com',
     subject: `ขอเรียนเชิญคณะกรรมการฯ เข้าร่วมประชุมมติ คณะกรรมการกำหนดราคาประเมินหลักประกัน ครั้งที่ ${meetingNo} ในวัน ${date} เวลา ${time}`,
     content: `เรียน คณะกรรมการกำหนดราคาประเมินหลักประกัน\n\n    ขอเรียนเชิญคณะกรรมการฯ เข้าร่วมประชุมมติและกรรมการกำหนดราคาประเมินหลักประกัน\nครั้งที่ ${meetingNo} ในวัน ${date} เวลา ${time} ณ ห้องประชุม ${room}\nหรือหากมีการเปลี่ยนแปลงจะแจ้งอีกครั้งภายหลังค่ะ\n\nจึงเรียนมาเพื่อโปรดทราบ\n${currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : ''}`,
-    attachments: ['Agenda Meeting'],
+    attachments: [],
   };
 
   const handleSubmit = (values: EmailFormValues) => {
@@ -67,6 +67,8 @@ const SendInvitationDialog = ({
         id: meetingId,
         from: values.from,
         to: values.to,
+        cc: values.cc,
+        bcc: values.bcc,
         subject: values.subject,
         content: values.content,
         attachments: values.attachments,
@@ -98,7 +100,9 @@ const SendInvitationDialog = ({
       onClose={onClose}
       title={isResend ? t('dialogs.resendInvitation') : t('dialogs.newEmail')}
       showAttachments={true}
-      showCc={false}
+      attachmentPicker={{ meetingId }}
+      showCc={true}
+      showBcc={true}
       subjectLabel={t('fields.subjectLabel')}
       defaultValues={defaultValues}
       isPending={sendInvitation.isPending}
