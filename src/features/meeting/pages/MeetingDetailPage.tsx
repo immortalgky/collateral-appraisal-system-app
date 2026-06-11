@@ -21,6 +21,7 @@ import AddItemsDialog from '../components/AddItemsDialog';
 import AgendaForm from '../components/AgendaForm';
 import CancelMeetingDialog from '../components/CancelMeetingDialog';
 import CutOffReviewDialog from '../components/CutOffReviewDialog';
+import MeetingDocumentsDialog from '../components/MeetingDocumentsDialog';
 import MeetingFormDialog from '../components/MeetingFormDialog';
 import MeetingItemsGrouped from '../components/MeetingItemsGrouped';
 import MeetingMembersTable from '../components/MeetingMembersTable';
@@ -58,6 +59,7 @@ const MeetingDetailPage = () => {
   const resendInvitationDialog = useDisclosure();
   const cancelDialog = useDisclosure();
   const addItemsDialog = useDisclosure();
+  const documentsDialog = useDisclosure();
 
   if (isLoading || !meeting) {
     return (
@@ -132,6 +134,11 @@ const MeetingDetailPage = () => {
                 {t('buttons.resendInvitation')}
               </Button>
             )}
+
+            <Button variant="ghost" size="sm" type="button" onClick={documentsDialog.onOpen}>
+              <Icon name="folder-open" style="solid" className="size-3.5 mr-1.5" />
+              {t('buttons.documents')}
+            </Button>
 
             {CANCEL_ELIGIBLE.has(status) && (
               <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
@@ -335,6 +342,12 @@ const MeetingDetailPage = () => {
       <AddItemsDialog
         isOpen={addItemsDialog.isOpen}
         onClose={addItemsDialog.onClose}
+        meetingId={meeting.id}
+      />
+
+      <MeetingDocumentsDialog
+        isOpen={documentsDialog.isOpen}
+        onClose={documentsDialog.onClose}
         meetingId={meeting.id}
       />
     </div>

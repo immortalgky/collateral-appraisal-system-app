@@ -70,7 +70,8 @@
     "cancelMeeting": "ยกเลิกการประชุม",
     "confirmCutOff": "ยืนยันการปิดรับ",
     "addMemberSubmit": "เพิ่มกรรมการ",
-    "cancelMemberAdd": "ยกเลิก"
+    "cancelMemberAdd": "ยกเลิก",
+    "documents": "เอกสาร"
   },
   "actions": {
     "cutOff": "ปิดรับ",
@@ -292,5 +293,31 @@
   },
   "confirm": {
     "removeMember": "นำ {{name}} ออกจากการประชุมนี้?"
+  },
+  "documents": {
+    "title": "เอกสารการประชุม",
+    "generate": "สร้าง",
+    "invitation": "หนังสือเชิญ",
+    "minutes": "รายงานการประชุม",
+    "uploadNew": "อัปโหลดใหม่",
+    "loading": "กำลังโหลดเอกสาร...",
+    "empty": "ยังไม่มีเอกสาร",
+    "colFileName": "ชื่อไฟล์",
+    "colType": "ประเภท",
+    "colSource": "แหล่งที่มา",
+    "colActions": "การดำเนินการ",
+    "download": "ดาวน์โหลด",
+    "remove": "นำออก",
+    "generated": "สร้างเอกสารแล้ว",
+    "generateFailed": "ไม่สามารถสร้างเอกสารได้",
+    "uploaded": "อัปโหลดและเชื่อมโยงไฟล์แล้ว",
+    "uploadFailed": "ไม่สามารถอัปโหลดไฟล์ได้",
+    "downloadFailed": "ไม่สามารถดาวน์โหลดไฟล์ได้",
+    "removed": "นำเอกสารออกแล้ว",
+    "removeFailed": "ไม่สามารถนำเอกสารออกได้",
+    "pickerTitle": "เลือกไฟล์แนบ",
+    "pickerHint": "เลือกเอกสารเพื่อแนบในอีเมล",
+    "pickerSelected": "เลือก {{count}} รายการ",
+    "pickerConfirm": "ยืนยัน"
   }
 }

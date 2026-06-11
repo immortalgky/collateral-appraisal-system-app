@@ -223,6 +223,33 @@ export interface CancelMeetingRequest {
   reason: string;
 }
 
+// ==================== Meeting Documents ====================
+
+export type MeetingDocumentType = 'Invitation' | 'Minute' | 'Upload';
+export type MeetingDocumentSource = 'Generated' | 'Uploaded';
+
+export interface MeetingDocumentDto {
+  id: string;
+  documentId: string;
+  fileName: string;
+  documentType: MeetingDocumentType;
+  source: MeetingDocumentSource;
+  // API serializes with WhenWritingNull — these may be absent. Use nullish.
+  createdBy?: string | null;
+  createdAt?: string | null;
+  fileSizeBytes?: number | null;
+  mimeType?: string | null;
+}
+
+export interface GenerateMeetingDocumentRequest {
+  documentType: 'Invitation' | 'Minute';
+}
+
+export interface LinkMeetingDocumentRequest {
+  documentId: string;
+  fileName: string;
+}
+
 // ==================== Query params ====================
 
 export interface GetMeetingsParams {
