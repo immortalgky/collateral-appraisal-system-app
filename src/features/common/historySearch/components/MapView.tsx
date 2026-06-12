@@ -703,6 +703,22 @@ export function MapView({
     fitToAllPins();
   }, [fitToken, fitToAllPins]);
 
+  // Frame the appraising-collateral/MC pins once they load. On the 360 drawer these
+  // are fetched lazily and often arrive AFTER the one-time sizing fit (which ran with
+  // no pins yet). Without this re-fit the markers are added off-screen and the map
+  // stays on the default center until the drawer is closed and reopened (data cached).
+  // Guarded so it fires once and never fights a later search/fit or user pan.
+  const framedAppraisingRef = useRef(false);
+  useEffect(() => {
+    if (!mapsReady || !mapRef.current) return;
+    const hasAppraising =
+      (appraisingCollateralPins?.length ?? 0) > 0 || (appraisingMcPins?.length ?? 0) > 0;
+    if (hasAppraising && !framedAppraisingRef.current) {
+      framedAppraisingRef.current = true;
+      fitToAllPins();
+    }
+  }, [mapsReady, appraisingCollateralPins, appraisingMcPins, fitToAllPins]);
+
   // Recover from being initialised while the container had no size — e.g. inside a
   // drawer/modal that lays out or animates in after mount. Google Maps renders blank
   // until a resize is triggered, and any fit computed at 0-size is wrong. On the first

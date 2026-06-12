@@ -655,7 +655,7 @@ export const useSendQuotation = (quotationId: string) => {
   return useMutation({
     mutationFn: async (emailData: {
       from: string;
-      to: string;
+      to?: string;
       cc?: string;
       bcc?: string;
       subject: string;

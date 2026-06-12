@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 import { isTerminalStatus } from '@shared/config/navigationTypes';
 import { useMenuStore } from '@features/menuManagement/store';
@@ -93,7 +93,7 @@ export function useAppraisalContextSafe(): AppraisalContextValue | null {
  */
 export function useIsCiAppraisal(): boolean {
   const ctx = useContext(AppraisalContext);
-  return ctx?.appraisal?.appraisalType === 'ConstructionInspection';
+  return ctx?.appraisal?.appraisalType === 'Progressive';
 }
 
 /**
