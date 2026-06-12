@@ -71,7 +71,7 @@
     "customerName": "Customer Name",
     "propertyDetail": "Property Detail",
     "rm": "RM",
-    "maxAppraisalDuration": "Max Appraisal Duration (day)",
+    "maxAppraisalDuration": "Max Appraisal Duration (Days)",
     "email": "Email",
     "companyName": "Company Name",
     "activityName": "Activity Name",
@@ -105,7 +105,7 @@
   "fields": {
     "appraisalNumber": "Appraisal Number",
     "customerName": "Customer Name",
-    "maxAppraisalDuration": "Max Appraisal Duration (days)",
+    "maxAppraisalDuration": "Max Appraisal Duration (Days)",
     "estimatedMandays": "Estimated Mandays",
     "quotationRemark": "Quotation Remark",
     "participating": "Participating",
@@ -448,8 +448,8 @@
     "properties": "Properties",
     "requestedAt": "Requested At",
     "selectAllHint": "Selected {{page}} on this page. {{total}} appraisals match your filters — refine filters or paginate to select more.",
-    "maxDaysAll": "Set max days for all:",
-    "maxDays": "Max days:",
+    "maxDaysAll": "Set max appraisal duration (day) for all:",
+    "maxDays": "Max appraisal duration (day):",
     "maxDaysPlaceholder": "e.g. 7",
     "docsCount": "{{n}} docs"
   },

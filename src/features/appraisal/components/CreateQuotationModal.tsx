@@ -271,7 +271,7 @@ const CreateQuotationModal = ({
         {/* Max Appraisal Duration — admin-set cap, companies must not exceed this on Submit */}
         <div>
           <NumberInput
-            label="Max Duration (days)"
+            label="Max Appraisal Duration (Day)"
             helperText="Maximum duration you allow the appraiser to complete this appraisal. Companies' estimated mandays must not exceed this value."
             placeholder="e.g. 7"
             value={maxAppraisalDays}
