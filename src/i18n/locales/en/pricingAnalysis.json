@@ -436,6 +436,7 @@
     "dropOrBrowse": "Drop an Excel file here or",
     "browseLink": "browse",
     "uploadHistory": "Upload History",
+    "noCol": "No.",
     "fileCol": "File",
     "uploadedCol": "Uploaded",
     "rowsCol": "Rows",

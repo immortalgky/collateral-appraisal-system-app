@@ -211,6 +211,7 @@ export function UnitDetailsTab({
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.noCol')}</th>
                 <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.fileCol')}</th>
                 <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.uploadedCol')}</th>
                 <th className="text-right px-4 py-2 font-medium text-gray-500">{t('upload.rowsCol')}</th>
@@ -219,8 +220,9 @@ export function UnitDetailsTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {uploads.map(u => (
+              {uploads.map((u, i) => (
                 <tr key={u.id} className={u.isActive ? 'bg-green-50' : ''}>
+                  <td className="px-4 py-2 tabular-nums text-gray-500">{i + 1}</td>
                   <td className="px-4 py-2 font-medium text-gray-700">
                     <div className="flex items-center gap-1.5">
                       <Icon
