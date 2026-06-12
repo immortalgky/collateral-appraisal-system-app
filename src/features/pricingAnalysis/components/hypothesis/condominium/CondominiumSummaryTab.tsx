@@ -75,7 +75,7 @@ export function CondominiumSummaryTab({
             </div>
           </FieldRow>
 
-          <FieldRow label="">
+          <FieldRow label="Area (Square Meter)">
             <div className="ml-auto flex items-center gap-2">
               <span className="min-w-[110px] text-right tabular-nums text-xs font-medium text-gray-800">
                 {fmt(areaTitleDeedSqM)}
