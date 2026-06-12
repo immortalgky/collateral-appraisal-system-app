@@ -211,6 +211,7 @@ export function UnitDetailsTab({
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.noCol')}</th>
                 <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.fileCol')}</th>
                 <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.uploadedCol')}</th>
                 <th className="text-right px-4 py-2 font-medium text-gray-500">{t('upload.rowsCol')}</th>
@@ -219,8 +220,9 @@ export function UnitDetailsTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {uploads.map(u => (
+              {uploads.map((u, i) => (
                 <tr key={u.id} className={u.isActive ? 'bg-green-50' : ''}>
+                  <td className="px-4 py-2 tabular-nums text-gray-500">{i + 1}</td>
                   <td className="px-4 py-2 font-medium text-gray-700">
                     <div className="flex items-center gap-1.5">
                       <Icon
@@ -341,11 +343,17 @@ export function UnitDetailsTab({
             <table className="w-full text-xs min-w-[600px]">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">{t('upload.colModel')}</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colUnits')}</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colAvgArea')}</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colTotalArea')}</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">{t('upload.colTotalRevenue')}</th>
+                  <th className="text-left px-3 py-2 font-medium text-gray-500">Model</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">Units</th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">
+                    Avg Area (Sq.Wa)
+                  </th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">
+                    Total Area (Sq.Wa)
+                  </th>
+                  <th className="text-right px-3 py-2 font-medium text-gray-500">
+                    Total Revenue (Baht)
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -422,10 +430,4 @@ function AggCard({
       }`}
     >
       <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className={`text-sm font-semibold ${highlight ? 'text-primary' : 'text-gray-900'}`}>
-        {value}
-        {unit && <span className="text-[10px] text-gray-400 font-normal ml-1">{unit}</span>}
-      </p>
-    </div>
-  );
-}
+      <p className={`text-sm font-semibold ${

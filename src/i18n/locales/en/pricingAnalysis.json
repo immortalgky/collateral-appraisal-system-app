@@ -436,6 +436,7 @@
     "dropOrBrowse": "Drop an Excel file here or",
     "browseLink": "browse",
     "uploadHistory": "Upload History",
+    "noCol": "No.",
     "fileCol": "File",
     "uploadedCol": "Uploaded",
     "rowsCol": "Rows",
@@ -444,11 +445,6 @@
     "statusHistoric": "Historic",
     "unitListing": "Unit Listing ({{n}} units)",
     "modelAnalysis": "Model Analysis",
-    "colModel": "Model Name",
-    "colUnits": "Units",
-    "colAvgArea": "Avg Area (Sq.Wa)",
-    "colTotalArea": "Total Area (Sq.Wa)",
-    "colTotalRevenue": "Total (Project Selling Price)",
     "parseErrors": "Excel Parse Errors — fix these rows and re-upload",
     "parseErrorRow": "Row",
     "parseErrorField": "Field",
@@ -457,7 +453,7 @@
     "aggTotalLandAreaFromTitle": "Total Land Area from Title",
     "aggTotalSellingArea": "Total Selling Area",
     "aggTotalUnits": "Total Units",
-    "aggTotalRevenue": "Total (Project Selling Price)",
+    "aggTotalRevenue": "Total Revenue",
     "aggIndoorSalesArea": "Indoor Sales Area",
     "aggTotalSellingPrice": "Total Selling Price"
   },
@@ -592,7 +588,4 @@
       "discountRateFactor": "Discount Factor = 1 / (1 + Discount Rate / 100) ^ (Sales Duration / 12). Converts the future remaining value back to a present-day value.",
       "finalRemainingValue": "Final Remaining Value = Total Remaining Value × Discount Rate Factor.",
       "totalAssetValueRounded": "Final remaining value rounded to the nearest 10,000 Baht.",
-      "totalAssetValuePerSqM": "Total asset value divided by indoor sales area (Sq.M), rounded to the nearest 100 Baht."
-    }
-  }
-}
+      "totalAssetValuePerSqM": "Total asset value divided by indoor sales area (Sq.M), rounded to the nearest 100 Ba
