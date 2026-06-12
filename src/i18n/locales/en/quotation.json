@@ -15,7 +15,7 @@
     "Sent": "Sent — Awaiting Companies",
     "UnderAdminReview": "Under Admin Review",
     "PendingRmSelection": "Pending RM Selection",
-    "WinnerTentative": "Winner Tentative",
+    "WinnerTentative": "Tentative Winner",
     "Negotiating": "Negotiating",
     "Finalized": "Completed",
     "Cancelled": "Cancelled",
@@ -406,6 +406,7 @@
   },
   "invitedCompanies": {
     "title": "Invited Companies",
+    "tableTitle": "External Appraisal Company Listing",
     "totalLabel": "{{count}} total",
     "pending": "Pending"
   },
