@@ -2,23 +2,35 @@ import { useEffect, useRef, useState } from 'react';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
 import ReportActionButtons from '../components/ReportActionButtons';
+import { useReportDefinitions } from '../hooks/useReportDefinitions';
 
-const REPORT_TYPES = [
-  { value: 'appointment-quotation-request', label: 'Appointment Quotation Request' },
-  // Unified entry: auto-picks the per-property summary forms and merges them into one PDF
-  // (block-only / construction-only / else land-building + condo + machine).
-  { value: 'appraisal-summary', label: 'Appraisal Summary' },
-  { value: 'external-appraisal-report', label: 'External Appraisal Report' },
-  { value: 'internal-report-construction', label: 'Internal Appraisal Report – Construction' },
-  { value: 'internal-report-block', label: 'Internal Appraisal Report – Block' },
-  { value: 'meeting-invitation', label: 'Meeting Invitation (entity = MeetingId)' },
-  { value: 'meeting-minute', label: 'Meeting Minute (entity = MeetingId)' },
-] as const;
+// The backend resolves the entered number to an entity id: Meeting-category reports use the
+// MeetingNo (e.g. "12/2567"); every other report uses the AppraisalNumber (e.g. "69000042").
 
 const ReportTestPage = () => {
+  // Drive the picker from the DB-backed report registry so it never drifts from the backend.
+  const { definitions, isLoading: isLoadingDefs } = useReportDefinitions();
+
   const [entityId, setEntityId] = useState('');
-  const [reportTypeKey, setReportTypeKey] = useState<string>(REPORT_TYPES[0].value);
+  const [reportTypeKey, setReportTypeKey] = useState<string>('');
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
+
+  // Selection defaults to the first definition until the user picks one — derived, not stored,
+  // so there's no effect round-trip or first-render '' mismatch.
+  const effectiveKey = reportTypeKey || definitions[0]?.reportTypeKey || '';
+  const selectedDef = definitions.find(d => d.reportTypeKey === effectiveKey);
+
+  // Meeting-mode comes from the report's Category (authoritative), matching the backend resolver.
+  const meetingMode = selectedDef?.category === 'Meeting';
+  const idLabel = meetingMode ? 'Meeting No.' : 'Appraisal No.';
+  const idPlaceholder = meetingMode ? 'e.g. 12/2567' : 'e.g. 69000042';
+
+  // Switching report type clears the field — a number entered for one category (e.g. a MeetingNo
+  // "12/2567") is meaningless for another and would just 404.
+  const handleReportTypeChange = (key: string) => {
+    setReportTypeKey(key);
+    setEntityId('');
+  };
 
   // Keep a ref to the current object URL so the cleanup effect always revokes
   // the most-recent one, even if state has already changed.
@@ -58,26 +70,27 @@ const ReportTestPage = () => {
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Report Type</label>
             <select
-              value={reportTypeKey}
-              onChange={e => setReportTypeKey(e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              value={effectiveKey}
+              onChange={e => handleReportTypeChange(e.target.value)}
+              disabled={isLoadingDefs || definitions.length === 0}
+              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-400"
             >
-              {REPORT_TYPES.map(rt => (
-                <option key={rt.value} value={rt.value}>
-                  {rt.label}
+              {definitions.map(rt => (
+                <option key={rt.reportTypeKey} value={rt.reportTypeKey}>
+                  {rt.displayNameEn || rt.reportTypeKey}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Appraisal ID */}
+          {/* Appraisal / Meeting number */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Appraisal ID</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">{idLabel}</label>
             <input
               type="text"
               value={entityId}
               onChange={e => setEntityId(e.target.value)}
-              placeholder="e.g. 01969f4a-0000-7000-0000-000000000001"
+              placeholder={idPlaceholder}
               className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
@@ -86,9 +99,9 @@ const ReportTestPage = () => {
         {/* Mode-aware actions — reads generationMode from /reports/definitions and routes
             Sync → open inline, Async → enqueue a background job (realtime + polling + bell). */}
         <div className="flex items-center gap-2 mt-4">
-          {entityId.trim() ? (
+          {entityId.trim() && effectiveKey ? (
             <ReportActionButtons
-              reportTypeKey={reportTypeKey}
+              reportTypeKey={effectiveKey}
               entityId={entityId.trim()}
               onSyncBlobReady={(_blob, url) => {
                 if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
@@ -97,7 +110,7 @@ const ReportTestPage = () => {
               }}
             />
           ) : (
-            <p className="text-xs text-gray-400">Enter an Appraisal ID to view or generate.</p>
+            <p className="text-xs text-gray-400">Enter {meetingMode ? 'a Meeting No.' : 'an Appraisal No.'} to view or generate.</p>
           )}
 
           {objectUrl && (
