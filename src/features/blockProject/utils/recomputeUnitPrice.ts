@@ -65,7 +65,10 @@ export const recomputeUnitPrice = (
  */
 const recomputeCondo = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPrice => {
   const usableArea = num(unit.usableArea);
-  const standardPriceTotal = num(unit.standardPrice) * usableArea;
+  const standardPriceTotal =
+    unit.standardPriceUnit === 'BahtPerUnit'
+      ? num(unit.standardPrice) // Baht — already a total, no multiplication
+      : num(unit.standardPrice) * usableArea; // Baht/sq.m (default) — multiply by area
 
   // adjustPriceLocation is stored as the raw flag-adjustment total. The
   // configured LocationMethod is only applied when folding it into the appraisal
