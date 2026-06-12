@@ -9,7 +9,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDeleteSupportingData, useGetSupportingDataMaintenanceList } from '../api';
 import type {
   GetSupportingDataMaintenanceListParams,
-  GetSupportingDataMaintenanceListResponse,
   SupportingDataDateType,
   SupportingDataMaintenance,
   SupportingDataParams,
@@ -120,7 +119,11 @@ export function SupportingDataMaintenanceListPage() {
         sortField: 'status',
         tdClassName: 'px-4 py-3',
         render: item => (
-          <Badge type="status" value={item.status ? getStatusLabel(item.status) : '-'} size="sm" />
+          <Badge
+            type="supportingDataStatus"
+            value={item.status ? getStatusLabel(item.status) : '-'}
+            size="sm"
+          />
         ),
       },
     ],

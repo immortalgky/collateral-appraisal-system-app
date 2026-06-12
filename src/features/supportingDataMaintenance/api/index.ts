@@ -137,6 +137,30 @@ export const useDeleteSupportingDetailData = () => {
   });
 };
 
+export const useDeleteSupportingDetailsByBatchData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      supportingId: string;
+      supportingDetailIds: string[];
+    }): Promise<void> => {
+      await axios.delete(`/supporting-data/${params.supportingId}/details/batch`, {
+        data: { SupportingDetailIds: params.supportingDetailIds },
+      });
+    },
+    onSuccess: (_data, variables) => {
+      // Refresh the detail list and parent record — no single dataDetail to invalidate
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.dataLists(variables.supportingId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+      });
+    },
+  });
+};
+
 export const useDeleteSupportingData = () => {
   const queryClient = useQueryClient();
 
@@ -168,8 +192,16 @@ export const useSubmitSupportingData = () => {
       });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      // Invalidate the list so status badge updates
       queryClient.invalidateQueries({ queryKey: supportingDataMaintenanceKeys.lists() });
+      // Invalidate the detail cache so hasAuthorityToDecision / hasAuthorityToEdit
+      // reflect the new status immediately when navigating back to this record
+      if (variables.supportingId) {
+        queryClient.invalidateQueries({
+          queryKey: supportingDataMaintenanceKeys.detail(variables.supportingId),
+        });
+      }
     },
   });
 };
