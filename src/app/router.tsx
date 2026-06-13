@@ -95,6 +95,10 @@ import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
 import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
 import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
 import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
+import WebhookSubscriptionListPage from '@features/webhookAdmin/pages/WebhookSubscriptionListPage';
+import OAuthClientListPage from '@features/oauthAdmin/pages/OAuthClientListPage';
+import OAuthScopeListPage from '@features/oauthAdmin/pages/OAuthScopeListPage';
+import OAuthTokenListPage from '@features/oauthAdmin/pages/OAuthTokenListPage';
 import LogViewerPage from '@features/common/logViewer/pages/LogViewerPage';
 import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
 import ReappraisalListPage from '@/features/reappraisal/pages/ReappraisalListPage';
@@ -362,6 +366,37 @@ export const router = createBrowserRouter([
           { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
           { path: 'evaluation-config', element: <EvaluationConfigPage /> },
           { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
+          {
+            path: 'webhook-subscriptions',
+            element: (
+              <RoleProtectedRoute
+                allowedRoles={[]}
+                requiredPermission="WEBHOOK_SUBSCRIPTIONS_MANAGE"
+              />
+            ),
+            children: [{ index: true, element: <WebhookSubscriptionListPage /> }],
+          },
+          {
+            path: 'oauth-clients',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_CLIENTS_MANAGE" />
+            ),
+            children: [{ index: true, element: <OAuthClientListPage /> }],
+          },
+          {
+            path: 'oauth-scopes',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_SCOPES_MANAGE" />
+            ),
+            children: [{ index: true, element: <OAuthScopeListPage /> }],
+          },
+          {
+            path: 'oauth-tokens',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_TOKENS_REVOKE" />
+            ),
+            children: [{ index: true, element: <OAuthTokenListPage /> }],
+          },
           // Menu management — gated by MENU_MANAGE permission
           {
             path: 'menus',
