@@ -1,0 +1,183 @@
+{
+  "clients": {
+    "page": {
+      "title": "OAuth Clients",
+      "subtitle": "Register and configure OAuth / OpenID Connect client applications"
+    },
+    "columns": {
+      "displayName": "Name",
+      "clientId": "Client ID",
+      "type": "Type",
+      "grantTypes": "Grant Types",
+      "scopes": "Scopes",
+      "actions": "Actions"
+    },
+    "type": {
+      "public": "Public",
+      "confidential": "Confidential"
+    },
+    "badges": {
+      "system": "System"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by name or client ID...",
+      "clear": "Clear"
+    },
+    "actions": {
+      "add": "Register Client",
+      "edit": "Edit",
+      "rotateSecret": "Rotate secret",
+      "delete": "Delete"
+    },
+    "form": {
+      "createTitle": "Register OAuth Client",
+      "editTitle": "Edit OAuth Client",
+      "displayName": "Display Name",
+      "clientId": "Client ID",
+      "clientIdHint": "Leave blank to generate automatically.",
+      "clientType": "Client Type",
+      "clientTypePublicHint": "Public clients (e.g. SPA) use PKCE and have no secret.",
+      "clientTypeConfidentialHint": "Confidential clients receive a generated secret.",
+      "grantTypes": "Grant Types",
+      "scopes": "Scopes",
+      "scopesHint": "Space- or comma-separated scope names (e.g. profile email appraisal.read).",
+      "redirectUris": "Redirect URIs",
+      "redirectUrisHint": "One per line. Required for the authorization_code flow.",
+      "postLogoutRedirectUris": "Post-Logout Redirect URIs",
+      "cancel": "Cancel",
+      "create": "Register",
+      "save": "Save"
+    },
+    "grant": {
+      "authorization_code": "Authorization Code",
+      "client_credentials": "Client Credentials",
+      "password": "Password",
+      "refresh_token": "Refresh Token"
+    },
+    "secret": {
+      "title": "Client Secret",
+      "createdIntro": "The client was registered. Copy the secret now — it will not be shown again.",
+      "rotatedIntro": "A new secret was generated. Copy it now — it will not be shown again.",
+      "clientId": "Client ID",
+      "secret": "Client Secret",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "done": "Done",
+      "rotateConfirmTitle": "Rotate Client Secret",
+      "rotateConfirmMessage": "The current secret will stop working immediately. Any integration using it must be updated. Continue?",
+      "rotateConfirmButton": "Rotate"
+    },
+    "delete": {
+      "confirmTitle": "Delete OAuth Client",
+      "confirmMessage": "This client and its authorizations will be removed. Applications using it will no longer be able to authenticate. Continue?",
+      "confirmButton": "Delete",
+      "cancelButton": "Cancel"
+    },
+    "toasts": {
+      "created": "OAuth client registered",
+      "updated": "OAuth client updated",
+      "deleted": "OAuth client deleted",
+      "createFailed": "Failed to register client",
+      "updateFailed": "Failed to update client",
+      "deleteFailed": "Failed to delete client",
+      "rotateFailed": "Failed to rotate secret"
+    },
+    "emptyState": "No OAuth clients found",
+    "loadFailed": "Failed to load OAuth clients"
+  },
+  "scopes": {
+    "page": {
+      "title": "OAuth Scopes",
+      "subtitle": "Define the API resources that clients can request"
+    },
+    "columns": {
+      "name": "Name",
+      "displayName": "Display Name",
+      "description": "Description",
+      "resources": "Resources",
+      "actions": "Actions"
+    },
+    "filters": {
+      "searchPlaceholder": "Search scopes...",
+      "clear": "Clear"
+    },
+    "actions": {
+      "add": "Add Scope",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "form": {
+      "createTitle": "Add OAuth Scope",
+      "editTitle": "Edit OAuth Scope",
+      "name": "Name",
+      "nameHint": "Unique scope identifier (e.g. appraisal.read). Cannot be changed after creation.",
+      "displayName": "Display Name",
+      "description": "Description",
+      "resources": "Resources",
+      "resourcesHint": "Space- or comma-separated API resource identifiers.",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save"
+    },
+    "delete": {
+      "confirmTitle": "Delete Scope",
+      "confirmMessage": "This scope will be permanently removed. Clients requesting it will be rejected. Continue?",
+      "confirmButton": "Delete",
+      "cancelButton": "Cancel"
+    },
+    "toasts": {
+      "created": "Scope created",
+      "updated": "Scope updated",
+      "deleted": "Scope deleted",
+      "createFailed": "Failed to create scope",
+      "updateFailed": "Failed to update scope",
+      "deleteFailed": "Failed to delete scope"
+    },
+    "emptyState": "No scopes found",
+    "loadFailed": "Failed to load scopes"
+  },
+  "tokens": {
+    "page": {
+      "title": "OAuth Authorizations & Tokens",
+      "subtitle": "View and revoke active grants and tokens"
+    },
+    "tabs": {
+      "authorizations": "Authorizations",
+      "tokens": "Tokens"
+    },
+    "filters": {
+      "clientId": "Client ID",
+      "clientIdPlaceholder": "Filter by client ID...",
+      "subject": "Subject",
+      "subjectPlaceholder": "Filter by subject...",
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "clear": "Clear filters"
+    },
+    "columns": {
+      "subject": "Subject",
+      "clientId": "Client",
+      "status": "Status",
+      "type": "Type",
+      "scopes": "Scopes",
+      "created": "Created",
+      "expires": "Expires",
+      "actions": "Actions"
+    },
+    "actions": {
+      "revoke": "Revoke"
+    },
+    "revoke": {
+      "confirmTitle": "Revoke",
+      "confirmMessageAuthorization": "Revoking this authorization will also revoke its tokens. Continue?",
+      "confirmMessageToken": "This token will be revoked immediately. Continue?",
+      "confirmButton": "Revoke",
+      "cancelButton": "Cancel",
+      "successToast": "Revoked",
+      "errorToast": "Failed to revoke"
+    },
+    "emptyAuthorizations": "No authorizations found",
+    "emptyTokens": "No tokens found",
+    "loadFailed": "Failed to load"
+  }
+}
