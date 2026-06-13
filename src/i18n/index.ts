@@ -1,6 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
+import resourcesToBackend from 'i18next-resources-to-backend';
 import { useLocaleStore } from '@shared/store';
 
 import enCommon from './locales/en/common.json';
@@ -34,64 +35,6 @@ import enEvaluationConfig from './locales/en/evaluationConfig.json';
 import enBlockProject from './locales/en/blockProject.json';
 import enWorkflowBuilder from './locales/en/workflowBuilder.json';
 import enBlockReappraisal from './locales/en/blockReappraisal.json';
-
-import thCommon from './locales/th/common.json';
-import thNav from './locales/th/nav.json';
-import thWebhookAdmin from './locales/th/webhookAdmin.json';
-import thInvoice from './locales/th/invoice.json';
-import thServiceQualityEvaluation from './locales/th/serviceQualityEvaluation.json';
-import thMonitoring from './locales/th/monitoring.json';
-import thHistorySearch from './locales/th/historySearch.json';
-import thBlockUnitMaintenance from './locales/th/blockUnitMaintenance.json';
-import thLogAdmin from './locales/th/logAdmin.json';
-import thReappraisal from './locales/th/reappraisal.json';
-import thTaskMonitor from './locales/th/taskMonitor.json';
-import thCommittee from './locales/th/committee.json';
-import thNotification from './locales/th/notification.json';
-import thMeeting from './locales/th/meeting.json';
-import thTemplateManagement from './locales/th/templateManagement.json';
-import thRequest from './locales/th/request.json';
-import thQuotation from './locales/th/quotation.json';
-import thDashboard from './locales/th/dashboard.json';
-import thAuth from './locales/th/auth.json';
-import thDocumentFollowup from './locales/th/documentFollowup.json';
-import thMenuManagement from './locales/th/menuManagement.json';
-import thSupportingDataMaintenance from './locales/th/supportingDataMaintenance.json';
-import thUserManagement from './locales/th/userManagement.json';
-import thPricingAnalysis from './locales/th/pricingAnalysis.json';
-import thAppraisal from './locales/th/appraisal.json';
-import thFeeAppointmentApproval from './locales/th/feeAppointmentApproval.json';
-import thFeeApprovalConfig from './locales/th/feeApprovalConfig.json';
-import thEvaluationConfig from './locales/th/evaluationConfig.json';
-import thBlockProject from './locales/th/blockProject.json';
-import thWorkflowBuilder from './locales/th/workflowBuilder.json';
-import thBlockReappraisal from './locales/th/blockReappraisal.json';
-
-import zhCommon from './locales/zh/common.json';
-import zhNav from './locales/zh/nav.json';
-import zhWebhookAdmin from './locales/zh/webhookAdmin.json';
-import zhInvoice from './locales/zh/invoice.json';
-import zhServiceQualityEvaluation from './locales/zh/serviceQualityEvaluation.json';
-import zhLogAdmin from './locales/zh/logAdmin.json';
-import zhReappraisal from './locales/zh/reappraisal.json';
-import zhTaskMonitor from './locales/zh/taskMonitor.json';
-import zhCommittee from './locales/zh/committee.json';
-import zhNotification from './locales/zh/notification.json';
-import zhMeeting from './locales/zh/meeting.json';
-import zhTemplateManagement from './locales/zh/templateManagement.json';
-import zhRequest from './locales/zh/request.json';
-import zhQuotation from './locales/zh/quotation.json';
-import zhDashboard from './locales/zh/dashboard.json';
-import zhAuth from './locales/zh/auth.json';
-import zhDocumentFollowup from './locales/zh/documentFollowup.json';
-import zhMenuManagement from './locales/zh/menuManagement.json';
-import zhSupportingDataMaintenance from './locales/zh/supportingDataMaintenance.json';
-import zhUserManagement from './locales/zh/userManagement.json';
-import zhPricingAnalysis from './locales/zh/pricingAnalysis.json';
-import zhAppraisal from './locales/zh/appraisal.json';
-import zhBlockProject from './locales/zh/blockProject.json';
-import zhWorkflowBuilder from './locales/zh/workflowBuilder.json';
-import zhBlockReappraisal from './locales/zh/blockReappraisal.json';
 
 export const defaultNS = 'common' as const;
 
@@ -129,75 +72,28 @@ export const resources = {
     workflowBuilder: enWorkflowBuilder,
     blockReappraisal: enBlockReappraisal,
   },
-  th: {
-    common: thCommon,
-    nav: thNav,
-    webhookAdmin: thWebhookAdmin,
-    invoice: thInvoice,
-    serviceQualityEvaluation: thServiceQualityEvaluation,
-    monitoring: thMonitoring,
-    historySearch: thHistorySearch,
-    blockUnitMaintenance: thBlockUnitMaintenance,
-    logAdmin: thLogAdmin,
-    reappraisal: thReappraisal,
-    taskMonitor: thTaskMonitor,
-    committee: thCommittee,
-    notification: thNotification,
-    meeting: thMeeting,
-    templateManagement: thTemplateManagement,
-    request: thRequest,
-    quotation: thQuotation,
-    dashboard: thDashboard,
-    auth: thAuth,
-    documentFollowup: thDocumentFollowup,
-    menuManagement: thMenuManagement,
-    supportingDataMaintenance: thSupportingDataMaintenance,
-    userManagement: thUserManagement,
-    pricingAnalysis: thPricingAnalysis,
-    appraisal: thAppraisal,
-    feeAppointmentApproval: thFeeAppointmentApproval,
-    feeApprovalConfig: thFeeApprovalConfig,
-    evaluationConfig: thEvaluationConfig,
-    blockProject: thBlockProject,
-    workflowBuilder: thWorkflowBuilder,
-    blockReappraisal: thBlockReappraisal,
-  },
-  zh: {
-    common: zhCommon,
-    nav: zhNav,
-    webhookAdmin: zhWebhookAdmin,
-    invoice: zhInvoice,
-    serviceQualityEvaluation: zhServiceQualityEvaluation,
-    // monitoring + historySearch + blockUnitMaintenance fall back to English for zh
-    // users until real Chinese translations are provided.
-    monitoring: enMonitoring,
-    historySearch: enHistorySearch,
-    blockUnitMaintenance: enBlockUnitMaintenance,
-    logAdmin: zhLogAdmin,
-    reappraisal: zhReappraisal,
-    taskMonitor: zhTaskMonitor,
-    committee: zhCommittee,
-    notification: zhNotification,
-    meeting: zhMeeting,
-    templateManagement: zhTemplateManagement,
-    request: zhRequest,
-    quotation: zhQuotation,
-    dashboard: zhDashboard,
-    auth: zhAuth,
-    documentFollowup: zhDocumentFollowup,
-    menuManagement: zhMenuManagement,
-    supportingDataMaintenance: zhSupportingDataMaintenance,
-    userManagement: zhUserManagement,
-    pricingAnalysis: zhPricingAnalysis,
-    appraisal: zhAppraisal,
-    feeAppointmentApproval: enFeeAppointmentApproval,
-    feeApprovalConfig: enFeeApprovalConfig,
-    evaluationConfig: enEvaluationConfig,
-    blockProject: zhBlockProject,
-    workflowBuilder: zhWorkflowBuilder,
-    blockReappraisal: zhBlockReappraisal,
-  },
 } as const;
+
+/**
+ * English is bundled inline (above) as the fallback language. Thai and Chinese
+ * are NOT bundled — they are fetched on demand, one chunk per namespace.
+ *
+ * `import.meta.glob` builds a map of lazy `() => import()` loaders for every
+ * non-English locale file (en is excluded because it's already inline — that
+ * also avoids Rollup "dynamic import will not move module" warnings for the en
+ * JSON). A namespace with no file for the requested language has no loader, so
+ * we reject explicitly and let i18next fall back to `en` (fallbackLng) — a clean
+ * controlled fallback rather than a thrown "unknown variable dynamic import".
+ */
+const localeLoaders = import.meta.glob<{ default: Record<string, unknown> }>([
+  './locales/*/*.json',
+  '!./locales/en/*.json',
+]);
+
+const lazyBackend = resourcesToBackend((language: string, namespace: string) =>
+  localeLoaders[`./locales/${language}/${namespace}.json`]?.() ??
+  Promise.reject(new Error(`No bundled locale for ${language}/${namespace}`))
+);
 
 const resolveParameterLang = (lng: string): string => {
   if (lng?.startsWith('th')) return 'th';
@@ -213,10 +109,15 @@ const syncLocale = (lng: string) => {
 i18n.on('languageChanged', syncLocale);
 
 i18n
+  .use(lazyBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
+    // `resources` only bundles `en`; th/zh come from lazyBackend, so tell
+    // i18next that the bundled set is partial and it should still hit the
+    // backend for languages/namespaces not present inline.
+    partialBundledLanguages: true,
     fallbackLng: 'en',
     defaultNS,
     interpolation: {
@@ -228,6 +129,16 @@ i18n
       caches: ['localStorage'],
     },
   });
+
+// These namespaces have no zh translation file and no feature-level i18n.ts that
+// registers them, so reuse English explicitly for zh — mirrors the prior inline
+// behavior and avoids a failing dynamic import (404 + console error) the first
+// time a zh user opens these pages. (Other zh-less namespaces such as
+// feeAppointmentApproval/feeApprovalConfig/evaluationConfig are already handled
+// by their feature i18n.ts via addResourceBundle.)
+i18n.addResourceBundle('zh', 'monitoring', enMonitoring, true, false);
+i18n.addResourceBundle('zh', 'historySearch', enHistorySearch, true, false);
+i18n.addResourceBundle('zh', 'blockUnitMaintenance', enBlockUnitMaintenance, true, false);
 
 // Also sync immediately in case init completed synchronously before the listener was ready
 syncLocale(i18n.language);

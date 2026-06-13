@@ -1,118 +1,229 @@
 import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
-import HomePage from '../features/dashboard/pages/HomePage';
-import CalendarPage from '../features/dashboard/pages/CalendarPage';
+import { lazy } from 'react';
+// Eager — structural shell, route guards, read-only wrappers, and helpers that
+// must be available immediately (no spinner on the critical path).
 import LoginPage from '@features/auth/pages/LoginPage';
 import CallbackPage from '@features/auth/pages/CallbackPage.tsx';
-import RequestListingPage from '@/features/request/pages/RequestListingPage';
-import RequestPage from '@/features/request/pages/RequestPage';
 import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
-import PropertyInformationPage from '@/features/appraisal/pages/PropertyInformationPage';
-import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistPage';
-import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
-import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
-import TaskListingPage from '@/features/task/pages/TaskListingPage';
-import ActivityTaskListPage from '@/features/task/pages/ActivityTaskListPage';
-import NotificationPage from '@/features/notification/pages/NotificationPage';
-import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
-import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
-import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
-import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
-import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
-import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
-import CreateLawAndRegulationPage from '@/features/appraisal/pages/CreateLawAndRegulationPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 import { ProtectedRoute } from '@features/auth/components';
-import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
-import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
-import PricingAnalysisPage from '@features/pricingAnalysis/pages/PricingAnalysisPage';
-import MarketComparableFactorListPage from '@features/templateManagement/pages/MarketComparableFactorListPage';
-import MarketComparableTemplateListPage from '@features/templateManagement/pages/MarketComparableTemplateListPage';
-import MarketComparableTemplateDetailPage from '@features/templateManagement/pages/MarketComparableTemplateDetailPage';
-import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
-import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
-import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
-import ActivityTrackingPage from '@/features/appraisal/pages/ActivityTrackingPage';
-import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
-import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
-import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
-import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
-import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeaseAgreementCondoPage';
-import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
-import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
-import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
 import {
   AppraisalReadOnlyWrapper,
   ReadOnlyPageWrapper,
 } from '@shared/contexts/PageReadOnlyContext';
-import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
-import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
-import FeeAppointmentApprovalTaskPage from '@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage';
-import FeeApprovalTierPage from '@/features/feeApprovalConfig/pages/FeeApprovalTierPage';
-import AppointmentApprovalRulePage from '@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage';
-import PasswordPolicyConfigPage from '@/features/userManagement/admin/pages/PasswordPolicyConfigPage';
-import EvaluationConfigPage from '@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage';
-import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
-import MigrateInstancesPage from '@features/workflowBuilder/pages/MigrateInstancesPage';
-import PermissionListPage from '@features/userManagement/pages/PermissionListPage';
-import RoleListPage from '@features/userManagement/pages/RoleListPage';
-import GroupListPage from '@features/userManagement/pages/GroupListPage';
-import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
-import TeamListPage from '@features/userManagement/pages/TeamListPage';
-import AuditLogPage from '@features/userManagement/pages/AuditLogPage';
-import CompanyListPage from '@features/userManagement/pages/CompanyListPage';
-import AccessReportPage from '@features/userManagement/pages/AccessReportPage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
-import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
-import BlockProjectPage from '@/features/blockProject/pages/BlockProjectPage';
-import ModelDetailPage from '@/features/blockProject/pages/ModelDetailPage';
-import TowerDetailPage from '@/features/blockProject/pages/TowerDetailPage';
-import MeetingListPage from '@/features/meeting/pages/MeetingListPage';
-import MeetingQueuePage from '@/features/meeting/pages/MeetingQueuePage';
-import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
-import CommitteeAdminPage from '@/features/committee/pages/CommitteeAdminPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
-import MenuListPage from '@features/menuManagement/pages/MenuListPage';
-import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
-import CollateralCatalogPage from '@/features/collateralMaster/pages/CollateralCatalogPage';
-import CollateralMasterDetailPage from '@/features/collateralMaster/pages/CollateralMasterDetailPage';
-import BackfillReportPage from '@/features/collateralMaster/pages/BackfillReportPage';
-import QuotationSelectionPage from '@/features/quotation/pages/QuotationSelectionPage';
-import QuotationListingPage from '@/features/quotation/pages/QuotationListingPage';
-import NewQuotationPage from '@/features/quotation/pages/NewQuotationPage';
-import ExtCompanyInvitationListPage from '@/features/quotation/pages/ExtCompanyInvitationListPage';
-import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompanySubmitQuotationPage';
-import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
-import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
-import ServiceQualityEvaluationListPage from '@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage';
-import ServiceQualityEvaluationDetailPage from '@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage';
-import ExtInvoiceListPage from '@/features/invoice/pages/ExtInvoiceListPage';
-import ExtCreateInvoicePage from '@/features/invoice/pages/ExtCreateInvoicePage';
-import ExtInvoiceDetailPage from '@/features/invoice/pages/ExtInvoiceDetailPage';
-import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
-import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
-import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
-import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
-import LogViewerPage from '@features/common/logViewer/pages/LogViewerPage';
-import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
-import ReappraisalListPage from '@/features/reappraisal/pages/ReappraisalListPage';
-import ReappraisalDetailPage from '@/features/reappraisal/pages/ReappraisalDetailPage';
-import GenerateReappraisalTestPage from '@/features/reappraisal/pages/GenerateReappraisalTestPage';
-import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
-import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
-import MonitoringPage from '@/features/common/monitoring/pages/MonitoringPage';
-import HistorySearchPage from '@/features/common/historySearch/pages/HistorySearchPage';
-import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage';
-import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
-import BlockReappraisalListPage from '@/features/blockReappraisal/pages/BlockReappraisalListPage';
-import BlockReappraisalDetailPage from '@/features/blockReappraisal/pages/BlockReappraisalDetailPage';
-import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
-import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
-import StepValidationRulesPage from '@features/workflowAdmin/pages/StepValidationRulesPage';
-import ReportTestPage from '@features/reportGeneration/pages/ReportTestPage';
-import OperationalReportRoute from '@features/common/operationalReports/pages/OperationalReportRoute';
+
+// Page components — lazy-loaded so each route ships as its own on-demand chunk.
+// A <Suspense> boundary wraps the <Outlet/> in each layout (plus a top-level one
+// around <RouterProvider/> in App.tsx) to catch these while their chunk loads.
+const HomePage = lazy(() => import('../features/dashboard/pages/HomePage'));
+const CalendarPage = lazy(() => import('../features/dashboard/pages/CalendarPage'));
+const RequestListingPage = lazy(() => import('@/features/request/pages/RequestListingPage'));
+const RequestPage = lazy(() => import('@/features/request/pages/RequestPage'));
+const PropertyInformationPage = lazy(
+  () => import('@/features/appraisal/pages/PropertyInformationPage')
+);
+const DocumentChecklistPage = lazy(
+  () => import('@/features/appraisal/pages/DocumentChecklistPage')
+);
+const AdministrationPage = lazy(() => import('@/features/appraisal/pages/AdministrationPage'));
+const AppointmentAndFeePage = lazy(
+  () => import('@/features/appraisal/pages/AppointmentAndFeePage')
+);
+const TaskListingPage = lazy(() => import('@/features/task/pages/TaskListingPage'));
+const ActivityTaskListPage = lazy(() => import('@/features/task/pages/ActivityTaskListPage'));
+const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
+const CreateMarketComparablePage = lazy(
+  () => import('@/features/appraisal/pages/CreateMarketComparablePage')
+);
+const MarketComparableListingPage = lazy(
+  () => import('@/features/appraisal/pages/MarketComparableListingPage')
+);
+const CreateLandPage = lazy(() => import('../features/appraisal/pages/CreateLandPage'));
+const CreateBuildingPage = lazy(() => import('../features/appraisal/pages/CreateBuildingPage'));
+const CreateCondoPage = lazy(() => import('@/features/appraisal/pages/CreateCondoPage'));
+const CreateLandBuildingPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLandBuildingPage')
+);
+const CreateLawAndRegulationPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLawAndRegulationPage')
+);
+const LandBuildingPMAPage = lazy(() => import('@/features/appraisal/pages/LandBuildingPMAPage'));
+const CondoPMAPage = lazy(() => import('@/features/appraisal/pages/CondoPMAPage'));
+const PricingAnalysisPage = lazy(
+  () => import('@features/pricingAnalysis/pages/PricingAnalysisPage')
+);
+const MarketComparableFactorListPage = lazy(
+  () => import('@features/templateManagement/pages/MarketComparableFactorListPage')
+);
+const MarketComparableTemplateListPage = lazy(
+  () => import('@features/templateManagement/pages/MarketComparableTemplateListPage')
+);
+const MarketComparableTemplateDetailPage = lazy(
+  () => import('@features/templateManagement/pages/MarketComparableTemplateDetailPage')
+);
+const ComparativeTemplateListPage = lazy(
+  () => import('@features/templateManagement/pages/ComparativeTemplateListPage')
+);
+const ComparativeTemplateDetailPage = lazy(
+  () => import('@features/templateManagement/pages/ComparativeTemplateDetailPage')
+);
+const DecisionSummaryPage = lazy(() => import('@/features/appraisal/pages/DecisionSummaryPage'));
+const ActivityTrackingPage = lazy(
+  () => import('@/features/appraisal/pages/ActivityTrackingPage')
+);
+const CreateMachineryPage = lazy(() => import('@/features/appraisal/pages/CreateMachineryPage'));
+const CreateLeaseAgreementLandPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandPage')
+);
+const CreateLeaseAgreementBuildingPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementBuildingPage')
+);
+const CreateLeaseAgreementLandBuildingPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage')
+);
+const CreateLeaseAgreementCondoPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementCondoPage')
+);
+const AppraisalSearchPage = lazy(() => import('@/features/appraisal/pages/AppraisalSearchPage'));
+const AppraisalListPage = lazy(() => import('@/features/appraisal/pages/AppraisalListPage'));
+const Appraisal360Page = lazy(() => import('@/features/appraisal/pages/Appraisal360Page'));
+const WorkflowBuilderPage = lazy(
+  () => import('@features/workflowBuilder/pages/WorkflowBuilderPage')
+);
+const ProvideDocumentsTaskPage = lazy(
+  () => import('@/features/document-followup/pages/ProvideDocumentsTaskPage')
+);
+const FeeAppointmentApprovalTaskPage = lazy(
+  () => import('@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage')
+);
+const FeeApprovalTierPage = lazy(
+  () => import('@/features/feeApprovalConfig/pages/FeeApprovalTierPage')
+);
+const AppointmentApprovalRulePage = lazy(
+  () => import('@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage')
+);
+const PasswordPolicyConfigPage = lazy(
+  () => import('@/features/userManagement/admin/pages/PasswordPolicyConfigPage')
+);
+const EvaluationConfigPage = lazy(
+  () => import('@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage')
+);
+const WorkflowListPage = lazy(() => import('@features/workflowBuilder/pages/WorkflowListPage'));
+const MigrateInstancesPage = lazy(
+  () => import('@features/workflowBuilder/pages/MigrateInstancesPage')
+);
+const PermissionListPage = lazy(() => import('@features/userManagement/pages/PermissionListPage'));
+const RoleListPage = lazy(() => import('@features/userManagement/pages/RoleListPage'));
+const GroupListPage = lazy(() => import('@features/userManagement/pages/GroupListPage'));
+const UserProfilePage = lazy(() => import('@features/userManagement/pages/UserProfilePage'));
+const TeamListPage = lazy(() => import('@features/userManagement/pages/TeamListPage'));
+const AuditLogPage = lazy(() => import('@features/userManagement/pages/AuditLogPage'));
+const CompanyListPage = lazy(() => import('@features/userManagement/pages/CompanyListPage'));
+const AccessReportPage = lazy(() => import('@features/userManagement/pages/AccessReportPage'));
+const OpeningTaskPage = lazy(() => import('@/features/task/pages/OpeningTaskPage'));
+const BlockProjectPage = lazy(() => import('@/features/blockProject/pages/BlockProjectPage'));
+const ModelDetailPage = lazy(() => import('@/features/blockProject/pages/ModelDetailPage'));
+const TowerDetailPage = lazy(() => import('@/features/blockProject/pages/TowerDetailPage'));
+const MeetingListPage = lazy(() => import('@/features/meeting/pages/MeetingListPage'));
+const MeetingQueuePage = lazy(() => import('@/features/meeting/pages/MeetingQueuePage'));
+const MeetingDetailPage = lazy(() => import('@/features/meeting/pages/MeetingDetailPage'));
+const CommitteeAdminPage = lazy(() => import('@/features/committee/pages/CommitteeAdminPage'));
+const MenuListPage = lazy(() => import('@features/menuManagement/pages/MenuListPage'));
+const MenuEditPage = lazy(() => import('@features/menuManagement/pages/MenuEditPage'));
+const CollateralCatalogPage = lazy(
+  () => import('@/features/collateralMaster/pages/CollateralCatalogPage')
+);
+const CollateralMasterDetailPage = lazy(
+  () => import('@/features/collateralMaster/pages/CollateralMasterDetailPage')
+);
+const BackfillReportPage = lazy(
+  () => import('@/features/collateralMaster/pages/BackfillReportPage')
+);
+const QuotationSelectionPage = lazy(
+  () => import('@/features/quotation/pages/QuotationSelectionPage')
+);
+const QuotationListingPage = lazy(() => import('@/features/quotation/pages/QuotationListingPage'));
+const NewQuotationPage = lazy(() => import('@/features/quotation/pages/NewQuotationPage'));
+const ExtCompanyInvitationListPage = lazy(
+  () => import('@/features/quotation/pages/ExtCompanyInvitationListPage')
+);
+const ExtCompanySubmitQuotationPage = lazy(
+  () => import('@/features/quotation/pages/ExtCompanySubmitQuotationPage')
+);
+const AdminQuotationTaskPage = lazy(
+  () => import('@/features/quotation/pages/AdminQuotationTaskPage')
+);
+const AdminCompanyQuotationDetailPage = lazy(
+  () => import('@/features/quotation/pages/AdminCompanyQuotationDetailPage')
+);
+const ServiceQualityEvaluationListPage = lazy(
+  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage')
+);
+const ServiceQualityEvaluationDetailPage = lazy(
+  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage')
+);
+const ExtInvoiceListPage = lazy(() => import('@/features/invoice/pages/ExtInvoiceListPage'));
+const ExtCreateInvoicePage = lazy(() => import('@/features/invoice/pages/ExtCreateInvoicePage'));
+const ExtInvoiceDetailPage = lazy(() => import('@/features/invoice/pages/ExtInvoiceDetailPage'));
+const IntInvoiceListPage = lazy(() => import('@/features/invoice/pages/IntInvoiceListPage'));
+const IntInvoiceDetailPage = lazy(() => import('@/features/invoice/pages/IntInvoiceDetailPage'));
+const IntBulkPaymentPage = lazy(() => import('@/features/invoice/pages/IntBulkPaymentPage'));
+const WebhookDeliveryListPage = lazy(
+  () => import('@features/webhookAdmin/pages/WebhookDeliveryListPage')
+);
+const LogViewerPage = lazy(() => import('@features/common/logViewer/pages/LogViewerPage'));
+const SupportingDataMaintenanceDetailListPage = lazy(() =>
+  import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage').then(
+    m => ({ default: m.SupportingDataMaintenanceDetailListPage })
+  )
+);
+const ReappraisalListPage = lazy(() => import('@/features/reappraisal/pages/ReappraisalListPage'));
+const ReappraisalDetailPage = lazy(
+  () => import('@/features/reappraisal/pages/ReappraisalDetailPage')
+);
+const GenerateReappraisalTestPage = lazy(
+  () => import('@/features/reappraisal/pages/GenerateReappraisalTestPage')
+);
+const TaskMonitorPage = lazy(() => import('@/features/taskMonitor/pages/TaskMonitorPage'));
+const PersonTasksPage = lazy(() => import('@/features/taskMonitor/pages/PersonTasksPage'));
+const MonitoringPage = lazy(() => import('@/features/common/monitoring/pages/MonitoringPage'));
+const HistorySearchPage = lazy(
+  () => import('@/features/common/historySearch/pages/HistorySearchPage')
+);
+const BlockUnitMaintenancePage = lazy(
+  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage')
+);
+const BlockUnitMaintenanceDetailPage = lazy(
+  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage')
+);
+const BlockReappraisalListPage = lazy(
+  () => import('@/features/blockReappraisal/pages/BlockReappraisalListPage')
+);
+const BlockReappraisalDetailPage = lazy(
+  () => import('@/features/blockReappraisal/pages/BlockReappraisalDetailPage')
+);
+const SupportingDataMaintenanceListPage = lazy(() =>
+  import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(m => ({
+    default: m.SupportingDataMaintenanceListPage,
+  }))
+);
+const CreateSupportingDataPage = lazy(() =>
+  import('@/features/supportingDataMaintenance/pages/CreateSupportingDataPage').then(m => ({
+    default: m.CreateSupportingDataPage,
+  }))
+);
+const StepValidationRulesPage = lazy(
+  () => import('@features/workflowAdmin/pages/StepValidationRulesPage')
+);
+const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
+const OperationalReportRoute = lazy(
+  () => import('@features/common/operationalReports/pages/OperationalReportRoute')
+);
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
