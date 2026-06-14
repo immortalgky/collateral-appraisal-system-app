@@ -226,6 +226,9 @@ const CreateSupportingDataPage = lazy(() =>
 const StepValidationRulesPage = lazy(
   () => import('@features/workflowAdmin/pages/StepValidationRulesPage')
 );
+const TaskAssignmentConfigPage = lazy(
+  () => import('@features/workflowAssignmentConfig/pages/TaskAssignmentConfigPage')
+);
 const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
 const OperationalReportRoute = lazy(
   () => import('@features/common/operationalReports/pages/OperationalReportRoute')
@@ -533,6 +536,14 @@ export const router = createBrowserRouter([
               <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
             ),
             children: [{ index: true, element: <StepValidationRulesPage /> }],
+          },
+          // Task assignment overrides — gated by WORKFLOW_ADMIN permission
+          {
+            path: 'workflow-assignment-config',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <TaskAssignmentConfigPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {

@@ -36,6 +36,7 @@ import enEvaluationConfig from './locales/en/evaluationConfig.json';
 import enBlockProject from './locales/en/blockProject.json';
 import enWorkflowBuilder from './locales/en/workflowBuilder.json';
 import enBlockReappraisal from './locales/en/blockReappraisal.json';
+import enWorkflowAssignmentConfig from './locales/en/workflowAssignmentConfig.json';
 
 export const defaultNS = 'common' as const;
 
@@ -73,6 +74,7 @@ export const resources = {
     blockProject: enBlockProject,
     workflowBuilder: enWorkflowBuilder,
     blockReappraisal: enBlockReappraisal,
+    workflowAssignmentConfig: enWorkflowAssignmentConfig,
   },
 } as const;
 
@@ -141,6 +143,7 @@ i18n
 i18n.addResourceBundle('zh', 'monitoring', enMonitoring, true, false);
 i18n.addResourceBundle('zh', 'historySearch', enHistorySearch, true, false);
 i18n.addResourceBundle('zh', 'blockUnitMaintenance', enBlockUnitMaintenance, true, false);
+i18n.addResourceBundle('zh', 'workflowAssignmentConfig', enWorkflowAssignmentConfig, true, false);
 
 // Also sync immediately in case init completed synchronously before the listener was ready
 syncLocale(i18n.language);
