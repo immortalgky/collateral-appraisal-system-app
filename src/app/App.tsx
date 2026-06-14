@@ -1,8 +1,10 @@
+import { Suspense } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import toast, { Toaster, ToastBar } from 'react-hot-toast';
 import { router } from './router';
 import { MenuInitializer } from '@features/menuManagement/MenuInitializer';
 import ThemeProvider from '@shared/components/ThemeProvider';
+import PageLoader from '@shared/components/PageLoader';
 
 /**
  * App root. Wrapped by AuthInitializer + AuthProvider in main.tsx.
@@ -14,7 +16,9 @@ function App() {
     <>
       <ThemeProvider />
       <MenuInitializer>
-        <RouterProvider router={router} />
+        <Suspense fallback={<PageLoader />}>
+          <RouterProvider router={router} />
+        </Suspense>
       </MenuInitializer>
       <Toaster
         position="top-right"

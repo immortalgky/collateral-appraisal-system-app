@@ -1,5 +1,6 @@
-import { Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo } from 'react';
+import SuspenseOutlet from '@shared/components/SuspenseOutlet';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
 
 import Navbar from '@shared/components/Navbar';
@@ -408,7 +409,7 @@ function AppraisalLayout() {
                 <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
                 <div className="flex-1 min-h-0 min-w-0">
                   <ErrorBoundary>
-                      <Outlet />
+                      <SuspenseOutlet />
                   </ErrorBoundary>
                 </div>
               </div>

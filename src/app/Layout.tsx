@@ -1,5 +1,6 @@
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useEffect, useMemo, useRef } from 'react';
+import SuspenseOutlet from '@shared/components/SuspenseOutlet';
 import Navbar from '@shared/components/Navbar';
 import Sidebar, { MobileSidebar } from '@shared/components/Sidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
@@ -148,7 +149,7 @@ function Layout() {
                 <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
                 <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">
                   <ErrorBoundary>
-                    <Outlet />
+                    <SuspenseOutlet />
                   </ErrorBoundary>
                 </div>
               </div>
