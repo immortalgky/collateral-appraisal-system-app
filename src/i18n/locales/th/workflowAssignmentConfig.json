@@ -1,0 +1,77 @@
+{
+  "page": {
+    "title": "การกำหนดผู้รับผิดชอบงานแบบกำหนดเอง",
+    "subtitle": "กำหนดกลุ่มผู้รับผิดชอบ / กลยุทธ์การมอบหมายของกิจกรรมตามกลุ่มธุรกิจ โดยไม่ต้องแก้ไขนิยาม Workflow — เงื่อนไขที่เฉพาะเจาะจงที่สุดจะถูกใช้ (workflow + กลุ่มธุรกิจ > กลุ่มธุรกิจ > ค่าตั้งต้น)"
+  },
+  "filter": {
+    "all": "ทั้งหมด"
+  },
+  "table": {
+    "activity": "กิจกรรม",
+    "segment": "กลุ่มธุรกิจ",
+    "group": "กลุ่ม",
+    "strategies": "กลยุทธ์",
+    "specific": "ระบุผู้รับผิดชอบ",
+    "status": "สถานะ",
+    "any": "ทั้งหมด",
+    "active": "ใช้งาน",
+    "inactive": "ปิดใช้งาน",
+    "empty": "ยังไม่มีการกำหนดผู้รับผิดชอบแบบกำหนดเอง"
+  },
+  "modal": {
+    "addTitle": "เพิ่มการกำหนดผู้รับผิดชอบ",
+    "editTitle": "แก้ไขการกำหนดผู้รับผิดชอบ"
+  },
+  "fields": {
+    "activity": "กิจกรรม",
+    "activitySelect": "— เลือกกิจกรรม —",
+    "activityFreePlaceholder": "เช่น ext-appraisal-assignment",
+    "activityUnavailable": "ไม่สามารถโหลดรายการกิจกรรมได้ — กรุณากรอกรหัสกิจกรรมให้ตรงกับนิยาม Workflow",
+    "bankingSegment": "กลุ่มธุรกิจ",
+    "anySegment": "ทุกกลุ่มธุรกิจ",
+    "assigneeGroup": "กลุ่มผู้รับผิดชอบ",
+    "assigneeGroupBaseline": "ค่าตั้งต้น: {{group}}",
+    "assigneeGroupEmpty": "เว้นว่างเพื่อใช้ค่าตั้งต้น",
+    "specificAssignee": "ระบุผู้รับผิดชอบ",
+    "specificAssigneeHint": "(ไม่บังคับ, รหัสพนักงาน)",
+    "specificAssigneePlaceholder": "เช่น P5229 — หากไม่เลือกกลยุทธ์จะใช้แบบ Manual",
+    "adminPoolId": "รหัส Admin Pool",
+    "adminPoolHint": "(สำรอง)",
+    "adminPoolPlaceholder": "เช่น ADMIN_POOL",
+    "escalate": "ส่งต่อไปยัง Admin Pool เมื่อมอบหมายไม่สำเร็จ",
+    "isActive": "ใช้งาน",
+    "isActiveHint": "(ยกเลิกการเลือกเพื่อปิดใช้งานโดยไม่ลบ)"
+  },
+  "baseline": {
+    "heading": "ค่าตั้งต้นจากนิยาม Workflow (จะถูกแทนที่เมื่อกำหนดค่าด้านล่าง):",
+    "group": "กลุ่ม",
+    "initial": "เริ่มต้น",
+    "routeBack": "ตีกลับ",
+    "none": "ไม่มี"
+  },
+  "strategies": {
+    "primary": "กลยุทธ์เริ่มต้น (Primary)",
+    "routeBack": "กลยุทธ์เมื่อตีกลับ",
+    "baseline": "ค่าตั้งต้น: {{list}}",
+    "baselineNone": "ไม่มี"
+  },
+  "actions": {
+    "addOverride": "เพิ่มการกำหนด",
+    "cancel": "ยกเลิก",
+    "add": "เพิ่มการกำหนด",
+    "update": "บันทึกการแก้ไข"
+  },
+  "toasts": {
+    "created": "สร้างการกำหนดแล้ว",
+    "updated": "บันทึกการแก้ไขแล้ว",
+    "deleted": "ลบการกำหนดแล้ว",
+    "saveFailed": "บันทึกไม่สำเร็จ",
+    "deleteFailed": "ลบไม่สำเร็จ"
+  },
+  "errors": {
+    "activityRequired": "กรุณาเลือกกิจกรรม"
+  },
+  "confirm": {
+    "delete": "ลบการกำหนดสำหรับ \"{{activity}}\"{{segment}} หรือไม่?"
+  }
+}

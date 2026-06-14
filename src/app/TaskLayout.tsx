@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -6,6 +6,7 @@ import Navbar from '@shared/components/Navbar';
 import AppraisalSidebar, { MobileAppraisalSidebar } from '@shared/components/AppraisalSidebar';
 import Breadcrumb from '@shared/components/Breadcrumb';
 import ErrorBoundary from '@shared/components/ErrorBoundary';
+import SuspenseOutlet from '@shared/components/SuspenseOutlet';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
 import { useAddressesQuery } from '@shared/api/addresses';
@@ -521,7 +522,7 @@ function TaskLayout() {
 
                 <div className="flex-1 min-h-0 min-w-0">
                   <ErrorBoundary>
-                    <Outlet />
+                    <SuspenseOutlet />
                   </ErrorBoundary>
                 </div>
               </div>
