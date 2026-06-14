@@ -1,0 +1,77 @@
+{
+  "page": {
+    "title": "Task Assignment Overrides",
+    "subtitle": "Override an activity's assignee group / strategies per banking segment — without editing the workflow definition. Most specific match wins (workflow + segment > segment > baseline)."
+  },
+  "filter": {
+    "all": "All"
+  },
+  "table": {
+    "activity": "Activity",
+    "segment": "Segment",
+    "group": "Group",
+    "strategies": "Strategies",
+    "specific": "Specific",
+    "status": "Status",
+    "any": "Any",
+    "active": "Active",
+    "inactive": "Inactive",
+    "empty": "No assignment overrides configured."
+  },
+  "modal": {
+    "addTitle": "Add Assignment Override",
+    "editTitle": "Edit Assignment Override"
+  },
+  "fields": {
+    "activity": "Activity",
+    "activitySelect": "— select an activity —",
+    "activityFreePlaceholder": "e.g. ext-appraisal-assignment",
+    "activityUnavailable": "Activity list unavailable — enter the exact activity id from the workflow definition.",
+    "bankingSegment": "Banking Segment",
+    "anySegment": "Any segment",
+    "assigneeGroup": "Assignee Group",
+    "assigneeGroupBaseline": "Baseline: {{group}}",
+    "assigneeGroupEmpty": "Leave empty to keep baseline",
+    "specificAssignee": "Specific Assignee",
+    "specificAssigneeHint": "(optional, bank code)",
+    "specificAssigneePlaceholder": "e.g. P5229 — implies Manual if no strategy chosen",
+    "adminPoolId": "Admin Pool Id",
+    "adminPoolHint": "(fallback)",
+    "adminPoolPlaceholder": "e.g. ADMIN_POOL",
+    "escalate": "Escalate to admin pool on failure",
+    "isActive": "Active",
+    "isActiveHint": "(uncheck to disable without deleting)"
+  },
+  "baseline": {
+    "heading": "JSON definition baseline (overridden when set below):",
+    "group": "Group",
+    "initial": "Initial",
+    "routeBack": "Route-back",
+    "none": "none"
+  },
+  "strategies": {
+    "primary": "Primary (initial) Strategies",
+    "routeBack": "Route-back Strategies",
+    "baseline": "Baseline: {{list}}",
+    "baselineNone": "none"
+  },
+  "actions": {
+    "addOverride": "Add override",
+    "cancel": "Cancel",
+    "add": "Add Override",
+    "update": "Update Override"
+  },
+  "toasts": {
+    "created": "Override created",
+    "updated": "Override updated",
+    "deleted": "Override deleted",
+    "saveFailed": "Save failed",
+    "deleteFailed": "Delete failed"
+  },
+  "errors": {
+    "activityRequired": "Activity is required."
+  },
+  "confirm": {
+    "delete": "Delete the override for \"{{activity}}\"{{segment}}?"
+  }
+}
