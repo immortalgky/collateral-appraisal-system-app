@@ -7,6 +7,7 @@ import { useLocaleStore } from '@shared/store';
 import enCommon from './locales/en/common.json';
 import enNav from './locales/en/nav.json';
 import enWebhookAdmin from './locales/en/webhookAdmin.json';
+import enOauthAdmin from './locales/en/oauthAdmin.json';
 import enInvoice from './locales/en/invoice.json';
 import enServiceQualityEvaluation from './locales/en/serviceQualityEvaluation.json';
 import enMonitoring from './locales/en/monitoring.json';
@@ -44,6 +45,7 @@ export const resources = {
     common: enCommon,
     nav: enNav,
     webhookAdmin: enWebhookAdmin,
+    oauthAdmin: enOauthAdmin,
     invoice: enInvoice,
     serviceQualityEvaluation: enServiceQualityEvaluation,
     monitoring: enMonitoring,

@@ -49,5 +49,71 @@
     "noPayload": "No payload"
   },
   "emptyState": "No webhook deliveries found",
-  "loadFailed": "Failed to load webhook deliveries"
+  "loadFailed": "Failed to load webhook deliveries",
+  "subscriptions": {
+    "page": {
+      "title": "Webhook Subscriptions",
+      "subtitle": "Configure the external systems that receive outbound webhook events"
+    },
+    "columns": {
+      "systemCode": "System Code",
+      "callbackUrl": "Callback URL",
+      "active": "Active",
+      "secret": "Secret",
+      "lastDelivery": "Last Delivery",
+      "actions": "Actions"
+    },
+    "filters": {
+      "systemCodePlaceholder": "Filter by system code...",
+      "statusAll": "All",
+      "statusActive": "Active only",
+      "statusInactive": "Inactive only",
+      "clear": "Clear filters"
+    },
+    "actions": {
+      "add": "Add Subscription",
+      "edit": "Edit",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "delete": "Delete"
+    },
+    "active": {
+      "yes": "Active",
+      "no": "Inactive"
+    },
+    "form": {
+      "createTitle": "Add Webhook Subscription",
+      "editTitle": "Edit Webhook Subscription",
+      "systemCode": "System Code",
+      "systemCodePlaceholder": "e.g. LOS, CLS",
+      "systemCodeLocked": "System code cannot be changed after creation.",
+      "callbackUrl": "Callback URL",
+      "secretKey": "Signing Secret",
+      "secretKeyPlaceholder": "Shared HMAC secret from the receiving system",
+      "secretKeyHint": "Shared HMAC-SHA256 secret used to sign outbound payloads. Coordinated with the receiving system.",
+      "replaceSecret": "Replace secret",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save"
+    },
+    "delete": {
+      "confirmTitle": "Delete Subscription",
+      "confirmMessage": "This subscription will be permanently removed. Subscriptions with delivery history cannot be deleted — deactivate them instead.",
+      "confirmButton": "Delete",
+      "cancelButton": "Cancel"
+    },
+    "toasts": {
+      "created": "Webhook subscription created",
+      "updated": "Webhook subscription updated",
+      "activated": "Subscription activated",
+      "deactivated": "Subscription deactivated",
+      "deleted": "Subscription deleted",
+      "createFailed": "Failed to create subscription",
+      "updateFailed": "Failed to update subscription",
+      "toggleFailed": "Failed to change subscription status",
+      "deleteFailed": "Failed to delete subscription"
+    },
+    "emptyState": "No webhook subscriptions configured",
+    "loadFailed": "Failed to load webhook subscriptions"
+  }
 }

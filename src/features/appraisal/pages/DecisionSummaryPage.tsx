@@ -306,6 +306,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
   'appraisal-initiation': { sections: [] },
   'appraisal-assignment': { sections: [] },
   'ext-appraisal-assignment': { sections: [] },
+  'int-pma-input': { sections: [] },
   'ext-appraisal-execution': {
     sections: [
       'decisionApproach',
