@@ -176,6 +176,12 @@ const IntBulkPaymentPage = lazy(() => import('@/features/invoice/pages/IntBulkPa
 const WebhookDeliveryListPage = lazy(
   () => import('@features/webhookAdmin/pages/WebhookDeliveryListPage')
 );
+const WebhookSubscriptionListPage = lazy(
+  () => import('@features/webhookAdmin/pages/WebhookSubscriptionListPage')
+);
+const OAuthClientListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthClientListPage'));
+const OAuthScopeListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthScopeListPage'));
+const OAuthTokenListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthTokenListPage'));
 const LogViewerPage = lazy(() => import('@features/common/logViewer/pages/LogViewerPage'));
 const SupportingDataMaintenanceDetailListPage = lazy(() =>
   import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage').then(
@@ -473,6 +479,37 @@ export const router = createBrowserRouter([
           { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
           { path: 'evaluation-config', element: <EvaluationConfigPage /> },
           { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
+          {
+            path: 'webhook-subscriptions',
+            element: (
+              <RoleProtectedRoute
+                allowedRoles={[]}
+                requiredPermission="WEBHOOK_SUBSCRIPTIONS_MANAGE"
+              />
+            ),
+            children: [{ index: true, element: <WebhookSubscriptionListPage /> }],
+          },
+          {
+            path: 'oauth-clients',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_CLIENTS_MANAGE" />
+            ),
+            children: [{ index: true, element: <OAuthClientListPage /> }],
+          },
+          {
+            path: 'oauth-scopes',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_SCOPES_MANAGE" />
+            ),
+            children: [{ index: true, element: <OAuthScopeListPage /> }],
+          },
+          {
+            path: 'oauth-tokens',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_TOKENS_REVOKE" />
+            ),
+            children: [{ index: true, element: <OAuthTokenListPage /> }],
+          },
           // Menu management — gated by MENU_MANAGE permission
           {
             path: 'menus',

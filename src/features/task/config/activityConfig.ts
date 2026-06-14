@@ -91,6 +91,13 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     icon: 'badge-check',
     allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalVerifier'],
   },
+  'int-pma-input': {
+    activityId: 'int-pma-input',
+    title: 'PMA Property Input',
+    description: 'Tasks for entering PMA property values before external company assignment',
+    icon: 'file-pen',
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
+  },
   'pending-approval': {
     activityId: 'pending-approval',
     title: 'Pending Approval',
