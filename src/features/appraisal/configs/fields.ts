@@ -951,11 +951,10 @@ export const decorationField: FormField[] = [
 
 export const encroachmentField: FormField[] = [
   {
-    type: 'boolean-toggle',
-    label: '',
+    type: 'checkbox',
+    label: 'Is Encroaching',
     name: 'isEncroachingOthers',
-    options: ['Is not Encroaching', 'Is Encroaching'],
-    wrapperClassName: 'col-span-6 flex items-center',
+    wrapperClassName: 'col-span-3 flex items-center',
   },
   {
     type: 'number-input',
