@@ -91,7 +91,9 @@ function useRowComputedValues(rowIndex: number) {
 
   // P = ((1 - (N - R) / N) * C)
   const physicalDeterioration =
-    lifeSpan !== 0 ? (1 - (lifeSpan - residualLifeSpan) / lifeSpan) * conditionFactor : 0;
+    lifeSpan !== 0
+      ? parseFloat(((1 - (lifeSpan - residualLifeSpan) / lifeSpan) * conditionFactor).toFixed(2))
+      : 0;
 
   // FMV = (RCN * P) * F * E
   const fmv =
