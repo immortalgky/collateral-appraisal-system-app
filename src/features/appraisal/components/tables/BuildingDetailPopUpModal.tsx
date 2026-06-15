@@ -6,7 +6,7 @@ import {
   NumberInput,
   TextInput,
 } from '@/shared/components';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { createPortal } from 'react-dom';
 import BuildingDetailTable, {
@@ -132,10 +132,13 @@ function BuildingDetailPopUpModal({
 
   const { register, handleSubmit, reset, watch, setValue, getValues } = methods;
 
+  const [periodErrors, setPeriodErrors] = useState<string[]>([]);
+
   // Reset form when modal opens with new data
   useEffect(() => {
     if (isOpen) {
       reset(initialData || defaultDepreciationDetail);
+      setPeriodErrors([]);
     }
   }, [isOpen, initialData, reset]);
 
@@ -165,6 +168,44 @@ function BuildingDetailPopUpModal({
 
   const onSubmit = useCallback(
     (data: DepreciationDetailData) => {
+      const rows: any[] = data.depreciationPeriods ?? [];
+      const errors: string[] = [];
+
+      rows.forEach((row, i) => {
+        const atYear = Number(row.atYear) || 0;
+        const toYear = Number(row.toYear) || 0;
+
+        // toYear must be >= atYear
+        if (toYear < atYear) {
+          errors.push(`Row ${i + 1}: To Year (${toYear}) must be ≥ At Year (${atYear})`);
+        }
+
+        // toYear must not exceed building year (also catches year=0 case)
+        if (buildingYear <= 0) {
+          errors.push(`Row ${i + 1}: Building Year must be set before adding depreciation periods`);
+        } else if (toYear > buildingYear) {
+          errors.push(
+            `Row ${i + 1}: To Year (${toYear}) must not exceed building Year (${buildingYear})`,
+          );
+        }
+
+        // atYear must be > previous row's toYear
+        if (i > 0) {
+          const prevToYear = Number(rows[i - 1].toYear) || 0;
+          if (atYear <= prevToYear) {
+            errors.push(
+              `Row ${i + 1}: At Year (${atYear}) must be > previous row's To Year (${prevToYear})`,
+            );
+          }
+        }
+      });
+
+      if (errors.length > 0) {
+        setPeriodErrors(errors);
+        return;
+      }
+
+      setPeriodErrors([]);
       onSave(data);
       onClose();
     },
@@ -305,16 +346,41 @@ function BuildingDetailPopUpModal({
                       area: 'area',
                       pricePerSqm: 'pricePerSqMBeforeDepreciation',
                     }}
-                    defaultValue={{
-                      atYear: 1,
-                      toYear: isGross ? buildingYear : 0,
-                      depreciationPerYear: 0,
-                      totalDepreciationPct: 0,
-                      priceDepreciation: 0,
-                    }}
-                    disableAddRowBtn={isGross && depreciationPeriods.length > 0}
+                    defaultValue={(() => {
+                      const rows = depreciationPeriods;
+                      const lastRow = rows.length > 0 ? rows[rows.length - 1] : null;
+                      const nextAtYear = lastRow ? (Number(lastRow.toYear) || 0) + 1 : 1;
+                      return {
+                        atYear: nextAtYear,
+                        toYear: isGross ? buildingYear : 0,
+                        depreciationPerYear: 0,
+                        totalDepreciationPct: 0,
+                        priceDepreciation: 0,
+                      };
+                    })()}
+                    disableAddRowBtn={
+                      buildingYear <= 0 ||
+                      (isGross && depreciationPeriods.length > 0) ||
+                      (depreciationPeriods.length > 0 &&
+                        (Number(depreciationPeriods[depreciationPeriods.length - 1]?.toYear) ||
+                          0) >= buildingYear)
+                    }
                     readonlyFields={isGross ? ['toYear'] : []}
                   />
+                  {periodErrors.length > 0 && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 flex flex-col gap-1">
+                      {periodErrors.map((err, i) => (
+                        <p key={i} className="text-xs text-red-600 flex items-start gap-1.5">
+                          <Icon
+                            name="circle-exclamation"
+                            style="solid"
+                            className="size-3.5 shrink-0 mt-px text-red-500"
+                          />
+                          {err}
+                        </p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
