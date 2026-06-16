@@ -338,7 +338,7 @@ function BuildingDetailPopUpModal({
                 </div>
 
                 {/* Depreciation Table */}
-                <div className="flex w-full min-w-0">
+                <div className="flex w-full min-w-0 flex-col gap-2">
                   <BuildingDetailTable
                     headers={propertiesTableHeader}
                     name="depreciationPeriods"
