@@ -14,8 +14,16 @@ const MachineryRowSchema = z.object({
   id: z.string().nullable(),
   appraisalPropertyId: z.string(),
   machine: MachineryItemSchema,
-  rcn: z.number().nullable(),
-  lifeSpan: z.number().nullable(),
+  rcn: z
+    .number({ required_error: 'RCN is required', invalid_type_error: 'RCN must be a number' })
+    .min(0, 'RCN must be at least 0'),
+  lifeSpan: z
+    .number({
+      required_error: 'Life span is required',
+      invalid_type_error: 'Life span must be a number',
+    })
+    .min(0, 'Life span must be at least 0')
+    .nullable(),
   durationInUse: z.number(),
   residualLifeSpan: z.number(),
   conditionFactor: z.number().nullable(),
