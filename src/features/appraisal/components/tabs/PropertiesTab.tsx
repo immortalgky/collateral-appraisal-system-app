@@ -37,6 +37,8 @@ import type { PropertyItem } from '../../types';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../../utils/propertyTypeConfig';
+import { usePricingValidationGate } from '@features/pricingAnalysis/hooks/usePricingValidationGate';
+import type { GroupPropertyRef } from '../../hooks/usePropertyGroupMandatoryValidation';
 
 const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
@@ -68,6 +70,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   const basePath = useBasePath();
   const appraisalId = useAppraisalId();
   const propertyBasePath = usePropertyBasePath();
+
+  // Pre-flight validation gate for pricing analysis (plug-and-play; reusable elsewhere)
+  const { open: openPricingValidation, modal: pricingValidationModal } = usePricingValidationGate();
 
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
@@ -420,15 +425,35 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     }
   };
 
-  const handleGoToPricingAnalysis = (groupId: string) => {
-    const group = groups.find(g => g.id === groupId);
-    const paId = group?.pricingAnalysisId;
-    if (paId) {
-      navigate(`${basePath}/groups/${groupId}/pricing-analysis/${paId}`);
-    } else {
-      navigate(`${basePath}/groups/${groupId}/pricing-analysis`);
-    }
-  };
+  const navigateToPricingAnalysis = useCallback(
+    (groupId: string) => {
+      const group = groupsRef.current.find(g => g.id === groupId);
+      const paId = group?.pricingAnalysisId;
+      navigate(
+        paId
+          ? `${basePath}/groups/${groupId}/pricing-analysis/${paId}`
+          : `${basePath}/groups/${groupId}/pricing-analysis`,
+      );
+    },
+    [basePath, navigate],
+  );
+
+  // Validate the group first; only navigate once every rule passes.
+  const handleGoToPricingAnalysis = useCallback(
+    (groupId: string) => {
+      const group = groupsRef.current.find(g => g.id === groupId);
+      // item.type carries the backend property type code; the validation registry normalises it.
+      const properties: GroupPropertyRef[] = (group?.items ?? []).map((item, index) => ({
+        id: item.id,
+        typeCode: item.type,
+        sequenceNumber: item.sequenceNumber ?? index + 1,
+      }));
+      openPricingValidation({ groupId, appraisalId, properties }, () =>
+        navigateToPricingAnalysis(groupId),
+      );
+    },
+    [openPricingValidation, navigateToPricingAnalysis, appraisalId],
+  );
 
   const contextMenuItems = readOnly
     ? [{ label: t('properties.contextMenu.view'), icon: 'eye', onClick: handleEdit }]
@@ -636,6 +661,9 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         properties={allProperties}
         selectedPropertyId={mapSelectedId ?? ''}
       />
+
+      {/* Pricing-analysis pre-flight validation modal */}
+      {pricingValidationModal}
 
       {/* Context Menu (for grid view) */}
       {contextMenu.visible && (
