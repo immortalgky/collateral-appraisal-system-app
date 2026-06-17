@@ -102,62 +102,73 @@ const SearchCompanyModal = ({
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {companyList.map(company => (
-                  <button
-                    key={company.id}
-                    type="button"
-                    onClick={() => setSelectedCompany(company)}
-                    className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${
-                      selectedCompany?.id === company.id
-                        ? 'bg-primary-50 hover:bg-primary-100'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    {/* Company Icon */}
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                      <Icon name="building" style="solid" className="w-5 h-5 text-purple-600" />
-                    </div>
-
-                    {/* Company Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-sm font-medium text-gray-900 truncate">
-                          {company.companyName}
-                        </span>
-                        <span className="text-xs text-gray-400">({company.registrationNo})</span>
+                {companyList.map(company => {
+                  const notAssignable = company.isAssignable === false;
+                  return (
+                    <button
+                      key={company.id}
+                      type="button"
+                      disabled={notAssignable}
+                      onClick={() => setSelectedCompany(company)}
+                      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors ${
+                        notAssignable
+                          ? 'opacity-50 cursor-not-allowed'
+                          : selectedCompany?.id === company.id
+                            ? 'bg-primary-50 hover:bg-primary-100'
+                            : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      {/* Company Icon */}
+                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                        <Icon name="building" style="solid" className="w-5 h-5 text-purple-600" />
                       </div>
-                      <div className="flex items-center gap-2 mb-1">
-                        {renderStars(company.rating)}
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Icon name="user" style="regular" className="w-3 h-3" />
-                          {company.contactPerson}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Icon name="phone" style="regular" className="w-3 h-3" />
-                          {company.contactPhone}
-                        </span>
-                      </div>
-                    </div>
 
-                    {/* Active Assignments */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                        {company.activeAssignments} active
-                      </span>
-                    </div>
+                      {/* Company Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-sm font-medium text-gray-900 truncate">
+                            {company.companyName}
+                          </span>
+                          <span className="text-xs text-gray-400">({company.registrationNo})</span>
+                          {notAssignable && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-50 text-red-600">
+                              MOU expired
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mb-1">
+                          {renderStars(company.rating)}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Icon name="user" style="regular" className="w-3 h-3" />
+                            {company.contactPerson}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Icon name="phone" style="regular" className="w-3 h-3" />
+                            {company.contactPhone}
+                          </span>
+                        </div>
+                      </div>
 
-                    {/* Selected Indicator */}
-                    {selectedCompany?.id === company.id && (
-                      <Icon
-                        name="circle-check"
-                        style="solid"
-                        className="w-5 h-5 text-primary-600 shrink-0"
-                      />
-                    )}
-                  </button>
-                ))}
+                      {/* Active Assignments */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                          {company.activeAssignments} active
+                        </span>
+                      </div>
+
+                      {/* Selected Indicator */}
+                      {selectedCompany?.id === company.id && (
+                        <Icon
+                          name="circle-check"
+                          style="solid"
+                          className="w-5 h-5 text-primary-600 shrink-0"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

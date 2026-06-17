@@ -5,6 +5,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import DatePickerInput from '@shared/components/inputs/DatePickerInput';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import {
@@ -23,13 +24,14 @@ type EditForm = Omit<UpdateCompanyRequest, 'loanTypes'> & { loanTypesStr: string
 
 const defaultForm = (): EditForm => ({
   name: '',
+  nameLocal: '',
   taxId: '',
   phone: '',
   email: '',
-  street: '',
-  city: '',
-  province: '',
-  postalCode: '',
+  addressLine1: '',
+  addressLine2: '',
+  effectiveDate: null,
+  expireDate: null,
   contactPerson: '',
   hostCompanyCode: '',
   loanTypesStr: '',
@@ -52,13 +54,14 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
     if (!company) return;
     setEditForm({
       name: company.name,
+      nameLocal: company.nameLocal ?? '',
       taxId: company.taxId ?? '',
       phone: company.phone ?? '',
       email: company.email ?? '',
-      street: company.street ?? '',
-      city: company.city ?? '',
-      province: company.province ?? '',
-      postalCode: company.postalCode ?? '',
+      addressLine1: company.addressLine1 ?? '',
+      addressLine2: company.addressLine2 ?? '',
+      effectiveDate: company.effectiveDate ?? null,
+      expireDate: company.expireDate ?? null,
       contactPerson: company.contactPerson ?? '',
       hostCompanyCode: company.hostCompanyCode ?? '',
       loanTypesStr: (company.loanTypes ?? []).join(', '),
@@ -84,13 +87,14 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       {
         id: companyId,
         name: editForm.name,
+        nameLocal: editForm.nameLocal || null,
         taxId: editForm.taxId || null,
         phone: editForm.phone || null,
         email: editForm.email || null,
-        street: editForm.street || null,
-        city: editForm.city || null,
-        province: editForm.province || null,
-        postalCode: editForm.postalCode || null,
+        addressLine1: editForm.addressLine1 || null,
+        addressLine2: editForm.addressLine2 || null,
+        effectiveDate: editForm.effectiveDate || null,
+        expireDate: editForm.expireDate || null,
         contactPerson: editForm.contactPerson || null,
         hostCompanyCode: editForm.hostCompanyCode || null,
         loanTypes,
@@ -152,6 +156,7 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
         </div>
         <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
           <InfoRow label={t('fields.companyName')} value={company.name} />
+          <InfoRow label={t('fields.companyNameLocal')} value={company.nameLocal} />
           <InfoRow label={t('fields.taxId')} value={company.taxId} />
           <InfoRow label={t('fields.phone')} value={company.phone} />
           <InfoRow label={t('fields.email')} value={company.email} />
@@ -177,10 +182,22 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
           <span className="text-sm font-semibold text-gray-800">{t('sections.address')}</span>
         </div>
         <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
-          <InfoRow label={t('fields.street')} value={company.street} />
-          <InfoRow label={t('fields.city')} value={company.city} />
-          <InfoRow label={t('fields.province')} value={company.province} />
-          <InfoRow label={t('fields.postalCode')} value={company.postalCode} />
+          <InfoRow label={t('fields.addressLine1')} value={company.addressLine1} />
+          <InfoRow label={t('fields.addressLine2')} value={company.addressLine2} />
+        </div>
+      </section>
+
+      {/* Approval Period Section */}
+      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <Icon name="calendar" style="solid" className="size-4 text-emerald-500" />
+          <span className="text-sm font-semibold text-gray-800">
+            {t('sections.approvalPeriod')}
+          </span>
+        </div>
+        <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
+          <InfoRow label={t('fields.effectiveDate')} value={formatDate(company.effectiveDate)} />
+          <InfoRow label={t('fields.expireDate')} value={formatDate(company.expireDate)} />
         </div>
       </section>
 
@@ -251,6 +268,12 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
             placeholder={t('placeholders.companyName')}
           />
           <TextInput
+            label={t('fields.companyNameLocal')}
+            value={editForm.nameLocal ?? ''}
+            onChange={e => setEditForm(prev => ({ ...prev, nameLocal: e.currentTarget.value }))}
+            placeholder={t('placeholders.companyNameLocal')}
+          />
+          <TextInput
             label={t('fields.taxId')}
             value={editForm.taxId ?? ''}
             onChange={e => setEditForm(prev => ({ ...prev, taxId: e.currentTarget.value }))}
@@ -295,29 +318,35 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
               {t('fields.isActive')}
             </label>
           </div>
-          <TextInput
-            label={t('fields.street')}
-            value={editForm.street ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, street: e.currentTarget.value }))}
-            placeholder={t('placeholders.street')}
+          <div className="col-span-2">
+            <TextInput
+              label={t('fields.addressLine1')}
+              value={editForm.addressLine1 ?? ''}
+              onChange={e =>
+                setEditForm(prev => ({ ...prev, addressLine1: e.currentTarget.value }))
+              }
+              placeholder={t('placeholders.addressLine1')}
+            />
+          </div>
+          <div className="col-span-2">
+            <TextInput
+              label={t('fields.addressLine2')}
+              value={editForm.addressLine2 ?? ''}
+              onChange={e =>
+                setEditForm(prev => ({ ...prev, addressLine2: e.currentTarget.value }))
+              }
+              placeholder={t('placeholders.addressLine2')}
+            />
+          </div>
+          <DatePickerInput
+            label={t('fields.effectiveDate')}
+            value={editForm.effectiveDate ?? null}
+            onChange={value => setEditForm(prev => ({ ...prev, effectiveDate: value }))}
           />
-          <TextInput
-            label={t('fields.city')}
-            value={editForm.city ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, city: e.currentTarget.value }))}
-            placeholder={t('placeholders.city')}
-          />
-          <TextInput
-            label={t('fields.province')}
-            value={editForm.province ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, province: e.currentTarget.value }))}
-            placeholder={t('placeholders.province')}
-          />
-          <TextInput
-            label={t('fields.postalCode')}
-            value={editForm.postalCode ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, postalCode: e.currentTarget.value }))}
-            placeholder={t('placeholders.postalCode')}
+          <DatePickerInput
+            label={t('fields.expireDate')}
+            value={editForm.expireDate ?? null}
+            onChange={value => setEditForm(prev => ({ ...prev, expireDate: value }))}
           />
           <TextInput
             label={t('fields.bankAccountNo')}
@@ -372,6 +401,12 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       />
     </div>
   );
+};
+
+const formatDate = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString('en-GB');
 };
 
 interface InfoRowProps {

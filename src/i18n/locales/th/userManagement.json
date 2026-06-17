@@ -51,7 +51,8 @@
     "bankAccount": "บัญชีธนาคาร",
     "account": "บัญชีผู้ใช้",
     "profile": "ข้อมูลส่วนตัว",
-    "access": "สิทธิ์การเข้าถึง"
+    "access": "สิทธิ์การเข้าถึง",
+    "approvalPeriod": "ระยะเวลาการอนุมัติ"
   },
   "fields": {
     "username": "ชื่อผู้ใช้",
@@ -75,10 +76,6 @@
     "taxId": "เลขประจำตัวผู้เสียภาษี",
     "phone": "โทรศัพท์",
     "contactPerson": "ผู้ติดต่อ",
-    "street": "ที่อยู่",
-    "city": "เมือง",
-    "province": "จังหวัด",
-    "postalCode": "รหัสไปรษณีย์",
     "bankAccountNo": "เลขที่บัญชีธนาคาร",
     "bankAccountName": "ชื่อบัญชี",
     "loanTypes": "ประเภทสินเชื่อ",
@@ -92,7 +89,12 @@
     "lastLogin": "เข้าสู่ระบบล่าสุด",
     "noCompany": "ไม่มีบริษัท",
     "authSourceLocal": "รหัสผ่านภายในระบบ",
-    "authSourceLdap": "LDAP / Active Directory"
+    "authSourceLdap": "LDAP / Active Directory",
+    "companyNameLocal": "ชื่อบริษัท (ภาษาไทย)",
+    "addressLine1": "ที่อยู่ บรรทัดที่ 1",
+    "addressLine2": "ที่อยู่ บรรทัดที่ 2",
+    "effectiveDate": "วันที่มีผล",
+    "expireDate": "วันที่หมดอายุ"
   },
   "placeholders": {
     "searchUsers": "ค้นหาผู้ใช้...",
@@ -116,10 +118,6 @@
     "taxId": "เช่น 0105556123456",
     "phone": "เช่น 02-xxx-xxxx",
     "contactPerson": "ชื่อผู้ติดต่อ",
-    "street": "ที่อยู่",
-    "city": "เมือง",
-    "province": "จังหวัด",
-    "postalCode": "รหัสไปรษณีย์",
     "bankAccountNo": "เลขที่บัญชีธนาคาร",
     "bankAccountName": "ชื่อผู้ถือบัญชี",
     "loanTypes": "เช่น HOUSING, AUTO",
@@ -134,7 +132,10 @@
     "username": "jdoe",
     "email": "jdoe@example.com",
     "reEnterNewPassword": "ป้อนรหัสผ่านใหม่อีกครั้ง",
-    "enterCurrentPassword": "ป้อนรหัสผ่านปัจจุบัน"
+    "enterCurrentPassword": "ป้อนรหัสผ่านปัจจุบัน",
+    "companyNameLocal": "ชื่อบริษัทภาษาไทย",
+    "addressLine1": "ที่อยู่ บรรทัดที่ 1",
+    "addressLine2": "ที่อยู่ บรรทัดที่ 2"
   },
   "filters": {
     "all": "ทั้งหมด",

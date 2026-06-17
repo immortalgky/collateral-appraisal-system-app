@@ -1190,6 +1190,17 @@
       "vote": "คะแนนเสียง",
       "date": "วันที่",
       "comments": "ความคิดเห็น"
+    },
+    "stats": {
+      "votesReceived": "จำนวนโหวต",
+      "approve": "อนุมัติ",
+      "reject": "ไม่อนุมัติ",
+      "routeBack": "ส่งกลับ"
+    },
+    "voteLabels": {
+      "approve": "เห็นด้วย",
+      "reject": "ไม่เห็นด้วย",
+      "route_back": "ส่งกลับ"
     }
   },
   "decisionSummaryPageExtra": {

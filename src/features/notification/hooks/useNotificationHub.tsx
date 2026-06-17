@@ -16,6 +16,14 @@ const FOLLOWUP_NOTIFICATION_TYPES = new Set([
   'DocumentLineItemDeclined',
 ]);
 
+// Notifications that change a user's pending-task set (a task lands in or leaves a
+// list/pool). Refresh every task view + counts so the recipient sees it live.
+// NOTE: TaskAssigned is delivered per-user via "ReceiveNotification" (handled here).
+// TaskCompleted is currently broadcast via "ReceiveGroupNotification" to the
+// Appraisal_{correlationId} group, which this hook does not subscribe to — it is
+// listed here so it works automatically if/when it's also delivered per-user.
+const TASK_NOTIFICATION_TYPES = new Set(['TaskAssigned', 'TaskCompleted']);
+
 export function useNotificationHub() {
   const hasShownConnectErrorToast = useRef(false);
   const addNotification = useNotificationStore(s => s.addNotification);
@@ -64,6 +72,16 @@ export function useNotificationHub() {
           queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
           queryClient.invalidateQueries({ queryKey: ['task-counts'] });
         }
+      }
+
+      // A task was assigned to / completed by this user: refresh every task list +
+      // counts so the affected task appears/disappears without a manual refresh.
+      if (TASK_NOTIFICATION_TYPES.has(notification.type)) {
+        queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+        queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }
     });
 

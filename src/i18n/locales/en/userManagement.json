@@ -51,7 +51,8 @@
     "bankAccount": "Bank Account",
     "account": "Account",
     "profile": "Profile",
-    "access": "Access"
+    "access": "Access",
+    "approvalPeriod": "Approval Period"
   },
   "fields": {
     "username": "Username",
@@ -76,10 +77,6 @@
     "phone": "Phone",
     "contactPerson": "Contact Person",
     "hostCompanyCode": "Host Company Code",
-    "street": "Street",
-    "city": "City",
-    "province": "Province",
-    "postalCode": "Postal Code",
     "bankAccountNo": "Bank Account No.",
     "bankAccountName": "Bank Account Name",
     "loanTypes": "Loan Types",
@@ -93,7 +90,12 @@
     "lastLogin": "Last Login",
     "noCompany": "No Company",
     "authSourceLocal": "Local password",
-    "authSourceLdap": "LDAP / Active Directory"
+    "authSourceLdap": "LDAP / Active Directory",
+    "companyNameLocal": "Company Name (Local)",
+    "addressLine1": "Address Line 1",
+    "addressLine2": "Address Line 2",
+    "effectiveDate": "Effective Date",
+    "expireDate": "Expire Date"
   },
   "placeholders": {
     "searchUsers": "Search users...",
@@ -118,10 +120,6 @@
     "phone": "e.g. 02-xxx-xxxx",
     "contactPerson": "Contact person name",
     "hostCompanyCode": "e.g. HC001",
-    "street": "Street address",
-    "city": "City",
-    "province": "Province",
-    "postalCode": "Postal code",
     "bankAccountNo": "Bank account number",
     "bankAccountName": "Account holder name",
     "loanTypes": "e.g. HOUSING, AUTO",
@@ -136,7 +134,10 @@
     "username": "jdoe",
     "email": "jdoe@example.com",
     "reEnterNewPassword": "Re-enter new password",
-    "enterCurrentPassword": "Enter current password"
+    "enterCurrentPassword": "Enter current password",
+    "companyNameLocal": "Local company name",
+    "addressLine1": "Address line 1",
+    "addressLine2": "Address line 2"
   },
   "filters": {
     "all": "All",

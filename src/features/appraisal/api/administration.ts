@@ -92,6 +92,13 @@ export const useCreateAssignment = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'assignments'],
       });
+      // Assigning completes the current pending task, so refresh the task lists and
+      // counts; otherwise the just-submitted task lingers in the (cached) list.
+      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
   });
 };
@@ -146,6 +153,7 @@ export const useGetEligibleCompanies = (bankingSegment: string | undefined, enab
           email?: string;
           averageRating?: number;
           activeAssignments?: number;
+          isAssignable?: boolean;
         }) => ({
           id: c.id,
           companyName: c.name,
@@ -155,6 +163,7 @@ export const useGetEligibleCompanies = (bankingSegment: string | undefined, enab
           contactEmail: c.email ?? '',
           rating: c.averageRating ?? 0,
           activeAssignments: c.activeAssignments ?? 0,
+          isAssignable: c.isAssignable ?? true,
         }),
       );
     },
