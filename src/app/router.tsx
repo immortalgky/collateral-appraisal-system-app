@@ -229,6 +229,9 @@ const StepValidationRulesPage = lazy(
 const TaskAssignmentConfigPage = lazy(
   () => import('@features/workflowAssignmentConfig/pages/TaskAssignmentConfigPage')
 );
+const CompanyRoundRobinConfigPage = lazy(
+  () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
+);
 const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
 const OperationalReportRoute = lazy(
   () => import('@features/common/operationalReports/pages/OperationalReportRoute')
@@ -544,6 +547,14 @@ export const router = createBrowserRouter([
               <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
             ),
             children: [{ index: true, element: <TaskAssignmentConfigPage /> }],
+          },
+          // External-company round-robin pools — gated by WORKFLOW_ADMIN permission
+          {
+            path: 'workflow-roundrobin-config',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {

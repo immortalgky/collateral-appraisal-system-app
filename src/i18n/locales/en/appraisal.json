@@ -1187,6 +1187,17 @@
       "vote": "Vote",
       "date": "Date",
       "comments": "Comments"
+    },
+    "stats": {
+      "votesReceived": "Votes received",
+      "approve": "Approve",
+      "reject": "Reject",
+      "routeBack": "Route-back"
+    },
+    "voteLabels": {
+      "approve": "Agree",
+      "reject": "Disagree",
+      "route_back": "Route Back"
     }
   },
   "decisionSummaryPageExtra": {

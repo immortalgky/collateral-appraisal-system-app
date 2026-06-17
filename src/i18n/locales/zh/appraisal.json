@@ -1183,6 +1183,17 @@
       "vote": "投票",
       "date": "日期",
       "comments": "评论"
+    },
+    "stats": {
+      "votesReceived": "已投票数",
+      "approve": "批准",
+      "reject": "拒绝",
+      "routeBack": "退回"
+    },
+    "voteLabels": {
+      "approve": "同意",
+      "reject": "不同意",
+      "route_back": "退回"
     }
   },
   "decisionSummaryPageExtra": {

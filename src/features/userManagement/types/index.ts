@@ -435,13 +435,14 @@ export interface GetAuditLogsParams {
 export interface Company {
   id: string;
   name: string;
+  nameLocal: string | null;
   taxId: string | null;
   phone: string | null;
   email: string | null;
-  street: string | null;
-  city: string | null;
-  province: string | null;
-  postalCode: string | null;
+  addressLine1: string | null;
+  addressLine2: string | null;
+  effectiveDate: string | null;
+  expireDate: string | null;
   contactPerson: string | null;
   hostCompanyCode: string | null;
   loanTypes: string[];
@@ -473,13 +474,14 @@ export interface GetCompaniesParams {
 
 export interface CreateCompanyRequest {
   name: string;
+  nameLocal?: string | null;
   taxId?: string | null;
   phone?: string | null;
   email?: string | null;
-  street?: string | null;
-  city?: string | null;
-  province?: string | null;
-  postalCode?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  effectiveDate?: string | null;
+  expireDate?: string | null;
   contactPerson?: string | null;
   hostCompanyCode?: string | null;
   loanTypes?: string[];
@@ -490,13 +492,14 @@ export interface CreateCompanyRequest {
 
 export interface UpdateCompanyRequest {
   name: string;
+  nameLocal?: string | null;
   taxId?: string | null;
   phone?: string | null;
   email?: string | null;
-  street?: string | null;
-  city?: string | null;
-  province?: string | null;
-  postalCode?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  effectiveDate?: string | null;
+  expireDate?: string | null;
   contactPerson?: string | null;
   hostCompanyCode?: string | null;
   loanTypes?: string[];

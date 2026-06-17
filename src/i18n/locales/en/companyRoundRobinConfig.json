@@ -1,0 +1,47 @@
+{
+  "page": {
+    "title": "Company Round-Robin Pools",
+    "subtitle": "Choose which external companies receive auto-assigned appraisals and set each company's weight in the rotation."
+  },
+  "actions": {
+    "addPool": "Add Pool"
+  },
+  "table": {
+    "scope": "Scope",
+    "companies": "Companies",
+    "status": "Status"
+  },
+  "scope": {
+    "global": "Global (all loan types)",
+    "loanType": "Loan type: {{loanType}}"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "modal": {
+    "addTitle": "Add Pool",
+    "editTitle": "Edit Pool",
+    "loanTypeLabel": "Loan type scope",
+    "loanTypeHint": "Leave empty for the global pool used when no loan-type-specific pool is active.",
+    "loanTypePlaceholder": "e.g. Retail, IBG (empty = global)",
+    "companies": "Companies in pool",
+    "addCompany": "Add company",
+    "selectCompany": "Select company…",
+    "weight": "Weight",
+    "noCompanies": "No companies added yet.",
+    "isActive": "Active",
+    "remove": "Remove"
+  },
+  "confirm": {
+    "delete": "Delete the {{scope}} pool?"
+  },
+  "toasts": {
+    "created": "Pool created",
+    "updated": "Pool updated",
+    "deleted": "Pool deleted",
+    "saveFailed": "Failed to save pool",
+    "deleteFailed": "Failed to delete pool",
+    "atLeastOne": "Add at least one company to the pool."
+  }
+}

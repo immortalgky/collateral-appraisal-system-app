@@ -985,8 +985,10 @@ const DecisionSummaryPage = () => {
                 </GroupCard>
               )}
 
-              {/* Committee Approval — standalone (active workflow) */}
-              {showSection('committeeApproval') && (
+              {/* Committee Approval — standalone (active workflow). Hidden once the appraisal has
+                  reached a terminal status: completed/migrated appraisals show only the history
+                  section below (avoids the "not active yet" placeholder next to real history). */}
+              {showSection('committeeApproval') && !isTerminalStatus(appraisal?.status) && (
                 <LiveApprovalListSection
                   workflowInstanceId={workflowInstanceId}
                   activityId={activityId}

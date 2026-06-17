@@ -51,7 +51,8 @@
     "bankAccount": "Bank Account",
     "account": "Account",
     "profile": "Profile",
-    "access": "Access"
+    "access": "Access",
+    "approvalPeriod": "Approval Period"
   },
   "fields": {
     "username": "Username",
@@ -75,10 +76,6 @@
     "taxId": "Tax ID",
     "phone": "Phone",
     "contactPerson": "Contact Person",
-    "street": "Street",
-    "city": "City",
-    "province": "Province",
-    "postalCode": "Postal Code",
     "bankAccountNo": "Bank Account No.",
     "bankAccountName": "Bank Account Name",
     "loanTypes": "Loan Types",
@@ -92,7 +89,12 @@
     "lastLogin": "Last Login",
     "noCompany": "No Company",
     "authSourceLocal": "本地密码",
-    "authSourceLdap": "LDAP / Active Directory"
+    "authSourceLdap": "LDAP / Active Directory",
+    "companyNameLocal": "Company Name (Local)",
+    "addressLine1": "Address Line 1",
+    "addressLine2": "Address Line 2",
+    "effectiveDate": "Effective Date",
+    "expireDate": "Expire Date"
   },
   "placeholders": {
     "searchUsers": "Search users...",
@@ -116,10 +118,6 @@
     "taxId": "e.g. 0105556123456",
     "phone": "e.g. 02-xxx-xxxx",
     "contactPerson": "Contact person name",
-    "street": "Street address",
-    "city": "City",
-    "province": "Province",
-    "postalCode": "Postal code",
     "bankAccountNo": "Bank account number",
     "bankAccountName": "Account holder name",
     "loanTypes": "e.g. HOUSING, AUTO",
@@ -134,7 +132,10 @@
     "username": "jdoe",
     "email": "jdoe@example.com",
     "reEnterNewPassword": "Re-enter new password",
-    "enterCurrentPassword": "Enter current password"
+    "enterCurrentPassword": "Enter current password",
+    "companyNameLocal": "Local company name",
+    "addressLine1": "Address line 1",
+    "addressLine2": "Address line 2"
   },
   "filters": {
     "all": "All",

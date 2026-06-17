@@ -68,6 +68,18 @@ const ApprovalListSectionBase = ({ data, isLoading, isError }: ApprovalListSecti
   // here (that showed "Approved" before a WaitForAll round had actually resolved).
   const status = data.status;
   const members: ApprovalMember[] = data.members;
+
+  // Per-vote tallies for the summary stats row (the API carries the roster, not the breakdown).
+  const countVote = (v: string) =>
+    members.filter(m => m.status === 'Voted' && (m.vote ?? '').toLowerCase() === v).length;
+  const approveCount = countVote('approve');
+  const rejectCount = countVote('reject');
+  const routeBackCount = countVote('route_back');
+
+  // Display label for a vote value (approve → Agree, reject → Disagree); falls back to the raw value.
+  const voteLabel = (vote: string): string =>
+    t(`approvalListSection.voteLabels.${vote.toLowerCase()}`, { defaultValue: vote });
+
   return (
     <FormCard title={t('approvalListSection.title')} icon="users-gear" iconColor="blue">
       <div className="space-y-4">
@@ -94,6 +106,28 @@ const ApprovalListSectionBase = ({ data, isLoading, isError }: ApprovalListSecti
                 endedAt={data.meetingRef.endedAt}
               />
             )}
+          </div>
+        </div>
+
+        {/* Summary stats — votes received + per-vote tally (approve / reject / route-back) */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-tight">
+              {data.votesReceived} / {data.totalMembers}
+            </div>
+            <div className="text-xs text-gray-500">{t('approvalListSection.stats.votesReceived')}</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold text-emerald-600 leading-tight">{approveCount}</div>
+            <div className="text-xs text-gray-500">{t('approvalListSection.stats.approve')}</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold text-red-600 leading-tight">{rejectCount}</div>
+            <div className="text-xs text-gray-500">{t('approvalListSection.stats.reject')}</div>
+          </div>
+          <div>
+            <div className="text-xl font-bold text-purple-600 leading-tight">{routeBackCount}</div>
+            <div className="text-xs text-gray-500">{t('approvalListSection.stats.routeBack')}</div>
           </div>
         </div>
 
@@ -179,7 +213,9 @@ const ApprovalListSectionBase = ({ data, isLoading, isError }: ApprovalListSecti
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         {hasVoted && member.vote ? (
-                          <Badge type="vote" value={member.vote} size="sm" />
+                          <Badge type="vote" value={member.vote} size="sm">
+                            {voteLabel(member.vote)}
+                          </Badge>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-xs text-gray-500">
                             <Icon name="clock" style="regular" className="w-3.5 h-3.5" />
