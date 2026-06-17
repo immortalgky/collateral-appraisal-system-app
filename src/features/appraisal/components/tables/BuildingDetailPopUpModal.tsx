@@ -169,6 +169,7 @@ function BuildingDetailPopUpModal({
   const onSubmit = useCallback(
     (data: DepreciationDetailData) => {
       const rows: any[] = data.depreciationPeriods ?? [];
+      const buildingYear = Number(data.year) || 0;
       const errors: string[] = [];
 
       rows.forEach((row, i) => {
