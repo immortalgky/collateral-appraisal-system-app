@@ -17,7 +17,7 @@ import {
  * Rules 1–3 are validated on the backend; "Mandatory fields" runs on the front-end.
  */
 const EXPECTED_STEPS: { key: string; displayName: string }[] = [
-  { key: 'MakerSurvey', displayName: 'Maker survey' },
+  { key: 'MarketSurvey', displayName: 'Market survey' },
   { key: 'BuildingDetail', displayName: 'Building detail' },
   { key: 'RentalSchedule', displayName: 'Rental schedule' },
   { key: 'MandatoryFields', displayName: 'Mandatory fields' },
