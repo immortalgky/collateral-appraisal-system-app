@@ -15,7 +15,11 @@ import { visualizer } from 'rollup-plugin-visualizer';
  */
 function manualChunks(id: string): string | undefined {
   if (!id.includes('node_modules')) return undefined;
-  if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id))
+  // `react-is` MUST live with React: recharts pulls a CommonJS react-is into the
+  // `charts` chunk otherwise, whose interop wrapper calls back into `react-vendor`
+  // before React's exports are initialized -> "Cannot set properties of undefined
+  // (setting 'Activity')". Co-locating it removes the cross-chunk eval-order cycle.
+  if (/[\\/]node_modules[\\/](react|react-dom|react-is|react-router|react-router-dom|scheduler)[\\/]/.test(id))
     return 'react-vendor';
   if (/[\\/]node_modules[\\/](recharts|d3-|victory-vendor|internmap)/.test(id)) return 'charts';
   if (/[\\/]node_modules[\\/](@xyflow|dagre|@dagrejs|graphlib)/.test(id)) return 'flow';
