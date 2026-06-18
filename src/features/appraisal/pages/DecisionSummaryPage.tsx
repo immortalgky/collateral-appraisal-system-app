@@ -53,6 +53,8 @@ import {
 } from '../components/summary/ApprovalListSection';
 import DecisionSection from '../components/summary/DecisionSection';
 import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
+import { AssetSummaryDrawer } from '@/features/common/assetSummary/AssetSummaryDrawer';
+import { useGetAssetSummary } from '@/features/appraisal/api/assetSummary';
 
 // ==================== Field Definitions ====================
 
@@ -472,6 +474,7 @@ const DecisionSummaryPage = () => {
   const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
+  const [isAssetSummaryOpen, setIsAssetSummaryOpen] = useState(false);
   const [failures, setFailures] = useState<StructuredValidationError[]>([]);
   const [warnings, setWarnings] = useState<StructuredWarning[]>([]);
   const resetProgressStore = useActivityProgressStore(s => s.reset);
@@ -482,6 +485,12 @@ const DecisionSummaryPage = () => {
   const hasAppraisalBook = useAppraisalHasAppraisalBook();
   const { appraisal } = useAppraisalContext();
   const isCiAppraisal = useIsCiAppraisal();
+
+  // API hooks to get Asset Summary information
+  const { data: assetSummaryData, isLoading: isLoadingAssetSummary } =
+    useGetAssetSummary(appraisalId);
+  const hasAssetSummary =
+    assetSummaryData?.groups?.length > 0 || assetSummaryData?.items?.length > 0;
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
@@ -666,8 +675,9 @@ const DecisionSummaryPage = () => {
         },
         onError: (error: unknown) => {
           // Keep dialog open; show the error in the panel
-          const apiErr = (error as { apiError?: { detail?: string; stepName?: string; errorCode?: string } })
-            ?.apiError;
+          const apiErr = (
+            error as { apiError?: { detail?: string; stepName?: string; errorCode?: string } }
+          )?.apiError;
           setFailures([
             {
               stepName: apiErr?.stepName ?? '',
@@ -872,7 +882,11 @@ const DecisionSummaryPage = () => {
 
               {/* Construction Summary — only on Construction Inspection appraisals */}
               {isCiAppraisal && showSection('constructionSummary') && data?.constructionSummary && (
-                <GroupCard icon="helmet-safety" iconColor="yellow" title={t('decisionSummaryPageExtra.constructionSummaryTitle')}>
+                <GroupCard
+                  icon="helmet-safety"
+                  iconColor="yellow"
+                  title={t('decisionSummaryPageExtra.constructionSummaryTitle')}
+                >
                   <ConstructionSummaryTable rows={data.constructionSummary.rows} />
                 </GroupCard>
               )}
@@ -1032,6 +1046,21 @@ const DecisionSummaryPage = () => {
                     <span className="hidden sm:inline">{t('decisionSummary.historySearch')}</span>
                   </button>
                   <div className="h-6 w-px bg-gray-200" />
+                  {/* Asset Summary icon */}
+                  {!isLoadingAssetSummary && hasAssetSummary && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setIsAssetSummaryOpen(true)}
+                        title={'Asset Summary'}
+                        className="flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs"
+                      >
+                        <Icon name="file-chart-pie" style="solid" className="w-4 h-4" />
+                        <span className="hidden sm:inline">Asset Summary</span>
+                      </button>
+                      <div className="h-6 w-px bg-gray-200" />
+                    </>
+                  )}
                   {isDirty && (
                     <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -1075,6 +1104,13 @@ const DecisionSummaryPage = () => {
       <HistorySearchMapDrawer
         isOpen={isHistorySearchOpen}
         onClose={() => setIsHistorySearchOpen(false)}
+      />
+
+      {/* Asset Summary drawer */}
+      <AssetSummaryDrawer
+        isOpen={isAssetSummaryOpen}
+        onClose={() => setIsAssetSummaryOpen(false)}
+        data={assetSummaryData}
       />
 
       <UnsavedChangesDialog blocker={blocker} />
@@ -1138,7 +1174,11 @@ const DecisionSummaryPage = () => {
             />
           </>
         ) : warnings.length > 0 ? (
-          <Alert variant="warning" title={t('decisionSummary.warnings.title')} className="mt-3 text-left">
+          <Alert
+            variant="warning"
+            title={t('decisionSummary.warnings.title')}
+            className="mt-3 text-left"
+          >
             <ul className="mt-2 space-y-2">
               {warnings.flatMap((w, wi) =>
                 splitWarningMessage(w.message).map((sentence, si) => (
