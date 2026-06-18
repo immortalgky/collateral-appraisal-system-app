@@ -236,6 +236,12 @@ const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/Repor
 const OperationalReportRoute = lazy(
   () => import('@features/common/operationalReports/pages/OperationalReportRoute')
 );
+const ParameterMaintenancePage = lazy(
+  () => import('@/features/parameterMaintenance/pages/ParameterMaintenancePage')
+);
+const ParameterDetailPage = lazy(
+  () => import('@/features/parameterMaintenance/pages/ParameterDetailPage')
+);
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -396,6 +402,14 @@ export const router = createBrowserRouter([
       {
         path: 'notifications',
         element: <NotificationPage />,
+      },
+      // Parameter Maintenance Routes
+      {
+        path: 'parameter',
+        children: [
+          { index: true, element: <ParameterMaintenancePage /> },
+          { path: ':group', element: <ParameterDetailPage /> },
+        ],
       },
       // Market Comparable Routes
       {

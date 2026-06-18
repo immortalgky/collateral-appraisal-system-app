@@ -72,6 +72,7 @@ export interface ApiError extends ProblemDetails {
 }
 
 export interface Parameter {
+  parId: number;
   group: string;
   country: string;
   language: string;
