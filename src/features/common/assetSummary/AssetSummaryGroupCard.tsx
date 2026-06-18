@@ -40,7 +40,10 @@ export function AssetSummaryGroupCard({
         {isSelected && <span className="w-2 h-2 rounded-full bg-primary" />}
       </div>
 
-      <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2">
+      <p
+        className="text-sm font-medium text-gray-800 leading-snug line-clamp-2"
+        title={assetGroupDetail ?? ''}
+      >
         {assetGroupDetail ?? '—'}
       </p>
 
