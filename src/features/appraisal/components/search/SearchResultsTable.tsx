@@ -12,7 +12,12 @@ interface SearchResultsTableProps {
   onAppraisalClick?: (appraisalId: string) => void;
 }
 
-function SearchResultsTable({ columns, items, isLoading, onAppraisalClick }: SearchResultsTableProps) {
+function SearchResultsTable({
+  columns,
+  items,
+  isLoading,
+  onAppraisalClick,
+}: SearchResultsTableProps) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -66,10 +71,7 @@ function SearchResultsTable({ columns, items, isLoading, onAppraisalClick }: Sea
         <tbody className="divide-y divide-gray-100">
           {isLoading ? (
             <TableRowSkeleton
-              columns={[
-                { width: 'w-8' },
-                ...columns.map(() => ({ width: 'w-32' })),
-              ]}
+              columns={[{ width: 'w-8' }, ...columns.map(() => ({ width: 'w-32' }))]}
               rows={5}
             />
           ) : items.length === 0 ? (

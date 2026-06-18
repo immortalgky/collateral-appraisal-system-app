@@ -18,7 +18,8 @@ interface SetDirectComparisonInitialValueProps {
   collateralType: string;
   methodId: string;
   methodType: string;
-  property: Record<string, unknown>;
+  /** Optional for manual-subject references (room/profit-rent) with no backing property. */
+  property?: Record<string, unknown>;
   template?: TemplateDetailType;
   comparativeSurveys: MarketComparableDetailType[];
   allFactors?: FactorDataType[];
@@ -34,8 +35,7 @@ export function initializeDirectComparisonForm({
   allFactors,
   reset,
 }: SetDirectComparisonInitialValueProps) {
-  if (!collateralType || !methodId || !methodType || !property || !comparativeSurveys || !reset)
-    return;
+  if (!collateralType || !methodId || !methodType || !comparativeSurveys || !reset) return;
 
   const factorIdMap = new Map<string, string>();
   for (const f of allFactors ?? []) {
@@ -98,10 +98,10 @@ export function initializeDirectComparisonForm({
         },
         directComparisonAppraisalPrice: {
           includeLandArea: false,
-          landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-          usableArea: property.totalBuildingArea
+          landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+          usableArea: property?.totalBuildingArea
             ? Number(property.totalBuildingArea)
-            : property.usableArea
+            : property?.usableArea
               ? Number(property.usableArea)
               : undefined,
           appraisalPrice: 0,
@@ -194,10 +194,10 @@ export function initializeDirectComparisonForm({
       },
       directComparisonAppraisalPrice: {
         includeLandArea: false,
-        landArea: property.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
-        usableArea: property.totalBuildingArea
+        landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        usableArea: property?.totalBuildingArea
           ? Number(property.totalBuildingArea)
-          : property.usableArea
+          : property?.usableArea
             ? Number(property.usableArea)
             : undefined,
         appraisalPrice: 0,

@@ -162,8 +162,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
     {
       targetPath: appraisalPriceRoundedPath(),
       deps: [appraisalPricePath()],
-      compute: ({ getValues: gv }) =>
-        roundToThousand(Number(gv(appraisalPricePath())) || 0),
+      compute: ({ getValues: gv }) => roundToThousand(Number(gv(appraisalPricePath())) || 0),
       when: ({ getValues: gv, getFieldState, formState }) => {
         const depValue = Number(gv(appraisalPricePath())) || 0;
         const current = Number(gv(appraisalPriceRoundedPath())) || 0;
@@ -204,7 +203,10 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
       when: ({ getValues: gv, getFieldState, formState }) => {
         const depValue = Number(gv(appraisalPriceIncludeBuildingCostPath())) || 0;
         const current = Number(gv(appraisalPriceIncludeBuildingCostRoundedPath())) || 0;
-        const { isDirty } = getFieldState(appraisalPriceIncludeBuildingCostRoundedPath(), formState);
+        const { isDirty } = getFieldState(
+          appraisalPriceIncludeBuildingCostRoundedPath(),
+          formState,
+        );
 
         if (prevValueIncludeCostRef.current === null) {
           prevValueIncludeCostRef.current = depValue;
@@ -280,7 +282,6 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-
       {/* ── COST APPROACH, no building cost, unit=01/02 ── */}
       {isCostApproach && !includeBuildingCost && isUnitPrice && (
         <>
@@ -290,7 +291,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               <RHFInputCell
                 fieldName={finalValueAdjustedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht/{unitAreaLabel}</span>
@@ -312,7 +318,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               <RHFInputCell
                 fieldName={finalValueAdjustedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht/{unitAreaLabel}</span>
@@ -351,7 +362,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               <RHFInputCell
                 fieldName={appraisalPriceRoundedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
                 onUserChange={
                   !isUnitPrice
                     ? (next: any) => {
@@ -379,7 +395,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
             <RHFInputCell
               fieldName={appraisalPriceRoundedPath()}
               inputType="number"
-              number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 15,
+                maxValue: 999_999_999_999_999.0,
+                allowNegative: false,
+              }}
               onUserChange={
                 !isUnitPrice
                   ? (next: any) => {
@@ -417,7 +438,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
                 <RHFInputCell
                   fieldName={finalValueAdjustedPath()}
                   inputType="number"
-                  number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                  number={{
+                    decimalPlaces: 2,
+                    maxIntegerDigits: 15,
+                    maxValue: 999_999_999_999_999.0,
+                    allowNegative: false,
+                  }}
                 />
               </div>
               <span className="text-gray-500">Baht/{unitAreaLabel}</span>
@@ -442,7 +468,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               <RHFInputCell
                 fieldName={appraisalPriceRoundedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht</span>
@@ -482,7 +513,12 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               <RHFInputCell
                 fieldName={appraisalPriceIncludeBuildingCostRoundedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht</span>

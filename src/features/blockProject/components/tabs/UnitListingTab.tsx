@@ -1,14 +1,24 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useAppraisalContext } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
 import UploadArea from '@/shared/components/inputs/UploadArea';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
-import { useGetProjectUnits, useGetProjectUnitUploads, useUploadProjectUnits, useDeleteProjectUnitUpload } from '../../api/projectUnit';
+import {
+  useGetProjectUnits,
+  useGetProjectUnitUploads,
+  useUploadProjectUnits,
+  useUploadReappraisalUnits,
+  useReappraisalPreview,
+  useDeleteProjectUnitUpload,
+} from '../../api/projectUnit';
+import type { ReappraisalPreviewResult } from '../../api/projectUnit';
+import UnitVerificationDialog from '../UnitVerificationDialog';
 import { isCondo } from '../../types';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
 import type { AxiosError } from 'axios';
@@ -18,15 +28,6 @@ type AppError = AxiosError & { apiError?: ApiError };
 
 const ALLOWED_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-
-function validateFile(file: File): string | null {
-  const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return `Invalid file type. Only ${ALLOWED_EXTENSIONS.join(', ')} are supported.`;
-  }
-  if (file.size > MAX_FILE_SIZE_BYTES) return 'File size exceeds 10 MB limit.';
-  return null;
-}
 
 // ── Upload History Table ──────────────────────────────────────────────────────
 
@@ -43,24 +44,38 @@ function UploadHistoryTable({
   onDelete: (upload: ProjectUnitUpload) => void;
   deletingId: string | null;
 }) {
+  const { t } = useTranslation('blockProject');
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />)}
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+        ))}
       </div>
     );
   }
-  if (uploads.length === 0) return <p className="text-xs text-gray-400 text-center py-6">No upload history</p>;
+  if (uploads.length === 0)
+    return (
+      <p className="text-xs text-gray-400 text-center py-6">{t('unitListing.noUploadHistory')}</p>
+    );
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-gray-200">
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">No</th>
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">File Name</th>
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">Date / Time</th>
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">Status</th>
+            <th className="text-left py-2 px-3 text-gray-500 font-medium">
+              {t('unitListing.cols.no')}
+            </th>
+            <th className="text-left py-2 px-3 text-gray-500 font-medium">
+              {t('unitListing.cols.fileName')}
+            </th>
+            <th className="text-left py-2 px-3 text-gray-500 font-medium">
+              {t('unitListing.cols.dateTime')}
+            </th>
+            <th className="text-left py-2 px-3 text-gray-500 font-medium">
+              {t('unitListing.cols.status')}
+            </th>
             <th className="py-2 px-3" />
           </tr>
         </thead>
@@ -68,11 +83,20 @@ function UploadHistoryTable({
           {uploads.map((upload, index) => (
             <tr key={upload.id} className="border-b border-gray-100 hover:bg-gray-50">
               <td className="py-2 px-3 text-gray-600">{index + 1}</td>
-              <td className="py-2 px-3 text-gray-800 max-w-[180px] truncate" title={upload.fileName}>{upload.fileName}</td>
-              <td className="py-2 px-3 text-gray-600 whitespace-nowrap">{new Date(upload.uploadedAt).toLocaleString()}</td>
+              <td
+                className="py-2 px-3 text-gray-800 max-w-[180px] truncate"
+                title={upload.fileName}
+              >
+                {upload.fileName}
+              </td>
+              <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
+                {new Date(upload.uploadedAt).toLocaleString()}
+              </td>
               <td className="py-2 px-3">
                 {upload.isUsed && (
-                  <Badge type="status" value="completed">Used</Badge>
+                  <Badge type="status" value="completed">
+                    {t('unitListing.cols.used')}
+                  </Badge>
                 )}
               </td>
               <td className="py-2 px-3 text-right">
@@ -82,7 +106,7 @@ function UploadHistoryTable({
                     onClick={() => onDelete(upload)}
                     disabled={deletingId === upload.id}
                     className="text-gray-400 hover:text-danger transition-colors disabled:opacity-50"
-                    title="Delete upload"
+                    title={t('unitListing.aria.deleteUpload')}
                   >
                     <Icon style="regular" name="trash" className="size-3.5" />
                   </button>
@@ -101,11 +125,22 @@ function UploadHistoryTable({
 // Condo: Floor / Tower Name / Reg. Number / Room No. / Model Type
 // LB: Plot No. / House No. / No. of Floors / Land Area / Model Name
 
-function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit[]; isLoading: boolean; projectType: ProjectType }) {
+function UnitResultTable({
+  units,
+  isLoading,
+  projectType,
+}: {
+  units: ProjectUnit[];
+  isLoading: boolean;
+  projectType: ProjectType;
+}) {
+  const { t } = useTranslation('blockProject');
   if (isLoading) {
     return (
       <div className="space-y-2">
-        {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />)}
+        {[1, 2, 3, 4, 5].map(i => (
+          <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+        ))}
       </div>
     );
   }
@@ -113,7 +148,7 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
     return (
       <div className="flex flex-col items-center justify-center py-10 text-gray-400">
         <Icon name="table-list" className="text-3xl mb-2" />
-        <p className="text-sm">No unit data — upload a spreadsheet to import units</p>
+        <p className="text-sm">{t('unitListing.noUnits')}</p>
       </div>
     );
   }
@@ -124,14 +159,30 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
         <table className="w-full text-xs">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Sq No</th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Floor</th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Tower Name</th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Reg. Number</th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Room No</th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model Type</th>
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m.)</th>
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price (Baht)</th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.sqNo')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                {t('unitListing.cols.floor')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.towerName')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.regNumber')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.roomNo')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.modelType')}
+              </th>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.usableAreaSqm')}
+              </th>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.sellingPriceBaht')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -143,8 +194,12 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
                 <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800 text-right">{unit.usableArea?.toLocaleString() ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800 text-right">{unit.sellingPrice?.toLocaleString() ?? '-'}</td>
+                <td className="py-2 px-3 text-gray-800 text-right">
+                  {unit.usableArea?.toLocaleString() ?? '-'}
+                </td>
+                <td className="py-2 px-3 text-gray-800 text-right">
+                  {unit.sellingPrice?.toLocaleString() ?? '-'}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -159,14 +214,30 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
       <table className="w-full text-xs">
         <thead className="bg-gray-50">
           <tr>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Sq No</th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Plot No</th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">House No</th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Model Name</th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">No. of Floors</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Land Area (Sq.Wa)</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Usable Area (sq.m.)</th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">Selling Price (Baht)</th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.sqNo')}
+            </th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.plotNo')}
+            </th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.houseNo')}
+            </th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.modelName')}
+            </th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.numFloors')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.landAreaSqWa')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.usableAreaSqm')}
+            </th>
+            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.sellingPriceBaht')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -177,9 +248,15 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
               <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-800 text-right">{unit.landArea?.toLocaleString() ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-800 text-right">{unit.usableArea?.toLocaleString() ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-800 text-right">{unit.sellingPrice?.toLocaleString() ?? '-'}</td>
+              <td className="py-2 px-3 text-gray-800 text-right">
+                {unit.landArea?.toLocaleString() ?? '-'}
+              </td>
+              <td className="py-2 px-3 text-gray-800 text-right">
+                {unit.usableArea?.toLocaleString() ?? '-'}
+              </td>
+              <td className="py-2 px-3 text-gray-800 text-right">
+                {unit.sellingPrice?.toLocaleString() ?? '-'}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -190,7 +267,16 @@ function UnitResultTable({ units, isLoading, projectType }: { units: ProjectUnit
 
 // ── Summary Footer ────────────────────────────────────────────────────────────
 
-function SummaryFooter({ units, totalCount, projectType }: { units: ProjectUnit[]; totalCount: number; projectType: ProjectType }) {
+function SummaryFooter({
+  units,
+  totalCount,
+  projectType,
+}: {
+  units: ProjectUnit[];
+  totalCount: number;
+  projectType: ProjectType;
+}) {
+  const { t } = useTranslation('blockProject');
   const towers = new Set(units.map(u => u.towerName).filter(Boolean)).size;
   const models = new Set(units.map(u => u.modelType).filter(Boolean)).size;
 
@@ -199,19 +285,19 @@ function SummaryFooter({ units, totalCount, projectType }: { units: ProjectUnit[
       {isCondo(projectType) && (
         <>
           <div className="flex items-center gap-2">
-            <span className="text-gray-500">Towers:</span>
+            <span className="text-gray-500">{t('unitListing.summary.towers')}</span>
             <span className="font-semibold text-gray-800">{towers}</span>
           </div>
           <div className="h-4 w-px bg-gray-300" />
         </>
       )}
       <div className="flex items-center gap-2">
-        <span className="text-gray-500">Models:</span>
+        <span className="text-gray-500">{t('unitListing.summary.models')}</span>
         <span className="font-semibold text-gray-800">{models}</span>
       </div>
       <div className="h-4 w-px bg-gray-300" />
       <div className="flex items-center gap-2">
-        <span className="text-gray-500">Total Units:</span>
+        <span className="text-gray-500">{t('unitListing.summary.totalUnits')}</span>
         <span className="font-semibold text-gray-800">{totalCount.toLocaleString()}</span>
       </div>
     </div>
@@ -233,12 +319,20 @@ interface UnitListingTabProps {
  * - Accepts both .xlsx, .xls, .csv (Condo convention) — Village only accepted .xlsx.
  */
 export default function UnitListingTab({ projectType }: UnitListingTabProps) {
+  const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
   const readOnly = usePageReadOnly();
+  const { appraisal } = useAppraisalContext();
+  const isReappraisal = appraisal?.appraisalType === 'ReAppraisal';
 
   const { data: unitsData, isLoading: unitsLoading } = useGetProjectUnits(appraisalId ?? '');
-  const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(appraisalId ?? '');
+  const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(
+    appraisalId ?? '',
+  );
   const { mutate: uploadUnits, isPending: isUploading } = useUploadProjectUnits();
+  const { mutate: uploadReappraisalUnits, isPending: isReappraisalUploading } =
+    useUploadReappraisalUnits();
+  const { mutate: previewReappraisal, isPending: isPreviewing } = useReappraisalPreview();
   const { mutate: deleteUpload, isPending: isDeleting } = useDeleteProjectUnitUpload();
 
   const units = unitsData?.units ?? [];
@@ -247,16 +341,20 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingDeleteUpload, setPendingDeleteUpload] = useState<ProjectUnitUpload | null>(null);
+  const [verificationState, setVerificationState] = useState<{
+    file: File;
+    result: ReappraisalPreviewResult;
+  } | null>(null);
 
   const doUpload = (file: File) => {
     if (!appraisalId) return;
     uploadUnits(
       { appraisalId, file },
       {
-        onSuccess: () => toast.success('Units imported successfully'),
+        onSuccess: () => toast.success(t('toasts.units.importSuccess')),
         onError: (err: unknown) => {
           const error = err as AppError;
-          toast.error(error?.apiError?.detail ?? 'Upload failed. Please check the file format.');
+          toast.error(error?.apiError?.detail ?? t('toasts.units.uploadFailed'));
         },
       },
     );
@@ -266,7 +364,15 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     const file = e.target.files?.[0];
     if (readOnly || !file || !appraisalId) return;
 
-    const validationError = validateFile(file);
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    let validationError: string | null = null;
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      validationError = t('toasts.units.invalidFileType', {
+        extensions: ALLOWED_EXTENSIONS.join(', '),
+      });
+    } else if (file.size > MAX_FILE_SIZE_BYTES) {
+      validationError = t('toasts.units.fileTooLarge');
+    }
     if (validationError) {
       toast.error(validationError);
       return;
@@ -284,13 +390,69 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     setPendingFile(null);
   };
 
+  const handleReappraisalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (readOnly || !file || !appraisalId) return;
+
+    // Reset the input so re-selecting the same file re-triggers the change event
+    e.target.value = '';
+
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    let validationError: string | null = null;
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      validationError = t('toasts.units.invalidFileType', {
+        extensions: ALLOWED_EXTENSIONS.join(', '),
+      });
+    } else if (file.size > MAX_FILE_SIZE_BYTES) {
+      validationError = t('toasts.units.fileTooLarge');
+    }
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
+    previewReappraisal(
+      { appraisalId, file },
+      {
+        onSuccess: result => {
+          setVerificationState({ file, result });
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? t('toasts.units.uploadFailed'));
+        },
+      },
+    );
+  };
+
+  const handleVerificationApply = () => {
+    if (!verificationState || !appraisalId) return;
+    uploadReappraisalUnits(
+      { appraisalId, file: verificationState.file },
+      {
+        onSuccess: () => {
+          toast.success(t('unitVerification.applySuccess'));
+          setVerificationState(null);
+        },
+        onError: (err: unknown) => {
+          const error = err as AppError;
+          toast.error(error?.apiError?.detail ?? t('toasts.units.uploadFailed'));
+        },
+      },
+    );
+  };
+
+  const handleVerificationClose = () => {
+    setVerificationState(null);
+  };
+
   const handleConfirmDelete = () => {
     if (readOnly || !pendingDeleteUpload || !appraisalId) return;
     deleteUpload(
       { appraisalId, uploadId: pendingDeleteUpload.id },
       {
-        onSuccess: () => toast.success('Upload deleted'),
-        onError: () => toast.error('Failed to delete upload'),
+        onSuccess: () => toast.success(t('toasts.units.deleteSuccess')),
+        onError: () => toast.error(t('toasts.units.deleteFailed')),
         onSettled: () => setPendingDeleteUpload(null),
       },
     );
@@ -299,19 +461,41 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   return (
     <div className="flex flex-col gap-6 h-full min-h-0 overflow-y-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Import Units</h3>
-          <UploadArea
-            onChange={handleFileChange}
-            accept=".xlsx,.xls,.csv"
-            isLoading={isUploading}
-            disabled={readOnly}
-            supportedText=".xlsx, .xls, .csv (max 10MB)"
-          />
-        </div>
+        {/* Reappraisal: the destructive "replace" upload is hidden — only the non-destructive
+            re-match upload is offered, in place of Import Units. */}
+        {isReappraisal ? (
+          <div className="bg-white rounded-xl border border-amber-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-1">
+              {t('unitListing.reappraisal.title')}
+            </h3>
+            <p className="text-xs text-gray-500 mb-4">{t('unitListing.reappraisal.hint')}</p>
+            <UploadArea
+              onChange={handleReappraisalFileChange}
+              accept=".xlsx,.xls,.csv"
+              isLoading={isPreviewing || isReappraisalUploading}
+              disabled={readOnly}
+              supportedText=".xlsx, .xls, .csv (max 10MB)"
+            />
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">
+              {t('unitListing.importUnits')}
+            </h3>
+            <UploadArea
+              onChange={handleFileChange}
+              accept=".xlsx,.xls,.csv"
+              isLoading={isUploading}
+              disabled={readOnly}
+              supportedText=".xlsx, .xls, .csv (max 10MB)"
+            />
+          </div>
+        )}
 
         <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Upload History</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">
+            {t('unitListing.uploadHistory')}
+          </h3>
           <UploadHistoryTable
             uploads={uploads}
             isLoading={uploadsLoading}
@@ -324,8 +508,12 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
       <div className="bg-white rounded-xl border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-900">Unit Listing</h3>
-          {units.length > 0 && <span className="text-xs text-gray-500">{totalCount.toLocaleString()} units</span>}
+          <h3 className="text-sm font-semibold text-gray-900">{t('unitListing.unitListing')}</h3>
+          {units.length > 0 && (
+            <span className="text-xs text-gray-500">
+              {t('unitListing.unitsCount', { count: totalCount.toLocaleString() })}
+            </span>
+          )}
         </div>
         <UnitResultTable units={units} isLoading={unitsLoading} projectType={projectType} />
         {units.length > 0 && (
@@ -339,9 +527,9 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         isOpen={pendingFile !== null}
         onClose={() => setPendingFile(null)}
         onConfirm={handleConfirmReupload}
-        title="Replace existing units?"
-        message="Uploading a new file will replace all current unit data. This cannot be undone."
-        confirmText="Replace"
+        title={t('unitListing.confirmReplace.title')}
+        message={t('unitListing.confirmReplace.message')}
+        confirmText={t('unitListing.confirmReplace.confirm')}
         variant="warning"
         isLoading={isUploading}
       />
@@ -350,12 +538,23 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         isOpen={pendingDeleteUpload !== null}
         onClose={() => setPendingDeleteUpload(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete upload?"
+        title={t('unitListing.confirmDelete.title')}
         message={`This will permanently remove "${pendingDeleteUpload?.fileName}" and all its unit rows.`}
-        confirmText="Delete"
+        confirmText={t('unitListing.confirmDelete.confirm')}
         variant="danger"
         isLoading={isDeleting}
       />
+
+      {verificationState && (
+        <UnitVerificationDialog
+          isOpen={true}
+          onClose={handleVerificationClose}
+          onApply={handleVerificationApply}
+          result={verificationState.result}
+          projectType={projectType}
+          isApplying={isReappraisalUploading}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,7 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import {
   allBuildingFields,
   allCondoFields,
@@ -35,11 +37,63 @@ const landTitleItem = z.object({
   remark: z.string().nullable().optional(),
 });
 
+// Shared refinement for rentalInfo validation — defined early so it can be
+// reused by both the rented-out guard below and the LSL lease schemas below.
+const rentalInfoRefinement = (data: any, ctx: z.RefinementCtx) => {
+  const ri = data.rentalInfo ?? data; // support both nested and flat
+  const numberOfYears = ri.numberOfYears ?? 0;
+
+  const upFrontTotal = ri.upFrontTotalAmount ?? 0;
+  const entriesTotal = (ri.upFrontEntries ?? []).reduce(
+    (sum: number, e: any) => sum + (e.upFrontAmount ?? 0),
+    0,
+  );
+  if (
+    upFrontTotal > 0 &&
+    (ri.upFrontEntries ?? []).length > 0 &&
+    Math.abs(entriesTotal - upFrontTotal) > 0.01
+  ) {
+    const path = data.rentalInfo ? ['rentalInfo', 'upFrontEntries'] : ['upFrontEntries'];
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: `Up front entries total (${entriesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}) does not match Up Front amount (${upFrontTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`,
+      path,
+    });
+  }
+
+  if (numberOfYears > 0 && ri.growthPeriodEntries?.length) {
+    ri.growthPeriodEntries.forEach((entry: any, idx: number) => {
+      if (entry.fromYear > numberOfYears) {
+        const path = data.rentalInfo
+          ? ['rentalInfo', 'growthPeriodEntries', idx, 'fromYear']
+          : ['growthPeriodEntries', idx, 'fromYear'];
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `At Year (${entry.fromYear}) exceeds Number of Years (${numberOfYears})`,
+          path,
+        });
+      }
+    });
+  }
+};
+
+// Only validate rental info when isRentedOut is true
+const rentedOutRefinement = (data: any, ctx: z.RefinementCtx) => {
+  if (data.isRentedOut) {
+    rentalInfoRefinement(data, ctx);
+  }
+};
+
 export const createLandFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
+  isRentedOut: z.boolean().optional(),
+  leaseAgreement: z.any().nullable().optional(),
+  rentalInfo: z.any().nullable().optional(),
 });
 
-export const createLandForm = buildFormSchema(allLandFields, createLandFormBase);
+export const createLandForm = buildFormSchema(allLandFields, createLandFormBase).superRefine(
+  rentedOutRefinement,
+);
 
 const surfaceFormItem = z.object({
   fromFloorNumber: z.coerce.number().nullable().optional(),
@@ -152,57 +206,91 @@ export const createLandAndBuildingFormBase = z.object({
   constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
   constructionSummary: constructionSummaryFormItem.nullable().optional(),
   constructionRemark: z.string().nullable().optional(),
+  isRentedOut: z.boolean().optional(),
+  leaseAgreement: z.any().nullable().optional(),
+  rentalInfo: z.any().nullable().optional(),
 });
 
 export const createLandAndBuildingForm = buildFormSchema(
   allLandBuildingFields,
   createLandAndBuildingFormBase,
-).superRefine(constructionProportionRefinement);
+)
+  .superRefine(constructionProportionRefinement)
+  .superRefine(rentedOutRefinement);
 
-export const createLandAndBuildingPMAFormBase = z.object({
-  buildingInsurancePrice: z.coerce.number().nullable(),
-  sellingPrice: z.coerce.number().nullable(),
-  forcedSalePrice: z.coerce.number().nullable(),
-  titleNo: z.string().nullable().optional(),
-  rawang: z.string().nullable().optional(),
-  landNo: z.string().nullable().optional(),
-  surveyNo: z.string().nullable().optional(),
-  bookNumber: z.string().nullable().optional(),
-  pageNumber: z.string().nullable().optional(),
-  areaRai: z.number().int().nullable().optional(),
-  areaNgan: z.number().int().nullable().optional(),
-  areaSquareWa: z.number().nullable().optional(),
-  subDistrict: z.string().min(1, 'Sub district is required.'),
-  subDistrictName: z.string().nullable(),
-  district: z.string().min(1, 'District is required.'),
-  districtName: z.string().nullable(),
-  province: z.string().min(1, 'Province is required.'),
-  provinceName: z.string().nullable(),
-});
+const makeLandAndBuildingPMAFormBase = (t: TFunction<'appraisal'>) =>
+  z.object({
+    buildingInsurancePrice: z.coerce.number().nullable(),
+    sellingPrice: z.coerce.number().nullable(),
+    forcedSalePrice: z.coerce.number().nullable(),
+    titleNo: z.string().nullable().optional(),
+    rawang: z.string().nullable().optional(),
+    landNo: z.string().nullable().optional(),
+    surveyNo: z.string().nullable().optional(),
+    bookNumber: z.string().nullable().optional(),
+    pageNumber: z.string().nullable().optional(),
+    areaRai: z.number().int().nullable().optional(),
+    areaNgan: z.number().int().nullable().optional(),
+    areaSquareWa: z.number().nullable().optional(),
+    subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
+    subDistrictName: z.string().nullable(),
+    district: z.string().min(1, t('validation.districtRequired')),
+    districtName: z.string().nullable(),
+    province: z.string().min(1, t('validation.provinceRequired')),
+    provinceName: z.string().nullable(),
+  });
 
-export const createCondoPMAFormBase = z.object({
-  buildingInsurancePrice: z.coerce.number().nullable(),
-  sellingPrice: z.coerce.number().nullable(),
-  forcedSalePrice: z.coerce.number().nullable(),
-  builtOnTitleNumber: z.string().min(1, 'Built on title number is required.'),
-  condoRegistrationNumber: z.string().min(1, 'Condo registration number is required.'),
-  roomNumber: z.string().min(1, 'Room number is required.'),
-  floorNumber: z.coerce.number(),
-  buildingNumber: z.string().min(1, 'Building number is required.'),
-  condoName: z.string().min(1, 'Condo name is required.'),
-  subDistrict: z.string().min(1, 'Sub district is required.'),
-  subDistrictName: z.string().nullable(),
-  district: z.string().min(1, 'District is required.'),
-  districtName: z.string().nullable(),
-  province: z.string().min(1, 'Province is required.'),
-  provinceName: z.string().nullable(),
-});
+// Static export for type inference
+export const createLandAndBuildingPMAFormBase = makeLandAndBuildingPMAFormBase(
+  ((key: string) => key) as unknown as TFunction<'appraisal'>,
+);
 
+const makeCondoPMAFormBase = (t: TFunction<'appraisal'>) =>
+  z.object({
+    buildingInsurancePrice: z.coerce.number().nullable(),
+    sellingPrice: z.coerce.number().nullable(),
+    forcedSalePrice: z.coerce.number().nullable(),
+    builtOnTitleNumber: z.string().min(1, t('validation.builtOnTitleNumberRequired')),
+    condoRegistrationNumber: z.string().min(1, t('validation.condoRegistrationNumberRequired')),
+    roomNumber: z.string().min(1, t('validation.roomNumberRequired')),
+    floorNumber: z.coerce.number(),
+    buildingNumber: z.string().min(1, t('validation.buildingNumberRequired')),
+    condoName: z.string().min(1, t('validation.condoNameRequired')),
+    subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
+    subDistrictName: z.string().nullable(),
+    district: z.string().min(1, t('validation.districtRequired')),
+    districtName: z.string().nullable(),
+    province: z.string().min(1, t('validation.provinceRequired')),
+    provinceName: z.string().nullable(),
+  });
+
+// Static export for type inference
+export const createCondoPMAFormBase = makeCondoPMAFormBase(
+  ((key: string) => key) as unknown as TFunction<'appraisal'>,
+);
+
+export const makeLandAndBuildingPMAForm = (t: TFunction<'appraisal'>) =>
+  buildFormSchema(allLandAndBuildingPMAFields, makeLandAndBuildingPMAFormBase(t));
+
+export const makeCondoPMAForm = (t: TFunction<'appraisal'>) =>
+  buildFormSchema(allCondoPMAFields, makeCondoPMAFormBase(t));
+
+// Static exports using identity t for type inference only
 export const createLandAndBuildingPMAForm = buildFormSchema(
   allLandAndBuildingPMAFields,
   createLandAndBuildingPMAFormBase,
 );
 export const createCondoPMAForm = buildFormSchema(allCondoPMAFields, createCondoPMAFormBase);
+
+export const useLandAndBuildingPMAFormSchema = () => {
+  const { t } = useTranslation('appraisal');
+  return makeLandAndBuildingPMAForm(t);
+};
+
+export const useCondoPMAFormSchema = () => {
+  const { t } = useTranslation('appraisal');
+  return makeCondoPMAForm(t);
+};
 export const createMachineryForm = buildFormSchema(allMachineryFields);
 
 export const factorDataDto = z
@@ -238,6 +326,8 @@ export const createMarketComparableForm = z
     salePrice: z.coerce.number().nullable().optional(),
     salePriceUnit: z.string().nullable().optional(),
     saleDate: z.string().datetime({ local: true, offset: true }).nullable().optional(),
+    latitude: z.coerce.number().nullable().optional(),
+    longitude: z.coerce.number().nullable().optional(),
   })
   .passthrough();
 
@@ -336,6 +426,9 @@ export const createLandFormDefault: createLandFormType = {
   pondDepth: 0,
   hasBuilding: false,
   hasBuildingOther: '',
+  isRentedOut: false,
+  leaseAgreement: null,
+  rentalInfo: null,
   remark: '',
 };
 
@@ -632,6 +725,9 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
     fileSizeBytes: null,
   },
   constructionRemark: '',
+  isRentedOut: false,
+  leaseAgreement: null,
+  rentalInfo: null,
 };
 
 export const createMachineryFormDefault: createMachineryFormType = {
@@ -724,6 +820,8 @@ export const createMarketComparableFormDefault: createMarketComparableFormType =
   salePrice: null,
   salePriceUnit: null,
   saleDate: null,
+  latitude: null,
+  longitude: null,
 };
 
 // =============================================================================
@@ -785,44 +883,6 @@ export const rentalInfoBaseSchema = z.object({
     .nullable()
     .optional(),
 });
-
-const rentalInfoRefinement = (data: any, ctx: z.RefinementCtx) => {
-  const ri = data.rentalInfo ?? data; // support both nested and flat
-  const numberOfYears = ri.numberOfYears ?? 0;
-
-  const upFrontTotal = ri.upFrontTotalAmount ?? 0;
-  const entriesTotal = (ri.upFrontEntries ?? []).reduce(
-    (sum: number, e: any) => sum + (e.upFrontAmount ?? 0),
-    0,
-  );
-  if (
-    upFrontTotal > 0 &&
-    (ri.upFrontEntries ?? []).length > 0 &&
-    Math.abs(entriesTotal - upFrontTotal) > 0.01
-  ) {
-    const path = data.rentalInfo ? ['rentalInfo', 'upFrontEntries'] : ['upFrontEntries'];
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: `Up front entries total (${entriesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}) does not match Up Front amount (${upFrontTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`,
-      path,
-    });
-  }
-
-  if (numberOfYears > 0 && ri.growthPeriodEntries?.length) {
-    ri.growthPeriodEntries.forEach((entry: any, idx: number) => {
-      if (entry.fromYear > numberOfYears) {
-        const path = data.rentalInfo
-          ? ['rentalInfo', 'growthPeriodEntries', idx, 'fromYear']
-          : ['growthPeriodEntries', idx, 'fromYear'];
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: `At Year (${entry.fromYear}) exceeds Number of Years (${numberOfYears})`,
-          path,
-        });
-      }
-    });
-  }
-};
 
 export const rentalInfoFormSchema = buildFormSchema(
   rentalScheduleField,

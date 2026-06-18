@@ -1,4 +1,5 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { UploadedDocument } from '../types/document';
 
@@ -17,6 +18,8 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
   onEdit,
   onReplace,
 }) => {
+  const { t } = useTranslation('request');
+
   return (
     <Menu as="div" className="relative inline-block text-left">
       <MenuButton className="inline-flex items-center justify-center w-8 h-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
@@ -37,7 +40,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
                 } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 first:rounded-t-lg`}
               >
                 <Icon name="eye" style="regular" className="w-4 h-4" />
-                View/Download
+                {t('documentActions.view')}
               </button>
             )}
           </MenuItem>
@@ -53,7 +56,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
                 } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
               >
                 <Icon name="pen-to-square" style="regular" className="w-4 h-4" />
-                Edit details
+                {t('documentActions.editDetails')}
               </button>
             )}
           </MenuItem>
@@ -69,7 +72,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
                 } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
               >
                 <Icon name="arrow-up-from-bracket" style="regular" className="w-4 h-4" />
-                Replace file
+                {t('documentActions.replaceFile')}
               </button>
             )}
           </MenuItem>
@@ -85,7 +88,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
                 } group flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 last:rounded-b-lg`}
               >
                 <Icon name="trash" style="regular" className="w-4 h-4" />
-                Delete
+                {t('documentActions.delete')}
               </button>
             )}
           </MenuItem>

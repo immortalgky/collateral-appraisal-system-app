@@ -1,22 +1,26 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Button from '@shared/components/Button';
+import Icon from '@shared/components/Icon';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalContext } from '../context/AppraisalContext';
 import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
+import AppointmentHistoryDrawer from '../components/AppointmentHistoryDrawer';
 import RescheduleModal from '../components/RescheduleModal';
 import FeeInformationSection, { BANK_ABSORB_FEE_TYPES } from '../components/FeeInformationSection';
 import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
 import {
   useCancelAppointment,
+  useCancelRescheduleAppointment,
   useCreateAppointment,
   useGetAppointment,
   useRescheduleAppointment,
 } from '../api/appointment';
+import { useGetAppointmentHistory } from '../api/appointmentHistory';
 import {
   useAddFeeItem,
   useApproveFeeItem,
@@ -30,15 +34,21 @@ import {
   useUpdateFeeItem,
   useUpdatePayment,
 } from '../api/fee';
+import { useSubmitFeeAppointmentApproval } from '../api/feeAppointmentApprovalSubmit';
+import { deriveFeeApprovalState, buildApprovalSummaryParts } from '../utils/feeApprovalState';
 
 /**
- * Appointment & Fee page for the appraisal workflow
- * Allows users to manage appointment scheduling, fee breakdown, and payment tracking
+ * Appointment & Fee page for the appraisal workflow.
+ * Inline edits persist immediately; the server decides whether they need approval.
+ * A banner + per-section badges show when approval is pending.
+ * A "Submit for Approval" button in the footer triggers the approval request.
  */
 export default function AppointmentAndFeePage() {
+  const { t } = useTranslation(['appraisal', 'common']);
   const readOnly = usePageReadOnly();
   const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const [isCancelAppointmentModalOpen, setIsCancelAppointmentModalOpen] = useState(false);
+  const [isHistoryDrawerOpen, setIsHistoryDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId ?? '';
@@ -46,9 +56,7 @@ export default function AppointmentAndFeePage() {
 
   // API hooks - Appointments
   const { data: appointment = null } = useGetAppointment(appraisalId);
-  const createAppointment = useCreateAppointment();
-  const rescheduleAppointment = useRescheduleAppointment();
-  const cancelAppointment = useCancelAppointment();
+  const { data: historyEvents = [] } = useGetAppointmentHistory(appraisalId);
 
   // API hooks - Fees
   const { data: fees = [] } = useGetAppraisalFees(appraisalId);
@@ -63,15 +71,35 @@ export default function AppointmentAndFeePage() {
   const updateAppraisalFee = useUpdateAppraisalFee();
   const updateConstructionInspectionFee = useUpdateConstructionInspectionFee();
 
-  const isNewAppointment = !appointment;
+  const createAppointment = useCreateAppointment();
+  const rescheduleAppointment = useRescheduleAppointment();
+  const cancelAppointment = useCancelAppointment();
+  const cancelRescheduleAppointment = useCancelRescheduleAppointment();
+
+  // Submit-for-approval hook
+  const submitApproval = useSubmitFeeAppointmentApproval(appraisalId);
 
   // Get the first fee record
   const currentFee = fees.length > 0 ? fees[0] : null;
 
-  // Derive whether the current fee payment type is a bank-absorb type.
-  // Used to override payment display in PaymentInformationSection (frontend-only, not persisted).
-  const isBankAbsorb = BANK_ABSORB_FEE_TYPES.includes((currentFee as any)?.feePaymentType ?? '');
 
+  const isNewAppointment = !appointment;
+
+  // Real assignment id — present on both appointment and fee DTOs (schema-typed field).
+  // Prefer appointment; fall back to the fee record; undefined when neither is loaded yet.
+  const assignmentId = appointment?.assignmentId ?? currentFee?.assignmentId;
+
+  // ---- Approval state derivation ----
+  const approvalState = deriveFeeApprovalState(appointment, currentFee?.items ?? []);
+  const { hasDraft, hasSubmitted } = approvalState;
+
+  // Summary string for the submit button label
+  const summaryText = buildApprovalSummaryParts(approvalState, {
+    dateLabel: t('approval.summary.dateChange'),
+    feeLabel: (count) => t('approval.summary.fees', { count }),
+  });
+
+  // ---- Handlers ----
   const handleReschedule = async (data: {
     dateTime: string;
     location: string;
@@ -83,25 +111,25 @@ export default function AppointmentAndFeePage() {
           appraisalId,
           assignmentId: appraisal?.appraisalId ?? '',
           appointmentDateTime: data.dateTime,
-          appointedBy: currentUser?.id ?? '',
+          appointedBy: currentUser?.username ?? '',
           locationDetail: data.location,
           contactPerson: null,
           contactPhone: null,
         });
-        toast.success('Appointment scheduled');
+        toast.success(t('appointment.toasts.scheduled'));
       } else {
         await rescheduleAppointment.mutateAsync({
           appraisalId,
           appointmentId: appointment!.id,
-          changedBy: currentUser?.id ?? '',
+          changedBy: currentUser?.username ?? '',
           newDateTime: data.dateTime,
           reason: data.reason || null,
         });
-        toast.success('Appointment rescheduled');
+        toast.success(t('appointment.toasts.rescheduled'));
       }
       setIsRescheduleModalOpen(false);
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to update appointment. Please try again.');
+      toast.error(error.apiError?.detail || t('appointment.toasts.scheduleFailed'));
     }
   };
 
@@ -111,14 +139,23 @@ export default function AppointmentAndFeePage() {
       await cancelAppointment.mutateAsync({
         appraisalId,
         appointmentId: appointment.id,
-        changedBy: currentUser?.id ?? '',
+        changedBy: currentUser?.username ?? '',
         reason: null,
       });
       setIsCancelAppointmentModalOpen(false);
-      toast.success('Appointment cancelled');
+      toast.success(t('appointment.toasts.cancelled'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to cancel appointment. Please try again.');
+      toast.error(error.apiError?.detail || t('appointment.toasts.cancelFailed'));
     }
+  };
+
+  const handleCancelReschedule = () => {
+    if (!appointment) return;
+    cancelRescheduleAppointment.mutate({
+      appraisalId,
+      appointmentId: appointment.id,
+      changedBy: currentUser?.username ?? '',
+    });
   };
 
   const handleApproveFeeItem = async (feeId: string, itemId: string) => {
@@ -127,11 +164,10 @@ export default function AppointmentAndFeePage() {
         appraisalId,
         feeId,
         itemId,
-        approvedBy: currentUser?.id ?? '',
       });
-      toast.success('Fee item approved');
+      toast.success(t('fee.toasts.feeApproved'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to approve fee item.');
+      toast.error(error.apiError?.detail || t('fee.toasts.feeApproveFailed'));
     }
   };
 
@@ -141,13 +177,39 @@ export default function AppointmentAndFeePage() {
         appraisalId,
         feeId,
         itemId,
-        rejectedBy: currentUser?.id ?? '',
         reason: reason || 'Rejected',
       });
-      toast.success('Fee item rejected');
+      toast.success(t('fee.toasts.feeRejected'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to reject fee item.');
+      toast.error(error.apiError?.detail || t('fee.toasts.feeRejectFailed'));
     }
+  };
+
+  const handleUpdateFeePaymentType = async (value: string) => {
+    if (!currentFee) return;
+    try {
+      await updateAppraisalFee.mutateAsync({
+        appraisalId,
+        feeId: currentFee.id ?? '',
+        feePaymentType: value,
+        bankAbsorbAmount: BANK_ABSORB_FEE_TYPES.includes(value)
+          ? (currentFee.bankAbsorbAmount ?? 0)
+          : 0,
+      });
+      toast.success(t('fee.toasts.feeTypeUpdated'));
+    } catch (error: any) {
+      toast.error(error.apiError?.detail || t('fee.toasts.feeTypeUpdateFailed'));
+    }
+  };
+
+  const handleUpdateBankAbsorbAmount = async (amount: number) => {
+    if (!currentFee) return;
+    await updateAppraisalFee.mutateAsync({
+      appraisalId,
+      feeId: currentFee.id ?? '',
+      feePaymentType: currentFee.feePaymentType ?? '',
+      bankAbsorbAmount: amount,
+    });
   };
 
   const handleAddFeeItem = async (data: {
@@ -158,11 +220,9 @@ export default function AppointmentAndFeePage() {
     if (!currentFee) return;
     await addFeeItem.mutateAsync({
       appraisalId,
-      feeId: currentFee.id,
+      feeId: currentFee.id ?? '',
       ...data,
     });
-    const newItems = [...(currentFee.items ?? []), { feeAmount: data.feeAmount }];
-    handleUpdateFeePaymentType(currentFee.feePaymentType, computeTotalFee(newItems));
   };
 
   const handleUpdateFeeItem = async (
@@ -176,10 +236,6 @@ export default function AppointmentAndFeePage() {
       feeItemId,
       ...data,
     });
-    const newItems = (currentFee?.items ?? []).map(item =>
-      item.id === feeItemId ? { ...item, feeAmount: data.feeAmount } : item,
-    );
-    handleUpdateFeePaymentType(currentFee.feePaymentType, computeTotalFee(newItems));
   };
 
   const handleRemoveFeeItem = async (feeId: string, feeItemId: string) => {
@@ -188,8 +244,6 @@ export default function AppointmentAndFeePage() {
       feeId,
       feeItemId,
     });
-    const newItems = (currentFee?.items ?? []).filter(item => item.id !== feeItemId);
-    handleUpdateFeePaymentType(currentFee.feePaymentType, computeTotalFee(newItems));
   };
 
   const handleRecordPayment = async (data: {
@@ -203,16 +257,16 @@ export default function AppointmentAndFeePage() {
     try {
       await recordPayment.mutateAsync({
         appraisalId,
-        feeId: currentFee.id,
+        feeId: currentFee.id ?? '',
         paymentAmount: data.paymentAmount,
         paymentDate: data.paymentDate,
         paymentMethod: data.paymentMethod || null,
         paymentReference: data.paymentReference || null,
         remarks: data.remarks || null,
       });
-      toast.success('Payment recorded');
+      toast.success(t('payment.toasts.paymentRecorded'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to record payment.');
+      toast.error(error.apiError?.detail || t('payment.toasts.paymentRecordFailed'));
     }
   };
 
@@ -224,13 +278,13 @@ export default function AppointmentAndFeePage() {
     try {
       await updatePayment.mutateAsync({
         appraisalId,
-        feeId: currentFee.id,
+        feeId: currentFee.id ?? '',
         paymentId,
         ...data,
       });
-      toast.success('Payment updated');
+      toast.success(t('payment.toasts.paymentUpdated'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to update payment.');
+      toast.error(error.apiError?.detail || t('payment.toasts.paymentUpdateFailed'));
     }
   };
 
@@ -239,36 +293,12 @@ export default function AppointmentAndFeePage() {
     try {
       await removePayment.mutateAsync({
         appraisalId,
-        feeId: currentFee.id,
+        feeId: currentFee.id ?? '',
         paymentId,
       });
-      toast.success('Payment deleted');
+      toast.success(t('payment.toasts.paymentDeleted'));
     } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to delete payment.');
-    }
-  };
-
-  const computeTotalFee = (items: []) => {
-    const vatRate = currentFee?.vatRate ?? VAT_PERCENTAGE;
-    const subtotal = items.reduce((sum, item) => sum + (item.feeAmount || 0), 0);
-    return subtotal * (1 + vatRate / 100);
-  };
-
-  const handleUpdateFeePaymentType = async (value: string, overrideTotalFee?: number) => {
-    if (!currentFee) return;
-    // Calculate totalFee to determine bankAbsorbAmount
-    const totalFee = overrideTotalFee ?? computeTotalFee(currentFee.items ?? []);
-    const isNewValueBankAbsorb = BANK_ABSORB_FEE_TYPES.includes(value);
-    try {
-      await updateAppraisalFee.mutateAsync({
-        appraisalId,
-        feeId: currentFee.id,
-        feePaymentType: value,
-        bankAbsorbAmount: isNewValueBankAbsorb ? totalFee : 0,
-      });
-      toast.success('Fee type updated');
-    } catch (error: any) {
-      toast.error(error.apiError?.detail || 'Failed to update fee type.');
+      toast.error(error.apiError?.detail || t('payment.toasts.paymentDeleteFailed'));
     }
   };
 
@@ -281,16 +311,41 @@ export default function AppointmentAndFeePage() {
     });
   };
 
+  const handleSubmitApproval = () => {
+    if (!assignmentId) return;
+    submitApproval.mutate({ assignmentId });
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Main Content - Scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col gap-6 pb-6 pr-4">
+
+          {/* Global approval banner */}
+          {hasDraft && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-300 text-amber-800">
+              <Icon name="triangle-exclamation" style="solid" className="size-4 mt-0.5 shrink-0 text-amber-600" />
+              <span className="text-sm">{t('approval.banner.needsApproval')}</span>
+            </div>
+          )}
+          {hasSubmitted && !hasDraft && (
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-300 text-blue-800">
+              <Icon name="clock" style="solid" className="size-4 mt-0.5 shrink-0 text-blue-600" />
+              <span className="text-sm">{t('approval.banner.awaiting')}</span>
+            </div>
+          )}
+
           {/* Appointment Information Section */}
           <AppointmentInfoCard
             appointment={appointment}
             onReschedule={() => !readOnly && setIsRescheduleModalOpen(true)}
             onCancel={() => !readOnly && setIsCancelAppointmentModalOpen(true)}
+            onCancelReschedule={!readOnly ? handleCancelReschedule : undefined}
+            approvalDraft={approvalState.draftDateChange}
+            approvalSubmitted={approvalState.submittedDateChange}
+            onViewHistory={() => setIsHistoryDrawerOpen(true)}
+            historyEventCount={historyEvents.length}
           />
 
           {/* Divider */}
@@ -310,11 +365,16 @@ export default function AppointmentAndFeePage() {
               onApproveFeeItem={handleApproveFeeItem}
               onRejectFeeItem={handleRejectFeeItem}
               isFeePaymentTypeUpdating={updateAppraisalFee.isPending}
+              editLocked={hasSubmitted}
               showConstructionInspectionFee={currentFee?.hasBuildingUnderConstruction ?? false}
               constructionInspectionFeeAmount={currentFee?.constructionInspectionFeeAmount ?? null}
               onUpdateConstructionInspectionFee={handleUpdateConstructionInspectionFee}
               isConstructionInspectionFeeUpdating={updateConstructionInspectionFee.isPending}
               totalFeePaid={currentFee?.totalPaidAmount ?? 0}
+              bankAbsorbAmount={currentFee?.bankAbsorbAmount ?? null}
+              totalFeeAfterVAT={currentFee?.totalFeeAfterVAT ?? undefined}
+              onUpdateBankAbsorbAmount={handleUpdateBankAbsorbAmount}
+              isAbsorbAmountUpdating={updateAppraisalFee.isPending}
             />
 
             {/* Payment Information (Right Column) */}
@@ -325,7 +385,6 @@ export default function AppointmentAndFeePage() {
               onUpdatePayment={handleUpdatePayment}
               onRemovePayment={handleRemovePayment}
               requestedAt={appraisal?.requestedAt}
-              isBankAbsorb={isBankAbsorb}
               isPaymentPending={
                 recordPayment.isPending || updatePayment.isPending || removePayment.isPending
               }
@@ -336,10 +395,24 @@ export default function AppointmentAndFeePage() {
 
       {/* Sticky Footer */}
       <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center">
+        <div className="flex items-center justify-between gap-3">
           <Button variant="ghost" type="button" onClick={() => navigate(-1)}>
             Cancel
           </Button>
+
+          {/* Submit for Approval button — shown when there are unsubmitted draft items */}
+          {hasDraft && !readOnly && (
+            <Button
+              variant="primary"
+              type="button"
+              onClick={handleSubmitApproval}
+              disabled={submitApproval.isPending || !assignmentId}
+              isLoading={submitApproval.isPending}
+              leftIcon={<Icon name="paper-plane" style="solid" className="size-4" />}
+            >
+              {t('approval.submitButton', { summary: summaryText })}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -362,11 +435,18 @@ export default function AppointmentAndFeePage() {
         isOpen={isCancelAppointmentModalOpen}
         onClose={() => setIsCancelAppointmentModalOpen(false)}
         onConfirm={handleCancelAppointment}
-        title="Cancel Appointment?"
-        message="Are you sure you want to cancel this appointment? This action cannot be undone."
-        confirmText="Cancel Appointment"
-        cancelText="Keep Appointment"
+        title={t('appointment.cancelDialog.title')}
+        message={t('appointment.cancelDialog.message')}
+        confirmText={t('appointment.cancelDialog.confirm')}
+        cancelText={t('appointment.cancelDialog.cancel')}
         variant="danger"
+      />
+
+      {/* Appointment & Fee History Drawer */}
+      <AppointmentHistoryDrawer
+        appraisalId={appraisalId}
+        open={isHistoryDrawerOpen}
+        onClose={() => setIsHistoryDrawerOpen(false)}
       />
     </div>
   );

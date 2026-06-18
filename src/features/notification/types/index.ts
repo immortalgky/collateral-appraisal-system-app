@@ -6,7 +6,9 @@ export type NotificationType =
   | 'DocumentFollowupRaised'
   | 'DocumentFollowupResolved'
   | 'DocumentFollowupCancelled'
-  | 'DocumentLineItemDeclined';
+  | 'DocumentLineItemDeclined'
+  | 'ReportReady'
+  | 'ReportFailed';
 
 export interface Notification {
   id: string;
@@ -25,10 +27,36 @@ export const notificationTypeConfig: Record<
 > = {
   TaskAssigned: { icon: 'clipboard-list', iconStyle: 'solid', color: 'text-blue-500 bg-blue-50' },
   TaskCompleted: { icon: 'circle-check', iconStyle: 'solid', color: 'text-green-500 bg-green-50' },
-  WorkflowTransition: { icon: 'arrow-right-arrow-left', iconStyle: 'solid', color: 'text-purple-500 bg-purple-50' },
+  WorkflowTransition: {
+    icon: 'arrow-right-arrow-left',
+    iconStyle: 'solid',
+    color: 'text-purple-500 bg-purple-50',
+  },
   SystemNotification: { icon: 'gear', iconStyle: 'solid', color: 'text-orange-500 bg-orange-50' },
-  DocumentFollowupRaised: { icon: 'file-circle-plus', iconStyle: 'solid', color: 'text-amber-500 bg-amber-50' },
-  DocumentFollowupResolved: { icon: 'file-circle-check', iconStyle: 'solid', color: 'text-green-500 bg-green-50' },
-  DocumentFollowupCancelled: { icon: 'file-circle-xmark', iconStyle: 'solid', color: 'text-gray-500 bg-gray-50' },
+  DocumentFollowupRaised: {
+    icon: 'file-circle-plus',
+    iconStyle: 'solid',
+    color: 'text-amber-500 bg-amber-50',
+  },
+  DocumentFollowupResolved: {
+    icon: 'file-circle-check',
+    iconStyle: 'solid',
+    color: 'text-green-500 bg-green-50',
+  },
+  DocumentFollowupCancelled: {
+    icon: 'file-circle-xmark',
+    iconStyle: 'solid',
+    color: 'text-gray-500 bg-gray-50',
+  },
   DocumentLineItemDeclined: { icon: 'hand', iconStyle: 'solid', color: 'text-red-500 bg-red-50' },
+  ReportReady: {
+    icon: 'file-check',
+    iconStyle: 'solid',
+    color: 'text-emerald-500 bg-emerald-50',
+  },
+  ReportFailed: {
+    icon: 'file-xmark',
+    iconStyle: 'solid',
+    color: 'text-red-500 bg-red-50',
+  },
 };

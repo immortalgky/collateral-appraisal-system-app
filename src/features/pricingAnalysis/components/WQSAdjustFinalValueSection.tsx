@@ -3,10 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { wqsFieldPath } from '../adapters/wqsFieldPath';
-import {
-  roundToThousand,
-  toFiniteNumber,
-} from '@features/pricingAnalysis/domain/calculateWQS.ts';
+import { roundToThousand, toFiniteNumber } from '@features/pricingAnalysis/domain/calculateWQS.ts';
 import { fmt } from '../domain/formatters';
 import {
   type DerivedFieldRule,
@@ -251,7 +248,12 @@ export const AdjustFinalValueSection = ({
     {
       // appraisalDiff: appraisalPrice − upstream (negative = user rounded down).
       targetPath: 'WQSFinalValue._appraisalDiff',
-      deps: ['WQSFinalValue._totalPrice', 'WQSFinalValue._rawLandPrice', appraisalPricePath(), hasBuildingCostPath()],
+      deps: [
+        'WQSFinalValue._totalPrice',
+        'WQSFinalValue._rawLandPrice',
+        appraisalPricePath(),
+        hasBuildingCostPath(),
+      ],
       compute: ({ getValues }) => {
         const upstream = getAppraisalUpstream(getValues);
         const appraisalVal = Number(getValues(appraisalPricePath())) || 0;
@@ -299,7 +301,6 @@ export const AdjustFinalValueSection = ({
 
   return (
     <div className="flex flex-col gap-3 text-sm">
-
       {/* Coefficient of decision */}
       <div className="flex items-center gap-4">
         <span className="w-48 shrink-0 text-gray-500">Coefficient of decision</span>
@@ -331,7 +332,12 @@ export const AdjustFinalValueSection = ({
               <RHFInputCell
                 fieldName={finalValueAdjustedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht/{unitAreaLabel}</span>
@@ -359,7 +365,12 @@ export const AdjustFinalValueSection = ({
               <RHFInputCell
                 fieldName={finalValueAdjustedPath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht/{unitAreaLabel}</span>
@@ -397,7 +408,12 @@ export const AdjustFinalValueSection = ({
               <RHFInputCell
                 fieldName={appraisalPricePath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
                 onUserChange={
                   // For unit 03 (machinery) the rounded appraisal price IS the user's
                   // adjusted final value — sync them so finalValueAdjusted persists too.
@@ -427,7 +443,12 @@ export const AdjustFinalValueSection = ({
             <RHFInputCell
               fieldName={appraisalPricePath()}
               inputType="number"
-              number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 15,
+                maxValue: 999_999_999_999_999.0,
+                allowNegative: false,
+              }}
               onUserChange={
                 // For unit 03 (total price comparables) the rounded appraisal price
                 // IS the user's adjusted final value — sync them on input.
@@ -469,7 +490,12 @@ export const AdjustFinalValueSection = ({
                 <RHFInputCell
                   fieldName={finalValueAdjustedPath()}
                   inputType="number"
-                  number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                  number={{
+                    decimalPlaces: 2,
+                    maxIntegerDigits: 15,
+                    maxValue: 999_999_999_999_999.0,
+                    allowNegative: false,
+                  }}
                 />
               </div>
               <span className="text-gray-500">Baht/{unitAreaLabel}</span>
@@ -494,7 +520,12 @@ export const AdjustFinalValueSection = ({
               <RHFInputCell
                 fieldName={landValuePath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht</span>
@@ -534,7 +565,12 @@ export const AdjustFinalValueSection = ({
               <RHFInputCell
                 fieldName={appraisalPricePath()}
                 inputType="number"
-                number={{ decimalPlaces: 2, maxIntegerDigits: 15, maxValue: 999_999_999_999_999.0, allowNegative: false }}
+                number={{
+                  decimalPlaces: 2,
+                  maxIntegerDigits: 15,
+                  maxValue: 999_999_999_999_999.0,
+                  allowNegative: false,
+                }}
               />
             </div>
             <span className="text-gray-500">Baht</span>

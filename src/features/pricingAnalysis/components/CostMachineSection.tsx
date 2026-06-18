@@ -6,6 +6,13 @@ import { ScrollableTableContainer } from './ScrollableTableContainer';
 import { ParameterDisplay } from '@/shared/components';
 import { Skeleton } from '@/shared/components/Skeleton';
 import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import axios from '@shared/api/axiosInstance';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { MarketReferenceButton } from './MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '../api/references';
+import type { MarketComparableDetailType } from '../schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 export interface MachineryItem {
   appraisalPropertyId: string;
@@ -84,7 +91,9 @@ function useRowComputedValues(rowIndex: number) {
 
   // P = ((1 - (N - R) / N) * C)
   const physicalDeterioration =
-    lifeSpan !== 0 ? (1 - (lifeSpan - residualLifeSpan) / lifeSpan) * conditionFactor : 0;
+    lifeSpan !== 0
+      ? parseFloat(((1 - (lifeSpan - residualLifeSpan) / lifeSpan) * conditionFactor).toFixed(2))
+      : 0;
 
   // FMV = (RCN * P) * F * E
   const fmv =
@@ -108,7 +117,19 @@ function useRowComputedValues(rowIndex: number) {
   };
 }
 
-function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: boolean }) {
+function MachineryRow({
+  rowIndex,
+  isReadOnly,
+  methodId,
+  marketSurveys,
+  templateList,
+}: {
+  rowIndex: number;
+  isReadOnly: boolean;
+  methodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
+}) {
   const { getValues } = useFormContext();
   const {
     durationInUse,
@@ -126,7 +147,24 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
   }, [fmv, rowIndex, setValue]);
 
   const machine: MachineryItem = getValues(`machineryCosts.${rowIndex}.machine`) ?? {};
+  const appraisalPropertyId: string | undefined = getValues(`machineryCosts.${rowIndex}.appraisalPropertyId`);
   const inputDisabled = isDisabled || isReadOnly;
+
+  // Fetch this row's machinery detail for the subject-property column of the reference panel.
+  // Mirrors the pattern in LeaseholdPanel — enabled only when both ids are available.
+  const appraisalId = useAppraisalId();
+  const { data: machineryDetail } = useQuery({
+    queryKey: ['appraisal', appraisalId, 'property', appraisalPropertyId, 'machinery-detail'],
+    queryFn: async (): Promise<Record<string, unknown>> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${appraisalPropertyId}/machinery-detail`,
+      );
+      return data as Record<string, unknown>;
+    },
+    enabled: !!appraisalId && !!appraisalPropertyId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
   const tdBase = 'px-2 py-1.5 border-b border-r border-gray-300 text-xs whitespace-nowrap';
 
   return (
@@ -155,13 +193,34 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
       </td>
 
       {/* RCN */}
-      <td className="border-b border-r border-gray-300 ">
-        <RHFInputCell
-          fieldName={costMachinePath.rcn(rowIndex)}
-          inputType="number"
-          disabled={inputDisabled}
-          number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
-        />
+      <td className="border-b border-r border-gray-300">
+        <div className="px-1">
+          <RHFInputCell
+            fieldName={costMachinePath.rcn(rowIndex)}
+            inputType="number"
+            disabled={inputDisabled}
+            number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+            inputClassName={appraisalPropertyId && !isReadOnly ? '!pr-14' : undefined}
+            rightIcon={
+              appraisalPropertyId && !isReadOnly ? (
+                <MarketReferenceButton
+                  subjectType={PricingAnalysisSubjectType.MachineryCostRef}
+                  anchorId={appraisalPropertyId}
+                  hostMethodId={methodId}
+                  marketSurveys={marketSurveys ?? []}
+                  templateList={templateList}
+                  subjectProperty={machineryDetail}
+                  onApplyValue={v =>
+                    setValue(costMachinePath.rcn(rowIndex), v, { shouldDirty: true })
+                  }
+                  compact
+                  label="WQS"
+                  className="pointer-events-auto shrink-0"
+                />
+              ) : undefined
+            }
+          />
+        </div>
       </td>
 
       <td className="border-b border-r border-gray-300">
@@ -240,9 +299,16 @@ function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: 
 
 export function CostMachineSection({
   isLoading = false,
+  methodId,
+  marketSurveys,
+  templateList,
 }: {
   machineryItems: MachineryItem[];
   isLoading?: boolean;
+  /** hostMethodId — used for market reference cleanup scoping */
+  methodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
 }) {
   const isReadOnly = usePageReadOnly();
   const { control } = useFormContext();
@@ -264,51 +330,84 @@ export function CostMachineSection({
           <table className="table table-xs min-w-max border-separate border-spacing-0">
             <thead className="bg-neutral-50">
               <tr>
-                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>No.</th>
-                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>Quantity</th>
-                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>Machinery Information</th>
+                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>
+                  No.
+                </th>
+                <th rowSpan={3} className={clsx(th, 'text-center min-w-24')}>
+                  Quantity
+                </th>
+                <th colSpan={5} className={clsx(thCenter, 'border-b-2')}>
+                  Machinery Information
+                </th>
                 <th rowSpan={2} className={clsx(th, 'min-w-32 text-right')}>
-                  RCN Replacement Cost<br />
+                  RCN Replacement Cost
+                  <br />
                   <span className="font-normal text-gray-500">(Baht)</span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  N<br /><span className="font-normal text-xs text-gray-500">Life Span (Year(s))</span>
+                  N<br />
+                  <span className="font-normal text-xs text-gray-500">Life Span (Year(s))</span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  n<br /><span className="font-normal text-xs text-gray-500">Duration in Use (Year(s))</span>
+                  n<br />
+                  <span className="font-normal text-xs text-gray-500">
+                    Duration in Use (Year(s))
+                  </span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  R<br /><span className="font-normal text-gray-500">Residual Life Span (Year(s))</span>
+                  R<br />
+                  <span className="font-normal text-gray-500">Residual Life Span (Year(s))</span>
                 </th>
-                <th colSpan={4} className={clsx(thCenter, 'border-b-2')}>Depreciation</th>
+                <th colSpan={4} className={clsx(thCenter, 'border-b-2')}>
+                  Depreciation
+                </th>
                 <th rowSpan={3} className={clsx(th, 'text-right')}>
-                  Fair Market Value<br />
+                  Fair Market Value
+                  <br />
                   <span className="text-xs font-normal text-gray-500">FMV (Baht)</span>
                 </th>
                 <th rowSpan={3} className={clsx(thCenter, 'min-w-32')}>
-                  Market Demand<br />
+                  Market Demand
+                  <br />
                   <span className="text-xs font-normal text-gray-500">Available / Used</span>
                 </th>
-                <th rowSpan={3} className={clsx(th, 'min-w-32')}>Notes</th>
+                <th rowSpan={3} className={clsx(th, 'min-w-32')}>
+                  Notes
+                </th>
               </tr>
               <tr>
-                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Machinery Name</th>
-                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Registration No.</th>
-                <th rowSpan={2} className={clsx(th, 'min-w-32')}>Country of Manufacturer</th>
-                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>Condition Use</th>
-                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>Year</th>
-                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  C<br /><span className="font-normal text-xs text-gray-500">Condition Factor</span>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>
+                  Machinery Name
+                </th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>
+                  Registration No.
+                </th>
+                <th rowSpan={2} className={clsx(th, 'min-w-32')}>
+                  Country of Manufacturer
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  P<br /><span className="font-normal text-xs text-gray-500">Physical Deterioration</span>
+                  Condition Use
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
-                  F<br /><span className="font-normal text-xs text-gray-500">Functional Obsolescence</span>
+                  Year
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  C<br />
+                  <span className="font-normal text-xs text-gray-500">Condition Factor</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  P<br />
+                  <span className="font-normal text-xs text-gray-500">Physical Deterioration</span>
+                </th>
+                <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
+                  F<br />
+                  <span className="font-normal text-xs text-gray-500">Functional Obsolescence</span>
                 </th>
                 <th rowSpan={2} className={clsx(thCenter, 'min-w-32')}>
                   E<br />
-                  <span className="font-normal text-xs text-gray-500">Economic / External Obsolescence</span>
+                  <span className="font-normal text-xs text-gray-500">
+                    Economic / External Obsolescence
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -416,7 +515,14 @@ export function CostMachineSection({
           </thead>
           <tbody className="divide-y divide-gray-100">
             {fields.map((_field, rowIndex) => (
-              <MachineryRow key={_field.id} rowIndex={rowIndex} isReadOnly={isReadOnly} />
+              <MachineryRow
+                key={_field.id}
+                rowIndex={rowIndex}
+                isReadOnly={isReadOnly}
+                methodId={methodId}
+                marketSurveys={marketSurveys}
+                templateList={templateList}
+              />
             ))}
             {fields.length === 0 && (
               <tr>

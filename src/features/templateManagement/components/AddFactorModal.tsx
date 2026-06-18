@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
@@ -28,23 +29,31 @@ interface AddFactorModalProps {
   isAdding?: boolean;
 }
 
-const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isAdding }: AddFactorModalProps) => {
-  const language = useLocaleStore((s) => s.language);
+const AddFactorModal = ({
+  isOpen,
+  onClose,
+  factors,
+  excludeFactorIds,
+  onAdd,
+  isAdding,
+}: AddFactorModalProps) => {
+  const { t } = useTranslation(['templateManagement', 'common']);
+  const language = useLocaleStore(s => s.language);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Map<string, SelectedState>>(new Map());
 
-  const availableFactors = factors.filter(
-    (f) => f.isActive && !excludeFactorIds.includes(f.id),
-  );
+  const availableFactors = factors.filter(f => f.isActive && !excludeFactorIds.includes(f.id));
 
   const filtered = availableFactors.filter(
-    (f) =>
+    f =>
       f.factorCode.toLowerCase().includes(search.toLowerCase()) ||
-      getTranslatedFactorName(f.translations, language).toLowerCase().includes(search.toLowerCase()),
+      getTranslatedFactorName(f.translations, language)
+        .toLowerCase()
+        .includes(search.toLowerCase()),
   );
 
   const toggleSelect = (factorId: string) => {
-    setSelected((prev) => {
+    setSelected(prev => {
       const next = new Map(prev);
       if (next.has(factorId)) {
         next.delete(factorId);
@@ -56,7 +65,7 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
   };
 
   const toggleMandatory = (factorId: string, isMandatory: boolean) => {
-    setSelected((prev) => {
+    setSelected(prev => {
       const next = new Map(prev);
       const current = next.get(factorId);
       if (current) next.set(factorId, { ...current, isMandatory });
@@ -65,7 +74,7 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
   };
 
   const toggleCalculation = (factorId: string, isCalculationFactor: boolean) => {
-    setSelected((prev) => {
+    setSelected(prev => {
       const next = new Map(prev);
       const current = next.get(factorId);
       if (current) next.set(factorId, { ...current, isCalculationFactor });
@@ -91,7 +100,7 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
   };
 
   const selectAll = () => {
-    setSelected((prev) => {
+    setSelected(prev => {
       const next = new Map(prev);
       for (const f of filtered) {
         if (!next.has(f.id)) next.set(f.id, { isMandatory: false, isCalculationFactor: false });
@@ -107,24 +116,29 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
   const selectedCount = selected.size;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Factors" size="xl">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('addFactorModal.title')} size="xl">
       <div className="flex items-center gap-3 mb-4">
         <div className="relative flex-1">
-          <Icon name="magnifying-glass" style="regular" className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by code or name..."
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('addFactorModal.searchPlaceholder')}
+            aria-label={t('addFactorModal.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
         <Button variant="ghost" size="sm" onClick={selectAll}>
-          Select All
+          {t('addFactorModal.selectAll')}
         </Button>
         {selectedCount > 0 && (
           <Button variant="ghost" size="sm" onClick={deselectAll}>
-            Clear
+            {t('addFactorModal.deselectAll')}
           </Button>
         )}
       </div>
@@ -132,22 +146,32 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
       <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
         {filtered.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">
-            No available factors found
+            {t('addFactorModal.noFactors')}
           </div>
         ) : (
           <table className="w-full">
             <thead className="sticky top-0 bg-gray-50">
               <tr>
                 <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center w-10" />
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">Code</th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">Name</th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">Data Type</th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">Mandatory</th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">Calculation</th>
+                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
+                  {t('addFactorModal.columns.code')}
+                </th>
+                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
+                  {t('addFactorModal.columns.name')}
+                </th>
+                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
+                  {t('addFactorModal.columns.dataType')}
+                </th>
+                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
+                  {t('addFactorModal.columns.mandatory')}
+                </th>
+                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
+                  {t('addFactorModal.columns.calculation')}
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((factor) => {
+              {filtered.map(factor => {
                 const isSelected = selected.has(factor.id);
                 const state = selected.get(factor.id);
                 return (
@@ -159,25 +183,29 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
                     )}
                     onClick={() => toggleSelect(factor.id)}
                   >
-                    <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onChange={() => toggleSelect(factor.id)} />
                     </td>
-                    <td className="py-2 px-3 text-sm font-mono text-gray-700">{factor.factorCode}</td>
-                    <td className="py-2 px-3 text-sm text-gray-900">{getTranslatedFactorName(factor.translations, language)}</td>
+                    <td className="py-2 px-3 text-sm font-mono text-gray-700">
+                      {factor.factorCode}
+                    </td>
+                    <td className="py-2 px-3 text-sm text-gray-900">
+                      {getTranslatedFactorName(factor.translations, language)}
+                    </td>
                     <td className="py-2 px-3 text-sm text-gray-600">{factor.dataType}</td>
-                    <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
                       {isSelected && (
                         <Checkbox
                           checked={state?.isMandatory ?? false}
-                          onChange={(checked) => toggleMandatory(factor.id, checked)}
+                          onChange={checked => toggleMandatory(factor.id, checked)}
                         />
                       )}
                     </td>
-                    <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
                       {isSelected && (
                         <Checkbox
                           checked={state?.isCalculationFactor ?? false}
-                          onChange={(checked) => toggleCalculation(factor.id, checked)}
+                          onChange={checked => toggleCalculation(factor.id, checked)}
                         />
                       )}
                     </td>
@@ -191,11 +219,13 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
 
       <div className="flex items-center justify-between mt-4">
         <span className="text-sm text-gray-500">
-          {selectedCount > 0 ? `${selectedCount} factor(s) selected` : 'Select factors to add'}
+          {selectedCount > 0
+            ? t('addFactorModal.selectedCount', { n: selectedCount })
+            : t('addFactorModal.selectPrompt')}
         </span>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={handleClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -204,7 +234,9 @@ const AddFactorModal = ({ isOpen, onClose, factors, excludeFactorIds, onAdd, isA
             isLoading={isAdding}
             onClick={handleAdd}
           >
-            Add {selectedCount > 0 ? `(${selectedCount})` : ''}
+            {selectedCount > 0
+              ? t('addFactorModal.addButtonWithCount', { n: selectedCount })
+              : t('addFactorModal.addButton')}
           </Button>
         </div>
       </div>

@@ -185,18 +185,15 @@ export function useSaveDraftSchema() {
       const { data } = await axiosInstance.put<{
         isSuccess: boolean;
         errorMessage: string | null;
-      }>(
-        `/api/workflows/definitions/${definitionId}/versions/${versionId}/schema`,
-        { workflowSchema, updatedBy },
-      );
+      }>(`/api/workflows/definitions/${definitionId}/versions/${versionId}/schema`, {
+        workflowSchema,
+        updatedBy,
+      });
       return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: workflowKeys.version(
-          variables.definitionId,
-          variables.versionId,
-        ),
+        queryKey: workflowKeys.version(variables.definitionId, variables.versionId),
       });
       queryClient.invalidateQueries({
         queryKey: workflowKeys.latestVersion(variables.definitionId),
@@ -228,9 +225,13 @@ export function usePublishVersion() {
         return data;
       } catch (err: unknown) {
         // On 409 the backend returns a refreshed PublishImpactReport — surface it
-        const axiosErr = err as { response?: { status: number; data: { impactReport: PublishImpactReport } } };
+        const axiosErr = err as {
+          response?: { status: number; data: { impactReport: PublishImpactReport } };
+        };
         if (axiosErr?.response?.status === 409) {
-          const conflict = new Error('BREAKING_CHANGE_CONFLICT') as Error & { impactReport: PublishImpactReport };
+          const conflict = new Error('BREAKING_CHANGE_CONFLICT') as Error & {
+            impactReport: PublishImpactReport;
+          };
           conflict.impactReport = axiosErr.response.data.impactReport;
           throw conflict;
         }
@@ -268,10 +269,7 @@ export function usePreviewPublish() {
   });
 }
 
-export function useListRunningInstances(
-  definitionId: string,
-  params?: { onVersionId?: string },
-) {
+export function useListRunningInstances(definitionId: string, params?: { onVersionId?: string }) {
   return useQuery({
     queryKey: workflowKeys.runningInstances(definitionId, params?.onVersionId),
     queryFn: async () => {
@@ -329,4 +327,3 @@ export function useDeleteDraftVersion() {
     },
   });
 }
-

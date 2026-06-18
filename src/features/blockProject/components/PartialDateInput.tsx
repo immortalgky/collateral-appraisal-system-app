@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import Dropdown, { type ListBoxItem } from '@/shared/components/inputs/Dropdown';
 import { useFormReadOnly } from '@/shared/components/form/context';
@@ -19,8 +20,18 @@ interface PartialDateInputProps {
 }
 
 const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ] as const;
 
 /** Buddhist Era offset from CE. */
@@ -64,6 +75,7 @@ export default function PartialDateInput({
   yearStart,
   yearEnd,
 }: PartialDateInputProps) {
+  const { t } = useTranslation('blockProject');
   const isReadOnly = useFormReadOnly();
   const isDisabled = Boolean(disabled || isReadOnly);
   const language = useLocaleStore(s => s.language);
@@ -144,7 +156,7 @@ export default function PartialDateInput({
           options={yearOptions}
           value={year || undefined}
           onChange={handleYearChange}
-          placeholder="Year"
+          placeholder={t('partialDate.year')}
           showValuePrefix={false}
           disabled={isDisabled}
           error={error}
@@ -153,7 +165,7 @@ export default function PartialDateInput({
           options={monthOptions}
           value={month || undefined}
           onChange={handleMonthChange}
-          placeholder="Month"
+          placeholder={t('partialDate.month')}
           showValuePrefix={false}
           disabled={isDisabled || !year}
         />
@@ -161,7 +173,7 @@ export default function PartialDateInput({
           options={dayOptions}
           value={day || undefined}
           onChange={handleDayChange}
-          placeholder="Day"
+          placeholder={t('partialDate.day')}
           showValuePrefix={false}
           disabled={isDisabled || !year || !month}
         />

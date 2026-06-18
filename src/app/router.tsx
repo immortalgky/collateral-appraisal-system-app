@@ -1,102 +1,247 @@
 import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
-import HomePage from '../features/dashboard/pages/HomePage';
-import CalendarPage from '../features/dashboard/pages/CalendarPage';
+import { lazy } from 'react';
+// Eager — structural shell, route guards, read-only wrappers, and helpers that
+// must be available immediately (no spinner on the critical path).
 import LoginPage from '@features/auth/pages/LoginPage';
 import CallbackPage from '@features/auth/pages/CallbackPage.tsx';
-import RequestListingPage from '@/features/request/pages/RequestListingPage';
-import RequestPage from '@/features/request/pages/RequestPage';
 import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
-import PropertyInformationPage from '@/features/appraisal/pages/PropertyInformationPage';
-import DocumentChecklistPage from '@/features/appraisal/pages/DocumentChecklistPage';
-import AdministrationPage from '@/features/appraisal/pages/AdministrationPage';
-import AppointmentAndFeePage from '@/features/appraisal/pages/AppointmentAndFeePage';
-import TaskListingPage from '@/features/task/pages/TaskListingPage';
-import ActivityTaskListPage from '@/features/task/pages/ActivityTaskListPage';
-import NotificationPage from '@/features/notification/pages/NotificationPage';
-import CreateMarketComparablePage from '@/features/appraisal/pages/CreateMarketComparablePage';
-import MarketComparableListingPage from '@/features/appraisal/pages/MarketComparableListingPage';
-import CreateLandPage from '../features/appraisal/pages/CreateLandPage';
-import CreateBuildingPage from '../features/appraisal/pages/CreateBuildingPage';
-import CreateCondoPage from '@/features/appraisal/pages/CreateCondoPage';
-import CreateLandBuildingPage from '@/features/appraisal/pages/CreateLandBuildingPage';
-import CreateLawAndRegulationPage from '@/features/appraisal/pages/CreateLawAndRegulationPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 import { ProtectedRoute } from '@features/auth/components';
-import LandBuildingPMAPage from '@/features/appraisal/pages/LandBuildingPMAPage';
-import CondoPMAPage from '@/features/appraisal/pages/CondoPMAPage';
-import PricingAnalysisPage from '@features/pricingAnalysis/pages/PricingAnalysisPage';
-import MarketComparableFactorListPage from '@features/templateManagement/pages/MarketComparableFactorListPage';
-import MarketComparableTemplateListPage from '@features/templateManagement/pages/MarketComparableTemplateListPage';
-import MarketComparableTemplateDetailPage from '@features/templateManagement/pages/MarketComparableTemplateDetailPage';
-import ComparativeTemplateListPage from '@features/templateManagement/pages/ComparativeTemplateListPage';
-import ComparativeTemplateDetailPage from '@features/templateManagement/pages/ComparativeTemplateDetailPage';
-import DecisionSummaryPage from '@/features/appraisal/pages/DecisionSummaryPage';
-import ActivityTrackingPage from '@/features/appraisal/pages/ActivityTrackingPage';
-import CreateMachineryPage from '@/features/appraisal/pages/CreateMachineryPage';
-import CreateLeaseAgreementLandPage from '@/features/appraisal/pages/CreateLeaseAgreementLandPage';
-import CreateLeaseAgreementBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementBuildingPage';
-import CreateLeaseAgreementLandBuildingPage from '@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage';
-import CreateLeaseAgreementCondoPage from '@/features/appraisal/pages/CreateLeaseAgreementCondoPage';
-import AppraisalSearchPage from '@/features/appraisal/pages/AppraisalSearchPage';
-import AppraisalListPage from '@/features/appraisal/pages/AppraisalListPage';
-import Appraisal360Page from '@/features/appraisal/pages/Appraisal360Page';
 import {
   AppraisalReadOnlyWrapper,
   ReadOnlyPageWrapper,
 } from '@shared/contexts/PageReadOnlyContext';
-import WorkflowBuilderPage from '@features/workflowBuilder/pages/WorkflowBuilderPage';
-import ProvideDocumentsTaskPage from '@/features/document-followup/pages/ProvideDocumentsTaskPage';
-import WorkflowListPage from '@features/workflowBuilder/pages/WorkflowListPage';
-import MigrateInstancesPage from '@features/workflowBuilder/pages/MigrateInstancesPage';
-import PermissionListPage from '@features/userManagement/pages/PermissionListPage';
-import RoleListPage from '@features/userManagement/pages/RoleListPage';
-import GroupListPage from '@features/userManagement/pages/GroupListPage';
-import UserProfilePage from '@features/userManagement/pages/UserProfilePage';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
-import OpeningTaskPage from '@/features/task/pages/OpeningTaskPage';
-import BlockProjectPage from '@/features/blockProject/pages/BlockProjectPage';
-import ModelDetailPage from '@/features/blockProject/pages/ModelDetailPage';
-import TowerDetailPage from '@/features/blockProject/pages/TowerDetailPage';
-import MeetingListPage from '@/features/meeting/pages/MeetingListPage';
-import MeetingQueuePage from '@/features/meeting/pages/MeetingQueuePage';
-import MeetingDetailPage from '@/features/meeting/pages/MeetingDetailPage';
-import CommitteeAdminPage from '@/features/committee/pages/CommitteeAdminPage';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
-import MenuListPage from '@features/menuManagement/pages/MenuListPage';
-import MenuEditPage from '@features/menuManagement/pages/MenuEditPage';
-import CollateralCatalogPage from '@/features/collateralMaster/pages/CollateralCatalogPage';
-import CollateralMasterDetailPage from '@/features/collateralMaster/pages/CollateralMasterDetailPage';
-import BackfillReportPage from '@/features/collateralMaster/pages/BackfillReportPage';
-import QuotationSelectionPage from '@/features/quotation/pages/QuotationSelectionPage';
-import QuotationListingPage from '@/features/quotation/pages/QuotationListingPage';
-import NewQuotationPage from '@/features/quotation/pages/NewQuotationPage';
-import ExtCompanyInvitationListPage from '@/features/quotation/pages/ExtCompanyInvitationListPage';
-import ExtCompanySubmitQuotationPage from '@/features/quotation/pages/ExtCompanySubmitQuotationPage';
-import AdminQuotationTaskPage from '@/features/quotation/pages/AdminQuotationTaskPage';
-import AdminCompanyQuotationDetailPage from '@/features/quotation/pages/AdminCompanyQuotationDetailPage';
-import ServiceQualityEvaluationListPage from '@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage';
-import ServiceQualityEvaluationDetailPage from '@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage';
-import ExtInvoiceListPage from '@/features/invoice/pages/ExtInvoiceListPage';
-import ExtCreateInvoicePage from '@/features/invoice/pages/ExtCreateInvoicePage';
-import ExtInvoiceDetailPage from '@/features/invoice/pages/ExtInvoiceDetailPage';
-import IntInvoiceListPage from '@/features/invoice/pages/IntInvoiceListPage';
-import IntInvoiceDetailPage from '@/features/invoice/pages/IntInvoiceDetailPage';
-import IntBulkPaymentPage from '@/features/invoice/pages/IntBulkPaymentPage';
-import WebhookDeliveryListPage from '@features/webhookAdmin/pages/WebhookDeliveryListPage';
-import { SupportingDataMaintenanceDetailListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage';
-import TaskMonitorPage from '@/features/taskMonitor/pages/TaskMonitorPage';
-import PersonTasksPage from '@/features/taskMonitor/pages/PersonTasksPage';
-import MonitoringPage from '@/features/common/monitoring/pages/MonitoringPage';
-import HistorySearchPage from '@/features/common/historySearch/pages/HistorySearchPage';
-import BlockUnitMaintenancePage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage';
-import BlockUnitMaintenanceDetailPage from '@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage';
-import { SupportingDataMaintenanceListPage } from '@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage';
-import { CreateSupportingDataPage } from '@/features/supportingDataMaintenance/pages/CreateSupportingDataPage';
-import ParameterDetailPage from '@/features/parameterMaintenance/pages/ParameterDetailPage';
-import ParameterMaintenancePage from '@/features/parameterMaintenance/pages/ParameterMaintenancePage';
+
+// Page components — lazy-loaded so each route ships as its own on-demand chunk.
+// A <Suspense> boundary wraps the <Outlet/> in each layout (plus a top-level one
+// around <RouterProvider/> in App.tsx) to catch these while their chunk loads.
+const HomePage = lazy(() => import('../features/dashboard/pages/HomePage'));
+const CalendarPage = lazy(() => import('../features/dashboard/pages/CalendarPage'));
+const RequestListingPage = lazy(() => import('@/features/request/pages/RequestListingPage'));
+const RequestPage = lazy(() => import('@/features/request/pages/RequestPage'));
+const PropertyInformationPage = lazy(
+  () => import('@/features/appraisal/pages/PropertyInformationPage')
+);
+const DocumentChecklistPage = lazy(
+  () => import('@/features/appraisal/pages/DocumentChecklistPage')
+);
+const AdministrationPage = lazy(() => import('@/features/appraisal/pages/AdministrationPage'));
+const AppointmentAndFeePage = lazy(
+  () => import('@/features/appraisal/pages/AppointmentAndFeePage')
+);
+const TaskListingPage = lazy(() => import('@/features/task/pages/TaskListingPage'));
+const ActivityTaskListPage = lazy(() => import('@/features/task/pages/ActivityTaskListPage'));
+const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
+const CreateMarketComparablePage = lazy(
+  () => import('@/features/appraisal/pages/CreateMarketComparablePage')
+);
+const MarketComparableListingPage = lazy(
+  () => import('@/features/appraisal/pages/MarketComparableListingPage')
+);
+const CreateLandPage = lazy(() => import('../features/appraisal/pages/CreateLandPage'));
+const CreateBuildingPage = lazy(() => import('../features/appraisal/pages/CreateBuildingPage'));
+const CreateCondoPage = lazy(() => import('@/features/appraisal/pages/CreateCondoPage'));
+const CreateLandBuildingPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLandBuildingPage')
+);
+const CreateLawAndRegulationPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLawAndRegulationPage')
+);
+const LandBuildingPMAPage = lazy(() => import('@/features/appraisal/pages/LandBuildingPMAPage'));
+const CondoPMAPage = lazy(() => import('@/features/appraisal/pages/CondoPMAPage'));
+const PricingAnalysisPage = lazy(
+  () => import('@features/pricingAnalysis/pages/PricingAnalysisPage')
+);
+const MarketComparableFactorListPage = lazy(
+  () => import('@features/templateManagement/pages/MarketComparableFactorListPage')
+);
+const MarketComparableTemplateListPage = lazy(
+  () => import('@features/templateManagement/pages/MarketComparableTemplateListPage')
+);
+const MarketComparableTemplateDetailPage = lazy(
+  () => import('@features/templateManagement/pages/MarketComparableTemplateDetailPage')
+);
+const ComparativeTemplateListPage = lazy(
+  () => import('@features/templateManagement/pages/ComparativeTemplateListPage')
+);
+const ComparativeTemplateDetailPage = lazy(
+  () => import('@features/templateManagement/pages/ComparativeTemplateDetailPage')
+);
+const DecisionSummaryPage = lazy(() => import('@/features/appraisal/pages/DecisionSummaryPage'));
+const ActivityTrackingPage = lazy(
+  () => import('@/features/appraisal/pages/ActivityTrackingPage')
+);
+const CreateMachineryPage = lazy(() => import('@/features/appraisal/pages/CreateMachineryPage'));
+const CreateLeaseAgreementLandPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandPage')
+);
+const CreateLeaseAgreementBuildingPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementBuildingPage')
+);
+const CreateLeaseAgreementLandBuildingPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage')
+);
+const CreateLeaseAgreementCondoPage = lazy(
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementCondoPage')
+);
+const AppraisalSearchPage = lazy(() => import('@/features/appraisal/pages/AppraisalSearchPage'));
+const AppraisalListPage = lazy(() => import('@/features/appraisal/pages/AppraisalListPage'));
+const Appraisal360Page = lazy(() => import('@/features/appraisal/pages/Appraisal360Page'));
+const WorkflowBuilderPage = lazy(
+  () => import('@features/workflowBuilder/pages/WorkflowBuilderPage')
+);
+const ProvideDocumentsTaskPage = lazy(
+  () => import('@/features/document-followup/pages/ProvideDocumentsTaskPage')
+);
+const FeeAppointmentApprovalTaskPage = lazy(
+  () => import('@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage')
+);
+const FeeApprovalTierPage = lazy(
+  () => import('@/features/feeApprovalConfig/pages/FeeApprovalTierPage')
+);
+const AppointmentApprovalRulePage = lazy(
+  () => import('@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage')
+);
+const PasswordPolicyConfigPage = lazy(
+  () => import('@/features/userManagement/admin/pages/PasswordPolicyConfigPage')
+);
+const EvaluationConfigPage = lazy(
+  () => import('@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage')
+);
+const WorkflowListPage = lazy(() => import('@features/workflowBuilder/pages/WorkflowListPage'));
+const MigrateInstancesPage = lazy(
+  () => import('@features/workflowBuilder/pages/MigrateInstancesPage')
+);
+const PermissionListPage = lazy(() => import('@features/userManagement/pages/PermissionListPage'));
+const RoleListPage = lazy(() => import('@features/userManagement/pages/RoleListPage'));
+const GroupListPage = lazy(() => import('@features/userManagement/pages/GroupListPage'));
+const UserProfilePage = lazy(() => import('@features/userManagement/pages/UserProfilePage'));
+const TeamListPage = lazy(() => import('@features/userManagement/pages/TeamListPage'));
+const AuditLogPage = lazy(() => import('@features/userManagement/pages/AuditLogPage'));
+const CompanyListPage = lazy(() => import('@features/userManagement/pages/CompanyListPage'));
+const AccessReportPage = lazy(() => import('@features/userManagement/pages/AccessReportPage'));
+const OpeningTaskPage = lazy(() => import('@/features/task/pages/OpeningTaskPage'));
+const BlockProjectPage = lazy(() => import('@/features/blockProject/pages/BlockProjectPage'));
+const ModelDetailPage = lazy(() => import('@/features/blockProject/pages/ModelDetailPage'));
+const TowerDetailPage = lazy(() => import('@/features/blockProject/pages/TowerDetailPage'));
+const MeetingListPage = lazy(() => import('@/features/meeting/pages/MeetingListPage'));
+const MeetingQueuePage = lazy(() => import('@/features/meeting/pages/MeetingQueuePage'));
+const MeetingDetailPage = lazy(() => import('@/features/meeting/pages/MeetingDetailPage'));
+const CommitteeAdminPage = lazy(() => import('@/features/committee/pages/CommitteeAdminPage'));
+const MenuListPage = lazy(() => import('@features/menuManagement/pages/MenuListPage'));
+const MenuEditPage = lazy(() => import('@features/menuManagement/pages/MenuEditPage'));
+const CollateralCatalogPage = lazy(
+  () => import('@/features/collateralMaster/pages/CollateralCatalogPage')
+);
+const CollateralMasterDetailPage = lazy(
+  () => import('@/features/collateralMaster/pages/CollateralMasterDetailPage')
+);
+const BackfillReportPage = lazy(
+  () => import('@/features/collateralMaster/pages/BackfillReportPage')
+);
+const QuotationSelectionPage = lazy(
+  () => import('@/features/quotation/pages/QuotationSelectionPage')
+);
+const QuotationListingPage = lazy(() => import('@/features/quotation/pages/QuotationListingPage'));
+const NewQuotationPage = lazy(() => import('@/features/quotation/pages/NewQuotationPage'));
+const ExtCompanyInvitationListPage = lazy(
+  () => import('@/features/quotation/pages/ExtCompanyInvitationListPage')
+);
+const ExtCompanySubmitQuotationPage = lazy(
+  () => import('@/features/quotation/pages/ExtCompanySubmitQuotationPage')
+);
+const AdminQuotationTaskPage = lazy(
+  () => import('@/features/quotation/pages/AdminQuotationTaskPage')
+);
+const AdminCompanyQuotationDetailPage = lazy(
+  () => import('@/features/quotation/pages/AdminCompanyQuotationDetailPage')
+);
+const ServiceQualityEvaluationListPage = lazy(
+  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage')
+);
+const ServiceQualityEvaluationDetailPage = lazy(
+  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage')
+);
+const ExtInvoiceListPage = lazy(() => import('@/features/invoice/pages/ExtInvoiceListPage'));
+const ExtCreateInvoicePage = lazy(() => import('@/features/invoice/pages/ExtCreateInvoicePage'));
+const ExtInvoiceDetailPage = lazy(() => import('@/features/invoice/pages/ExtInvoiceDetailPage'));
+const IntInvoiceListPage = lazy(() => import('@/features/invoice/pages/IntInvoiceListPage'));
+const IntInvoiceDetailPage = lazy(() => import('@/features/invoice/pages/IntInvoiceDetailPage'));
+const IntBulkPaymentPage = lazy(() => import('@/features/invoice/pages/IntBulkPaymentPage'));
+const WebhookDeliveryListPage = lazy(
+  () => import('@features/webhookAdmin/pages/WebhookDeliveryListPage')
+);
+const WebhookSubscriptionListPage = lazy(
+  () => import('@features/webhookAdmin/pages/WebhookSubscriptionListPage')
+);
+const OAuthClientListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthClientListPage'));
+const OAuthScopeListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthScopeListPage'));
+const OAuthTokenListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthTokenListPage'));
+const LogViewerPage = lazy(() => import('@features/common/logViewer/pages/LogViewerPage'));
+const SupportingDataMaintenanceDetailListPage = lazy(() =>
+  import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage').then(
+    m => ({ default: m.SupportingDataMaintenanceDetailListPage })
+  )
+);
+const ReappraisalListPage = lazy(() => import('@/features/reappraisal/pages/ReappraisalListPage'));
+const ReappraisalDetailPage = lazy(
+  () => import('@/features/reappraisal/pages/ReappraisalDetailPage')
+);
+const GenerateReappraisalTestPage = lazy(
+  () => import('@/features/reappraisal/pages/GenerateReappraisalTestPage')
+);
+const TaskMonitorPage = lazy(() => import('@/features/taskMonitor/pages/TaskMonitorPage'));
+const PersonTasksPage = lazy(() => import('@/features/taskMonitor/pages/PersonTasksPage'));
+const MonitoringPage = lazy(() => import('@/features/common/monitoring/pages/MonitoringPage'));
+const HistorySearchPage = lazy(
+  () => import('@/features/common/historySearch/pages/HistorySearchPage')
+);
+const BlockUnitMaintenancePage = lazy(
+  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage')
+);
+const BlockUnitMaintenanceDetailPage = lazy(
+  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage')
+);
+const BlockReappraisalListPage = lazy(
+  () => import('@/features/blockReappraisal/pages/BlockReappraisalListPage')
+);
+const BlockReappraisalDetailPage = lazy(
+  () => import('@/features/blockReappraisal/pages/BlockReappraisalDetailPage')
+);
+const SupportingDataMaintenanceListPage = lazy(() =>
+  import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(m => ({
+    default: m.SupportingDataMaintenanceListPage,
+  }))
+);
+const CreateSupportingDataPage = lazy(() =>
+  import('@/features/supportingDataMaintenance/pages/CreateSupportingDataPage').then(m => ({
+    default: m.CreateSupportingDataPage,
+  }))
+);
+const StepValidationRulesPage = lazy(
+  () => import('@features/workflowAdmin/pages/StepValidationRulesPage')
+);
+const TaskAssignmentConfigPage = lazy(
+  () => import('@features/workflowAssignmentConfig/pages/TaskAssignmentConfigPage')
+);
+const CompanyRoundRobinConfigPage = lazy(
+  () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
+);
+const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
+const OperationalReportRoute = lazy(
+  () => import('@features/common/operationalReports/pages/OperationalReportRoute')
+);
+const ParameterMaintenancePage = lazy(
+  () => import('@/features/parameterMaintenance/pages/ParameterMaintenancePage')
+);
+const ParameterDetailPage = lazy(
+  () => import('@/features/parameterMaintenance/pages/ParameterDetailPage')
+);
 
 /**
  * Thin wrappers that bind PricingAnalysisPage to a project-model subject.
@@ -220,6 +365,19 @@ export const router = createBrowserRouter([
         path: 'monitoring',
         element: <MonitoringPage />,
       },
+      // ─── Operational Reports (RCAS001–012) ─────────────────────────────────
+      // Menu items at /reports/operational/rcasNNN are server-seeded and gated
+      // by REPORT_OP_VIEW. The :slug param is matched to a ReportConfig in
+      // OperationalReportRoute, so a single route handles all 12 reports.
+      {
+        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_OP_VIEW" />,
+        children: [
+          {
+            path: 'reports/operational/:slug',
+            element: <OperationalReportRoute />,
+          },
+        ],
+      },
       // History Search (Pin) — FSD §2.6.7 geo-filtered appraisal + MC map view
       {
         path: 'standalone/history-search',
@@ -308,8 +466,70 @@ export const router = createBrowserRouter([
           { path: 'roles', element: <RoleListPage /> },
           { path: 'groups', element: <GroupListPage /> },
           { path: 'users', element: <UserProfilePage /> },
+          {
+            path: 'teams',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="TEAM_MANAGE" />,
+            children: [{ index: true, element: <TeamListPage /> }],
+          },
+          {
+            path: 'audit-logs',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="AUTH_AUDIT_VIEW" />,
+            children: [{ index: true, element: <AuditLogPage /> }],
+          },
+          {
+            path: 'companies',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="COMPANY_MANAGE" />,
+            children: [{ index: true, element: <CompanyListPage /> }],
+          },
+          {
+            path: 'password-policy',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="PASSWORD_POLICY_MANAGE" />
+            ),
+            children: [{ index: true, element: <PasswordPolicyConfigPage /> }],
+          },
+          {
+            path: 'access-report',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="AUTH_AUDIT_VIEW" />,
+            children: [{ index: true, element: <AccessReportPage /> }],
+          },
           { path: 'committees', element: <CommitteeAdminPage /> },
+          { path: 'reports/test', element: <ReportTestPage /> },
+          { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
+          { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
+          { path: 'evaluation-config', element: <EvaluationConfigPage /> },
           { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
+          {
+            path: 'webhook-subscriptions',
+            element: (
+              <RoleProtectedRoute
+                allowedRoles={[]}
+                requiredPermission="WEBHOOK_SUBSCRIPTIONS_MANAGE"
+              />
+            ),
+            children: [{ index: true, element: <WebhookSubscriptionListPage /> }],
+          },
+          {
+            path: 'oauth-clients',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_CLIENTS_MANAGE" />
+            ),
+            children: [{ index: true, element: <OAuthClientListPage /> }],
+          },
+          {
+            path: 'oauth-scopes',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_SCOPES_MANAGE" />
+            ),
+            children: [{ index: true, element: <OAuthScopeListPage /> }],
+          },
+          {
+            path: 'oauth-tokens',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="OAUTH_TOKENS_REVOKE" />
+            ),
+            children: [{ index: true, element: <OAuthTokenListPage /> }],
+          },
           // Menu management — gated by MENU_MANAGE permission
           {
             path: 'menus',
@@ -319,6 +539,34 @@ export const router = createBrowserRouter([
               { path: 'new', element: <MenuEditPage /> },
               { path: ':menuId', element: <MenuEditPage /> },
             ],
+          },
+          // Log viewer — gated by LOGS_VIEW permission
+          {
+            path: 'logs',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="LOGS_VIEW" />,
+            children: [{ index: true, element: <LogViewerPage /> }],
+          },
+          // Step validation rules — gated by WORKFLOW_ADMIN permission
+          {
+            path: 'workflow-step-validation',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />,
+            children: [{ index: true, element: <StepValidationRulesPage /> }],
+          },
+          // Task assignment overrides — gated by WORKFLOW_ADMIN permission
+          {
+            path: 'workflow-assignment-config',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <TaskAssignmentConfigPage /> }],
+          },
+          // External-company round-robin pools — gated by WORKFLOW_ADMIN permission
+          {
+            path: 'workflow-roundrobin-config',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {
@@ -409,7 +657,7 @@ export const router = createBrowserRouter([
         element: <BlockUnitMaintenancePage />,
       },
       {
-        path: 'standalone/block-unit-maintenance/:projectId',
+        path: 'standalone/block-unit-maintenance/:collateralMasterId',
         element: <BlockUnitMaintenanceDetailPage />,
       },
       // ─── Service Quality Evaluation Routes ──────────────────────────────────
@@ -424,23 +672,31 @@ export const router = createBrowserRouter([
       // support data maintenance
       {
         path: 'standalone/supporting-data-maintenance',
-        element: <SupportingDataMaintenanceListPage />,
+        children: [
+          { index: true, element: <SupportingDataMaintenanceListPage /> },
+          { path: 'new', element: <SupportingDataMaintenanceDetailListPage /> },
+          { path: ':supportingId', element: <SupportingDataMaintenanceDetailListPage /> },
+          { path: ':supportingId/data/new', element: <CreateSupportingDataPage /> },
+          { path: ':supportingId/data/:id', element: <CreateSupportingDataPage /> },
+        ],
+      },
+      // ─── Block Project Reappraisal ──────────────────────────────────────────
+      {
+        path: 'standalone/block-reappraisal',
+        element: <BlockReappraisalListPage />,
       },
       {
-        path: 'standalone/supporting-data-maintenance/new',
-        element: <SupportingDataMaintenanceDetailListPage />,
+        path: 'standalone/block-reappraisal/:collateralMasterId',
+        element: <BlockReappraisalDetailPage />,
       },
+      // ─── Periodical Reappraisal (AS400) ────────────────────────────────────
       {
-        path: 'standalone/supporting-data-maintenance/:supportingId',
-        element: <SupportingDataMaintenanceDetailListPage />,
-      },
-      {
-        path: 'standalone/supporting-data-maintenance/:supportingId/data/new',
-        element: <CreateSupportingDataPage />,
-      },
-      {
-        path: 'standalone/supporting-data-maintenance/:supportingId/data/:id',
-        element: <CreateSupportingDataPage />,
+        path: 'reappraisal',
+        children: [
+          { index: true, element: <ReappraisalListPage /> },
+          { path: ':id', element: <ReappraisalDetailPage /> },
+          { path: 'generate-test-file', element: <GenerateReappraisalTestPage /> },
+        ],
       },
       // Catch-all route for 404 pages
       {
@@ -1416,6 +1672,10 @@ export const router = createBrowserRouter([
       {
         path: 'provide-documents',
         element: <ProvideDocumentsTaskPage />,
+      },
+      {
+        path: 'fee-appointment-approval',
+        element: <FeeAppointmentApprovalTaskPage />,
       },
       // ─── Quotation task sub-routes ────────────────────────────────────────
       // ext-collect-submissions: ExtCompany submits their bid

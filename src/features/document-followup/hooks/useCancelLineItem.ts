@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { cancelLineItem, followupKeys } from '../api/followup';
 
 interface CancelLineItemParams {
@@ -11,6 +12,7 @@ interface CancelLineItemParams {
 
 export function useCancelLineItem() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation('documentFollowup');
 
   return useMutation({
     mutationFn: ({ followupId, lineItemId, reason }: CancelLineItemParams) =>
@@ -22,13 +24,11 @@ export function useCancelLineItem() {
       queryClient.invalidateQueries({
         queryKey: followupKeys.byTask(variables.raisingTaskId),
       });
-      toast.success('Line item cancelled');
+      toast.success(t('toasts.cancelLineItemSuccess'));
     },
     onError: (error: any) => {
       const msg =
-        error?.apiError?.detail ??
-        error?.apiError?.message ??
-        'Failed to cancel line item';
+        error?.apiError?.detail ?? error?.apiError?.message ?? t('toasts.cancelLineItemFailed');
       toast.error(msg);
     },
   });

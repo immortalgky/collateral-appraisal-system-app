@@ -28,6 +28,13 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     icon: 'building',
     allowedRoles: ['Admin', 'IntAdmin'],
   },
+  'fee-appointment-approval': {
+    activityId: 'fee-appointment-approval',
+    title: 'Fee & Appointment Approval',
+    description: 'Tasks for approving external-company appointment-postpone and added-fee changes',
+    icon: 'check-to-slot',
+    allowedRoles: ['Admin', 'IntAdmin'],
+  },
   'ext-appraisal-assignment': {
     activityId: 'ext-appraisal-assignment',
     title: 'External Appraisal Assignment',
@@ -83,6 +90,13 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     description: 'Tasks for final internal verification and sign-off',
     icon: 'badge-check',
     allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalVerifier'],
+  },
+  'int-pma-input': {
+    activityId: 'int-pma-input',
+    title: 'PMA Property Input',
+    description: 'Tasks for entering PMA property values before external company assignment',
+    icon: 'file-pen',
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
   },
   'pending-approval': {
     activityId: 'pending-approval',

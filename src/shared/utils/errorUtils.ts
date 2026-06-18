@@ -36,6 +36,9 @@ export function extractApiError(error: AxiosError<ProblemDetails | unknown>): Ap
       status: problemDetails.status ?? status,
       detail: problemDetails.detail ?? null,
       instance: problemDetails.instance ?? null,
+      // Extension members (e.g. workflow 422 step errors)
+      stepName: problemDetails.stepName ?? null,
+      errorCode: problemDetails.errorCode ?? null,
       // Legacy fields for backwards compatibility
       statusCode: problemDetails.status ?? status,
       message:

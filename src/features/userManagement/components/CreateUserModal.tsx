@@ -1,11 +1,19 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
-import Checkbox from '@shared/components/inputs/Checkbox';
-import { useCreateUser } from '../api/users';
+import Icon from '@shared/components/Icon';
+import AssignmentTable from './AssignmentTable';
+import PasswordPolicyChecklist from './PasswordPolicyChecklist';
+import { usePasswordPolicyChecks } from '../hooks/usePasswordPolicyChecks';
+import { useCreateUser, useLdapLookup } from '../api/users';
 import { useGetRoles } from '../api/roles';
+import { useGetGroups } from '../api/groups';
+import { useGetTeams } from '../api/teams';
+import { useGetAdminCompanies } from '../api/companies';
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -13,64 +21,158 @@ interface CreateUserModalProps {
   onCreated?: (userId: string) => void;
 }
 
+type AuthSource = 'Local' | 'LDAP';
+type AccessTab = 'roles' | 'groups' | 'teams';
+type Scope = 'Bank' | 'Company';
+
 interface FormState {
+  scope: Scope;
   username: string;
   password: string;
+  confirmPassword: string;
   email: string;
   firstName: string;
   lastName: string;
   position: string;
   department: string;
+  companyId: string;
   roles: string[];
+  groups: string[];
+  teams: string[];
+  authSource: AuthSource;
 }
 
 const EMPTY_FORM: FormState = {
+  scope: 'Bank',
   username: '',
   password: '',
+  confirmPassword: '',
   email: '',
   firstName: '',
   lastName: '',
   position: '',
   department: '',
+  companyId: '',
   roles: [],
+  groups: [],
+  teams: [],
+  authSource: 'Local',
 };
 
+const SectionLabel = ({ icon, children }: { icon: string; children: React.ReactNode }) => (
+  <div className="mb-3 flex items-center gap-2">
+    <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
+      <Icon name={icon} style="solid" className="size-3 text-primary" />
+    </div>
+    <span className="text-sm font-semibold text-gray-800">{children}</span>
+  </div>
+);
+
 const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [accessTab, setAccessTab] = useState<AccessTab>('roles');
   const createUser = useCreateUser();
-  const { data: rolesData } = useGetRoles({ pageSize: 200 });
-  const allRoles = rolesData?.items ?? [];
+  const ldapLookup = useLdapLookup();
+
+  const isLdap = form.authSource === 'LDAP';
+  const isCompany = form.scope === 'Company';
+
+  // Live password-policy evaluation (same DB-maintained policy as every other password field).
+  const { allPassed: passwordPolicyMet } = usePasswordPolicyChecks(form.password);
+
+  // Roles/Groups are scoped server-side by the Bank/Company toggle. Teams have no scope
+  // param, so filter client-side by type (Bank → Internal, Company → External).
+  const { data: rolesData } = useGetRoles({ scope: form.scope, pageSize: 200 });
+  const { data: groupsData } = useGetGroups({ scope: form.scope, pageSize: 200 });
+  const { data: teamsData } = useGetTeams({ pageSize: 200 });
+  const { data: companiesData } = useGetAdminCompanies({ pageSize: 200 });
+  // Only show options whose scope matches the selected Bank/Company scope.
+  const roleOptions = (rolesData?.items ?? []).filter(r => r.scope === form.scope);
+  const groupOptions = (groupsData?.items ?? []).filter(g => g.scope === form.scope);
+  const teamOptions = (teamsData?.items ?? []).filter(tm => tm.scope === form.scope);
+  const companies = companiesData?.companies ?? [];
 
   const handleClose = () => {
     setForm(EMPTY_FORM);
+    setAccessTab('roles');
     onClose();
   };
 
   const setField = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
-  const toggleRole = (roleId: string) =>
+  // Switching scope changes which roles/groups/teams are valid, so clear those selections.
+  // Bank users carry position/department; Company users carry a company instead.
+  const setScope = (scope: Scope) => {
     setForm(prev => ({
       ...prev,
-      roles: prev.roles.includes(roleId)
-        ? prev.roles.filter(id => id !== roleId)
-        : [...prev.roles, roleId],
+      scope,
+      roles: [],
+      groups: [],
+      teams: [],
+      companyId: scope === 'Bank' ? '' : prev.companyId,
+      position: scope === 'Company' ? '' : prev.position,
+      department: scope === 'Company' ? '' : prev.department,
+    }));
+    setAccessTab('roles');
+  };
+
+  // Switching to LDAP clears any typed local password (LDAP users authenticate against AD).
+  const setAuthSource = (src: AuthSource) =>
+    setForm(prev => ({
+      ...prev,
+      authSource: src,
+      password: src === 'LDAP' ? '' : prev.password,
+      confirmPassword: src === 'LDAP' ? '' : prev.confirmPassword,
     }));
 
+  const handleLdapLookup = () => {
+    if (!form.username.trim()) {
+      toast.error(t('validation.usernameRequired'));
+      return;
+    }
+    ldapLookup.mutate(form.username.trim(), {
+      onSuccess: data => {
+        if (!data.found) {
+          toast.error(t('toasts.ldapUserNotFound', 'User not found in LDAP/AD'));
+          return;
+        }
+        setForm(prev => ({
+          ...prev,
+          username: data.username || prev.username,
+          email: data.email ?? prev.email,
+          firstName: data.firstName ?? prev.firstName,
+          lastName: data.lastName ?? prev.lastName,
+          department: data.department ?? prev.department,
+          position: data.position ?? prev.position,
+          authSource: 'LDAP',
+          password: '',
+        }));
+        toast.success(t('toasts.ldapInfoLoaded', 'Loaded info from LDAP'));
+      },
+      onError: () => {
+        toast.error(t('toasts.ldapLookupFailed', 'LDAP lookup failed'));
+      },
+    });
+  };
+
   const validate = (): string | null => {
-    if (!form.username.trim()) return 'Username is required';
-    if (!form.email.trim()) return 'Email is required';
-    if (!/^\S+@\S+\.\S+$/.test(form.email)) return 'Email is not valid';
-    if (!form.password) return 'Password is required';
-    if (form.password.length < 8) return 'Password must be at least 8 characters';
-    if (!/[A-Z]/.test(form.password)) return 'Password must contain an uppercase letter';
-    if (!/[a-z]/.test(form.password)) return 'Password must contain a lowercase letter';
-    if (!/[0-9]/.test(form.password)) return 'Password must contain a digit';
-    if (!/[^A-Za-z0-9]/.test(form.password))
-      return 'Password must contain a non-alphanumeric character';
-    if (!form.firstName.trim()) return 'First name is required';
-    if (!form.lastName.trim()) return 'Last name is required';
-    if (form.roles.length === 0) return 'Select at least one role';
+    if (!form.username.trim()) return t('validation.usernameRequired');
+    if (!form.email.trim()) return t('validation.emailRequired');
+    if (!/^\S+@\S+\.\S+$/.test(form.email)) return t('validation.emailInvalid');
+    // LDAP users have no local password — it's validated against AD at login.
+    if (!isLdap) {
+      if (!form.password) return t('validation.passwordRequired');
+      // Complexity is driven by the DB-maintained policy (see the checklist below the field).
+      if (!passwordPolicyMet) return t('validation.passwordPolicyNotMet');
+      if (!form.confirmPassword) return t('validation.confirmPasswordRequired');
+      if (form.password !== form.confirmPassword) return t('validation.passwordsDoNotMatch');
+    }
+    if (!form.firstName.trim()) return t('validation.firstNameRequired');
+    if (!form.lastName.trim()) return t('validation.lastNameRequired');
+    if (isCompany && !form.companyId) return t('validation.companyRequired');
+    if (form.roles.length === 0) return t('validation.selectAtLeastOneRole');
     return null;
   };
 
@@ -84,114 +186,296 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
     createUser.mutate(
       {
         username: form.username.trim(),
-        password: form.password,
+        password: isLdap ? '' : form.password,
         email: form.email.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
-        position: form.position.trim() || null,
-        department: form.department.trim() || null,
+        position: isCompany ? null : form.position.trim() || null,
+        department: isCompany ? null : form.department.trim() || null,
+        companyId: isCompany ? form.companyId : null,
         roles: form.roles,
+        groupIds: form.groups,
+        teamIds: form.teams,
+        authSource: form.authSource,
       },
       {
         onSuccess: data => {
-          toast.success('User created');
+          toast.success(t('toasts.userCreated'));
           handleClose();
           if (data?.id) onCreated?.(data.id);
         },
-        onError: (err: any) => {
-          const detail =
-            err?.response?.data?.detail ||
-            err?.response?.data?.title ||
-            'Failed to create user';
-          toast.error(detail);
+        onError: (err: unknown) => {
+          // The shared axios interceptor attaches a normalized `apiError` ({ detail, title }).
+          const apiError = (err as { apiError?: { detail?: string; title?: string } })?.apiError;
+          toast.error(apiError?.detail || apiError?.title || t('toasts.userUpdateFailed'));
         },
       },
     );
   };
 
-  return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Create User" size="md">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
-        <TextInput
-          label="Username"
-          value={form.username}
-          onChange={e => setField('username', e.currentTarget.value)}
-          required
-          placeholder="jdoe"
-        />
-        <TextInput
-          label="Email"
-          type="email"
-          value={form.email}
-          onChange={e => setField('email', e.currentTarget.value)}
-          required
-          placeholder="jdoe@example.com"
-        />
-        <TextInput
-          label="First Name"
-          value={form.firstName}
-          onChange={e => setField('firstName', e.currentTarget.value)}
-          required
-        />
-        <TextInput
-          label="Last Name"
-          value={form.lastName}
-          onChange={e => setField('lastName', e.currentTarget.value)}
-          required
-        />
-        <TextInput
-          label="Password"
-          type="password"
-          value={form.password}
-          onChange={e => setField('password', e.currentTarget.value)}
-          required
-          placeholder="At least 8 chars, upper/lower/digit/symbol"
-          autoComplete="new-password"
-        />
-        <TextInput
-          label="Position"
-          value={form.position}
-          onChange={e => setField('position', e.currentTarget.value)}
-        />
-        <TextInput
-          label="Department"
-          value={form.department}
-          onChange={e => setField('department', e.currentTarget.value)}
-          className="sm:col-span-2"
-        />
+  const ACCESS_TABS: { key: AccessTab; label: string; count: number; required?: boolean }[] = [
+    { key: 'roles', label: t('sections.roles'), count: form.roles.length, required: true },
+    { key: 'groups', label: t('sections.groups'), count: form.groups.length },
+    { key: 'teams', label: t('sections.teams'), count: form.teams.length },
+  ];
 
-        <div className="sm:col-span-2">
-          <div className="block text-xs font-medium text-gray-700 mb-1">
-            Roles <span className="text-red-500">*</span>
+  return (
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.createUser.title')} size="2xl">
+      <div className="p-6 space-y-5">
+        {/* Scope — Bank vs Company drives roles/groups/teams and profile fields */}
+        <section>
+          <SectionLabel icon="building">{t('fields.scope')}</SectionLabel>
+          <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+            {(['Bank', 'Company'] as Scope[]).map(s => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setScope(s)}
+                className={clsx(
+                  'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
+                  form.scope === s ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-700',
+                )}
+              >
+                {s === 'Bank' ? t('tabs.bank') : t('tabs.company')}
+              </button>
+            ))}
           </div>
-          {allRoles.length === 0 ? (
-            <div className="text-xs text-gray-400">No roles available</div>
-          ) : (
-            <div className="max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1">
-              {allRoles.map(role => (
-                <Checkbox
-                  key={role.id}
-                  label={`${role.name}${role.description ? ` — ${role.description}` : ''}`}
-                  checked={form.roles.includes(role.id)}
-                  onChange={() => toggleRole(role.id)}
-                  size="sm"
-                />
-              ))}
+        </section>
+
+        {/* Authentication */}
+        <section>
+          <SectionLabel icon="shield-halved">
+            {t('fields.authSource', 'Authentication')}
+          </SectionLabel>
+          <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+            {(
+              [
+                ['Local', t('fields.authSourceLocal', 'Local password')],
+                ['LDAP', t('fields.authSourceLdap', 'LDAP / Active Directory')],
+              ] as [AuthSource, string][]
+            ).map(([src, label]) => (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setAuthSource(src)}
+                className={clsx(
+                  'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
+                  form.authSource === src
+                    ? 'bg-primary text-white'
+                    : 'text-gray-500 hover:text-gray-700',
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* Account */}
+        <section>
+          <SectionLabel icon="circle-user">{t('sections.account', 'Account')}</SectionLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <TextInput
+                label={t('fields.username')}
+                value={form.username}
+                onChange={e => setField('username', e.currentTarget.value)}
+                required
+                placeholder={t('placeholders.username')}
+              />
+              {isLdap && (
+                <Button
+                  variant="outline"
+                  size="xs"
+                  className="mt-1.5"
+                  isLoading={ldapLookup.isPending}
+                  onClick={handleLdapLookup}
+                >
+                  {t('buttons.retrieveFromLdap', 'Retrieve from LDAP')}
+                </Button>
+              )}
             </div>
+            <TextInput
+              label={t('fields.email')}
+              type="email"
+              value={form.email}
+              onChange={e => setField('email', e.currentTarget.value)}
+              required
+              placeholder={t('placeholders.email')}
+            />
+            {isLdap ? (
+              <div className="sm:col-span-2 flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
+                <p className="text-xs text-gray-500">
+                  {t(
+                    'hints.ldapPassword',
+                    'Password is managed by Active Directory — the user signs in with their AD credentials.',
+                  )}
+                </p>
+              </div>
+            ) : (
+              <>
+                <TextInput
+                  label={t('fields.password')}
+                  type="password"
+                  value={form.password}
+                  onChange={e => setField('password', e.currentTarget.value)}
+                  required
+                  autoComplete="new-password"
+                />
+                <TextInput
+                  label={t('fields.confirmPassword')}
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={e => setField('confirmPassword', e.currentTarget.value)}
+                  required
+                  placeholder={t('placeholders.reEnterNewPassword')}
+                  autoComplete="new-password"
+                />
+                <div className="sm:col-span-2">
+                  <PasswordPolicyChecklist password={form.password} />
+                </div>
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Profile */}
+        <section>
+          <SectionLabel icon="id-card">{t('sections.profile', 'Profile')}</SectionLabel>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <TextInput
+              label={t('fields.firstName')}
+              value={form.firstName}
+              onChange={e => setField('firstName', e.currentTarget.value)}
+              required
+            />
+            <TextInput
+              label={t('fields.lastName')}
+              value={form.lastName}
+              onChange={e => setField('lastName', e.currentTarget.value)}
+              required
+            />
+            {isCompany ? (
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  {t('fields.company')} <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={form.companyId}
+                  onChange={e => setField('companyId', e.target.value)}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
+                  <option value="">{t('placeholders.selectCompany')}</option>
+                  {companies.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <>
+                <TextInput
+                  label={t('fields.position')}
+                  value={form.position}
+                  onChange={e => setField('position', e.currentTarget.value)}
+                />
+                <TextInput
+                  label={t('fields.department')}
+                  value={form.department}
+                  onChange={e => setField('department', e.currentTarget.value)}
+                />
+              </>
+            )}
+          </div>
+        </section>
+
+        {/* Access — roles / groups / teams */}
+        <section>
+          <SectionLabel icon="user-shield">{t('sections.access', 'Access')}</SectionLabel>
+          <div className="flex gap-1 border-b border-gray-100 mb-3">
+            {ACCESS_TABS.map(tab => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setAccessTab(tab.key)}
+                className={clsx(
+                  '-mb-px px-3 py-2 text-sm font-medium border-b-2 transition-colors',
+                  accessTab === tab.key
+                    ? 'text-primary border-primary'
+                    : 'text-gray-500 border-transparent hover:text-gray-700',
+                )}
+              >
+                {tab.label}
+                {tab.required && <span className="text-red-500 ml-0.5">*</span>}
+                {tab.count > 0 && (
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary">
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {accessTab === 'roles' && (
+            <AssignmentTable
+              items={roleOptions}
+              getId={r => r.id}
+              getLabel={r => r.name}
+              columns={[
+                { key: 'name', label: t('fields.name'), sortable: true },
+                { key: 'scope', label: t('fields.scope'), sortable: true },
+              ]}
+              selectedIds={form.roles}
+              onChange={ids => setField('roles', ids)}
+              searchPlaceholder={t('placeholders.searchRoles')}
+              searchFields={r => [r.name, r.scope]}
+            />
           )}
-        </div>
+          {accessTab === 'groups' && (
+            <AssignmentTable
+              items={groupOptions}
+              getId={g => g.id}
+              getLabel={g => g.name}
+              columns={[
+                { key: 'name', label: t('fields.name'), sortable: true },
+                { key: 'scope', label: t('fields.scope'), sortable: true },
+              ]}
+              selectedIds={form.groups}
+              onChange={ids => setField('groups', ids)}
+              searchPlaceholder={t('placeholders.searchGroups')}
+              searchFields={g => [g.name, g.scope]}
+            />
+          )}
+          {accessTab === 'teams' && (
+            <AssignmentTable
+              items={teamOptions}
+              getId={tm => tm.id}
+              getLabel={tm => tm.name}
+              columns={[
+                { key: 'name', label: t('fields.name'), sortable: true },
+                {
+                  key: 'scope',
+                  label: t('fields.scope'),
+                  sortable: true,
+                  render: tm => t(tm.scope === 'Bank' ? 'tabs.bank' : 'tabs.company'),
+                },
+              ]}
+              selectedIds={form.teams}
+              onChange={ids => setField('teams', ids)}
+              searchPlaceholder={t('placeholders.searchTeams')}
+              searchFields={tm => [tm.name, tm.scope]}
+            />
+          )}
+        </section>
       </div>
+
       <div className="flex justify-end gap-2 px-6 pb-6">
         <Button variant="ghost" size="sm" onClick={handleClose}>
-          Cancel
+          {t('common:actions.cancel')}
         </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          isLoading={createUser.isPending}
-          onClick={handleCreate}
-        >
-          Create
+        <Button variant="primary" size="sm" isLoading={createUser.isPending} onClick={handleCreate}>
+          {t('buttons.create')}
         </Button>
       </div>
     </Modal>

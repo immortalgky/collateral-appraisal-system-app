@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -19,17 +20,13 @@ import {
 } from '../api/roles';
 import type { RoleScope } from '../types';
 
-const SCOPE_OPTIONS = [
-  { value: 'Bank', label: 'Bank' },
-  { value: 'Company', label: 'Company' },
-];
-
 interface RoleDetailPanelProps {
   roleId: string;
   onDeleted: () => void;
 }
 
 const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const { data: role, isLoading } = useGetRoleById(roleId);
   const { data: roleUsers = [], isLoading: isLoadingUsers } = useGetRoleUsers(roleId);
 
@@ -38,9 +35,18 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
   const updateUsers = useUpdateRoleUsers();
   const deleteRole = useDeleteRole();
 
+  const SCOPE_OPTIONS = [
+    { value: 'Bank', label: t('tabs.bank') },
+    { value: 'Company', label: t('tabs.company') },
+  ];
+
   // General edit modal
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({ name: '', description: '', scope: 'Bank' as RoleScope });
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    scope: 'Bank' as RoleScope,
+  });
 
   const handleOpenEdit = () => {
     if (!role) return;
@@ -50,14 +56,17 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
 
   const handleSaveGeneral = () => {
     if (!editForm.name || !editForm.scope) {
-      toast.error('Name and scope are required');
+      toast.error(t('validation.nameAndScopeRequired'));
       return;
     }
     updateRole.mutate(
       { id: roleId, name: editForm.name, description: editForm.description, scope: editForm.scope },
       {
-        onSuccess: () => { toast.success('Role updated'); setShowEditModal(false); },
-        onError: () => toast.error('Failed to update role'),
+        onSuccess: () => {
+          toast.success(t('toasts.roleUpdated'));
+          setShowEditModal(false);
+        },
+        onError: () => toast.error(t('toasts.roleUpdateFailed')),
       },
     );
   };
@@ -69,8 +78,11 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
     updatePermissions.mutate(
       { id: roleId, permissionIds },
       {
-        onSuccess: () => { toast.success('Permissions updated'); setShowPermModal(false); },
-        onError: () => toast.error('Failed to update permissions'),
+        onSuccess: () => {
+          toast.success(t('toasts.permissionsUpdated'));
+          setShowPermModal(false);
+        },
+        onError: () => toast.error(t('toasts.permissionsUpdateFailed')),
       },
     );
   };
@@ -82,8 +94,11 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
     updateUsers.mutate(
       { id: roleId, userIds },
       {
-        onSuccess: () => { toast.success('Users updated'); setShowUserModal(false); },
-        onError: () => toast.error('Failed to update users'),
+        onSuccess: () => {
+          toast.success(t('toasts.usersUpdated'));
+          setShowUserModal(false);
+        },
+        onError: () => toast.error(t('toasts.usersUpdateFailed')),
       },
     );
   };
@@ -94,11 +109,11 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
   const handleConfirmDelete = () => {
     deleteRole.mutate(roleId, {
       onSuccess: () => {
-        toast.success('Role deleted');
+        toast.success(t('toasts.roleDeleted'));
         setShowDelete(false);
         onDeleted();
       },
-      onError: () => toast.error('Failed to delete role'),
+      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.roleDeleteFailed')),
     });
   };
 
@@ -117,13 +132,14 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
 
   return (
     <div className="flex flex-col gap-4 p-6">
-
       {/* General Section */}
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="circle-info" style="solid" className="size-4 text-blue-500" />
-            <span className="text-sm font-semibold text-gray-800">General</span>
+            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+              <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
+            </span>
+            <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
           </div>
           <button
             type="button"
@@ -131,25 +147,27 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             className="text-xs text-primary hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
-            Edit
+            {t('buttons.edit')}
           </button>
         </div>
         <div className="px-4 py-4 space-y-2">
           <div>
-            <div className="text-xs text-gray-400 mb-0.5">Name</div>
+            <div className="text-xs text-gray-400 mb-0.5">{t('fields.name')}</div>
             <div className="text-sm font-medium text-gray-900">{role.name}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-0.5">Scope</div>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-              role.scope === 'Bank' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'
-            }`}>
+            <div className="text-xs text-gray-400 mb-0.5">{t('fields.scope')}</div>
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                role.scope === 'Bank' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'
+              }`}
+            >
               {role.scope}
             </span>
           </div>
           {role.description && (
             <div>
-              <div className="text-xs text-gray-400 mb-0.5">Description</div>
+              <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
               <div className="text-sm text-gray-600">{role.description}</div>
             </div>
           )}
@@ -160,8 +178,10 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="shield-halved" style="solid" className="size-4 text-emerald-500" />
-            <span className="text-sm font-semibold text-gray-800">Permissions</span>
+            <span className="flex size-6 items-center justify-center rounded-md bg-emerald-50">
+              <Icon name="shield-halved" style="solid" className="size-3 text-emerald-500" />
+            </span>
+            <span className="text-sm font-semibold text-gray-800">{t('sections.permissions')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {role.permissions.length}
             </span>
@@ -172,16 +192,20 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             className="text-xs text-primary hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
-            Edit
+            {t('buttons.edit')}
           </button>
         </div>
         <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
           {role.permissions.length === 0 ? (
-            <div className="px-4 py-4 text-sm text-gray-400 text-center">No permissions assigned</div>
+            <div className="px-4 py-4 text-sm text-gray-400 text-center">
+              {t('empty.noPermissionsAssigned')}
+            </div>
           ) : (
             role.permissions.map(p => (
               <div key={p.id} className="px-4 py-2.5">
-                <code className="text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">{p.permissionCode}</code>
+                <code className="text-xs text-gray-600 bg-gray-50 px-1.5 py-0.5 rounded">
+                  {p.permissionCode}
+                </code>
                 {p.description && (
                   <div className="text-xs text-gray-400 mt-0.5">{p.description}</div>
                 )}
@@ -196,8 +220,10 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
           <div className="flex items-center gap-2">
-            <Icon name="users" style="solid" className="size-4 text-violet-500" />
-            <span className="text-sm font-semibold text-gray-800">Users</span>
+            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50">
+              <Icon name="users" style="solid" className="size-3 text-violet-500" />
+            </span>
+            <span className="text-sm font-semibold text-gray-800">{t('sections.users')}</span>
             <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
               {roleUsers.length}
             </span>
@@ -208,21 +234,23 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             className="text-xs text-primary hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
-            Edit
+            {t('buttons.edit')}
           </button>
         </div>
         <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
           {isLoadingUsers ? (
-            <div className="px-4 py-4 text-sm text-gray-400">Loading...</div>
+            <div className="px-4 py-4 text-sm text-gray-400">{t('empty.loading')}</div>
           ) : roleUsers.length === 0 ? (
-            <div className="px-4 py-4 text-sm text-gray-400 text-center">No users assigned</div>
+            <div className="px-4 py-4 text-sm text-gray-400 text-center">
+              {t('empty.noUsersAssigned')}
+            </div>
           ) : (
             roleUsers.map(u => {
               const displayName = `${u.firstName} ${u.lastName}`.trim() || u.username;
               return (
                 <div key={u.id} className="px-4 py-2.5 flex items-center gap-2">
                   <div className="size-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-500 shrink-0">
-                    {(displayName)[0]?.toUpperCase()}
+                    {displayName[0]?.toUpperCase()}
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-gray-800 truncate">{displayName}</div>
@@ -239,58 +267,72 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
       {/* Security Section */}
       <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
-          <Icon name="triangle-exclamation" style="solid" className="size-4 text-danger" />
-          <span className="text-sm font-semibold text-gray-800">Security</span>
+          <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+            <Icon name="triangle-exclamation" style="solid" className="size-3 text-danger" />
+          </span>
+          <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
         </div>
         <div className="px-4 py-4">
-          <p className="text-xs text-gray-500 mb-3">
-            Deleting this role will remove it from all assigned users. This action cannot be undone.
-          </p>
+          <p className="text-xs text-gray-500 mb-3">{t('security.deleteRoleWarning')}</p>
           <Button
             variant="danger"
             size="sm"
             onClick={() => setShowDelete(true)}
             leftIcon={<Icon name="trash-can" style="regular" className="size-3.5" />}
           >
-            Delete Role
+            {t('buttons.deleteRole')}
           </Button>
         </div>
       </section>
 
       {/* General Edit Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="Edit Role" size="md">
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title={t('dialogs.editRole.title')}
+        size="md"
+      >
         <div className="grid grid-cols-1 gap-4 p-6">
           <TextInput
-            label="Name"
+            label={t('fields.name')}
             value={editForm.name}
             onChange={e => {
               const value = e.currentTarget.value;
               setEditForm(prev => ({ ...prev, name: value }));
             }}
             required
-            placeholder="Role name"
+            placeholder={t('placeholders.roleName')}
           />
           <Dropdown
-            label="Scope"
+            label={t('fields.scope')}
             value={editForm.scope}
-            onChange={(val: string | null) => setEditForm(prev => ({ ...prev, scope: (val ?? 'Bank') as RoleScope }))}
+            onChange={(val: string | null) =>
+              setEditForm(prev => ({ ...prev, scope: (val ?? 'Bank') as RoleScope }))
+            }
             options={SCOPE_OPTIONS}
             required
           />
           <TextInput
-            label="Description"
+            label={t('fields.description')}
             value={editForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setEditForm(prev => ({ ...prev, description: value }));
             }}
-            placeholder="Brief description"
+            placeholder={t('placeholders.briefDescription')}
           />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
-          <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>Cancel</Button>
-          <Button variant="primary" size="sm" isLoading={updateRole.isPending} onClick={handleSaveGeneral}>
-            Save
+          <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>
+            {t('common:actions.cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
+            isLoading={updateRole.isPending}
+            onClick={handleSaveGeneral}
+          >
+            {t('common:actions.save')}
           </Button>
         </div>
       </Modal>
@@ -321,9 +363,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
         isOpen={showDelete}
         onClose={() => setShowDelete(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Role"
-        message={`Are you sure you want to delete "${role.name}"? This cannot be undone.`}
-        confirmText="Delete"
+        title={t('dialogs.deleteRole.title')}
+        message={t('dialogs.deleteRole.message', { name: role.name })}
+        confirmText={t('common:actions.delete')}
         isLoading={deleteRole.isPending}
       />
     </div>

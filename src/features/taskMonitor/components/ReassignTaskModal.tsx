@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { format, parseISO } from 'date-fns';
 
@@ -28,6 +29,7 @@ function formatDueAt(dueAt: string | null): string {
 const PAGE_SIZE = 10;
 
 function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
+  const { t } = useTranslation(['taskMonitor', 'common']);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -68,17 +70,17 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
       });
 
       if (!result.isSuccess) {
-        setServerError(result.errorMessage ?? 'Reassignment failed.');
+        setServerError(result.errorMessage ?? t('reassign.failed'));
         return;
       }
 
       if (result.changed) {
         const picked = allCandidates.find(a => a.userId === selectedUserId);
-        toast.success(`Reassigned to ${picked?.displayName ?? selectedUserId}. DueAt unchanged.`);
+        toast.success(t('reassign.success', { name: picked?.displayName ?? selectedUserId }));
       }
       onClose();
     } catch {
-      setServerError('An unexpected error occurred. Please try again.');
+      setServerError(t('reassign.unexpectedError'));
     }
   };
 
@@ -89,7 +91,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
   if (!task) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Reassign Task" size="lg">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('reassign.title')} size="lg">
       <div className="space-y-4">
         {/* ── Current assignment summary ── */}
         <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
@@ -100,7 +102,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
               className="mt-0.5"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 mb-0.5">Currently assigned to</p>
+              <p className="text-xs text-gray-500 mb-0.5">{t('reassign.currentlyAssigned')}</p>
               <p className="text-sm font-semibold text-gray-900 truncate">
                 {task.assignedToDisplayName || task.assignedTo}
               </p>
@@ -111,11 +113,12 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
           <div className="flex items-center gap-2 pt-1">
             <Icon style="solid" name="clock" className="size-3.5 text-gray-400 shrink-0" />
             <span className="text-xs text-gray-600">
-              Due: <span className="font-medium text-gray-800">{formatDueAt(task.dueAt)}</span>
+              {t('reassign.due')}{' '}
+              <span className="font-medium text-gray-800">{formatDueAt(task.dueAt)}</span>
             </span>
             <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-50 border border-blue-200 text-blue-700">
               <Icon style="solid" name="lock" className="size-2.5" />
-              SLA preserved
+              {t('reassign.slaPreserved')}
             </span>
           </div>
         </div>
@@ -123,18 +126,16 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
         {/* ── Eligible list ── */}
         <div>
           <p className="block text-sm font-medium text-gray-700 mb-2">
-            New assignee <span className="text-red-500">*</span>
+            {t('reassign.newAssignee')} <span className="text-red-500">*</span>
           </p>
 
           {isLoadingAssignees ? (
             <div className="flex items-center justify-center py-12 text-xs text-gray-400">
               <Icon style="solid" name="spinner" className="size-4 animate-spin mr-2" />
-              Loading eligible users…
+              {t('reassign.loadingUsers')}
             </div>
           ) : allCandidates.length === 0 ? (
-            <p className="text-xs text-gray-500 py-6 text-center">
-              No eligible users found for this activity.
-            </p>
+            <p className="text-xs text-gray-500 py-6 text-center">{t('reassign.noEligible')}</p>
           ) : (
             <>
               <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[360px] overflow-auto">
@@ -181,8 +182,11 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
                   <span>
-                    {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, allCandidates.length)}{' '}
-                    of {allCandidates.length}
+                    {t('reassign.pageInfo', {
+                      from: page * PAGE_SIZE + 1,
+                      to: Math.min((page + 1) * PAGE_SIZE, allCandidates.length),
+                      total: allCandidates.length,
+                    })}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
@@ -243,7 +247,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
             onClick={handleClose}
             disabled={reassign.isPending}
           >
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button
             type="button"
@@ -253,7 +257,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
             disabled={!selectedUserId}
             onClick={onSave}
           >
-            Save
+            {t('common:actions.save')}
           </Button>
         </div>
       </div>

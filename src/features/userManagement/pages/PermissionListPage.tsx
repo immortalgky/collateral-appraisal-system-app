@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
-import SectionHeader from '@shared/components/sections/SectionHeader';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -8,7 +9,7 @@ import TextInput from '@shared/components/inputs/TextInput';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
-import Pagination from '@shared/components/Pagination';
+import ListSortMenu from '../components/ListSortMenu';
 import {
   useGetPermissions,
   useCreatePermission,
@@ -17,23 +18,17 @@ import {
 } from '../api/permissions';
 import type { Permission, CreatePermissionRequest } from '../types';
 
-const PAGE_SIZE = 20;
+const MODULES = ['Auth', 'Workflow', 'Appraisal', 'Request', 'Common'] as const;
+const MODULE_OPTIONS = MODULES.map(m => ({ value: m, label: m }));
 
-const TABLE_SKELETON_COLUMNS = [
-  { width: 'w-32' },
-  { width: 'w-40' },
-  { width: 'w-20' },
-  { width: 'w-48' },
-  { width: 'w-16' },
-];
-
-const MODULE_OPTIONS = [
-  { value: 'Auth', label: 'Auth' },
-  { value: 'Workflow', label: 'Workflow' },
-  { value: 'Appraisal', label: 'Appraisal' },
-  { value: 'Request', label: 'Request' },
-  { value: 'Common', label: 'Common' },
-];
+const MODULE_BADGE: Record<string, string> = {
+  Auth: 'bg-blue-50 text-blue-700',
+  Workflow: 'bg-violet-50 text-violet-700',
+  Appraisal: 'bg-emerald-50 text-emerald-700',
+  Request: 'bg-amber-50 text-amber-700',
+  Common: 'bg-gray-100 text-gray-600',
+};
+const moduleBadge = (m: string) => MODULE_BADGE[m] ?? 'bg-gray-100 text-gray-600';
 
 type PermissionFormData = {
   permissionCode: string;
@@ -50,10 +45,13 @@ const emptyForm: PermissionFormData = {
 };
 
 const PermissionListPage = () => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  // Pagination component is 0-based; backend is 1-based — we store 0-based internally
-  const [pageIndex, setPageIndex] = useState(0);
+  const [moduleFilter, setModuleFilter] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState('name');
+  const [sortAsc, setSortAsc] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
   const [form, setForm] = useState<PermissionFormData>(emptyForm);
@@ -62,23 +60,38 @@ const PermissionListPage = () => {
     id: null,
   });
 
-  // Debounce search — reset to page 1 on new search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPageIndex(0);
-    }, 400);
+    const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Permissions are a bounded reference set — load all and filter client-side.
   const { data, isLoading } = useGetPermissions({
     search: debouncedSearch || undefined,
-    pageNumber: pageIndex + 1, // convert 0-based index to 1-based page number
-    pageSize: PAGE_SIZE,
+    pageNumber: 1,
+    pageSize: 500,
   });
 
   const permissions = data?.items ?? [];
-  const totalCount = data?.totalCount ?? 0;
+  const totalCount = data?.totalCount ?? permissions.length;
+
+  const filtered = useMemo(() => {
+    const rows = moduleFilter ? permissions.filter(p => p.module === moduleFilter) : permissions;
+    return [...rows].sort((a, b) => {
+      const cmp =
+        sortKey === 'module'
+          ? a.module.localeCompare(b.module) || a.displayName.localeCompare(b.displayName)
+          : a.displayName.localeCompare(b.displayName);
+      return sortAsc ? cmp : -cmp;
+    });
+  }, [permissions, moduleFilter, sortKey, sortAsc]);
+
+  const SORT_OPTIONS = [
+    { key: 'name', label: t('sort.name') },
+    { key: 'module', label: t('sort.module') },
+  ];
+
+  const selectedPermission = permissions.find(p => p.id === selectedId) ?? null;
 
   const createPermission = useCreatePermission();
   const updatePermission = useUpdatePermission();
@@ -101,32 +114,29 @@ const PermissionListPage = () => {
     setShowModal(true);
   };
 
-  const handleOpenDelete = (id: string) => {
-    setDeleteConfirm({ isOpen: true, id });
-  };
-
-  const handleCloseDelete = () => {
-    setDeleteConfirm({ isOpen: false, id: null });
-  };
-
   const handleConfirmDelete = () => {
     if (!deleteConfirm.id) return;
     deletePermission.mutate(deleteConfirm.id, {
       onSuccess: () => {
-        toast.success('Permission deleted successfully');
-        handleCloseDelete();
+        toast.success(t('toasts.permissionDeleted'));
+        if (selectedId === deleteConfirm.id) setSelectedId(null);
+        setDeleteConfirm({ isOpen: false, id: null });
       },
-      onError: () => toast.error('Failed to delete permission'),
+      onError: (err: any) =>
+        toast.error(err?.apiError?.detail ?? t('toasts.permissionDeleteFailed')),
     });
   };
 
-  const updateField = <K extends keyof PermissionFormData>(key: K, value: PermissionFormData[K]) => {
+  const updateField = <K extends keyof PermissionFormData>(
+    key: K,
+    value: PermissionFormData[K],
+  ) => {
     setForm(prev => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = () => {
     if (!form.permissionCode || !form.displayName || !form.module) {
-      toast.error('Please fill in all required fields');
+      toast.error(t('validation.fillAllRequired'));
       return;
     }
 
@@ -140,10 +150,10 @@ const PermissionListPage = () => {
         },
         {
           onSuccess: () => {
-            toast.success('Permission updated successfully');
+            toast.success(t('toasts.permissionUpdated'));
             setShowModal(false);
           },
-          onError: () => toast.error('Failed to update permission'),
+          onError: () => toast.error(t('toasts.permissionUpdateFailed')),
         },
       );
     } else {
@@ -155,10 +165,10 @@ const PermissionListPage = () => {
       };
       createPermission.mutate(request, {
         onSuccess: () => {
-          toast.success('Permission created successfully');
+          toast.success(t('toasts.permissionCreated'));
           setShowModal(false);
         },
-        onError: () => toast.error('Failed to create permission'),
+        onError: () => toast.error(t('toasts.permissionCreateFailed')),
       });
     }
   };
@@ -166,175 +176,277 @@ const PermissionListPage = () => {
   const isSaving = createPermission.isPending || updatePermission.isPending;
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <SectionHeader
-        title="Permissions"
-        subtitle="Manage system permissions that can be assigned to roles"
-        icon="shield-halved"
-        iconColor="blue"
-        rightIcon={
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleOpenCreate}
-            leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
-          >
-            Add Permission
-          </Button>
-        }
-      />
+    <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.permissions.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {totalCount}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.permissions.subtitle')}</p>
+        </div>
+      </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
-        {/* Search */}
-        <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-          <div className="relative flex-1 max-w-sm">
-            <Icon
-              name="magnifying-glass"
-              style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+      <div className="flex gap-4 flex-1 min-h-0">
+        {/* Left panel — permission list */}
+        <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
+          {/* Search + Add */}
+          <div className="px-3 pt-3 pb-2 flex gap-2">
+            <div className="relative flex-1">
+              <Icon
+                name="magnifying-glass"
+                style="regular"
+                className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t('placeholders.searchPermissions')}
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              title={t('buttons.addPermission')}
+              aria-label={t('buttons.addPermission')}
+              className="shrink-0 size-7 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary/80 transition-colors"
+            >
+              <Icon name="plus" style="solid" className="size-3.5" />
+            </button>
+            <ListSortMenu
+              options={SORT_OPTIONS}
+              sortKey={sortKey}
+              asc={sortAsc}
+              onChange={(key, asc) => {
+                setSortKey(key);
+                setSortAsc(asc);
+              }}
             />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search by code or display name..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            />
+          </div>
+
+          {/* Module filter chips */}
+          <div className="px-3 pb-2 flex flex-wrap gap-1">
+            <button
+              type="button"
+              onClick={() => setModuleFilter('')}
+              className={clsx(
+                'px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors',
+                moduleFilter === ''
+                  ? 'bg-primary text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+              )}
+            >
+              {t('filters.all')}
+            </button>
+            {MODULES.map(m => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setModuleFilter(m)}
+                className={clsx(
+                  'px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors',
+                  moduleFilter === m
+                    ? 'bg-primary text-white'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+
+          {/* List */}
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-50">
+            {isLoading ? (
+              <table className="w-full">
+                <tbody>
+                  <TableRowSkeleton columns={[{ width: 'w-full' }]} rows={8} />
+                </tbody>
+              </table>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-xs gap-1">
+                <Icon name="shield-halved" style="regular" className="size-7 opacity-40" />
+                <span>{t('empty.noPermissionsFound')}</span>
+              </div>
+            ) : (
+              filtered.map(permission => (
+                <button
+                  key={permission.id}
+                  type="button"
+                  onClick={() => setSelectedId(permission.id)}
+                  className={clsx(
+                    'w-full text-left px-3 py-2.5 transition-colors',
+                    selectedId === permission.id
+                      ? 'bg-primary/5 border-l-2 border-primary'
+                      : 'hover:bg-gray-50 border-l-2 border-transparent',
+                  )}
+                >
+                  <div className="text-sm font-medium text-gray-800 truncate">
+                    {permission.displayName}
+                  </div>
+                  <div className="mt-0.5 flex items-center gap-1.5">
+                    <code className="text-[10px] text-gray-400 truncate">
+                      {permission.permissionCode}
+                    </code>
+                    <span
+                      className={clsx(
+                        'shrink-0 ml-auto inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium',
+                        moduleBadge(permission.module),
+                      )}
+                    >
+                      {permission.module}
+                    </span>
+                  </div>
+                </button>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Display Name
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Permission Code
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Module
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Description
-                </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <TableRowSkeleton columns={TABLE_SKELETON_COLUMNS} rows={5} />
-              ) : permissions.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-12 text-gray-400 text-sm">
-                    <Icon name="shield-halved" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
-                    <p>No permissions found</p>
-                  </td>
-                </tr>
-              ) : (
-                permissions.map(permission => (
-                  <tr key={permission.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">{permission.displayName}</td>
-                    <td className="px-4 py-3">
-                      <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
-                        {permission.permissionCode}
-                      </code>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                        {permission.module}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 max-w-xs truncate">
-                      {permission.description || <span className="text-gray-300">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(permission)}
-                          className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Icon name="pen-to-square" style="regular" className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleOpenDelete(permission.id)}
-                          className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Icon name="trash-can" style="regular" className="size-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* Right panel — permission detail */}
+        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto">
+          {selectedPermission ? (
+            <div className="flex flex-col gap-4 p-6">
+              {/* General Section */}
+              <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+                      <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
+                    </span>
+                    <span className="text-sm font-semibold text-gray-800">
+                      {t('sections.general')}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(selectedPermission)}
+                    className="text-xs text-primary hover:underline flex items-center gap-1"
+                  >
+                    <Icon name="pen-to-square" style="regular" className="size-3.5" />
+                    {t('buttons.edit')}
+                  </button>
+                </div>
+                <div className="px-4 py-4 space-y-2">
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">{t('fields.displayName')}</div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {selectedPermission.displayName}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">{t('fields.permissionCode')}</div>
+                    <code className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">
+                      {selectedPermission.permissionCode}
+                    </code>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-400 mb-0.5">{t('fields.module')}</div>
+                    <span
+                      className={clsx(
+                        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                        moduleBadge(selectedPermission.module),
+                      )}
+                    >
+                      {selectedPermission.module}
+                    </span>
+                  </div>
+                  {selectedPermission.description && (
+                    <div>
+                      <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
+                      <div className="text-sm text-gray-600">{selectedPermission.description}</div>
+                    </div>
+                  )}
+                </div>
+              </section>
 
-        {/* Pagination */}
-        {!isLoading && totalCount > 0 && (
-          <Pagination
-            currentPage={pageIndex}
-            totalPages={Math.ceil(totalCount / PAGE_SIZE)}
-            totalCount={totalCount}
-            pageSize={PAGE_SIZE}
-            onPageChange={setPageIndex}
-            showPageSizeSelector={false}
-          />
-        )}
+              {/* Security Section */}
+              <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
+                  <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+                    <Icon
+                      name="triangle-exclamation"
+                      style="solid"
+                      className="size-3 text-danger"
+                    />
+                  </span>
+                  <span className="text-sm font-semibold text-gray-800">
+                    {t('sections.security')}
+                  </span>
+                </div>
+                <div className="px-4 py-4">
+                  <p className="text-xs text-gray-500 mb-3">
+                    {t('security.deletePermissionWarning')}
+                  </p>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setDeleteConfirm({ isOpen: true, id: selectedPermission.id })}
+                    leftIcon={<Icon name="trash-can" style="regular" className="size-3.5" />}
+                  >
+                    {t('buttons.deletePermission')}
+                  </Button>
+                </div>
+              </section>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
+              <Icon name="shield-halved" style="regular" className="size-12 opacity-30" />
+              <p className="text-sm">{t('empty.selectPermission')}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create / Edit Modal */}
       <Modal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        title={editingPermission ? 'Edit Permission' : 'Add Permission'}
+        title={
+          editingPermission ? t('dialogs.editPermission.title') : t('dialogs.addPermission.title')
+        }
         size="md"
       >
         <div className="grid grid-cols-1 gap-4 p-6">
           <TextInput
-            label="Permission Code"
+            label={t('fields.permissionCode')}
             value={form.permissionCode}
             onChange={e => updateField('permissionCode', e.currentTarget.value)}
             disabled={!!editingPermission}
             required
-            placeholder="e.g., permissions.read"
+            placeholder={t('placeholders.permissionCodeExample')}
           />
           <TextInput
-            label="Display Name"
+            label={t('fields.displayName')}
             value={form.displayName}
             onChange={e => updateField('displayName', e.currentTarget.value)}
             required
-            placeholder="e.g., View Permissions"
+            placeholder={t('placeholders.displayNameExample')}
           />
           <Dropdown
-            label="Module"
+            label={t('fields.module')}
             value={form.module}
             onChange={(val: string | null) => updateField('module', val ?? '')}
             options={MODULE_OPTIONS}
             required
           />
           <TextInput
-            label="Description"
+            label={t('fields.description')}
             value={form.description}
             onChange={e => updateField('description', e.currentTarget.value)}
-            placeholder="Brief description of what this permission allows"
+            placeholder={t('placeholders.permissionDescription')}
           />
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
           <Button variant="ghost" size="sm" onClick={() => setShowModal(false)}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSubmit}>
-            {editingPermission ? 'Update' : 'Create'}
+            {editingPermission ? t('buttons.update') : t('buttons.create')}
           </Button>
         </div>
       </Modal>
@@ -342,11 +454,11 @@ const PermissionListPage = () => {
       {/* Delete Confirm */}
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
-        onClose={handleCloseDelete}
+        onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
         onConfirm={handleConfirmDelete}
-        title="Delete Permission"
-        message="Are you sure you want to delete this permission? This action cannot be undone."
-        confirmText="Delete"
+        title={t('dialogs.deletePermission.title')}
+        message={t('dialogs.deletePermission.message')}
+        confirmText={t('common:actions.delete')}
         isLoading={deletePermission.isPending}
       />
     </div>

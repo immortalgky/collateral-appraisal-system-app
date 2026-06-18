@@ -42,6 +42,7 @@ export function mapDirectComparisonFormToSubmitSchema({
       displaySequence: index,
       isSelectedForScoring: scoringFactorIds.has(cf.factorId),
       remarks: null,
+      collateralValue: (cf as any).collateralValue ?? null,
     })),
 
     factorScores: buildFactorScores(DirectComparisonForm),

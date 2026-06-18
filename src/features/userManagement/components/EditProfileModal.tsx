@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
@@ -13,6 +14,7 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal = ({ isOpen, onClose, profile }: EditProfileModalProps) => {
+  const { t } = useTranslation(['userManagement', 'common']);
   const updateProfile = useUpdateProfile();
 
   const [form, setForm] = useState({
@@ -28,7 +30,7 @@ const EditProfileModal = ({ isOpen, onClose, profile }: EditProfileModalProps) =
 
   const handleSave = () => {
     if (!form.firstName || !form.lastName) {
-      toast.error('First name and last name are required');
+      toast.error(t('validation.firstAndLastNameRequired'));
       return;
     }
     updateProfile.mutate(
@@ -40,50 +42,55 @@ const EditProfileModal = ({ isOpen, onClose, profile }: EditProfileModalProps) =
       },
       {
         onSuccess: () => {
-          toast.success('Profile updated');
+          toast.success(t('toasts.profileUpdated'));
           onClose();
         },
-        onError: () => toast.error('Failed to update profile'),
+        onError: () => toast.error(t('toasts.profileUpdateFailed')),
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('dialogs.editUser.title')} size="md">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6">
         <TextInput
-          label="First Name"
+          label={t('fields.firstName')}
           value={form.firstName}
           onChange={e => updateField('firstName', e.currentTarget.value)}
           required
-          placeholder="First name"
+          placeholder={t('placeholders.firstName')}
         />
         <TextInput
-          label="Last Name"
+          label={t('fields.lastName')}
           value={form.lastName}
           onChange={e => updateField('lastName', e.currentTarget.value)}
           required
-          placeholder="Last name"
+          placeholder={t('placeholders.lastName')}
         />
         <TextInput
-          label="Position"
+          label={t('fields.position')}
           value={form.position}
           onChange={e => updateField('position', e.currentTarget.value)}
-          placeholder="e.g., Senior Appraiser"
+          placeholder={t('placeholders.position')}
         />
         <TextInput
-          label="Department"
+          label={t('fields.department')}
           value={form.department}
           onChange={e => updateField('department', e.currentTarget.value)}
-          placeholder="e.g., Appraisal Division"
+          placeholder={t('placeholders.department')}
         />
       </div>
       <div className="flex justify-end gap-2 px-6 pb-6">
         <Button variant="ghost" size="sm" onClick={onClose}>
-          Cancel
+          {t('common:actions.cancel')}
         </Button>
-        <Button variant="primary" size="sm" isLoading={updateProfile.isPending} onClick={handleSave}>
-          Save
+        <Button
+          variant="primary"
+          size="sm"
+          isLoading={updateProfile.isPending}
+          onClick={handleSave}
+        >
+          {t('common:actions.save')}
         </Button>
       </div>
     </Modal>

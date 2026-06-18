@@ -36,3 +36,42 @@ export interface GetWebhookDeliveriesParams extends WebhookDeliveryFilters {
   pageNumber?: number;
   pageSize?: number;
 }
+
+// ─── Webhook Subscriptions ────────────────────────────────────────────────────
+
+export interface WebhookSubscription {
+  id: string;
+  systemCode: string;
+  callbackUrl: string;
+  isActive: boolean;
+  /** Last 4 chars of the shared HMAC secret — the full secret is never returned. */
+  secretLast4: string | null;
+  lastDeliveryAt: string | null;
+  createdAt: string | null;
+}
+
+export interface WebhookSubscriptionListResult {
+  items: WebhookSubscription[];
+  count: number;
+  pageNumber: number;
+  pageSize: number;
+}
+
+export interface GetWebhookSubscriptionsParams {
+  pageNumber?: number;
+  pageSize?: number;
+  systemCode?: string;
+  isActive?: boolean;
+}
+
+export interface CreateWebhookSubscriptionRequest {
+  systemCode: string;
+  callbackUrl: string;
+  secretKey: string;
+}
+
+export interface UpdateWebhookSubscriptionRequest {
+  callbackUrl: string;
+  /** Only sent when replacing the shared secret; omitted leaves it unchanged. */
+  secretKey?: string;
+}

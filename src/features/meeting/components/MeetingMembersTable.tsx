@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -16,6 +17,7 @@ interface MeetingMembersTableProps {
 }
 
 const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTableProps) => {
+  const { t } = useTranslation('meeting');
   const removeMember = useRemoveMeetingMember();
   const updatePosition = useUpdateMeetingMemberPosition();
   const addMemberDialog = useDisclosure();
@@ -31,7 +33,7 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to update position');
+          toast.error(detail || t('toasts.positionUpdateFailed'));
           setUpdatingId(null);
         },
       },
@@ -39,16 +41,16 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
   };
 
   const handleRemove = (memberId: string, memberName: string) => {
-    if (!confirm(`Remove ${memberName} from this meeting?`)) return;
+    if (!confirm(t('confirm.removeMember', { name: memberName }))) return;
     removeMember.mutate(
       { meetingId, memberId },
       {
         onSuccess: () => {
-          toast.success('Member removed');
+          toast.success(t('toasts.memberRemoved'));
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to remove member');
+          toast.error(detail || t('toasts.memberRemoveFailed'));
         },
       },
     );
@@ -59,13 +61,13 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
       <div className="space-y-3">
         <div className="flex flex-col items-center justify-center py-8 gap-2 text-center">
           <Icon name="users" style="regular" className="w-10 h-10 text-gray-300" />
-          <p className="text-sm text-gray-500">No members in this meeting snapshot.</p>
+          <p className="text-sm text-gray-500">{t('empty.noMembers')}</p>
         </div>
         {editable && (
           <div className="flex justify-end">
             <Button size="sm" type="button" onClick={addMemberDialog.onOpen}>
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-              Add Member
+              {t('buttons.addMember')}
             </Button>
           </div>
         )}
@@ -85,17 +87,17 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase w-10">
-                No.
+                {t('columns.memberNo')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Member Name
+                {t('columns.memberName')}
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                Position
+                {t('columns.position')}
               </th>
               {editable && (
                 <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Actions
+                  {t('columns.actions')}
                 </th>
               )}
             </tr>
@@ -117,12 +119,12 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
                     >
                       {POSITION_OPTIONS.map(pos => (
                         <option key={pos} value={pos}>
-                          {pos}
+                          {t(`position.${pos}` as `position.${CommitteeMemberPosition}`)}
                         </option>
                       ))}
                     </select>
                   ) : (
-                    member.position
+                    t(`position.${member.position}` as `position.${CommitteeMemberPosition}`)
                   )}
                 </td>
                 {editable && (
@@ -135,7 +137,7 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
                       disabled={removeMember.isPending}
                     >
                       <Icon name="xmark" style="solid" className="size-3.5 mr-1" />
-                      Remove
+                      {t('buttons.remove')}
                     </Button>
                   </td>
                 )}
@@ -149,7 +151,7 @@ const MeetingMembersTable = ({ meetingId, members, editable }: MeetingMembersTab
         <div className="flex justify-end">
           <Button size="sm" type="button" onClick={addMemberDialog.onOpen}>
             <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
-            Add Member
+            {t('buttons.addMember')}
           </Button>
         </div>
       )}

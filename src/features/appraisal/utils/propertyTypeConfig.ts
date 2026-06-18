@@ -51,7 +51,10 @@ const displayNameToCode: Record<string, string> = {
 
 /** Resolve a display name or short code to its short code */
 export function resolveTypeCode(typeNameOrCode: string): string | undefined {
-  return displayNameToCode[typeNameOrCode] ?? (typeToDetailEndpoint[typeNameOrCode] ? typeNameOrCode : undefined);
+  return (
+    displayNameToCode[typeNameOrCode] ??
+    (typeToDetailEndpoint[typeNameOrCode] ? typeNameOrCode : undefined)
+  );
 }
 
 /** Get the backend detail endpoint for a property type (accepts display name or code) */

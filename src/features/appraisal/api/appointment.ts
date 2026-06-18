@@ -1,4 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import axios from '@shared/api/axiosInstance';
 import type {
   AppointmentDto2Type,
@@ -40,7 +42,9 @@ export const useCreateAppointment = () => {
     mutationFn: async ({
       appraisalId,
       ...body
-    }: CreateAppointmentRequestType & { appraisalId: string }): Promise<CreateAppointmentResponseType> => {
+    }: CreateAppointmentRequestType & {
+      appraisalId: string;
+    }): Promise<CreateAppointmentResponseType> => {
       const { data } = await axios.post(`/appraisals/${appraisalId}/appointments`, body);
       return data;
     },
@@ -70,7 +74,7 @@ export const useRescheduleAppointment = () => {
     }): Promise<void> => {
       await axios.patch(
         `/appraisals/${appraisalId}/appointments/${appointmentId}/reschedule`,
-        body
+        body,
       );
     },
     onSuccess: (_, variables) => {
@@ -97,15 +101,50 @@ export const useCancelAppointment = () => {
       appraisalId: string;
       appointmentId: string;
     }): Promise<void> => {
-      await axios.patch(
-        `/appraisals/${appraisalId}/appointments/${appointmentId}/cancel`,
-        body
-      );
+      await axios.patch(`/appraisals/${appraisalId}/appointments/${appointmentId}/cancel`, body);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'appointments'],
       });
+    },
+  });
+};
+
+/**
+ * Cancel a pending reschedule (draft state), reverting to the previous date.
+ * PATCH /appraisals/{appraisalId}/appointments/{appointmentId}/cancel-reschedule
+ */
+export const useCancelRescheduleAppointment = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation('appraisal');
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      appointmentId,
+      ...body
+    }: {
+      appraisalId: string;
+      appointmentId: string;
+      changedBy: string;
+      reason?: string | null;
+    }): Promise<void> => {
+      await axios.patch(
+        `/appraisals/${appraisalId}/appointments/${appointmentId}/cancel-reschedule`,
+        body,
+      );
+    },
+    onSuccess: (_, variables) => {
+      toast.success(t('approval.toasts.rescheduleCancelled'));
+      queryClient.invalidateQueries({ queryKey: ['appraisal', variables.appraisalId, 'appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appraisal', variables.appraisalId, 'fees'] });
+    },
+    onError: (error: unknown) => {
+      const apiError = error as { apiError?: { detail?: string }; message?: string };
+      const message =
+        apiError?.apiError?.detail ?? apiError?.message ?? t('approval.toasts.rescheduleCancelFailed');
+      toast.error(message);
     },
   });
 };
@@ -126,10 +165,7 @@ export const useApproveAppointment = () => {
       appraisalId: string;
       appointmentId: string;
     }): Promise<void> => {
-      await axios.patch(
-        `/appraisals/${appraisalId}/appointments/${appointmentId}/approve`,
-        body
-      );
+      await axios.patch(`/appraisals/${appraisalId}/appointments/${appointmentId}/approve`, body);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

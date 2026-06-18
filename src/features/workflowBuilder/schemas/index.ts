@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 
 export const positionSchema = z.object({
   x: z.number(),
@@ -86,8 +87,199 @@ export const workflowSchemaSchema = z
   })
   .passthrough();
 
-// Form schemas for property panels
+// Form schema factories (t-parameterised for i18n validation messages)
 
+export const makeStartFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+  });
+
+export const makeTaskFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    activityName: z.string().min(1, t('validation.activityNameRequired')),
+    assigneeRole: z.string().optional(),
+    assigneeGroup: z.string().min(1, t('validation.assigneeGroupRequired')),
+    initialAssignmentStrategies: z.array(z.string()).min(1),
+    revisitAssignmentStrategies: z.array(z.string()).min(1),
+    timeoutDuration: z.string().min(1, t('validation.timeoutRequired')),
+    decisionConditions: z.array(
+      z.object({
+        key: z.string().min(1, t('validation.decisionNameRequired')),
+        value: z.string().min(1, t('validation.conditionRequired')),
+      }),
+    ),
+    requiredRoles: z.array(z.string()),
+    actions: z.array(
+      z.object({
+        value: z.string(),
+        label: z.string(),
+        assignmentMode: z.enum(['system', 'user']),
+        movement: z.enum(['F', 'B', 'C']),
+        condition: z.string().optional(),
+      }),
+    ),
+    canRaiseFollowup: z.boolean().optional(),
+    canRaiseQuotation: z.boolean().optional(),
+    teamIdVariable: z.string().optional(),
+    teamConstrained: z.boolean().optional(),
+    assigneeVariable: z.string().optional(),
+    inputMappings: z.array(z.object({ key: z.string(), value: z.string() })),
+  });
+
+export const makeRoutingFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    routingConditions: z.array(
+      z.object({
+        key: z.string().min(1, t('validation.conditionNameRequired')),
+        value: z.string().min(1, t('validation.conditionExpressionRequired')),
+      }),
+    ),
+    defaultDecision: z.string(),
+  });
+
+export const makeEndFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    completionMessage: z.string(),
+  });
+
+export const makeCompanySelectionFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    selectionMethod: z.enum(['roundrobin', 'manual']),
+    loanTypeVariable: z.string(),
+  });
+
+export const makeIfElseFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    condition: z.string().min(1, t('validation.conditionRequired')),
+  });
+
+export const makeSwitchFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    expression: z.string().min(1, t('validation.expressionRequired')),
+    cases: z.array(z.string().min(1, t('validation.caseValueRequired'))),
+  });
+
+export const makeForkFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    branches: z.array(z.string().min(1, t('validation.branchNameRequired'))),
+    forkType: z.enum(['parallel', 'inclusive']),
+    maxConcurrency: z.coerce.number().min(0),
+  });
+
+export const makeJoinFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    forkId: z.string(),
+    joinType: z.enum(['all', 'any', 'n_of_m']),
+    timeoutMinutes: z.coerce.number().min(0),
+    mergeStrategy: z.enum(['first', 'last', 'merge']),
+    timeoutAction: z.enum(['continue', 'cancel', 'error']),
+  });
+
+export const makeDynamicPropertyFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+  });
+
+export const makeTransitionFormSchema = () =>
+  z.object({
+    type: z.enum(['Normal', 'Conditional']),
+    condition: z.string().nullable(),
+  });
+
+export const makeApprovalFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    activityName: z.string().optional(),
+    memberSourceType: z.string().min(1, t('validation.memberSourceRequired')),
+    valueExpression: z.string().optional(),
+    thresholds: z.array(
+      z.object({
+        committeeCode: z.string(),
+        maxValue: z.string(),
+      }),
+    ),
+    quorumType: z.enum(['count', 'percent']),
+    quorumValue: z.coerce.number().min(1),
+    majorityType: z.enum(['count', 'percent']),
+    majorityValue: z.coerce.number().min(1),
+    voteOptions: z.array(z.string().min(1)),
+    voteMovements: z.array(z.object({ key: z.string(), value: z.string() })),
+    decisionConditions: z.array(z.object({ key: z.string(), value: z.string() })),
+    timeoutDuration: z.string().min(1, t('validation.timeoutRequired2')),
+  });
+
+export const makeMeetingFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    meetingName: z.string(),
+    notes: z.string(),
+  });
+
+export const makeAwaitSignalFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    signalName: z.string().min(1, t('validation.signalNameRequired')),
+    correlationKey: z.string().min(1, t('validation.correlationKeyRequired')),
+    completionVariable: z.string(),
+  });
+
+export const makeInternalFollowupSelectionFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+  });
+
+export const makeRequestSubmissionActivityFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
+    propertyAddress: z.string().min(1, t('validation.propertyAddressRequired')),
+    estimatedValue: z.coerce.number().min(0),
+    purpose: z.string().min(1, t('validation.purposeRequired')),
+    requestorId: z.string(),
+  });
+
+export const makeAdminReviewActivityFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    reviewDeadline: z.string(),
+    autoApprovalThreshold: z.coerce.number().min(0),
+  });
+
+export const makeTimerFormSchema = (t: TFunction<'workflowBuilder'>) =>
+  z.object({
+    name: z.string().min(1, t('validation.nameRequired')),
+    description: z.string(),
+    duration: z.string().min(1, t('validation.durationRequired')),
+    scheduledTime: z.string(),
+    timerName: z.string(),
+    allowEarlyCancellation: z.boolean(),
+  });
+
+// Static schemas (kept for backward compat — forms now use factories above)
 export const startFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
@@ -192,18 +384,18 @@ export const transitionFormSchema = z.object({
   condition: z.string().nullable(),
 });
 
-// Phase 2 form schemas
-
 export const approvalFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string(),
   activityName: z.string().optional(),
   memberSourceType: z.string().min(1, 'Member source type is required'),
   valueExpression: z.string().optional(),
-  thresholds: z.array(z.object({
-    committeeCode: z.string(),
-    maxValue: z.string(), // string in form; convert to number|null on submit
-  })),
+  thresholds: z.array(
+    z.object({
+      committeeCode: z.string(),
+      maxValue: z.string(),
+    }),
+  ),
   quorumType: z.enum(['count', 'percent']),
   quorumValue: z.coerce.number().min(1),
   majorityType: z.enum(['count', 'percent']),
@@ -274,7 +466,11 @@ export type TransitionFormValues = z.infer<typeof transitionFormSchema>;
 export type ApprovalFormValues = z.infer<typeof approvalFormSchema>;
 export type MeetingFormValues = z.infer<typeof meetingFormSchema>;
 export type AwaitSignalFormValues = z.infer<typeof awaitSignalFormSchema>;
-export type InternalFollowupSelectionFormValues = z.infer<typeof internalFollowupSelectionFormSchema>;
-export type RequestSubmissionActivityFormValues = z.infer<typeof requestSubmissionActivityFormSchema>;
+export type InternalFollowupSelectionFormValues = z.infer<
+  typeof internalFollowupSelectionFormSchema
+>;
+export type RequestSubmissionActivityFormValues = z.infer<
+  typeof requestSubmissionActivityFormSchema
+>;
 export type AdminReviewActivityFormValues = z.infer<typeof adminReviewActivityFormSchema>;
 export type TimerFormValues = z.infer<typeof timerFormSchema>;

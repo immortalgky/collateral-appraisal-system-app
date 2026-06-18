@@ -9,6 +9,7 @@
  */
 import { useCallback, useRef, useState } from 'react';
 import { Icon } from '@/shared/components';
+import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,9 +51,18 @@ function VariantPicker({
   onGenerate: (variant: HypothesisVariant) => void;
   isGenerating: boolean;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   const options: Array<{ value: HypothesisVariant; title: string; subtitle: string }> = [
-    { value: 'LandBuilding', title: 'Land & Building', subtitle: '3 tabs — unit details, cost of building, summary' },
-    { value: 'Condominium', title: 'Condominium', subtitle: '2 tabs — unit details, summary' },
+    {
+      value: 'LandBuilding',
+      title: t('hypothesis.variants.landBuilding'),
+      subtitle: t('hypothesis.variants.landBuildingSubtitle'),
+    },
+    {
+      value: 'Condominium',
+      title: t('hypothesis.variants.condominium'),
+      subtitle: t('hypothesis.variants.condominiumSubtitle'),
+    },
   ];
 
   return (
@@ -61,10 +71,8 @@ function VariantPicker({
         <Icon name="calculator" style="solid" className="size-8" />
       </div>
       <div className="text-center">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">
-          Hypothesis / Residual Analysis
-        </h3>
-        <p className="text-sm text-gray-500">Choose a template to start</p>
+        <h3 className="text-base font-semibold text-gray-900 mb-1">{t('hypothesis.title')}</h3>
+        <p className="text-sm text-gray-500">{t('hypothesis.chooseTemplate')}</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
         {options.map(opt => (
@@ -83,7 +91,7 @@ function VariantPicker({
       {isGenerating && (
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Icon name="spinner" className="size-4 animate-spin" />
-          Generating…
+          {t('hypothesis.generating')}
         </div>
       )}
     </div>
@@ -98,6 +106,7 @@ export function HypothesisPanel({
   onCalculationMethodDirty,
   onCancelCalculationMethod,
 }: HypothesisPanelProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { pricingAnalysisId, methodId, approachType, methodType } = activeMethod ?? {};
   const queryClient = useQueryClient();
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
@@ -119,7 +128,7 @@ export function HypothesisPanel({
   // Variant comes from the saved aggregate (set at generate time via template choice).
   const variant: HypothesisVariant | null = savedData?.variant ?? null;
 
-  const hasAnalysis = !!(savedData?.hypothesisAnalysisId);
+  const hasAnalysis = !!savedData?.hypothesisAnalysisId;
 
   const handleGenerate = useCallback(
     async (v: HypothesisVariant) => {
@@ -130,9 +139,9 @@ export function HypothesisPanel({
           methodId,
           request: { variant: v },
         });
-        toast.success('Analysis created');
+        toast.success(t('hypothesis.toasts.analysisCreated'));
       } catch {
-        toast.error('Failed to create analysis');
+        toast.error(t('hypothesis.toasts.analysisFailed'));
       }
     },
     [pricingAnalysisId, methodId, generateMutation],
@@ -148,7 +157,7 @@ export function HypothesisPanel({
           appraisalValue,
         });
       }
-      toast.success('Saved!');
+      toast.success(t('hypothesis.toasts.saved'));
     },
     [pricingAnalysisId, methodId, approachType, methodType, onCalculationSave],
   );
@@ -161,9 +170,9 @@ export function HypothesisPanel({
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.hypothesisAnalysis(pricingAnalysisId, methodId),
       });
-      toast.success('Analysis reset');
+      toast.success(t('hypothesis.toasts.analysisReset'));
     } catch {
-      toast.error('Failed to reset analysis');
+      toast.error(t('hypothesis.toasts.analysisResetFailed'));
     }
   };
 
@@ -179,20 +188,19 @@ export function HypothesisPanel({
           <Icon name="calculator" style="solid" className="size-4" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Hypothesis / Residual Analysis</h2>
+          <h2 className="text-lg font-semibold text-gray-900">{t('hypothesis.title')}</h2>
           {variant && (
             <p className="text-xs text-gray-500">
-              {variant === 'LandBuilding' ? 'Land & Building' : 'Condominium'}
+              {variant === 'LandBuilding'
+                ? t('hypothesis.variants.landBuilding')
+                : t('hypothesis.variants.condominium')}
             </p>
           )}
         </div>
       </div>
 
       {!hasAnalysis ? (
-        <VariantPicker
-          onGenerate={handleGenerate}
-          isGenerating={generateMutation.isPending}
-        />
+        <VariantPicker onGenerate={handleGenerate} isGenerating={generateMutation.isPending} />
       ) : variant === 'LandBuilding' ? (
         <div className="flex-1 min-h-0">
           <LandBuildingTabs
@@ -201,7 +209,7 @@ export function HypothesisPanel({
             savedData={savedData!}
             saveMutation={saveMutation}
             previewMutation={previewMutation}
-            onDirty={(d) => onDirtyRef.current(d)}
+            onDirty={d => onDirtyRef.current(d)}
             onSaveSuccess={handleSave}
             onReset={() => setIsResetDialogOpen(true)}
             onCancel={onCancelCalculationMethod}
@@ -215,7 +223,7 @@ export function HypothesisPanel({
             savedData={savedData!}
             saveMutation={saveMutation}
             previewMutation={previewMutation}
-            onDirty={(d) => onDirtyRef.current(d)}
+            onDirty={d => onDirtyRef.current(d)}
             onSaveSuccess={handleSave}
             onReset={() => setIsResetDialogOpen(true)}
             onCancel={onCancelCalculationMethod}
@@ -227,7 +235,7 @@ export function HypothesisPanel({
         isOpen={isResetDialogOpen}
         onClose={() => setIsResetDialogOpen(false)}
         onConfirm={handleConfirmReset}
-        message="Reset this analysis? All data including uploads, cost items, and summary will be permanently deleted."
+        message={t('confirm.resetAnalysis')}
       />
     </div>
   );

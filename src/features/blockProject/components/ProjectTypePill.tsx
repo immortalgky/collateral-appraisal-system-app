@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
@@ -26,6 +27,7 @@ export default function ProjectTypePill({
   hasExistingProject,
   onPendingTypeChange,
 }: ProjectTypeSelectorProps) {
+  const { t } = useTranslation('blockProject');
   const typeOptions = useParameterOptions('ProjectType');
   const isReadOnly = usePageReadOnly();
   const canChange = !isReadOnly && hasExistingProject;
@@ -38,13 +40,13 @@ export default function ProjectTypePill({
 
   return (
     <Dropdown
-      label="Project Type"
+      label={t('projectInfo.fields.projectType')}
       options={typeOptions}
       value={pendingType ?? projectType}
       onChange={handleChange}
       disabled={!canChange}
       showValuePrefix={false}
-      placeholder="Select project type"
+      placeholder={t('projectTypePill.placeholder')}
     />
   );
 }

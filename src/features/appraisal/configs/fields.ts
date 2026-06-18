@@ -733,6 +733,13 @@ export const otherInformationField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+  {
+    type: 'boolean-toggle',
+    label: 'Land is rented out to others',
+    name: 'isRentedOut',
+    options: ['No', 'Yes'],
+    wrapperClassName: 'col-span-12',
+  },
 ];
 
 export const remarkLandField: FormField[] = [
@@ -944,11 +951,10 @@ export const decorationField: FormField[] = [
 
 export const encroachmentField: FormField[] = [
   {
-    type: 'boolean-toggle',
-    label: '',
+    type: 'checkbox',
+    label: 'Is Encroaching',
     name: 'isEncroachingOthers',
-    options: ['Is not Encroaching', 'Is Encroaching'],
-    wrapperClassName: 'col-span-6 flex items-center',
+    wrapperClassName: 'col-span-3 flex items-center',
   },
   {
     type: 'number-input',
@@ -1615,6 +1621,7 @@ export const constructionMaterialsFormFields: FormField[] = [
 export const condoRoomLayoutFormFields: FormField[] = [
   {
     type: 'radio-group',
+    label: 'Room Layout',
     name: 'roomLayoutType',
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
@@ -2122,7 +2129,7 @@ export const machineInfoFields: FormField[] = [
     label: 'Machinery Age ',
     name: 'machineAge',
     wrapperClassName: 'col-span-3',
-    decimalPlaces: 1,
+    decimalPlaces: 0,
     maxIntegerDigits: 3,
   },
   {

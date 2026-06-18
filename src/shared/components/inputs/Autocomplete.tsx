@@ -35,6 +35,8 @@ interface AutocompleteProps {
   /** Called whenever the raw input text changes. Use to drive external search queries. */
   onInputChange?: (text: string) => void;
   ariaLabel?: string;
+  /** Width (and any extra) classes for the dropdown panel. Defaults to a fixed `w-56`; pass `w-full` to match the input. */
+  menuClassName?: string;
 }
 
 function Autocomplete({
@@ -48,6 +50,7 @@ function Autocomplete({
   filterItems,
   onInputChange,
   ariaLabel,
+  menuClassName = 'w-56',
 }: AutocompleteProps) {
   const listId = useId();
   const [inputText, setInputText] = useState('');
@@ -196,7 +199,7 @@ function Autocomplete({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 w-56 max-h-52 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg text-sm"
+          className={`absolute z-50 mt-1 ${menuClassName} max-h-52 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg text-sm`}
         >
           {isLoading && visibleItems.length === 0 ? (
             <li role="option" aria-selected={false} className="px-3 py-2 text-gray-400 italic">

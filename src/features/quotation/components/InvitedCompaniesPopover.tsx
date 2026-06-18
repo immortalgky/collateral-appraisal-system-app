@@ -12,6 +12,7 @@ import {
   offset,
   shift,
 } from '@floating-ui/react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 
 interface InvitedCompany {
@@ -25,6 +26,7 @@ interface InvitedCompaniesPopoverProps {
 }
 
 const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPopoverProps) => {
+  const { t } = useTranslation('quotation');
   const [open, setOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -48,7 +50,7 @@ const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPo
         ref={refs.setReference}
         {...getReferenceProps()}
         type="button"
-        aria-label="View invited companies"
+        aria-label={t('aria.viewInvitedCompanies')}
         className="inline-flex items-center text-blue-500 hover:text-blue-600 transition-colors"
       >
         <Icon name="circle-info" style="solid" className="size-3.5" />
@@ -64,12 +66,14 @@ const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPo
               className="z-50 bg-white rounded-lg border border-gray-200 shadow-lg min-w-[220px] max-w-xs"
             >
               <div className="px-3 py-2 border-b border-gray-100">
-                <p className="text-xs font-semibold text-gray-700">Invited Companies</p>
-                <p className="text-[10px] text-gray-400">{totalInvited} total</p>
+                <p className="text-xs font-semibold text-gray-700">{t('invitedCompanies.title')}</p>
+                <p className="text-[10px] text-gray-400">
+                  {t('invitedCompanies.totalLabel', { count: totalInvited })}
+                </p>
               </div>
               {companies.length === 0 ? (
                 <p className="px-3 py-3 text-xs text-gray-400 italic">
-                  Names unavailable — try refreshing.
+                  {t('empty.namesUnavailable')}
                 </p>
               ) : (
                 <ul className="max-h-64 overflow-auto py-1">

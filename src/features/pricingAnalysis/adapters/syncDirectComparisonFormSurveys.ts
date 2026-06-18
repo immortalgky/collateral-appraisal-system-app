@@ -1,10 +1,11 @@
 import type { UseFormGetValues, UseFormReset } from 'react-hook-form';
-import type {
-  FactorDataType,
-  MarketComparableDetailType,
-} from '@features/pricingAnalysis/schemas';
+import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import type { DirectComparisonType } from '@features/pricingAnalysis/schemas/directComparisonForm.ts';
-import { readFactorValue, toNum, yearDiffFromToday } from '@features/pricingAnalysis/domain/readFactorValue.ts';
+import {
+  readFactorValue,
+  toNum,
+  yearDiffFromToday,
+} from '@features/pricingAnalysis/domain/readFactorValue.ts';
 
 interface SetDirectComparisonInitialValueOnSelectSurveyProps {
   comparativeSurveys: MarketComparableDetailType[];
@@ -81,10 +82,14 @@ export function syncDirectComparisonFormSurveys({
       });
     })(),
     directComparisonAdjustmentFactors: (() => {
-      const prevAdjMap = new Map<string, Map<string, { adjustPercent: number; adjustAmount: number }>>();
+      const prevAdjMap = new Map<
+        string,
+        Map<string, { adjustPercent: number; adjustAmount: number }>
+      >();
       for (const af of current.directComparisonAdjustmentFactors ?? []) {
         const inner = new Map<string, { adjustPercent: number; adjustAmount: number }>();
-        for (const s of af.surveys ?? []) inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
+        for (const s of af.surveys ?? [])
+          inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
         prevAdjMap.set(af.factorCode, inner);
       }
       const prevRemarkMap = new Map<string, string | null | undefined>();

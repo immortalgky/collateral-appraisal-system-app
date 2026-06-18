@@ -18,9 +18,12 @@ import type {
   CreateAcknowledgementQueueItemRequest,
   CreateMeetingRequest,
   CreateMeetingResponse,
+  GenerateMeetingDocumentRequest,
   GetMeetingQueueParams,
   GetMeetingsParams,
+  LinkMeetingDocumentRequest,
   MeetingDetailDto,
+  MeetingDocumentDto,
   MeetingListItemDto,
   MeetingQueueItemDto,
   PaginatedResult,
@@ -32,6 +35,11 @@ import type {
 } from './types';
 
 // ==================== Query Keys ====================
+
+export const meetingDocumentKeys = {
+  all: ['meetingDocuments'] as const,
+  byMeeting: (meetingId: string) => ['meetingDocuments', meetingId] as const,
+};
 
 export const meetingKeys = {
   all: ['meetings'] as const,
@@ -238,13 +246,17 @@ export const useSendInvitation = () => {
       id,
       from,
       to,
+      cc,
+      bcc,
       subject,
       content,
       attachments,
     }: {
       id: string;
       from: string;
-      to: string;
+      to?: string;
+      cc?: string;
+      bcc?: string;
       subject: string;
       content?: string;
       attachments?: string[];
@@ -252,6 +264,8 @@ export const useSendInvitation = () => {
       const { data } = await axios.post(`/meetings/${id}/send-invitation`, {
         from,
         to,
+        cc,
+        bcc,
         subject,
         content,
         attachments,
@@ -308,7 +322,13 @@ export const useAddMeetingMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ meetingId, body }: { meetingId: string; body: AddMeetingMemberRequest }) => {
+    mutationFn: async ({
+      meetingId,
+      body,
+    }: {
+      meetingId: string;
+      body: AddMeetingMemberRequest;
+    }) => {
       await axios.post(`/meetings/${meetingId}/members`, body);
     },
     onSuccess: (_data, variables) => {
@@ -358,7 +378,13 @@ export const useUpdateMeetingAgenda = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ meetingId, body }: { meetingId: string; body: UpdateMeetingAgendaRequest }) => {
+    mutationFn: async ({
+      meetingId,
+      body,
+    }: {
+      meetingId: string;
+      body: UpdateMeetingAgendaRequest;
+    }) => {
       await axios.patch(`/meetings/${meetingId}/agenda`, body);
     },
     onSuccess: (_data, variables) => {
@@ -377,6 +403,88 @@ export const useCreateAcknowledgementQueueItem = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.queueAll });
+    },
+  });
+};
+
+// ==================== Meeting Document Hooks ====================
+
+/** GET /meetings/{id}/documents */
+export const useGetMeetingDocuments = (meetingId: string | undefined) => {
+  return useQuery({
+    queryKey: meetingDocumentKeys.byMeeting(meetingId ?? ''),
+    queryFn: async (): Promise<MeetingDocumentDto[]> => {
+      const { data } = await axios.get(`/meetings/${meetingId}/documents`);
+      return data;
+    },
+    enabled: !!meetingId,
+  });
+};
+
+/** POST /meetings/{id}/documents/generate */
+export const useGenerateMeetingDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      meetingId,
+      body,
+    }: {
+      meetingId: string;
+      body: GenerateMeetingDocumentRequest;
+    }): Promise<MeetingDocumentDto> => {
+      const { data } = await axios.post(`/meetings/${meetingId}/documents/generate`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: meetingDocumentKeys.byMeeting(variables.meetingId),
+      });
+    },
+  });
+};
+
+/** POST /meetings/{id}/documents */
+export const useLinkMeetingDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      meetingId,
+      body,
+    }: {
+      meetingId: string;
+      body: LinkMeetingDocumentRequest;
+    }): Promise<MeetingDocumentDto> => {
+      const { data } = await axios.post(`/meetings/${meetingId}/documents`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: meetingDocumentKeys.byMeeting(variables.meetingId),
+      });
+    },
+  });
+};
+
+/** DELETE /meetings/{id}/documents/{documentId} */
+export const useRemoveMeetingDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      meetingId,
+      documentId,
+    }: {
+      meetingId: string;
+      documentId: string;
+    }) => {
+      await axios.delete(`/meetings/${meetingId}/documents/${documentId}`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: meetingDocumentKeys.byMeeting(variables.meetingId),
+      });
     },
   });
 };

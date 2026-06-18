@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { useRef, useState } from 'react';
 import type { Method } from '../../types/selection';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useTranslation } from 'react-i18next';
 
 export type ViewLayout = 'grid' | 'list';
 
@@ -22,10 +23,12 @@ interface PricingAnalysisMethodCardProps {
   onManualValueChange?: (arg: { approachType: string; methodType: string; value: number }) => void;
 }
 
-function getMethodStatus(method: Method): { label: string; color: 'emerald' | 'amber' | 'gray' } {
-  if (method.appraisalValue > 0) return { label: 'Calculated', color: 'emerald' };
-  if (method.isIncluded) return { label: 'Pending', color: 'amber' };
-  return { label: 'Not included', color: 'gray' };
+type MethodStatusKey = 'calculated' | 'pending' | 'notIncluded';
+
+function getMethodStatusKey(method: Method): MethodStatusKey {
+  if (method.appraisalValue > 0) return 'calculated';
+  if (method.isIncluded) return 'pending';
+  return 'notIncluded';
 }
 
 export const PricingAnalysisMethodCard = ({
@@ -40,6 +43,7 @@ export const PricingAnalysisMethodCard = ({
   onManualValueChange,
 }: PricingAnalysisMethodCardProps) => {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue || null);
   const isEscapingRef = useRef(false);
 
@@ -79,7 +83,7 @@ export const PricingAnalysisMethodCard = ({
           <button
             type="button"
             className="shrink-0 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onDeleteMethod({ approachType, methodType: method.methodType });
             }}
@@ -95,14 +99,18 @@ export const PricingAnalysisMethodCard = ({
     );
   }
 
-  const status = getMethodStatus(method);
+  const statusKey = getMethodStatusKey(method);
+  const statusLabel = t(`methodStatus.${statusKey}` as `methodStatus.${MethodStatusKey}`);
 
   // Grid tile view — card with hero value
   if (viewLayout === 'grid') {
     const Wrapper = isManualMode ? 'div' : 'button';
     const wrapperProps = isManualMode
       ? {}
-      : { type: 'button' as const, onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }) };
+      : {
+          type: 'button' as const,
+          onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
+        };
 
     return (
       <Wrapper
@@ -120,18 +128,24 @@ export const PricingAnalysisMethodCard = ({
           <Icon
             name={method.icon}
             style="solid"
-            className={clsx('size-4 shrink-0', method.isSelected ? 'text-primary' : 'text-gray-400')}
+            className={clsx(
+              'size-4 shrink-0',
+              method.isSelected ? 'text-primary' : 'text-gray-400',
+            )}
           />
-          <span className={clsx('flex-1 text-sm font-medium', method.isSelected ? 'text-primary' : 'text-gray-700')}>
+          <span
+            className={clsx(
+              'flex-1 text-sm font-medium',
+              method.isSelected ? 'text-primary' : 'text-gray-700',
+            )}
+          >
             {method.label}
           </span>
           {isReadOnly ? (
             <div
               className={clsx(
                 'size-4 rounded border-2 flex items-center justify-center shrink-0',
-                method.isSelected
-                  ? 'bg-primary border-primary'
-                  : 'border-gray-300',
+                method.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
               )}
             >
               {method.isSelected && (
@@ -141,7 +155,7 @@ export const PricingAnalysisMethodCard = ({
           ) : (
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onSelectCandidateMethod({ approachType, methodType: method.methodType });
               }}
@@ -177,10 +191,19 @@ export const PricingAnalysisMethodCard = ({
           />
         ) : (
           <div className="flex items-baseline gap-1">
-            <span className={clsx('text-xl font-semibold', method.isSelected ? 'text-primary' : 'text-gray-800')}>
+            <span
+              className={clsx(
+                'text-xl font-semibold',
+                method.isSelected ? 'text-primary' : 'text-gray-800',
+              )}
+            >
               {Number(method.appraisalValue).toLocaleString()}
             </span>
-            <Icon name="baht-sign" style="light" className={clsx('size-3.5', method.isSelected ? 'text-primary/70' : 'text-gray-400')} />
+            <Icon
+              name="baht-sign"
+              style="light"
+              className={clsx('size-3.5', method.isSelected ? 'text-primary/70' : 'text-gray-400')}
+            />
           </div>
         )}
 
@@ -190,9 +213,15 @@ export const PricingAnalysisMethodCard = ({
           dot
           badgeStyle="soft"
           type="status"
-          value={status.label === 'Calculated' ? 'completed' : status.label === 'Pending' ? 'draft' : 'cancelled'}
+          value={
+            statusKey === 'calculated'
+              ? 'completed'
+              : statusKey === 'pending'
+                ? 'draft'
+                : 'cancelled'
+          }
         >
-          {status.label}
+          {statusLabel}
         </Badge>
       </Wrapper>
     );
@@ -202,7 +231,10 @@ export const PricingAnalysisMethodCard = ({
   const ListWrapper = isManualMode ? 'div' : 'button';
   const listWrapperProps = isManualMode
     ? {}
-    : { type: 'button' as const, onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }) };
+    : {
+        type: 'button' as const,
+        onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
+      };
 
   return (
     <ListWrapper
@@ -210,9 +242,7 @@ export const PricingAnalysisMethodCard = ({
       className={clsx(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full',
         isManualMode ? '' : 'cursor-pointer',
-        method.isSelected
-          ? 'bg-primary/5 ring-1 ring-primary/30'
-          : 'hover:bg-gray-50',
+        method.isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : 'hover:bg-gray-50',
       )}
     >
       {/* Candidate checkbox */}
@@ -220,19 +250,15 @@ export const PricingAnalysisMethodCard = ({
         <div
           className={clsx(
             'size-4 rounded border-2 flex items-center justify-center shrink-0',
-            method.isSelected
-              ? 'bg-primary border-primary'
-              : 'border-gray-300',
+            method.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
           )}
         >
-          {method.isSelected && (
-            <Icon name="check" style="solid" className="size-2.5 text-white" />
-          )}
+          {method.isSelected && <Icon name="check" style="solid" className="size-2.5 text-white" />}
         </div>
       ) : (
         <button
           type="button"
-          onClick={(e) => {
+          onClick={e => {
             e.stopPropagation();
             onSelectCandidateMethod({ approachType, methodType: method.methodType });
           }}
@@ -252,8 +278,17 @@ export const PricingAnalysisMethodCard = ({
           </div>
         </button>
       )}
-      <Icon name={method.icon} style="solid" className={clsx('size-4 shrink-0', method.isSelected ? 'text-primary' : 'text-gray-400')} />
-      <span className={clsx('flex-1 text-sm text-left', method.isSelected ? 'font-medium text-primary' : 'text-gray-700')}>
+      <Icon
+        name={method.icon}
+        style="solid"
+        className={clsx('size-4 shrink-0', method.isSelected ? 'text-primary' : 'text-gray-400')}
+      />
+      <span
+        className={clsx(
+          'flex-1 text-sm text-left',
+          method.isSelected ? 'font-medium text-primary' : 'text-gray-700',
+        )}
+      >
         {method.label}
       </span>
       {isManualMode ? (
@@ -269,7 +304,12 @@ export const PricingAnalysisMethodCard = ({
           rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
         />
       ) : (
-        <div className={clsx('flex items-center gap-1 text-sm font-semibold', method.isSelected ? 'text-primary' : 'text-gray-600')}>
+        <div
+          className={clsx(
+            'flex items-center gap-1 text-sm font-semibold',
+            method.isSelected ? 'text-primary' : 'text-gray-600',
+          )}
+        >
           <span>{Number(method.appraisalValue).toLocaleString()}</span>
           <Icon name="baht-sign" style="light" className="size-3" />
         </div>
@@ -279,10 +319,12 @@ export const PricingAnalysisMethodCard = ({
         dot
         badgeStyle="soft"
         type="status"
-        value={status.label === 'Calculated' ? 'completed' : status.label === 'Pending' ? 'draft' : 'cancelled'}
+        value={
+          statusKey === 'calculated' ? 'completed' : statusKey === 'pending' ? 'draft' : 'cancelled'
+        }
         className="shrink-0"
       >
-        {status.label}
+        {statusLabel}
       </Badge>
       {!isManualMode && (
         <Icon name="chevron-right" style="solid" className="size-3 text-gray-300 shrink-0" />

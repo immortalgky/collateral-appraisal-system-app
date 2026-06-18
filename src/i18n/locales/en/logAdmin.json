@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "Log Viewer",
+    "subtitle": "Search and inspect structured application logs by level, message, or business ID"
+  },
+  "columns": {
+    "timeStamp": "Timestamp",
+    "level": "Level",
+    "message": "Message",
+    "exception": "Exception",
+    "correlationId": "Correlation ID",
+    "appraisalId": "Appraisal ID",
+    "requestId": "Request ID",
+    "entityId": "Entity ID",
+    "workflowInstanceId": "Workflow Instance ID",
+    "collateralId": "Collateral ID",
+    "documentId": "Document ID",
+    "machineName": "Machine"
+  },
+  "levels": {
+    "Verbose": "Verbose",
+    "Debug": "Debug",
+    "Information": "Information",
+    "Warning": "Warning",
+    "Error": "Error",
+    "Fatal": "Fatal"
+  },
+  "filters": {
+    "searchPlaceholder": "Search message...",
+    "levelLabel": "Level",
+    "correlationIdPlaceholder": "Correlation ID",
+    "appraisalIdPlaceholder": "Appraisal ID",
+    "requestIdPlaceholder": "Request ID",
+    "entityIdPlaceholder": "Entity ID",
+    "from": "From",
+    "to": "To",
+    "clear": "Clear filters"
+  },
+  "drawer": {
+    "title": "Log Entry Details",
+    "copy": "Copy",
+    "copied": "Copied!"
+  },
+  "error": {
+    "failedToLoad": "Failed to load logs"
+  },
+  "emptyState": "No log entries found"
+}

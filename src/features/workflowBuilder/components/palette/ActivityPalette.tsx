@@ -1,4 +1,5 @@
 import { type DragEvent, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGetActivityTypes } from '../../api';
 import type { ActivityTypeDefinition } from '../../types';
 
@@ -24,6 +25,7 @@ function onDragStart(event: DragEvent, type: string) {
 }
 
 export function ActivityPalette() {
+  const { t } = useTranslation('workflowBuilder');
   const { data: activityTypes, isLoading } = useGetActivityTypes();
 
   // Group activity types by category
@@ -43,8 +45,8 @@ export function ActivityPalette() {
   return (
     <div className="flex h-full w-[200px] flex-col border-r border-base-300 bg-base-200/50">
       <div className="border-b border-base-300 px-4 py-3">
-        <h3 className="text-sm font-semibold text-base-content">Activities</h3>
-        <p className="text-xs text-base-content/60">Drag to canvas</p>
+        <h3 className="text-sm font-semibold text-base-content">{t('palette.title')}</h3>
+        <p className="text-xs text-base-content/60">{t('palette.subtitle')}</p>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -59,19 +61,15 @@ export function ActivityPalette() {
                 {category}
               </div>
               <div className="flex flex-col gap-2">
-                {items.map((item) => (
+                {items.map(item => (
                   <div
                     key={item.type}
                     draggable
-                    onDragStart={(e) => onDragStart(e, item.type)}
+                    onDragStart={e => onDragStart(e, item.type)}
                     className={`cursor-grab rounded-lg border-l-4 bg-base-100 p-3 shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing ${getColorClass(item.color)}`}
                   >
-                    <div className="text-sm font-medium text-base-content">
-                      {item.name}
-                    </div>
-                    <div className="text-xs text-base-content/60">
-                      {item.description}
-                    </div>
+                    <div className="text-sm font-medium text-base-content">{item.name}</div>
+                    <div className="text-xs text-base-content/60">{item.description}</div>
                   </div>
                 ))}
               </div>

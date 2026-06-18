@@ -10,8 +10,7 @@ export const isCondo = (t: ProjectType): boolean => t === 'U';
  * (Construction) (L). Both share the same domain logic in v1.
  * // TODO(Land): revisit each call site if Land-specific branches are needed.
  */
-export const isLandAndBuildingLike = (t: ProjectType): boolean =>
-  t === 'LB' || t === 'L';
+export const isLandAndBuildingLike = (t: ProjectType): boolean => t === 'LB' || t === 'L';
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 

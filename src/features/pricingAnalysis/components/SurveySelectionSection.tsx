@@ -1,6 +1,7 @@
 import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { useState } from 'react';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useTranslation } from 'react-i18next';
 import { ComparativeFactorTable } from './ComparativeFactorTable';
 import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
 
@@ -12,6 +13,7 @@ interface SurveySelectionSectionProps {
   allFactors: FactorDataType[];
   fieldPath: Record<string, any>;
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
+  manualSubject?: boolean;
 }
 export function SurveySelectionSection({
   template,
@@ -21,8 +23,10 @@ export function SurveySelectionSection({
   comparativeMarketSurveys,
   fieldPath,
   onSelectComparativeMarketSurvey,
+  manualSubject,
 }: SurveySelectionSectionProps) {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const [isShowMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
   const handleOnClickAddComparativeSurvey = (check: boolean) => {
     setShowMarketSurveySelection(check);
@@ -31,7 +35,7 @@ export function SurveySelectionSection({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
-        <h3 className="text-base font-semibold text-gray-800">Comparative Analysis</h3>
+        <h3 className="text-base font-semibold text-gray-800">{t('comparativeAnalysis.title')}</h3>
       </div>
       <div className="px-4">
         <div className="flex flex-col gap-2">
@@ -41,7 +45,7 @@ export function SurveySelectionSection({
               onClick={() => handleOnClickAddComparativeSurvey(true)}
               className="w-[250px] border border-dashed border-primary text-primary font-medium hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
             >
-              Add Comparative Data
+              {t('comparativeAnalysis.addComparativeData')}
             </button>
           )}
           <ComparativeFactorTable
@@ -50,6 +54,7 @@ export function SurveySelectionSection({
             allFactors={allFactors}
             template={template}
             fieldPath={fieldPath}
+            manualSubject={manualSubject}
           />
         </div>
         <MarketSurveySelectionModal

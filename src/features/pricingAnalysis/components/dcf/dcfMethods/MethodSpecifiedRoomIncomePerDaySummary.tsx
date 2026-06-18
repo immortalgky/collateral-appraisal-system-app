@@ -34,10 +34,18 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
         <table className="w-full border-collapse text-xs">
           <thead>
             <tr className="bg-gray-50 text-gray-600">
-              <th className="text-left font-medium px-3 py-2 border-b border-gray-200">Room Type</th>
-              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">Room Income</th>
-              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">Saleable Area</th>
-              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">Total Room Income</th>
+              <th className="text-left font-medium px-3 py-2 border-b border-gray-200">
+                Room Type
+              </th>
+              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
+                Room Income
+              </th>
+              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
+                Saleable Area
+              </th>
+              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
+                Total Room Income
+              </th>
             </tr>
           </thead>
           <tbody>

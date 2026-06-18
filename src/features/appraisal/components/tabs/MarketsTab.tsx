@@ -1,18 +1,26 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useAppraisalContext } from '../../context/AppraisalContext';
-import { useGetAppraisalComparables, useUnlinkAppraisalComparable } from '@features/appraisal/api';
+import {
+  useGetAppraisalComparables,
+  useGetAppraisalMapPins,
+  useUnlinkAppraisalComparable,
+} from '@features/appraisal/api';
 import FormCard from '@shared/components/sections/FormCard';
 import { PROPERTY_TYPES, PropertyTypeDropdown } from '../PropertyTypeDropdown';
 
 import type { AppraisalComparableDtoType } from '@/shared/schemas/v1';
 import { ParameterDisplay } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { HistorySearchMapDrawer } from '@/features/common/historySearch/HistorySearchMapDrawer';
+import type { MarketComparablePinDto } from '@/features/common/historySearch/types';
+import { isMarketComparablePin } from '@/features/common/historySearch/types';
 
 /** Look up icon name for a property type code */
 const getPropertyIcon = (code: string | null | undefined): string | null => {
@@ -27,6 +35,7 @@ const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'proper
 
 export const MarketsTab = () => {
   const readOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
   const location = useLocation();
@@ -44,6 +53,32 @@ export const MarketsTab = () => {
     isError,
   } = useGetAppraisalComparables(appraisalId);
   const { mutate: unlinkComparable } = useUnlinkAppraisalComparable();
+
+  // "Find Existing" drawer state
+  const [findExistingOpen, setFindExistingOpen] = useState(false);
+
+  // This appraisal's own linked comparables (with coords) — shown as RED
+  // "appraising" pins on the Find Existing map so the user can tell which
+  // surveys are already part of their application (vs blue pool comparables).
+  const { data: mapPinsData } = useGetAppraisalMapPins(findExistingOpen ? appraisalId : undefined);
+  const appraisingMcPins = useMemo<MarketComparablePinDto[]>(
+    () =>
+      (mapPinsData?.marketComparables ?? []).map(m => ({
+        marketComparableId: m.marketComparableId,
+        lat: m.lat,
+        lon: m.lon,
+        propertyType: m.propertyType,
+        surveyName: m.surveyName,
+        infoDateTime: m.infoDateTime,
+        offerPrice: m.offerPrice,
+        salePrice: m.salePrice,
+        distanceKm: null,
+        appraisalNumber: null,
+        customerName: null,
+        appraisalDate: null,
+      })),
+    [mapPinsData],
+  );
 
   // Unlink confirmation state
   const [unlinkConfirm, setUnlinkConfirm] = useState<{ isOpen: boolean; id: string | null }>({
@@ -65,17 +100,31 @@ export const MarketsTab = () => {
     setUnlinkConfirm({ isOpen: true, id: comparableId });
   };
 
+  /**
+   * COPY an existing MarketComparable (found via the History Search map) into a
+   * NEW comparable for this appraisal — so the user doesn't re-key everything.
+   * Navigates to the create form pre-filled with the chosen survey's data
+   * (?copyFrom=). On Save the create page creates a new MC and links it.
+   */
+  const handleCopyExisting = (pin: MarketComparablePinDto) => {
+    navigate(
+      `${basePath}/${parentSegment}/market-comparable/new` +
+        `?propertyType=${encodeURIComponent(pin.propertyType)}` +
+        `&copyFrom=${encodeURIComponent(pin.marketComparableId)}`,
+    );
+  };
+
   const confirmUnlink = () => {
     if (!appraisalId || !unlinkConfirm.id) return;
     unlinkComparable(
       { appraisalId, comparableId: unlinkConfirm.id },
       {
         onSuccess: () => {
-          toast.success('Comparable unlinked successfully');
+          toast.success(t('toasts.comparableUnlinked'));
           setUnlinkConfirm({ isOpen: false, id: null });
         },
         onError: () => {
-          toast.error('Failed to unlink comparable');
+          toast.error(t('toasts.comparableUnlinkFailed'));
         },
       },
     );
@@ -128,13 +177,23 @@ export const MarketsTab = () => {
           </p>
         </div>
         {!readOnly && (
-          <PropertyTypeDropdown
-            groupId=""
-            onSelectType={handleCreateSelect}
-            buttonLabel="Create Comparable"
-            disableDefaultNavigation
-            align="right"
-          />
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setFindExistingOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+            >
+              <Icon name="map-location-dot" style="solid" className="w-3.5 h-3.5" />
+              Find Existing
+            </button>
+            <PropertyTypeDropdown
+              groupId=""
+              onSelectType={handleCreateSelect}
+              buttonLabel="Create Comparable"
+              disableDefaultNavigation
+              align="right"
+            />
+          </div>
         )}
       </div>
 
@@ -262,6 +321,21 @@ export const MarketsTab = () => {
         confirmText="Unlink"
         cancelText="Cancel"
         variant="danger"
+      />
+
+      {/* Find Existing — History Search map drawer scoped to MC pins only */}
+      <HistorySearchMapDrawer
+        isOpen={findExistingOpen}
+        onClose={() => setFindExistingOpen(false)}
+        initialRadiusKm={5}
+        pinScope="marketComparablesOnly"
+        appraisingMcPins={appraisingMcPins}
+        pinActionLabel="Use this survey"
+        onPinSelect={pin => {
+          if (isMarketComparablePin(pin)) {
+            handleCopyExisting(pin);
+          }
+        }}
       />
     </div>
   );

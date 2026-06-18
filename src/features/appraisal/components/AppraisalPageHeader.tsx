@@ -15,11 +15,7 @@ interface AppraisalPageHeaderProps {
  * Compact header component for appraisal pages
  * Shows appraisal number and page-specific title with icon
  */
-const AppraisalPageHeader = ({
-  title,
-  icon,
-  iconBgColor,
-}: AppraisalPageHeaderProps) => {
+const AppraisalPageHeader = ({ title, icon, iconBgColor }: AppraisalPageHeaderProps) => {
   const { appraisal } = useAppraisalContext();
 
   const appraisalNo = appraisal?.appraisalReportNo || appraisal?.appraisalId || '...';
@@ -49,7 +45,6 @@ const AppraisalPageHeader = ({
               <span className="text-sm font-semibold text-gray-900">{title}</span>
             </div>
           </div>
-
         </div>
       </div>
     </div>

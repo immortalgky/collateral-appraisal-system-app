@@ -31,10 +31,7 @@ export const useGetDocumentTypes = () => {
 /**
  * Lookup a document type name by code from a list of document types.
  */
-export const getDocumentTypeName = (
-  documentTypes: DocumentTypeDtoType[],
-  code: string,
-): string => {
+export const getDocumentTypeName = (documentTypes: DocumentTypeDtoType[], code: string): string => {
   const found = documentTypes.find(dt => dt.code === code);
   return found?.name ?? code;
 };

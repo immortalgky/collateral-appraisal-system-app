@@ -22,10 +22,7 @@ function formatAreaRange(min: number | null | undefined, max: number | null | un
   return `${min ?? max} sq.m.`;
 }
 
-function formatPriceRange(
-  min: number | null | undefined,
-  max: number | null | undefined,
-): string {
+function formatPriceRange(min: number | null | undefined, max: number | null | undefined): string {
   if (min == null && max == null) return '-';
   if (min != null && max != null) return `${min.toLocaleString()} - ${max.toLocaleString()}`;
   return (min ?? max)!.toLocaleString();
@@ -46,10 +43,16 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
  * Mirrors the model card on ModelListingTab.
  * Displayed inside PricingAnalysisAccordion instead of the propertyItems list.
  */
-export function ModelCardContent({ flat, context, projectType, thumbnailSrc }: ModelCardContentProps) {
+export function ModelCardContent({
+  flat,
+  context,
+  projectType,
+  thumbnailSrc,
+}: ModelCardContentProps) {
   // Prefer the explicit prop; fall back to inferring from tower presence.
   const resolvedProjectType: ProjectType | undefined =
-    projectType ?? (context != null ? (context.tower != null ? 'Condo' : 'LandAndBuilding') : undefined);
+    projectType ??
+    (context != null ? (context.tower != null ? 'Condo' : 'LandAndBuilding') : undefined);
 
   if (resolvedProjectType == null) {
     return (

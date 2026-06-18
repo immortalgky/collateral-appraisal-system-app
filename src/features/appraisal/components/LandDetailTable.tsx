@@ -76,7 +76,11 @@ export default function LandDetailTable() {
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Land Detail</span>
         {!readOnly && (
-          <button type="button" onClick={handleAddRow} className="btn btn-circle btn-xs btn-success">
+          <button
+            type="button"
+            onClick={handleAddRow}
+            className="btn btn-circle btn-xs btn-success"
+          >
             <Icon name="plus" style="solid" className="text-xs" />
           </button>
         )}

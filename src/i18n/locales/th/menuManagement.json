@@ -1,0 +1,197 @@
+{
+  "page": {
+    "title": "จัดการเมนู",
+    "subtitle": "จัดการรายการเมนูนำทาง ลากเพื่อเรียงลำดับ",
+    "subtitleActivities": "กำหนดการแทนที่ตามกิจกรรมบนสิทธิ์เมนูตามบทบาท",
+    "newItem": "รายการใหม่"
+  },
+  "tabs": {
+    "main": "หลัก",
+    "appraisal": "การประเมิน",
+    "activities": "กิจกรรม"
+  },
+  "empty": {
+    "noItems": "ไม่พบรายการเมนูสำหรับขอบเขต {{scope}}"
+  },
+  "errors": {
+    "failedToLoad": "โหลดรายการเมนูไม่สำเร็จ",
+    "failedToLoadOverrides": "โหลดการแทนที่ไม่สำเร็จ"
+  },
+  "table": {
+    "dragHint": "ลากในแนวตั้งเพื่อเรียงลำดับ ลากขวาเพื่อฝังใต้รายการด้านบน ลากซ้ายเพื่อเลื่อนระดับขึ้น",
+    "columns": {
+      "name": "ชื่อ",
+      "itemKey": "คีย์รายการ",
+      "scope": "ขอบเขต",
+      "viewPermission": "สิทธิ์ดู",
+      "actions": "การดำเนินการ"
+    },
+    "actions": {
+      "edit": "แก้ไข",
+      "delete": "ลบ"
+    },
+    "systemBadge": "ระบบ"
+  },
+  "aria": {
+    "dragToReorder": "ลากเพื่อเรียงลำดับ",
+    "loadingNavigation": "กำลังโหลดการนำทาง"
+  },
+  "confirm": {
+    "deleteItem": "ลบรายการเมนูนี้หรือไม่? ไม่สามารถยกเลิกได้"
+  },
+  "editPage": {
+    "titleNew": "รายการเมนูใหม่",
+    "titleEdit": "แก้ไข: {{name}}",
+    "systemWarning": "รายการระบบ — คีย์รายการถูกล็อกและไม่สามารถลบได้"
+  },
+  "form": {
+    "itemKey": "คีย์รายการ",
+    "itemKeyPlaceholder": "เช่น main.dashboard",
+    "itemKeyLocked": "คีย์รายการถูกล็อกสำหรับรายการระบบ",
+    "scope": "ขอบเขต",
+    "parent": "ผู้ปกครอง",
+    "parentNone": "— ไม่มี (ระดับบนสุด) —",
+    "path": "เส้นทาง",
+    "pathPlaceholder": "/dashboard หรือ :basePath/property",
+    "pathHint": "รายการการประเมินอาจใช้ตัวแปร :basePath และ :requestId",
+    "icon": "ไอคอน",
+    "iconColor": "สีไอคอน",
+    "iconColorNone": "ไม่มีสี",
+    "sortOrder": "ลำดับการเรียง",
+    "viewPermission": "สิทธิ์ดู",
+    "editPermission": "สิทธิ์แก้ไข",
+    "labels": "ป้ายกำกับ",
+    "labelPlaceholderEn": "ป้ายกำกับภาษาอังกฤษ (จำเป็น)",
+    "labelPlaceholderOther": "ป้ายกำกับ {{lang}} (ไม่บังคับ)",
+    "labelAriaInput": "ป้ายกำกับ {{lang}}",
+    "submit": "บันทึก",
+    "submitting": "กำลังบันทึก...",
+    "viewPermissionRequired": "จำเป็นต้องระบุสิทธิ์การดู"
+  },
+  "colors": {
+    "Blue": "น้ำเงิน",
+    "Emerald": "มรกต",
+    "Purple": "ม่วง",
+    "Amber": "อำพัน",
+    "Cyan": "ฟ้าคราม",
+    "Teal": "เขียวอมฟ้า",
+    "Rose": "กุหลาบ",
+    "Orange": "ส้ม",
+    "Indigo": "คราม",
+    "Sky": "ฟ้า",
+    "Violet": "ม่วงอ่อน",
+    "Gray": "เทา"
+  },
+  "iconPicker": {
+    "pickIcon": "เลือกไอคอน...",
+    "searchPlaceholder": "ค้นหาไอคอน...",
+    "searchAriaLabel": "ค้นหาไอคอน",
+    "loading": "กำลังโหลดไอคอน...",
+    "noIcons": "ไม่พบไอคอน",
+    "moreIcons": "{{n}} รายการเพิ่มเติม — กรองค้นหาให้ละเอียดขึ้น"
+  },
+  "permissionSelect": {
+    "searchPlaceholder": "ค้นหาสิทธิ์...",
+    "loading": "กำลังโหลด...",
+    "editPermissionEmpty": "ไม่มี (อ่านอย่างเดียว)"
+  },
+  "activityOverrides": {
+    "activityLabel": "กิจกรรม",
+    "activityLoadingOption": "กำลังโหลด…",
+    "activityNoneOption": "ไม่พบกิจกรรม",
+    "overridesHint": "การแทนที่ทำได้เพียงจำกัดสิทธิ์ — ซ่อนเมนูหรือทำให้อ่านอย่างเดียวเมื่อผู้ใช้เข้าสู่งานของกิจกรรมนี้ ไม่สามารถเพิ่มสิทธิ์ได้ เมนูจะแสดงได้ก็ต่อเมื่อบทบาทของผู้ใช้อนุญาตอยู่แล้ว แถวที่ไม่จำกัดสิทธิ์จะใช้สิทธิ์ตามบทบาท",
+    "columns": {
+      "appraisalMenu": "เมนูการประเมิน",
+      "itemKey": "คีย์รายการ",
+      "visible": "มองเห็น",
+      "editable": "แก้ไขได้",
+      "status": "สถานะ",
+      "hidden": "ซ่อน",
+      "readOnly": "อ่านอย่างเดียว",
+      "access": "สิทธิ์สำหรับงานนี้"
+    },
+    "status": {
+      "unsaved": "ยังไม่บันทึก",
+      "roleDefault": "ค่าเริ่มต้นตามบทบาท",
+      "activityOverride": "แทนที่ตามกิจกรรม",
+      "inherit": "สืบทอดตามบทบาท",
+      "restricted": "จำกัดสิทธิ์"
+    },
+    "actions": {
+      "reset": "รีเซ็ต",
+      "saveChanges": "บันทึกการเปลี่ยนแปลง",
+      "discard": "ยกเลิก"
+    },
+    "access": {
+      "inherit": "สืบทอด",
+      "readonly": "อ่านอย่างเดียว",
+      "hidden": "ซ่อน"
+    },
+    "effective": {
+      "label": "ผลลัพธ์",
+      "editable": "แก้ไขได้",
+      "readonly": "อ่านอย่างเดียว",
+      "hidden": "ซ่อน",
+      "noRoleAccess": "บทบาทไม่มีสิทธิ์",
+      "roleNote": "บทบาทไม่มีสิทธิ์ดู — การแทนที่ไม่มีผล"
+    },
+    "preview": {
+      "title": "ตัวอย่างแถบเมนู",
+      "asRole": "แสดงผลสำหรับบทบาท: {{role}}",
+      "intentNote": "แสดงเจตนาการแทนที่ — เลือกบทบาทเพื่อดูผลจริง",
+      "empty": "ไม่มีเมนูที่แสดงสำหรับการเลือกนี้",
+      "selectRole": "เลือกบทบาทเพื่อดูผลจริง"
+    },
+    "filter": {
+      "search": "ค้นหาเมนู…",
+      "onlyRestricted": "เฉพาะที่จำกัด"
+    },
+    "bulk": {
+      "hideAll": "ซ่อนทั้งหมด",
+      "readonlyAll": "อ่านอย่างเดียวทั้งหมด",
+      "resetAll": "รีเซ็ตเป็นสืบทอด"
+    },
+    "summary": "จำกัด {{restricted}} · สืบทอด {{inherit}}",
+    "previewAsRole": "แสดงตัวอย่างเป็นบทบาท",
+    "previewAsRolePlaceholder": "เลือกบทบาท…",
+    "unsavedCount": "ยังไม่บันทึก {{count}} รายการ",
+    "restrictions": "จำกัด {{count}} รายการ",
+    "confirmSwitch": {
+      "title": "ยกเลิกการเปลี่ยนแปลงที่ยังไม่บันทึก?",
+      "message": "คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึกสำหรับกิจกรรมนี้ การสลับจะทำให้การเปลี่ยนแปลงหายไป"
+    }
+  },
+  "toasts": {
+    "created": "สร้างรายการเมนู \"{{key}}\" แล้ว",
+    "createFailed": "สร้างรายการเมนูไม่สำเร็จ",
+    "updated": "อัปเดตรายการเมนูแล้ว",
+    "updateFailed": "อัปเดตรายการเมนูไม่สำเร็จ",
+    "deleted": "ลบรายการเมนูแล้ว",
+    "deleteFailed": "ลบรายการเมนูไม่สำเร็จ",
+    "reorderFailed": "เรียงลำดับรายการเมนูไม่สำเร็จ",
+    "overridesSaved": "บันทึกการแทนที่กิจกรรมแล้ว",
+    "overridesSaveFailed": "บันทึกการแทนที่กิจกรรมไม่สำเร็จ",
+    "loadNavFailed": "โหลดการนำทางไม่สำเร็จ",
+    "loadNavFailedDetail": "โหลดการนำทางไม่สำเร็จ แถบด้านข้างอาจว่างเปล่า",
+    "syncMenuFailed": "ซิงค์เมนูไม่สำเร็จ"
+  },
+  "tree": {
+    "columns": {
+      "path": "เส้นทาง",
+      "editPermission": "สิทธิ์แก้ไข"
+    },
+    "expand": "ขยาย",
+    "collapse": "ยุบ",
+    "expandAll": "ขยายทั้งหมด",
+    "collapseAll": "ยุบทั้งหมด",
+    "export": "ส่งออก JSON",
+    "searchPlaceholder": "ค้นหาเมนู…",
+    "count": "{{count}} รายการ",
+    "unknownPerm": "ไม่พบสิทธิ์",
+    "missingI18n": "ขาดการแปล: {{langs}}",
+    "missingI18nShort": "ไม่มี {{langs}}",
+    "hiddenForRole": "ซ่อนสำหรับบทบาท",
+    "noReorderHint": "ล้างการค้นหาและขยายทั้งหมดเพื่อจัดเรียง",
+    "emptyFiltered": "ไม่พบเมนูที่ตรงกับการค้นหา"
+  }
+}

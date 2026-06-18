@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams, useSearchParams } from 'react-rout
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
@@ -46,6 +47,7 @@ import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateMarketComparablePage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -67,11 +69,15 @@ const CreateMarketComparablePage = () => {
   const marketId = marketComparableId || searchParams.get('id');
   const isEditMode = !!marketId;
 
-  const { data: marketComparable, isLoading: isLoadingComparable } = useGetMarketComparableById(
-    isEditMode ? marketId : undefined,
-  );
+  // Copy mode: prefill the form from an existing survey (?copyFrom=) but still
+  // CREATE a brand-new comparable on save (so the user doesn't re-key everything).
+  const copyFromId = searchParams.get('copyFrom');
+  const sourceId = marketId ?? copyFromId ?? undefined;
+
+  const { data: marketComparable, isLoading: isLoadingComparable } =
+    useGetMarketComparableById(sourceId);
   const { data: template, isLoading: isLoadingTemplate } = useGetMarketComparableTemplateById(
-    isEditMode ? marketComparable?.marketComparable.templateId : undefined,
+    marketComparable?.marketComparable.templateId,
   );
 
   // The "Property Information → Market Comparable" structural parents are derived
@@ -100,7 +106,8 @@ const CreateMarketComparablePage = () => {
   const isPending = isCreating || isUpdating;
 
   const mapComparableToForm = useMemo(() => {
-    if (!isEditMode || !marketComparable || !template) return null;
+    // Prefill from the loaded source in BOTH edit mode and copy mode.
+    if (!marketComparable || !template) return null;
 
     const factorDataValue = template.template.factors
       .map((factor: any) => {
@@ -139,6 +146,8 @@ const CreateMarketComparablePage = () => {
       salePrice: marketComparable.marketComparable.salePrice ?? null,
       salePriceUnit: marketComparable.marketComparable.salePriceUnit ?? null,
       saleDate: marketComparable.marketComparable.saleDate ?? null,
+      latitude: marketComparable.marketComparable.latitude ?? null,
+      longitude: marketComparable.marketComparable.longitude ?? null,
       factorData: factorDataValue,
     };
   }, [isEditMode, marketComparable, template]);
@@ -158,10 +167,11 @@ const CreateMarketComparablePage = () => {
   const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   useEffect(() => {
-    if (isEditMode && mapComparableToForm) {
+    // Reset the form once the source data is mapped (edit OR copy prefill).
+    if (mapComparableToForm) {
       methods.reset(mapComparableToForm);
     }
-  }, [isEditMode, mapComparableToForm]);
+  }, [mapComparableToForm]);
 
   const onSubmit: SubmitHandler<createMarketComparableFormType> = data => {
     // Convert factorData values to string
@@ -192,6 +202,9 @@ const CreateMarketComparablePage = () => {
           salePrice: data.salePrice ?? null,
           salePriceUnit: data.salePriceUnit ?? null,
           saleDate: data.saleDate || null,
+          // Falsy (0 / empty) → null so an unset coordinate doesn't pin at 0,0.
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
           factorData,
         };
 
@@ -204,7 +217,7 @@ const CreateMarketComparablePage = () => {
             });
           }
           skipWarning();
-          toast.success('Market comparable updated successfully');
+          toast.success(t('toasts.marketComparableUpdated'));
           navigate(`${basePath}/${parentSegment}?tab=markets`);
         },
         onError: (error: any) => {
@@ -229,6 +242,9 @@ const CreateMarketComparablePage = () => {
         salePrice: data.salePrice ?? null,
         salePriceUnit: data.salePriceUnit ?? null,
         saleDate: data.saleDate || null,
+        // Falsy (0 / empty) → null so an unset coordinate doesn't pin at 0,0.
+        latitude: data.latitude || null,
+        longitude: data.longitude || null,
         factorData,
       };
 
@@ -241,6 +257,9 @@ const CreateMarketComparablePage = () => {
                 marketComparableId: response.id,
                 sequenceNumber: 0,
                 originalPricePerUnit: 0,
+                weight: null,
+                selectionReason: null,
+                notes: null,
               });
             } catch (error: any) {
               toast.error(
@@ -253,7 +272,7 @@ const CreateMarketComparablePage = () => {
           await photoSectionRef.current?.linkImagesToComparable(response.id);
 
           skipWarning();
-          toast.success('Market comparable created successfully');
+          toast.success(t('toasts.marketComparableCreated'));
           if (appraisalId) {
             navigate(`${basePath}/${parentSegment}/market-comparable/${response.id}`);
           } else {
@@ -271,9 +290,10 @@ const CreateMarketComparablePage = () => {
 
   const { isOpen, onToggle } = useDisclosure();
 
-  // Loading state — block render until both data sources are available in edit mode
+  // Loading state — block render until the source data is available when prefilling
+  // (edit OR copy), so the form mounts already populated rather than flashing empty.
   const isLoading =
-    isEditMode && (isLoadingComparable || isLoadingTemplate || !marketComparable || !template);
+    !!sourceId && (isLoadingComparable || isLoadingTemplate || !marketComparable || !template);
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">

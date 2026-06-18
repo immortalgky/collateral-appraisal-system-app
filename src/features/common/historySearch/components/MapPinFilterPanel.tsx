@@ -6,6 +6,8 @@ interface MapPinFilterPanelProps {
   filters: PinFilterState;
   onFiltersChange: (filters: PinFilterState) => void;
   isExternal: boolean;
+  /** When true, only MC layers are shown (collateral/appraisal layers are hidden). */
+  mcOnly?: boolean;
 }
 
 /**
@@ -14,11 +16,11 @@ interface MapPinFilterPanelProps {
  * to backend results today; the "(appraising)" and "Supporting Data" layers
  * are scaffolded — the toggle state is tracked but no data renders yet.
  *
- * Collateral layers are hidden for external users (they only see their own
+ * Appraisal layers are hidden for external users (they only see their own
  * MarketComparable records). Defense-in-depth: parent also passes
- * `visibleCollateralPins=[]` for externals.
+ * `visibleAppraisalPins=[]` for externals.
  */
-export function MapPinFilterPanel({ filters, onFiltersChange, isExternal }: MapPinFilterPanelProps) {
+export function MapPinFilterPanel({ filters, onFiltersChange, isExternal, mcOnly = false }: MapPinFilterPanelProps) {
   const { t } = useTranslation('historySearch');
 
   const toggle = (key: keyof PinFilterState) => {
@@ -39,7 +41,7 @@ export function MapPinFilterPanel({ filters, onFiltersChange, isExternal }: MapP
     /** When true, the row is rendered disabled (no backend yet). */
     comingSoon?: boolean;
   }> = [
-    { key: 'showCollateral',           layerKey: 'collateralExisting',   labelKey: 'collateralExisting',   testId: 'filter-collateral',            internalOnly: true },
+    { key: 'showCollateral',           layerKey: 'collateralExisting',   labelKey: 'appraisalExisting',    testId: 'filter-collateral',            internalOnly: true },
     { key: 'showMarketComparables',    layerKey: 'mcExisting',           labelKey: 'mcExisting',           testId: 'filter-mc' },
     { key: 'showCollateralAppraising', layerKey: 'collateralAppraising', labelKey: 'collateralAppraising', testId: 'filter-collateral-appraising', internalOnly: true },
     { key: 'showMcAppraising',         layerKey: 'mcAppraising',         labelKey: 'mcAppraising',         testId: 'filter-mc-appraising' },
@@ -52,7 +54,7 @@ export function MapPinFilterPanel({ filters, onFiltersChange, isExternal }: MapP
         {t('pinFilter.title')}
       </p>
 
-      {LAYERS.filter(layer => !(layer.internalOnly && isExternal)).map(layer => (
+      {LAYERS.filter(layer => !(layer.internalOnly && isExternal) && !(mcOnly && layer.key !== 'showMarketComparables' && layer.key !== 'showMcAppraising')).map(layer => (
         <PinRow
           key={layer.key}
           checked={filters[layer.key]}

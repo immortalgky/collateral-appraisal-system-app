@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -16,6 +17,7 @@ const formatCurrency = (value: number) =>
   new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
 
 const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => {
+  const { t } = useTranslation('meeting');
   const { data, isLoading } = useGetMeetingQueue({ status: 'Queued', pageSize: 100 });
   const addItems = useAddMeetingItems();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -52,19 +54,25 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
       { id: meetingId, body: { queueItemIds: Array.from(selected) } },
       {
         onSuccess: () => {
-          toast.success(`Added ${selected.size} appraisal${selected.size === 1 ? '' : 's'}`);
+          const key = selected.size === 1 ? 'toasts.itemsAdded' : 'toasts.itemsAddedPlural';
+          toast.success(t(key, { count: selected.size }));
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to add appraisals');
+          toast.error(detail || t('toasts.itemsAddFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Add Appraisals from Queue" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={t('dialogs.addAppraisalsFromQueue')}
+      size="lg"
+    >
       <div className="space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -73,9 +81,7 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
             <Icon name="hourglass-half" style="regular" className="w-10 h-10 text-gray-300" />
-            <p className="text-sm text-gray-500">
-              No appraisals are currently waiting in the queue.
-            </p>
+            <p className="text-sm text-gray-500">{t('empty.noQueuedAppraisals')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-gray-200 max-h-[55vh] overflow-y-auto">
@@ -87,17 +93,17 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
                       type="checkbox"
                       checked={selected.size === items.length && items.length > 0}
                       onChange={toggleAll}
-                      aria-label="Select all"
+                      aria-label={t('aria.selectAll')}
                     />
                   </th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Appraisal #
+                    {t('columns.appraisalNo')}
                   </th>
                   <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                    Facility Limit
+                    {t('columns.facilityLimit')}
                   </th>
                   <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
-                    Enqueued
+                    {t('columns.enqueued')}
                   </th>
                 </tr>
               </thead>
@@ -112,7 +118,9 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
                         type="checkbox"
                         checked={selected.has(item.id)}
                         onChange={() => toggle(item.id)}
-                        aria-label={`Select ${item.appraisalNo ?? item.appraisalId}`}
+                        aria-label={t('aria.selectItem', {
+                          label: item.appraisalNo ?? item.appraisalId,
+                        })}
                       />
                     </td>
                     <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
@@ -137,7 +145,7 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
 
         <div className="flex items-center justify-between gap-3 pt-2">
           <p className="text-xs text-gray-500">
-            {selected.size} of {items.length} selected
+            {t('addItemsDialog.selectedCount', { selected: selected.size, total: items.length })}
           </p>
           <div className="flex gap-3">
             <Button
@@ -146,7 +154,7 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
               onClick={handleClose}
               disabled={addItems.isPending}
             >
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button
               type="button"
@@ -154,8 +162,8 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
               disabled={selected.size === 0 || addItems.isPending}
             >
               {addItems.isPending
-                ? 'Adding...'
-                : `Add ${selected.size > 0 ? selected.size : ''}`.trim()}
+                ? t('addItemsDialog.adding')
+                : `${t('buttons.addAppraisals')}${selected.size > 0 ? ` (${selected.size})` : ''}`}
             </Button>
           </div>
         </div>

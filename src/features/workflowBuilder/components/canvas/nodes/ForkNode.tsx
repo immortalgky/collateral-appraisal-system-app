@@ -11,15 +11,13 @@ export function ForkNode({ id, data, selected }: NodeProps) {
   const props = nodeData.properties as ForkProperties;
   const branches = props?.branches ?? [];
 
-  const outputs =
-    branches.length > 0
-      ? branches.map((b) => ({ id: b, label: b }))
-      : undefined;
+  const outputs = branches.length > 0 ? branches.map(b => ({ id: b, label: b })) : undefined;
 
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || 'Fork'}
       selected={selected}
@@ -30,9 +28,7 @@ export function ForkNode({ id, data, selected }: NodeProps) {
           {props?.forkType || 'parallel'}
         </span>
         {branches.length > 0 && (
-          <span className="badge badge-ghost badge-sm">
-            {branches.length} branches
-          </span>
+          <span className="badge badge-ghost badge-sm">{branches.length} branches</span>
         )}
       </div>
     </BaseNode>

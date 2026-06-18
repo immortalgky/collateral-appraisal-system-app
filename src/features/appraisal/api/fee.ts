@@ -3,9 +3,7 @@ import axios from '@shared/api/axiosInstance';
 import type {
   AddFeeItemRequestType,
   AppraisalFeeDtoType,
-  ApproveFeeItemRequestType,
   RecordPaymentRequestType,
-  RejectFeeItemRequestType,
   UpdateFeeItemRequestType,
   UpdatePaymentRequestType,
 } from '@shared/schemas/v1';
@@ -66,6 +64,7 @@ export const useUpdateAppraisalFee = () => {
       appraisalId: string;
       feeId: string;
       feePaymentType: string;
+      bankAbsorbAmount: number;
     }): Promise<void> => {
       await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}`, body);
     },
@@ -94,10 +93,9 @@ export const useUpdateConstructionInspectionFee = () => {
       feeId: string;
       amount: number | null;
     }): Promise<void> => {
-      await axios.patch(
-        `/appraisals/${appraisalId}/fees/${feeId}/construction-inspection-fee`,
-        { amount },
-      );
+      await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}/construction-inspection-fee`, {
+        amount,
+      });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -115,17 +113,17 @@ export const useApproveFeeItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // Actor is stamped server-side from the authenticated user — no body sent.
     mutationFn: async ({
       appraisalId,
       feeId,
       itemId,
-      ...body
-    }: ApproveFeeItemRequestType & {
+    }: {
       appraisalId: string;
       feeId: string;
       itemId: string;
     }): Promise<void> => {
-      await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}/items/${itemId}/approve`, body);
+      await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}/items/${itemId}/approve`);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
@@ -143,17 +141,21 @@ export const useRejectFeeItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // Actor is stamped server-side; only the reason is sent.
     mutationFn: async ({
       appraisalId,
       feeId,
       itemId,
-      ...body
-    }: RejectFeeItemRequestType & {
+      reason,
+    }: {
       appraisalId: string;
       feeId: string;
       itemId: string;
+      reason: string;
     }): Promise<void> => {
-      await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}/items/${itemId}/reject`, body);
+      await axios.patch(`/appraisals/${appraisalId}/fees/${feeId}/items/${itemId}/reject`, {
+        reason,
+      });
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

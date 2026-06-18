@@ -1,12 +1,17 @@
 import { Navigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store.ts';
 import { useCurrentUser } from '../api.ts';
 import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationHub } from '@features/notification/hooks/useNotificationHub';
+import { useReportJobReconciler } from '@features/reportGeneration/hooks/useReportJobReconciler';
+import ForcedPasswordChange from './ForcedPasswordChange';
 import type { JSX } from 'react';
 
 export function ProtectedRoute({ component }: { component: JSX.Element }) {
+  const { t } = useTranslation('auth');
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const mustChangePassword = useAuthStore(state => state.user?.mustChangePassword ?? false);
   const hasToken = !!getAccessToken();
   const { isLoading } = useCurrentUser();
 
@@ -14,6 +19,9 @@ export function ProtectedRoute({ component }: { component: JSX.Element }) {
   // above all layouts so it doesn't tear down on Layout↔AppraisalLayout↔TaskLayout
   // navigation. Hook returns early if no access token is present yet.
   useNotificationHub();
+  // Realtime + reconnect reconciler for async report jobs — zero overhead when
+  // no jobs are tracked.
+  useReportJobReconciler();
 
   // No token and not authenticated → go to login
   if (!hasToken && !isAuthenticated) {
@@ -27,10 +35,16 @@ export function ProtectedRoute({ component }: { component: JSX.Element }) {
         <div
           className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
           role="status"
-          aria-label="Authenticating"
+          aria-label={t('aria.authenticating')}
         />
       </div>
     );
+  }
+
+  // Newly created / admin-reset accounts must set a new password before using the app.
+  // Block every protected route until the change succeeds (which clears the flag on /auth/me).
+  if (isAuthenticated && mustChangePassword) {
+    return <ForcedPasswordChange />;
   }
 
   return component;

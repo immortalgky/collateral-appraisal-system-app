@@ -1,4 +1,5 @@
 import { Controller, useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
@@ -31,11 +32,7 @@ const SectionSubtitle = ({ children }: { children: React.ReactNode }) => (
 const InfoHint = ({ children }: { children: React.ReactNode }) => (
   <div className="col-span-12">
     <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-amber-50/70 border border-amber-100">
-      <Icon
-        name="circle-info"
-        style="solid"
-        className="size-3.5 text-amber-600 mt-0.5 shrink-0"
-      />
+      <Icon name="circle-info" style="solid" className="size-3.5 text-amber-600 mt-0.5 shrink-0" />
       <p className="text-xs text-amber-800 leading-relaxed">{children}</p>
     </div>
   </div>
@@ -54,14 +51,6 @@ const SectionHeader = ({ title, icon }: { title: string; icon: string }) => (
 
 // ── Location Assumptions Table ────────────────────────────────────────────────
 
-const buildLocationMethodOptions = (projectType: ProjectType) => {
-  const areaUnit = isCondo(projectType) ? 'Sq.M' : 'Sq.Wa';
-  return [
-    { value: 'AdjustPriceSqm', label: `01 - Adjust Price/${areaUnit}` },
-    { value: 'Lumpsum', label: '02 - Lumpsum' },
-  ];
-};
-
 interface LocationRow {
   name: string;
   label: string;
@@ -70,30 +59,40 @@ interface LocationRow {
   decimalPlaces?: number;
 }
 
-const CONDO_LOCATION_ROWS: LocationRow[] = [
-  { name: 'cornerAdjustment', label: 'Corner' },
-  { name: 'edgeAdjustment', label: 'Edge' },
-  { name: 'poolViewAdjustment', label: 'Pool View' },
-  { name: 'southAdjustment', label: 'South' },
-  { name: 'otherAdjustment', label: 'Other' },
-];
-
-const LB_LOCATION_ROWS: LocationRow[] = [
-  { name: 'cornerAdjustment', label: 'Corner' },
-  { name: 'edgeAdjustment', label: 'Edge' },
-  { name: 'nearGardenAdjustment', label: 'Near Garden/Clubhouse' },
-  { name: 'otherAdjustment', label: 'Other' },
-];
-
-
 interface LocationAssumptionsTableProps {
   projectType: ProjectType;
 }
 
 const LocationAssumptionsTable = ({ projectType }: LocationAssumptionsTableProps) => {
+  const { t } = useTranslation('blockProject');
   const { control } = useFormContext();
+
+  const CONDO_LOCATION_ROWS: LocationRow[] = [
+    { name: 'cornerAdjustment', label: t('pricingAssumption.fields.corner') },
+    { name: 'edgeAdjustment', label: t('pricingAssumption.fields.edge') },
+    { name: 'poolViewAdjustment', label: t('pricingAssumption.fields.poolView') },
+    { name: 'southAdjustment', label: t('pricingAssumption.fields.south') },
+    { name: 'otherAdjustment', label: t('pricingAssumption.fields.other') },
+  ];
+
+  const LB_LOCATION_ROWS: LocationRow[] = [
+    { name: 'cornerAdjustment', label: t('pricingAssumption.fields.corner') },
+    { name: 'edgeAdjustment', label: t('pricingAssumption.fields.edge') },
+    { name: 'nearGardenAdjustment', label: t('pricingAssumption.fields.nearGardenClubhouse') },
+    { name: 'otherAdjustment', label: t('pricingAssumption.fields.other') },
+  ];
+
+  const methodOptions = [
+    {
+      value: 'AdjustPriceSqm',
+      label: isCondo(projectType)
+        ? t('options.locationMethodBySqWa.AdjustPriceSqm')
+        : t('options.locationMethodByM.AdjustPriceSqm'),
+    },
+    { value: 'Lumpsum', label: t('options.locationMethodBySqWa.Lumpsum') },
+  ];
+
   const rows = isCondo(projectType) ? CONDO_LOCATION_ROWS : LB_LOCATION_ROWS;
-  const methodOptions = buildLocationMethodOptions(projectType);
 
   return (
     <div className="rounded-lg border border-gray-200 overflow-hidden">
@@ -104,7 +103,9 @@ const LocationAssumptionsTable = ({ projectType }: LocationAssumptionsTableProps
         </colgroup>
         <thead>
           <tr className="bg-gray-50 text-gray-500 border-b border-gray-200">
-            <th className="text-left px-4 py-2.5 text-xs font-medium">Location Description</th>
+            <th className="text-left px-4 py-2.5 text-xs font-medium">
+              {t('pricingAssumption.locationDescription')}
+            </th>
             <th className="px-3 py-2 font-normal">
               <div className="max-w-[260px]">
                 <Controller
@@ -115,7 +116,7 @@ const LocationAssumptionsTable = ({ projectType }: LocationAssumptionsTableProps
                       options={methodOptions}
                       value={field.value ?? undefined}
                       onChange={value => field.onChange(value)}
-                      placeholder="Select adjustment method"
+                      placeholder={t('pricingAssumption.locationMethodPlaceholder')}
                       showValuePrefix={false}
                       error={fieldState.error?.message}
                     />
@@ -165,51 +166,46 @@ const LocationAssumptionsTable = ({ projectType }: LocationAssumptionsTableProps
  * Floor Assumptions: Condo-only floor-increment row.
  * Force Sale Value: discount factor for forced-sale valuation.
  */
-const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => (
-  <div className="w-full max-w-full overflow-hidden flex flex-col gap-6">
-    {/* Location Assumptions — full-width table layout */}
-    <section>
-      <SectionHeader title="Location Assumptions" icon="location-dot" />
-      <p className="text-xs text-gray-400 mb-3">
-        Choose an adjustment method, then set the per-location offset applied to each unit.
-      </p>
-      <LocationAssumptionsTable projectType={projectType} />
-    </section>
+const PricingAssumptionForm = ({ projectType }: PricingAssumptionFormProps) => {
+  const { t } = useTranslation('blockProject');
+  return (
+    <div className="w-full max-w-full overflow-hidden flex flex-col gap-6">
+      {/* Location Assumptions — full-width table layout */}
+      <section>
+        <SectionHeader
+          title={t('pricingAssumption.sections.locationAssumptions')}
+          icon="location-dot"
+        />
+        <p className="text-xs text-gray-400 mb-3">{t('pricingAssumption.locationHint')}</p>
+        <LocationAssumptionsTable projectType={projectType} />
+      </section>
 
-    <div className="h-px bg-gray-200" />
+      <div className="h-px bg-gray-200" />
 
-    {/* Floor / Land + Force Sale — two-column SectionRow layout */}
-    <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-      {isCondo(projectType) && (
-        <SectionRow title="Floor Assumptions" icon="stairs">
-          <SectionSubtitle>
-            Price increment applied for every N floors above the base floor.
-          </SectionSubtitle>
-          <FormFields fields={condoPricingFloorFields} />
+      {/* Floor / Land + Force Sale — two-column SectionRow layout */}
+      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
+        {isCondo(projectType) && (
+          <SectionRow title={t('pricingAssumption.sections.floorAssumptions')} icon="stairs">
+            <SectionSubtitle>{t('pricingAssumption.floorHint')}</SectionSubtitle>
+            <FormFields fields={condoPricingFloorFields} />
+          </SectionRow>
+        )}
+
+        {isLandAndBuildingLike(projectType) && (
+          <SectionRow title={t('pricingAssumption.sections.landAssumption')} icon="mountain-city">
+            <SectionSubtitle>{t('pricingAssumption.landHint')}</SectionSubtitle>
+            <FormFields fields={pricingLandAssumptionFields} />
+          </SectionRow>
+        )}
+
+        <SectionRow title={t('pricingAssumption.sections.forceSaleValue')} icon="percent" isLast>
+          <SectionSubtitle>{t('pricingAssumption.forceSaleHint')}</SectionSubtitle>
+          <FormFields fields={pricingForceSaleFields} />
+          <InfoHint>{t('pricingAssumption.forceSaleInfoHint')}</InfoHint>
         </SectionRow>
-      )}
-
-      {isLandAndBuildingLike(projectType) && (
-        <SectionRow title="Land Assumption" icon="mountain-city">
-          <SectionSubtitle>
-            Land price adjustment applied to each unit based on land area.
-          </SectionSubtitle>
-          <FormFields fields={pricingLandAssumptionFields} />
-        </SectionRow>
-      )}
-
-      <SectionRow title="Force Sale Value" icon="percent" isLast>
-        <SectionSubtitle>
-          Discount factor applied to calculated unit prices for forced-sale valuation.
-        </SectionSubtitle>
-        <FormFields fields={pricingForceSaleFields} />
-        <InfoHint>
-          Enter a value between 0 and 100. The calculated unit price is multiplied by this
-          percentage to derive the force-sale price.
-        </InfoHint>
-      </SectionRow>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default PricingAssumptionForm;

@@ -24,6 +24,13 @@ interface ComparativeFactorTableProps {
   allFactors: FactorDataType[];
   template?: TemplateDetailType;
   fieldPath: Record<string, any>;
+  /**
+   * When true (room/rental references — no backing property), ALL factor collateral
+   * cells render as editable inputs bound to `collateralValue` regardless of
+   * whether the factor has a `fieldName`. The value is persisted by the backend
+   * via the SaveComparativeAnalysis endpoint.
+   */
+  manualSubject?: boolean;
 }
 export function ComparativeFactorTable({
   comparativeMarketSurveys,
@@ -31,6 +38,7 @@ export function ComparativeFactorTable({
   allFactors,
   template,
   fieldPath,
+  manualSubject,
 }: ComparativeFactorTableProps) {
   const isReadOnly = usePageReadOnly();
   const language = useLocaleStore(s => s.language);
@@ -205,13 +213,15 @@ export function ComparativeFactorTable({
                       collateralColumnStyle,
                     )}
                   >
-                    {/* Should-fix 5: branch on fieldName. Truthy → resolved read-only
-                        display. Null/empty → legacy editable input for manual entry. */}
+                    {/* Branch on fieldName + manualSubject.
+                        manualSubject=true → always editable (room/rental refs: no backing property).
+                        fieldName truthy → resolved read-only display from property.
+                        Null/empty fieldName → editable collateralValue input. */}
                     {(() => {
                       const factorCode = watchComparativeFactors[rowIndex]?.factorCode;
                       const factor = allFactors?.find(f => f.factorCode === factorCode);
                       const fieldName = factor?.fieldName as string | undefined;
-                      if (fieldName) {
+                      if (!manualSubject && fieldName) {
                         const raw = property[fieldName];
                         const rawStr = raw != null ? String(raw) : null;
                         return (

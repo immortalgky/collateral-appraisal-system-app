@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   closestCenter,
@@ -28,6 +29,7 @@ import {
   useUpdatePropertyGroup,
 } from '../../api/propertyGroup';
 import { GroupContainer } from '../GroupContainer';
+import { PropertiesMapModal } from '../PropertiesMapModal';
 import { MoveToGroupModal } from '../MoveToGroupModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import { PropertyContextMenu } from '../PropertyContextMenu';
@@ -35,6 +37,8 @@ import type { PropertyItem } from '../../types';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../../utils/propertyTypeConfig';
+import { usePricingValidationGate } from '@features/pricingAnalysis/hooks/usePricingValidationGate';
+import type { GroupPropertyRef } from '../../hooks/usePropertyGroupMandatoryValidation';
 
 const getRouteSegment = (type: string): string => getRouteSegmentFromConfig(type) ?? 'land';
 
@@ -60,11 +64,15 @@ interface PropertiesTabProps {
 }
 
 export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps) => {
+  const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
   const appraisalId = useAppraisalId();
   const propertyBasePath = usePropertyBasePath();
+
+  // Pre-flight validation gate for pricing analysis (plug-and-play; reusable elsewhere)
+  const { open: openPricingValidation, modal: pricingValidationModal } = usePricingValidationGate();
 
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
@@ -89,6 +97,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [highlightPropertyId, setHighlightPropertyId] = useState<string | null>(null);
+
+  // Properties map modal — holds the id of the property whose pin was clicked.
+  const [mapSelectedId, setMapSelectedId] = useState<string | null>(null);
+  const handleShowOnMap = useCallback((propertyId: string) => setMapSelectedId(propertyId), []);
+  const allProperties = useMemo(() => groups.flatMap(g => g.items), [groups]);
 
   const [activeProperty, setActiveProperty] = useState<PropertyItem | null>(null);
 
@@ -145,7 +158,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       { appraisalId, groupName: `Group ${groupNumber}` },
       {
         onError: () => {
-          toast.error('Failed to create group');
+          toast.error(t('properties.toasts.groupCreateFailed'));
         },
       },
     );
@@ -165,7 +178,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         },
         {
           onError: () => {
-            toast.error('Failed to rename group');
+            toast.error(t('properties.toasts.groupRenameFailed'));
           },
         },
       );
@@ -185,7 +198,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
           },
           onError: () => {
             setDeletingGroupId(null);
-            toast.error('Failed to delete group');
+            toast.error(t('properties.toasts.groupDeleteFailed'));
           },
         },
       );
@@ -200,7 +213,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         { appraisalId, groupId, propertyId },
         {
           onError: () => {
-            toast.error('Failed to remove property from group');
+            toast.error(t('properties.toasts.propertyRemoveFailed'));
           },
         },
       );
@@ -209,12 +222,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   );
 
   const handleMoveProperty = useCallback(
-    (
-      fromGroupId: string,
-      toGroupId: string,
-      propertyId: string,
-      targetPosition?: number,
-    ) => {
+    (fromGroupId: string, toGroupId: string, propertyId: string, targetPosition?: number) => {
       if (!appraisalId) return;
       moveMutation.mutate(
         {
@@ -226,7 +234,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         },
         {
           onError: () => {
-            toast.error('Failed to move property');
+            toast.error(t('properties.toasts.propertyMoveFailed'));
           },
         },
       );
@@ -240,11 +248,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       copyPropertyMutation.mutate(
         { appraisalId, propertyId: clipboard.id, targetGroupId: groupId },
         {
-          onSuccess: (data) => {
+          onSuccess: data => {
             setHighlightPropertyId(data.id);
           },
           onError: () => {
-            toast.error('Failed to paste property');
+            toast.error(t('properties.toasts.propertyPasteFailed'));
           },
         },
       );
@@ -292,7 +300,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
               reordered.splice(toIndex, 0, activeId);
               reorderMutation.mutate(
                 { appraisalId, groupId: activeGroupId, orderedPropertyIds: reordered },
-                { onError: () => toast.error('Failed to reorder properties') },
+                { onError: () => toast.error(t('properties.toasts.reorderFailed')) },
               );
             }
           }
@@ -351,16 +359,13 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     [basePath, propertyBasePath, navigate],
   );
 
-  const handleMoveToProperty = useCallback(
-    (property: PropertyItem, groupId: string) => {
-      setMoveModalState({
-        isOpen: true,
-        property,
-        fromGroupId: groupId,
-      });
-    },
-    [],
-  );
+  const handleMoveToProperty = useCallback((property: PropertyItem, groupId: string) => {
+    setMoveModalState({
+      isOpen: true,
+      property,
+      fromGroupId: groupId,
+    });
+  }, []);
 
   const handleCopyProperty = useCallback(
     (property: PropertyItem) => {
@@ -369,16 +374,13 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     [copyProperty],
   );
 
-  const handleDeleteProperty = useCallback(
-    (property: PropertyItem, groupId: string) => {
-      setDeleteModalState({
-        isOpen: true,
-        property,
-        groupId,
-      });
-    },
-    [],
-  );
+  const handleDeleteProperty = useCallback((property: PropertyItem, groupId: string) => {
+    setDeleteModalState({
+      isOpen: true,
+      property,
+      groupId,
+    });
+  }, []);
 
   // Context menu handlers
   const handleEdit = () => {
@@ -423,43 +425,63 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     }
   };
 
-  const handleGoToPricingAnalysis = (groupId: string) => {
-    const group = groups.find(g => g.id === groupId);
-    const paId = group?.pricingAnalysisId;
-    if (paId) {
-      navigate(`${basePath}/groups/${groupId}/pricing-analysis/${paId}`);
-    } else {
-      navigate(`${basePath}/groups/${groupId}/pricing-analysis`);
-    }
-  };
+  const navigateToPricingAnalysis = useCallback(
+    (groupId: string) => {
+      const group = groupsRef.current.find(g => g.id === groupId);
+      const paId = group?.pricingAnalysisId;
+      navigate(
+        paId
+          ? `${basePath}/groups/${groupId}/pricing-analysis/${paId}`
+          : `${basePath}/groups/${groupId}/pricing-analysis`,
+      );
+    },
+    [basePath, navigate],
+  );
+
+  // Validate the group first; only navigate once every rule passes.
+  const handleGoToPricingAnalysis = useCallback(
+    (groupId: string) => {
+      const group = groupsRef.current.find(g => g.id === groupId);
+      // item.type carries the backend property type code; the validation registry normalises it.
+      const properties: GroupPropertyRef[] = (group?.items ?? []).map((item, index) => ({
+        id: item.id,
+        typeCode: item.type,
+        sequenceNumber: item.sequenceNumber ?? index + 1,
+      }));
+      openPricingValidation({ groupId, appraisalId, properties }, () =>
+        navigateToPricingAnalysis(groupId),
+      );
+    },
+    [openPricingValidation, navigateToPricingAnalysis, appraisalId],
+  );
 
   const contextMenuItems = readOnly
-    ? [{ label: 'View', icon: 'eye', onClick: handleEdit }]
+    ? [{ label: t('properties.contextMenu.view'), icon: 'eye', onClick: handleEdit }]
     : [
         {
-          label: 'Edit',
+          label: t('properties.contextMenu.edit'),
           icon: 'pen-to-square',
           onClick: handleEdit,
         },
         {
-          label: 'Move to',
+          label: t('properties.contextMenu.moveTo'),
           icon: 'arrow-right-arrow-left',
           onClick: handleMoveTo,
           disabled: groups.length <= 1,
         },
         {
-          label: 'Copy',
+          label: t('properties.contextMenu.copy'),
           icon: 'copy',
           onClick: handleCopy,
         },
         {
-          label: 'Paste',
+          label: t('properties.contextMenu.paste'),
           icon: 'paste',
           onClick: handlePaste,
           disabled: !clipboard,
         },
         {
-          label: 'Delete',
+          label: t('properties.contextMenu.delete'),
           icon: 'trash',
           onClick: handleDelete,
           danger: true,
@@ -498,8 +520,8 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
     return (
       <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-red-50 rounded-xl border-2 border-dashed border-red-200">
         <Icon name="exclamation-triangle" className="text-4xl mb-3 text-red-400" />
-        <p className="text-sm font-medium text-red-500">Failed to load property groups</p>
-        <p className="text-xs text-red-400 mt-1">Please try refreshing the page</p>
+        <p className="text-sm font-medium text-red-500">{t('properties.loadError')}</p>
+        <p className="text-xs text-red-400 mt-1">{t('properties.loadErrorHint')}</p>
       </div>
     );
   }
@@ -522,7 +544,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
             }`}
           >
             <Icon name="grid-2" style="solid" />
-            <span>Grid</span>
+            <span>{t('properties.viewGrid')}</span>
           </button>
           <button
             type="button"
@@ -534,7 +556,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
             }`}
           >
             <Icon name="list" style="solid" />
-            <span>List</span>
+            <span>{t('properties.viewList')}</span>
           </button>
         </div>
 
@@ -551,7 +573,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
             ) : (
               <Icon name="plus" />
             )}
-            Add New Group
+            {t('properties.addNewGroup')}
           </Button>
         )}
       </div>
@@ -568,10 +590,8 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
           {groups.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
               <Icon name="layer-group" className="text-4xl mb-3" />
-              <p className="text-sm font-medium text-gray-500">No property groups yet</p>
-              <p className="text-xs text-gray-400 mt-1">
-                Click "Add New Group" to create your first group
-              </p>
+              <p className="text-sm font-medium text-gray-500">{t('properties.noGroups')}</p>
+              <p className="text-xs text-gray-400 mt-1">{t('properties.noGroupsHint')}</p>
             </div>
           ) : (
             groups.map(group => (
@@ -588,6 +608,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 onPaste={handlePasteProperty}
                 onDelete={handleDeleteProperty}
                 onGoToPricingAnalysis={handleGoToPricingAnalysis}
+                onShowOnMap={handleShowOnMap}
                 hasClipboard={!!clipboard}
                 isDeletingGroup={deletingGroupId === group.id}
               />
@@ -603,11 +624,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
               <div className="flex items-center justify-center w-10 bg-gray-50 border-r border-gray-200 flex-shrink-0">
                 <Icon name="grip-vertical" className="text-gray-400" />
               </div>
-              <PropertyCardContent
-                property={activeProperty}
-                showArrow={false}
-                size="md"
-              />
+              <PropertyCardContent property={activeProperty} showArrow={false} size="md" />
             </div>
           ) : null}
         </DragOverlay>
@@ -636,6 +653,17 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         onConfirm={handleDeleteConfirm}
         isLoading={removePropertyMutation.isPending}
       />
+
+      <PropertiesMapModal
+        isOpen={mapSelectedId != null}
+        onClose={() => setMapSelectedId(null)}
+        appraisalId={appraisalId}
+        properties={allProperties}
+        selectedPropertyId={mapSelectedId ?? ''}
+      />
+
+      {/* Pricing-analysis pre-flight validation modal */}
+      {pricingValidationModal}
 
       {/* Context Menu (for grid view) */}
       {contextMenu.visible && (

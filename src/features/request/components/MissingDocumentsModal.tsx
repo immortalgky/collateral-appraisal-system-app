@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
@@ -29,7 +30,15 @@ interface MissingDocRowProps {
   getOrCreateSession: () => Promise<string>;
 }
 
-const MissingDocRow = ({ code, name, category, requestId, titleId, getOrCreateSession }: MissingDocRowProps) => {
+const MissingDocRow = ({
+  code,
+  name,
+  category,
+  requestId,
+  titleId,
+  getOrCreateSession,
+}: MissingDocRowProps) => {
+  const { t } = useTranslation('request');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { mutate: uploadDocument, isPending: isUploading } = useUploadDocument();
@@ -40,16 +49,17 @@ const MissingDocRow = ({ code, name, category, requestId, titleId, getOrCreateSe
 
     // Validate file type
     const extension = `.${file.name.split('.').pop()?.toLowerCase()}`;
-    const typeAllowed = ALLOWED_TYPES.includes(file.type) || ['.pdf', '.png', '.jpg', '.jpeg'].includes(extension);
+    const typeAllowed =
+      ALLOWED_TYPES.includes(file.type) || ['.pdf', '.png', '.jpg', '.jpeg'].includes(extension);
     if (!typeAllowed) {
-      toast.error(`${file.name}: Unsupported file type. Use PDF, PNG, or JPG.`);
+      toast.error(t('toasts.missingDocTypeError', { name: file.name }));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(`${file.name}: File size exceeds 10MB.`);
+      toast.error(t('toasts.missingDocSizeError', { name: file.name }));
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
@@ -64,7 +74,7 @@ const MissingDocRow = ({ code, name, category, requestId, titleId, getOrCreateSe
           documentCategory: getDocumentCategory(code),
         },
         {
-          onSuccess: async (uploadedDoc) => {
+          onSuccess: async uploadedDoc => {
             try {
               // Attach the uploaded document to the request or title
               const attachUrl = titleId
@@ -80,16 +90,16 @@ const MissingDocRow = ({ code, name, category, requestId, titleId, getOrCreateSe
               queryClient.invalidateQueries({ queryKey: ['document-checklist', requestId] });
               queryClient.invalidateQueries({ queryKey: ['request', requestId] });
             } catch {
-              toast.error(`File uploaded but failed to attach to request. Please try again.`);
+              toast.error(t('toasts.missingDocAttachFailed'));
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || `Failed to upload ${name}.`);
+            toast.error(error.apiError?.detail || t('toasts.missingDocUploadFailed', { name }));
           },
         },
       );
     } catch {
-      toast.error('Failed to start upload session. Please try again.');
+      toast.error(t('toasts.missingDocSessionFailed'));
     }
 
     // Reset the input so the same file can be re-selected after an error
@@ -101,7 +111,11 @@ const MissingDocRow = ({ code, name, category, requestId, titleId, getOrCreateSe
   return (
     <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-gray-50 border border-gray-200">
       <div className="flex items-center gap-2.5 min-w-0">
-        <Icon name="file-circle-exclamation" style="solid" className="size-4 text-amber-500 shrink-0" />
+        <Icon
+          name="file-circle-exclamation"
+          style="solid"
+          className="size-4 text-amber-500 shrink-0"
+        />
         <span className="text-sm font-medium text-gray-800 truncate">{name}</span>
         {category && (
           <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium shrink-0">
@@ -127,12 +141,12 @@ const MissingDocRow = ({ code, name, category, requestId, titleId, getOrCreateSe
           {isUploading ? (
             <>
               <Icon name="spinner" style="solid" className="size-3 animate-spin" />
-              Uploading...
+              {t('missingDocuments.uploading')}
             </>
           ) : (
             <>
               <Icon name="arrow-up-from-bracket" style="solid" className="size-3" />
-              Upload
+              {t('missingDocuments.upload')}
             </>
           )}
         </button>
@@ -149,6 +163,7 @@ const MissingDocumentsModal = ({
   isSubmitting,
   getOrCreateSession,
 }: MissingDocumentsModalProps) => {
+  const { t } = useTranslation(['request', 'common']);
   const { data: checklist, isLoading, isFetching } = useGetDocumentChecklist(requestId);
 
   if (!isOpen) return null;
@@ -185,11 +200,13 @@ const MissingDocumentsModal = ({
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 text-base">
-                {isComplete ? 'All required documents uploaded' : 'Required documents missing'}
+                {isComplete ? t('missingDocuments.allUploaded') : t('missingDocuments.missing')}
               </h3>
               {!isComplete && (
                 <p className="text-sm text-gray-500 mt-0.5">
-                  {missingCount} required document{missingCount !== 1 ? 's' : ''} must be uploaded before submitting.
+                  {missingCount === 1
+                    ? t('missingDocuments.missingDesc_one', { count: missingCount })
+                    : t('missingDocuments.missingDesc_other', { count: missingCount })}
                 </p>
               )}
             </div>
@@ -208,12 +225,12 @@ const MissingDocumentsModal = ({
         {isLoading ? (
           <div className="flex items-center justify-center py-10 gap-2 text-gray-500">
             <Icon name="spinner" style="solid" className="size-5 animate-spin" />
-            <span className="text-sm">Checking documents...</span>
+            <span className="text-sm">{t('missingDocuments.checkingDocs')}</span>
           </div>
         ) : isComplete ? (
           <div className="flex items-center gap-2 py-6 justify-center text-green-700">
             <Icon name="circle-check" style="solid" className="size-5" />
-            <span className="text-sm font-medium">All required documents have been uploaded. You may now submit.</span>
+            <span className="text-sm font-medium">{t('missingDocuments.allUploadedConfirm')}</span>
           </div>
         ) : (
           <div className="flex flex-col gap-4 max-h-[420px] overflow-y-auto pr-1">
@@ -221,7 +238,7 @@ const MissingDocumentsModal = ({
             {missingAppDocs.length > 0 && (
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  Request Documents
+                  {t('missingDocuments.requestDocuments')}
                 </p>
                 <div className="flex flex-col gap-2">
                   {missingAppDocs.map(doc => (
@@ -242,7 +259,7 @@ const MissingDocumentsModal = ({
             {missingTitleGroups.map(group => (
               <div key={group.titleId}>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  Title Documents
+                  {t('missingDocuments.titleDocuments')}
                   {(group.ownerName || group.collateralType) && (
                     <span className="normal-case font-normal ml-1 text-gray-400">
                       — {[group.ownerName, group.collateralType].filter(Boolean).join(', ')}
@@ -275,7 +292,7 @@ const MissingDocumentsModal = ({
             disabled={isSubmitting}
             className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancel
+            {t('common:actions.cancel')}
           </button>
           <button
             type="button"
@@ -286,12 +303,12 @@ const MissingDocumentsModal = ({
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                Submitting...
+                {t('missingDocuments.submitting')}
               </span>
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <Icon name="paper-plane" style="solid" className="size-4" />
-                Submit
+                {t('missingDocuments.submit')}
               </span>
             )}
           </button>

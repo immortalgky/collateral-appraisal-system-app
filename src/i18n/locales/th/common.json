@@ -21,7 +21,17 @@
     "import": "นำเข้า",
     "print": "พิมพ์",
     "refresh": "รีเฟรช",
-    "viewDetails": "ดูรายละเอียด"
+    "viewDetails": "ดูรายละเอียด",
+    "apply": "ใช้งาน",
+    "clear": "ล้าง",
+    "clearAll": "ล้างทั้งหมด"
+  },
+  "select": {
+    "placeholder": "กรุณาเลือก"
+  },
+  "range": {
+    "from": "ตั้งแต่",
+    "to": "ถึง"
   },
   "status": {
     "loading": "กำลังโหลด...",
@@ -54,7 +64,9 @@
     "en": "EN",
     "th": "TH",
     "english": "English",
-    "thai": "ไทย"
+    "thai": "ไทย",
+    "zh": "ZH",
+    "chinese": "จีน"
   },
   "favorites": {
     "row": {
@@ -65,7 +77,8 @@
     "picker": {
       "title": "จัดการรายการโปรด",
       "searchPlaceholder": "ค้นหารายการเมนู...",
-      "selected": "เลือกแล้ว"
+      "selected": "เลือกแล้ว",
+      "folderBadge": "โฟลเดอร์"
     },
     "sidebar": {
       "title": "รายการโปรด"
@@ -75,6 +88,13 @@
       "title": "รายการโปรดของคุณ",
       "empty": "ปักหมุดรายการเพื่อดูที่นี่",
       "manage": "จัดการรายการโปรด"
+    },
+    "aria": {
+      "addToFavorites": "เพิ่มในรายการโปรด",
+      "removeFromFavorites": "นำออกจากรายการโปรด",
+      "reorder": "จัดเรียงใหม่",
+      "collapse": "ย่อ",
+      "expand": "ขยาย"
     }
   }
 }

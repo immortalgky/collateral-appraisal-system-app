@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { postHistorySearch } from '../api';
 import { useUserVisibility } from './useUserVisibility';
-import type { HistorySearchQuery, HistorySearchResult, PaginatedResult, CollateralPinDto } from '../types';
+import type { HistorySearchQuery, HistorySearchResult, PaginatedResult, AppraisalPinDto } from '../types';
 
 // ─── Empty paginated result helper ────────────────────────────────────────────
 
-const emptyCollateral: PaginatedResult<CollateralPinDto> = {
+const emptyAppraisals: PaginatedResult<AppraisalPinDto> = {
   items: [],
   count: 0,
   pageNumber: 0,
@@ -23,7 +23,7 @@ const emptyCollateral: PaginatedResult<CollateralPinDto> = {
  * 2. The user triggers search explicitly via a Search button (standalone mode)
  *    or on mount (embedded mode) — not driven purely by URL state
  *
- * External-user defense: even if the backend somehow returns collateral data
+ * External-user defense: even if the backend somehow returns appraisal data
  * for an external user, `isExternal` zeroes it out client-side.
  */
 export function useHistorySearch() {
@@ -36,7 +36,7 @@ export function useHistorySearch() {
 
   /**
    * The processed result:
-   * - collateral items are emptied for external users (defense-in-depth)
+   * - appraisals items are emptied for external users (defense-in-depth)
    * - marketComparables pass through unchanged
    */
   // Memoized so the reference is stable across renders — consumers that watch
@@ -47,7 +47,7 @@ export function useHistorySearch() {
       mutation.data
         ? {
             ...mutation.data,
-            collateral: isExternal ? emptyCollateral : mutation.data.collateral,
+            appraisals: isExternal ? emptyAppraisals : mutation.data.appraisals,
           }
         : undefined,
     [mutation.data, isExternal],

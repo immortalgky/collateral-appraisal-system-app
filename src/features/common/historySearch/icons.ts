@@ -15,6 +15,7 @@
 export type PinLayerKey =
   | 'collateralExisting'
   | 'collateralAppraising'
+  | 'collateralMain'
   | 'mcExisting'
   | 'mcAppraising'
   | 'supportingData';
@@ -22,6 +23,7 @@ export type PinLayerKey =
 const ICON_URLS: Record<PinLayerKey, string> = {
   collateralExisting:   '/markers/collateral-existing.svg',
   collateralAppraising: '/markers/collateral-appraising.svg',
+  collateralMain:       '/markers/collateral-main.svg',
   mcExisting:           '/markers/mc-existing.svg',
   mcAppraising:         '/markers/mc-appraising.svg',
   supportingData:       '/markers/supporting-data.svg',

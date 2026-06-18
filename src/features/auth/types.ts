@@ -22,6 +22,11 @@ export interface User {
    * Only populated when the user belongs to an external company.
    */
   companyId?: string;
+  /**
+   * When true the user must set a new password before using the app (newly created
+   * Local account, or admin password reset). Enforced by ProtectedRoute.
+   */
+  mustChangePassword?: boolean;
 }
 
 export interface LoginCredentials {

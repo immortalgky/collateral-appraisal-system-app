@@ -49,9 +49,7 @@ export const useGetProjectUnitUploads = (appraisalId: string) => {
   return useQuery({
     queryKey: projectUnitKeys.uploads(appraisalId),
     queryFn: async (): Promise<ProjectUnitUpload[]> => {
-      const { data } = await axios.get(
-        `/appraisals/${appraisalId}/project/units/uploads`,
-      );
+      const { data } = await axios.get(`/appraisals/${appraisalId}/project/units/uploads`);
       return data;
     },
     enabled: !!appraisalId,
@@ -97,6 +95,108 @@ export const useUploadProjectUnits = () => {
       });
       queryClient.invalidateQueries({
         queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
+      });
+    },
+  });
+};
+
+// ── Reappraisal preview types ─────────────────────────────────────────────────
+
+export type ReappraisalUnitStatus = 'Sold' | 'NewlySold' | 'Available' | 'MatchDifference';
+
+export interface ReappraisalPreviewUnit {
+  id: string;
+  sequenceNumber: number;
+  modelType: string | null;
+  usableArea: number | null;
+  sellingPrice: number | null;
+  floor: number | null;
+  towerName: string | null;
+  condoRegistrationNumber: string | null;
+  roomNumber: string | null;
+  plotNumber: string | null;
+  houseNumber: string | null;
+  numberOfFloors: number | null;
+  landArea: number | null;
+  isSold: boolean;
+  status: ReappraisalUnitStatus;
+  diffFields: string[];
+}
+
+export interface ReappraisalPreviewSummary {
+  total: number;
+  sold: number;
+  newlySold: number;
+  available: number;
+  matchDifference: number;
+}
+
+export interface ReappraisalPreviewResult {
+  summary: ReappraisalPreviewSummary;
+  units: ReappraisalPreviewUnit[];
+}
+
+// ── Reappraisal result type ───────────────────────────────────────────────────
+
+export interface ReappraisalUploadResult {
+  matchedUnsold: number;
+  autoSold: number;
+  added: number;
+}
+
+/**
+ * Dry-run preview for a reappraisal Excel re-upload — no DB write.
+ * POST /appraisals/{appraisalId}/project/units/reappraisal-preview
+ */
+export const useReappraisalPreview = () => {
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      file: File;
+    }): Promise<ReappraisalPreviewResult> => {
+      const formData = new FormData();
+      formData.append('file', params.file);
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/project/units/reappraisal-preview`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return data.result ?? data;
+    },
+  });
+};
+
+/**
+ * Re-upload an Excel file for a REAPPRAISAL appraisal.
+ * POST /appraisals/{appraisalId}/project/units/reappraisal-upload
+ *
+ * Matches rows to seeded unsold units: present rows stay UNSOLD, missing rows
+ * are auto-marked SOLD, new rows are counted but NOT persisted (v1).
+ * Same FormData field name as useUploadProjectUnits.
+ */
+export const useUploadReappraisalUnits = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      file: File;
+    }): Promise<ReappraisalUploadResult> => {
+      const formData = new FormData();
+      formData.append('file', params.file);
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/project/units/reappraisal-upload`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
+      return data.result ?? data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectUnitKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitKeys.uploads(variables.appraisalId),
       });
     },
   });

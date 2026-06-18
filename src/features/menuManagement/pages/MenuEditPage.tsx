@@ -1,4 +1,5 @@
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { MenuItemForm, type MenuItemFormValues } from '../components/MenuItemForm';
 import {
@@ -16,6 +17,7 @@ import type { CreateMenuItemRequest, MenuItemAdminDto, UpdateMenuItemRequest } f
  *   /admin/menus/:menuId — edit
  */
 export default function MenuEditPage() {
+  const { t } = useTranslation('menuManagement');
   const { menuId } = useParams<{ menuId: string }>();
   const navigate = useNavigate();
   const isNew = !menuId;
@@ -54,7 +56,7 @@ export default function MenuEditPage() {
         sortOrder: values.sortOrder,
         viewPermissionCode: values.viewPermissionCode,
         editPermissionCode: values.editPermissionCode,
-        translations: values.translations.filter(t => t.label.trim() !== ''),
+        translations: values.translations.filter(tr => tr.label.trim() !== ''),
       };
       createMutation.mutate(body, {
         onSuccess: () => navigate('/admin/menus'),
@@ -69,7 +71,7 @@ export default function MenuEditPage() {
         sortOrder: values.sortOrder,
         viewPermissionCode: values.viewPermissionCode,
         editPermissionCode: values.editPermissionCode,
-        translations: values.translations.filter(t => t.label.trim() !== ''),
+        translations: values.translations.filter(tr => tr.label.trim() !== ''),
       };
       updateMutation.mutate(
         { id: menuId!, body },
@@ -89,7 +91,7 @@ export default function MenuEditPage() {
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
@@ -99,13 +101,15 @@ export default function MenuEditPage() {
           <Icon name="arrow-left" style="solid" className="size-4 text-gray-600" />
         </Link>
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {isNew ? 'New Menu Item' : `Edit: ${existing?.labels?.en ?? existing?.itemKey}`}
-          </h1>
+          <h3 className="text-sm font-semibold text-gray-900">
+            {isNew
+              ? t('editPage.titleNew')
+              : t('editPage.titleEdit', {
+                  name: existing?.labels?.en ?? existing?.itemKey ?? '',
+                })}
+          </h3>
           {!isNew && existing?.isSystem && (
-            <p className="text-xs text-amber-600 mt-0.5">
-              System item — ItemKey is locked and deletion is disabled.
-            </p>
+            <p className="text-xs text-amber-600 mt-0.5">{t('editPage.systemWarning')}</p>
           )}
         </div>
       </div>

@@ -12,6 +12,7 @@ import { LeaseholdPanel } from './LeaseholdPanel';
 import { ProfitRentPanel } from './ProfitRentPanel';
 import { HypothesisPanel } from './hypothesis/HypothesisPanel';
 import { CostBuildingPanel } from './CostBuildingPanel';
+import { findRentalSourceProperty } from '../utils/leaseProperty';
 
 interface MethodSectionRendererProps {
   state: SelectionState;
@@ -58,8 +59,10 @@ export function MethodSectionRenderer({
     savedCalculations: calculationMethodData.comparativeFactors?.calculations,
     savedComparativeAnalysisTemplateId:
       calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
-    savedFinalValueAdjusted: (calculationMethodData.comparativeFactors as any)?.finalValue?.finalValueAdjusted ?? null,
-    savedLandValue: (calculationMethodData.comparativeFactors as any)?.finalValue?.landValue ?? null,
+    savedFinalValueAdjusted:
+      (calculationMethodData.comparativeFactors as any)?.finalValue?.finalValueAdjusted ?? null,
+    savedLandValue:
+      (calculationMethodData.comparativeFactors as any)?.finalValue?.landValue ?? null,
     savedMethodValue: (calculationMethodData.comparativeFactors as any)?.methodValue ?? null,
     onCalculationSave,
     onCalculationMethodDirty,
@@ -71,54 +74,101 @@ export function MethodSectionRenderer({
       return (
         <WQSPanel
           {...panelProps}
-          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
-          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
-          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
-          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+          savedBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+          }
+          savedAppraisalPrice={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+          }
+          savedHasBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+          }
+          savedIncludeLandArea={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
+          }
         />
       );
     case 'SAG_MARKET':
       return (
         <SaleAdjustmentGridPanel
           {...panelProps}
-          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
-          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
-          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
-          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+          savedBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+          }
+          savedAppraisalPrice={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+          }
+          savedHasBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+          }
+          savedIncludeLandArea={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
+          }
         />
       );
     case 'DC_MARKET':
       return (
         <DirectComparisonPanel
           {...panelProps}
-          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
-          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
-          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
-          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+          savedBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+          }
+          savedAppraisalPrice={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+          }
+          savedHasBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+          }
+          savedIncludeLandArea={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
+          }
         />
       );
     case 'I':
       return <DiscountedCashFlowPanel {...panelProps} />;
     case 'MC_COST':
-      return <CostMachinePanel {...panelProps} propertiesMap={serverData.propertiesMap} />;
+      return (
+        <CostMachinePanel
+          {...panelProps}
+          propertiesMap={serverData.propertiesMap}
+          marketSurveys={filteredMarketSurveys}
+          templateList={calculationMethodData.templateList}
+        />
+      );
     case 'WQS_COST':
       return (
         <WQSPanel
           {...panelProps}
-          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
-          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
-          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
-          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+          savedBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+          }
+          savedAppraisalPrice={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+          }
+          savedHasBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+          }
+          savedIncludeLandArea={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
+          }
         />
       );
     case 'SAG_COST':
       return (
         <SaleAdjustmentGridPanel
           {...panelProps}
-          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
-          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
-          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
-          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+          savedBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+          }
+          savedAppraisalPrice={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+          }
+          savedHasBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+          }
+          savedIncludeLandArea={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
+          }
         />
       );
     case 'BC':
@@ -127,30 +177,49 @@ export function MethodSectionRenderer({
       return (
         <DirectComparisonPanel
           {...panelProps}
-          savedBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null}
-          savedAppraisalPrice={(calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null}
-          savedHasBuildingCost={(calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null}
-          savedIncludeLandArea={(calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null}
+          savedBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+          }
+          savedAppraisalPrice={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+          }
+          savedHasBuildingCost={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+          }
+          savedIncludeLandArea={
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
+          }
         />
       );
-    case 'LH':
+    case 'LH': {
+      // Source rental data from the rental-bearing property (a lease-agreement
+      // property, or plain land rented out to others) rather than assuming
+      // properties[0]. A mixed group only needs at least one such property.
+      const leaseProperty = findRentalSourceProperty(serverData.groupDetail?.properties);
       return (
         <LeaseholdPanel
           {...panelProps}
           propertiesMap={serverData.propertiesMap}
-          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
-          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
+          firstPropertyId={leaseProperty?.propertyId ?? undefined}
+          firstPropertyType={leaseProperty?.propertyType ?? undefined}
+          marketSurveys={filteredMarketSurveys}
+          templateList={calculationMethodData.templateList}
         />
       );
-    case 'PR':
+    }
+    case 'PR': {
+      const leaseProperty = findRentalSourceProperty(serverData.groupDetail?.properties);
       return (
         <ProfitRentPanel
           {...panelProps}
           propertiesMap={serverData.propertiesMap}
-          firstPropertyId={serverData.groupDetail?.properties?.[0]?.propertyId ?? undefined}
-          firstPropertyType={serverData.groupDetail?.properties?.[0]?.propertyType ?? undefined}
+          firstPropertyId={leaseProperty?.propertyId ?? undefined}
+          firstPropertyType={leaseProperty?.propertyType ?? undefined}
+          marketSurveys={filteredMarketSurveys}
+          templateList={calculationMethodData.templateList}
         />
       );
+    }
     case 'Hypothesis':
       return (
         <HypothesisPanel

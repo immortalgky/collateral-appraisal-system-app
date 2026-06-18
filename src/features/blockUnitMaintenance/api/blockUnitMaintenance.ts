@@ -14,8 +14,8 @@ export const blockUnitMaintenanceKeys = {
   lists: () => [...blockUnitMaintenanceKeys.all, 'list'] as const,
   list: (params: Record<string, unknown>) =>
     [...blockUnitMaintenanceKeys.lists(), params] as const,
-  units: (projectId: string) =>
-    [...blockUnitMaintenanceKeys.all, 'units', projectId] as const,
+  units: (collateralMasterId: string) =>
+    [...blockUnitMaintenanceKeys.all, 'units', collateralMasterId] as const,
 };
 
 // ─── Query Param Interface ────────────────────────────────────────────────────
@@ -59,41 +59,41 @@ export const useGetBlockUnitMaintenanceList = (
   });
 };
 
-// ─── GET /block-unit-maintenance/{projectId}/units ────────────────────────────
+// ─── GET /block-unit-maintenance/{collateralMasterId}/units ──────────────────
 
-export const useGetProjectUnits = (projectId: string | null) => {
+export const useGetProjectUnits = (collateralMasterId: string | null) => {
   return useQuery({
-    queryKey: blockUnitMaintenanceKeys.units(projectId ?? ''),
+    queryKey: blockUnitMaintenanceKeys.units(collateralMasterId ?? ''),
     queryFn: async (): Promise<BlockUnitMaintenanceDetail> => {
       const { data } = await axios.get<BlockUnitMaintenanceDetail>(
-        `/block-unit-maintenance/${projectId}/units`,
+        `/block-unit-maintenance/${collateralMasterId}/units`,
       );
       return data;
     },
-    enabled: !!projectId,
+    enabled: !!collateralMasterId,
     staleTime: 30_000,
   });
 };
 
-// ─── PUT /block-unit-maintenance/{projectId}/units ────────────────────────────
+// ─── PUT /block-unit-maintenance/{collateralMasterId}/units ──────────────────
 
 export const useUpdateUnitSaleStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
-      projectId,
+      collateralMasterId,
       payload,
     }: {
-      projectId: string;
+      collateralMasterId: string;
       payload: UpdateUnitSaleStatusPayload;
     }): Promise<void> => {
-      await axios.put(`/block-unit-maintenance/${projectId}/units`, payload);
+      await axios.put(`/block-unit-maintenance/${collateralMasterId}/units`, payload);
     },
-    onSuccess: (_data, { projectId }) => {
+    onSuccess: (_data, { collateralMasterId }) => {
       // Refresh the unit list for this project
       queryClient.invalidateQueries({
-        queryKey: blockUnitMaintenanceKeys.units(projectId),
+        queryKey: blockUnitMaintenanceKeys.units(collateralMasterId),
       });
       // Refresh listing rows so sold/unsold counts update
       queryClient.invalidateQueries({

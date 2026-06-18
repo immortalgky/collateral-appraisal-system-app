@@ -26,8 +26,8 @@ interface SurfaceInputModalProps {
 }
 
 const defaultSurfaceData: SurfaceData = {
-  fromFloorNumber: null,
-  toFloorNumber: null,
+  fromFloorNumber: 1,
+  toFloorNumber: 1,
   floorType: '',
   floorStructureType: '',
   floorStructureTypeOther: '',
@@ -46,7 +46,14 @@ const SurfaceInputModal = ({
     defaultValues: initialData || defaultSurfaceData,
   });
 
-  const { handleSubmit, reset, watch, setValue } = methods;
+  const {
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    register,
+    formState: { errors },
+  } = methods;
 
   // Reset form when modal opens with new data
   useEffect(() => {
@@ -54,6 +61,12 @@ const SurfaceInputModal = ({
       reset(initialData || defaultSurfaceData);
     }
   }, [isOpen, initialData, reset]);
+
+  // เพิ่มหลัง useEffect ก่อน onSubmit
+  useEffect(() => {
+    register('fromFloorNumber', { required: true, validate: v => v !== null });
+    register('toFloorNumber', { required: true, validate: v => v !== null });
+  }, [register]);
 
   const onSubmit = (data: SurfaceData) => {
     onSave(data);
@@ -113,6 +126,8 @@ const SurfaceInputModal = ({
                     onChange={e => setValue('fromFloorNumber', e.target.value)}
                     decimalPlaces={0}
                     maxIntegerDigits={3}
+                    required={true}
+                    error={errors.fromFloorNumber ? 'Required' : undefined}
                   />
                   <NumberInput
                     label="To Floor"
@@ -120,6 +135,8 @@ const SurfaceInputModal = ({
                     onChange={e => setValue('toFloorNumber', e.target.value)}
                     decimalPlaces={0}
                     maxIntegerDigits={3}
+                    required={true}
+                    error={errors.toFloorNumber ? 'Required' : undefined}
                   />
                 </div>
               </div>

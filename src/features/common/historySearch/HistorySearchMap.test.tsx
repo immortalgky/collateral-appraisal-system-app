@@ -18,12 +18,17 @@ import type { HistorySearchResult } from './types';
 
 // ─── Module mocks ─────────────────────────────────────────────────────────────
 
-// Hoist mock factory so we can control the role inside each test
+// Hoist mock factory so we can control role/company inside each test.
+// External users are detected by companyId (mirrors ICurrentUserService.IsExternal).
 let mockRoles: string[] = ['IntAppraisalStaff'];
+let mockCompanyId: string | undefined = undefined;
 
 vi.mock('@features/auth/store', () => ({
-  useAuthStore: (selector: (s: { user: { roles: string[]; permissions: string[] } }) => unknown) =>
-    selector({ user: { roles: mockRoles, permissions: [] } }),
+  useAuthStore: (
+    selector: (s: {
+      user: { roles: string[]; permissions: string[]; companyId?: string };
+    }) => unknown,
+  ) => selector({ user: { roles: mockRoles, permissions: [], companyId: mockCompanyId } }),
 }));
 
 // MapView — Google Maps unavailable in happy-dom
@@ -53,24 +58,26 @@ const mockMcPin = {
   salePrice: 2800000,
   distanceKm: 1.2,
   appraisalNumber: 'RPT-2024-009',
+  customerName: 'Mube Yamashita',
+  appraisalDate: '2024-04-20T00:00:00Z',
 };
 
 const mockResult: HistorySearchResult = {
-  collateral: {
+  appraisals: {
     items: [{
-      collateralMasterId: 'cm-001',
+      appraisalId: 'ap-001',
+      appraisalNumber: 'RPT-2024-001',
       lat: 13.75,
       lon: 100.5,
-      collateralType: 'Land',
-      propertyType: 'Residential',
-      engagementCount: 3,
-      lastAppraisedDate: '2024-01-15T00:00:00Z',
-      lastAppraisedValue: 5000000,
+      propertyType: 'LB',
+      buildingType: 'Single House',
+      appraisedValue: 5000000,
+      appraisedDate: '2024-01-15T00:00:00Z',
       distanceKm: 0.5,
       province: 'Bangkok',
       district: 'Pathum Wan',
       subDistrict: 'Lumphini',
-      lastAppraisalNumber: 'RPT-2024-001',
+      customerName: 'John Doe',
     }],
     count: 1,
     pageNumber: 0,
@@ -105,6 +112,7 @@ async function getComponent() {
 describe('HistorySearchMap', () => {
   beforeEach(() => {
     mockRoles = ['IntAppraisalStaff']; // reset to internal user
+    mockCompanyId = undefined; // internal (no company)
     setupHistorySearchHandler();
   });
 
@@ -118,23 +126,31 @@ describe('HistorySearchMap', () => {
 
   it('shows green pin checkbox for internal users', async () => {
     mockRoles = ['IntAppraisalStaff'];
+    const user = userEvent.setup();
     const HistorySearchMap = await getComponent();
     render(<HistorySearchMap mode="standalone" />);
 
+    // Pin-layer filters live in a popover toggled from the map overlay.
+    await user.click(screen.getByTitle('pinFilter.title'));
     expect(screen.getByTestId('filter-collateral')).toBeInTheDocument();
   });
 
   it('hides green pin checkbox for external users', async () => {
     mockRoles = ['ExtAdmin'];
+    mockCompanyId = 'company-1'; // external user → has a companyId
+    const user = userEvent.setup();
     const HistorySearchMap = await getComponent();
     render(<HistorySearchMap mode="standalone" />);
 
+    await user.click(screen.getByTitle('pinFilter.title'));
     expect(screen.queryByTestId('filter-collateral')).not.toBeInTheDocument();
     // Market comparable filter always shown
     expect(screen.getByTestId('filter-mc')).toBeInTheDocument();
   });
 
-  it('fires search on mount in embedded mode', async () => {
+  it('fires search when the panel is opened in embedded mode', async () => {
+    // Embedded mode prefills the criteria but the panel auto-fires (autoSearch)
+    // when it mounts — i.e. when the user opens the search popover.
     let searchFired = false;
     server.use(
       http.post(`${API_URL}/history-search`, async () => {
@@ -143,6 +159,7 @@ describe('HistorySearchMap', () => {
       }),
     );
 
+    const user = userEvent.setup();
     const HistorySearchMap = await getComponent();
     render(
       <HistorySearchMap
@@ -153,6 +170,7 @@ describe('HistorySearchMap', () => {
       />,
     );
 
+    await user.click(screen.getByTitle('searchPanel.title'));
     await waitFor(() => {
       expect(searchFired).toBe(true);
     });
@@ -169,13 +187,17 @@ describe('HistorySearchMap', () => {
       />,
     );
 
-    // Wait for the MC result to appear
+    // Open the search panel so the embedded auto-search fires and results load.
+    await user.click(screen.getByTitle('searchPanel.title'));
+
+    // Wait for the MC result row to appear (report-no column shows its
+    // appraisalNumber; the survey name surfaces in the detail drawer).
     await waitFor(() => {
-      expect(screen.getByText('Survey Alpha')).toBeInTheDocument();
+      expect(screen.getByText('RPT-2024-009')).toBeInTheDocument();
     });
 
     // Click the MC result row
-    await user.click(screen.getByText('Survey Alpha'));
+    await user.click(screen.getByText('RPT-2024-009'));
 
     // Drawer should appear with the correct content
     await waitFor(() => {

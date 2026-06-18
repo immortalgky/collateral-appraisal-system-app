@@ -2,7 +2,6 @@ import {
   APPRAISAL_COMPANY_PARAMS,
   COLLATERAL_TYPE_PARAMS,
   IMPORT_CHANNEL_PARAMS,
-  MOVEMENT_PARAMS,
   SOURCE_OF_DATA_PARAMS,
   STATUS_PARAMS,
 } from '../constants/parameters';
@@ -24,11 +23,6 @@ export const getAppraisalCompanyLabel = (type: string | undefined) => {
 
 export const getCollateralTypeLabel = (type: string | undefined) => {
   const option = COLLATERAL_TYPE_PARAMS.find(opt => opt.value === type);
-  return option?.label ?? '-';
-};
-
-export const getMovementLabel = (type: string | undefined) => {
-  const option = MOVEMENT_PARAMS.find(opt => opt.value === type);
   return option?.label ?? '-';
 };
 

@@ -8,33 +8,127 @@ import {
   type decisionFormType,
 } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ActionBar, Button, CancelButton, FormCard, Icon, Section } from '@/shared/components';
+import {
+  ActionBar,
+  Alert,
+  Button,
+  CancelButton,
+  FormCard,
+  Icon,
+  Section,
+} from '@/shared/components';
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { FormFields } from '@/shared/components/form';
-import { decisionFields, supportingDataFields } from '../configs/fields';
+import { getDecisionFields, getSupportingDataFields } from '../configs/fields';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
 import { SupportingDataTable } from '../components/SupportingDataTable';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   useCreateDraftSupportingData,
-  useCreateSupportingData,
+  useDeleteSupportingDetailData,
+  useDeleteSupportingDetailsByBatchData,
   useGetSupportingDataById,
-  useUpdateSupportingData,
+  useSubmitSupportingData,
+  useUpdateDraftSupportingData,
+  useBulkUploadSupportingDetails,
 } from '../api';
+import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
-import { ARCHIVED_STATUSES } from '../constants/parameters';
+import { SUPPORTING_STATUS } from '../constants/parameters';
+import { useTranslation } from 'react-i18next';
+import useBreadcrumb from '@/shared/hooks/useBreadcrumb';
 
-interface ParseRowError {
-  row: number;
-  field: string;
-  value: string;
-  reason: string;
+function SupportingDataMaintenanceDetailListPageSkeleton() {
+  return (
+    <div className="flex flex-col gap-4 justify-between min-h-full">
+      <div className="flex flex-col gap-4 pr-2">
+        {/* Section 1 skeleton — Supporting Data Maintenance (blue) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+          {/* Card header */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="size-9 rounded-lg bg-blue-100" />
+            <div className="flex flex-col gap-2">
+              <div className="h-4 bg-gray-200 rounded w-52" />
+              <div className="h-3 bg-gray-100 rounded w-72" />
+            </div>
+          </div>
+          {/* Form fields — matches 2 + 2 + 2 + 4 col layout */}
+          <div className="p-5 grid grid-cols-12 gap-4">
+            {[
+              { label: 'w-24', input: 'col-span-2' },
+              { label: 'w-20', input: 'col-span-2' },
+              { label: 'w-24', input: 'col-span-2' },
+              { label: 'w-20', input: 'col-span-4' },
+            ].map((field, i) => (
+              <div key={i} className={`${field.input} flex flex-col gap-1.5`}>
+                <div className={`h-3.5 bg-gray-200 rounded ${field.label}`} />
+                <div className="h-9 bg-gray-100 rounded-lg" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Section 2 skeleton — Supporting Data Details (purple) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+          {/* Card header */}
+          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="size-9 rounded-lg bg-purple-100" />
+              <div className="h-4 bg-gray-200 rounded w-44" />
+            </div>
+            {/* Placeholder for Import Excel + Add Item buttons */}
+            <div className="flex items-center gap-2">
+              <div className="h-8 bg-gray-100 rounded-lg w-28" />
+              <div className="h-8 bg-gray-200 rounded-lg w-24" />
+            </div>
+          </div>
+          {/* Table skeleton */}
+          <div className="p-5">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, i) => (
+                    <th key={i} className="px-4 py-2.5 text-left">
+                      <div className={`h-4 bg-gray-200 rounded ${w}`} />
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {Array.from({ length: 4 }).map((_, rowIdx) => (
+                  <tr key={rowIdx}>
+                    {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, colIdx) => (
+                      <td key={colIdx} className="px-4 py-3">
+                        <div className={`h-4 bg-gray-100 rounded ${w}`} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      {/* Action bar skeleton */}
+      <div className="shrink-0 sticky bottom-0 z-40 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="h-9 bg-gray-200 rounded-lg w-20" />
+          <div className="flex items-center gap-3">
+            <div className="h-9 bg-gray-100 rounded-lg w-28" />
+            <div className="h-9 bg-gray-200 rounded-lg w-24" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function SupportingDataMaintenanceDetailListPage() {
   const navigate = useNavigate();
   const { supportingId } = useParams<{ supportingId: string }>();
+  const { t } = useTranslation(['supportingDataMaintenance', 'common']);
 
   // getAPI
   const {
@@ -44,20 +138,26 @@ export function SupportingDataMaintenanceDetailListPage() {
     error,
   } = useGetSupportingDataById(supportingId);
 
-  const status = supportingData?.status ?? '';
-  const isReadOnly = ARCHIVED_STATUSES.has(status);
+  /**
+   * Disable when
+   * 1. Status has Approved, Cancelled, Rejected
+   * 2. Permission to edit is false
+   * 3. Has SupportingId - path not /new
+   */
 
-  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // check by user's role
+  const status = supportingData?.status ?? '';
+
+  const hasSupportingId = Boolean(supportingId); // To check allow to edit when path is /supporting-data-maintenance/new
+  const hasAuthorityToEdit = supportingData?.hasAuthorityToEdit ?? false; // To check disable detail form by permissions
+  const hasAuthorityToDecision = supportingData?.hasAuthorityToDecision ?? false; // To check disable decision form by permissions
 
   // Form
-  const isEditMode = Boolean(supportingId);
-
   const formDefaults = useMemo(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       return mapSupportingDataResponseToForm(supportingData);
     }
     return defaultSupportingData;
-  }, [isEditMode, supportingData]);
+  }, [hasSupportingId, supportingData]);
 
   /**
    * Submit supporting detail - staff
@@ -89,33 +189,121 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { getValues: getSupportingValues, reset: resetSupporting } = supportingMethods;
 
   useEffect(() => {
-    if (isEditMode && supportingData) {
+    if (hasSupportingId && supportingData) {
       resetSupporting(mapSupportingDataResponseToForm(supportingData));
     }
-  }, [isEditMode, supportingData, resetSupporting]);
+  }, [hasSupportingId, supportingData, resetSupporting]);
 
-  const { mutate: createSupportingData, isPending: isCreating } = useCreateSupportingData();
   const { mutateAsync: createDraftSupportingData, isPending: isCreatingDraft } =
     useCreateDraftSupportingData();
-  const { mutate: updateSupportingData, isPending: isUpdating } = useUpdateSupportingData();
+  const { mutate: updateDraftSupportingData, isPending: isUpdating } =
+    useUpdateDraftSupportingData();
+  const { mutate: deleteSupportingData, isPending: isDeleting } = useDeleteSupportingDetailData();
+  const { mutate: deleteSupportingDetailsByBatch, isPending: isDeletingBatch } =
+    useDeleteSupportingDetailsByBatchData();
+  const { mutate: submitSupportingData, isPending: isSubmitting } = useSubmitSupportingData();
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
-  const isPending = isCreating || isUpdating || isCreatingDraft || isUpdating;
 
-  // File management (Excel upload of supporting data)
-  const [parseErrors, setParseErrors] = useState<ParseRowError[] | null>(null);
+  // ── Batch delete state ──
+  const [isBatchDeleteMode, setIsBatchDeleteMode] = useState(false);
+  const [selectedDetailIds, setSelectedDetailIds] = useState<string[]>([]);
+  const [batchDeleteConfirmOpen, setBatchDeleteConfirmOpen] = useState(false);
+
+  const toggleDetailSelection = (id: string) => {
+    setSelectedDetailIds(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAll = (pageIds: string[]) => {
+    const allSelected = pageIds.every(id => selectedDetailIds.includes(id));
+    if (allSelected) {
+      setSelectedDetailIds(prev => prev.filter(id => !pageIds.includes(id)));
+    } else {
+      setSelectedDetailIds(prev => [...new Set([...prev, ...pageIds])]);
+    }
+  };
+
+  const exitBatchMode = () => {
+    setIsBatchDeleteMode(false);
+    setSelectedDetailIds([]);
+  };
+
+  const handleConfirmBatchDelete = () => {
+    if (!supportingId || selectedDetailIds.length === 0) return;
+    deleteSupportingDetailsByBatch(
+      { supportingId, supportingDetailIds: selectedDetailIds },
+      {
+        onSuccess: () => {
+          toast.success(t('toasts.detailDeletedSuccess'));
+          exitBatchMode();
+        },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || t('toasts.detailDeleteFailed'));
+        },
+      },
+    );
+    setBatchDeleteConfirmOpen(false);
+  };
+
+  // File management (Excel bulk upload of supporting details)
+  const [parseErrors, setParseErrors] = useState<RowParseError[] | null>(null);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const { mutateAsync: bulkUpload, isPending: isUploading } = useBulkUploadSupportingDetails();
+
+  const isPending =
+    isCreatingDraft || isUpdating || isSubmitting || isDeleting || isUploading || isDeletingBatch;
+
+  useBreadcrumb(hasSupportingId ? supportingData?.supportingNumber : undefined, '');
+
   const handleFile = async (file: File) => {
+    // Client-side guards (mirrors the server-side checks)
     if (!file.name.endsWith('.xlsx')) {
-      toast.error('Only .xlsx files are accepted');
+      toast.error(t('toasts.fileTypeError'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be ≤ 5 MB');
+      toast.error(t('toasts.fileSizeError'));
       return;
     }
-    setParseErrors(null);
+
+    try {
+      if (!hasSupportingId) {
+        const supportingData = getSupportingValues();
+        const { supportingId: newSupportingId } = await createDraftSupportingData(
+          { data: supportingData as any },
+          {
+            onError: (error: any) => {
+              toast.error(
+                error.apiError?.detail ||
+                  'Failed to create draft supporting data. Please try again.',
+              );
+              setSaveAction(null);
+            },
+          },
+        );
+        const result = await bulkUpload({ supportingId: newSupportingId, file });
+        setParseErrors(null);
+
+        toast.success(`${result.insertedCount} row(s) imported successfully`);
+        navigate(`/standalone/supporting-data-maintenance/${newSupportingId}`);
+      } else {
+        const result = await bulkUpload({ supportingId, file });
+        setParseErrors(null);
+
+        toast.success(`${result.insertedCount} row(s) imported successfully`);
+      }
+    } catch (err: any) {
+      // The server returns row-level errors in ProblemDetails.extensions.rowErrors
+      const rowErrors: RowParseError[] | undefined = err?.response?.data?.rowErrors;
+      if (rowErrors && rowErrors.length > 0) {
+        setParseErrors(rowErrors);
+        setShowErrorDialog(true);
+      } else {
+        toast.error(err?.response?.data?.detail ?? t('toasts.uploadFailed'));
+      }
+    }
   };
 
   const handleOpenFilePicker = () => {
@@ -123,9 +311,6 @@ export function SupportingDataMaintenanceDetailListPage() {
   };
 
   // Local state
-  const [editIndex, setEditIndex] = useState<number | undefined>();
-  const isEditing = editIndex !== undefined;
-
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     id: string | null;
@@ -134,84 +319,40 @@ export function SupportingDataMaintenanceDetailListPage() {
     id: null,
   });
 
-  const listContainerRef = useRef<HTMLDivElement>(null);
-
   // Handlers
-  const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = data => {
+  const onSubmitSupporting: SubmitHandler<createSupportingDataFormType> = async data => {
     setSaveAction('submit');
-    // Submit goes through react-hook-form so Zod validation runs first.
-    console.log('Submit (supporting):', data);
-    if (isEditMode) {
-      updateSupportingData(
-        { supportingId: supportingId!, data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data updated successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
+    submitSupportingData(
+      { supportingId: supportingId, data: data as any },
+      {
+        onSuccess: () => {
+          toast.success(t('toasts.updatedSuccess'));
+          setSaveAction(null);
+          navigate(`/standalone/supporting-data-maintenance`);
         },
-      );
-    } else {
-      createSupportingData(
-        { data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
+        onError: (error: any) => {
+          toast.error(error.apiError?.detail || t('toasts.updateFailed'));
+          setSaveAction(null);
         },
-      );
-    }
+      },
+    );
   };
 
   const onSubmitDecision: SubmitHandler<decisionFormType> = data => {
     setSaveAction('submit');
     // Submit goes through react-hook-form so Zod validation runs first.
     console.log('Submit (decision):', data);
-    if (isEditMode) {
-      updateSupportingData(
+    if (hasSupportingId) {
+      submitSupportingData(
         { supportingId: supportingId!, data: data as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success(t('toasts.updatedSuccess'));
             setSaveAction(null);
             navigate(`/standalone/supporting-data-maintenance`);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
-            );
-            setSaveAction(null);
-          },
-        },
-      );
-    } else {
-      createSupportingData(
-        { data: data as any },
-        {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
-            setSaveAction(null);
-            navigate(`/standalone/supporting-data-maintenance`);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
-            );
+            toast.error(error.apiError?.detail || t('toasts.updateFailed'));
             setSaveAction(null);
           },
         },
@@ -230,18 +371,16 @@ export function SupportingDataMaintenanceDetailListPage() {
   const handleAddSupportingDetailData = async () => {
     const values = getSupportingValues();
     // If supporting data is unsaved when "Add Item" is clicked, create a draft first to get the supportingId, then route to /:supportingId/new
-    if (!isEditMode) {
+    if (!hasSupportingId) {
       const { supportingId: newSupportingId } = await createDraftSupportingData(
         { data: values },
         {
           onSuccess: () => {
-            toast.success('Property supporting data created successfully');
+            toast.success(t('toasts.propertyCreatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
-            );
+            toast.error(error.apiError?.detail || t('toasts.propertyCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -259,38 +398,39 @@ export function SupportingDataMaintenanceDetailListPage() {
   };
 
   const handleSaveDraft = async () => {
-    // Save draft skips validation by reading values directly.
-    const supportingData = getSupportingValues();
-    const decisionData = hasAuthorityToDecision ? decisionMethods.getValues() : null;
-    console.log('Save draft:', { supportingData, decisionData });
-    if (isEditMode) {
-      updateSupportingData(
-        { supportingId: supportingId!, data: data as any },
+    setSaveAction('draft');
+
+    const supportingDataValues = getSupportingValues();
+
+    const payload = {
+      ...supportingDataValues,
+    };
+
+    if (hasSupportingId) {
+      updateDraftSupportingData(
+        { supportingId: supportingId!, data: payload as any },
         {
           onSuccess: () => {
-            toast.success('Supporting data updated successfully');
+            toast.success(t('toasts.updatedSuccess'));
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to update supporting data. Please try again.',
-            );
+            toast.error(error.apiError?.detail || t('toasts.updateFailed'));
             setSaveAction(null);
           },
         },
       );
     } else {
-      createSupportingData(
-        { data: data as any },
+      createDraftSupportingData(
+        { data: payload as any },
         {
-          onSuccess: () => {
-            toast.success('Supporting data created successfully');
+          onSuccess: data => {
+            toast.success(t('toasts.createdSuccess'));
             setSaveAction(null);
+            navigate(`/standalone/supporting-data-maintenance/${data.supportingId}`);
           },
           onError: (error: any) => {
-            toast.error(
-              error.apiError?.detail || 'Failed to create supporting data. Please try again.',
-            );
+            toast.error(error.apiError?.detail || t('toasts.createFailed'));
             setSaveAction(null);
           },
         },
@@ -305,106 +445,207 @@ export function SupportingDataMaintenanceDetailListPage() {
   const confirmDelete = () => {
     if (deleteConfirm.id !== null) {
       const id = deleteConfirm.id;
-      // delete API — TODO: call delete with id
-      void id;
+
+      deleteSupportingData(
+        { supportingId: supportingId!, id: id },
+        {
+          onSuccess: () => {
+            toast.success(t('toasts.detailDeletedSuccess'));
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || t('toasts.detailDeleteFailed'));
+            setSaveAction(null);
+          },
+        },
+      );
     }
     setDeleteConfirm({ isOpen: false, id: null });
   };
 
-  // ------------------------------------------------------------------
   // Render
-  // ------------------------------------------------------------------
 
   if (isLoading) {
-    return <>Loading...</>; // improve with skeleton UI
+    return <SupportingDataMaintenanceDetailListPageSkeleton />;
   }
 
   return (
     <div className="flex flex-col gap-4 justify-between min-h-full">
       <FormProvider {...supportingMethods}>
         <div className="flex flex-col gap-4 pr-2">
-          {/* Section 1 — Supporting Data Maintenance (general info)    */}
+          {/* Supporting Data Maintenance (general info) */}
           <Section id="supporting-data">
             <FormCard
-              title="Supporting Data Maintenance"
-              subtitle="General information for this batch of supporting data"
+              title={t('formSections.supportingDataTitle')}
+              subtitle={t('formSections.supportingDataSubtitle')}
               icon="clipboard-list"
               iconColor="blue"
             >
               <div className="flex-1 flex flex-col gap-6">
                 <div className="grid grid-cols-12 gap-4">
-                  <FormFields fields={supportingDataFields} />
+                  <FormFields
+                    fields={getSupportingDataFields(t)}
+                    disabled={!hasAuthorityToEdit && hasSupportingId}
+                  />
                 </div>
               </div>
             </FormCard>
           </Section>
 
-          {/* Section 2 — Supporting Data Details (list + card)          */}
+          {/* Remark from routedback */}
+          {supportingData?.remark && (
+            <Alert
+              variant={status === SUPPORTING_STATUS.Approved ? 'success' : 'danger'}
+              title={`Remark`}
+              dismissible={false}
+            >
+              <p className="max-h-24 overflow-y-auto text-xs whitespace-pre-wrap">
+                {supportingData.remark}
+              </p>
+            </Alert>
+          )}
+
+          {/* Supporting Data Details (list + card) */}
           <FormCard
-            title="Supporting Data Details"
+            title={t('formSections.supportingDataDetailsTitle')}
             subtitle={supportingData?.remark ? `Remark: ${supportingData.remark}` : ''} // show remark when route back
             icon="file-certificate"
             iconColor="purple"
             required
             rightIcon={
               <div className="flex items-center gap-2">
-                {/* Hidden file input + visible trigger button */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx"
-                  className="hidden"
-                  onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) handleFile(f);
-                    e.target.value = '';
-                  }}
-                />
-
-                {!isReadOnly && !isEditing && (
+                {(hasAuthorityToEdit || !hasSupportingId) && (
                   <>
-                    <button
-                      type="button"
-                      onClick={handleOpenFilePicker}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer"
-                    >
-                      <Icon style="solid" name="file-arrow-up" className="size-4" />
-                      Import Excel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleAddSupportingDetailData}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors cursor-pointer"
-                    >
-                      <Icon style="solid" name="plus" className="size-4" />
-                      Add Item
-                    </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx"
+                      className="hidden"
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (f) handleFile(f);
+                        e.target.value = '';
+                      }}
+                    />
+
+                    {isBatchDeleteMode ? (
+                      /* ── Batch mode toolbar ── */
+                      <>
+                        {/* Delete button — disabled until at least one item is selected */}
+                        <Button
+                          type="button"
+                          variant="danger"
+                          onClick={() => setBatchDeleteConfirmOpen(true)}
+                          disabled={selectedDetailIds.length === 0 || isPending}
+                          isLoading={isDeletingBatch}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium"
+                        >
+                          <Icon style="solid" name="trash" className="size-4" />
+                          {selectedDetailIds.length > 0
+                            ? `${t('common:actions.delete')} (${selectedDetailIds.length})`
+                            : t('common:actions.delete')}
+                        </Button>
+
+                        {/* Clear selection — scope is batch mode only, not whole page */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={exitBatchMode}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-60"
+                        >
+                          <Icon style="solid" name="xmark" className="size-3.5" />
+                          {t('actions.clearSelection', { defaultValue: 'Clear Selection' })}
+                        </Button>
+                      </>
+                    ) : (
+                      /* ── Normal mode toolbar ── */
+                      <>
+                        {/* Batch delete entry point — labeled so intent is clear */}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          onClick={() => setIsBatchDeleteMode(true)}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
+                        >
+                          <Icon style="solid" name="trash" className="size-4" />
+                          {t('actions.deleteItems', { defaultValue: 'Delete Items' })}
+                        </Button>
+
+                        <div className="h-5 w-px bg-gray-200" />
+
+                        <Button
+                          type="button"
+                          onClick={handleOpenFilePicker}
+                          disabled={isUploading || isPending}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <Icon
+                            style="solid"
+                            name={isUploading ? 'spinner' : 'file-arrow-up'}
+                            className={`size-4 ${isUploading ? 'animate-spin' : ''}`}
+                          />
+                          {isUploading ? 'Uploading...' : 'Import Excel'}
+                        </Button>
+
+                        <Button
+                          type="button"
+                          onClick={handleAddSupportingDetailData}
+                          disabled={isPending}
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors cursor-pointer"
+                        >
+                          <Icon style="solid" name="plus" className="size-4" />
+                          {t('actions.addItem')}
+                        </Button>
+                      </>
+                    )}
                   </>
                 )}
               </div>
             }
           >
-            <div className="w-full">
+            <div className="flex flex-col gap-2 w-full">
+              {/* Batch mode hint banner */}
+              {isBatchDeleteMode && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">
+                  <Icon style="solid" name="circle-info" className="size-4 shrink-0" />
+                  <span>
+                    {selectedDetailIds.length === 0
+                      ? 'Tick the checkboxes to select items you want to delete.'
+                      : `${selectedDetailIds.length} item(s) selected. Click Delete to confirm.`}
+                  </span>
+                </div>
+              )}
+
               <SupportingDataTable
                 supportingId={supportingId}
-                isReadOnly={isReadOnly}
+                isReadOnly={!hasAuthorityToEdit}
                 onSelectSupportingData={handleSelectSupportingData}
                 onDeleteSupportingData={handleDeleteSupportingData}
+                isBatchMode={isBatchDeleteMode}
+                selectedDetailIds={selectedDetailIds}
+                onToggleDetailSelection={toggleDetailSelection}
+                onToggleSelectAll={toggleSelectAll}
               />
             </div>
           </FormCard>
         </div>
       </FormProvider>
 
-      {/* Section 3 - Decision Detail */}
-      {hasAuthorityToDecision && !ARCHIVED_STATUSES.has(status) && (
+      {/* Decision Detail */}
+      {hasAuthorityToDecision && (
         <FormProvider {...decisionMethods}>
           <div className="flex flex-col gap-4 pr-2">
             <Section id="supporting-data-decision">
-              <FormCard title="Decision" subtitle="" icon="paper-plane" iconColor="blue">
+              <FormCard
+                title={t('formSections.decisionTitle')}
+                subtitle=""
+                icon="paper-plane"
+                iconColor="blue"
+              >
                 <div className="flex-1 flex flex-col gap-6">
                   <div className="grid grid-cols-12 gap-4">
-                    <FormFields fields={decisionFields} />
+                    <FormFields fields={getDecisionFields(t)} />
                   </div>
                 </div>
               </FormCard>
@@ -413,45 +654,70 @@ export function SupportingDataMaintenanceDetailListPage() {
         </FormProvider>
       )}
 
-      {/* Section 4 — Action panel (Save Draft / Submit)             */}
+      {/* Action bar */}
       <ActionBar>
         <ActionBar.Left>
           <CancelButton fallbackPath="/standalone/supporting-data-maintenance" />
         </ActionBar.Left>
-        {!isReadOnly && (
-          <ActionBar.Right>
+        <ActionBar.Right>
+          {(hasAuthorityToEdit || !hasSupportingId) && (
             <Button
               variant="ghost"
               type="button"
-              onClick={handleSaveDraft}
+              onClick={() => handleSaveDraft()}
               isLoading={isPending && saveAction === 'draft'}
               disabled={isPending}
             >
               <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-              Save draft
+              {t('actions.saveDraft')}
             </Button>
+          )}
+          {(hasAuthorityToEdit || hasAuthorityToDecision || !hasSupportingId) && (
             <Button
               type="button"
               onClick={() => handleFormSubmit()}
+              isLoading={isPending && saveAction === 'submit'}
               leftIcon={<Icon name="check" style="solid" className="size-4" />}
+              disabled={isPending}
             >
-              Submit
+              {t('actions.submit')}
             </Button>
-          </ActionBar.Right>
-        )}
+          )}
+        </ActionBar.Right>
       </ActionBar>
 
-      {/* Delete confirmation */}
+      {/* Single delete confirmation */}
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, id: null })}
         onConfirm={confirmDelete}
-        title="Delete Supporting Detail"
-        message="Are you sure you want to delete this item? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('confirm.deleteTitle')}
+        message={t('confirm.deleteMessage')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
         variant="danger"
       />
+
+      {/* Batch delete confirmation */}
+      <ConfirmDialog
+        isOpen={batchDeleteConfirmOpen}
+        onClose={() => setBatchDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmBatchDelete}
+        title={t('confirm.deleteTitle')}
+        message={`Delete ${selectedDetailIds.length} selected item(s)? This cannot be undone.`}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+      />
+
+      {/* Bulk upload row-error dialog */}
+      {parseErrors && (
+        <BulkUploadDialog
+          isOpen={showErrorDialog}
+          onClose={() => setShowErrorDialog(false)}
+          errors={parseErrors}
+        />
+      )}
     </div>
   );
 }

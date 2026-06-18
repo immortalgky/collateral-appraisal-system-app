@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { GUIDELINE_DESCRIPTIONS, RATING_VALUES } from '../constants/guidelines';
+import type { EvaluationConfig } from '../api/types';
 
 const CRITERIA_COUNT = 5;
 
@@ -14,9 +15,33 @@ const RATING_COLOR: Record<number, { header: string; cell: string }> = {
   5: { header: 'bg-green-100 text-green-800',   cell: 'bg-green-50 text-green-900' },
 };
 
-function RatingGuidelinesTable() {
+interface RatingGuidelinesTableProps {
+  /** When provided, guidance text comes from config (locale-aware). */
+  configs?: EvaluationConfig[];
+}
+
+function RatingGuidelinesTable({ configs }: RatingGuidelinesTableProps) {
   const [open, setOpen] = useState(false);
-  const { t } = useTranslation('serviceQualityEvaluation');
+  const { t, i18n } = useTranslation('serviceQualityEvaluation');
+
+  /**
+   * Resolve guidance description for a given criteria index (0-based) and rating level.
+   * Config is keyed by criteriaSlot (1-based) and rating level (as a string).
+   * Falls back to the hardcoded GUIDELINE_DESCRIPTIONS.
+   */
+  const getDescription = (criteriaIndex: number, rating: number): string => {
+    if (configs && configs.length > 0) {
+      const slot = criteriaIndex + 1;
+      const cfg = configs.find(c => c.criteriaSlot === slot);
+      if (cfg) {
+        const entry = cfg.guidance[String(rating)];
+        if (entry) {
+          return i18n.language.startsWith('th') ? (entry.th || entry.en) : entry.en;
+        }
+      }
+    }
+    return GUIDELINE_DESCRIPTIONS[criteriaIndex]?.[rating] ?? '—';
+  };
 
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -60,7 +85,7 @@ function RatingGuidelinesTable() {
                   <td className="px-3 py-2 text-center text-gray-500">{i + 1}</td>
                   {RATING_VALUES.map(rating => (
                     <td key={rating} className={`px-3 py-2 ${RATING_COLOR[rating].cell}`}>
-                      {GUIDELINE_DESCRIPTIONS[i][rating]}
+                      {getDescription(i, rating)}
                     </td>
                   ))}
                 </tr>

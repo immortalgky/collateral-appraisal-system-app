@@ -1,6 +1,7 @@
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PhotoGallery, { type Photo } from './PhotoGallery';
 import PhotoPreviewModal, { type PreviewablePhoto } from './PhotoPreviewModal';
 import PhotoSourceModal from './PhotoSourceModal';
@@ -39,6 +40,7 @@ interface DeleteTarget {
 const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSectionProps>(
   ({ appraisalId, propertyId }, ref) => {
     const readOnly = usePageReadOnly();
+    const { t } = useTranslation('appraisal');
     const isCreateMode = !propertyId;
 
     // Pending photo IDs for create mode (linked after property creation)
@@ -66,7 +68,8 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
     const uploadDocumentMutation = useUploadDocument();
     const setThumbnailMutation = useSetPropertyThumbnail();
     const unsetThumbnailMutation = useUnsetPropertyThumbnail();
-    const { mutateAsync: updateGalleryPhoto, isPending: isUpdatingDescription } = useUpdateGalleryPhoto();
+    const { mutateAsync: updateGalleryPhoto, isPending: isUpdatingDescription } =
+      useUpdateGalleryPhoto();
 
     // In edit mode, get the property's linked photos from groups.
     const { groups } = useEnrichedPropertyGroups(isCreateMode ? undefined : appraisalId);
@@ -135,7 +138,14 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
       }
 
       return [...resolved, ...uploadingPhotos];
-    }, [galleryPhotos, isCreateMode, pendingPhotoIds, linkedDocumentIds, documentToMappingId, uploadingPhotos]);
+    }, [
+      galleryPhotos,
+      isCreateMode,
+      pendingPhotoIds,
+      linkedDocumentIds,
+      documentToMappingId,
+      uploadingPhotos,
+    ]);
 
     // Thumbnail ID
     const thumbnailId = useMemo(() => {
@@ -167,9 +177,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
       // IDs of photos already shown on this property
       const currentPhotoDocIds = new Set(photos.map(p => p.documentId).filter(Boolean));
 
-      return allPhotos
-        .filter(p => !currentPhotoDocIds.has(p.documentId))
-        .map(toGalleryImage);
+      return allPhotos.filter(p => !currentPhotoDocIds.has(p.documentId)).map(toGalleryImage);
     }, [galleryPhotos, photos]);
 
     // Get or create upload session
@@ -220,7 +228,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
             photoTopicIds: null,
             fileName: uploadResult.fileName,
             filePath: uploadResult.storageUrl,
-            fileExtension: file.name.includes('.') ? file.name.split('.').pop() ?? null : null,
+            fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
             mimeType: file.type || null,
             fileSizeBytes: uploadResult.fileSize,
             uploadedByName: null,
@@ -241,9 +249,9 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
             });
           }
 
-          toast.success('Photo uploaded successfully');
+          toast.success(t('toasts.photoUploaded'));
         } catch {
-          toast.error('Failed to upload photo');
+          toast.error(t('toasts.photoUploadFailed'));
         } finally {
           setUploadingPhotos(prev => prev.filter(p => p.id !== tempId));
           URL.revokeObjectURL(previewUrl);
@@ -288,19 +296,19 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
                 linkedBy: 'current-user',
               });
             } catch {
-              toast.error('Failed to link photo');
+              toast.error(t('toasts.photoLinkFailed'));
             }
           }
         }
         if (selectedImages.length > 0) {
           toast.success(
             selectedImages.length === 1
-              ? 'Photo linked successfully'
-              : `${selectedImages.length} photos linked successfully`,
+              ? t('toasts.photoLinked')
+              : t('toasts.photosLinked', { count: selectedImages.length }),
           );
         }
       },
-      [appraisalId, propertyId, isCreateMode, linkPhotoMutation],
+      [appraisalId, propertyId, isCreateMode, linkPhotoMutation, t],
     );
 
     // Delete: open confirmation modal
@@ -311,7 +319,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
           // In create mode, just remove from pending (no unlink needed)
           setPendingPhotoIds(prev => prev.filter(id => id !== photoId));
           if (localThumbnailId === photoId) setLocalThumbnailId(null);
-          toast.success('Photo removed');
+          toast.success(t('toasts.photoRemoved'));
           return;
         }
         setDeleteTarget({
@@ -325,7 +333,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
     // Unlink handler (edit mode)
     const handleUnlink = useCallback(async () => {
       if (!deleteTarget?.mappingId) {
-        toast.error('Cannot unlink: missing mapping ID');
+        toast.error(t('toasts.photoUnlinkMissingMappingId'));
         setDeleteTarget(null);
         return;
       }
@@ -335,9 +343,9 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
           appraisalId,
           mappingId: deleteTarget.mappingId,
         });
-        toast.success('Photo unlinked from property');
+        toast.success(t('toasts.photoUnlinked'));
       } catch {
-        toast.error('Failed to unlink photo');
+        toast.error(t('toasts.photoUnlinkFailed'));
       } finally {
         setIsDeleteLoading(false);
         setDeleteTarget(null);
@@ -353,9 +361,9 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
           appraisalId,
           photoId: deleteTarget.photoId,
         });
-        toast.success('Photo deleted permanently');
+        toast.success(t('toasts.photoDeletedPermanently'));
       } catch {
-        toast.error('Failed to delete photo');
+        toast.error(t('toasts.photoDeleteFailed'));
       } finally {
         setIsDeleteLoading(false);
         setDeleteTarget(null);
@@ -374,16 +382,23 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
         if (isCurrentThumbnail) {
           unsetThumbnailMutation.mutate(
             { appraisalId, propertyId, photoId },
-            { onError: () => toast.error('Failed to unset thumbnail') },
+            { onError: () => toast.error(t('toasts.photoThumbnailUnsetPropertyFailed')) },
           );
         } else {
           setThumbnailMutation.mutate(
             { appraisalId, propertyId, photoId },
-            { onError: () => toast.error('Failed to set thumbnail') },
+            { onError: () => toast.error(t('toasts.photoThumbnailSetPropertyFailed')) },
           );
         }
       },
-      [isCreateMode, appraisalId, propertyId, thumbnailId, setThumbnailMutation, unsetThumbnailMutation],
+      [
+        isCreateMode,
+        appraisalId,
+        propertyId,
+        thumbnailId,
+        setThumbnailMutation,
+        unsetThumbnailMutation,
+      ],
     );
 
     // Build a lookup from gallery photo ID → GalleryPhotoDtoType
@@ -447,7 +462,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
               linkedBy: 'current-user',
             });
           } catch {
-            toast.error(`Failed to link photo ${i + 1}`);
+            toast.error(t('toasts.photoLinkIndexFailed', { index: i + 1 }));
           }
         }
         setPendingPhotoIds([]);
@@ -519,12 +534,10 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
                   longitude: dto?.longitude ?? null,
                   capturedAt: dto?.capturedAt ?? null,
                 });
-                setPreviewPhoto(prev =>
-                  prev ? { ...prev, caption: caption || null } : null,
-                );
-                toast.success('Description updated');
+                setPreviewPhoto(prev => (prev ? { ...prev, caption: caption || null } : null));
+                toast.success(t('toasts.descriptionUpdated'));
               } catch {
-                toast.error('Failed to update description');
+                toast.error(t('toasts.descriptionUpdateFailed'));
               }
             }}
             isSavingDescription={isUpdatingDescription}

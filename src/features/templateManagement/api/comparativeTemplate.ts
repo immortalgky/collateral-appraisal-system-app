@@ -10,13 +10,14 @@ import type {
 } from '@/shared/schemas/v1';
 import { templateMgmtKeys } from './queryKeys';
 
-export const useGetComparativeAnalysisTemplates = () => {
+export const useGetComparativeAnalysisTemplates = (enabled: boolean = true) => {
   return useQuery({
     queryKey: templateMgmtKeys.compTemplates,
     queryFn: async (): Promise<TemplateDtoType[]> => {
       const { data } = await axios.get('/comparative-analysis-templates');
       return data.templates ?? [];
     },
+    enabled,
   });
 };
 

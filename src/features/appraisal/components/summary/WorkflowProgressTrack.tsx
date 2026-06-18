@@ -50,7 +50,7 @@ const buildStepItemMap = (
 
   for (const step of steps) {
     if (step.status !== 'Current') continue;
-    const items = activityLog.filter((i) => i.group === step.group && i.status !== 'Completed');
+    const items = activityLog.filter(i => i.group === step.group && i.status !== 'Completed');
     if (items.length > 0) map[step.group] = items;
   }
 
@@ -75,11 +75,7 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
     open,
     onOpenChange: setOpen,
     placement: 'top',
-    middleware: [
-      offset(8),
-      flip({ fallbackPlacements: ['bottom'] }),
-      shift({ padding: 8 }),
-    ],
+    middleware: [offset(8), flip({ fallbackPlacements: ['bottom'] }), shift({ padding: 8 })],
     whileElementsMounted: autoUpdate,
   });
 

@@ -1,0 +1,593 @@
+{
+  "page": {
+    "title": "การวิเคราะห์ราคา",
+    "back": "ย้อนกลับ",
+    "noAnalysisAvailable": "ไม่มีการวิเคราะห์ราคา",
+    "failedToCreate": "ไม่สามารถสร้างการวิเคราะห์ราคาได้",
+    "creating": "กำลังสร้างการวิเคราะห์ราคา...",
+    "retry": "ลองใหม่",
+    "tabs": {
+      "properties": "ทรัพย์สิน",
+      "model": "โมเดล",
+      "markets": "ตลาด"
+    }
+  },
+  "confirm": {
+    "changeCalculationTitle": "เปลี่ยนโหมดการคำนวณ",
+    "changeCalculationMessage": "สลับไปยังการคำนวณ {{mode}}? ซึ่งจะส่งผลต่อผลลัพธ์ที่มีอยู่",
+    "confirmText": "ยืนยัน",
+    "deselectMethod": "คุณแน่ใจหรือไม่? หากยืนยัน มูลค่าประเมินของวิธีนี้จะถูกลบออก",
+    "resetMethod": "คุณแน่ใจหรือไม่ที่จะรีเซ็ตวิธีนี้? ข้อมูลการคำนวณทั้งหมดจะถูกล้าง",
+    "resetAnalysis": "รีเซ็ตการวิเคราะห์นี้? ข้อมูลทั้งหมดรวมถึงการอัปโหลด รายการค่าใช้จ่าย และสรุปจะถูกลบอย่างถาวร"
+  },
+  "accordion": {
+    "group": "กลุ่ม:",
+    "items": "{{count}} รายการ",
+    "noProperties": "ไม่มีทรัพย์สินในกลุ่มนี้",
+    "loadingModel": "กำลังโหลดข้อมูลโมเดล..."
+  },
+  "calculationMode": {
+    "manual": "ป้อนข้อมูลด้วยตนเอง",
+    "system": "การคำนวณโดยระบบ",
+    "manualDesc": "ป้อนมูลค่าประเมินโดยตรงสำหรับแต่ละวิธี",
+    "systemDesc": "ระบบคำนวณมูลค่าประเมินโดยอัตโนมัติ",
+    "manualToggle": "ด้วยตนเอง",
+    "systemToggle": "ระบบ"
+  },
+  "approaches": {
+    "title": "แนวทางและวิธีการ",
+    "editing": "กำลังแก้ไขแนวทางและวิธีการ",
+    "editButton": "แก้ไขแนวทาง",
+    "doneButton": "เสร็จสิ้น",
+    "addMethod": "เพิ่มวิธีการ",
+    "deleteMethod": "ลบวิธีการ",
+    "deleteHasData": "วิธีนี้มีข้อมูลที่คำนวณแล้ว การลบจะลบผลลัพธ์ทั้งหมดอย่างถาวร",
+    "deleteConfirm": "คุณแน่ใจหรือไม่ที่จะลบวิธีนี้?",
+    "manualUploadPdf": "อัปโหลด PDF",
+    "manualUploadClick": "คลิกเพื่ออัปโหลด PDF",
+    "manualRemark": "หมายเหตุ",
+    "manualRemarkPlaceholder": "เพิ่มหมายเหตุหรือบันทึกสำหรับการประเมินด้วยตนเองนี้...",
+    "openPdf": "เปิด PDF"
+  },
+  "methodStatus": {
+    "calculated": "คำนวณแล้ว",
+    "pending": "รอดำเนินการ",
+    "notIncluded": "ไม่รวม"
+  },
+  "toasts": {
+    "saved": "บันทึกแล้ว!",
+    "valueSaved": "บันทึกมูลค่าแล้ว",
+    "valueFailed": "บันทึกมูลค่าไม่สำเร็จ",
+    "changed": "เปลี่ยนแล้ว",
+    "failedSave": "บันทึกการวิเคราะห์เปรียบเทียบไม่สำเร็จ",
+    "failedReset": "รีเซ็ตวิธีการไม่สำเร็จ",
+    "resetSuccess": "รีเซ็ตวิธีการสำเร็จ",
+    "failedLoad": "โหลดไม่สำเร็จ",
+    "analysisCreated": "สร้างการวิเคราะห์แล้ว",
+    "analysisFailed": "สร้างการวิเคราะห์ไม่สำเร็จ",
+    "analysisSaved": "บันทึกแล้ว!",
+    "analysisReset": "รีเซ็ตการวิเคราะห์แล้ว",
+    "analysisResetFailed": "รีเซ็ตการวิเคราะห์ไม่สำเร็จ",
+    "missingIds": "ไม่พบ ID การวิเคราะห์ราคาหรือ ID วิธีการ!",
+    "saveFailed": "บันทึกไม่สำเร็จ",
+    "loadMachineFailed": "โหลดรายการค่าใช้จ่ายเครื่องจักรไม่สำเร็จ",
+    "loadLeaseholdFailed": "โหลดการวิเคราะห์สิทธิการเช่าไม่สำเร็จ",
+    "selectionSaved": "บันทึกการเลือกแล้ว",
+    "calculateFirst": "กรุณาคำนวณมูลค่าประเมินก่อน",
+    "methodNotSelected": "ไม่ได้เลือกวิธีการ",
+    "methodAdded": "เพิ่มวิธีการแล้ว",
+    "methodDeleted": "ลบวิธีการแล้ว",
+    "saveSelectionFirst": "บันทึกการเลือกก่อนเพื่อสร้าง ID วิธีการและแนวทางก่อนการคำนวณ",
+    "uploadXlsxOnly": "รับเฉพาะไฟล์ .xlsx เท่านั้น",
+    "uploadMaxSize": "ไฟล์ต้องมีขนาดไม่เกิน 5 MB",
+    "uploadFailed": "อัปโหลดไม่สำเร็จ",
+    "uploadDeleted": "ลบการอัปโหลดแล้ว",
+    "deleteFailed": "ลบไม่สำเร็จ",
+    "uploadSuccess": "อัปโหลด {{n}} แถวสำเร็จ"
+  },
+  "footer": {
+    "cancel": "ยกเลิก",
+    "reset": "รีเซ็ต",
+    "save": "บันทึก"
+  },
+  "template": {
+    "sectionTitle": "เทมเพลตการวิเคราะห์ราคา",
+    "collateralType": "ประเภทหลักประกัน",
+    "template": "เทมเพลต",
+    "generate": "สร้าง"
+  },
+  "wqs": {
+    "methodName": "Weighted Quality Scores (WQS)"
+  },
+  "directComparison": {
+    "methodName": "การเปรียบเทียบตรง"
+  },
+  "saleAdjustmentGrid": {
+    "methodName": "ตารางปรับราคาขาย"
+  },
+  "leasehold": {
+    "title": "การวิเคราะห์สิทธิการเช่า",
+    "appraisalDate": "วันที่ประเมิน",
+    "leaseStart": "วันเริ่มต้นเช่า",
+    "leaseEnd": "วันสิ้นสุดเช่า",
+    "rentalInformation": "ข้อมูลการเช่า",
+    "viewRental": "ดู",
+    "landArea": "พื้นที่ที่ดิน",
+    "partialUsage": "การใช้ประโยชน์บางส่วน",
+    "leaseLandArea": "พื้นที่ที่ดินเช่า",
+    "totalLeaseLandArea": "พื้นที่ที่ดินเช่ารวม",
+    "landValue": "มูลค่าที่ดิน",
+    "totalLandValue": "มูลค่าที่ดินรวม",
+    "landValueGrowthRate": "อัตราการเติบโตของมูลค่าที่ดิน",
+    "rate": "อัตรา",
+    "interval": "ช่วงเวลา",
+    "every": "ทุก",
+    "addPeriods": "เพิ่มช่วงเวลา",
+    "fromYear": "จากปี",
+    "toYear": "ถึงปี",
+    "growthRatePercent": "อัตราการเติบโต (%)",
+    "constructionCostIndex": "ดัชนีต้นทุนการก่อสร้าง",
+    "buildingCalcStart": "ปีเริ่มต้นคำนวณอาคาร",
+    "depreciationRate": "อัตราค่าเสื่อมราคา",
+    "discountedRate": "อัตราส่วนลด",
+    "totalIncome": "รายได้รวม",
+    "valueAtExpiry": "มูลค่า ณ วันหมดอายุ",
+    "finalValue": "มูลค่าสุทธิ",
+    "estimatePriceFromPv": "ราคาประมาณ (จาก PV)",
+    "landPriceNotCovered": "ราคาที่ดินในส่วนที่ไม่ครอบคลุมโดยสัญญาเช่า",
+    "appraisalPriceWithPartialLand": "ราคาประเมินรวมที่ดินบางส่วน",
+    "appraisalPrice": "ราคาประเมิน",
+    "units": {
+      "sqWa": "ตร.วา",
+      "sqWaShort": "ตร.วา",
+      "rai": "ไร่",
+      "ngan": "งาน",
+      "bahtPerSqWa": "บาท/ตร.วา",
+      "baht": "บาท",
+      "percent": "%",
+      "percentEvery": "% ทุก",
+      "years": "ปี",
+      "yr": "ปี"
+    },
+    "growthTypes": {
+      "frequency": "ความถี่",
+      "period": "ช่วงเวลา"
+    },
+    "toggle": {
+      "yes": "ใช่",
+      "no": "ไม่"
+    },
+    "table": {
+      "year": "ปี",
+      "detail": "รายละเอียด",
+      "landValue": "มูลค่าที่ดิน",
+      "landGrowthPercent": "การเติบโตของที่ดิน (%)",
+      "buildingValue": "มูลค่าอาคาร",
+      "depreciationAmount": "จำนวนค่าเสื่อมราคา",
+      "depreciationPercent": "ค่าเสื่อมราคา (%)",
+      "buildingAfterDepreciation": "อาคารหลังค่าเสื่อมราคา",
+      "totalLandAndBuilding": "รวมที่ดินและอาคาร",
+      "rentalIncome": "รายได้จากการเช่า",
+      "pvFactor": "ปัจจัย PV",
+      "netCurrentRentalIncome": "รายได้จากการเช่าสุทธิปัจจุบัน",
+      "totalIncomeOverLeaseTerm": "รายได้รวมตลอดระยะเวลาเช่า",
+      "valueAtLeaseExpiry": "มูลค่า ณ วันหมดอายุสัญญาเช่า",
+      "finalValuePv": "มูลค่าสุทธิ (ผลรวม PV)",
+      "finalValueRounded": "มูลค่าสุทธิ (ปัดเศษ)"
+    }
+  },
+  "costMachine": {
+    "title": "ต้นทุนเครื่องจักร",
+    "loadFailed": "โหลดรายการต้นทุนเครื่องจักรไม่สำเร็จ"
+  },
+  "costBuilding": {
+    "title": "ต้นทุนอาคาร"
+  },
+  "hypothesis": {
+    "title": "การวิเคราะห์สมมติฐาน/ส่วนเกิน",
+    "chooseTemplate": "เลือกเทมเพลตเพื่อเริ่มต้น",
+    "generating": "กำลังสร้าง…",
+    "variants": {
+      "landBuilding": "ที่ดินและอาคาร",
+      "landBuildingSubtitle": "3 แท็บ — รายละเอียดหน่วย ต้นทุนอาคาร สรุป",
+      "condominium": "คอนโดมิเนียม",
+      "condominiumSubtitle": "2 แท็บ — รายละเอียดหน่วย สรุป"
+    },
+    "tabs": {
+      "unitDetails": "รายละเอียดหน่วย",
+      "costOfBuilding": "ต้นทุนอาคาร",
+      "summary": "สรุป"
+    },
+    "toasts": {
+      "analysisCreated": "สร้างการวิเคราะห์แล้ว",
+      "analysisFailed": "สร้างการวิเคราะห์ไม่สำเร็จ",
+      "saved": "บันทึกแล้ว!",
+      "saveFailed": "บันทึกไม่สำเร็จ",
+      "analysisReset": "รีเซ็ตการวิเคราะห์แล้ว",
+      "analysisResetFailed": "รีเซ็ตการวิเคราะห์ไม่สำเร็จ"
+    }
+  },
+  "dcf": {
+    "title": "กระแสเงินสดลดราคา",
+    "highestBestUsed": "การใช้ประโยชน์สูงสุดและดีที่สุด",
+    "assumptions": "สมมติฐาน",
+    "viewSummary": "ดูสรุปสมมติฐาน"
+  },
+  "profitRent": {
+    "title": "การวิเคราะห์กำไรจากค่าเช่า",
+    "loadError": "โหลดการวิเคราะห์กำไรจากค่าเช่าไม่สำเร็จ",
+    "headerTitle": "กำไรจากค่าเช่า",
+    "appraisalDate": "วันที่ประเมิน",
+    "leaseStart": "วันเริ่มต้นเช่า",
+    "leaseEnd": "วันสิ้นสุดเช่า",
+    "viewRentalInfo": "ข้อมูลการเช่า",
+    "viewRentalInfoShort": "ดู",
+    "landArea": "พื้นที่ที่ดิน",
+    "marketRentalFee": "ค่าเช่าตลาด",
+    "monthlyTotal": "รวมรายเดือน",
+    "discountedRate": "อัตราส่วนลด",
+    "marketRentalFeeIncrease": "การเพิ่มขึ้นของค่าเช่าตลาด",
+    "rate": "อัตรา",
+    "every": "ทุก",
+    "interval": "ช่วงเวลา",
+    "fromYear": "จากปี",
+    "toYear": "ถึงปี",
+    "growthRatePercent": "อัตราการเติบโต (%)",
+    "addPeriods": "เพิ่มช่วงเวลา",
+    "includeBuildingCost": "รวมต้นทุนอาคาร",
+    "buildingCostSummary": "สรุปต้นทุนอาคาร",
+    "afterDepre": "หลังค่าเสื่อมราคา",
+    "propertyCol": "ทรัพย์สิน",
+    "areaCol": "พื้นที่",
+    "beforeDepre": "ก่อนค่าเสื่อมราคา",
+    "estimatePriceFromPv": "ราคาประมาณ (จาก PV)",
+    "buildingCostAfterDepre": "ต้นทุนอาคาร (หลังค่าเสื่อม)",
+    "appraisalPriceWithBuilding": "ราคาประเมินรวมอาคาร",
+    "appraisalPrice": "ราคาประเมิน",
+    "total": "รวม",
+    "unitBahtPerSqWaPerMonth": "บาท/ตร.วา/เดือน",
+    "unitBahtPerMonth": "บาท/เดือน",
+    "unitSqWa": "ตร.วา",
+    "unitYear": "ปี",
+    "resetConfirmMessage": "คุณแน่ใจหรือไม่ที่จะรีเซ็ตวิธีนี้? ข้อมูลการคำนวณทั้งหมดจะถูกล้าง",
+    "tableHeaders": {
+      "year": "ปี",
+      "periodStart": "วันเริ่มต้นรอบ",
+      "periodEnd": "วันสิ้นสุดรอบ",
+      "numberOfMonth": "จำนวนเดือน",
+      "marketRentalFeePerSqWaMonth": "ค่าเช่าตลาด (บาท/ตร.วา/เดือน)",
+      "marketRentalFeePerMonth": "ค่าเช่าตลาด (บาท/เดือน)",
+      "marketRentalFeePerYear": "ค่าเช่าตลาด (บาท/ปี)",
+      "contractRentalFeePerYear": "ค่าเช่าตามสัญญา (บาท/ปี)",
+      "returnsFromLease": "ผลตอบแทนจากการเช่า (บาท)",
+      "discountedRate": "อัตราส่วนลด",
+      "presentValue": "มูลค่าปัจจุบัน (บาท)"
+    },
+    "kpi": {
+      "totalMarketRental": "ค่าเช่าตลาดรวม",
+      "totalContractRental": "ค่าเช่าสัญญารวม",
+      "totalReturns": "ผลตอบแทนรวม",
+      "presentValue": "มูลค่าปัจจุบัน"
+    }
+  },
+  "comparativeAnalysis": {
+    "title": "การวิเคราะห์เปรียบเทียบ",
+    "addComparativeData": "เพิ่มข้อมูลเปรียบเทียบ",
+    "noSurveys": "ไม่ได้เลือกการสำรวจเปรียบเทียบ",
+    "factor": "ปัจจัย",
+    "weight": "น้ำหนัก",
+    "intensity": "ความเข้ม",
+    "score": "คะแนน",
+    "weightedScore": "คะแนนถ่วงน้ำหนัก"
+  },
+  "surveySelection": {
+    "title": "เลือกข้อมูลเปรียบเทียบ",
+    "search": "ค้นหา...",
+    "confirm": "ยืนยัน",
+    "cancel": "ยกเลิก",
+    "selected": "เลือก {{count}} รายการ",
+    "subjectCollateral": "หลักประกันที่ประเมิน"
+  },
+  "scoring": {
+    "totalWeight": "น้ำหนักรวม",
+    "totalScore": "คะแนนรวม",
+    "collateral": "หลักประกัน",
+    "survey": "การสำรวจ"
+  },
+  "finalValue": {
+    "title": "ปรับมูลค่าสุทธิ",
+    "coefficientOfDecision": "สัมประสิทธิ์การตัดสินใจ (R²)",
+    "includeLandArea": "รวมพื้นที่ที่ดิน",
+    "hasBuildingCost": "รวมต้นทุนอาคาร",
+    "landArea": "พื้นที่ที่ดิน",
+    "usableArea": "พื้นที่ใช้สอย",
+    "finalValueAdjusted": "มูลค่าสุทธิ (บาท/พื้นที่)",
+    "finalValueRounded": "มูลค่าสุทธิ (ปัดเศษ)",
+    "landValue": "มูลค่าที่ดิน",
+    "buildingCost": "ต้นทุนอาคาร",
+    "appraisalPrice": "ราคาประเมิน",
+    "appraisalPriceRounded": "ราคาประเมิน (ปัดเศษ)",
+    "totalBuildingCost": "ต้นทุนอาคารรวม",
+    "appraisalPriceIncludeBuildingCost": "ราคาประเมิน (รวมอาคาร)",
+    "appraisalPriceIncludeBuildingCostRounded": "ราคาประเมิน (รวมอาคาร, ปัดเศษ)"
+  },
+  "remark": {
+    "title": "หมายเหตุและสมมติฐาน",
+    "label": "หมายเหตุ",
+    "placeholder": "เพิ่มหมายเหตุหรือบันทึก..."
+  },
+  "sensitivity": {
+    "title": "การวิเคราะห์ความไว",
+    "discountRate": "อัตราส่วนลด"
+  },
+  "buildingCost": {
+    "propertyName": "ชื่อทรัพย์สิน",
+    "rcn": "RCN / ต้นทุนทดแทน",
+    "lifeSpan": "อายุการใช้งาน (ปี)",
+    "conditionFactor": "ปัจจัยสภาพ",
+    "functionalObsolescence": "ความล้าสมัยเชิงหน้าที่",
+    "economicObsolescence": "ความล้าสมัยเชิงเศรษฐกิจ",
+    "fmv": "มูลค่าตลาดยุติธรรม",
+    "marketDemand": "ความต้องการของตลาด",
+    "notes": "หมายเหตุ"
+  },
+  "validation": {
+    "required": "จำเป็นต้องกรอกข้อมูลในช่องนี้",
+    "mustBePositive": "ต้องเป็นจำนวนบวก",
+    "mustBeNonNegative": "ต้องมีค่า 0 หรือมากกว่า",
+    "mustBePercentage": "ต้องอยู่ระหว่าง 0 ถึง 100",
+    "invalidNumber": "ตัวเลขไม่ถูกต้อง",
+    "minLength": "ขั้นต่ำ {{min}} ตัวอักษร",
+    "maxLength": "สูงสุด {{max}} ตัวอักษร",
+    "collateralTypeRequired": "กรุณาระบุประเภทหลักประกัน",
+    "templateRequired": "กรุณาระบุเทมเพลต",
+    "templateCodeRequired": "กรุณาระบุรหัสเทมเพลต",
+    "landValueRequired": "กรุณาระบุมูลค่าที่ดิน",
+    "discountRateRequired": "กรุณาระบุอัตราส่วนลด",
+    "landGrowthRateRequired": "กรุณาระบุอัตราการเติบโตของที่ดิน",
+    "depreciationRateRequired": "กรุณาระบุอัตราค่าเสื่อมราคา",
+    "factorCodeRequired": "กรุณาระบุรหัสปัจจัย",
+    "weightRequired": "กรุณาระบุน้ำหนัก",
+    "intensityRequired": "กรุณาระบุความเข้ม",
+    "collateralScoreRequired": "กรุณาระบุคะแนนหลักประกัน",
+    "surveyScoreRequired": "กรุณาระบุคะแนนของการสำรวจที่ {{n}}",
+    "finalValueRoundedRequired": "กรุณาระบุมูลค่าสุทธิ (ปัดเศษ)",
+    "qualitativeLevelRequired": "กรุณาระบุระดับคุณภาพ",
+    "appraisalPriceRoundedRequired": "กรุณาระบุราคาประเมิน (ปัดเศษ)",
+    "adjustPercentRequired": "กรุณาระบุเปอร์เซ็นต์ปรับ",
+    "descriptionRequired": "กรุณาระบุรายละเอียด",
+    "toYearInvalid": "ปีสิ้นสุดต้องมากกว่าหรือเท่ากับปีเริ่มต้น",
+    "leasehold": {
+      "fromYearRequired": "กรุณาระบุปีเริ่มต้น",
+      "toYearRequired": "กรุณาระบุปีสิ้นสุด",
+      "growthRateRequired": "กรุณาระบุอัตราการเติบโต"
+    }
+  },
+  "empty": {
+    "noData": "ไม่มีข้อมูล",
+    "noResults": "ไม่พบผลลัพธ์",
+    "noProperties": "ไม่มีทรัพย์สินในกลุ่มนี้",
+    "noSurveys": "ไม่มีการสำรวจตลาด",
+    "noMethods": "ไม่ได้เลือกวิธีการ"
+  },
+  "aria": {
+    "scrollLeft": "เลื่อนไปทางซ้าย",
+    "scrollRight": "เลื่อนไปทางขวา",
+    "toggleAccordion": "สลับส่วน",
+    "openPdf": "เปิด PDF"
+  },
+  "errors": {
+    "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
+    "saveFailed": "บันทึกไม่สำเร็จ",
+    "resetFailed": "รีเซ็ตไม่สำเร็จ"
+  },
+  "marketRef": {
+    "buttonLabel": "ข้อมูลอ้างอิงตลาด",
+    "modalTitle": "ข้อมูลอ้างอิงตลาด",
+    "addReference": "เพิ่มข้อมูลอ้างอิง",
+    "noReferences": "ยังไม่มีข้อมูลอ้างอิง",
+    "noReferencesHint": "คลิก 'เพิ่มข้อมูลอ้างอิง' เพื่อสร้างการวิเคราะห์เปรียบเทียบสำหรับฟิลด์นี้",
+    "openReference": "เปิด",
+    "deleteReference": "ลบ",
+    "deleteConfirm": "ลบข้อมูลอ้างอิงนี้? ข้อมูลเปรียบเทียบและคะแนนทั้งหมดจะถูกลบถาวร",
+    "valuePerUnit": "มูลค่า/หน่วย",
+    "applyValue": "ใช้ค่านี้",
+    "applySuccess": "ใช้ค่าเรียบร้อย",
+    "methodLabel": "วิธีการ",
+    "finalValue": "มูลค่าสุดท้าย",
+    "noValue": "ยังไม่ได้คำนวณ",
+    "unmatchedRoom": "ประเภทห้องไม่ตรงอีกต่อไป — โปรดเชื่อมโยงใหม่",
+    "loadFailed": "โหลดข้อมูลอ้างอิงไม่สำเร็จ",
+    "createFailed": "เปิดข้อมูลอ้างอิงไม่สำเร็จ",
+    "deleteFailed": "ลบข้อมูลอ้างอิงไม่สำเร็จ",
+    "backToList": "กลับไปยังรายการ",
+    "status": {
+      "pending": "รอดำเนินการ",
+      "active": "ใช้งาน"
+    }
+  },
+  "incomeLandRef": {
+    "copyFromCost": "คัดลอกจากวิธีต้นทุน",
+    "pickerTitle": "เลือกวิธีต้นทุนที่ต้องการคัดลอก",
+    "pickerHint": "ข้อมูลเปรียบเทียบและคะแนนของวิธีที่เลือกจะถูกคัดลอกเป็นข้อมูลอ้างอิงที่แก้ไขได้",
+    "noCostMethods": "ไม่พบวิธี WQS/SAG/DC ในแนวทางต้นทุน กรุณาเพิ่มในส่วน Approaches & Methods ก่อน",
+    "copyFailed": "คัดลอกวิธีต้นทุนไม่สำเร็จ",
+    "openRef": "เปิดข้อมูลอ้างอิง"
+  },
+  "groupReferences": {
+    "sectionTitle": "ข้อมูลอ้างอิง",
+    "openReference": "เปิด",
+    "deleteReference": "ลบ",
+    "deleteConfirm": "ลบข้อมูลอ้างอิงนี้? ข้อมูลเปรียบเทียบและคะแนนทั้งหมดจะถูกลบถาวร",
+    "deleteFailed": "ลบข้อมูลอ้างอิงไม่สำเร็จ",
+    "noValue": "ยังไม่ได้คำนวณ",
+    "valuePerUnit": "มูลค่า/หน่วย",
+    "finalValue": "มูลค่าสุดท้าย",
+    "subjects": {
+      "machineryCostRef": "เครื่องจักร",
+      "incomeLandRef": "มูลค่าที่ดิน (DCF)",
+      "leaseholdLandRef": "มูลค่าที่ดิน (เช่า)",
+      "roomIncomeRef": "รายได้ห้องพัก",
+      "profitRentRef": "ค่าเช่า"
+    }
+  },
+  "upload": {
+    "uploading": "กำลังอัปโหลด…",
+    "dropOrBrowse": "วางไฟล์ Excel ที่นี่ หรือ",
+    "browseLink": "เลือกไฟล์",
+    "uploadHistory": "ประวัติการอัปโหลด",
+    "fileCol": "ไฟล์",
+    "uploadedCol": "อัปโหลดเมื่อ",
+    "rowsCol": "แถว",
+    "statusCol": "สถานะ",
+    "statusPresent": "ปัจจุบัน",
+    "statusHistoric": "ประวัติ",
+    "unitListing": "รายการหน่วย ({{n}} หน่วย)",
+    "modelAnalysis": "การวิเคราะห์โมเดล",
+    "parseErrors": "ข้อผิดพลาดการอ่านไฟล์ Excel — แก้ไขแถวเหล่านี้และอัปโหลดใหม่",
+    "parseErrorRow": "แถว",
+    "parseErrorField": "ฟิลด์",
+    "parseErrorValue": "ค่า",
+    "parseErrorReason": "เหตุผล",
+    "aggTotalLandAreaFromTitle": "พื้นที่ดินรวมจากโฉนด",
+    "aggTotalSellingArea": "พื้นที่ขายรวม",
+    "aggTotalUnits": "จำนวนหน่วยรวม",
+    "aggTotalRevenue": "รายได้รวม",
+    "aggIndoorSalesArea": "พื้นที่ขายภายใน",
+    "aggTotalSellingPrice": "ราคาขายรวม"
+  },
+  "viz": {
+    "sensitivity": {
+      "title": "ความไวต่ออัตราส่วนลด"
+    },
+    "profitRentChart": {
+      "title": "ค่าเช่าตลาดกับสัญญา & มูลค่าปัจจุบัน",
+      "marketRental": "ค่าเช่าตลาด (ปี)",
+      "contractRental": "ค่าเช่าสัญญา (ปี)",
+      "presentValue": "มูลค่าปัจจุบัน",
+      "year": "ปี {{n}}"
+    },
+    "waterfall": {
+      "runningTotal": "ผลรวมสะสม:",
+      "defaultTitle": "การวิเคราะห์มูลค่า"
+    },
+    "residualWaterfall": {
+      "lb": "การวิเคราะห์มูลค่าส่วนเกิน",
+      "condo": "การวิเคราะห์มูลค่าส่วนเกิน (GDV → สุดท้าย)",
+      "revenue": "รายได้",
+      "revenueGdv": "รายได้ (GDV)",
+      "projectDev": "ต้นทุนพัฒนาโครงการ",
+      "projectCost": "ต้นทุนโครงการ",
+      "govTax": "ภาษีรัฐบาล",
+      "risk": "ความเสี่ยง",
+      "currentValue": "มูลค่าปัจจุบัน",
+      "discount": "ส่วนลด",
+      "finalValue": "มูลค่าสุทธิ",
+      "hardCost": "ต้นทุนหลัก",
+      "softCost": "ต้นทุนรอง",
+      "riskProfit": "ความเสี่ยงและกำไร",
+      "remaining": "มูลค่าคงเหลือ",
+      "finalRemaining": "มูลค่าคงเหลือสุดท้าย"
+    },
+    "costDonut": {
+      "title": "สัดส่วนต้นทุน",
+      "lb": {
+        "projectDevCost": "ต้นทุนพัฒนาโครงการ",
+        "projectCost": "ต้นทุนโครงการ",
+        "govTax": "ภาษีรัฐบาล",
+        "riskPremium": "ค่าความเสี่ยง"
+      },
+      "condo": {
+        "hardCost": "ต้นทุนหลัก",
+        "softCost": "ต้นทุนรอง",
+        "govTax": "ภาษีรัฐบาล",
+        "riskProfit": "ความเสี่ยงและกำไร"
+      }
+    },
+    "leaseholdChart": {
+      "collateralValueTitle": "มูลค่าหลักประกันตลอดระยะเช่า",
+      "pvBahtNote": "ค่าทั้งหมดเป็นมูลค่าปัจจุบัน (บาท)",
+      "compositionTitle": "องค์ประกอบมูลค่าสิทธิการเช่า",
+      "compositionRent": "ค่าเช่า",
+      "compositionReversion": "มูลค่าคืนกลับ",
+      "compositionTotal": "รวม",
+      "leaseEnd": "สิ้นสุดการเช่า",
+      "tooltipYear": "ปี",
+      "rentalIncome": "รายได้ค่าเช่า",
+      "netPvRental": "ค่าเช่า PV สุทธิ",
+      "cumulativePv": "PV สะสม",
+      "reversionPvConstant": "PV คืนกลับ (คงที่)",
+      "cumulativePvPct": "PV สะสม %",
+      "buildingPvToday": "อาคาร (PV ปัจจุบัน)",
+      "totalLbPvToday": "ที่ดิน+อาคารรวม (PV ปัจจุบัน)",
+      "encumberedCollateralPv": "หลักประกันที่มีภาระ (PV ปัจจุบัน)",
+      "landPvToday": "ที่ดิน (PV ปัจจุบัน)",
+      "landNominal": "ที่ดิน (ราคาตามบัญชี)",
+      "buildingNominal": "อาคาร (ราคาตามบัญชี)",
+      "totalLbNominal": "ที่ดิน+อาคารรวม (ราคาตามบัญชี)",
+      "encumberedCollateral": "หลักประกันที่มีภาระ",
+      "encumberedNote": "PV(ค่าเช่าที่เหลือ) + PV(คืนกลับ)"
+    }
+  },
+  "hypothesisTooltips": {
+    "lb": {
+      "totalArea": "พื้นที่ดินรวมของโครงการ (ตร.วา) อ้างอิงจากโฉนดที่ดินของกลุ่มทรัพย์สิน",
+      "sellingArea": "พื้นที่ขาย = % พื้นที่ขาย × พื้นที่รวม ช่วงปกติ: 50–70% ของพื้นที่ทั้งหมด แสดงสีแดงเมื่อนอกช่วง",
+      "publicUtilityArea": "พื้นที่สาธารณูปโภค = % พื้นที่สาธารณูปโภค × พื้นที่รวม ครอบคลุมถนน สวน และโครงสร้างพื้นฐานสาธารณะ",
+      "totalRevenue": "ผลรวมราคาขายทุกหน่วยจากไฟล์รายละเอียดที่อัปโหลด",
+      "estSalesPeriod": "ระยะเวลาขายโดยประมาณ = จำนวนหน่วยรวม ÷ อัตราการขาย (หลัง/เดือน) ใช้เป็นระยะเวลาสำหรับปัจจัยส่วนลด",
+      "publicUtilityConstruction": "ต้นทุนรวม = อัตรา (บาท/ตร.วา) × พื้นที่โครงการรวม",
+      "landFilling": "ต้นทุนรวม = อัตรา (บาท/ตร.วา) × พื้นที่โครงการรวม",
+      "contingencyDev": "ค่าสำรอง = % สำรอง × ต้นทุนพัฒนาโครงการรวม ค่าเริ่มต้น 3%",
+      "estConstructionPeriod": "ระยะเวลาก่อสร้างโดยประมาณ = จำนวนหน่วย ÷ อัตราก่อสร้าง (หลัง/เดือน)",
+      "allocationPermitFee": "ค่าธรรมเนียมขออนุญาตจัดสรรที่ดิน (บาท)",
+      "landTitleFee": "ค่าธรรมเนียมรวม = ค่าธรรมเนียมต่อแปลง × จำนวนแปลง",
+      "professionalFee": "รวม = ค่าวิชาชีพ/เดือน × ระยะเวลาก่อสร้าง (เดือน)",
+      "adminCost": "รวม = ค่าบริหาร/เดือน × ระยะเวลาก่อสร้าง (เดือน)",
+      "sellingAdv": "รวม = % ค่าขายและโฆษณา × รายได้โครงการรวม",
+      "contingencyProject": "ค่าสำรอง = % สำรอง × ค่าใช้จ่ายโครงการรวม ค่าเริ่มต้น 3%",
+      "transferFee": "ค่าธรรมเนียมโอนที่ดิน รวม = % ค่าโอน × รายได้รวม",
+      "specificBizTax": "ภาษีธุรกิจเฉพาะ รวม = % SBT × รายได้รวม",
+      "riskPremium": "ค่าความเสี่ยงผู้พัฒนา รวม = % ความเสี่ยง × รายได้รวม",
+      "currentPropertyValue": "มูลค่าทรัพย์สินปัจจุบัน = รายได้รวม − ต้นทุนและค่าใช้จ่ายพัฒนารวม",
+      "discountRate": "อัตราส่วนลดต่อปี (%) กรอก 0 เพื่อข้ามการปรับค่าเวลา",
+      "discountRateFactor": "ปัจจัยส่วนลด = 1 / (1 + อัตราส่วนลด/100) ^ (ระยะเวลาขาย/12)",
+      "finalPropertyValue": "มูลค่าทรัพย์สินสุดท้าย = มูลค่าปัจจุบัน × ปัจจัยส่วนลด",
+      "totalAssetValueRounded": "มูลค่าทรัพย์สินรวม (ปัดเป็น 10,000 บาท)",
+      "totalAssetValuePerSqWa": "มูลค่าทรัพย์สินรวม ÷ พื้นที่ขาย (ตร.วา) ปัดเป็น 100 บาท"
+    },
+    "condo": {
+      "areaTitleDeed": "พื้นที่ตามโฉนด (ตร.วา) แปลงเป็น ตร.ม. โดยคูณ × 4",
+      "far": "อัตราส่วนพื้นที่อาคารต่อที่ดิน (FAR) ตามผังเมือง",
+      "totalBuildingArea": "พื้นที่อาคารรวม (ตร.ม.) เป็นฐานคำนวณต้นทุนก่อสร้าง",
+      "commonArea": "พื้นที่ส่วนกลาง = พื้นที่อาคารรวม − พื้นที่ขายภายใน",
+      "indoorSalesArea": "พื้นที่ใช้สอยรวมของทุกยูนิตจากไฟล์ที่อัปโหลด",
+      "projectSalesArea": "พื้นที่ขายสุทธิ = พื้นที่ขายภายในจากไฟล์อัปโหลด",
+      "averageSellingPrice": "ราคาเฉลี่ย/ตร.ม. = ราคาขายรวม ÷ พื้นที่ขายโครงการ",
+      "totalRevenue": "รายได้โครงการรวม (GDV) จากไฟล์อัปโหลด",
+      "estSalesDuration": "ระยะเวลาขาย (เดือน) ที่ผู้ประเมินกำหนด",
+      "condoBuildingCost": "รวม = อัตราก่อสร้าง (บาท/ตร.ม.) × พื้นที่อาคารรวม",
+      "setAvgRoomSize": "จำนวนยูนิตรวมจากไฟล์อัปโหลด พื้นที่เฉลี่ย = พื้นที่ขายภายใน ÷ จำนวนยูนิต",
+      "furniture": "รวม = ค่าเฟอร์นิเจอร์/ยูนิต × จำนวนยูนิต",
+      "externalUtilities": "ต้นทุนสาธารณูปโภคภายนอกอาคาร (คงที่)",
+      "hardCostContingency": "ค่าสำรอง = % × (ต้นทุนก่อสร้าง + ต้นทุนพัฒนาโครงการ) ค่าเริ่มต้น 3%",
+      "estConstructionPeriod": "ระยะเวลาก่อสร้าง (เดือน)",
+      "professionalFee": "รวม = ค่าวิชาชีพ/เดือน × ระยะเวลาก่อสร้าง (เดือน)",
+      "adminCost": "รวม = ค่าบริหาร/เดือน × ระยะเวลาขาย (เดือน)",
+      "sellingAdv": "รวม = % ค่าขาย&โฆษณา × รายได้โครงการรวม",
+      "titleDeedFee": "ค่าออกโฉนดอาคารชุด (จดทะเบียนอาคารชุด)",
+      "eiaCost": "ค่า EIA (การประเมินผลกระทบสิ่งแวดล้อม)",
+      "condoRegistrationFee": "ค่าธรรมเนียมจดทะเบียนนิติบุคคลอาคารชุด",
+      "otherExpenses": "รวม = % ค่าใช้จ่ายอื่น × ค่าใช้จ่ายโครงการรวม",
+      "transferFee": "ค่าธรรมเนียมโอน รวม = % × รายได้โครงการรวม ค่าเริ่มต้น 1%",
+      "specificBizTax": "ภาษีธุรกิจเฉพาะ รวม = % SBT × รายได้โครงการรวม",
+      "riskProfit": "กำไรและความเสี่ยงของผู้พัฒนา รวม = % × รายได้โครงการรวม",
+      "totalRemainingValue": "มูลค่าคงเหลือรวม = รายได้รวม − ต้นทุนพัฒนารวม",
+      "discountRate": "อัตราส่วนลดต่อปี (%) กรอก 0 เพื่อข้ามการปรับค่าเวลา",
+      "discountRateFactor": "ปัจจัยส่วนลด = 1 / (1 + อัตราส่วนลด/100) ^ (ระยะเวลาขาย/12)",
+      "finalRemainingValue": "มูลค่าคงเหลือสุดท้าย = มูลค่าคงเหลือรวม × ปัจจัยส่วนลด",
+      "totalAssetValueRounded": "มูลค่าสินทรัพย์รวม (ปัดเป็น 10,000 บาท)",
+      "totalAssetValuePerSqM": "มูลค่าสินทรัพย์รวม ÷ พื้นที่ขายภายใน (ตร.ม.) ปัดเป็น 100 บาท"
+    }
+  }
+}

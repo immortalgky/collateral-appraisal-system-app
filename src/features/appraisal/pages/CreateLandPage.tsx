@@ -22,9 +22,12 @@ import {
   useUpdateLandProperty,
 } from '../api/property';
 import LandDetailForm from '../forms/LandDetailForm';
+import LeaseAgreementForm from '../forms/LeaseAgreementForm';
+import RentalInfoForm from '../forms/RentalInfoForm';
 import { createLandForm, createLandFormDefault, type createLandFormType } from '../schemas/form';
 import { mapLandPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
@@ -32,6 +35,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateLandPage = () => {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -47,7 +51,12 @@ const CreateLandPage = () => {
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
-      return mapLandPropertyResponseToForm(propertyData);
+      return {
+        ...mapLandPropertyResponseToForm(propertyData),
+        isRentedOut: (propertyData as any).isRentedOut ?? false,
+        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+        rentalInfo: (propertyData as any).rentalInfo ?? null,
+      };
     }
     return createLandFormDefault;
   }, [isEditMode, propertyData]);
@@ -56,14 +65,25 @@ const CreateLandPage = () => {
     defaultValues: formDefaults,
     resolver: zodResolver(createLandForm),
   });
-  const { handleSubmit, getValues, reset, formState: { dirtyFields } } = methods;
+  const {
+    handleSubmit,
+    getValues,
+    reset,
+    formState: { dirtyFields },
+  } = methods;
 
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   useEffect(() => {
     if (isEditMode && propertyData) {
-      reset(mapLandPropertyResponseToForm(propertyData));
+      reset({
+        ...createLandFormDefault,
+        ...mapLandPropertyResponseToForm(propertyData),
+        isRentedOut: (propertyData as any).isRentedOut ?? false,
+        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
+        rentalInfo: (propertyData as any).rentalInfo ?? null,
+      } as any);
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -74,20 +94,33 @@ const CreateLandPage = () => {
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
+  // Conditional tabs driven by isRentedOut flag
+  const isRentedOut = methods.watch('isRentedOut');
+  const [activeTab, setActiveTab] = useState<'land' | 'lease-agreement' | 'rental-info'>('land');
+
+  // Reset to land tab when isRentedOut is turned off
+  useEffect(() => {
+    if (!isRentedOut && activeTab !== 'land') {
+      setActiveTab('land');
+    }
+  }, [isRentedOut, activeTab]);
+
   const onSubmit: SubmitHandler<createLandFormType> = data => {
     setSaveAction('submit');
+    const { leaseAgreement, rentalInfo, ...rest } = data as any;
+    const payload = { ...rest, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateLandProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Property land updated successfully');
+            toast.success(t('toasts.propertyLandUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -101,12 +134,12 @@ const CreateLandPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Property land created successfully');
+            toast.success(t('toasts.propertyLandCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/land/${response.propertyId}`);
@@ -124,19 +157,20 @@ const CreateLandPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
+    const { leaseAgreement, rentalInfo, ...rest } = getValues() as any;
+    const payload = { ...rest, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateLandProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -150,12 +184,12 @@ const CreateLandPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data: data as any,
+          data: payload as any,
         },
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
@@ -186,8 +220,29 @@ const CreateLandPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
-            { label: 'Land', id: 'properties-section', icon: 'mountain-sun' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
+            {
+              label: t('createPage.navLand'),
+              id: 'land-section',
+              icon: 'mountain-sun',
+              onClick: () => setActiveTab('land'),
+            },
+            ...(isRentedOut
+              ? [
+                  {
+                    label: t('createPage.navLeaseAgreement'),
+                    id: 'lease-agreement-section',
+                    icon: 'file-contract',
+                    onClick: () => setActiveTab('lease-agreement'),
+                  },
+                  {
+                    label: t('createPage.navRentalInfo'),
+                    id: 'rental-info-section',
+                    icon: 'calendar-days',
+                    onClick: () => setActiveTab('rental-info'),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
@@ -207,13 +262,13 @@ const CreateLandPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section */}
+                  {/* Photos Section — always visible */}
                   <Section id="photos" anchor className="min-w-0 overflow-hidden">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                     {appraisalId && (
@@ -225,36 +280,86 @@ const CreateLandPage = () => {
                     )}
                   </Section>
 
-                  {/* Land Information Header */}
-                  <Section id="properties-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon
-                          name="mountain-sun"
-                          style="solid"
-                          className="w-5 h-5 text-amber-600"
-                        />
+                  {/* Land Tab Content */}
+                  <div
+                    id="land-section"
+                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
+                  >
+                    <Section id="properties-section" anchor>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                          <Icon
+                            name="mountain-sun"
+                            style="solid"
+                            className="w-5 h-5 text-amber-600"
+                          />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">{t('createPage.landSection')}</h2>
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Land Information</h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                  </Section>
+                      <div className="h-px bg-gray-200" />
+                    </Section>
 
-                  {/* Land Forms */}
-                  <Section
-                    id="land-title"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <TitleDeedForm />
-                  </Section>
-                  <Section
-                    id="land-info"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <LandDetailForm />
-                  </Section>
+                    <Section
+                      id="land-title"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <TitleDeedForm />
+                    </Section>
+                    <Section
+                      id="land-info"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    >
+                      <LandDetailForm />
+                    </Section>
+                  </div>
+
+                  {/* Lease Agreement Tab Content */}
+                  {isRentedOut && (
+                    <div
+                      id="lease-agreement-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Icon
+                              name="file-contract"
+                              style="solid"
+                              className="w-5 h-5 text-purple-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">{t('createPage.leaseAgreementSection')}</h2>
+                        </div>
+                        <div className="h-px bg-gray-200 mb-6" />
+                        <LeaseAgreementForm namePrefix="leaseAgreement" />
+                      </Section>
+                    </div>
+                  )}
+
+                  {/* Rental Info Tab Content */}
+                  {isRentedOut && (
+                    <div
+                      id="rental-info-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <Icon
+                              name="calendar-days"
+                              style="solid"
+                              className="w-5 h-5 text-teal-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">{t('createPage.rentalInfoSection')}</h2>
+                        </div>
+                        <div className="h-px bg-gray-200 mb-6" />
+                        <RentalInfoForm namePrefix="rentalInfo" />
+                      </Section>
+                    </div>
+                  )}
                 </div>
               </ResizableSidebar.Main>
             </ResizableSidebar>
@@ -281,7 +386,7 @@ const CreateLandPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
+                  {t('createPage.saveDraft')}
                 </Button>
                 <Button
                   type="submit"
@@ -289,7 +394,7 @@ const CreateLandPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('createPage.save')}
                 </Button>
               </ActionBar.Right>
             )}

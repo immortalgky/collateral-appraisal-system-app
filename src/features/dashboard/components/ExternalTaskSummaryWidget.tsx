@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -47,6 +48,7 @@ type Row = {
 };
 
 function ExternalTaskSummaryWidget() {
+  const { t } = useTranslation('dashboard');
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const settings = useDashboardStore(
@@ -146,7 +148,7 @@ function ExternalTaskSummaryWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800 truncate">External Appraisal Summary</h3>
+              <h3 className="font-semibold text-gray-800 truncate">{t('externalSummary.title')}</h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
@@ -159,9 +161,9 @@ function ExternalTaskSummaryWidget() {
                   updateSettings(WIDGET_ID, { companyId: e.target.value || undefined })
                 }
                 className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[160px]"
-                aria-label="Filter by company"
+                aria-label={t('externalSummary.aria.filterByCompany')}
               >
-                <option value="">All companies</option>
+                <option value="">{t('externalSummary.allCompanies')}</option>
                 {allRows.map(r => (
                   <option key={r.companyId} value={r.companyId}>
                     {r.name}
@@ -173,7 +175,7 @@ function ExternalTaskSummaryWidget() {
               <button
                 type="button"
                 onClick={() => setMenuOpen(o => !o)}
-                aria-label="Widget menu"
+                aria-label={t('externalSummary.aria.menu')}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
@@ -182,7 +184,7 @@ function ExternalTaskSummaryWidget() {
                 <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
                   {updatedLabel && (
                     <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
-                      Updated {updatedLabel} ago
+                      {t('updatedAgo', { n: updatedLabel })}
                     </p>
                   )}
                   <button
@@ -195,7 +197,7 @@ function ExternalTaskSummaryWidget() {
                       style="solid"
                       className="size-3 text-gray-400"
                     />
-                    Refresh
+                    {t('externalSummary.menu.refresh')}
                   </button>
                   <button
                     type="button"
@@ -203,7 +205,7 @@ function ExternalTaskSummaryWidget() {
                     className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                   >
                     <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
-                    Reset
+                    {t('externalSummary.menu.reset')}
                   </button>
                 </div>
               )}
@@ -213,7 +215,7 @@ function ExternalTaskSummaryWidget() {
 
         <div className="p-6">
           {isError ? (
-            <WidgetError message="Unable to load company summary" onRetry={() => refetch()} />
+            <WidgetError message={t('externalSummary.error')} onRetry={() => refetch()} />
           ) : isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, i) => (
@@ -222,7 +224,7 @@ function ExternalTaskSummaryWidget() {
             </div>
           ) : rows.length === 0 ? (
             <div className="py-12 text-center text-sm text-gray-400">
-              No company data for this period
+              {t('externalSummary.noData')}
               {settings.companyId && (
                 <>
                   {' · '}
@@ -231,16 +233,14 @@ function ExternalTaskSummaryWidget() {
                     className="text-blue-600 hover:text-blue-700"
                     onClick={() => updateSettings(WIDGET_ID, { companyId: undefined })}
                   >
-                    Clear company filter
+                    {t('externalSummary.clearCompanyFilter')}
                   </button>
                 </>
               )}
             </div>
           ) : (
             <>
-              <p className="text-xs text-gray-400 mb-2">
-                Click a bar to view that company&apos;s appraisals
-              </p>
+              <p className="text-xs text-gray-400 mb-2">{t('externalSummary.clickBarHint')}</p>
               <ResponsiveContainer width="100%" height={chartHeight}>
                 <BarChart
                   data={rows}
@@ -272,11 +272,9 @@ function ExternalTaskSummaryWidget() {
                     }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                  {/* onClick lives on each Bar — Recharts v3's BarChart.onClick is unreliable
-                      when the click lands directly on a bar rectangle. */}
                   <Bar
                     dataKey="assigned"
-                    name="Assigned"
+                    name={t('externalSummary.chart.assigned')}
                     fill="#3b82f6"
                     cursor="pointer"
                     onClick={data => {
@@ -286,7 +284,7 @@ function ExternalTaskSummaryWidget() {
                   />
                   <Bar
                     dataKey="completed"
-                    name="Completed"
+                    name={t('externalSummary.chart.completed')}
                     fill="#10b981"
                     cursor="pointer"
                     onClick={data => {

@@ -11,14 +11,16 @@ import { DateInput } from '@/shared/components/inputs';
 import { formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import { useCancelQuotation, useGetQuotations, type QuotationListItem } from '../api/quotation';
+import { z } from 'zod';
 import { QuotationStatusSchema } from '../schemas/quotation';
+
+type QuotationStatus = z.infer<typeof QuotationStatusSchema>;
 
 /** Slice a DatePickerInput ISO value (`2026-04-28T00:00:00+07:00`) down to the
     `yyyy-MM-dd` slug the backend's `DateOnly?` query binder expects. */
-const toDateOnly = (iso: string | null | undefined) =>
-  iso ? iso.slice(0, 10) : undefined;
+const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : undefined);
 
-const QUOTATION_STATUS_OPTIONS = QuotationStatusSchema.options;
+const QUOTATION_STATUS_OPTIONS: QuotationStatus[] = QuotationStatusSchema.options;
 
 const TERMINAL_STATUSES = new Set(['Finalized', 'Cancelled', 'Closed']);
 
@@ -28,6 +30,7 @@ interface RowActionsMenuProps {
 }
 
 const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
+  const { t } = useTranslation(['quotation', 'common']);
   const [open, setOpen] = useState(false);
 
   return (
@@ -39,7 +42,7 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
           setOpen(prev => !prev);
         }}
         className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
-        aria-label="Row actions"
+        aria-label={t('aria.rowActions')}
       >
         <Icon name="ellipsis-vertical" style="solid" className="size-4" />
       </button>
@@ -65,10 +68,12 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
                 className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
               >
                 <Icon name="trash" style="solid" className="size-3.5 shrink-0" />
-                Delete
+                {t('common:actions.delete')}
               </button>
             ) : (
-              <div className="px-3 py-2 text-xs text-gray-400 italic">No actions available</div>
+              <div className="px-3 py-2 text-xs text-gray-400 italic">
+                {t('empty.noQuotationsHint')}
+              </div>
             )}
           </div>
         </>
@@ -79,7 +84,7 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
 
 function QuotationListingPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['quotation', 'common']);
   const [searchParams] = useSearchParams();
 
   // Pagination state
@@ -104,10 +109,7 @@ function QuotationListingPage() {
 
   const handleConfirmDelete = () => {
     if (!pendingDelete) return;
-    cancelQuotation(
-      { reason: 'Deleted from list' },
-      { onSuccess: () => setPendingDelete(null) },
-    );
+    cancelQuotation({ reason: 'Deleted from list' }, { onSuccess: () => setPendingDelete(null) });
   };
 
   useEffect(() => {
@@ -151,7 +153,7 @@ function QuotationListingPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Failed to load quotations</p>
+        <p className="text-gray-600">{t('errors.failedToLoad')}</p>
         <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
       </div>
     );
@@ -163,16 +165,16 @@ function QuotationListingPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Quotations</h3>
+            <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">Manage and track quotation requests</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" onClick={() => navigate('/quotations/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
-          New Quotation
+          {t('buttons.newQuotation')}
         </Button>
       </div>
 
@@ -181,23 +183,23 @@ function QuotationListingPage() {
         {/* Search */}
         <div className="flex-1 max-w-xs">
           <Input
-            placeholder="Quotation number or requester"
+            placeholder={t('filters.searchPlaceholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
           />
         </div>
 
-        {/* Status Filter — kept as native select; shared Dropdown renders "value - label" which is wrong here. */}
+        {/* Status Filter */}
         <select
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none bg-white min-w-36 hover:border-gray-300"
         >
-          <option value="">All statuses</option>
+          <option value="">{t('filters.allStatuses')}</option>
           {QUOTATION_STATUS_OPTIONS.map(s => (
             <option key={s} value={s}>
-              {s}
+              {t(`status.${s}`)}
             </option>
           ))}
         </select>
@@ -205,7 +207,7 @@ function QuotationListingPage() {
         {/* Cut Off Time — From */}
         <div className="w-40">
           <DateInput
-            label="Cut Off From"
+            label={t('filters.cutOffFrom')}
             value={cutOffTimeFrom}
             onChange={setCutOffTimeFrom}
             placeholder="dd/mm/yyyy"
@@ -215,7 +217,7 @@ function QuotationListingPage() {
         {/* Cut Off Time — To */}
         <div className="w-40">
           <DateInput
-            label="Cut Off To"
+            label={t('filters.cutOffTo')}
             value={cutOffTimeTo}
             onChange={setCutOffTimeTo}
             placeholder="dd/mm/yyyy"
@@ -226,7 +228,7 @@ function QuotationListingPage() {
         {hasFilters && (
           <Button variant="ghost" size="xs" onClick={handleClearFilters}>
             <Icon style="solid" name="xmark" className="size-3 mr-1" />
-            Clear all
+            {t('common:actions.clearAll')}
           </Button>
         )}
       </div>
@@ -237,17 +239,25 @@ function QuotationListingPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Quotation #</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Status</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Cut Off Time</th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.quotationNumber')}
+                </th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.status')}
+                </th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.cutOffTime')}
+                </th>
                 <th className="text-center font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  No of Appraisal
+                  {t('columns.noOfAppraisal')}
                 </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5">Response</th>
+                <th className="text-center font-medium text-gray-600 px-4 py-2.5">
+                  {t('columns.response')}
+                </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  Created Date
+                  {t('columns.createdDate')}
                 </th>
-                <th className="w-10 px-4 py-2.5" aria-label="Actions" />
+                <th className="w-10 px-4 py-2.5" aria-label={t('common:actions.viewDetails')} />
               </tr>
             </thead>
             <tbody
@@ -271,9 +281,11 @@ function QuotationListingPage() {
                   <td colSpan={7} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">No quotations found</p>
+                      <p className="text-gray-500 font-medium">{t('empty.noQuotations')}</p>
                       <p className="text-xs text-gray-400">
-                        {hasFilters ? 'Try different filters' : 'Create your first quotation'}
+                        {hasFilters
+                          ? t('empty.noQuotationsFilterHint')
+                          : t('empty.noQuotationsHint')}
                       </p>
                     </div>
                   </td>
@@ -341,13 +353,9 @@ function QuotationListingPage() {
         isOpen={pendingDelete !== null}
         onClose={() => (isCancelling ? undefined : setPendingDelete(null))}
         onConfirm={handleConfirmDelete}
-        title="Delete quotation?"
-        message={
-          pendingDelete
-            ? `Quotation ${pendingDelete.quotationNumber} will be cancelled and removed from active lists. This cannot be undone.`
-            : ''
-        }
-        confirmText="Delete"
+        title={t('cancel.title')}
+        message={pendingDelete ? t('cancel.body', { number: pendingDelete.quotationNumber }) : ''}
+        confirmText={t('common:actions.delete')}
         variant="danger"
         isLoading={isCancelling}
       />

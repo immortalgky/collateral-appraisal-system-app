@@ -3,6 +3,7 @@ import { DayPicker, type DayButtonProps } from 'react-day-picker';
 import 'react-day-picker/style.css';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -25,6 +26,7 @@ const BulkCreateMeetingsDialog = ({
   onClose,
   onSuccess,
 }: BulkCreateMeetingsDialogProps) => {
+  const { t } = useTranslation('meeting');
   const bulkCreate = useBulkCreateMeetings();
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [visibleMonth, setVisibleMonth] = useState<Date>(() => new Date());
@@ -61,10 +63,11 @@ const BulkCreateMeetingsDialog = ({
   }, [existingMeetings]);
 
   const datesWithMeetings = useMemo(
-    () => Array.from(meetingsByDate.keys()).map(k => {
-      const [y, mo, d] = k.split('-').map(Number);
-      return new Date(y, mo - 1, d);
-    }),
+    () =>
+      Array.from(meetingsByDate.keys()).map(k => {
+        const [y, mo, d] = k.split('-').map(Number);
+        return new Date(y, mo - 1, d);
+      }),
     [meetingsByDate],
   );
 
@@ -76,13 +79,12 @@ const BulkCreateMeetingsDialog = ({
 
   const handleSubmit = () => {
     if (selectedDates.length === 0) {
-      toast.error('Pick at least one date');
+      toast.error(t('toasts.pickAtLeastOneDate'));
       return;
     }
 
     // Send each picked day as application-local noon, no TZ offset, so the backend
-    // parses it as Kind=Unspecified and stores in application time (lines up with
-    // IDateTimeProvider.ApplicationNow). UTC ISO would skew StartAt by the TZ offset.
+    // parses it as Kind=Unspecified and stores in application time.
     const dates = selectedDates.map(d => {
       const noon = new Date(d);
       noon.setHours(12, 0, 0, 0);
@@ -90,32 +92,27 @@ const BulkCreateMeetingsDialog = ({
     });
 
     bulkCreate.mutate(
-      {
-        dates,
-      },
+      { dates },
       {
         onSuccess: data => {
-          toast.success(
-            `${data.meetingIds.length} meeting draft${data.meetingIds.length === 1 ? '' : 's'} created`,
-          );
+          const count = data.meetingIds.length;
+          const key = count === 1 ? 'toasts.bulkCreated' : 'toasts.bulkCreatedPlural';
+          toast.success(t(key, { count }));
           onSuccess?.(data.meetingIds);
           handleClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to create meetings');
+          toast.error(detail || t('toasts.bulkCreateFailed'));
         },
       },
     );
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Bulk Create Meetings" size="2xl">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.bulkCreateMeetings')} size="2xl">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
-          Select one or more dates. A New meeting will be created for each selected date. Members
-          can be added to each meeting afterwards.
-        </p>
+        <p className="text-sm text-gray-600">{t('bulkCreateDialog.description')}</p>
 
         {/* Date picker */}
         <div
@@ -173,7 +170,7 @@ const BulkCreateMeetingsDialog = ({
                               className="text-[10px] text-amber-700"
                               title={meetingNos.slice(2).join(', ')}
                             >
-                              +{overflow} more
+                              {t('bulkCreateDialog.overflow', { n: overflow })}
                             </span>
                           )}
                         </span>
@@ -203,7 +200,7 @@ const BulkCreateMeetingsDialog = ({
                       setSelectedDates(prev => prev.filter(x => x.getTime() !== d.getTime()))
                     }
                     className="hover:text-blue-900 focus:outline-none"
-                    aria-label={`Remove ${formatDate(d)}`}
+                    aria-label={t('aria.removeDate', { date: formatDate(d) })}
                   >
                     ×
                   </button>
@@ -214,7 +211,9 @@ const BulkCreateMeetingsDialog = ({
 
         <div className="flex items-center justify-between gap-3 pt-2">
           <p className="text-xs text-gray-500">
-            {selectedDates.length} date{selectedDates.length === 1 ? '' : 's'} selected
+            {selectedDates.length === 1
+              ? t('bulkCreateDialog.datesSelected', { n: selectedDates.length })
+              : t('bulkCreateDialog.datesSelectedPlural', { n: selectedDates.length })}
           </p>
           <div className="flex gap-3">
             <Button
@@ -223,7 +222,7 @@ const BulkCreateMeetingsDialog = ({
               onClick={handleClose}
               disabled={bulkCreate.isPending}
             >
-              Cancel
+              {t('buttons.cancel')}
             </Button>
             <Button
               type="button"
@@ -231,8 +230,8 @@ const BulkCreateMeetingsDialog = ({
               disabled={selectedDates.length === 0 || bulkCreate.isPending}
             >
               {bulkCreate.isPending
-                ? 'Creating...'
-                : `Create ${selectedDates.length > 0 ? selectedDates.length : ''}`.trim()}
+                ? t('bulkCreateDialog.creating')
+                : `${t('buttons.create')}${selectedDates.length > 0 ? ` (${selectedDates.length})` : ''}`}
             </Button>
           </div>
         </div>

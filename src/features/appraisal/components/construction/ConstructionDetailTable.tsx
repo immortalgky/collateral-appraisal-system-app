@@ -47,7 +47,11 @@ interface ConstructionDetailTableProps {
     totalPreviousPropertyValue: number;
     totalCurrentPropertyValue: number;
   };
-  onAddSubItem: (constructionWorkGroupId: string, constructionWorkItemId: string, workItemName: string) => void;
+  onAddSubItem: (
+    constructionWorkGroupId: string,
+    constructionWorkItemId: string,
+    workItemName: string,
+  ) => void;
   onUpdateSubItem: (index: number, field: string, value: number) => void;
   onDeleteSubItem: (index: number) => void;
   readOnly?: boolean;
@@ -67,15 +71,17 @@ function AddSubItemDropdown({
 }: {
   group: ConstructionWorkGroupDto;
   existingItemIds: string[];
-  onAdd: (constructionWorkGroupId: string, constructionWorkItemId: string, workItemName: string) => void;
+  onAdd: (
+    constructionWorkGroupId: string,
+    constructionWorkItemId: string,
+    workItemName: string,
+  ) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const availableItems = group.items.filter(
-    item => !existingItemIds.includes(item.id),
-  );
+  const availableItems = group.items.filter(item => !existingItemIds.includes(item.id));
 
   if (availableItems.length === 0) return null;
 
@@ -104,35 +110,38 @@ function AddSubItemDropdown({
         <Icon name="plus" style="solid" className="size-2.5" />
         Add
       </button>
-      {isOpen && createPortal(
-        <>
-          <div className="fixed inset-0 z-50" onClick={() => setIsOpen(false)} />
-          <div
-            ref={menuRef}
-            className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[200px]"
-            style={getPosition()}
-          >
-            <div className="px-3 pb-1.5 mb-1 border-b border-gray-100">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Select Item</span>
+      {isOpen &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-50" onClick={() => setIsOpen(false)} />
+            <div
+              ref={menuRef}
+              className="fixed z-50 bg-white border border-gray-200 rounded-xl shadow-xl py-1.5 min-w-[200px]"
+              style={getPosition()}
+            >
+              <div className="px-3 pb-1.5 mb-1 border-b border-gray-100">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  Select Item
+                </span>
+              </div>
+              {availableItems.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="flex items-center gap-2 w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-gray-50 text-gray-700 transition-colors"
+                  onClick={() => {
+                    onAdd(group.id, item.id, item.nameEn);
+                    setIsOpen(false);
+                  }}
+                >
+                  <Icon name="plus" style="solid" className="size-2.5 text-gray-400" />
+                  {item.nameEn}
+                </button>
+              ))}
             </div>
-            {availableItems.map(item => (
-              <button
-                key={item.id}
-                type="button"
-                className="flex items-center gap-2 w-full text-left px-3 py-1.5 text-xs font-medium hover:bg-gray-50 text-gray-700 transition-colors"
-                onClick={() => {
-                  onAdd(group.id, item.id, item.nameEn);
-                  setIsOpen(false);
-                }}
-              >
-                <Icon name="plus" style="solid" className="size-2.5 text-gray-400" />
-                {item.nameEn}
-              </button>
-            ))}
-          </div>
-        </>,
-        document.body,
-      )}
+          </>,
+          document.body,
+        )}
     </div>
   );
 }
@@ -158,107 +167,107 @@ export function ConstructionDetailTable({
           Total proportion is {formatNumber(grandTotal.totalProportion, 2)}% — exceeds 100%
         </div>
       )}
-    <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="bg-primary text-white">
-            <th className="text-left px-3 py-2.5 font-semibold min-w-[170px] sticky left-0 bg-primary">
-              Construction Work
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[125px]">
-              <div>Construction Value</div>
-              <div className="text-[10px] font-normal opacity-80">(Baht)</div>
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[95px]">
-              <div>Proportion</div>
-              <div className="text-[10px] font-normal opacity-80">(%)</div>
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[100px] bg-white/5">
-              <div>Prev. Progress</div>
-              <div className="text-[10px] font-normal opacity-80">(%)</div>
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[110px]">
-              <div>Curr. Progress</div>
-              <div className="text-[10px] font-normal opacity-80">(%)</div>
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[100px]">
-              <div>Curr. Proportion</div>
-              <div className="text-[10px] font-normal opacity-80">(%)</div>
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[125px] bg-white/5">
-              <div>Prev. Value</div>
-              <div className="text-[10px] font-normal opacity-80">(Baht)</div>
-            </th>
-            <th className="text-right px-3 py-2.5 font-semibold min-w-[125px]">
-              <div>Curr. Value</div>
-              <div className="text-[10px] font-normal opacity-80">(Baht)</div>
-            </th>
-            {!readOnly && !ciMode && <th className="w-9 px-1 py-2.5" />}
-          </tr>
-        </thead>
-        <tbody>
-          {workGroups.map(group => {
-            const items = computedSubItems.filter(
-              item => item.constructionWorkGroupId === group.id,
-            );
-            const subtotal = categorySubtotals.find(
-              s => s.constructionWorkGroupId === group.id,
-            );
-            const existingItemIds = items
-              .map(i => i.constructionWorkItemId)
-              .filter(Boolean) as string[];
+      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
+        <table className="w-full text-xs">
+          <thead>
+            <tr className="bg-primary text-white">
+              <th className="text-left px-3 py-2.5 font-semibold min-w-[170px] sticky left-0 bg-primary">
+                Construction Work
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[125px]">
+                <div>Construction Value</div>
+                <div className="text-[10px] font-normal opacity-80">(Baht)</div>
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[95px]">
+                <div>Proportion</div>
+                <div className="text-[10px] font-normal opacity-80">(%)</div>
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[100px] bg-white/5">
+                <div>Prev. Progress</div>
+                <div className="text-[10px] font-normal opacity-80">(%)</div>
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[110px]">
+                <div>Curr. Progress</div>
+                <div className="text-[10px] font-normal opacity-80">(%)</div>
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[100px]">
+                <div>Curr. Proportion</div>
+                <div className="text-[10px] font-normal opacity-80">(%)</div>
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[125px] bg-white/5">
+                <div>Prev. Value</div>
+                <div className="text-[10px] font-normal opacity-80">(Baht)</div>
+              </th>
+              <th className="text-right px-3 py-2.5 font-semibold min-w-[125px]">
+                <div>Curr. Value</div>
+                <div className="text-[10px] font-normal opacity-80">(Baht)</div>
+              </th>
+              {!readOnly && !ciMode && <th className="w-9 px-1 py-2.5" />}
+            </tr>
+          </thead>
+          <tbody>
+            {workGroups.map(group => {
+              const items = computedSubItems.filter(
+                item => item.constructionWorkGroupId === group.id,
+              );
+              const subtotal = categorySubtotals.find(s => s.constructionWorkGroupId === group.id);
+              const existingItemIds = items
+                .map(i => i.constructionWorkItemId)
+                .filter(Boolean) as string[];
 
-            return (
-              <CategorySection
-                key={group.id}
-                group={group}
-                items={items}
-                subtotal={subtotal}
-                existingItemIds={existingItemIds}
-                onAddSubItem={onAddSubItem}
-                onUpdateSubItem={onUpdateSubItem}
-                onDeleteSubItem={onDeleteSubItem}
-                readOnly={readOnly}
-                ciMode={ciMode}
-              />
-            );
-          })}
+              return (
+                <CategorySection
+                  key={group.id}
+                  group={group}
+                  items={items}
+                  subtotal={subtotal}
+                  existingItemIds={existingItemIds}
+                  onAddSubItem={onAddSubItem}
+                  onUpdateSubItem={onUpdateSubItem}
+                  onDeleteSubItem={onDeleteSubItem}
+                  readOnly={readOnly}
+                  ciMode={ciMode}
+                />
+              );
+            })}
 
-          {/* Grand Total Row */}
-          <tr className="bg-primary text-white font-semibold text-xs">
-            <td className="px-3 py-2.5 sticky left-0 bg-primary">
-              <div className="flex items-center gap-2">
-                <Icon name="calculator" style="solid" className="size-3.5 opacity-80" />
-                Total Building Value
-              </div>
-            </td>
-            <td className="text-right px-3 py-2.5 tabular-nums">
-              {formatNumber(grandTotal.totalConstructionValue, 2)}
-            </td>
-            <td className={`text-right px-3 py-2.5 tabular-nums ${isOverLimit ? 'text-red-200' : ''}`}>
-              {formatNumber(grandTotal.totalProportion, 2)}
-              {isOverLimit && ' !'}
-            </td>
-            <td className="text-right px-3 py-2.5 tabular-nums">
-              {formatNumber(grandTotal.weightedPreviousProgress, 2)} %
-            </td>
-            <td className="text-right px-3 py-2.5 tabular-nums">
-              {formatNumber(grandTotal.weightedCurrentProgress, 2)} %
-            </td>
-            <td className="text-right px-3 py-2.5 tabular-nums">
-              {formatNumber(grandTotal.totalCurrentProportion, 2)}
-            </td>
-            <td className="text-right px-3 py-2.5 tabular-nums">
-              {formatNumber(grandTotal.totalPreviousPropertyValue, 2)}
-            </td>
-            <td className="text-right px-3 py-2.5 tabular-nums">
-              {formatNumber(grandTotal.totalCurrentPropertyValue, 2)}
-            </td>
-            {!readOnly && !ciMode && <td className="px-1 py-2.5" />}
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            {/* Grand Total Row */}
+            <tr className="bg-primary text-white font-semibold text-xs">
+              <td className="px-3 py-2.5 sticky left-0 bg-primary">
+                <div className="flex items-center gap-2">
+                  <Icon name="calculator" style="solid" className="size-3.5 opacity-80" />
+                  Total Building Value
+                </div>
+              </td>
+              <td className="text-right px-3 py-2.5 tabular-nums">
+                {formatNumber(grandTotal.totalConstructionValue, 2)}
+              </td>
+              <td
+                className={`text-right px-3 py-2.5 tabular-nums ${isOverLimit ? 'text-red-200' : ''}`}
+              >
+                {formatNumber(grandTotal.totalProportion, 2)}
+                {isOverLimit && ' !'}
+              </td>
+              <td className="text-right px-3 py-2.5 tabular-nums">
+                {formatNumber(grandTotal.weightedPreviousProgress, 2)} %
+              </td>
+              <td className="text-right px-3 py-2.5 tabular-nums">
+                {formatNumber(grandTotal.weightedCurrentProgress, 2)} %
+              </td>
+              <td className="text-right px-3 py-2.5 tabular-nums">
+                {formatNumber(grandTotal.totalCurrentProportion, 2)}
+              </td>
+              <td className="text-right px-3 py-2.5 tabular-nums">
+                {formatNumber(grandTotal.totalPreviousPropertyValue, 2)}
+              </td>
+              <td className="text-right px-3 py-2.5 tabular-nums">
+                {formatNumber(grandTotal.totalCurrentPropertyValue, 2)}
+              </td>
+              {!readOnly && !ciMode && <td className="px-1 py-2.5" />}
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -278,7 +287,11 @@ function CategorySection({
   items: ComputedItem[];
   subtotal?: CategorySubtotal;
   existingItemIds: string[];
-  onAddSubItem: (constructionWorkGroupId: string, constructionWorkItemId: string, workItemName: string) => void;
+  onAddSubItem: (
+    constructionWorkGroupId: string,
+    constructionWorkItemId: string,
+    workItemName: string,
+  ) => void;
   onUpdateSubItem: (index: number, field: string, value: number) => void;
   onDeleteSubItem: (index: number) => void;
   readOnly?: boolean;
@@ -345,7 +358,9 @@ function CategorySection({
           <td className="px-1 py-0.5">
             <NumberInput
               value={item.currentProgressPct}
-              onChange={e => onUpdateSubItem(item._index, 'currentProgressPct', e.target.value ?? 0)}
+              onChange={e =>
+                onUpdateSubItem(item._index, 'currentProgressPct', e.target.value ?? 0)
+              }
               decimalPlaces={2}
               max={100}
               disabled={readOnly}

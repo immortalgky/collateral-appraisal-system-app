@@ -13,9 +13,7 @@ export function AppraisalCopyProvider({
   children: ReactNode;
 }) {
   return (
-    <AppraisalCopyContext.Provider value={onCopySelect}>
-      {children}
-    </AppraisalCopyContext.Provider>
+    <AppraisalCopyContext.Provider value={onCopySelect}>{children}</AppraisalCopyContext.Provider>
   );
 }
 

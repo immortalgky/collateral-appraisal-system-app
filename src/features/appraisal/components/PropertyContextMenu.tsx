@@ -16,12 +16,7 @@ interface PropertyContextMenuProps {
   onClose: () => void;
 }
 
-export const PropertyContextMenu = ({
-  x,
-  y,
-  items,
-  onClose,
-}: PropertyContextMenuProps) => {
+export const PropertyContextMenu = ({ x, y, items, onClose }: PropertyContextMenuProps) => {
   const menuRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x, y });
 

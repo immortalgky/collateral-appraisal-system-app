@@ -198,7 +198,10 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
           className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl text-white transition-all hover:scale-110 group"
           title="Previous"
         >
-          <Icon name="chevron-left" className="text-2xl group-hover:-translate-x-0.5 transition-transform" />
+          <Icon
+            name="chevron-left"
+            className="text-2xl group-hover:-translate-x-0.5 transition-transform"
+          />
         </button>
       )}
       {hasNext && (
@@ -211,7 +214,10 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
           className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl text-white transition-all hover:scale-110 group"
           title="Next"
         >
-          <Icon name="chevron-right" className="text-2xl group-hover:translate-x-0.5 transition-transform" />
+          <Icon
+            name="chevron-right"
+            className="text-2xl group-hover:translate-x-0.5 transition-transform"
+          />
         </button>
       )}
 
@@ -292,7 +298,9 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
             {/* Metadata pills */}
             <div className="flex items-center gap-2 mt-2.5 ml-14">
               {showInUseStatus && photo.isInUse != null && (
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${photo.isInUse ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'}`}>
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${photo.isInUse ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'}`}
+                >
                   <Icon name={photo.isInUse ? 'check-circle' : 'clock'} className="text-[10px]" />
                   {photo.isInUse ? 'In Use' : 'Not Used'}
                 </span>

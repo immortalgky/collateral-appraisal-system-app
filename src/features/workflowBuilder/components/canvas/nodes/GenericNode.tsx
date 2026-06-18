@@ -10,7 +10,8 @@ export function GenericNode({ id, data, selected }: NodeProps) {
   return (
     <BaseNode
       nodeId={id}
-      iconName={visual.iconName} iconStyle={visual.iconStyle}
+      iconName={visual.iconName}
+      iconStyle={visual.iconStyle}
       accentColor={visual.accentColor}
       title={nodeData.name || visual.label}
       subtitle={nodeData.type as string}

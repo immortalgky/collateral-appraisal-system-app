@@ -1,12 +1,26 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
+import Alert from '@/shared/components/Alert';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import { useAuthStore } from '@/features/auth/store';
-import { useCompleteActivity } from '../../api/workflow';
+import { useCompleteActivity, type StructuredWarning } from '../../api/workflow';
 import { decisionSummaryKeys } from '../../api/decisionSummary';
+
+/**
+ * Splits an admin-authored warning message into individual sentence bullets.
+ * Splits on '. ' (period-space) so single sentences pass through as one bullet.
+ * Re-appends a period to each sentence so each reads as a complete statement.
+ */
+const splitWarningMessage = (message: string): string[] =>
+  message
+    .split(/\.\s+/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(s => (s.endsWith('.') ? s : `${s}.`));
 
 const VOTE_OPTIONS = [
   { value: 'approve', label: 'Approve' },
@@ -24,14 +38,16 @@ interface VoteDialogProps {
 }
 
 const VoteDialog = ({ isOpen, onClose, workflowInstanceId, activityId }: VoteDialogProps) => {
+  const { t } = useTranslation('appraisal');
   const [selectedVote, setSelectedVote] = useState<VoteValue | null>(null);
   const [comments, setComments] = useState('');
+  const [warnings, setWarnings] = useState<StructuredWarning[]>([]);
   const completeActivity = useCompleteActivity();
   const isPending = completeActivity.isPending;
   const username = useAuthStore(s => s.user?.username);
   const queryClient = useQueryClient();
 
-  const handleSubmit = () => {
+  const submitVote = (acknowledgedWarningTokens?: string[]) => {
     if (!selectedVote || !username) return;
 
     completeActivity.mutate(
@@ -43,40 +59,56 @@ const VoteDialog = ({ isOpen, onClose, workflowInstanceId, activityId }: VoteDia
           decisionTaken: selectedVote,
           comments: comments || undefined,
         },
+        acknowledgedWarningTokens,
       },
       {
         onSuccess: result => {
+          if (result.status === 'WarningsRequireAcknowledgement') {
+            // Non-blocking warnings — keep dialog open and show warning panel
+            setWarnings(result.warnings ?? []);
+            return;
+          }
+
           if (result.status === 'ValidationFailed' || result.status === 'Failed') {
             const errors = result.validationErrors ?? [];
             if (errors.length > 0) {
-              errors.forEach(err => toast.error(err));
+              errors.forEach(err => toast.error(err.message));
             } else {
-              toast.error('Failed to submit vote');
+              toast.error(t('toasts.voteSubmitFailed'));
             }
             return;
           }
 
-          toast.success(result.isCompleted ? 'Committee decision recorded' : 'Vote recorded');
+          toast.success(
+            result.isCompleted ? t('toasts.committeeDecisionRecorded') : t('toasts.voteRecorded'),
+          );
           // Refresh the approval list so members[]/conditions[] reflect the new vote.
           queryClient.invalidateQueries({
             queryKey: decisionSummaryKeys.approvalList(workflowInstanceId, activityId),
           });
+          setWarnings([]);
           setSelectedVote(null);
           setComments('');
           onClose();
         },
         onError: (error: unknown) => {
           const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
-          toast.error(detail || 'Failed to submit vote');
+          toast.error(detail || t('toasts.voteSubmitFailed'));
         },
       },
     );
+  };
+
+  const handleSubmit = () => {
+    setWarnings([]);
+    submitVote();
   };
 
   const handleClose = () => {
     if (!isPending) {
       setSelectedVote(null);
       setComments('');
+      setWarnings([]);
       onClose();
     }
   };
@@ -120,13 +152,38 @@ const VoteDialog = ({ isOpen, onClose, workflowInstanceId, activityId }: VoteDia
           />
         </div>
 
+        {warnings.length > 0 && (
+          <Alert variant="warning" title={t('decisionSummary.warnings.title')} className="text-left">
+            <ul className="mt-2 space-y-2">
+              {warnings.flatMap((w, wi) =>
+                splitWarningMessage(w.message).map((sentence, si) => (
+                  <li key={`${wi}-${si}`} className="flex items-start gap-2 text-sm text-amber-800">
+                    <span className="mt-[5px] size-1.5 shrink-0 rounded-full bg-amber-500" />
+                    <span>{sentence}</span>
+                  </li>
+                )),
+              )}
+            </ul>
+          </Alert>
+        )}
+
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" type="button" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={!selectedVote || isPending}>
-            {isPending ? 'Submitting...' : 'Submit Vote'}
-          </Button>
+          {warnings.length > 0 ? (
+            <Button
+              type="button"
+              onClick={() => submitVote(warnings.map(w => w.ackToken))}
+              disabled={isPending}
+            >
+              {isPending ? 'Submitting...' : t('decisionSummary.warnings.continueAnyway')}
+            </Button>
+          ) : (
+            <Button type="button" onClick={handleSubmit} disabled={!selectedVote || isPending}>
+              {isPending ? 'Submitting...' : 'Submit Vote'}
+            </Button>
+          )}
         </div>
       </div>
     </Modal>

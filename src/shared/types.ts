@@ -31,6 +31,8 @@ export type LoadingStore = {
   message?: string;
   showLoading: (message?: string) => void;
   hideLoading: () => void;
+  /** Update the message text without toggling visibility. No-op when not loading. */
+  setMessage: (message: string) => void;
 };
 
 export type AtLeastOne<T> = { [K in keyof T]: Pick<T, K> }[keyof T] & Partial<T>;

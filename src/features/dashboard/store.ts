@@ -51,7 +51,7 @@ export const useDashboardStore = create<DashboardStore>()(
       prefs: {},
       isEditMode: false,
       setEditMode: mode => set({ isEditMode: mode }),
-      updatePrefs: (partial) => set(state => ({ prefs: { ...state.prefs, ...partial } })),
+      updatePrefs: partial => set(state => ({ prefs: { ...state.prefs, ...partial } })),
 
       addWidget: (type, position) =>
         set(state => {

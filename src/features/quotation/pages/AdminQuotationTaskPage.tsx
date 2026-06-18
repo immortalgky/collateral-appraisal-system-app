@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import QuotationSection from '@/features/appraisal/components/QuotationSection';
@@ -17,6 +18,7 @@ import { useGetTaskById } from '@features/appraisal/api/workflow';
  * No AppraisalLayout wrapper — the page lives inside TaskLayout.
  */
 const AdminQuotationTaskPage = () => {
+  const { t } = useTranslation('quotation');
   const { taskId } = useParams<{ taskId: string }>();
   const { data: taskData, isLoading, isError, refetch } = useGetTaskById(taskId);
 
@@ -33,7 +35,7 @@ const AdminQuotationTaskPage = () => {
   }
 
   if (isError) {
-    return <DataErrorState title="Failed to load task" onRetry={() => refetch()} />;
+    return <DataErrorState title={t('errors.failedToLoadTask')} onRetry={() => refetch()} />;
   }
 
   if (!appraisalId) {
@@ -41,7 +43,7 @@ const AdminQuotationTaskPage = () => {
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
         <p className="text-sm text-gray-600">
-          No appraisal linked to this task. Cannot display quotation section.
+          {t('errors.noAppraisalLinked')}
         </p>
       </div>
     );

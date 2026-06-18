@@ -86,7 +86,9 @@ const PropertyDetailSlideOver = ({
   const photos: any[] = data.photos ?? data.documents ?? [];
   const photoUrls = photos
     .filter((p: any) => p.documentId)
-    .map((p: any) => `${API_BASE_URL}/documents/${p.documentId}/download?download=false&size=large`);
+    .map(
+      (p: any) => `${API_BASE_URL}/documents/${p.documentId}/download?download=false&size=large`,
+    );
 
   // Title deeds (land types have a `titles` array)
   const titles: any[] = data.titles ?? [];
@@ -151,7 +153,10 @@ const PropertyDetailSlideOver = ({
                   const code = Array.isArray(value) ? value : value != null ? String(value) : null;
                   if (!code || (typeof code === 'string' && code === '')) return null;
                   return (
-                    <div key={field.key} className="flex justify-between py-1.5 border-b border-gray-50">
+                    <div
+                      key={field.key}
+                      className="flex justify-between py-1.5 border-b border-gray-50"
+                    >
                       <span className="text-xs text-gray-500 shrink-0">{field.label}</span>
                       <ParameterDisplay
                         group={field.parameterGroup}
@@ -166,17 +171,27 @@ const PropertyDetailSlideOver = ({
                 // Boolean
                 if (field.isBoolean) {
                   if (value == null) return null;
-                  return <DetailRow key={field.key} label={field.label} value={value ? 'Yes' : 'No'} />;
+                  return (
+                    <DetailRow key={field.key} label={field.label} value={value ? 'Yes' : 'No'} />
+                  );
                 }
 
                 // Date
                 if (field.isDate) {
-                  return <DetailRow key={field.key} label={field.label} value={formatDate(value)} />;
+                  return (
+                    <DetailRow key={field.key} label={field.label} value={formatDate(value)} />
+                  );
                 }
 
                 // Number
                 if (field.isNumber && value != null) {
-                  return <DetailRow key={field.key} label={field.label} value={formatNumber(value, field.decimalPlaces)} />;
+                  return (
+                    <DetailRow
+                      key={field.key}
+                      label={field.label}
+                      value={formatNumber(value, field.decimalPlaces)}
+                    />
+                  );
                 }
 
                 // Array
@@ -279,19 +294,33 @@ const TitleDeedCard = ({ title, idx }: { title: any; idx: number }) => {
           {title.governmentPricePerSqWa != null && (
             <div className="flex justify-between py-1 border-b border-gray-50">
               <span className="text-gray-500">Gov. Price / Sq.Wa</span>
-              <span className="text-gray-900">{Number(title.governmentPricePerSqWa).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-gray-900">
+                {Number(title.governmentPricePerSqWa).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
           )}
           {title.governmentPrice != null && (
             <div className="flex justify-between py-1 border-b border-gray-50">
               <span className="text-gray-500">Gov. Price</span>
-              <span className="text-gray-900 font-medium">{Number(title.governmentPrice).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="text-gray-900 font-medium">
+                {Number(title.governmentPrice).toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
             </div>
           )}
           {title.isMissingFromSurvey != null && (
             <div className="flex justify-between py-1">
               <span className="text-gray-500">Missed on Survey</span>
-              <span className={title.isMissingFromSurvey ? 'text-amber-600 font-medium' : 'text-gray-900'}>
+              <span
+                className={
+                  title.isMissingFromSurvey ? 'text-amber-600 font-medium' : 'text-gray-900'
+                }
+              >
                 {title.isMissingFromSurvey ? 'Yes' : 'No'}
               </span>
             </div>

@@ -38,6 +38,7 @@ export function mapWQSFormToSubmitSchema({
       displaySequence: index,
       isSelectedForScoring: scoringFactorIds.has(cf.factorId ?? ''),
       remarks: null,
+      collateralValue: (cf as any).collateralValue ?? null,
     })),
 
     factorScores: WQSForm.WQSScores.flatMap((score, index) => {

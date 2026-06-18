@@ -37,7 +37,7 @@ export function TaskCountBadge({ activityId }: TaskCountBadgeProps) {
 
   return (
     <span
-      className="ml-auto inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold leading-none"
+      className="flex-shrink-0 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold leading-none"
       aria-label={ariaLabel}
     >
       {display}

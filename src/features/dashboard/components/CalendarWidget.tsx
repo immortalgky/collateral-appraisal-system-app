@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import WidgetWrapper from './WidgetWrapper';
@@ -9,16 +10,6 @@ import { useDashboardStore } from '../store';
 import { toIsoDate } from '../utils/periodPresets';
 import type { CalendarItem, CalendarItemType, CalendarLinkEntityType } from '../api/types';
 
-const DAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-];
-const MONTH_SHORT = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-];
-
 const WIDGET_ID = 'calendar';
 
 type CalendarWidgetSettings = {
@@ -27,9 +18,7 @@ type CalendarWidgetSettings = {
 
 const EMPTY_SETTINGS: CalendarWidgetSettings = Object.freeze({}) as CalendarWidgetSettings;
 
-// Visual category derived from (type + isSlaCritical). Used for dot color,
-// legend, and aggregated day counts. Distinct from CalendarItemType because
-// the SLA-critical state is no longer its own backend type.
+// Visual category derived from (type + isSlaCritical).
 type VisualCategory = 'meeting' | 'sla' | 'task';
 
 function categoryOf(item: CalendarItem): VisualCategory {
@@ -43,35 +32,18 @@ const CATEGORY_DOT_CLASS: Record<VisualCategory, string> = {
   task: 'bg-amber-400',
 };
 
-const CATEGORY_LABEL: Record<VisualCategory, string> = {
-  meeting: 'Meeting',
-  sla: 'SLA critical',
-  task: 'Task due',
-};
-
 const ALL_TYPES: CalendarItemType[] = ['meeting', 'task_due'];
-const TOPIC_LABELS: Record<CalendarItemType, string> = {
-  meeting: 'Meetings',
-  task_due: 'Task Due',
-};
-
-function buildDaySummary(items: CalendarItem[]): string {
-  if (items.length === 0) return '';
-  const counts: Record<VisualCategory, number> = { meeting: 0, sla: 0, task: 0 };
-  for (const i of items) counts[categoryOf(i)]++;
-  const parts: string[] = [];
-  if (counts.sla) parts.push(`${counts.sla} SLA`);
-  if (counts.task) parts.push(`${counts.task} task${counts.task === 1 ? '' : 's'}`);
-  if (counts.meeting) parts.push(`${counts.meeting} meeting${counts.meeting === 1 ? '' : 's'}`);
-  return `${items.length} event${items.length === 1 ? '' : 's'} · ${parts.join(', ')}`;
-}
 
 function buildEntityUrl(entityType: CalendarLinkEntityType, entityId: string): string {
   switch (entityType) {
-    case 'appraisal': return `/appraisals/${entityId}`;
-    case 'request': return `/requests/${entityId}`;
-    case 'task': return `/tasks/${entityId}/opening`;
-    case 'meeting': return `/meetings/${entityId}`;
+    case 'appraisal':
+      return `/appraisals/${entityId}`;
+    case 'request':
+      return `/requests/${entityId}`;
+    case 'task':
+      return `/tasks/${entityId}/opening`;
+    case 'meeting':
+      return `/meetings/${entityId}`;
   }
 }
 
@@ -80,20 +52,27 @@ function getDayDotColors(items: CalendarItem[]): string[] {
   const colors: string[] = [];
   for (const item of items) {
     const cat = categoryOf(item);
-    if (!seen.has(cat)) { seen.add(cat); colors.push(CATEGORY_DOT_CLASS[cat]); }
+    if (!seen.has(cat)) {
+      seen.add(cat);
+      colors.push(CATEGORY_DOT_CLASS[cat]);
+    }
     if (colors.length === 3) break;
   }
   return colors;
 }
 
+const THIS_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => THIS_YEAR - 5 + i);
+
 type PopoverProps = {
   items: CalendarItem[];
   dateLabel: string;
+  categoryLabel: (cat: VisualCategory) => string;
   onClose: () => void;
   anchorRef: { current: HTMLButtonElement | null };
 };
 
-function DayPopover({ items, dateLabel, onClose, anchorRef }: PopoverProps) {
+function DayPopover({ items, dateLabel, categoryLabel, onClose, anchorRef }: PopoverProps) {
   const navigate = useNavigate();
   const popoverRef = useRef<HTMLDivElement>(null);
   const [align, setAlign] = useState<'center' | 'start' | 'end'>('center');
@@ -101,9 +80,12 @@ function DayPopover({ items, dateLabel, onClose, anchorRef }: PopoverProps) {
   useEffect(() => {
     function handleClick(e: globalThis.MouseEvent) {
       if (
-        popoverRef.current && !popoverRef.current.contains(e.target as Node) &&
-        anchorRef.current && !anchorRef.current.contains(e.target as Node)
-      ) onClose();
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(e.target as Node)
+      )
+        onClose();
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -142,33 +124,46 @@ function DayPopover({ items, dateLabel, onClose, anchorRef }: PopoverProps) {
       {items.map((item, idx) => {
         const cat = categoryOf(item);
         return (
-        <button
-          key={idx}
-          type="button"
-          title={`${CATEGORY_LABEL[cat]}${item.time ? ` at ${item.time.slice(0, 5)}` : ''}${item.appraisalNumber ? ` · ${item.appraisalNumber}` : ''} — ${item.title}`}
-          onClick={() => { navigate(buildEntityUrl(item.linkEntityType, item.linkEntityId)); onClose(); }}
-          className="w-full flex items-start gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
-        >
-          <span className={`mt-1.5 size-2 rounded-full shrink-0 ${CATEGORY_DOT_CLASS[cat]}`} />
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="text-sm text-gray-800 leading-snug break-words">{item.title}</span>
-            <span className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
-              <span>{CATEGORY_LABEL[cat]}</span>
-              {item.time && (<><span className="text-gray-300">·</span><span>{item.time.slice(0, 5)}</span></>)}
-              {item.appraisalNumber && (<><span className="text-gray-300">·</span><span className="font-medium text-gray-600 tabular-nums">{item.appraisalNumber}</span></>)}
-            </span>
-          </div>
-        </button>
+          <button
+            key={idx}
+            type="button"
+            title={`${categoryLabel(cat)}${item.time ? ` at ${item.time.slice(0, 5)}` : ''}${item.appraisalNumber ? ` · ${item.appraisalNumber}` : ''} — ${item.title}`}
+            onClick={() => {
+              navigate(buildEntityUrl(item.linkEntityType, item.linkEntityId));
+              onClose();
+            }}
+            className="w-full flex items-start gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+          >
+            <span className={`mt-1.5 size-2 rounded-full shrink-0 ${CATEGORY_DOT_CLASS[cat]}`} />
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm text-gray-800 leading-snug break-words">{item.title}</span>
+              <span className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                <span>{categoryLabel(cat)}</span>
+                {item.time && (
+                  <>
+                    <span className="text-gray-300">·</span>
+                    <span>{item.time.slice(0, 5)}</span>
+                  </>
+                )}
+                {item.appraisalNumber && (
+                  <>
+                    <span className="text-gray-300">·</span>
+                    <span className="font-medium text-gray-600 tabular-nums">
+                      {item.appraisalNumber}
+                    </span>
+                  </>
+                )}
+              </span>
+            </div>
+          </button>
         );
       })}
     </div>
   );
 }
 
-const THIS_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => THIS_YEAR - 5 + i);
-
 function CalendarWidget() {
+  const { t } = useTranslation('dashboard');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [topicOpen, setTopicOpen] = useState(false);
@@ -176,13 +171,49 @@ function CalendarWidget() {
   const topicRef = useRef<HTMLDivElement>(null);
 
   const settings = useDashboardStore(
-    s => (s.widgets.find(w => w.id === WIDGET_ID)?.settings as CalendarWidgetSettings | undefined) ?? EMPTY_SETTINGS,
+    s =>
+      (s.widgets.find(w => w.id === WIDGET_ID)?.settings as CalendarWidgetSettings | undefined) ??
+      EMPTY_SETTINGS,
   );
   const updateSettings = useDashboardStore(s => s.updateWidgetSettings);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const today = new Date();
+
+  // Arrays derived from translation keys (inside component)
+  const DAYS = [
+    t('calendar.days.MON'),
+    t('calendar.days.TUE'),
+    t('calendar.days.WED'),
+    t('calendar.days.THU'),
+    t('calendar.days.FRI'),
+    t('calendar.days.SAT'),
+    t('calendar.days.SUN'),
+  ];
+
+  const MONTHS = Array.from({ length: 12 }, (_, i) =>
+    t(
+      `calendar.months.${i}` as `calendar.months.${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11}`,
+    ),
+  );
+
+  const MONTH_SHORT = Array.from({ length: 12 }, (_, i) =>
+    t(
+      `calendar.monthsShort.${i}` as `calendar.monthsShort.${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11}`,
+    ),
+  );
+
+  const CATEGORY_LABEL: Record<VisualCategory, string> = {
+    meeting: t('calendar.categoryLabels.meeting'),
+    sla: t('calendar.categoryLabels.sla'),
+    task: t('calendar.categoryLabels.task'),
+  };
+
+  const TOPIC_LABELS: Record<CalendarItemType, string> = {
+    meeting: t('calendar.topicLabels.meeting'),
+    task_due: t('calendar.topicLabels.task_due'),
+  };
 
   useEffect(() => {
     if (!topicOpen) return;
@@ -214,8 +245,14 @@ function CalendarWidget() {
   const firstDayWeekday = (firstDayOfMonth.getDay() + 6) % 7;
   const daysInMonth = lastDayOfMonth.getDate();
 
-  const prevMonth = () => { setCurrentDate(new Date(year, month - 1, 1)); setSelectedDay(null); };
-  const nextMonth = () => { setCurrentDate(new Date(year, month + 1, 1)); setSelectedDay(null); };
+  const prevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+    setSelectedDay(null);
+  };
+  const nextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+    setSelectedDay(null);
+  };
 
   const days: (number | null)[] = [];
   for (let i = 0; i < firstDayWeekday; i++) {
@@ -228,22 +265,39 @@ function CalendarWidget() {
 
   const isTodayCell = (day: number, index: number) => {
     const inCurrent = index >= firstDayWeekday && index < firstDayWeekday + daysInMonth;
-    return inCurrent && day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+    return (
+      inCurrent &&
+      day === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    );
   };
 
-  const isCurrentMonthCell = (index: number) => index >= firstDayWeekday && index < firstDayWeekday + daysInMonth;
+  const isCurrentMonthCell = (index: number) =>
+    index >= firstDayWeekday && index < firstDayWeekday + daysInMonth;
 
   const getDateKey = (day: number, index: number): string | null => {
     if (!isCurrentMonthCell(index)) return null;
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   };
 
+  const buildDaySummary = (items: CalendarItem[]): string => {
+    if (items.length === 0) return '';
+    const counts: Record<VisualCategory, number> = { meeting: 0, sla: 0, task: 0 };
+    for (const i of items) counts[categoryOf(i)]++;
+    const parts: string[] = [];
+    if (counts.sla) parts.push(`${counts.sla} SLA`);
+    if (counts.task) parts.push(`${counts.task} task${counts.task === 1 ? '' : 's'}`);
+    if (counts.meeting) parts.push(`${counts.meeting} meeting${counts.meeting === 1 ? '' : 's'}`);
+    return `${items.length} event${items.length === 1 ? '' : 's'} · ${parts.join(', ')}`;
+  };
+
   const selectedItems = selectedDay ? (eventMap.get(selectedDay) ?? []) : [];
-  const selectedDateLabel = selectedDay ? format(new Date(selectedDay + 'T00:00:00'), 'MMM d, yyyy') : '';
+  const selectedDateLabel = selectedDay
+    ? format(new Date(selectedDay + 'T00:00:00'), 'MMM d, yyyy')
+    : '';
 
   const toggleTopic = (type: CalendarItemType) => {
-    // Empty filter means "all visible"; expand it before removing the clicked type
-    // so the UI matches the checkboxes (which render as all-checked when empty).
     const current = settings.topicFilter?.length ? settings.topicFilter : ALL_TYPES;
     const next = current.includes(type) ? current.filter(t => t !== type) : [...current, type];
     updateSettings(WIDGET_ID, { topicFilter: next.length === ALL_TYPES.length ? [] : next });
@@ -257,16 +311,14 @@ function CalendarWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-0.5">
-            <h3 className="font-semibold text-gray-800">Calendar</h3>
-            <WidgetDateRangeBadge
-              label={`${MONTH_SHORT[month]} ${year}`}
-            />
+            <h3 className="font-semibold text-gray-800">{t('calendar.title')}</h3>
+            <WidgetDateRangeBadge label={`${MONTH_SHORT[month]} ${year}`} />
           </div>
           <Link
             to="/calendar"
             className="text-blue-500 text-sm font-medium hover:text-blue-600 flex items-center gap-1.5 transition-colors"
           >
-            View Calendar
+            {t('calendar.viewCalendar')}
             <Icon name="arrow-up-right-from-square" style="solid" className="size-3" />
           </Link>
         </div>
@@ -277,6 +329,7 @@ function CalendarWidget() {
             <button
               type="button"
               onClick={prevMonth}
+              aria-label={t('calendar.aria.previous')}
               className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
             >
               <Icon name="chevron-left" style="solid" className="size-4" />
@@ -287,17 +340,25 @@ function CalendarWidget() {
                 value={month}
                 onChange={e => setCurrentDate(new Date(year, Number(e.target.value), 1))}
                 className="text-sm font-semibold text-gray-800 border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded cursor-pointer pr-1"
-                aria-label="Select month"
+                aria-label={t('calendar.aria.selectMonth')}
               >
-                {MONTHS.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                {MONTHS.map((m, i) => (
+                  <option key={i} value={i}>
+                    {m}
+                  </option>
+                ))}
               </select>
               <select
                 value={year}
                 onChange={e => setCurrentDate(new Date(Number(e.target.value), month, 1))}
                 className="text-sm font-semibold text-gray-800 border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded cursor-pointer"
-                aria-label="Select year"
+                aria-label={t('calendar.aria.selectYear')}
               >
-                {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+                {YEAR_OPTIONS.map(y => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -307,9 +368,11 @@ function CalendarWidget() {
                 <button
                   type="button"
                   onClick={() => setTopicOpen(o => !o)}
-                  aria-label="Filter by topic"
+                  aria-label={t('calendar.aria.filterByTopic')}
                   className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors relative ${
-                    activeFilterCount > 0 ? 'text-blue-600 bg-blue-50 hover:bg-blue-100' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                    activeFilterCount > 0
+                      ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
+                      : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
                   }`}
                 >
                   <Icon name="filter" style="solid" className="size-3.5" />
@@ -321,11 +384,17 @@ function CalendarWidget() {
                 </button>
                 {topicOpen && (
                   <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white shadow-lg p-2">
-                    <p className="text-xs font-semibold text-gray-500 px-1 mb-1">Topics</p>
+                    <p className="text-xs font-semibold text-gray-500 px-1 mb-1">
+                      {t('calendar.topics')}
+                    </p>
                     {ALL_TYPES.map(type => {
-                      const checked = !(settings.topicFilter?.length) || settings.topicFilter.includes(type);
+                      const checked =
+                        !settings.topicFilter?.length || settings.topicFilter.includes(type);
                       return (
-                        <label key={type} className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm text-gray-700">
+                        <label
+                          key={type}
+                          className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                        >
                           <input
                             type="checkbox"
                             checked={checked}
@@ -342,6 +411,7 @@ function CalendarWidget() {
               <button
                 type="button"
                 onClick={nextMonth}
+                aria-label={t('calendar.aria.next')}
                 className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
               >
                 <Icon name="chevron-right" style="solid" className="size-4" />
@@ -351,8 +421,8 @@ function CalendarWidget() {
 
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1 mb-3">
-            {DAYS.map(day => (
-              <div key={day} className="text-center text-xs font-medium text-gray-400 py-1">
+            {DAYS.map((day, i) => (
+              <div key={i} className="text-center text-xs font-medium text-gray-400 py-1">
                 {day}
               </div>
             ))}
@@ -375,9 +445,16 @@ function CalendarWidget() {
                     onClick={e => {
                       if (!dateKey) return;
                       const items = eventMap.get(dateKey);
-                      if (!items || items.length === 0) { setSelectedDay(null); return; }
-                      if (selectedDay === dateKey) { setSelectedDay(null); }
-                      else { activeBtnRef.current = e.currentTarget; setSelectedDay(dateKey); }
+                      if (!items || items.length === 0) {
+                        setSelectedDay(null);
+                        return;
+                      }
+                      if (selectedDay === dateKey) {
+                        setSelectedDay(null);
+                      } else {
+                        activeBtnRef.current = e.currentTarget;
+                        setSelectedDay(dateKey);
+                      }
                     }}
                     className={`w-full aspect-square flex flex-col items-center justify-center text-sm rounded-lg transition-all pb-0.5 ${
                       isTodayCell(day as number, index)
@@ -402,6 +479,7 @@ function CalendarWidget() {
                     <DayPopover
                       items={selectedItems}
                       dateLabel={selectedDateLabel}
+                      categoryLabel={cat => CATEGORY_LABEL[cat]}
                       onClose={() => setSelectedDay(null)}
                       anchorRef={activeBtnRef}
                     />

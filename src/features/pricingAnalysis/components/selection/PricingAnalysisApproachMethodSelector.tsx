@@ -7,6 +7,7 @@ import type { SelectionState } from '@features/pricingAnalysis/store/selectionRe
 import type { PricingAnalysisConfigType } from '../../schemas';
 import { useState, useCallback, useRef } from 'react';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useTranslation } from 'react-i18next';
 
 const VIEW_LAYOUT_KEY = 'pricing-analysis-view-layout';
 
@@ -14,7 +15,9 @@ function getStoredLayout(): ViewLayout {
   try {
     const stored = localStorage.getItem(VIEW_LAYOUT_KEY);
     if (stored === 'grid' || stored === 'list') return stored;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return 'grid';
 }
 
@@ -66,6 +69,7 @@ export const PricingAnalysisApproachMethodSelector = ({
   onManualValueChange,
 }: PricingAnalysisApproachMethodSelectorProps) => {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('pricingAnalysis');
   const [viewLayout, setViewLayout] = useState<ViewLayout>(getStoredLayout);
   const [pdfFiles, setPdfFiles] = useState<File[]>([]);
   const [remark, setRemark] = useState('');
@@ -73,7 +77,11 @@ export const PricingAnalysisApproachMethodSelector = ({
 
   const handleViewLayoutChange = useCallback((layout: ViewLayout) => {
     setViewLayout(layout);
-    try { localStorage.setItem(VIEW_LAYOUT_KEY, layout); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(VIEW_LAYOUT_KEY, layout);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   // Build a lookup of config methods per approach type
@@ -90,22 +98,24 @@ export const PricingAnalysisApproachMethodSelector = ({
       {/* Calculation Mode Banner */}
       <div className="flex items-center justify-between bg-gray-50 rounded-xl border border-gray-200 px-4 py-3">
         <div className="flex items-center gap-3">
-          <Icon name={isManualMode ? 'pen-field' : 'microchip'} style="solid" className="size-5 text-primary" />
+          <Icon
+            name={isManualMode ? 'pen-field' : 'microchip'}
+            style="solid"
+            className="size-5 text-primary"
+          />
           <div>
             <p className="text-sm font-medium text-gray-700">
-              {isManualMode ? 'Manual Entry' : 'System Calculation'}
+              {isManualMode ? t('calculationMode.manual') : t('calculationMode.system')}
             </p>
             <p className="text-xs text-gray-400">
-              {isManualMode
-                ? 'Enter appraisal values directly for each method'
-                : 'System auto-calculates appraisal values'}
+              {isManualMode ? t('calculationMode.manualDesc') : t('calculationMode.systemDesc')}
             </p>
           </div>
         </div>
         {!isReadOnly && (
           <Toggle
             size="sm"
-            options={['Manual', 'System']}
+            options={[t('calculationMode.manualToggle'), t('calculationMode.systemToggle')]}
             checked={isSystemCalculation === 'System'}
             onChange={onSystemCalculationChange}
           />
@@ -115,7 +125,7 @@ export const PricingAnalysisApproachMethodSelector = ({
       {/* Section header with Edit button — shared by both modes */}
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-gray-600">
-          {isEditing ? 'Editing Approaches & Methods' : 'Approaches & Methods'}
+          {isEditing ? t('approaches.editing') : t('approaches.title')}
         </span>
         {!isReadOnly && (
           <button
@@ -138,7 +148,7 @@ export const PricingAnalysisApproachMethodSelector = ({
               style={isEditing ? 'solid' : 'regular'}
               className="size-3.5"
             />
-            {isEditing ? 'Done' : 'Edit Approaches'}
+            {isEditing ? t('approaches.doneButton') : t('approaches.editButton')}
           </button>
         )}
       </div>
@@ -167,13 +177,13 @@ export const PricingAnalysisApproachMethodSelector = ({
               isOpen={deleteConfirm.isOpen}
               onClose={deleteConfirm.cancelDelete}
               onConfirm={deleteConfirm.confirmDelete}
-              title="Delete Method"
+              title={t('approaches.deleteMethod')}
               message={
                 deleteConfirm.hasData
-                  ? 'This method has calculated data. Deleting will permanently remove all results.'
-                  : 'Are you sure you want to delete this method?'
+                  ? t('approaches.deleteHasData')
+                  : t('approaches.deleteConfirm')
               }
-              confirmText="Delete"
+              confirmText={t('footer.save')}
               variant={deleteConfirm.hasData ? 'danger' : 'warning'}
               isLoading={deleteConfirm.isDeleting}
             />
@@ -210,7 +220,9 @@ export const PricingAnalysisApproachMethodSelector = ({
             <div className="flex flex-col gap-4">
               {/* PDF File Uploader */}
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-600">Upload PDF</label>
+                <label className="text-sm font-medium text-gray-600">
+                  {t('approaches.manualUploadPdf')}
+                </label>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -228,7 +240,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <Icon name="file-pdf" style="regular" className="size-4" />
-                  Click to upload PDF
+                  {t('approaches.manualUploadClick')}
                 </button>
                 {pdfFiles.length > 0 && (
                   <ul className="flex flex-col gap-1.5">
@@ -244,9 +256,13 @@ export const PricingAnalysisApproachMethodSelector = ({
                             const url = URL.createObjectURL(file);
                             window.open(url, '_blank');
                           }}
-                          title="Open PDF"
+                          title={t('approaches.openPdf')}
                         >
-                          <Icon name="file-pdf" style="solid" className="size-4 text-red-500 shrink-0" />
+                          <Icon
+                            name="file-pdf"
+                            style="solid"
+                            className="size-4 text-red-500 shrink-0"
+                          />
                           <span className="truncate underline underline-offset-2">{file.name}</span>
                         </button>
                         <button
@@ -264,9 +280,9 @@ export const PricingAnalysisApproachMethodSelector = ({
 
               {/* Remark Textarea */}
               <Textarea
-                label="Remark"
+                label={t('approaches.manualRemark')}
                 rows={3}
-                placeholder="Add any remarks or notes for this manual appraisal..."
+                placeholder={t('approaches.manualRemarkPlaceholder')}
                 value={remark}
                 onChange={e => setRemark(e.target.value)}
               />

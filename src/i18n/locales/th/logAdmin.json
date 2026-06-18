@@ -1,0 +1,48 @@
+{
+  "page": {
+    "title": "ดูบันทึกระบบ (Log)",
+    "subtitle": "ค้นหาและตรวจสอบบันทึกแอปพลิเคชันแบบมีโครงสร้างตามระดับ ข้อความ หรือรหัสธุรกิจ"
+  },
+  "columns": {
+    "timeStamp": "เวลา",
+    "level": "ระดับ",
+    "message": "ข้อความ",
+    "exception": "ข้อยกเว้น (Exception)",
+    "correlationId": "Correlation ID",
+    "appraisalId": "รหัสการประเมิน",
+    "requestId": "รหัสคำขอ",
+    "entityId": "รหัสเอนทิตี",
+    "workflowInstanceId": "Workflow Instance ID",
+    "collateralId": "รหัสหลักประกัน",
+    "documentId": "รหัสเอกสาร",
+    "machineName": "เครื่อง"
+  },
+  "levels": {
+    "Verbose": "Verbose",
+    "Debug": "Debug",
+    "Information": "Information",
+    "Warning": "Warning",
+    "Error": "Error",
+    "Fatal": "Fatal"
+  },
+  "filters": {
+    "searchPlaceholder": "ค้นหาข้อความ...",
+    "levelLabel": "ระดับ",
+    "correlationIdPlaceholder": "Correlation ID",
+    "appraisalIdPlaceholder": "รหัสการประเมิน",
+    "requestIdPlaceholder": "รหัสคำขอ",
+    "entityIdPlaceholder": "รหัสเอนทิตี",
+    "from": "ตั้งแต่",
+    "to": "ถึง",
+    "clear": "ล้างตัวกรอง"
+  },
+  "drawer": {
+    "title": "รายละเอียดรายการบันทึก",
+    "copy": "คัดลอก",
+    "copied": "คัดลอกแล้ว!"
+  },
+  "error": {
+    "failedToLoad": "โหลดบันทึกไม่สำเร็จ"
+  },
+  "emptyState": "ไม่พบรายการบันทึก"
+}

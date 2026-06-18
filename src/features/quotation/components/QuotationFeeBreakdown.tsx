@@ -1,5 +1,6 @@
 import type { Control } from 'react-hook-form';
 import { Controller, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import type { SubmitQuotationFormValues } from '../schemas/quotation';
 
@@ -72,6 +73,7 @@ const QuotationFeeBreakdown = ({
   readOnly = false,
   isNegotiating = false,
 }: QuotationFeeBreakdownProps) => {
+  const { t } = useTranslation('quotation');
   const feeAmount = useWatch({ control, name: `items.${index}.feeAmount` });
   const discount = useWatch({ control, name: `items.${index}.discount` });
   const negotiatedDiscount = useWatch({ control, name: `items.${index}.negotiatedDiscount` });
@@ -93,7 +95,7 @@ const QuotationFeeBreakdown = ({
       {/* Fee Amount */}
       <div className="grid grid-cols-2 gap-3 items-center">
         <label htmlFor={`fee-amount-${index}`} className="text-sm text-gray-600">
-          Fee Amount (THB)
+          {t('columns.feeAmount')}
         </label>
         <Controller
           control={control}
@@ -102,7 +104,7 @@ const QuotationFeeBreakdown = ({
             <NumberInput
               {...field}
               id={`fee-amount-${index}`}
-              aria-label="Fee Amount"
+              aria-label={t('columns.feeAmount')}
               disabled={readOnly}
               decimalPlaces={2}
               min={0}
@@ -114,7 +116,7 @@ const QuotationFeeBreakdown = ({
       {/* Discount */}
       <div className="grid grid-cols-2 gap-3 items-center">
         <label htmlFor={`discount-${index}`} className="text-sm text-gray-600">
-          Discount (THB)
+          {t('columns.discount')}
         </label>
         <Controller
           control={control}
@@ -123,7 +125,7 @@ const QuotationFeeBreakdown = ({
             <NumberInput
               {...field}
               id={`discount-${index}`}
-              aria-label="Discount"
+              aria-label={t('columns.discount')}
               disabled={readOnly}
               decimalPlaces={2}
               min={0}
@@ -135,7 +137,7 @@ const QuotationFeeBreakdown = ({
       {/* Negotiated Discount */}
       <div className="grid grid-cols-2 gap-3 items-center">
         <label htmlFor={`neg-discount-${index}`} className="text-sm text-gray-600">
-          Discount (Negotiate)
+          {t('columns.discountNegotiate')}
         </label>
         <Controller
           control={control}
@@ -144,7 +146,7 @@ const QuotationFeeBreakdown = ({
             <NumberInput
               {...field}
               id={`neg-discount-${index}`}
-              aria-label="Negotiated Discount"
+              aria-label={t('columns.discountNegotiate')}
               disabled={!isNegotiating}
               title={!isNegotiating ? 'Only editable during a negotiation round' : undefined}
               decimalPlaces={2}
@@ -162,13 +164,13 @@ const QuotationFeeBreakdown = ({
             discountOverflow ? 'bg-red-50 border border-red-200' : ''
           }`}
         >
-          <span className="text-sm text-gray-600 text-right">Fee After Discount</span>
+          <span className="text-sm text-gray-600 text-right">{t('columns.feeAfterDiscount')}</span>
           <span
             className={`text-sm font-semibold text-right tabular-nums ${
               discountOverflow ? 'text-red-600' : 'text-gray-900'
             }`}
           >
-            {discountOverflow ? 'Discounts exceed fee' : fmt(feeAfterDiscount)}
+            {discountOverflow ? t('shared.discountsExceedFee') : fmt(feeAfterDiscount)}
           </span>
         </div>
 
@@ -193,7 +195,7 @@ const QuotationFeeBreakdown = ({
         {/* Net Amount — primary total. Thick top border for emphasis. */}
         <div className="grid grid-cols-2 gap-3 items-center border-t-2 border-primary/30 mt-1 pt-2 px-2.5 py-2 bg-primary/5 rounded-b-lg">
           <span className="text-sm font-semibold text-gray-800 text-right uppercase tracking-wide">
-            Net Amount
+            {t('columns.netAmount')}
           </span>
           <span className="text-base font-bold text-primary text-right tabular-nums">
             {fmt(netAmount)}

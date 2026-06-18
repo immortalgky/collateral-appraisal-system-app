@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMigrationStore } from '../../hooks/useMigrationStore';
 import type { RunningInstanceSummary, InstanceImpact, MigrationAction } from '../../types';
 
@@ -8,20 +9,27 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-function actionLabel(action: MigrationAction | undefined): string {
-  if (!action) return '—';
-  if (action.kind === 'bump') return 'Migrate';
-  if (action.kind === 'skip') return 'Pinned';
-  return `Remap: ${action.newActivityId}`;
+function useActionLabel(action: MigrationAction | undefined): string {
+  const { t } = useTranslation('workflowBuilder');
+  if (!action) return t('migrate.table.actionLabels.none');
+  if (action.kind === 'bump') return t('migrate.table.actionLabels.migrate');
+  if (action.kind === 'skip') return t('migrate.table.actionLabels.pinned');
+  return t('migrate.table.actionLabels.remap', { activityId: action.newActivityId });
+}
+
+function ActionLabel({ action }: { action: MigrationAction | undefined }) {
+  const label = useActionLabel(action);
+  return <>{label}</>;
 }
 
 export function InstanceTable({ instances, classifications, selectedId, onSelect }: Props) {
-  const actions = useMigrationStore((s) => s.actions);
+  const { t } = useTranslation('workflowBuilder');
+  const actions = useMigrationStore(s => s.actions);
 
   if (instances.length === 0) {
     return (
       <p className="py-8 text-center text-sm text-base-content/60">
-        No running instances on the previous version — nothing to migrate.
+        {t('migrate.table.noInstances')}
       </p>
     );
   }
@@ -31,16 +39,16 @@ export function InstanceTable({ instances, classifications, selectedId, onSelect
       <table className="table table-sm w-full">
         <thead>
           <tr>
-            <th>Instance</th>
-            <th>Name</th>
-            <th>Current Activity</th>
-            <th>Started</th>
-            <th>Status</th>
-            <th>Action</th>
+            <th>{t('migrate.table.columns.instance')}</th>
+            <th>{t('migrate.table.columns.name')}</th>
+            <th>{t('migrate.table.columns.currentActivity')}</th>
+            <th>{t('migrate.table.columns.started')}</th>
+            <th>{t('migrate.table.columns.status')}</th>
+            <th>{t('migrate.table.columns.action')}</th>
           </tr>
         </thead>
         <tbody>
-          {instances.map((inst) => {
+          {instances.map(inst => {
             const classification = classifications[inst.id];
             const action = actions[inst.id];
             const isSelected = inst.id === selectedId;
@@ -67,10 +75,14 @@ export function InstanceTable({ instances, classifications, selectedId, onSelect
                       {classification}
                     </span>
                   ) : (
-                    <span className="badge badge-xs badge-ghost">Unknown</span>
+                    <span className="badge badge-xs badge-ghost">
+                      {t('migrate.table.classification.unknown')}
+                    </span>
                   )}
                 </td>
-                <td className="text-xs text-base-content/60">{actionLabel(action)}</td>
+                <td className="text-xs text-base-content/60">
+                  <ActionLabel action={action} />
+                </td>
               </tr>
             );
           })}

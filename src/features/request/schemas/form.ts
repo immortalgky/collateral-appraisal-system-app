@@ -1,63 +1,78 @@
 import { z } from 'zod';
 import { buildFormSchema } from '@/shared/components/form';
 import { allRequestFields, titlesFieldConfig } from '../configs/fields';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
+
+// =============================================================================
+// Static schema (used at module level — no i18n, labels are for schema builder)
+// =============================================================================
 
 const UserDto = z.object({
   userId: z.string(),
   username: z.string(),
 });
 
-const RequestDetailDto = z.object({
-  hasAppraisalBook: z.boolean(),
-  loanDetail: z.object({
-    bankingSegment: z.string().min(1, 'Banking segment is required.'),
-    loanApplicationNumber: z.string().max(10).nullable(),
-    facilityLimit: z.coerce.number().min(1, 'Facility limit must be greater than 0.'),
-    additionalFacilityLimit: z.number().nullable(),
-    previousFacilityLimit: z.number().nullable(),
-    totalSellingPrice: z.number().nullable(),
-  }),
-  prevAppraisalId: z.string().nullable(),
-  prevAppraisalValue: z.number().nullable(),
-  prevAppraisalDate: z.string().nullable(),
-  address: z.object({
-    houseNumber: z.string().max(10).min(1, 'House number is required.'),
-    projectName: z.string().max(100).nullable(),
-    moo: z.string().max(10).nullable(),
-    soi: z.string().max(100).nullable(),
-    road: z.string().max(100).nullable(),
-    subDistrict: z.string().min(1, 'Sub district is required.'),
-    subDistrictName: z.string().nullable(),
-    district: z.string().min(1, 'District is required.'),
-    districtName: z.string().nullable(),
-    province: z.string().min(1, 'Province is required.'),
-    provinceName: z.string().nullable(),
-    postcode: z.string().nullable(),
-  }),
-  contact: z.object({
-    contactPersonName: z.string().max(100).min(1, 'Contact person name is required.'),
-    contactPersonPhone: z.string().max(40).min(1, 'Contact person phone number is required.'),
-    dealerCode: z.string().nullable(),
-  }),
-  appointment: z.object({
-    appointmentDateTime: z.string().datetime({ local: true, offset: true }),
-    appointmentLocation: z.string().min(1, 'Appointment location is required.'),
-  }),
-  fee: z.object({
-    feePaymentType: z.string().min(1, 'Fee payment type is required.'),
-    feeNotes: z.string().nullable(),
-    absorbedAmount: z.number().nullable(),
-  }),
-});
-const RequestCustomerDto = z.object({
-  name: z.string().max(260).min(1, 'Customer name is required.'),
-  contactNumber: z.string().max(20).min(1, 'Contact number is required.'),
-});
-const RequestPropertyDto = z.object({
-  propertyType: z.string().min(1, 'Property type is required.'),
-  buildingType: z.string().nullable(),
-  sellingPrice: z.number().nullable(),
-});
+function makeRequestDetailDto(t: TFunction<'request'>) {
+  return z.object({
+    hasAppraisalBook: z.boolean(),
+    loanDetail: z.object({
+      bankingSegment: z.string().min(1, t('validation.bankingSegmentRequired')),
+      loanApplicationNumber: z.string().max(10).nullable(),
+      facilityLimit: z.coerce.number().min(1, t('validation.facilityLimitRequired')),
+      additionalFacilityLimit: z.number().nullable(),
+      previousFacilityLimit: z.number().nullable(),
+      totalSellingPrice: z.number().nullable(),
+    }),
+    prevAppraisalId: z.string().nullable(),
+    prevAppraisalValue: z.number().nullable(),
+    prevAppraisalDate: z.string().nullable(),
+    address: z.object({
+      houseNumber: z.string().max(10).min(1, t('validation.houseNumberRequired')),
+      projectName: z.string().max(100).nullable(),
+      moo: z.string().max(10).nullable(),
+      soi: z.string().max(100).nullable(),
+      road: z.string().max(100).nullable(),
+      subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
+      subDistrictName: z.string().nullable(),
+      district: z.string().min(1, t('validation.districtRequired')),
+      districtName: z.string().nullable(),
+      province: z.string().min(1, t('validation.provinceRequired')),
+      provinceName: z.string().nullable(),
+      postcode: z.string().nullable(),
+    }),
+    contact: z.object({
+      contactPersonName: z.string().max(100).min(1, t('validation.contactPersonNameRequired')),
+      contactPersonPhone: z.string().max(40).min(1, t('validation.contactPersonPhoneRequired')),
+      dealerCode: z.string().nullable(),
+    }),
+    appointment: z.object({
+      appointmentDateTime: z.string().datetime({ local: true, offset: true }),
+      appointmentLocation: z.string().min(1, t('validation.appointmentLocationRequired')),
+    }),
+    fee: z.object({
+      feePaymentType: z.string().min(1, t('validation.feePaymentTypeRequired')),
+      feeNotes: z.string().nullable(),
+      absorbedAmount: z.number().nullable(),
+    }),
+  });
+}
+
+function makeRequestCustomerDto(t: TFunction<'request'>) {
+  return z.object({
+    name: z.string().max(260).min(1, t('validation.customerNameRequired')),
+    contactNumber: z.string().max(20).min(1, t('validation.contactNumberRequired')),
+  });
+}
+
+function makeRequestPropertyDto(t: TFunction<'request'>) {
+  return z.object({
+    propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
+    buildingType: z.string().nullable(),
+    sellingPrice: z.number().nullable(),
+  });
+}
+
 const AddressDto = z
   .object({
     houseNumber: z.string().max(10),
@@ -122,41 +137,57 @@ const RequestDocumentDto = z
     uploadedAt: z.string().nullable().optional(),
   })
   .partial();
-const RequestCommentDto = z.object({
-  id: z.string().uuid().optional(), // undefined for new local comments
-  tempId: z.string().optional(), // local tracking ID before API call
-  requestId: z.string().uuid().optional(), // undefined when no requestId yet
-  comment: z.string().min(1, 'Comment is required'),
-  commentedBy: z.string(),
-  commentedByName: z.string(),
-  commentedAt: z.string(),
-  lastModifiedAt: z.string().nullable(),
-  isLocal: z.boolean().optional(), // true = not yet saved to API
-});
 
-// Base schema without manual superRefine — conditional validation handled by field configs.
-const createRequestFormBase = z.object({
-  purpose: z.string(),
-  channel: z.string(),
-  priority: z.string(),
-  isPma: z.boolean(),
-  creator: UserDto,
-  requestor: UserDto,
-  detail: RequestDetailDto,
-  customers: z.array(RequestCustomerDto),
-  properties: z.array(RequestPropertyDto),
-  titles: z.array(RequestTitleDto).min(1, 'Title Information must have at least 1 item(s)'),
-  documents: z.array(RequestDocumentDto),
-  comments: z.array(RequestCommentDto),
-});
+function makeRequestCommentDto(t: TFunction<'request'>) {
+  return z.object({
+    id: z.string().uuid().optional(),
+    tempId: z.string().optional(),
+    requestId: z.string().uuid().optional(),
+    comment: z.string().min(1, t('validation.commentRequired')),
+    commentedBy: z.string(),
+    commentedByName: z.string(),
+    commentedAt: z.string(),
+    lastModifiedAt: z.string().nullable(),
+    isLocal: z.boolean().optional(),
+  });
+}
 
-// Conditional refinement from field configs replaces hand-written superRefine.
-// Field configs are the source of truth for validation (field-wins by default).
-// Base schema provides fields not expressible as FormField (titles, documents, etc.).
-export const createRequestForm = buildFormSchema(allRequestFields, createRequestFormBase);
+// Factory: produce the full form schema with translated validation messages.
+export function makeCreateRequestForm(t: TFunction<'request'>) {
+  const createRequestFormBase = z.object({
+    purpose: z.string(),
+    channel: z.string(),
+    priority: z.string(),
+    isPma: z.boolean(),
+    creator: UserDto,
+    requestor: UserDto,
+    detail: makeRequestDetailDto(t),
+    customers: z.array(makeRequestCustomerDto(t)),
+    properties: z.array(makeRequestPropertyDto(t)),
+    titles: z.array(RequestTitleDto).min(1, t('validation.titleMinItems')),
+    documents: z.array(RequestDocumentDto),
+    comments: z.array(makeRequestCommentDto(t)),
+  });
+
+  return buildFormSchema(allRequestFields, createRequestFormBase);
+}
+
+// Hook: resolve the form schema per render (re-built when language changes).
+export function useCreateRequestForm() {
+  const { t } = useTranslation('request');
+  return makeCreateRequestForm(t);
+}
+
+// Static fallback for components that need a non-reactive schema reference
+// (e.g. RequestTitleDto used in isTitleComplete).
+// The static version uses English error messages — acceptable since it's only
+// used for boolean pass/fail validation, not shown to the user.
+
+const _tStatic = ((key: string) => key) as TFunction<'request'>;
+export const createRequestForm = makeCreateRequestForm(_tStatic);
 
 export type UserDtoType = z.infer<typeof UserDto>;
-export type RequestCommentDtoType = z.infer<typeof RequestCommentDto>;
+export type RequestCommentDtoType = z.infer<ReturnType<typeof makeRequestCommentDto>>;
 export type createRequestFormType = z.infer<typeof createRequestForm>;
 export type RequestTitleDtoType = z.infer<typeof RequestTitleDto>;
 export type RequestDocumentDtoType = z.infer<typeof RequestDocumentDto>;

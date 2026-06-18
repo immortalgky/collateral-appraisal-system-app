@@ -1,8 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '../Modal';
+import { MapTypeToggleButton } from '../MapTypeToggleButton';
 import { useGoogleMaps } from './useGoogleMaps';
 import { PlacesAutocomplete } from './PlacesAutocomplete';
+import {
+  BANGKOK_CENTER,
+  MAP_CONTROL_CLASS,
+  MAP_TYPE_OPTIONS,
+  THAILAND_MAP_RESTRICTION,
+  isWithinThailand,
+} from '@/shared/constants/mapConfig';
+import { useGeolocation } from '@/shared/hooks/useGeolocation';
 
 interface MapLocationPickerProps {
   isOpen: boolean;
@@ -13,8 +22,6 @@ interface MapLocationPickerProps {
   initialLat?: number | null;
   initialLon?: number | null;
 }
-
-const BANGKOK_FALLBACK = { lat: 13.7563, lon: 100.5018 };
 
 /**
  * Modal-hosted map for picking a single (lat, lon) coordinate.
@@ -33,7 +40,13 @@ export function MapLocationPicker({
 }: MapLocationPickerProps) {
   const { t } = useTranslation('historySearch');
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
-  const { ready, missingKey } = useGoogleMaps(apiKey, ['marker', 'places']);
+  const {
+    ready,
+    missingKey,
+    failed: mapsFailed,
+    retry: retryMaps,
+  } = useGoogleMaps(apiKey, ['marker', 'places']);
+  const { locate, locating } = useGeolocation();
 
   // Callback ref → state. Headless UI Dialog mounts children after a tick
   // (for focus-trap setup), so a plain `useRef` is null when the first effect
@@ -45,6 +58,10 @@ export function MapLocationPicker({
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markerRef = useRef<any>(null);
+  // Map instance, captured once ready, so the satellite⇄map toggle (a React
+  // overlay next to the "my location" button) can drive it.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [mapInstance, setMapInstance] = useState<any>(null);
 
   // Selected coordinate (null = nothing picked yet)
   const [selected, setSelected] = useState<{ lat: number; lon: number } | null>(null);
@@ -72,6 +89,16 @@ export function MapLocationPicker({
     setSelected({ lat, lon });
   }, []);
 
+  // "Use my location" — drop/move the pin at the user's current position.
+  // Silent fallback on denial/unavailable or a fix outside Thailand.
+  const handleLocateMe = useCallback(async () => {
+    const coords = await locate();
+    if (!coords || !isWithinThailand(coords.lat, coords.lon) || !mapRef.current) return;
+    placeMarker(coords.lat, coords.lon);
+    mapRef.current.setCenter({ lat: coords.lat, lng: coords.lon });
+    mapRef.current.setZoom(16);
+  }, [locate, placeMarker]);
+
   // Initialise the map once the API is ready and the modal is open.
   useEffect(() => {
     if (!isOpen || !ready || !containerEl) return;
@@ -90,15 +117,20 @@ export function MapLocationPicker({
 
     const center = hasInitial
       ? { lat: initialLat as number, lng: initialLon as number }
-      : { lat: BANGKOK_FALLBACK.lat, lng: BANGKOK_FALLBACK.lon };
+      : BANGKOK_CENTER;
 
     mapRef.current = new g.maps.Map(containerEl, {
       center,
       zoom: hasInitial ? 16 : 12,
-      mapTypeControl: false,
+      ...MAP_TYPE_OPTIONS,
       streetViewControl: false,
       fullscreenControl: false,
+      restriction: THAILAND_MAP_RESTRICTION,
     });
+
+    // Expose the map so the React satellite⇄map toggle (rendered next to the
+    // "my location" button) can control it.
+    setMapInstance(mapRef.current);
 
     // Modal opens with a CSS scale-transition (300 ms). Google Maps measures
     // the container at construction time, so without this resize-trigger the
@@ -138,6 +170,7 @@ export function MapLocationPicker({
         gEvent?.clearInstanceListeners?.(mapRef.current);
         mapRef.current = null;
       }
+      setMapInstance(null);
     };
   }, [isOpen, ready, containerEl, initialLat, initialLon, placeMarker]);
 
@@ -181,16 +214,85 @@ export function MapLocationPicker({
             <p className="font-medium">{t('map.noApiKey')}</p>
             <p className="text-xs text-gray-400 font-mono mt-1">VITE_GOOGLE_MAPS_API_KEY</p>
           </div>
-        ) : (
+        ) : mapsFailed ? (
           <div
-            ref={setContainerEl}
-            // flex-shrink-0 + min-h-[420px] prevent the parent flex column
-            // from compressing the map container when the autocomplete or
-            // other children claim height.
-            className="w-full rounded-md overflow-hidden border border-gray-200 flex-shrink-0 min-h-[420px] bg-gray-100"
+            className="flex flex-col items-center justify-center gap-3 bg-gray-50 rounded-md text-center p-6 text-sm text-gray-500"
             style={{ height: 420 }}
-            data-testid="map-location-picker"
-          />
+          >
+            <p className="font-medium">{t('map.loadFailed')}</p>
+            <button
+              type="button"
+              onClick={retryMaps}
+              className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              {t('map.retry')}
+            </button>
+          </div>
+        ) : (
+          // flex-shrink-0 + min-h-[420px] prevent the parent flex column from
+          // compressing the map when the autocomplete or other children claim height.
+          <div className="relative flex-shrink-0 min-h-[420px]" style={{ height: 420 }}>
+            <div
+              ref={setContainerEl}
+              className="w-full h-full rounded-md overflow-hidden border border-gray-200 bg-gray-100"
+              data-testid="map-location-picker"
+            />
+            <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2">
+              {mapInstance && <MapTypeToggleButton map={mapInstance} className="p-2 text-sm" />}
+              <button
+              type="button"
+              onClick={handleLocateMe}
+              disabled={locating}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium ${MAP_CONTROL_CLASS} disabled:opacity-60 disabled:cursor-not-allowed`}
+              title={t('map.myLocation')}
+            >
+              {locating ? (
+                <svg
+                  aria-hidden="true"
+                  className="w-4 h-4 animate-spin"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  aria-hidden="true"
+                  className="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8a4 4 0 100 8 4 4 0 000-8z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 2v3m0 14v3m10-10h-3M5 12H2"
+                  />
+                </svg>
+              )}
+              {t('map.myLocation')}
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Footer */}

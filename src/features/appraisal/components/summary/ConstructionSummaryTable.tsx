@@ -2,22 +2,26 @@ import Icon from '@/shared/components/Icon';
 import { ConstructionTimelineBar } from '@/shared/components/ConstructionTimelineBar';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import type { ConstructionSummaryRow } from '../../api/decisionSummary';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   rows: ConstructionSummaryRow[];
 }
 
-const ROW_CONFIG: Record<string, {
-  bg: string;
-  border: string;
-  labelClass: string;
-  barColor: string;
-  valueClass: string;
-  iconName: string;
-  iconClass: string;
-  isDelta: boolean;
-}> = {
-  'Previous': {
+const ROW_CONFIG: Record<
+  string,
+  {
+    bg: string;
+    border: string;
+    labelClass: string;
+    barColor: string;
+    valueClass: string;
+    iconName: string;
+    iconClass: string;
+    isDelta: boolean;
+  }
+> = {
+  Previous: {
     bg: 'bg-blue-50',
     border: 'border-b border-blue-100',
     labelClass: 'text-blue-700',
@@ -37,7 +41,7 @@ const ROW_CONFIG: Record<string, {
     iconClass: 'text-amber-500',
     isDelta: true,
   },
-  'Current': {
+  Current: {
     bg: 'bg-teal-50',
     border: 'border-b-2 border-teal-300',
     labelClass: 'text-teal-800 font-semibold',
@@ -72,6 +76,8 @@ const ROW_CONFIG: Record<string, {
 const DEFAULT_CONFIG = ROW_CONFIG['Previous'];
 
 const ConstructionSummaryTable = ({ rows }: Props) => {
+  const { t } = useTranslation('appraisal');
+
   const previousRow = rows.find(r => r.label === 'Previous');
   const currentRow = rows.find(r => r.label === 'Current');
   const completeRow = rows.find(r => r.label === 'Complete ( 100% )');
@@ -89,31 +95,31 @@ const ConstructionSummaryTable = ({ rows }: Props) => {
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-56">
-                Milestone
+                {t('constructionSummaryTable.columns.milestone')}
               </th>
               <th
                 className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-40 leading-tight"
                 title="Land Value + under-construction value at this milestone + completed buildings"
               >
-                Total Appraisal Value
+                {t('constructionSummaryTable.columns.totalAppraisalValue')}
               </th>
               <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-36 leading-tight">
-                Land Value
+                {t('constructionSummaryTable.columns.landValue')}
               </th>
               <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-32 leading-tight">
-                Construction Progress (%)
+                {t('constructionSummaryTable.columns.constructionProgress')}
               </th>
               <th
                 className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-36 leading-tight"
                 title="Current under-construction structure value at this milestone (CI only)"
               >
-                Building Value
+                {t('constructionSummaryTable.columns.buildingValue')}
               </th>
               <th
                 className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-44 leading-tight"
                 title="Completed buildings registered before the construction inspection (non-CI)"
               >
-                Building Value Pre-inspection
+                {t('constructionSummaryTable.columns.buildingValuePreInspection')}
               </th>
             </tr>
           </thead>
@@ -130,27 +136,23 @@ const ConstructionSummaryTable = ({ rows }: Props) => {
                 <tr key={row.label} className={`${rowBg} ${borderClass}`}>
                   <td className={`px-4 py-4 ${cfg.labelClass}`}>
                     <span className="inline-flex items-center gap-2.5">
-                      <span className={`inline-flex size-7 items-center justify-center rounded-full ${cfg.iconClass.replace('text-', 'bg-').replace('-500', '-100').replace('-600', '-100')}`}>
-                        <Icon name={cfg.iconName} style="solid" className={`size-3.5 ${cfg.iconClass}`} />
+                      <span
+                        className={`inline-flex size-7 items-center justify-center rounded-full ${cfg.iconClass.replace('text-', 'bg-').replace('-500', '-100').replace('-600', '-100')}`}
+                      >
+                        <Icon
+                          name={cfg.iconName}
+                          style="solid"
+                          className={`size-3.5 ${cfg.iconClass}`}
+                        />
                       </span>
                       {row.label}
                     </span>
                   </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.totalAppraisalValue, 2)}
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.totalLandValue, 2)}
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.constructionProgressPct, 2)} %
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(row.buildingValueConstructing, 2)}
-                  </td>
-                  <td className={numericClass}>
-                    {formatNumber(preInspection, 2)}
-                  </td>
+                  <td className={numericClass}>{formatNumber(row.totalAppraisalValue, 2)}</td>
+                  <td className={numericClass}>{formatNumber(row.totalLandValue, 2)}</td>
+                  <td className={numericClass}>{formatNumber(row.constructionProgressPct, 2)} %</td>
+                  <td className={numericClass}>{formatNumber(row.buildingValueConstructing, 2)}</td>
+                  <td className={numericClass}>{formatNumber(preInspection, 2)}</td>
                 </tr>
               );
             })}

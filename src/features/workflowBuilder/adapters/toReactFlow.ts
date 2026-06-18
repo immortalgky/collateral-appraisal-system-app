@@ -21,10 +21,7 @@ export function activityToNode(activity: Activity): Node<ActivityNodeData> {
   };
 }
 
-export function transitionToEdge(
-  transition: Transition,
-  sourceActivity?: Activity,
-): Edge {
+export function transitionToEdge(transition: Transition, sourceActivity?: Activity): Edge {
   const isConditional = transition.type === 'Conditional';
   return {
     id: transition.id,
@@ -33,9 +30,7 @@ export function transitionToEdge(
     type: 'draggable',
     animated: !isConditional,
     style: { stroke: isConditional ? '#6366f1' : '#94a3b8', strokeWidth: 2 },
-    label: transition.condition
-      ? truncateLabel(transition.condition, 30)
-      : undefined,
+    label: transition.condition ? truncateLabel(transition.condition, 30) : undefined,
     markerEnd: { type: 'arrowclosed' as MarkerType },
     data: { ...transition },
     sourceHandle: resolveSourceHandle(transition, sourceActivity),
@@ -125,10 +120,8 @@ export function toReactFlow(schema: WorkflowSchema): {
   edges: Edge[];
 } {
   const nodes = schema.activities.map(activityToNode);
-  const byId = new Map(schema.activities.map((a) => [a.id, a]));
-  const edges = schema.transitions.map((t) =>
-    transitionToEdge(t, byId.get(t.from)),
-  );
+  const byId = new Map(schema.activities.map(a => [a.id, a]));
+  const edges = schema.transitions.map(t => transitionToEdge(t, byId.get(t.from)));
   return { nodes, edges };
 }
 

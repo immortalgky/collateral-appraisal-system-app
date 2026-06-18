@@ -27,7 +27,8 @@ export function RemarkSection({ setValue, watch, readOnly }: RemarkSectionProps)
           <span className="text-xs font-semibold text-gray-700">Notes & Assumptions</span>
           {hasContent && !expanded && (
             <span className="text-[10px] text-gray-400 truncate max-w-[200px]">
-              — {remark.slice(0, 50)}{remark.length > 50 ? '...' : ''}
+              — {remark.slice(0, 50)}
+              {remark.length > 50 ? '...' : ''}
             </span>
           )}
         </div>
@@ -40,7 +41,7 @@ export function RemarkSection({ setValue, watch, readOnly }: RemarkSectionProps)
         <div className="px-4 py-3 border-t border-gray-100">
           <textarea
             value={remark}
-            onChange={(e) => setValue('remark', e.target.value || null, { shouldDirty: true })}
+            onChange={e => setValue('remark', e.target.value || null, { shouldDirty: true })}
             placeholder="Document your assumptions, rationale for growth rates, discount rate justification, or any adjustments made..."
             className="w-full text-xs text-gray-700 bg-transparent border border-gray-200 rounded-md px-3 py-2 resize-y min-h-[80px] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
             rows={3}

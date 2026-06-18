@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type {
   RunningInstanceSummary,
   InstanceImpact,
@@ -23,40 +24,38 @@ export function InstanceActionPanel({
   currentAction,
   onActionChange,
 }: Props) {
+  const { t } = useTranslation('workflowBuilder');
+
   if (!instance) {
     return (
       <div className="flex h-full items-center justify-center p-6 text-sm text-base-content/50">
-        Select an instance to configure its migration action.
+        {t('migrate.selectInstancePrompt')}
       </div>
     );
   }
 
   // Non-terminal activities in target schema (exclude EndActivity types)
-  const targetActivities =
-    targetSchema?.activities.filter((a) => !a.isEndActivity) ?? [];
+  const targetActivities = targetSchema?.activities.filter(a => !a.isEndActivity) ?? [];
 
-  const remapValue =
-    currentAction?.kind === 'remap' ? currentAction.newActivityId : '';
+  const remapValue = currentAction?.kind === 'remap' ? currentAction.newActivityId : '';
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <div>
         <p className="text-sm font-semibold">{instance.name}</p>
-        <p className="font-mono text-xs text-base-content/60">
-          {instance.id.slice(0, 8)}…
-        </p>
+        <p className="font-mono text-xs text-base-content/60">{instance.id.slice(0, 8)}…</p>
         <p className="mt-1 text-xs text-base-content/60">
           Currently at:{' '}
-          <span className="font-medium text-base-content">
-            {instance.currentActivityId}
-          </span>
+          <span className="font-medium text-base-content">{instance.currentActivityId}</span>
         </p>
       </div>
 
       {/* Warning banner for unsafe instances */}
       {classification === 'Unsafe' && breakingChanges.length > 0 && (
         <div className="rounded-lg border border-error/30 bg-error/5 p-3">
-          <p className="mb-1 text-xs font-semibold text-error">Breaking changes</p>
+          <p className="mb-1 text-xs font-semibold text-error">
+            {t('migrate.breakingChangesTitle')}
+          </p>
           {/* TODO: Ideally filter to only changes affecting THIS instance's reachable path */}
           {breakingChanges.map((bc, i) => (
             <p key={i} className="text-xs text-base-content/70">
@@ -76,7 +75,7 @@ export function InstanceActionPanel({
                 checked={currentAction?.kind === 'bump' || currentAction === undefined}
                 onChange={() => onActionChange({ kind: 'bump' })}
               />
-              <span className="text-sm">Migrate to new version</span>
+              <span className="text-sm">{t('migrate.actions.migrateLabel')}</span>
             </label>
             <label className="flex cursor-pointer items-center gap-2">
               <input
@@ -85,7 +84,7 @@ export function InstanceActionPanel({
                 checked={currentAction?.kind === 'skip'}
                 onChange={() => onActionChange({ kind: 'skip' })}
               />
-              <span className="text-sm">Leave pinned on old version</span>
+              <span className="text-sm">{t('migrate.actions.pinLabel')}</span>
             </label>
           </>
         ) : (
@@ -98,8 +97,10 @@ export function InstanceActionPanel({
                 onChange={() => onActionChange({ kind: 'skip' })}
               />
               <span className="text-sm">
-                Leave pinned on old version{' '}
-                <span className="badge badge-xs badge-ghost ml-1">recommended</span>
+                {t('migrate.actions.pinLabel')}{' '}
+                <span className="badge badge-xs badge-ghost ml-1">
+                  {t('migrate.actions.recommended')}
+                </span>
               </span>
             </label>
 
@@ -108,11 +109,9 @@ export function InstanceActionPanel({
                 type="radio"
                 className="radio radio-sm radio-warning"
                 checked={currentAction?.kind === 'remap'}
-                onChange={() =>
-                  onActionChange({ kind: 'remap', newActivityId: remapValue })
-                }
+                onChange={() => onActionChange({ kind: 'remap', newActivityId: remapValue })}
               />
-              <span className="text-sm">Manual remap</span>
+              <span className="text-sm">{t('migrate.actions.manualRemap')}</span>
             </label>
 
             {currentAction?.kind === 'remap' && (
@@ -120,14 +119,12 @@ export function InstanceActionPanel({
                 <select
                   className="select select-bordered select-sm w-full"
                   value={remapValue}
-                  onChange={(e) =>
-                    onActionChange({ kind: 'remap', newActivityId: e.target.value })
-                  }
+                  onChange={e => onActionChange({ kind: 'remap', newActivityId: e.target.value })}
                 >
                   <option value="" disabled>
-                    Select target activity…
+                    {t('forms.placeholders.selectTargetActivity')}
                   </option>
-                  {targetActivities.map((a) => (
+                  {targetActivities.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.name} ({a.id})
                     </option>
@@ -139,9 +136,9 @@ export function InstanceActionPanel({
             <label className="flex cursor-pointer items-center gap-2 opacity-50">
               <input type="radio" className="radio radio-sm" disabled />
               <span className="text-sm">
-                Cancel instance{' '}
+                {t('migrate.actions.cancelInstance')}{' '}
                 <span className="text-xs text-base-content/50">
-                  — use the cancel endpoint separately
+                  {t('migrate.actions.cancelInstanceHint')}
                 </span>
               </span>
             </label>

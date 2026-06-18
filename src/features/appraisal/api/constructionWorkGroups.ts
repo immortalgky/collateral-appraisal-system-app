@@ -11,9 +11,7 @@ export const useConstructionWorkGroups = () => {
   return useQuery({
     queryKey: CONSTRUCTION_WORK_GROUPS_KEY,
     queryFn: async (): Promise<ConstructionWorkGroupDto[]> => {
-      const { data } = await axios.get<ConstructionWorkGroupDto[]>(
-        '/construction-work-groups',
-      );
+      const { data } = await axios.get<ConstructionWorkGroupDto[]>('/construction-work-groups');
       return data;
     },
     staleTime: Infinity,

@@ -141,6 +141,8 @@ interface FormFieldsProps {
   schema?: z.ZodObject<any>;
   /** Show character count for text fields with maxLength */
   showCharCount?: boolean;
+  /** Disable all fields in this group (e.g. when user has no edit permission). Existing per-field disabled rules still apply. */
+  disabled?: boolean;
 }
 
 interface FieldRendererProps {
@@ -150,6 +152,7 @@ interface FieldRendererProps {
   index?: number;
   schema?: z.ZodObject<any>;
   globalShowCharCount?: boolean;
+  globalDisabled?: boolean;
 }
 
 /**
@@ -178,6 +181,7 @@ export function FormFields({
   index,
   schema: schemaProp,
   showCharCount,
+  disabled,
 }: FormFieldsProps) {
   const { control } = useFormContext();
   // Use schema from props, or fall back to context from FormProvider
@@ -197,6 +201,7 @@ export function FormFields({
             index={index}
             schema={schema as z.ZodObject<any> | undefined}
             globalShowCharCount={showCharCount}
+            globalDisabled={disabled}
           />
         ))}
     </>
@@ -213,9 +218,11 @@ function FieldRenderer({
   index,
   schema,
   globalShowCharCount,
+  globalDisabled,
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
-  const { isVisible, isDisabled, isRequired } = useFieldState({ field, namePrefix, index });
+  const { isVisible, isDisabled: fieldDisabled, isRequired } = useFieldState({ field, namePrefix, index });
+  const isDisabled = fieldDisabled || (globalDisabled ?? false);
   const { setValue, getValues } = useFormContext();
 
   const filterWatchValues = useFilterWatchValues(

@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react';
 import { Handle, Position, useStore } from '@xyflow/react';
 import Icon from '@shared/components/Icon';
-import {
-  type AccentColor,
-  type IconStyle,
-} from '../../../utils/activityIcons';
+import { type AccentColor, type IconStyle } from '../../../utils/activityIcons';
 
 export interface OutputHandle {
   id: string;
@@ -52,12 +49,7 @@ const ICON_COLOR: Record<AccentColor, string> = {
 function PlusIcon() {
   return (
     <svg width="8" height="8" viewBox="0 0 10 10" style={{ pointerEvents: 'none' }}>
-      <path
-        d="M5 1 V9 M1 5 H9"
-        stroke="#9ca3af"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M5 1 V9 M1 5 H9" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -65,15 +57,8 @@ function PlusIcon() {
 /** Stub + "+" rendered when the output is unconnected. The "+" itself is a
  *  real ReactFlow Handle with id `${realId}__plus`. WorkflowCanvas.onConnect
  *  strips the `__plus` suffix so the saved edge's sourceHandle is the real id. */
-function PlusAffordance({
-  handleId,
-  topPct,
-}: {
-  handleId: string | undefined;
-  topPct: number;
-}) {
-  const plusHandleId =
-    handleId !== undefined ? `${handleId}__plus` : '__plus';
+function PlusAffordance({ handleId, topPct }: { handleId: string | undefined; topPct: number }) {
+  const plusHandleId = handleId !== undefined ? `${handleId}__plus` : '__plus';
   return (
     <>
       {/* stub line — purely decorative */}
@@ -137,7 +122,7 @@ export function BaseNode({
   const hasLabeledOutputs = outputs !== undefined && outputs.length > 0;
   const outputCount = hasLabeledOutputs ? outputs.length : 1;
 
-  const { inputConnected, connectedOutputs } = useStore((s) => {
+  const { inputConnected, connectedOutputs } = useStore(s => {
     let input = false;
     const outs = new Set<string | undefined>();
     for (const e of s.edges) {
@@ -147,8 +132,7 @@ export function BaseNode({
     return { inputConnected: input, connectedOutputs: outs };
   });
 
-  const tileHeight =
-    outputCount > 1 ? Math.max(TILE_SIZE, outputCount * 24 + 24) : TILE_SIZE;
+  const tileHeight = outputCount > 1 ? Math.max(TILE_SIZE, outputCount * 24 + 24) : TILE_SIZE;
 
   // Reserve horizontal space outside the tile for dot + stub + plus.
   const wrapperPadRight = KNOB_START + STUB_LEN + PLUS_SIZE + 8;
@@ -209,10 +193,10 @@ export function BaseNode({
           border: `1px solid ${TILE_BORDER}`,
           boxShadow: '0 1px 2px rgba(0,0,0,0.3)',
         }}
-        onMouseEnter={(e) => {
+        onMouseEnter={e => {
           e.currentTarget.style.background = TILE_BG_HOVER;
         }}
-        onMouseLeave={(e) => {
+        onMouseLeave={e => {
           e.currentTarget.style.background = TILE_BG;
         }}
       >
@@ -251,13 +235,7 @@ export function BaseNode({
             className="flex h-3 w-3 items-center justify-center rounded-full"
             style={{ background: CHECK_GREEN }}
           >
-            <svg
-              viewBox="0 0 16 16"
-              className="h-2 w-2"
-              fill="none"
-              stroke="white"
-              strokeWidth="3"
-            >
+            <svg viewBox="0 0 16 16" className="h-2 w-2" fill="none" stroke="white" strokeWidth="3">
               <path d="M3 8.5 L6.5 12 L13 4.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
@@ -297,47 +275,41 @@ export function BaseNode({
                       marginLeft: KNOB_START,
                       transform: 'translateY(-50%)',
                       color: '#e5e7eb',
-                      textShadow:
-                        '0 0 3px #1e1f24, 0 0 3px #1e1f24, 0 0 3px #1e1f24',
+                      textShadow: '0 0 3px #1e1f24, 0 0 3px #1e1f24, 0 0 3px #1e1f24',
                       zIndex: 5,
                     }}
                   >
                     {out.label}
                   </span>
                   {/* When unconnected: stub + plus to the right of the label */}
-                  {!connected && (
-                    <PlusAffordance handleId={out.id} topPct={topPct} />
-                  )}
+                  {!connected && <PlusAffordance handleId={out.id} topPct={topPct} />}
                 </div>
               );
             })
-          : hasOutput && (
-              (() => {
-                const connected = connectedOutputs.size > 0;
-                return (
-                  <>
-                    <Handle
-                      type="source"
-                      position={Position.Right}
-                      style={{
-                        top: '50%',
-                        right: -3,
-                        width: DOT_SIZE,
-                        height: DOT_SIZE,
-                        borderRadius: '50%',
-                        background: HANDLE_COLOR,
-                        border: 'none',
-                        minWidth: 0,
-                        minHeight: 0,
-                      }}
-                    />
-                    {!connected && (
-                      <PlusAffordance handleId={undefined} topPct={50} />
-                    )}
-                  </>
-                );
-              })()
-            )}
+          : hasOutput &&
+            (() => {
+              const connected = connectedOutputs.size > 0;
+              return (
+                <>
+                  <Handle
+                    type="source"
+                    position={Position.Right}
+                    style={{
+                      top: '50%',
+                      right: -3,
+                      width: DOT_SIZE,
+                      height: DOT_SIZE,
+                      borderRadius: '50%',
+                      background: HANDLE_COLOR,
+                      border: 'none',
+                      minWidth: 0,
+                      minHeight: 0,
+                    }}
+                  />
+                  {!connected && <PlusAffordance handleId={undefined} topPct={50} />}
+                </>
+              );
+            })()}
       </div>
 
       {/* Label below */}
@@ -349,17 +321,12 @@ export function BaseNode({
           {title}
         </div>
         {subtitle && (
-          <div
-            className="mt-0.5 truncate text-[10px] leading-tight"
-            style={{ color: '#9ca3af' }}
-          >
+          <div className="mt-0.5 truncate text-[10px] leading-tight" style={{ color: '#9ca3af' }}>
             {subtitle}
           </div>
         )}
         {children && (
-          <div className="mt-1 flex max-w-[160px] flex-wrap justify-center gap-1">
-            {children}
-          </div>
+          <div className="mt-1 flex max-w-[160px] flex-wrap justify-center gap-1">{children}</div>
         )}
       </div>
     </div>

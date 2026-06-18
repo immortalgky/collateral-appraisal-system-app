@@ -1,4 +1,15 @@
 import type { ListBoxItem } from '@/shared/components';
+import { SUPPORTING_DECISION, SUPPORTING_STATUS } from './enums';
+
+// Re-export so callers can keep using `from '../constants/parameters'` for these.
+export {
+  SUPPORTING_STATUS,
+  SUPPORTING_DECISION,
+  ARCHIVED_STATUSES,
+  REMOVABLE_STATUSES,
+  REMARK_REQUIRED_DECISIONS,
+} from './enums';
+export type { SupportingStatus, SupportingDecision } from './enums';
 
 export const APPRAISAL_COMPANY_PARAMS: ListBoxItem[] = [
   { value: '01', label: 'Company A', id: '', isActive: true },
@@ -8,39 +19,17 @@ export const APPRAISAL_COMPANY_PARAMS: ListBoxItem[] = [
 ];
 
 export const COLLATERAL_TYPE_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Land' },
-  { value: '02', label: 'Land with buildings' },
-  { value: '03', label: 'Land with buildings (blueprint)' },
-  { value: '04', label: 'Land allocation (whole project)' },
-  { value: '05', label: 'Buildings' },
-  { value: '06', label: 'Building (blueprint)' },
-  { value: '07', label: 'Building (whole project)' },
-  { value: '08', label: 'Apartment' },
-  { value: '09', label: 'Leasehold rights, real estate' },
-  { value: '10', label: 'Car' },
-  { value: '11', label: 'Machinery' },
-  { value: '12', label: 'Ship' },
-  { value: '13', label: 'Land (Part 1)' },
-  { value: '14', label: 'Land (Part 2)' },
-  { value: '15', label: 'Building (Part 1)' },
-  { value: '16', label: 'Building (Part 2)' },
-  { value: '17', label: 'Land (Part 2)' },
-  { value: '18', label: 'Building (Part 2)' },
-  { value: '19', label: 'Land (Group 1)' },
-  { value: '20', label: 'Building (Group 1)' },
-  { value: '21', label: 'Land (Group 2)' },
-  { value: '22', label: 'Building (Group 2)' },
-  { value: '23', label: 'Land with buildings (Group 1)' },
-  { value: '24', label: 'Land with buildings (Group 2)' },
-  { value: '25', label: 'Leasehold rights (land with buildings)' },
-  { value: '26', label: 'Land (Group 3)' },
-  { value: '27', label: 'Land (Group 4)' },
-  { value: '28', label: 'Leasehold rights (condominium)' },
-  { value: '29', label: 'Land lease rights' },
-  { value: '30', label: 'Leasehold rights' },
-  { value: '31', label: 'Lease rights for space within shopping center' },
-  { value: '32', label: 'Land with buildings (BlockLand)' },
-  { value: '33', label: 'Condominium (BlockCondo)' },
+  { value: 'B', label: 'Building' },
+  { value: 'LB', label: 'Land and Building' },
+  { value: 'U', label: 'Condo' },
+  { value: 'L', label: 'Land' },
+  { value: 'MAC', label: 'Machinery' },
+  { value: 'VEH', label: 'Vehicle' },
+  { value: 'VES', label: 'Vessel' },
+  { value: 'LS', label: 'Lease Agreement (Land and Building)' },
+  { value: 'LSL', label: 'Lease Agreement (Land)' },
+  { value: 'LSB', label: 'Lease Agreement (Building)' },
+  { value: 'LSU', label: 'Lease Agreement (Condo)' },
 ];
 
 export const IMPORT_CHANNEL_PARAMS: { value: string; label: string }[] = [
@@ -53,24 +42,23 @@ export const SOURCE_OF_DATA_PARAMS: { value: string; label: string }[] = [
   { value: '2', label: 'Appraisal Company' },
 ];
 
-export const STATUS_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Draft' },
-  { value: '02', label: 'Pending' },
-  { value: '03', label: 'Approved' },
-  { value: '04', label: 'Cancelled' },
-  { value: '05', label: 'Rejected' },
-];
+export const STATUS_PARAMS = [
+  { value: SUPPORTING_STATUS.Draft, label: 'Draft' },
+  { value: SUPPORTING_STATUS.Pending, label: 'Pending' },
+  { value: SUPPORTING_STATUS.Approved, label: 'Approved' },
+  { value: SUPPORTING_STATUS.Cancelled, label: 'Cancelled' },
+  { value: SUPPORTING_STATUS.Rejected, label: 'Rejected' },
+  { value: SUPPORTING_STATUS.RoutedBack, label: 'Routed Back' },
+] as const;
 
-export const ARCHIVED_STATUSES = new Set(['03', '04', '05']);
+export const DECISION_PARAMS = [
+  { value: SUPPORTING_DECISION.Approved, label: 'Approve' },
+  { value: SUPPORTING_DECISION.Cancelled, label: 'Cancel' },
+  { value: SUPPORTING_DECISION.Rejected, label: 'Reject' },
+  { value: SUPPORTING_DECISION.RoutedBack, label: 'Route Back' },
+] as const;
 
-export const DECISION_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Approve' },
-  { value: '02', label: 'Cancel' },
-  { value: '03', label: 'Reject' },
-  { value: '04', label: 'Route Back' },
-];
-
-export const MOVEMENT_PARAMS: { value: string; label: string }[] = [
-  { value: '01', label: 'Forward' },
-  { value: '02', label: 'Backward' },
+export const DATE_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'createdDate', label: 'Created Date' },
+  { value: 'lastModifiedDate', label: 'Last Modified Date' },
 ];

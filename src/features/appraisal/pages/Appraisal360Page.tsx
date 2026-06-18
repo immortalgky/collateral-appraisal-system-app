@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@/shared/components/Icon';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
@@ -8,6 +7,12 @@ import { useGetDecisionSummary } from '../api/decisionSummary';
 import { useGetRequestById } from '@features/request/api/requests';
 import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyType } from '../types';
+import { useGetAppraisalMapPins } from '../api/marketComparable';
+import { HistorySearchMapDrawer } from '@/features/common/historySearch/HistorySearchMapDrawer';
+import type {
+  AppraisalPinDto,
+  MarketComparablePinDto,
+} from '@/features/common/historySearch/types';
 
 import StickyHeaderCard from '../components/360/StickyHeaderCard';
 import RequestInfoSection from '../components/360/RequestInfoSection';
@@ -30,17 +35,89 @@ type SlideOverState =
 const Appraisal360Page = () => {
   const appraisalId = useAppraisalId();
   const [slideOver, setSlideOver] = useState<SlideOverState>({ type: 'closed' });
+  const [mapOpen, setMapOpen] = useState(false);
 
   // Data hooks
-  const { data: appraisal, isLoading: isLoadingAppraisal, isError: isAppraisalError, error: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
-  const { data: request, isError: isRequestError, error: requestError, refetch: refetchRequest } = useGetRequestById(appraisal?.requestId);
+  const {
+    data: appraisal,
+    isLoading: isLoadingAppraisal,
+    isError: isAppraisalError,
+    error: appraisalError,
+    refetch: refetchAppraisal,
+  } = useGetAppraisalById(appraisalId);
+  const {
+    data: request,
+    isError: isRequestError,
+    error: requestError,
+    refetch: refetchRequest,
+  } = useGetRequestById(appraisal?.requestId);
   const { groups, isLoading: isLoadingGroups } = useEnrichedPropertyGroups(appraisalId);
-  const { data: decisionSummary, isLoading: isLoadingDecision, isError: isDecisionError, error: decisionError, refetch: refetchDecision } = useGetDecisionSummary(appraisalId);
+  const {
+    data: decisionSummary,
+    isLoading: isLoadingDecision,
+    isError: isDecisionError,
+    error: decisionError,
+    refetch: refetchDecision,
+  } = useGetDecisionSummary(appraisalId);
 
+  // Map-pins data — fetched lazily when the user opens the map
+  const { data: mapPinsData } = useGetAppraisalMapPins(mapOpen ? appraisalId : undefined);
+
+  // Map the API shapes to the history-search DTOs (pad missing fields with null).
+  // appraisalId is set to the current page's appraisalId so PinDetailDrawer can
+  // look up appraisal data correctly. appraisalPropertyId is used as the React key
+  // via the per-property lat/lon uniqueness — it's not stored in the DTO shape.
+  const appraisingCollateralPins = useMemo<AppraisalPinDto[]>(
+    () =>
+      (mapPinsData?.collateral ?? []).map(c => ({
+        appraisalId: appraisalId ?? '',
+        appraisalNumber: null,
+        lat: c.lat,
+        lon: c.lon,
+        propertyType: c.propertyType,
+        buildingType: null,
+        appraisedValue: null,
+        appraisedDate: null,
+        distanceKm: null,
+        province: c.province,
+        district: c.district,
+        subDistrict: c.subDistrict,
+        customerName: null,
+      })),
+    [mapPinsData, appraisalId],
+  );
+
+  const appraisingMcPins = useMemo<MarketComparablePinDto[]>(
+    () =>
+      (mapPinsData?.marketComparables ?? []).map(m => ({
+        marketComparableId: m.marketComparableId,
+        lat: m.lat,
+        lon: m.lon,
+        propertyType: m.propertyType,
+        surveyName: m.surveyName,
+        infoDateTime: m.infoDateTime,
+        offerPrice: m.offerPrice,
+        salePrice: m.salePrice,
+        distanceKm: null,
+        appraisalNumber: null,
+        customerName: null,
+        appraisalDate: null,
+      })),
+    [mapPinsData],
+  );
+
+  // Center the map on the first collateral pin if available.
+  const mapInitialCenter = appraisingCollateralPins[0]
+    ? { lat: appraisingCollateralPins[0].lat, lon: appraisingCollateralPins[0].lon }
+    : undefined;
 
   const isPageLoading = isLoadingAppraisal;
 
-  const handlePropertyClick = (propertyId: string, propertyType: PropertyType, groupName: string) => {
+  const handlePropertyClick = (
+    propertyId: string,
+    propertyType: PropertyType,
+    groupName: string,
+  ) => {
     setSlideOver({ type: 'property', propertyId, propertyType, groupName });
   };
 
@@ -52,7 +129,12 @@ const Appraisal360Page = () => {
     const group = groups.find(g => g.id === groupId);
     const paId = group?.pricingAnalysisId;
     if (paId) {
-      setSlideOver({ type: 'pricing', groupId, pricingAnalysisId: paId, groupName: group?.name || '' });
+      setSlideOver({
+        type: 'pricing',
+        groupId,
+        pricingAnalysisId: paId,
+        groupName: group?.name || '',
+      });
     }
   };
 
@@ -92,7 +174,9 @@ const Appraisal360Page = () => {
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
-              onClick={() => {/* TODO: download appraisal report */}}
+              onClick={() => {
+                /* TODO: download appraisal report */
+              }}
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-teal-600" />
               Appraisal Report
@@ -100,10 +184,20 @@ const Appraisal360Page = () => {
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
-              onClick={() => {/* TODO: download summary document */}}
+              onClick={() => {
+                /* TODO: download summary document */
+              }}
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-purple-600" />
               Appraisal Summary
+            </button>
+            <button
+              type="button"
+              onClick={() => setMapOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg shadow-sm hover:bg-blue-100 hover:border-blue-300 transition-colors"
+            >
+              <Icon name="map-location-dot" style="solid" className="w-3.5 h-3.5" />
+              View on Map
             </button>
           </div>
 
@@ -179,6 +273,17 @@ const Appraisal360Page = () => {
           />
         )}
       </SlideOverPanel>
+
+      {/* 360 view-only map — shows this appraisal's own pins + nearby history results */}
+      <HistorySearchMapDrawer
+        isOpen={mapOpen}
+        onClose={() => setMapOpen(false)}
+        initialCenter={mapInitialCenter}
+        initialRadiusKm={5}
+        appraisingCollateralPins={appraisingCollateralPins}
+        appraisingMcPins={appraisingMcPins}
+        defaultExpanded
+      />
     </div>
   );
 };

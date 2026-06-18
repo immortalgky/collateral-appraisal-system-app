@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import type { AppraisalSummaryDto } from '../schemas/quotation';
@@ -63,6 +64,8 @@ const AppraisalReportListingTable = ({
   rmUserName,
   rmUserFullName,
 }: AppraisalReportListingTableProps) => {
+  const { t } = useTranslation('quotation');
+
   if (appraisals.length === 0) {
     return (
       <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -70,10 +73,10 @@ const AppraisalReportListingTable = ({
           <div className="size-7 rounded-lg bg-blue-100 flex items-center justify-center">
             <Icon name="file-lines" style="solid" className="size-3.5 text-blue-600" />
           </div>
-          <h2 className="text-sm font-semibold text-gray-700">Appraisal Report Listing</h2>
+          <h2 className="text-sm font-semibold text-gray-700">{t('appraisalReport.title')}</h2>
         </div>
         <div className="px-4 py-8 text-center">
-          <p className="text-sm text-gray-500">No appraisals linked to this RFQ.</p>
+          <p className="text-sm text-gray-500">{t('appraisalReport.noAppraisals')}</p>
         </div>
       </div>
     );
@@ -86,7 +89,7 @@ const AppraisalReportListingTable = ({
           <Icon name="file-lines" style="solid" className="size-3.5 text-blue-600" />
         </div>
         <h2 className="text-sm font-semibold text-gray-700">
-          Appraisal Report Listing ({appraisals.length})
+          {t('appraisalReport.title')} ({appraisals.length})
         </h2>
       </div>
       <div className="overflow-x-auto">
@@ -97,19 +100,19 @@ const AppraisalReportListingTable = ({
                 #
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Appraisal Number
+                {t('columns.appraisalNumber')}
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Customer Name
+                {t('columns.customerName')}
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Property Detail
+                {t('columns.propertyDetail')}
               </th>
               <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                RM
+                {t('columns.rm')}
               </th>
               <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Max Appraisal Duration (day)
+                {t('columns.maxAppraisalDuration')}
               </th>
             </tr>
           </thead>

@@ -1,8 +1,7 @@
 export const workflowKeys = {
   all: ['workflows'] as const,
   definitions: () => ['workflows', 'definitions'] as const,
-  versions: (definitionId: string) =>
-    ['workflows', definitionId, 'versions'] as const,
+  versions: (definitionId: string) => ['workflows', definitionId, 'versions'] as const,
   version: (definitionId: string, versionId: string) =>
     ['workflows', definitionId, 'versions', versionId] as const,
   latestVersion: (definitionId: string) =>

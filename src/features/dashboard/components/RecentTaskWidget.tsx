@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
@@ -25,13 +26,7 @@ const SKELETON_COLUMNS = [
 type SortKey = 'appraisalNumber' | 'customerName' | 'taskType' | 'purpose';
 type SortDirection = 'asc' | 'desc';
 
-type SortableColumn = { key: SortKey; label: string; sticky?: boolean };
-const SORTABLE_COLUMNS: SortableColumn[] = [
-  { key: 'appraisalNumber', label: 'Appraisal No.', sticky: true },
-  { key: 'customerName', label: 'Customer Name' },
-  { key: 'taskType', label: 'Task Type' },
-  { key: 'purpose', label: 'Purpose' },
-];
+type SortableColumn = { key: SortKey; sticky?: boolean };
 
 function compareBy(items: Task[], key: SortKey, dir: SortDirection): Task[] {
   return [...items].sort((a, b) => {
@@ -46,11 +41,27 @@ function compareBy(items: Task[], key: SortKey, dir: SortDirection): Task[] {
 }
 
 function RecentTaskWidget() {
+  const { t } = useTranslation('dashboard');
   const { data, isLoading, dataUpdatedAt } = useGetTasks(RECENT_TASKS_PARAMS);
   const rawTasks = data?.items ?? [];
 
   const [sortField, setSortField] = useState<SortKey | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  // Built inside component so t() is in scope
+  const SORTABLE_COLUMNS: SortableColumn[] = [
+    { key: 'appraisalNumber', sticky: true },
+    { key: 'customerName' },
+    { key: 'taskType' },
+    { key: 'purpose' },
+  ];
+
+  const COLUMN_LABELS: Record<SortKey, string> = {
+    appraisalNumber: t('recentTask.columns.appraisalNo'),
+    customerName: t('recentTask.columns.customerName'),
+    taskType: t('recentTask.columns.taskType'),
+    purpose: t('recentTask.columns.purpose'),
+  };
 
   const tasks = useMemo(
     () => (sortField ? compareBy(rawTasks, sortField, sortDirection) : rawTasks),
@@ -92,16 +103,16 @@ function RecentTaskWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-800">Recent Task</h3>
+          <h3 className="font-semibold text-gray-800">{t('recentTask.title')}</h3>
           <div className="flex items-center gap-3">
             {updatedLabel && (
-              <span className="text-xs text-gray-400">Updated {updatedLabel} ago</span>
+              <span className="text-xs text-gray-400">{t('updatedAgo', { n: updatedLabel })}</span>
             )}
             <a
               href="/tasks"
               className="text-blue-500 text-sm font-medium hover:text-blue-600 flex items-center gap-1.5 transition-colors"
             >
-              View All
+              {t('recentTask.viewAll')}
               <Icon name="arrow-up-right-from-square" style="solid" className="size-3" />
             </a>
           </div>
@@ -126,14 +137,14 @@ function RecentTaskWidget() {
                       className={`${base}${stickyExtra}${activeColor}`}
                     >
                       <div className="flex items-center gap-1">
-                        {col.label}
+                        {COLUMN_LABELS[col.key]}
                         <SortIcon field={col.key} />
                       </div>
                     </th>
                   );
                 })}
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50">
-                  Status
+                  {t('recentTask.columns.status')}
                 </th>
               </tr>
             </thead>
@@ -147,7 +158,7 @@ function RecentTaskWidget() {
                       <div className="size-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
                         <Icon style="regular" name="inbox" className="size-5 text-gray-300" />
                       </div>
-                      <p className="text-sm text-gray-400">No recent tasks yet.</p>
+                      <p className="text-sm text-gray-400">{t('recentTask.empty')}</p>
                     </div>
                   </td>
                 </tr>

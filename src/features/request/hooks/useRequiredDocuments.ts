@@ -6,7 +6,11 @@ import type { UploadedDocument } from '../types/document';
 /**
  * Creates an empty placeholder document for a required document type
  */
-const createPlaceholder = (documentType: string, displayName?: string, isRequired = false): UploadedDocument => ({
+const createPlaceholder = (
+  documentType: string,
+  displayName?: string,
+  isRequired = false,
+): UploadedDocument => ({
   id: null,
   titleId: null,
   documentId: null,
@@ -40,7 +44,9 @@ export const useRequestLevelRequiredDocuments = () => {
 
     const currentDocs: UploadedDocument[] = documents || [];
     const checklistTypes = new Set(data.documents.map(d => d.documentType));
-    const requiredTypes = new Set(data.documents.filter(d => d.isRequired).map(d => d.documentType));
+    const requiredTypes = new Set(
+      data.documents.filter(d => d.isRequired).map(d => d.documentType),
+    );
     const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
     const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
@@ -62,7 +68,9 @@ export const useRequestLevelRequiredDocuments = () => {
     if (missingTypes.length === 0 && !needsUpdate && prevPurposeRef.current === purpose) return;
 
     // Create placeholders for all missing checklist types (isRequired from API)
-    const newPlaceholders = missingTypes.map(d => createPlaceholder(d.documentType, d.displayName, d.isRequired));
+    const newPlaceholders = missingTypes.map(d =>
+      createPlaceholder(d.documentType, d.displayName, d.isRequired),
+    );
 
     // Find the minimum set number for each required document type
     const minSetByType: Record<string, number> = {};
@@ -122,7 +130,9 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
 
     const currentDocs: UploadedDocument[] = titleDocuments || [];
     const checklistTypes = new Set(data.documents.map(d => d.documentType));
-    const requiredTypes = new Set(data.documents.filter(d => d.isRequired).map(d => d.documentType));
+    const requiredTypes = new Set(
+      data.documents.filter(d => d.isRequired).map(d => d.documentType),
+    );
     const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
     const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
@@ -141,10 +151,17 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
     );
 
     // No changes needed — all placeholders exist and metadata is set
-    if (missingTypes.length === 0 && !needsUpdate && prevCollateralTypeRef.current === collateralType) return;
+    if (
+      missingTypes.length === 0 &&
+      !needsUpdate &&
+      prevCollateralTypeRef.current === collateralType
+    )
+      return;
 
     // Create placeholders for all missing checklist types (isRequired from API)
-    const newPlaceholders = missingTypes.map(d => createPlaceholder(d.documentType, d.displayName, d.isRequired));
+    const newPlaceholders = missingTypes.map(d =>
+      createPlaceholder(d.documentType, d.displayName, d.isRequired),
+    );
 
     // Find the minimum set number for each required document type
     const minSetByType: Record<string, number> = {};

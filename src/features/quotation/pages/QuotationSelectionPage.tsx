@@ -2,11 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
-import { useCancelQuotation, useGetQuotationById, usePickTentativeWinner, useSendQuotation, } from '../api/quotation';
+import {
+  useCancelQuotation,
+  useGetQuotationById,
+  usePickTentativeWinner,
+  useSendQuotation,
+} from '../api/quotation';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import EditDraftQuotationModal from '../components/EditDraftQuotationModal';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
@@ -37,6 +43,7 @@ import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetai
 const QuotationSelectionPage = () => {
   const id = useQuotationIdFromRoute();
   const navigate = useNavigate();
+  const { t } = useTranslation(['quotation', 'common']);
   const currentUser = useAuthStore(s => s.user);
   const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
   const { data: quotation, isLoading, isError } = useGetQuotationById(id);
@@ -103,7 +110,7 @@ const QuotationSelectionPage = () => {
       },
       {
         onSuccess: () => {
-          toast.success('Tentative winner selected — admin will be notified');
+          toast.success(t('toasts.winnerSelected'));
           setIsConfirmOpen(false);
           setPickedId(null);
           setReason('');
@@ -112,7 +119,7 @@ const QuotationSelectionPage = () => {
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? 'Failed to pick tentative winner');
+          toast.error(apiErr?.apiError?.detail ?? t('toasts.winnerSelectFailed'));
         },
       },
     );
@@ -123,13 +130,13 @@ const QuotationSelectionPage = () => {
       { reason: cancelReason.trim() || null },
       {
         onSuccess: () => {
-          toast.success('Quotation cancelled');
+          toast.success(t('toasts.quotationCancelled'));
           closeCancelConfirm();
           navigate(-1);
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? 'Failed to cancel quotation');
+          toast.error(apiErr?.apiError?.detail ?? t('toasts.cancelFailed'));
         },
       },
     );
@@ -157,7 +164,10 @@ const QuotationSelectionPage = () => {
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
     ].join(', ');
-    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean).join(',');
+    const appraisalNumbers = appraisals
+      .map(a => a.appraisalNumber ?? '')
+      .filter(Boolean)
+      .join(',');
 
     const targetTime = dueDate
       ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -205,11 +215,9 @@ const QuotationSelectionPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
-        <p className="text-sm text-gray-600">
-          Unable to load quotation. You may not have access to this resource.
-        </p>
+        <p className="text-sm text-gray-600">{t('errors.unableToLoadQuotation')}</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
-          Back to Tasks
+          {t('buttons.backToTasks')}
         </Button>
       </div>
     );
@@ -269,7 +277,7 @@ const QuotationSelectionPage = () => {
 
   const handleSendConfirm = (emailData: {
     from: string;
-    to: string;
+    to?: string;
     cc?: string;
     bcc?: string;
     subject: string;
@@ -277,15 +285,12 @@ const QuotationSelectionPage = () => {
   }) => {
     sendQuotation(emailData, {
       onSuccess: () => {
-        toast.success('Quotation sent — companies have been notified');
+        toast.success(t('toasts.quotationSent'));
         setIsSendConfirmOpen(false);
       },
       onError: (err: unknown) => {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(
-          apiErr?.apiError?.detail ??
-            'Failed to send quotation. Set shared documents via the task page before sending.',
-        );
+        toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
       },
     });
   };
@@ -295,13 +300,13 @@ const QuotationSelectionPage = () => {
       {},
       {
         onSuccess: () => {
-          toast.success('Draft quotation cancelled');
+          toast.success(t('toasts.draftCancelled'));
           setIsDraftCancelOpen(false);
           navigate('/quotations');
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? 'Failed to cancel draft');
+          toast.error(apiErr?.apiError?.detail ?? t('toasts.draftCancelFailed'));
         },
       },
     );
@@ -329,7 +334,7 @@ const QuotationSelectionPage = () => {
             <QuotationStatusBadge status={quotation.status} />
             <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
               <Icon name="clock" style="solid" className="size-2.5 text-gray-400" />
-              <span>Cut-off</span>
+              <span>{t('shared.cutOff')}</span>
               <span className="font-medium text-gray-700">{cutOffTimeDisplay}</span>
             </span>
             {hoursLeft !== null && (
@@ -339,7 +344,7 @@ const QuotationSelectionPage = () => {
                   hoursLeft < 24 ? 'text-red-600' : 'text-amber-600',
                 )}
               >
-                · {hoursLeft}h remaining
+                · {t('shared.hoursRemaining', { n: hoursLeft })}
               </span>
             )}
           </div>
@@ -354,22 +359,28 @@ const QuotationSelectionPage = () => {
               className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed mr-2"
             >
               <Icon name="ban" style="solid" className="size-3" />
-              Cancel Quotation
+              {t('shared.cancelQuotation')}
             </button>
           )}
           <span className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-md px-2.5 py-1 text-xs">
-            <span className="text-blue-400 font-medium">Appraisals</span>
-            <span className="font-semibold text-blue-700 tabular-nums">{quotation.totalAppraisals}</span>
+            <span className="text-blue-400 font-medium">{t('shared.appraisals')}</span>
+            <span className="font-semibold text-blue-700 tabular-nums">
+              {quotation.totalAppraisals}
+            </span>
           </span>
           <span className="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-100 rounded-md px-2.5 py-1 text-xs">
-            <span className="text-teal-400 font-medium">Invited</span>
-            <span className="font-semibold text-teal-700 tabular-nums">{quotation.totalCompaniesInvited}</span>
+            <span className="text-teal-400 font-medium">{t('shared.invited')}</span>
+            <span className="font-semibold text-teal-700 tabular-nums">
+              {quotation.totalCompaniesInvited}
+            </span>
           </span>
           <span className="inline-flex items-center gap-1.5 bg-violet-50 border border-violet-100 rounded-md px-2.5 py-1 text-xs">
-            <span className="text-violet-400 font-medium">Responses</span>
+            <span className="text-violet-400 font-medium">{t('shared.responses')}</span>
             <span className="font-semibold text-violet-700 tabular-nums">
               {quotation.totalQuotationsReceived}
-              <span className="text-violet-400 font-normal">/{quotation.totalCompaniesInvited}</span>
+              <span className="text-violet-400 font-normal">
+                /{quotation.totalCompaniesInvited}
+              </span>
             </span>
           </span>
         </div>
@@ -379,17 +390,15 @@ const QuotationSelectionPage = () => {
       {isDraft && (
         <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
           <Icon name="pen-to-square" style="solid" className="size-4 text-amber-600 shrink-0" />
-          <p className="text-sm text-amber-700 flex-1">
-            This quotation is a <strong>Draft</strong>. Edit details or send it to invite companies.
-          </p>
+          <p className="text-sm text-amber-700 flex-1">{t('draft.draftBannerText')}</p>
           <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" size="sm" onClick={() => setIsEditDraftOpen(true)}>
               <Icon name="pen-to-square" style="solid" className="size-3.5 mr-1.5" />
-              Edit
+              {t('buttons.edit')}
             </Button>
             <Button size="sm" onClick={() => setIsSendConfirmOpen(true)} disabled={isSendPending}>
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-              Send to Companies
+              {t('buttons.sendToCompanies')}
             </Button>
             <Button
               variant="danger"
@@ -398,7 +407,7 @@ const QuotationSelectionPage = () => {
               disabled={isCancelPending}
             >
               <Icon name="ban" style="solid" className="size-3.5 mr-1.5" />
-              Cancel Draft
+              {t('buttons.cancelDraft')}
             </Button>
           </div>
         </div>
@@ -425,10 +434,7 @@ const QuotationSelectionPage = () => {
             style="solid"
             className="size-4 text-purple-500 shrink-0 mt-0.5"
           />
-          <p className="text-sm text-purple-700">
-            Select one of the shortlisted companies below as the tentative winner. Admin will then
-            negotiate and award the agreement.
-          </p>
+          <p className="text-sm text-purple-700">{t('selectWinner.rmPickInstruction')}</p>
         </div>
       )}
 
@@ -437,7 +443,7 @@ const QuotationSelectionPage = () => {
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
             <h2 className="text-sm font-semibold text-gray-700">
-              Company Responses ({quotation.invitedCompanies?.length ?? 0})
+              {t('shared.companyResponses')} ({quotation.invitedCompanies?.length ?? 0})
             </h2>
           </div>
 
@@ -447,25 +453,25 @@ const QuotationSelectionPage = () => {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Company
+                      {t('columns.company')}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Fee Amount
+                      {t('columns.totalFeeAmount')}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Discount
+                      {t('columns.totalDiscount')}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Net Amount
+                      {t('columns.totalNetAmount')}
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Estimate Manday
+                      {t('columns.totalEstimateManday')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Submitted At
+                      {t('columns.submittedAt')}
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      {t('columns.status')}
                     </th>
                   </tr>
                 </thead>
@@ -523,7 +529,7 @@ const QuotationSelectionPage = () => {
                             <QuotationStatusBadge status={cq.status} />
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                              Pending
+                              {t('invitedCompanies.pending')}
                             </span>
                           )}
                         </td>
@@ -563,17 +569,20 @@ const QuotationSelectionPage = () => {
             </div>
           </div>
           <div className="px-4 py-3 text-sm text-gray-600">
-            <p>
-              Quotation awarded to{' '}
-              <strong className="text-gray-900">{finalizedWinner?.companyName ?? '—'}</strong>.
-            </p>
+            <p
+              dangerouslySetInnerHTML={{
+                __html: t('shared.quotationAwarded', {
+                  company: `<strong class="text-gray-900">${finalizedWinner?.companyName ?? '—'}</strong>`,
+                }),
+              }}
+            />
             {(() => {
               const finalPrice =
                 finalizedWinner?.currentNegotiatedPrice ?? finalizedWinner?.totalQuotedPrice;
               if (finalPrice == null) return null;
               return (
                 <p className="mt-1">
-                  Final price:{' '}
+                  {t('shared.finalPrice')}{' '}
                   <strong className="text-green-700">{formatCurrency(finalPrice)}</strong>
                 </p>
               );
@@ -596,7 +605,7 @@ const QuotationSelectionPage = () => {
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
-          <div className="px-4 py-3 text-sm text-gray-500">This quotation was cancelled.</div>
+          <div className="px-4 py-3 text-sm text-gray-500">{t('shared.quotationCancelled')}</div>
         </div>
       )}
 
@@ -605,7 +614,7 @@ const QuotationSelectionPage = () => {
         <div className="rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-gray-700">
-              Shortlisted Submissions ({shortlisted.length})
+              {t('draft.shortlistSubmissions')} ({shortlisted.length})
             </h2>
             {showWinnerActions && isIntAdmin && (
               <div className="flex items-center gap-2">
@@ -617,7 +626,7 @@ const QuotationSelectionPage = () => {
                   className="text-red-600 border-red-300 hover:bg-red-50"
                 >
                   <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-                  Reject Winner
+                  {t('buttons.rejectWinner')}
                 </Button>
                 <Button
                   size="sm"
@@ -627,7 +636,7 @@ const QuotationSelectionPage = () => {
                   className="text-indigo-600 border-indigo-300 hover:bg-indigo-50"
                 >
                   <Icon name="handshake" style="solid" className="size-3.5 mr-1.5" />
-                  Negotiate
+                  {t('buttons.openNegotiation')}
                 </Button>
                 <Button
                   size="sm"
@@ -636,7 +645,7 @@ const QuotationSelectionPage = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-                  Award
+                  {t('buttons.award')}
                 </Button>
               </div>
             )}
@@ -649,7 +658,8 @@ const QuotationSelectionPage = () => {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-amber-900">
-                  RM requests negotiation with <strong>{tentativeWinner?.companyName}</strong>
+                  {t('negotiation.rmRequestsNegotiation')}{' '}
+                  <strong>{tentativeWinner?.companyName}</strong>
                 </p>
                 {quotation.rmNegotiationNote && (
                   <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
@@ -662,7 +672,7 @@ const QuotationSelectionPage = () => {
 
           {shortlisted.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-gray-500">No shortlisted submissions available</p>
+              <p className="text-sm text-gray-500">{t('empty.noShortlistedSubmissions')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -670,32 +680,32 @@ const QuotationSelectionPage = () => {
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Company
+                      {t('columns.company')}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Fee Amount
+                      {t('columns.totalFeeAmount')}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Discount
+                      {t('columns.totalDiscount')}
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Net Amount
+                      {t('columns.totalNetAmount')}
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total Estimate Manday
+                      {t('columns.totalEstimateManday')}
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Submitted At
+                      {t('columns.submittedAt')}
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      {t('columns.status')}
                     </th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Detail
+                      {t('columns.detail')}
                     </th>
                     {!isRmReadOnly && (
                       <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Action
+                        {t('columns.action')}
                       </th>
                     )}
                   </tr>
@@ -771,11 +781,15 @@ const QuotationSelectionPage = () => {
                         <td className="px-4 py-3 text-center">
                           <button
                             type="button"
-                            aria-label={`View ${cq.companyName} quotation detail`}
+                            aria-label={t('aria.viewDetail', { company: cq.companyName })}
                             onClick={() => setViewingCqId(cq.id)}
                             className="p-1 rounded hover:bg-gray-100 transition-colors"
                           >
-                            <Icon name="file-lines" style="regular" className="size-4 text-blue-500" />
+                            <Icon
+                              name="file-lines"
+                              style="regular"
+                              className="size-4 text-blue-500"
+                            />
                           </button>
                         </td>
                         {!isRmReadOnly && (
@@ -786,7 +800,7 @@ const QuotationSelectionPage = () => {
                               disabled={isAlreadyPicked}
                               className={clsx(isWinner && 'bg-indigo-600 hover:bg-indigo-700')}
                             >
-                              {isWinner ? 'Selected' : 'Pick'}
+                              {isWinner ? t('selectWinner.selectButton') : 'Pick'}
                             </Button>
                           </td>
                         )}
@@ -809,16 +823,20 @@ const QuotationSelectionPage = () => {
       <Modal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
-        title="Select Tentative Winner"
+        title={t('selectWinner.title')}
         size="sm"
       >
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-start gap-2">
             <Icon name="crown" style="solid" className="size-4 text-indigo-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-indigo-700">
-              You are selecting <strong>{pickedCompany?.companyName}</strong> as the tentative
-              winner.
-            </p>
+            <p
+              className="text-sm text-indigo-700"
+              dangerouslySetInnerHTML={{
+                __html: t('selectWinner.body', {
+                  company: `<strong>${pickedCompany?.companyName}</strong>`,
+                }),
+              }}
+            />
           </div>
 
           {/* Request negotiation toggle */}
@@ -835,25 +853,24 @@ const QuotationSelectionPage = () => {
               />
               <div>
                 <span className="text-sm font-medium text-gray-700 group-hover:text-primary">
-                  Request negotiation with this company
+                  {t('selectWinner.requestNegotiation')}
                 </span>
-                <p className="text-xs text-gray-400">
-                  Admin will see your recommendation when finalizing.
-                </p>
+                <p className="text-xs text-gray-400">{t('selectWinner.requestNegotiationHint')}</p>
               </div>
             </label>
 
             {requestNegotiation && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Note to admin <span className="text-xs text-gray-400">(max 500 chars)</span>
+                  {t('selectWinner.noteLabel')}{' '}
+                  <span className="text-xs text-gray-400">{t('selectWinner.noteMax')}</span>
                 </label>
                 <textarea
                   value={negotiationNote}
                   onChange={e => setNegotiationNote(e.target.value.slice(0, 500))}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
-                  placeholder="e.g. Target price ฿2.5M, they may be flexible on timeline..."
+                  placeholder={t('selectWinner.notePlaceholder')}
                 />
                 <p className="text-xs text-gray-400 text-right mt-0.5">
                   {negotiationNote.length}/500
@@ -868,18 +885,18 @@ const QuotationSelectionPage = () => {
               onClick={() => setIsConfirmOpen(false)}
               disabled={isPickPending}
             >
-              Cancel
+              {t('common:actions.cancel')}
             </Button>
             <Button onClick={handleConfirmPick} disabled={isPickPending}>
               {isPickPending ? (
                 <>
                   <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  Selecting...
+                  {t('selectWinner.selecting')}
                 </>
               ) : (
                 <>
                   <Icon name="crown" style="solid" className="size-4 mr-2" />
-                  Confirm Selection
+                  {t('buttons.confirmSelection')}
                 </>
               )}
             </Button>
@@ -891,7 +908,7 @@ const QuotationSelectionPage = () => {
       <Modal
         isOpen={isCancelConfirmOpen}
         onClose={closeCancelConfirm}
-        title="Cancel Quotation"
+        title={t('cancel.title')}
         size="sm"
       >
         <div className="flex flex-col gap-4">
@@ -901,15 +918,19 @@ const QuotationSelectionPage = () => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p className="text-sm text-red-700">
-              This will cancel quotation <strong>{quotation.quotationNumber}</strong>. All invited
-              companies will be notified and the workflow task will be cancelled. This action cannot
-              be undone.
-            </p>
+            <p
+              className="text-sm text-red-700"
+              dangerouslySetInnerHTML={{
+                __html: t('cancel.standaloneBody', {
+                  number: `<strong>${quotation.quotationNumber}</strong>`,
+                }),
+              }}
+            />
           </div>
           <div>
             <label htmlFor="standalone-cancel-reason" className="block text-sm text-gray-600 mb-1">
-              Reason <span className="text-gray-400">(optional)</span>
+              {t('fields.reasonOptional')}{' '}
+              <span className="text-gray-400">{t('fields.notesOptional')}</span>
             </label>
             <textarea
               id="standalone-cancel-reason"
@@ -917,25 +938,25 @@ const QuotationSelectionPage = () => {
               maxLength={500}
               value={cancelReason}
               onChange={e => setCancelReason(e.target.value)}
-              placeholder="Why is this quotation being cancelled?"
+              placeholder={t('placeholders.cancelReason')}
               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             />
             <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={closeCancelConfirm} disabled={isCancelPending}>
-              Go Back
+              {t('buttons.goBack')}
             </Button>
             <Button variant="danger" onClick={handleCancelConfirm} disabled={isCancelPending}>
               {isCancelPending ? (
                 <>
                   <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  Cancelling...
+                  {t('cancel.cancelling')}
                 </>
               ) : (
                 <>
                   <Icon name="ban" style="solid" className="size-4 mr-2" />
-                  Confirm Cancel
+                  {t('cancel.confirmCancelButton')}
                 </>
               )}
             </Button>
@@ -996,12 +1017,12 @@ const QuotationSelectionPage = () => {
       <EmailCompositionModal
         isOpen={isSendConfirmOpen}
         onClose={() => setIsSendConfirmOpen(false)}
-        title="Drafting email to send to external appraisal company"
+        title={t('email.draftingTitle')}
         defaultValues={defaultEmailValues}
         showCc={true}
         showBcc={true}
         showAttachments={false}
-        subjectLabel="Subject"
+        subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
         onSubmit={handleSendConfirm}
       />
@@ -1010,7 +1031,7 @@ const QuotationSelectionPage = () => {
       <Modal
         isOpen={isDraftCancelOpen}
         onClose={() => setIsDraftCancelOpen(false)}
-        title="Cancel Draft"
+        title={t('cancel.draftTitle')}
         size="sm"
       >
         <div className="flex flex-col gap-4">
@@ -1020,10 +1041,14 @@ const QuotationSelectionPage = () => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p className="text-sm text-red-700">
-              Cancel draft <strong>{quotation.quotationNumber}</strong>? This action cannot be
-              undone.
-            </p>
+            <p
+              className="text-sm text-red-700"
+              dangerouslySetInnerHTML={{
+                __html: t('cancel.draftBody', {
+                  number: `<strong>${quotation.quotationNumber}</strong>`,
+                }),
+              }}
+            />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button
@@ -1031,7 +1056,7 @@ const QuotationSelectionPage = () => {
               onClick={() => setIsDraftCancelOpen(false)}
               disabled={isCancelPending}
             >
-              Go Back
+              {t('buttons.goBack')}
             </Button>
             <Button
               variant="danger"
@@ -1040,7 +1065,7 @@ const QuotationSelectionPage = () => {
               isLoading={isCancelPending}
             >
               {!isCancelPending && <Icon name="ban" style="solid" className="size-4 mr-1.5" />}
-              Confirm Cancel
+              {t('cancel.confirmCancelButton')}
             </Button>
           </div>
         </div>
@@ -1050,7 +1075,7 @@ const QuotationSelectionPage = () => {
       <SlideOverPanel
         isOpen={!!viewingCqId}
         onClose={() => setViewingCqId(null)}
-        title="Company Quotation Detail"
+        title={t('page.extQuotationTitle')}
         width="2xl"
       >
         {viewingCqId && (

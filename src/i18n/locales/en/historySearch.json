@@ -24,8 +24,8 @@
     "collateralOnlyFilters": "Collateral Filters",
     "addressFilters": "Address Filters",
     "bothPinFilters": "All Filters",
-    "appraisalReportNo": "Appraisal Report No.",
-    "titleDeedNo": "Title Deed No.",
+    "appraisalReportNo": "Appraisal Report Number",
+    "titleDeedNo": "Title Number",
     "collateralType": "Collateral Type",
     "collateralTypeOptions": {
       "all": "All",
@@ -53,13 +53,17 @@
     "groupAppraisalId": "Appraisal Request & Identification",
     "groupAppraisalDate": "Appraisal Date & Time",
     "groupLocation": "Location Information",
-    "oldAppraisalReportNo": "Old Appraisal Report No.",
+    "oldAppraisalReportNo": "Old Appraisal Report Number",
     "oldAppraisalReportNoPlaceholder": "Not yet supported",
-    "oldAppraisalReportNoComingSoon": "Coming soon"
+    "oldAppraisalReportNoComingSoon": "Coming soon",
+    "provincePlaceholder": "All provinces",
+    "districtPlaceholder": "Select province first",
+    "subDistrictPlaceholder": "Select district first",
+    "center": "Center"
   },
   "pinFilter": {
     "title": "Map Pin",
-    "collateralExisting": "Collateral (existing)",
+    "appraisalExisting": "Appraisal (existing)",
     "mcExisting": "Market Comparable (existing)",
     "collateralAppraising": "Collateral (appraising)",
     "mcAppraising": "Market Comparable (appraising)",
@@ -70,7 +74,7 @@
     "title": "Results",
     "close": "Close results",
     "tabs": {
-      "collateral": "Collateral",
+      "appraisal": "Appraisal",
       "marketComparable": "Market Comparable"
     },
     "totalCount": "{{count}} result(s)",
@@ -80,24 +84,44 @@
     "retry": "Retry",
     "pagination": "Page {{page}} of {{total}}",
     "columns": {
-      "appraisalReportNo": "Appraisal Report No.",
+      "appraisalReportNo": "Appraisal Number",
       "appraisalDate": "Appraisal Date",
       "latitude": "Latitude",
-      "longitude": "Longitude"
+      "longitude": "Longitude",
+      "customerName": "Customer Name",
+      "collateralType": "Collateral Type",
+      "buildingType": "Building Type",
+      "appraisalValue": "Appraisal Value",
+      "sellingPrice": "Selling Price",
+      "offeringPrice": "Offering Price",
+      "distance": "Distance"
+    },
+    "exportCsv": "Export CSV",
+    "activeFilters": {
+      "clearAll": "Clear all"
     }
   },
   "pinDetail": {
     "title": "Pin Detail",
     "close": "Close",
-    "collateral": {
-      "title": "Collateral Detail",
-      "collateralType": "Collateral Type",
+    "appraisal": {
+      "title": "Appraisal Detail",
+      "appraisalNumber": "Appraisal Report Number",
+      "customerName": "Customer Name",
       "propertyType": "Property Type",
-      "engagementCount": "Appraisal Count",
-      "lastAppraisedDate": "Last Appraised",
-      "lastAppraisedValue": "Last Value (THB)",
+      "appraisedDate": "Appraised Date",
       "location": "Location",
-      "distance": "Distance"
+      "openReport": "Open appraisal report",
+      "prices": "Appraisal Prices (THB)",
+      "appraisalPrice": "Appraisal Price",
+      "forceSellingPrice": "Forced Selling Price",
+      "buildingInsurance": "Building Insurance",
+      "propertyGroups": "Property Groups",
+      "coordinatesNotSet": "Not set",
+      "property": "property",
+      "properties": "properties",
+      "titleNo": "Title Number",
+      "landTitleInfo": "Land Title Information"
     },
     "marketComparable": {
       "title": "Market Comparable Detail",
@@ -106,9 +130,26 @@
       "infoDateTime": "Survey Date",
       "offerPrice": "Offer Price (THB)",
       "salePrice": "Sale Price (THB)",
-      "distance": "Distance",
       "viewComparison": "Comparison Table",
       "factors": "Survey Factors"
+    },
+    "landTitle": {
+      "titleType": "Title Type",
+      "titleNumber": "Title Number",
+      "bookNumber": "Book Number",
+      "pageNumber": "Page Number",
+      "landParcelNumber": "Land Number",
+      "surveyNumber": "Survey Number",
+      "mapSheetNumber": "Sheet Number",
+      "rawang": "Rawang",
+      "aerialMapName": "Aerial Photo Name",
+      "aerialMapNumber": "Aerial Photo Number",
+      "area": "Area (Rai-Ngan-Wa)",
+      "boundaryMarkerType": "Boundary Marker",
+      "documentValidationResultType": "Document Validation",
+      "governmentPricePerSqWa": "Gov. Price / Sq.Wa",
+      "governmentPrice": "Government Price",
+      "remark": "Remark"
     }
   },
   "comparisonTable": {
@@ -124,7 +165,12 @@
   },
   "map": {
     "noApiKey": "Google Maps API key is not configured.",
-    "loading": "Loading map..."
+    "loading": "Loading map...",
+    "loadFailed": "The map could not be loaded. Please check your connection and try again.",
+    "retry": "Retry",
+    "myLocation": "My location",
+    "radius": "Radius",
+    "searchThisArea": "Search this area"
   },
   "locationPicker": {
     "title": "Pick Location",
@@ -141,7 +187,7 @@
     "totalCount": "{{count}} record(s)",
     "empty": "No appraisal records found for this collateral.",
     "columns": {
-      "appraisalNumber": "Appraisal Report No.",
+      "appraisalNumber": "Appraisal Report Number",
       "appraisalDate": "Appraisal Date",
       "customerName": "Customer Name",
       "collateralType": "Collateral Type",
@@ -163,8 +209,8 @@
       "landOfficeCode": "Land Office Code",
       "titleType": "Title Type",
       "titleNumber": "Title Number",
-      "parcelNumber": "Parcel No.",
-      "surveyNumber": "Survey No.",
+      "parcelNumber": "Parcel Number",
+      "surveyNumber": "Survey Number",
       "subDistrict": "Sub-District",
       "district": "District",
       "province": "Province",
@@ -172,21 +218,21 @@
       "street": "Street",
       "village": "Village",
       "otherTitles": "Other Titles",
-      "condoRegistrationNumber": "Condo Registration No.",
+      "condoRegistrationNumber": "Condo Registration Number",
       "building": "Building",
       "floor": "Floor",
       "unit": "Unit",
       "condoName": "Condo Name",
       "usableArea": "Usable Area (Sq.m.)",
       "model": "Model",
-      "leaseRegistrationNo": "Lease Registration No.",
+      "leaseRegistrationNo": "Lease Registration Number",
       "lessor": "Lessor",
       "lessee": "Lessee",
       "leaseTermStart": "Lease Term Start",
       "leaseTermEnd": "Lease Term End",
       "underlyingMaster": "Underlying Collateral",
-      "machineRegistrationNo": "Registration No.",
-      "serialNo": "Serial No.",
+      "machineRegistrationNo": "Registration Number",
+      "serialNo": "Serial Number",
       "brand": "Brand",
       "manufacturer": "Manufacturer"
     }
@@ -205,5 +251,8 @@
   "common": {
     "na": "N/A",
     "unknown": "Unknown"
+  },
+  "chooser": {
+    "title": "Records at this location"
   }
 }

@@ -11,8 +11,12 @@ import type {
   AdminUpdateUserRequest,
   UpdateUserRolesRequest,
   UpdateUserGroupsRequest,
+  UpdateUserTeamsRequest,
+  SetUserActivationRequest,
   CreateUserRequest,
   CreateUserResponse,
+  LdapLookupResponse,
+  PasswordPolicy,
 } from '../types';
 
 const ME_KEY = ['me'];
@@ -66,6 +70,10 @@ export const useGetUsers = (params: GetUsersParams = {}) => {
           Search: params.search || undefined,
           Scope: params.scope || undefined,
           role: params.role || undefined,
+          groupId: params.groupId || undefined,
+          teamId: params.teamId || undefined,
+          companyId: params.companyId || undefined,
+          isActive: params.isActive,
           PageNumber: params.pageNumber ?? 1,
           PageSize: params.pageSize ?? 20,
         },
@@ -105,8 +113,19 @@ export const useAdminUpdateUser = () => {
 /** Admin: reset user password (requires ALLOW_RESET_PASSWORD permission) */
 export const useResetPassword = () => {
   return useMutation({
-    mutationFn: async ({ id, newPassword, confirmPassword }: { id: string; newPassword: string; confirmPassword: string }) => {
-      const { data } = await axios.post(`/auth/users/${id}/reset-password`, { newPassword, confirmPassword });
+    mutationFn: async ({
+      id,
+      newPassword,
+      confirmPassword,
+    }: {
+      id: string;
+      newPassword: string;
+      confirmPassword: string;
+    }) => {
+      const { data } = await axios.post(`/auth/users/${id}/reset-password`, {
+        newPassword,
+        confirmPassword,
+      });
       return data;
     },
   });
@@ -122,6 +141,18 @@ export const useCreateUser = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+};
+
+/** Admin: look up a username in LDAP/AD to pre-fill the create-user form (no password validation) */
+export const useLdapLookup = () => {
+  return useMutation({
+    mutationFn: async (username: string): Promise<LdapLookupResponse> => {
+      const { data } = await axios.get<LdapLookupResponse>('/auth/users/ldap-lookup', {
+        params: { username },
+      });
+      return data;
     },
   });
 };
@@ -151,5 +182,65 @@ export const useUpdateUserGroups = () => {
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
     },
+  });
+};
+
+/** Admin: update user teams */
+export const useUpdateUserTeams = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: UpdateUserTeamsRequest & { id: string }) => {
+      const { data } = await axios.put(`/auth/users/${id}/teams`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+    },
+  });
+};
+
+/** Admin: activate or deactivate a user */
+export const useSetUserActivation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...body }: SetUserActivationRequest & { id: string }) => {
+      const { data } = await axios.put(`/auth/users/${id}/activation`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+};
+
+/** Admin: unlock a locked user account */
+export const useUnlockUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await axios.post(`/auth/users/${id}/unlock`);
+      return data;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, id] });
+      // The user list renders the lock icon, so refresh it too.
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+};
+
+/** React Query key for the public password-policy (complexity rules for the checklist). */
+export const passwordPolicyQueryKey = ['passwordPolicy'] as const;
+
+/** Get the global password policy */
+export const useGetPasswordPolicy = () => {
+  return useQuery({
+    queryKey: passwordPolicyQueryKey,
+    queryFn: async (): Promise<PasswordPolicy> => {
+      const { data } = await axios.get<PasswordPolicy>('/auth/password-policy');
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
   });
 };

@@ -23,6 +23,7 @@ import {
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
 import { mapCondoPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
@@ -30,6 +31,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateCondoPage = () => {
   const isReadOnly = usePageReadOnly();
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -89,7 +91,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Property condominium updated successfully');
+            toast.success(t('toasts.propertyCondoUpdated'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -108,7 +110,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Property condominium created successfully');
+            toast.success(t('toasts.propertyCondoCreated'));
             setSaveAction(null);
             skipWarning();
             navigate(`${basePath}/property/condo/${response.propertyId}`);
@@ -138,7 +140,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: () => {
             reset(getValues());
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
           },
           onError: (error: any) => {
@@ -157,7 +159,7 @@ const CreateCondoPage = () => {
         {
           onSuccess: async (response: any) => {
             await photoSectionRef.current?.linkPhotosToProperty(response.propertyId ?? response.id);
-            toast.success('Draft saved successfully');
+            toast.success(t('toasts.draftSaved'));
             setSaveAction(null);
             if (response.propertyId) {
               skipWarning();
@@ -188,8 +190,8 @@ const CreateCondoPage = () => {
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
-            { label: 'Condo', id: 'properties-section', icon: 'building' },
+            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
+            { label: t('createPage.navCondo'), id: 'properties-section', icon: 'building' },
           ]}
         />
       </div>
@@ -215,7 +217,7 @@ const CreateCondoPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                     {appraisalId && (
@@ -233,7 +235,7 @@ const CreateCondoPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
                         <Icon name="building" style="solid" className="w-5 h-5 text-violet-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Condo Information</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.condoSection')}</h2>
                     </div>
                     <div className="h-px bg-gray-200" />
                   </Section>
@@ -272,7 +274,7 @@ const CreateCondoPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
+                  {t('createPage.saveDraft')}
                 </Button>
                 <Button
                   type="submit"
@@ -280,7 +282,7 @@ const CreateCondoPage = () => {
                   disabled={isPending}
                 >
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('createPage.save')}
                 </Button>
               </ActionBar.Right>
             )}
