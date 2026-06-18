@@ -2,11 +2,11 @@ import clsx from 'clsx';
 import { formatNumber } from '@/shared/utils/formatUtils';
 
 interface AssetSummaryGroupCardProps {
-  assetGroupDetail: string;
-  sumEstimatedPrice: number;
-  roundEstimatedPrice: number;
-  sumCurrentPrice: number;
-  roundCurrentPrice: number;
+  assetGroupDetail: string | null;
+  sumEstimatedPrice: number | null;
+  roundEstimatedPrice: number | null;
+  sumCurrentPrice: number | null;
+  roundCurrentPrice: number | null;
   groupSet: number;
   handleOnClick: () => void;
   isSelected: boolean;
@@ -41,23 +41,23 @@ export function AssetSummaryGroupCard({
       </div>
 
       <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2">
-        {assetGroupDetail}
+        {assetGroupDetail ?? '—'}
       </p>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pt-1 border-t border-gray-100">
         <span className="text-xs text-gray-400">Estimated</span>
         <span className="text-xs text-gray-400">Current</span>
         <span className="text-sm font-semibold text-gray-900 tabular-nums">
-          {formatNumber(roundEstimatedPrice)}
+          {roundEstimatedPrice != null ? formatNumber(roundEstimatedPrice) : '—'}
         </span>
         <span className="text-sm font-semibold text-gray-900 tabular-nums">
-          {formatNumber(roundCurrentPrice)}
+          {roundCurrentPrice != null ? formatNumber(roundCurrentPrice) : '—'}
         </span>
         <span className="text-xs text-gray-400 tabular-nums">
-          Sum {formatNumber(sumEstimatedPrice)}
+          Sum {sumEstimatedPrice != null ? formatNumber(sumEstimatedPrice) : '—'}
         </span>
         <span className="text-xs text-gray-400 tabular-nums">
-          Sum {formatNumber(sumCurrentPrice)}
+          Sum {sumCurrentPrice != null ? formatNumber(sumCurrentPrice) : '—'}
         </span>
       </div>
     </button>

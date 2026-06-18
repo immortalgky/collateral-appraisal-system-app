@@ -85,14 +85,16 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
         label: 'Status',
         sortField: 'isPricesCurrent',
         render: item =>
-          item.isPricesCurrent ? (
+          item.isPricesCurrent === true ? (
             <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
               Current
             </span>
-          ) : (
+          ) : item.isPricesCurrent === false ? (
             <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
               Not Current
             </span>
+          ) : (
+            <span className="text-gray-400 text-xs">—</span>
           ),
       },
     ],

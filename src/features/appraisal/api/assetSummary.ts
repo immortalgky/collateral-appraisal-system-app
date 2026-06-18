@@ -3,24 +3,24 @@ import axios from '@shared/api/axiosInstance';
 
 export interface AssetSummaryGroup {
   id: string;
-  assetGroupDetail: string;
-  sumEstimatedPrice: number;
-  roundEstimatedPrice: number;
-  sumCurrentPrice: number;
-  roundCurrentPrice: number;
+  assetGroupDetail: string | null;
+  sumEstimatedPrice: number | null;
+  roundEstimatedPrice: number | null;
+  sumCurrentPrice: number | null;
+  roundCurrentPrice: number | null;
   groupSet: number;
 }
 
 export interface AssetSummaryItem {
   id: string;
   propertyType: string;
-  assetDetail: string;
-  area: number;
-  pricePerUnit: number;
-  estimatedPrice: number;
-  currentPrice: number;
+  assetDetail: string | null;
+  area: number | null;
+  pricePerUnit: number | null;
+  estimatedPrice: number | null;
+  currentPrice: number | null;
   groupSet: number;
-  isPricesCurrent: boolean;
+  isPricesCurrent: boolean | null;
 }
 
 export interface AssetSummaryDto {
