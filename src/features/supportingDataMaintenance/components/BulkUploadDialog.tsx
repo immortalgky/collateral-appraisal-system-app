@@ -6,7 +6,7 @@ import { Icon } from '@/shared/components';
  * when the bulk upload fails row-level validation.
  */
 export interface RowParseError {
-  rowNumber: number;  // Excel row number (2-based)
+  rowNumber: number; // Excel row number (2-based)
   column: string | null;
   message: string;
 }
@@ -27,7 +27,11 @@ export function BulkUploadDialog({ isOpen, onClose, errors }: BulkUploadDialogPr
       <div className="flex flex-col gap-4">
         {/* Summary banner */}
         <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500 mt-0.5 shrink-0" />
+          <Icon
+            style="solid"
+            name="triangle-exclamation"
+            className="size-5 text-red-500 mt-0.5 shrink-0"
+          />
           <div>
             <p className="text-sm font-medium text-red-800">
               {errors.length} row error{errors.length !== 1 ? 's' : ''} found
