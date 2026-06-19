@@ -65,7 +65,7 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
           !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
         buySellMonth: null,
         adjustedPeriodPct: !hasOfferingPrice ? (calc.sellingPriceAdjustmentYear ?? null) : null,
-        cumulativeAdjPeriod: calc.adjustedValue ?? null,
+        cumulativeAdjPeriod: null,
         landAreaDeficient: calc.landAreaOfDeficient ?? null,
         landAreaDeficientUnit: null,
         landPrice: formAny.landPrice ?? null,
