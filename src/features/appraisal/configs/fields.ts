@@ -281,6 +281,7 @@ export const landFillField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
     decimalPlaces: 2,
+    allowNegative: true,
   },
 ];
 
