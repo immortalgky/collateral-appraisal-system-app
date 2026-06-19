@@ -348,6 +348,8 @@
     "depreciationRateRequired": "Depreciation rate is required",
     "factorCodeRequired": "Factor code is required",
     "weightRequired": "Weight is required",
+    "weightMax": "Weight must not exceed 1.0",
+    "weightTotalExceeds": "Total weight across all rows must not exceed 1.0",
     "intensityRequired": "Intensity is required",
     "collateralScoreRequired": "Collateral score is required",
     "surveyScoreRequired": "Survey {{n}}'s score is required",
