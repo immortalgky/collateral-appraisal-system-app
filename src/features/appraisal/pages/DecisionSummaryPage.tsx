@@ -779,19 +779,36 @@ const DecisionSummaryPage = () => {
                   iconColor="teal"
                   title={t('decisionSummary.sections.valuation')}
                   rightSlot={
-                    data?.appraisalDate ? (
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <span className="text-sm leading-none">🗓️</span>
-                        <span>{t('decisionSummary.appraisalDate')}</span>
-                        <span className="font-semibold text-gray-700">
-                          {new Date(data.appraisalDate).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                    ) : undefined
+                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                      {/* Asset Summary icon */}
+                      {!isLoadingAssetSummary && hasAssetSummary && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setIsAssetSummaryOpen(true)}
+                            title={'Asset Summary'}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs cursor-pointer"
+                          >
+                            <Icon name="file-chart-pie" style="solid" className="w-4 h-4" />
+                            <span className="hidden sm:inline">Asset Summary</span>
+                          </button>
+                          <div className="h-6 w-px bg-gray-200" />
+                        </>
+                      )}
+                      {data?.appraisalDate ? (
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                          <span className="text-sm leading-none">🗓️</span>
+                          <span>{t('decisionSummary.appraisalDate')}</span>
+                          <span className="font-semibold text-gray-700">
+                            {new Date(data.appraisalDate).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </div>
+                      ) : undefined}
+                    </div>
                   }
                 >
                   {showSection('priceSummary') && (
@@ -1046,21 +1063,6 @@ const DecisionSummaryPage = () => {
                     <span className="hidden sm:inline">{t('decisionSummary.historySearch')}</span>
                   </button>
                   <div className="h-6 w-px bg-gray-200" />
-                  {/* Asset Summary icon */}
-                  {!isLoadingAssetSummary && hasAssetSummary && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setIsAssetSummaryOpen(true)}
-                        title={'Asset Summary'}
-                        className="flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs"
-                      >
-                        <Icon name="file-chart-pie" style="solid" className="w-4 h-4" />
-                        <span className="hidden sm:inline">Asset Summary</span>
-                      </button>
-                      <div className="h-6 w-px bg-gray-200" />
-                    </>
-                  )}
                   {isDirty && (
                     <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
