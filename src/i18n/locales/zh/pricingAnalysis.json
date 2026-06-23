@@ -348,6 +348,8 @@
     "depreciationRateRequired": "Depreciation rate is required",
     "factorCodeRequired": "Factor code is required",
     "weightRequired": "Weight is required",
+    "weightMax": "权重不得超过 1.0",
+    "weightTotalExceeds": "所有行的权重总和不得超过 1.0",
     "intensityRequired": "Intensity is required",
     "collateralScoreRequired": "Collateral score is required",
     "surveyScoreRequired": "Survey {{n}}'s score is required",
