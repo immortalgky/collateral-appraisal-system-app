@@ -77,6 +77,7 @@ export interface CurrentAssignment {
   cancellationReason: string | null;
   internalAppraiserId: string | null;
   internalFollowupAssignmentMethod: string | null;
+  comment: string | null;
   createdOn: string | null;
 }
 
