@@ -406,6 +406,7 @@
   },
   "invitedCompanies": {
     "title": "Invited Companies",
+    "tableTitle": "External Appraisal Company Listing",
     "totalLabel": "{{count}} total",
     "pending": "Pending"
   },
