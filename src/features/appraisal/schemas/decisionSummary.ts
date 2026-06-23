@@ -16,6 +16,9 @@ export const decisionSummaryFormSchema = z.object({
   committeeOpinion: z.string().nullable(),
   totalAppraisalPriceReview: z.number().nullable(),
   additionalAssumptions: z.string().nullable(),
+  decisionType: z.string().nullable(),
+  assignNextToType: z.string().nullable(),
+  commentDecision: z.string().nullable(),
 });
 
 export type DecisionSummaryFormType = z.infer<typeof decisionSummaryFormSchema>;
@@ -32,4 +35,7 @@ export const decisionSummaryFormDefaults: DecisionSummaryFormType = {
   committeeOpinion: null,
   totalAppraisalPriceReview: null,
   additionalAssumptions: null,
+  decisionType: null,
+  assignNextToType: null,
+  commentDecision: null,
 };
