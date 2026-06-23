@@ -43,6 +43,7 @@ import {
   LB_FIRE_INSURANCE_LABEL_BY_VALUE,
 } from '../../data/options';
 import { recomputeUnitPrice, type AssumptionInputs } from '../../utils/recomputeUnitPrice';
+import Dropdown from '@/shared/components/inputs/Dropdown';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -61,12 +62,26 @@ function SectionHeader({ icon, label, color }: { icon: string; label: string; co
 
 // ── Model Assumptions Table ───────────────────────────────────────────────────
 
+const UNIT_PRICE_OPTIONS = [
+  { label: 'Baht/sq. m', value: 'PerSquareMeter', isUsedForLand: false },
+  { label: 'Baht', value: 'BahtPerUnit', isUsedForLand: true },
+];
+
 interface ModelAssumptionsTableProps {
   assumptions: ProjectModelAssumption[];
   projectType: ProjectType;
+  selectedUnitKey: Map<string, string>; // tracks '1' or '2' per model
+  standardPriceLookup: Map<string, number | undefined>; // resolved price per model
+  onSelectUnit: (modelId: string, optionKey: string, price: number | undefined) => void;
 }
 
-function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTableProps) {
+function ModelAssumptionsTable({
+  assumptions,
+  projectType,
+  selectedUnitKey,
+  standardPriceLookup,
+  onSelectUnit,
+}: ModelAssumptionsTableProps) {
   const { t } = useTranslation('blockProject');
   if (assumptions.length === 0) {
     return (
@@ -124,7 +139,29 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
                 </td>
               )}
               <td className="py-2 px-3 text-right text-gray-800">
-                {m.finalAppraisedValue?.toLocaleString() ?? '-'}
+                {
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="w-36">
+                        <Dropdown
+                          options={UNIT_PRICE_OPTIONS.filter(o =>
+                            isLandAndBuildingLike(projectType) ? o.isUsedForLand : !o.isUsedForLand,
+                          )}
+                          value={selectedUnitKey.get(m.projectModelId) ?? undefined}
+                          showValuePrefix={false}
+                          onChange={val =>
+                            onSelectUnit(
+                              m.projectModelId,
+                              val,
+                              val === 'PerSquareMeter' ? m.finalValueAdjusted : m.appraisalPrice,
+                            )
+                          }
+                        />
+                      </div>
+                      {standardPriceLookup.get(m.projectModelId)?.toLocaleString() ?? '-'}
+                    </div>
+                  </>
+                }
               </td>
               <td className="py-2 px-3 text-right text-gray-800">
                 {m.coverageAmount?.toLocaleString() ?? '-'}
@@ -749,11 +786,19 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
       isNearGarden: up.isNearGarden,
     }));
 
+    const modelAssumptionsPayload = modelAssumptions.map(m => ({
+      ...m,
+      standardPriceUnit: selectedUnitKey.get(m.projectModelId) ?? 'BahtPerUnit',
+    }));
+
     try {
       if (flags.length > 0) {
         await saveUnitFlagsAsync({ appraisalId, flags });
       }
-      await saveAssumptionAsync({ appraisalId, data });
+      await saveAssumptionAsync({
+        appraisalId,
+        data: { ...data, modelAssumptions: modelAssumptionsPayload },
+      });
       reset(data);
 
       if (withCalculate) {
@@ -784,20 +829,48 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const modelAssumptions = pricingAssumption?.modelAssumptions ?? [];
 
   // Lookup: modelType → model assumption fields needed for LB preview enrichment.
+  const [selectedUnitKey, setSelectedUnitKey] = useState<Map<string, string>>(new Map());
+  const [standardPriceLookup, setStandardPriceLookup] = useState<Map<string, number | undefined>>(
+    new Map(),
+  );
+
+  useEffect(() => {
+    if (!pricingAssumption) return;
+    const assumptions = pricingAssumption.modelAssumptions ?? [];
+
+    setSelectedUnitKey(
+      new Map(
+        assumptions.map(m => [
+          m.projectModelId,
+          m.standardPriceUnit === 'PerSquareMeter' ? 'PerSquareMeter' : 'BahtPerUnit',
+        ]),
+      ),
+    );
+    setStandardPriceLookup(
+      new Map(
+        assumptions.map(m => [
+          m.projectModelId,
+          m.standardPriceUnit === 'PerSquareMeter' ? m.finalValueAdjusted : m.appraisalPrice,
+        ]),
+      ),
+    );
+  }, [pricingAssumption]);
+
   const modelLookup = useMemo(
     () =>
       new Map(
         modelAssumptions.map(m => [
           m.modelType ?? '',
           {
-            standardPrice: m.finalAppraisedValue,
+            standardPrice: standardPriceLookup.get(m.projectModelId),
+            standardPriceUnit: selectedUnitKey.get(m.projectModelId),
             coverageAmount: m.coverageAmount,
             // standardLandPrice holds the standard land AREA (Sq.Wa) — see DeriveFromModels
             standardLandArea: m.standardLandPrice,
           },
         ]),
       ),
-    [modelAssumptions],
+    [modelAssumptions, selectedUnitKey, standardPriceLookup],
   );
 
   // Derived display rows: re-run the preview calc whenever the local flag set
@@ -823,6 +896,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
         const enriched: typeof up = {
           ...up,
           standardPrice: lookup?.standardPrice ?? up.standardPrice ?? undefined,
+          standardPriceUnit: lookup?.standardPriceUnit ?? up.standardPriceUnit,
           coverageAmount: lookup?.coverageAmount ?? up.coverageAmount ?? undefined,
           landAreaDifference,
           landIncreaseDecreaseAmount,
@@ -856,7 +930,16 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
                   ))}
                 </div>
               ) : (
-                <ModelAssumptionsTable assumptions={modelAssumptions} projectType={projectType} />
+                <ModelAssumptionsTable
+                  assumptions={modelAssumptions}
+                  projectType={projectType}
+                  selectedUnitKey={selectedUnitKey}
+                  standardPriceLookup={standardPriceLookup}
+                  onSelectUnit={(modelId, optionKey, price) => {
+                    setSelectedUnitKey(prev => new Map(prev).set(modelId, optionKey));
+                    setStandardPriceLookup(prev => new Map(prev).set(modelId, price));
+                  }}
+                />
               )}
             </div>
 
