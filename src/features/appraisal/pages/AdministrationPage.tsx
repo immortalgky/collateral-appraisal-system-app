@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
+  useActivityId,
   useAppraisalId,
   useAppraisalRequestId,
   useIsTaskOwner,
@@ -45,6 +46,10 @@ import QuotationEntryModal from '../components/QuotationEntryModal';
 import { useAuthStore } from '@features/auth/store.ts';
 import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.ts';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { Textarea } from '@/shared/components';
+import { useCompleteActivity } from '../api';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 
 const AdministrationPage = () => {
   const { t } = useTranslation('appraisal');
@@ -52,6 +57,9 @@ const AdministrationPage = () => {
   const appraisalId = useAppraisalId();
   const requestId = useAppraisalRequestId();
   const currentUser = useAuthStore(state => state.user);
+  const hasResetRef = useRef(false);
+  const activityId = useActivityId();
+  const completeActivity = useCompleteActivity();
 
   // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
   const { data: requestData } = useGetRequestById(requestId ?? '');
@@ -70,6 +78,10 @@ const AdministrationPage = () => {
   const isReadOnly = pageReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
 
+  // Track which button is in flight so each spinner shows on the right button.
+  const [pendingAction, setPendingAction] = useState<'save' | 'assign' | null>(null);
+  const isSaving = pendingAction === 'save' && isCreating;
+  const isAssigning = pendingAction === 'assign' && isCreating;
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
@@ -96,7 +108,7 @@ const AdministrationPage = () => {
     resolver: zodResolver(assignmentSchema),
   });
 
-  //const { blocker } = useUnsavedChangesWarning(isDirty);
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // Watch form values for conditional rendering
   const assignmentType = watch('assignmentType');
@@ -213,20 +225,24 @@ const AdministrationPage = () => {
     setValue('staffId', null);
     setValue('selectedCompany', null);
     setValue('companyId', null);
-    setValue('assignmentMethod', 'manual');
+    setValue('assignmentMethod', 'quotation');
     if (value === 'internal') {
       setValue('selectedFollowupStaff', null);
       setValue('followupStaffId', null);
+      setValue('assignmentMethod', 'manual');
     }
   };
 
   // Update form when data is fetched
   useEffect(() => {
     if (currentAssignment) {
+      if (hasResetRef.current) {
+        hasResetRef.current = false;
+        return;
+      }
       const formValues = mapAssignmentResponseToForm(currentAssignment);
       reset({
         ...formValues,
-        ...assignmentFormDefaults,
         selectedStaff: assignedStaff ?? null,
         selectedCompany: assignedCompany ?? null,
         selectedFollowupStaff: followupStaff ?? null,
@@ -241,10 +257,71 @@ const AdministrationPage = () => {
     followupStaff,
   ]);
 
-  // Handle form submission
-  const onSubmit = (data: AssignmentFormType) => {
-    if (!appraisalId) return;
+  // ── Shared payload builder ────────────────────────────────────────────────
 
+  const buildPayload = (data: AssignmentFormType, submitToWorkflow: boolean) => {
+    // assignmentType always reflects the user's Internal/External choice — the backend
+    // AssignmentType value object only accepts those two codes. The "quotation" choice
+    // lives on assignmentMethod, not on assignmentType.
+    const isExternal = data.assignmentType === 'external';
+    const isQuotationMethod = data.assignmentMethod === 'quotation';
+
+    // For quotation method on an external assignment, send the finalized winner's company id
+    // (not whatever was previously selected manually). Internal+quotation falls back to staffId.
+    const resolvedCompanyId = isExternal
+      ? isQuotationMethod && quotationWinner
+        ? quotationWinner.companyId
+        : (data.companyId ?? null)
+      : null;
+
+    // Derive decisionTaken and assigneeCompanyName to send to the backend relay
+    const decisionTaken = isExternal ? ('EXT' as const) : ('INT' as const);
+    const resolvedCompanyName = isExternal
+      ? isQuotationMethod && quotationWinner
+        ? quotationWinner.companyName
+        : (data.selectedCompany?.companyName ?? null)
+      : null;
+
+    return {
+      appraisalId: appraisalId ?? '',
+      assignmentType: isExternal ? 'External' : 'Internal',
+      assigneeUserId: isExternal ? null : data.staffId,
+      assigneeCompanyId: resolvedCompanyId,
+      assigneeCompanyName: resolvedCompanyName,
+      assignmentMethod: data.assignmentMethod,
+      internalAppraiserId: isExternal ? data.followupStaffId : null,
+      internalAppraiserName: isExternal ? data.selectedFollowupStaff?.name : null,
+      internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
+      assignedBy: currentUser?.username ?? null,
+      workflowInstanceId: workflowInstanceId ?? '',
+      comment: data.comment ?? null,
+      decisionTaken: decisionTaken,
+      submitToWorkflow,
+    };
+  };
+
+  // ── Save (no workflow) ────────────────────────────────────────────────────
+
+  const handleSave = () => {
+    const data = watch();
+    setPendingAction('save');
+    createAssignment(buildPayload(data, false), {
+      onSuccess: () => {
+        toast.success('Saved');
+        hasResetRef.current = true;
+        reset(data, { keepValues: false });
+        setPendingAction(null);
+      },
+      onError: (error: any) => {
+        toast.error(error.apiError?.detail || 'Save failed');
+        setPendingAction(null);
+      },
+    });
+  };
+
+  // ── Assign (save + workflow) ──────────────────────────────────────────────
+
+  const onSubmit = (data: AssignmentFormType) => {
     if (!workflowInstanceId) {
       toast.error(t('administration.toasts.noWorkflowTask'));
       return;
@@ -271,59 +348,36 @@ const AdministrationPage = () => {
       toast.error(t('administration.toasts.quotationNotFinalized'));
       return;
     }
-
-    // assignmentType always reflects the user's Internal/External choice — the backend
-    // AssignmentType value object only accepts those two codes. The "quotation" choice
-    // lives on assignmentMethod, not on assignmentType.
     const isExternal = data.assignmentType === 'external';
-    const isQuotationMethod = data.assignmentMethod === 'quotation';
-
-    // For quotation method on an external assignment, send the finalized winner's company id
-    // (not whatever was previously selected manually). Internal+quotation falls back to staffId.
-    const resolvedAssigneeCompanyId = isExternal
-      ? isQuotationMethod && quotationWinner
-        ? quotationWinner.companyId
-        : data.companyId
-      : null;
-
-    // Derive decisionTaken and assigneeCompanyName to send to the backend relay
+    const comment = watch('comment');
     const decisionTaken = isExternal ? ('EXT' as const) : ('INT' as const);
-    const resolvedAssigneeCompanyName = isExternal
-      ? isQuotationMethod && quotationWinner
-        ? quotationWinner.companyName
-        : (data.selectedCompany?.companyName ?? null)
-      : null;
 
-    createAssignment(
-      {
-        appraisalId: appraisalId ?? '',
-        assignmentType: isExternal ? 'External' : 'Internal',
-        assigneeUserId: isExternal ? null : data.staffId,
-        assigneeCompanyId: resolvedAssigneeCompanyId,
-        assigneeCompanyName: resolvedAssigneeCompanyName,
-        assignmentMethod: data.assignmentMethod,
-        internalAppraiserId: isExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
-        assignedBy: currentUser?.username ?? null,
-        workflowInstanceId,
-        decisionTaken,
+    setPendingAction('assign');
+    createAssignment(buildPayload(data, true), {
+      onSuccess: () => {
+        completeActivity.mutate({
+          workflowInstanceId: workflowInstanceId!,
+          activityId: activityId!,
+          input: {
+            decisionTaken: decisionTaken,
+            comments: comment ?? '',
+          },
+        });
+        toast.success(t('administration.toasts.assignmentCreated'));
+        skipWarning();
+        setPendingAction(null);
+        navigate('/tasks');
       },
-      {
-        onSuccess: () => {
-          toast.success(t('administration.toasts.assignmentCreated'));
-          navigate('/tasks');
-        },
-        onError: (error: any) => {
-          toast.error(error.apiError?.detail || t('administration.toasts.assignmentFailed'));
-        },
+      onError: (error: any) => {
+        toast.error(error.apiError?.detail || t('administration.toasts.assignmentFailed'));
+        setPendingAction(null);
       },
-    );
+    });
   };
 
-  // Handle cancel
-  const handleCancel = () => {
-    reset(assignmentFormDefaults);
-  };
+  const handleCancel = () => reset(assignmentFormDefaults);
+
+  // ── Render ────────────────────────────────────────────────────────────────
 
   if (isLoadingAssignment) {
     return (
@@ -947,6 +1001,21 @@ const AdministrationPage = () => {
                 />
               </div>
             )}
+
+            <div>
+              <Controller
+                name="comment"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    label={'Comments'}
+                    value={field.value ?? ''}
+                    onChange={field.onChange}
+                    disabled={isReadOnly}
+                  />
+                )}
+              />
+            </div>
           </div>
         </div>
 
@@ -955,7 +1024,7 @@ const AdministrationPage = () => {
           <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" type="button" onClick={handleCancel}>
+                <Button variant="ghost" type="button" onClick={handleCancel} disabled={isCreating}>
                   Cancel
                 </Button>
                 <div className="h-6 w-px bg-gray-200" />
@@ -967,8 +1036,16 @@ const AdministrationPage = () => {
                 )}
               </div>
               <div className="flex gap-3">
+                {/* Save — save only, no workflow */}
+                <Button variant="outline" type="button" onClick={handleSave} isLoading={isSaving}>
+                  <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
+                  Save
+                </Button>
+
+                {/* Assign — starts workflow */}
                 <Button
                   type="submit"
+                  isLoading={isAssigning}
                   disabled={isCreating || isLockedByQuotation || !canSubmitAssignment}
                 >
                   {isCreating ? (
@@ -989,7 +1066,7 @@ const AdministrationPage = () => {
         )}
       </form>
 
-      {/*<UnsavedChangesDialog blocker={blocker} />*/}
+      <UnsavedChangesDialog blocker={blocker} />
 
       {/* Modals */}
       {!isReadOnly && (

@@ -659,6 +659,6 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
     selectedStaff: null as null,
     selectedCompany: null as null,
     selectedFollowupStaff: null as null,
-    remarks: '',
+    comment: response.comment ?? null,
   };
 };
