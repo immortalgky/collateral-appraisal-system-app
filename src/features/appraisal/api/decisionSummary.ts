@@ -143,6 +143,30 @@ export const useGetDecisionSummary = (appraisalId: string | undefined) => {
 
 // ==================== Mutations ====================
 
+export interface SaveDecisionRequest {
+  decisionType: string;
+  assignNextToType: string;
+  commentDecision: string;
+}
+
+/**
+ * Save task decision fields (decisionType, assignNextToType, commentDecision).
+ * PUT /tasks/{taskId}/save-decision
+ */
+export const useSaveDecision = () => {
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      body,
+    }: {
+      taskId: string;
+      body: SaveDecisionRequest;
+    }): Promise<void> => {
+      await axios.put(`/tasks/${taskId}/save-decision`, body);
+    },
+  });
+};
+
 /**
  * Save decision summary
  * POST /appraisals/{appraisalId}/decision-summary
