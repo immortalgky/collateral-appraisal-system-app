@@ -22,14 +22,31 @@ const MachineryRowSchema = z.object({
       required_error: 'Life span is required',
       invalid_type_error: 'Life span must be a number',
     })
-    .min(0, 'Life span must be at least 0')
-    .nullable(),
+    .min(0, 'Life span must be at least 0'),
   durationInUse: z.number(),
   residualLifeSpan: z.number(),
-  conditionFactor: z.number().nullable(),
+  conditionFactor: z
+    .number({
+      required_error: 'Condition factor is required',
+      invalid_type_error: 'Condition factor must be a number',
+    })
+    .min(0, 'Condition factor must be at least 0')
+    .max(1, 'Condition factor must be at most 1'),
   physicalDeterioration: z.number().nullable(),
-  functionalObsolescence: z.number().nullable(),
-  economicObsolescence: z.number().nullable(),
+  functionalObsolescence: z
+    .number({
+      required_error: 'Functional obsolescence is required',
+      invalid_type_error: 'Functional obsolescence must be a number',
+    })
+    .min(0, 'Functional obsolescence must be at least 0')
+    .max(1, 'Functional obsolescence must be at most 1'),
+  economicObsolescence: z
+    .number({
+      required_error: 'Economic obsolescence is required',
+      invalid_type_error: 'Economic obsolescence must be a number',
+    })
+    .min(0, 'Economic obsolescence must be at least 0')
+    .max(1, 'Economic obsolescence must be at most 1'),
   fmv: z.number().nullable(),
   marketDemand: z.enum(['Y', 'N']).nullable(),
   notes: z.string().nullable(),
