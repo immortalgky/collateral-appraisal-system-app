@@ -3,7 +3,7 @@ import ActivityCompletionChecklist from '../components/ActivityCompletionCheckli
 import ActivityCompletionErrors from '../components/ActivityCompletionErrors';
 import { useActivityProgressStore } from '../store/activityProgressStore';
 import type { StructuredValidationError, StructuredWarning } from '../api/workflow';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAppraisalId,
@@ -34,8 +34,12 @@ import { FormReadOnlyContext } from '@/shared/components/form/context';
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useConnectionStatus } from '@/features/notification/hooks/useConnectionStatus';
-import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
-import { useCompleteActivity, useGetActivityActions } from '../api/workflow';
+import {
+  useGetDecisionSummary,
+  useSaveDecisionSummary,
+  useSaveDecision,
+} from '../api/decisionSummary';
+import { useCompleteActivity, useGetActivityActions, useGetTaskById } from '../api/workflow';
 import {
   decisionSummaryFormDefaults,
   decisionSummaryFormSchema,
@@ -453,6 +457,8 @@ const DecisionSummaryPage = () => {
   const workflowInstanceId = useWorkflowInstanceId();
   const activityId = useActivityId();
   const isTaskOwner = useIsTaskOwner();
+  const { taskId } = useParams<{ taskId: string }>();
+  const { data: decision, isLoading: isLoadingDecision } = useGetTaskById(taskId);
 
   // Section visibility by activity
   const sectionConfig = activityId
@@ -470,7 +476,6 @@ const DecisionSummaryPage = () => {
 
   // Decision state (lifted from DecisionSection)
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
-  const [comments, setComments] = useState('');
   const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
@@ -494,12 +499,17 @@ const DecisionSummaryPage = () => {
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
-  const { mutate: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
+  const { mutateAsync: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
+  const { mutateAsync: saveDecision } = useSaveDecision();
   const completeActivity = useCompleteActivity();
   // SignalR hub status — when not connected, live step progress won't arrive, so the
   // submitting fallback message is adjusted instead of waiting on step animations.
   const hubStatus = useConnectionStatus();
   const { data: actionsData } = useGetActivityActions(workflowInstanceId, activityId);
+
+  // Tracks whether the current handleSubmit call should complete the workflow activity
+  // (Submit button) or only persist the form data (Save button).
+  const submitIntentRef = useRef<'save' | 'submit'>('save');
 
   const selectedAction = useMemo(
     () => (actionsData?.actions ?? []).find(a => a.value === selectedDecision) ?? null,
@@ -524,8 +534,11 @@ const DecisionSummaryPage = () => {
       committeeOpinion: data.committeeOpinion ?? null,
       totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
       additionalAssumptions: data.additionalAssumptions ?? null,
+      decisionType: decision?.decisionType ?? null,
+      assignNextToType: decision?.assignNextToType ?? null,
+      commentDecision: decision?.commentDecision ?? null,
     };
-  }, [data]);
+  }, [data, decision]);
 
   const methods = useForm<DecisionSummaryFormType>({
     defaultValues: mapDataToForm ?? decisionSummaryFormDefaults,
@@ -539,6 +552,10 @@ const DecisionSummaryPage = () => {
     setValue,
     formState: { isDirty },
   } = methods;
+
+  const commentDecision = watch('commentDecision');
+  const decisionType = watch('decisionType');
+  const assigneeUser = watch('assignNextToType');
 
   const { blocker } = useUnsavedChangesWarning(isDirty);
 
@@ -610,6 +627,8 @@ const DecisionSummaryPage = () => {
   useEffect(() => {
     if (mapDataToForm) {
       reset(mapDataToForm);
+      setSelectedDecision(mapDataToForm.decisionType ?? null);
+      setSelectedAssigneeUserId(mapDataToForm.assignNextToType ?? null);
     }
   }, [mapDataToForm, reset]);
 
@@ -636,7 +655,7 @@ const DecisionSummaryPage = () => {
         activityId: activityId!,
         input: {
           decisionTaken: selectedDecision!,
-          comments,
+          comments: commentDecision ?? '',
           // For appraisal-initiation: refresh routing variables after maker edits
           ...(activityId === 'appraisal-initiation' && {
             isPma,
@@ -693,43 +712,52 @@ const DecisionSummaryPage = () => {
     );
   };
 
-  const onSubmit = (formData: DecisionSummaryFormType) => {
-    const canComplete = isTaskOwner && workflowInstanceId && activityId && selectedDecision;
+  const onSubmit = async (formData: DecisionSummaryFormType) => {
+    const intent = submitIntentRef.current;
+    const canComplete =
+      intent === 'submit' && isTaskOwner && workflowInstanceId && activityId && selectedDecision;
 
-    // Guard: if this user is the task owner, ensure actions have loaded and the picked
-    // decision resolves to a known action — otherwise a manual-mode action could silently
-    // submit as system mode while the actions API is still in flight.
-    if (canComplete && (!actionsData || !selectedAction)) {
-      setIsConfirmOpen(false);
-      toast.error(t('administration.toasts.loadingActions'));
-      return;
-    }
+    if (intent === 'submit') {
+      if (canComplete && (!actionsData || !selectedAction)) {
+        setIsConfirmOpen(false);
+        toast.error(t('administration.toasts.loadingActions'));
+        return;
+      }
 
-    if (isManualAssignment && !selectedAssigneeUserId) {
-      setIsConfirmOpen(false);
-      toast.error(t('administration.toasts.selectAssignee'));
-      return;
+      if (isManualAssignment && !selectedAssigneeUserId) {
+        setIsConfirmOpen(false);
+        toast.error(t('administration.toasts.selectAssignee'));
+        return;
+      }
     }
 
     if (appraisalId) {
-      // Normal path: save summary first, then optionally complete activity
-      saveSummary(
-        { appraisalId, body: formData },
-        {
-          onSuccess: () => {
-            if (canComplete) {
-              doCompleteActivity();
-            } else {
-              setIsConfirmOpen(false);
-              toast.success(t('decisionSummary.toasts.saved'));
-            }
-          },
-          onError: (error: any) => {
-            setIsConfirmOpen(false);
-            toast.error(error.apiError?.detail || t('decisionSummary.toasts.saveFailed'));
-          },
-        },
-      );
+      try {
+        const saves: Promise<unknown>[] = [saveSummary({ appraisalId, body: formData })];
+        if (taskId) {
+          saves.push(
+            saveDecision({
+              taskId,
+              body: {
+                decisionType: formData.decisionType ?? '',
+                assignNextToType: formData.assignNextToType ?? '',
+                commentDecision: formData.commentDecision ?? '',
+              },
+            }),
+          );
+        }
+        await Promise.all(saves);
+        reset(formData);
+        if (canComplete) {
+          doCompleteActivity();
+        } else {
+          setIsConfirmOpen(false);
+          toast.success(t('decisionSummary.toasts.saved'));
+        }
+      } catch (error: any) {
+        setIsConfirmOpen(false);
+        toast.error(error.apiError?.detail || t('decisionSummary.toasts.saveFailed'));
+      }
     } else {
       // No appraisal yet: skip summary save, complete activity directly
       if (canComplete) {
@@ -752,13 +780,20 @@ const DecisionSummaryPage = () => {
         committeeOpinion: data.committeeOpinion ?? null,
         totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
         additionalAssumptions: data.additionalAssumptions ?? null,
+        decisionType: decision?.decisionType ?? null,
+        assignNextToType: decision?.assignNextToType ?? null,
+        commentDecision: decision?.commentDecision ?? null,
       });
+      setSelectedDecision(decision?.decisionType ?? null);
+      setSelectedAssigneeUserId(decision?.assignNextToType ?? null);
     } else {
       reset(decisionSummaryFormDefaults);
+      setSelectedDecision(null);
+      setSelectedAssigneeUserId(null);
     }
   };
 
-  if (appraisalId && isLoading) {
+  if (appraisalId && (isLoading || isLoadingDecision)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
@@ -896,7 +931,6 @@ const DecisionSummaryPage = () => {
                   )}
                 </GroupCard>
               )}
-
               {/* Construction Summary — only on Construction Inspection appraisals */}
               {isCiAppraisal && showSection('constructionSummary') && data?.constructionSummary && (
                 <GroupCard
@@ -907,7 +941,6 @@ const DecisionSummaryPage = () => {
                   <ConstructionSummaryTable rows={data.constructionSummary.rows} />
                 </GroupCard>
               )}
-
               {/* Group B — Review & Opinions */}
               {anyVisible(
                 'priceVerification',
@@ -1015,7 +1048,6 @@ const DecisionSummaryPage = () => {
                   )}
                 </GroupCard>
               )}
-
               {/* Committee Approval — standalone (active workflow). Hidden once the appraisal has
                   reached a terminal status: completed/migrated appraisals show only the history
                   section below (avoids the "not active yet" placeholder next to real history). */}
@@ -1025,20 +1057,26 @@ const DecisionSummaryPage = () => {
                   activityId={activityId}
                 />
               )}
-
               {/* Committee Approval History — shown when workflow has ended */}
               {isTerminalStatus(appraisal?.status) && (
                 <ApprovalHistorySection appraisalId={appraisalId} activityId="pending-approval" />
               )}
-
               {/* Decision — standalone */}
               <DecisionSection
-                selectedDecision={selectedDecision}
-                onDecisionChange={setSelectedDecision}
-                comments={comments}
-                onCommentsChange={setComments}
-                selectedAssigneeUserId={selectedAssigneeUserId}
-                onAssigneeChange={setSelectedAssigneeUserId}
+                selectedDecision={decisionType}
+                onDecisionChange={value => {
+                  setSelectedDecision(value);
+                  setValue('decisionType', value, { shouldDirty: true });
+                }}
+                comments={commentDecision ?? ''}
+                onCommentsChange={value =>
+                  setValue('commentDecision', value, { shouldDirty: true })
+                }
+                selectedAssigneeUserId={assigneeUser}
+                onAssigneeChange={value => {
+                  setSelectedAssigneeUserId(value);
+                  setValue('assignNextToType', value ?? '', { shouldDirty: true });
+                }}
               />
             </div>
           </div>
@@ -1074,8 +1112,12 @@ const DecisionSummaryPage = () => {
                   {hasEditableSections && (
                     <Button
                       variant="outline"
-                      type="submit"
+                      type="button"
                       disabled={!appraisalId || !isDirty || isSaving}
+                      onClick={() => {
+                        submitIntentRef.current = 'save';
+                        handleSubmit(onSubmit)();
+                      }}
                     >
                       <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
                       {t('decisionSummaryPageExtra.saveButton')}
@@ -1090,7 +1132,10 @@ const DecisionSummaryPage = () => {
                       (isTaskOwner && !!selectedDecision && !selectedAction) ||
                       (isTaskOwner && isManualAssignment && !selectedAssigneeUserId)
                     }
-                    onClick={() => setIsConfirmOpen(true)}
+                    onClick={() => {
+                      submitIntentRef.current = 'submit';
+                      setIsConfirmOpen(true);
+                    }}
                   >
                     <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
                     {t('decisionSummaryPageExtra.submitButton')}
@@ -1124,7 +1169,10 @@ const DecisionSummaryPage = () => {
           setWarnings([]);
           resetProgressStore();
         }}
-        onConfirm={() => handleSubmit(onSubmit)()}
+        onConfirm={() => {
+          submitIntentRef.current = 'submit';
+          handleSubmit(onSubmit)();
+        }}
         title={t('decisionSummary.confirmDialog.title')}
         message={t('decisionSummary.confirmDialog.message')}
         confirmText={t('decisionSummary.confirmDialog.confirm')}

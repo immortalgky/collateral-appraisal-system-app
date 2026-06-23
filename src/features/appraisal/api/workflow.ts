@@ -54,6 +54,9 @@ export interface TaskDetailResult {
   isOwner: boolean;
   workingBy: string | null;
   lockedAt: string | null;
+  decisionType: string | null;
+  assignNextToType: string | null;
+  commentDecision: string | null;
 }
 
 export interface ActivityAction {
