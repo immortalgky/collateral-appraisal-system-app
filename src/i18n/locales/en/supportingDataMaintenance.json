@@ -42,7 +42,8 @@
     "addItem": "Add Item",
     "saveDraft": "Save draft",
     "submit": "Submit",
-    "save": "Save"
+    "save": "Save",
+    "edit": "Edit"
   },
   "search": {
     "placeholder": "Search supporting data..."
