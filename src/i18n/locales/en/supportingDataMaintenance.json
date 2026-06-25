@@ -9,8 +9,8 @@
     "archived": "Archived"
   },
   "columns": {
-    "supportingNumber": "Supporting No.",
-    "createdDate": "Created Date",
+    "supportingNumber": "External Running No.",
+    "createdDate": "Creation Date",
     "importChannel": "Import Channel",
     "sourceOfData": "Source of Data",
     "lastModifiedBy": "Last Modified By",
