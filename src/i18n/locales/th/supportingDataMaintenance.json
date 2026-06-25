@@ -19,7 +19,7 @@
     "status": "สถานะ",
     "no": "ลำดับ",
     "propertyName": "ชื่อทรัพย์สิน",
-    "type": "ประเภท",
+    "type": "ประเภทหลักประกัน",
     "address": "ที่อยู่",
     "coordinates": "พิกัด"
   },
@@ -42,7 +42,8 @@
     "addItem": "เพิ่มรายการ",
     "saveDraft": "บันทึกฉบับร่าง",
     "submit": "ส่ง",
-    "save": "บันทึก"
+    "save": "บันทึก",
+    "edit": "แก้ไข"
   },
   "search": {
     "placeholder": "ค้นหาข้อมูลสนับสนุน..."
@@ -86,7 +87,7 @@
     "importDate": "วันที่นำเข้า",
     "sourceOfData": "แหล่งข้อมูล",
     "appraisalCompany": "บริษัทประเมิน",
-    "description": "คำอธิบาย",
+    "description": "รายละเอียด",
     "decision": "การตัดสินใจ",
     "remark": "หมายเหตุ",
     "propertyName": "ชื่อทรัพย์สิน",
