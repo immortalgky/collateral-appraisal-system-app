@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validateMethodDetail } from './dcfMethodModalSchema';
 
 // total*Values are derived display values written by useDerivedFields and the
 // summary derived rules. Backend recomputes them on Save (formToSaveRequest
@@ -71,24 +72,70 @@ const HighestBestUsedForm = z.object({
   totalValue: z.number().nullable().optional(),
 });
 
-export const DCFForm = z.object({
-  id: z.string().nullable().optional(),
-  templateCode: z.string(),
-  templateName: z.string().optional(),
-  totalNumberOfYears: z.number(),
-  totalNumberOfDayInYear: z.number(),
-  capitalizeRate: z.number(),
-  discountedRate: z.number(),
-  sections: z.array(DCFSectionForm),
-  finalValue: z.number(),
-  finalValueRounded: z.number(),
-  finalValueAdjust: z.number().nullable().optional(),
-  isHighestBestUsed: z.boolean().optional(),
-  highestBestUsed: HighestBestUsedForm.optional(),
-  appraisalPrice: z.number().nullable().optional(),
-  appraisalPriceRounded: z.number().nullable().optional(),
-  appraisalPriceDifferentiate: z.number().nullable().optional(),
-});
+export const DCFForm = z
+  .object({
+    id: z.string().nullable().optional(),
+    templateCode: z.string(),
+    templateName: z.string().optional(),
+    totalNumberOfYears: z.number(),
+    totalNumberOfDayInYear: z.number(),
+    capitalizeRate: z.number(),
+    discountedRate: z.number(),
+    sections: z.array(DCFSectionForm),
+    finalValue: z.number(),
+    finalValueRounded: z.number(),
+    finalValueAdjust: z.number().nullable().optional(),
+    isHighestBestUsed: z.boolean().optional(),
+    highestBestUsed: HighestBestUsedForm.optional(),
+    appraisalPrice: z.number().nullable().optional(),
+    appraisalPriceRounded: z.number().nullable().optional(),
+    appraisalPriceDifferentiate: z.number().nullable().optional(),
+  })
+  .superRefine((data, ctx) => {
+    // Validate each assumption's method detail fields using the shared validator.
+    // Errors are placed at the exact RHF path so RHFInputCell highlights the
+    // offending cell automatically on the outer DCF panel form's Save.
+    (data.sections ?? []).forEach((section: any, sIdx: number) => {
+      (section.categories ?? []).forEach((category: any, cIdx: number) => {
+        (category.assumptions ?? []).forEach((assumption: any, aIdx: number) => {
+          const method = assumption?.method as any;
+          if (!method?.methodType || !method?.detail) return;
+
+          // Build a context prefix so that error messages on the outer panel
+          // tell the user exactly which assumption is invalid.
+          // Only include parts that are actually populated ("if has data").
+          const contextParts = [
+            section?.sectionName,
+            category?.categoryName,
+            assumption?.assumptionName ?? assumption?.assumptionType,
+          ].filter(Boolean) as string[];
+          const contextPrefix = contextParts.length ? `[${contextParts.join(' › ')}] ` : '';
+
+          validateMethodDetail(
+            method.methodType,
+            method.detail as Record<string, any>,
+            (path, message) => {
+              ctx.addIssue({
+                code: 'custom',
+                path: [
+                  'sections',
+                  sIdx,
+                  'categories',
+                  cIdx,
+                  'assumptions',
+                  aIdx,
+                  'method',
+                  'detail',
+                  ...path,
+                ],
+                message: contextPrefix + message,
+              });
+            },
+          );
+        });
+      });
+    });
+  });
 
 export type DCFMethodFormType = z.infer<typeof DCFMethodForm>;
 export type DCFAssumptionFormType = z.infer<typeof DCFAssumptionForm>;
