@@ -708,6 +708,9 @@
     }
   },
   "forms": {
+    "propertyName": {
+      "autoFillLabel": "Auto-fill property name"
+    },
     "land": {
       "pageTitle": "Land Detail",
       "sectionTitleInfo": "Land Information",

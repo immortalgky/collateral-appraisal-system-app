@@ -1,8 +1,8 @@
-import { FormFields } from '@/shared/components/form';
+import { FormFields, type FormField } from '@/shared/components/form';
 import SurfaceTable from '../components/tables/SurfaceTable';
 import { BuildingDetail } from '../components/tables/BuildingDetail';
 import Icon from '@/shared/components/Icon';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import {
   buildingInfoField,
   buildingTypeField,
@@ -24,9 +24,11 @@ import {
   buildingArea,
   remarkBuildingField,
 } from '../configs/fields';
+import { PropertyNameTriggerIcon, type PropertyType } from '../components/PropertyNameTriggerIcon';
 
 interface BuildingDetailFormProps {
   prefix?: string;
+  propertyType?: PropertyType;
 }
 
 // SectionRow component for consistent section styling with icons
@@ -62,11 +64,20 @@ const Card = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
-const BuildingDetailForm = ({ prefix }: BuildingDetailFormProps) => {
+const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormProps) => {
+  const fillIcon = useMemo(() => <PropertyNameTriggerIcon propertyType={propertyType} />, []);
+
+  const buildingFields = useMemo<FormField[]>(
+    () =>
+      buildingInfoField.map(field =>
+        field.name === 'propertyName' && fillIcon ? { ...field, rightIcon: fillIcon } : field,
+      ),
+    [fillIcon],
+  );
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
       <SectionRow title="Building Information" icon="building">
-        <FormFields fields={buildingInfoField} />
+        <FormFields fields={buildingFields} />
       </SectionRow>
 
       <SectionRow title="Building Type" icon="list">
