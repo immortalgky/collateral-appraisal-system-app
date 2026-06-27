@@ -1,3 +1,4 @@
+import type { UseFormGetValues } from 'react-hook-form';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModalProps {

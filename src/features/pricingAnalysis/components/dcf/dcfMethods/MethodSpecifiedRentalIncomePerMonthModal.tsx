@@ -2,7 +2,7 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 

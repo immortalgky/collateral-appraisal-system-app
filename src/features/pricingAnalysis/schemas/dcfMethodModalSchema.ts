@@ -61,6 +61,9 @@ export function validateMethodDetail(
       reqInRows('roomDetails', 'roomType');
       // saleableArea and roomIncome live inside each row's seasons[] array
       (detail.roomDetails ?? []).forEach((row: any, rowIdx: number) => {
+        if (!row?.seasons?.length)
+          addIssue(['roomDetails', rowIdx, 'seasons'], 'At least one season is required');
+
         (row?.seasons ?? []).forEach((season: any, sIdx: number) => {
           if (season?.saleableArea == null || season.saleableArea === '')
             addIssue(['roomDetails', rowIdx, 'seasons', sIdx, 'saleableArea'], 'Required');
@@ -191,7 +194,7 @@ export function validateMethodDetail(
     case '13':
       req('proportionPct', 'Proportion (%) is required');
       req('startIn', 'Start In (year) is required');
-      if (!detail.refTarget?.clientId)
+      if (detail.refTarget?.clientId == null || detail.refTarget.clientId === '')
         addIssue(['refTarget', 'clientId'], 'Reference target is required');
       break;
 
