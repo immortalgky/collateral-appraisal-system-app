@@ -32,6 +32,7 @@ import enPricingAnalysis from './locales/en/pricingAnalysis.json';
 import enAppraisal from './locales/en/appraisal.json';
 import enFeeAppointmentApproval from './locales/en/feeAppointmentApproval.json';
 import enFeeApprovalConfig from './locales/en/feeApprovalConfig.json';
+import enFeeStructureMaintenance from './locales/en/feeStructureMaintenance.json';
 import enEvaluationConfig from './locales/en/evaluationConfig.json';
 import enBlockProject from './locales/en/blockProject.json';
 import enWorkflowBuilder from './locales/en/workflowBuilder.json';
@@ -71,6 +72,7 @@ export const resources = {
     appraisal: enAppraisal,
     feeAppointmentApproval: enFeeAppointmentApproval,
     feeApprovalConfig: enFeeApprovalConfig,
+    feeStructureMaintenance: enFeeStructureMaintenance,
     evaluationConfig: enEvaluationConfig,
     blockProject: enBlockProject,
     workflowBuilder: enWorkflowBuilder,

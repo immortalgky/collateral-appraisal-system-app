@@ -58,6 +58,8 @@
   },
   "forms": {
     "request": "Request",
+    "requestorDetail": "Requestor Detail",
+    "searchRequestor": "Search Requestor",
     "customers": "Customers",
     "properties": "Properties",
     "location": "Location",
@@ -70,6 +72,14 @@
   "fields": {
     "appraisalPurpose": "Appraisal Purpose",
     "hasAppraisalBook": "Customer bring the appraisal book",
+    "requestorEmployeeId": "Employee ID",
+    "requestorName": "Employee Name",
+    "requestorEmail": "Email",
+    "requestorContactNo": "Contact No",
+    "requestorAoCode": "AO Code",
+    "requestorCostCenterCode": "Cost Center Code",
+    "requestorCostCenterDescription": "Cost Center Description",
+    "requestorDepartment": "Department",
     "priority": "Priority",
     "priorityNormal": "Normal",
     "priorityHigh": "High",
@@ -289,8 +299,10 @@
   },
   "searchUser": {
     "modalTitle": "Select User",
-    "searchPlaceholder": "Search by name or email...",
-    "noResults": "No users found matching your search."
+    "searchPlaceholder": "Search by Employee ID or name...",
+    "noResults": "No users found matching your search.",
+    "loading": "Searching...",
+    "typeToSearch": "Type to search for employees"
   },
   "searchAppraisal": {
     "modalTitle": "Search Previous Appraisal Report",

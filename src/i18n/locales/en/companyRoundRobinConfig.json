@@ -31,7 +31,9 @@
     "weight": "Weight",
     "noCompanies": "No companies added yet.",
     "isActive": "Active",
-    "remove": "Remove"
+    "remove": "Remove",
+    "companiesLoadError": "Couldn't load companies.",
+    "retry": "Retry"
   },
   "confirm": {
     "delete": "Delete the {{scope}} pool?"

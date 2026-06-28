@@ -75,13 +75,13 @@ export function MethodSectionRenderer({
         <WQSPanel
           {...panelProps}
           savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
           }
           savedHasBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
           }
           savedIncludeLandArea={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
@@ -93,13 +93,13 @@ export function MethodSectionRenderer({
         <SaleAdjustmentGridPanel
           {...panelProps}
           savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
           }
           savedHasBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
           }
           savedIncludeLandArea={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
@@ -111,13 +111,13 @@ export function MethodSectionRenderer({
         <DirectComparisonPanel
           {...panelProps}
           savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
           }
           savedHasBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
           }
           savedIncludeLandArea={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
@@ -140,13 +140,13 @@ export function MethodSectionRenderer({
         <WQSPanel
           {...panelProps}
           savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
           }
           savedHasBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
           }
           savedIncludeLandArea={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
@@ -158,13 +158,13 @@ export function MethodSectionRenderer({
         <SaleAdjustmentGridPanel
           {...panelProps}
           savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
           }
           savedHasBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
           }
           savedIncludeLandArea={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null
@@ -178,13 +178,13 @@ export function MethodSectionRenderer({
         <DirectComparisonPanel
           {...panelProps}
           savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
           }
           savedHasBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
           }
           savedIncludeLandArea={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.includeLandArea ?? null

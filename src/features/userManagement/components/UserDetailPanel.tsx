@@ -81,6 +81,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     position: '',
     department: '',
     companyId: null,
+    aoCode: '',
   });
   const [editScope, setEditScope] = useState<'Bank' | 'Company'>('Bank');
   const [editAuthSource, setEditAuthSource] = useState<'Local' | 'LDAP'>('Local');
@@ -119,6 +120,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       ...prev,
       companyId: scope === 'Bank' ? null : prev.companyId,
       department: scope === 'Company' ? '' : prev.department,
+      aoCode: scope === 'Company' ? '' : prev.aoCode,
     }));
   };
 
@@ -131,6 +133,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       position: user.position ?? '',
       department: user.department ?? '',
       companyId: user.companyId,
+      aoCode: user.aoCode ?? '',
     });
     setEditScope(user.companyId ? 'Company' : 'Bank');
     setEditAuthSource(user.authSource === 'LDAP' ? 'LDAP' : 'Local');
@@ -164,6 +167,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         position: editForm.position || null,
         department: isCompany ? null : editForm.department || null,
         companyId: isCompany ? editForm.companyId || null : null,
+        aoCode: isCompany ? null : editForm.aoCode || null,
         authSource: editAuthSource,
       },
       {
@@ -381,9 +385,12 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               { label: t('fields.firstName'), value: user.firstName },
               { label: t('fields.lastName'), value: user.lastName },
               { label: t('fields.position'), value: user.position },
-              // Department applies to Bank users only; Company users carry a company instead.
+              // Department and AO Code apply to Bank users only; Company users carry a company instead.
               ...(userScope === 'Bank'
-                ? [{ label: t('fields.department'), value: user.department }]
+                ? [
+                    { label: t('fields.department'), value: user.department },
+                    { label: t('fields.aoCode'), value: user.aoCode },
+                  ]
                 : []),
               ...(user.companyName
                 ? [{ label: t('fields.company'), value: user.companyName }]
@@ -746,6 +753,15 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                       setEditForm(prev => ({ ...prev, department: value }));
                     }}
                     placeholder={t('placeholders.department')}
+                  />
+                  <TextInput
+                    label={t('fields.aoCode')}
+                    value={editForm.aoCode ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, aoCode: value }));
+                    }}
+                    placeholder={t('placeholders.aoCode')}
                   />
                 </>
               )}

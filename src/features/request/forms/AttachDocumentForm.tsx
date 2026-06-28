@@ -6,9 +6,11 @@ import { useFormReadOnly } from '@/shared/components/form/context';
 
 interface AttachDocumentFormProps {
   getOrCreateSession: () => Promise<string>;
+  /** Saved request id — enables the Appointment Letter action above the checklist. */
+  requestId?: string;
 }
 
-const AttachDocumentForm = ({ getOrCreateSession }: AttachDocumentFormProps) => {
+const AttachDocumentForm = ({ getOrCreateSession, requestId }: AttachDocumentFormProps) => {
   const { t } = useTranslation('request');
   const isReadOnly = useFormReadOnly();
 
@@ -16,7 +18,7 @@ const AttachDocumentForm = ({ getOrCreateSession }: AttachDocumentFormProps) => 
     <FormCard title={t('forms.attachDocument')} icon="paperclip" iconColor="teal">
       <div className="flex flex-col gap-6">
         {!isReadOnly && <CreateRequestFileInput getOrCreateSession={getOrCreateSession} />}
-        <DocumentUploader getOrCreateSession={getOrCreateSession} />
+        <DocumentUploader getOrCreateSession={getOrCreateSession} requestId={requestId} />
       </div>
     </FormCard>
   );

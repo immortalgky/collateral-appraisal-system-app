@@ -1,0 +1,46 @@
+{
+  "page": {
+    "title": "Fee Structure",
+    "subtitle": "Maintain the master fee table. Fee code 01 (Appraisal Fee) uses selling-price tiers; 02/03 are flat fees.",
+    "addFee": "Add Fee",
+    "noFees": "No fee structures configured. Add one to enable fee calculation."
+  },
+  "modal": {
+    "createTitle": "Add Fee Structure",
+    "editTitle": "Edit Fee Structure",
+    "deleteTitle": "Delete Fee Structure",
+    "create": "Create"
+  },
+  "fields": {
+    "feeType": "Fee Type",
+    "feeTypePlaceholder": "Select a fee type",
+    "feeCode": "Fee Code",
+    "feeName": "Fee Name",
+    "baseAmount": "Base Amount",
+    "minSellingPrice": "Min Selling Price",
+    "maxSellingPrice": "Max Selling Price",
+    "isActive": "Active"
+  },
+  "hints": {
+    "feeCodeImmutable": "Fee code cannot be changed after creation.",
+    "maxSellingPrice": "Leave blank for no upper limit."
+  },
+  "columns": {
+    "feeCode": "Code",
+    "feeName": "Name",
+    "baseAmount": "Base Amount",
+    "range": "Selling-Price Range",
+    "status": "Status"
+  },
+  "confirm": {
+    "deleteFee": "Delete fee \"{{name}}\" ({{code}})? This cannot be undone."
+  },
+  "toasts": {
+    "created": "Fee structure created",
+    "createFailed": "Failed to create fee structure",
+    "updated": "Fee structure updated",
+    "updateFailed": "Failed to update fee structure",
+    "deleted": "Fee structure deleted",
+    "deleteFailed": "Failed to delete fee structure"
+  }
+}

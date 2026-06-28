@@ -147,7 +147,7 @@ export function DirectComparisonPanel({
       // Toggle-aware: with building cost, the user's "Appraisal Price (rounded)" lives in
       // appraisalPriceIncludeBuildingCostRounded; otherwise in appraisalPriceRounded.
       const ap = value.directComparisonAppraisalPrice as any;
-      const hbc = !!ap?.hasBuildingCost;
+      const hbc = !!ap?.hasBuildingValue;
       const appraisalValue =
         (hbc ? ap?.appraisalPriceIncludeBuildingCostRounded : ap?.appraisalPriceRounded) ?? null;
 
@@ -271,7 +271,7 @@ export function DirectComparisonPanel({
       }
       // Restore toggles BEFORE the rounded inputs so we pick the right target path.
       if (savedHasBuildingCost != null) {
-        setValue('directComparisonAppraisalPrice.hasBuildingCost' as any, savedHasBuildingCost, {
+        setValue('directComparisonAppraisalPrice.hasBuildingValue' as any, savedHasBuildingCost, {
           shouldDirty: false,
         });
       }
@@ -297,7 +297,7 @@ export function DirectComparisonPanel({
         });
       }
       if (savedBuildingCost != null && savedBuildingCost !== 0) {
-        setValue('directComparisonAppraisalPrice.buildingCost' as any, savedBuildingCost, {
+        setValue('directComparisonAppraisalPrice.buildingValue' as any, savedBuildingCost, {
           shouldDirty: true,
         });
       }

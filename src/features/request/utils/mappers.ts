@@ -15,7 +15,17 @@ export const mapRequestResponseToForm = (
     priority: response.priority ?? 'normal',
     isPma: response.isPma ?? false,
     creator: response.creator ?? { userId: '', username: '' },
-    requestor: response.requestor ?? { userId: '', username: '' },
+    // GET /requests/{id} returns RequestorDetailDto (employeeId + full snapshot, no GUID).
+    requestor: {
+      employeeId: response.requestor?.employeeId ?? '',
+      name: response.requestor?.name ?? null,
+      email: response.requestor?.email ?? null,
+      contactNo: response.requestor?.contactNo ?? null,
+      aoCode: response.requestor?.aoCode ?? null,
+      costCenterCode: response.requestor?.costCenterCode ?? null,
+      costCenterDescription: response.requestor?.costCenterDescription ?? null,
+      department: response.requestor?.department ?? null,
+    },
     detail: {
       hasAppraisalBook: response.detail?.hasAppraisalBook ?? false,
       loanDetail: {

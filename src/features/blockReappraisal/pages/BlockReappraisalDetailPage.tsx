@@ -16,6 +16,7 @@ import {
   useMarkBlockReappraisalNotRequired,
 } from '../api/blockReappraisal';
 import type { BlockReappraisalUnitDetail, BlockReappraisalCreateResult } from '../types';
+import { isCondo } from '@/features/blockProject/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -335,7 +336,7 @@ function BlockReappraisalDetailPage() {
     );
   }
 
-  const isCondo = detail.projectType === 'Condo';
+  const condo = isCondo(detail.projectType);
 
   return (
     <div className="flex flex-col min-h-full min-w-0 gap-4">
@@ -355,12 +356,12 @@ function BlockReappraisalDetailPage() {
               </h2>
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
-                  isCondo
+                  condo
                     ? 'bg-blue-50 text-blue-700 border border-blue-100'
                     : 'bg-amber-50 text-amber-700 border border-amber-100'
                 }`}
               >
-                {isCondo ? t('projectType.condo') : t('projectType.landAndBuilding')}
+                {condo ? t('projectType.condo') : t('projectType.landAndBuilding')}
               </span>
             </div>
             {detail.oldAppraisalNumber && (
@@ -455,7 +456,7 @@ function BlockReappraisalDetailPage() {
               <Icon style="regular" name="folder-open" className="size-8 text-gray-300" />
               <p className="text-xs text-gray-400">{t('detail.units.empty')}</p>
             </div>
-          ) : isCondo ? (
+          ) : condo ? (
             <CondoUnitsTable units={detail.structure.units} />
           ) : (
             <LandBuildingUnitsTable units={detail.structure.units} />

@@ -214,9 +214,9 @@ export function MarketReferenceMethodPanel({
     savedComparativeAnalysisTemplateId: comparativeFactors?.comparativeAnalysisTemplateId,
     savedFinalValueAdjusted: (comparativeFactors as any)?.finalValue?.finalValueAdjusted ?? null,
     savedLandValue: (comparativeFactors as any)?.finalValue?.landValue ?? null,
-    savedBuildingCost: (comparativeFactors as any)?.finalValue?.buildingCost ?? null,
+    savedBuildingCost: (comparativeFactors as any)?.finalValue?.buildingValue ?? null,
     savedAppraisalPrice: (comparativeFactors as any)?.finalValue?.appraisalPrice ?? null,
-    savedHasBuildingCost: (comparativeFactors as any)?.finalValue?.hasBuildingCost ?? null,
+    savedHasBuildingCost: (comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null,
     savedIncludeLandArea: (comparativeFactors as any)?.finalValue?.includeLandArea ?? null,
     // No-ops: the reference result is shown in the parent list, not fed back into
     // any parent form context here.

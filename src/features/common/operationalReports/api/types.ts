@@ -22,6 +22,7 @@ export interface BaseReportFilter {
   approvedFrom?: string;
   approvedTo?: string;
   // Common string filters
+  appraisalNumber?: string;
   status?: string;
   bankingSegment?: string;
   appraisalCompany?: string;

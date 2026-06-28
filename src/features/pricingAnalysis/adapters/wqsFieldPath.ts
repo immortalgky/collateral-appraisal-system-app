@@ -66,11 +66,11 @@ export const wqsFieldPath = {
   finalValuSlope: () => `WQSFinalValue.slope`,
   finalValueLowestEstimate: () => `WQSFinalValue.lowestEstimate`,
   finalValueHighestEstimate: () => `WQSFinalValue.highestEstimate`,
-  finalValueHasBuildingCost: () => `WQSFinalValue.hasBuildingCost`,
+  finalValueHasBuildingCost: () => `WQSFinalValue.hasBuildingValue`,
   finalValueIncludeLandArea: () => `WQSFinalValue.includeLandArea`,
   finalValueLandArea: () => `WQSFinalValue.landArea`,
   finalValueUsableArea: () => `WQSFinalValue.usableArea`,
   finalValueLandValue: () => `WQSFinalValue.landValue`,
-  finalValueBuildingCost: () => `WQSFinalValue.buildingCost`,
+  finalValueBuildingCost: () => `WQSFinalValue.buildingValue`,
   finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice`,
 };

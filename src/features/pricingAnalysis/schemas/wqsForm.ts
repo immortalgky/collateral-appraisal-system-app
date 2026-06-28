@@ -67,7 +67,7 @@ const WQSFinalValue = (t: TFunction<'pricingAnalysis'>) =>
           invalid_type_error: t('validation.landValueRequired'),
         })
         .optional(),
-      buildingCost: z.number().optional(),
+      buildingValue: z.number().optional(),
       appraisalPrice: z.number().optional(),
     })
     .passthrough();
