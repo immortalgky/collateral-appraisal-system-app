@@ -40,13 +40,17 @@ export const useCompaniesQuery = () => {
         const companies = raw.map(c => ({ id: c.id, companyName: c.name }));
         useCompanyStore.getState().setCompanies(companies);
         return companies;
-      } catch {
+      } catch (err) {
+        // Don't swallow into [] — that would be cached as a successful empty
+        // result (staleTime/gcTime: Infinity) and never refetch, leaving every
+        // company picker blank for the whole session. Rethrow so React Query
+        // treats it as an error and retries / refetches on next mount.
         useCompanyStore.getState().setLoading(false);
-        return [];
+        throw err;
       }
     },
     staleTime: Infinity,
     gcTime: Infinity,
-    retry: false,
+    retry: 2,
   });
 };

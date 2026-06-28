@@ -28,10 +28,13 @@ export const useGetRequiredDocuments = (params: GetRequiredDocumentsParams) => {
         `/document-checklist?${queryParams.toString()}`,
       );
 
-      // Map response to RequiredDocumentConfig[] based on what was requested
-      if (params.collateralType && data.propertyTypeGroups.length > 0) {
+      // Title-level: ONLY collateral-scoped groups (property = the collateral).
+      // Never fall back to application docs (property = Any) — those belong to the
+      // request level. If the collateral has no specific rows, return empty.
+      if (params.collateralType) {
+        const group = data.propertyTypeGroups[0];
         return {
-          documents: data.propertyTypeGroups[0].documents.map(d => ({
+          documents: (group?.documents ?? []).map(d => ({
             documentType: d.code,
             displayName: d.name,
             isRequired: d.isRequired,
@@ -39,6 +42,7 @@ export const useGetRequiredDocuments = (params: GetRequiredDocumentsParams) => {
         };
       }
 
+      // Request-level: ONLY application docs (property = Any).
       if (params.purpose) {
         return {
           documents: data.applicationDocuments.map(d => ({

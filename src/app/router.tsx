@@ -107,12 +107,16 @@ const FeeApprovalTierPage = lazy(
 const AppointmentApprovalRulePage = lazy(
   () => import('@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage')
 );
+const FeeStructurePage = lazy(
+  () => import('@/features/feeStructureMaintenance/pages/FeeStructurePage')
+);
 const PasswordPolicyConfigPage = lazy(
   () => import('@/features/userManagement/admin/pages/PasswordPolicyConfigPage')
 );
 const EvaluationConfigPage = lazy(
   () => import('@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage')
 );
+const SlaConfigPage = lazy(() => import('@/features/slaConfig/pages/SlaConfigPage'));
 const WorkflowListPage = lazy(() => import('@features/workflowBuilder/pages/WorkflowListPage'));
 const MigrateInstancesPage = lazy(
   () => import('@features/workflowBuilder/pages/MigrateInstancesPage')
@@ -241,6 +245,9 @@ const ParameterMaintenancePage = lazy(
 );
 const ParameterDetailPage = lazy(
   () => import('@/features/parameterMaintenance/pages/ParameterDetailPage')
+);
+const DocumentRequirementsPage = lazy(
+  () => import('@/features/documentRequirementsMaintenance/pages/DocumentRequirementsPage')
 );
 
 /**
@@ -497,7 +504,16 @@ export const router = createBrowserRouter([
           { path: 'reports/test', element: <ReportTestPage /> },
           { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
           { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
+          { path: 'fee-structures', element: <FeeStructurePage /> },
           { path: 'evaluation-config', element: <EvaluationConfigPage /> },
+          {
+            path: 'sla-config',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="SLA_CONFIG_MANAGE" />
+            ),
+            children: [{ index: true, element: <SlaConfigPage /> }],
+          },
+          { path: 'document-requirements', element: <DocumentRequirementsPage /> },
           { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
           {
             path: 'webhook-subscriptions',

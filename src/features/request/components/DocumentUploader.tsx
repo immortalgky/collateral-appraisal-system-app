@@ -7,6 +7,7 @@ import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DocumentActionMenu from './DocumentActionMenu';
 import DocumentEditModal from './DocumentEditModal';
+import AppointmentLetterButton from './AppointmentLetterButton';
 import { useDownloadDocument, useUploadDocument } from '../api';
 import { getDocumentCategory, type UploadedDocument } from '../types/document';
 import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
@@ -218,10 +219,13 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
 
 interface DocumentUploaderProps {
   getOrCreateSession: () => Promise<string>;
+  /** Saved request id — enables the Appointment Letter action in the summary bar. */
+  requestId?: string;
 }
 
 const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   getOrCreateSession,
+  requestId,
 }) => {
   const { t } = useTranslation(['request', 'common']);
   const isReadOnly = useFormReadOnly();
@@ -869,6 +873,9 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               </>
             )}
           </div>
+
+          {/* Appointment Letter — generate / generate & attach */}
+          <AppointmentLetterButton requestId={requestId} getOrCreateSession={getOrCreateSession} />
         </div>
         {totalUploadedCount === 0 && requiredStats.total === 0 && (
           <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">

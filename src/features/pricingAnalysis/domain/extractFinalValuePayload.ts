@@ -29,7 +29,7 @@ export function extractFinalValuePayload(
     priceDifferentiate: finalValueSection.priceDifferentiate ?? null,
     includeLandArea: finalValueSection.includeLandArea ?? null,
     landArea: finalValueSection.landArea ?? null,
-    hasBuildingCost: finalValueSection.hasBuildingCost ?? null,
-    buildingCost: finalValueSection.buildingCost ?? null,
+    hasBuildingValue: finalValueSection.hasBuildingValue ?? null,
+    buildingValue: finalValueSection.buildingValue ?? null,
   } as SetFinalValueRequestType;
 }

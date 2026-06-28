@@ -1714,6 +1714,84 @@ export const contactFields: FormField[] = [
   },
 ];
 
+// =============================================================================
+// Requestor fields
+// =============================================================================
+
+/**
+ * Static fields for schema building (relative names — prefix with 'requestor' via prefixFields).
+ * employeeId is the identifier (bank code e.g. "P5229") and must be non-empty after a
+ * requestor is picked. Display-only fields remain nullish in the base schema and are not listed.
+ */
+export const requestorSchemaFields: FormField[] = [
+  { type: 'text-input', label: _st('Employee ID'), name: 'employeeId', required: true },
+];
+
+/**
+ * Rendered fields for RequestorDetailForm. All display-only (disabled).
+ * Uses full dotted paths — no namePrefix needed at render time.
+ */
+export function makeRequestorFields(t: TFunction<'request'>): FormField[] {
+  return [
+    {
+      type: 'text-input',
+      name: 'requestor.employeeId',
+      label: t('fields.requestorEmployeeId'),
+      disabled: true,
+      wrapperClassName: 'col-span-1',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.name',
+      label: t('fields.requestorName'),
+      disabled: true,
+      wrapperClassName: 'col-span-2',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.email',
+      label: t('fields.requestorEmail'),
+      disabled: true,
+      wrapperClassName: 'col-span-1',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.contactNo',
+      label: t('fields.requestorContactNo'),
+      disabled: true,
+      wrapperClassName: 'col-span-1',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.aoCode',
+      label: t('fields.requestorAoCode'),
+      disabled: true,
+      wrapperClassName: 'col-span-1',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.costCenterCode',
+      label: t('fields.requestorCostCenterCode'),
+      disabled: true,
+      wrapperClassName: 'col-span-1',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.costCenterDescription',
+      label: t('fields.requestorCostCenterDescription'),
+      disabled: true,
+      wrapperClassName: 'col-span-2',
+    },
+    {
+      type: 'text-input',
+      name: 'requestor.department',
+      label: t('fields.requestorDepartment'),
+      disabled: true,
+      wrapperClassName: 'col-span-2',
+    },
+  ];
+}
+
 export const requestFields: FormField[] = [
   {
     type: 'dropdown',
@@ -1920,6 +1998,7 @@ export const propertiesFieldConfig: FieldArrayField = {
 
 export const allRequestFields: FormField[] = [
   ...requestFields,
+  ...prefixFields(requestorSchemaFields, 'requestor'),
   ...prefixFields(addressFields, 'detail.address'),
   ...prefixFields(contactFields, 'detail.contact'),
   ...appointmentAndFeeFields,

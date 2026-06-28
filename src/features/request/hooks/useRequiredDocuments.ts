@@ -48,7 +48,6 @@ export const useRequestLevelRequiredDocuments = () => {
       data.documents.filter(d => d.isRequired).map(d => d.documentType),
     );
     const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
-    const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
     // Keep docs that have files OR are in the checklist
     const docsToKeep = currentDocs.filter(
@@ -121,9 +120,13 @@ export const useRequestLevelRequiredDocuments = () => {
 export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
   const { setValue } = useFormContext();
   const collateralType = useWatch({ name: `titles.${titleIndex}.collateralType` });
+  const purpose = useWatch({ name: 'purpose' });
   const titleDocuments = useWatch({ name: `titles.${titleIndex}.documents` });
-  const { data } = useGetRequiredDocuments({ collateralType });
-  const prevCollateralTypeRef = useRef<string | undefined>(undefined);
+  // Pass purpose too so requirements scoped to BOTH collateral type AND purpose resolve.
+  // When no collateral is selected, pass empty params so the query is disabled and the
+  // title does NOT pick up the request-level (property = Any) documents.
+  const { data } = useGetRequiredDocuments(collateralType ? { collateralType, purpose } : {});
+  const prevScopeRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!data?.documents) return;
@@ -134,7 +137,6 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
       data.documents.filter(d => d.isRequired).map(d => d.documentType),
     );
     const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
-    const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
     // Keep docs that have files OR are in the checklist
     const docsToKeep = currentDocs.filter(
@@ -151,12 +153,8 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
     );
 
     // No changes needed — all placeholders exist and metadata is set
-    if (
-      missingTypes.length === 0 &&
-      !needsUpdate &&
-      prevCollateralTypeRef.current === collateralType
-    )
-      return;
+    const scopeKey = `${collateralType ?? ''}|${purpose ?? ''}`;
+    if (missingTypes.length === 0 && !needsUpdate && prevScopeRef.current === scopeKey) return;
 
     // Create placeholders for all missing checklist types (isRequired from API)
     const newPlaceholders = missingTypes.map(d =>
@@ -201,6 +199,6 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
     });
 
     setValue(`titles.${titleIndex}.documents`, finalDocs, { shouldDirty: false });
-    prevCollateralTypeRef.current = collateralType;
-  }, [data, collateralType, titleDocuments, titleIndex, setValue]);
+    prevScopeRef.current = scopeKey;
+  }, [data, collateralType, purpose, titleDocuments, titleIndex, setValue]);
 };

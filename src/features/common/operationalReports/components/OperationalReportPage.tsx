@@ -4,6 +4,7 @@ import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Input from '@shared/components/Input';
+import { useDebounce } from '@shared/hooks/useDebounce';
 import { useOperationalReport, useReportExport } from '../api/operationalReportsApi';
 import type { BaseReportFilter, SortDir } from '../api/operationalReportsApi';
 import type { ReportConfig, ColumnDef, FilterField } from '../config/reports';
@@ -56,6 +57,7 @@ interface FilterPanelProps {
 }
 
 const FILTER_LABELS: Record<FilterField, string> = {
+  appraisalNumber: 'Appraisal No.',
   createdFrom: 'Create Date From',
   createdTo: 'Create Date To',
   approvedFrom: 'Approved Date From',
@@ -231,14 +233,17 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
   const { slug, title, columns, filters, defaultPageSize = 20 } = config;
 
   // ── Filter state ─────────────────────────────────────────────────────────────
+  // `filterValues` updates on every keystroke so the inputs stay responsive, but the
+  // query/export read the debounced copy — typing no longer fires a request per keystroke.
   const [filterValues, setFilterValues] = useState<BaseReportFilter>({});
+  const debouncedFilterValues = useDebounce(filterValues, 400);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [sortBy, setSortBy] = useState<string | undefined>();
   const [sortDir, setSortDir] = useState<SortDir | undefined>();
 
   const activeFilter: BaseReportFilter = {
-    ...filterValues,
+    ...debouncedFilterValues,
     pageNumber,
     pageSize,
     sortBy,
@@ -263,7 +268,7 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
 
   // ── Data ──────────────────────────────────────────────────────────────────────
   const { data, isLoading, isError, error } = useOperationalReport(slug, activeFilter);
-  const { exportReport, isExporting } = useReportExport(slug, filterValues);
+  const { exportReport, isExporting } = useReportExport(slug, debouncedFilterValues);
 
   const rows = data?.items ?? [];
   const totalCount = data?.count ?? 0;

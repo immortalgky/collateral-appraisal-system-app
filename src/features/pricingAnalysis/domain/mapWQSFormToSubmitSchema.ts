@@ -17,8 +17,8 @@ export function mapWQSFormToSubmitSchema({
 
   // The Adjust Final Value UI now binds the user-rounded total to `appraisalPrice`
   // in all cases (unit 01/02, unit 03 machinery, with/without building cost).
-  // `landValue` is only meaningful when hasBuildingCost = true (separate Land Price input).
-  const hasBuildingCost = !!fv?.hasBuildingCost;
+  // `landValue` is only meaningful when hasBuildingValue = true (separate Land Price input).
+  const hasBuildingCost = !!fv?.hasBuildingValue;
   const userRoundedAppraisalPrice = fv?.appraisalPrice ?? null;
   const landValueToSend = hasBuildingCost ? (fv?.landValue ?? null) : null;
 
@@ -26,8 +26,8 @@ export function mapWQSFormToSubmitSchema({
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
     appraisalValue: userRoundedAppraisalPrice,
     finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
-    hasBuildingCost: fv?.hasBuildingCost ?? null,
-    buildingCost: fv?.buildingCost ?? null,
+    hasBuildingValue: fv?.hasBuildingValue ?? null,
+    buildingValue: fv?.buildingValue ?? null,
     appraisalPrice: userRoundedAppraisalPrice,
     includeLandArea: fv?.includeLandArea ?? null,
     landArea: fv?.landArea ?? null,

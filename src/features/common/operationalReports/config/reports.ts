@@ -30,6 +30,7 @@ export interface ColumnDef {
  * The OperationalReportPage renders only the subset listed here.
  */
 export type FilterField =
+  | 'appraisalNumber'
   | 'createdFrom'
   | 'createdTo'
   | 'approvedFrom'
@@ -83,6 +84,7 @@ const OLA_COLUMNS: ColumnDef[] = [
 
 // rcas003/005/006/007/011/012 share the same filters
 const OLA_FILTERS: FilterField[] = [
+  'appraisalNumber',
   'createdFrom',
   'createdTo',
   'status',
@@ -98,7 +100,7 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas001',
     title: 'RCAS001 - Appraisal Books',
-    filters: ['createdFrom', 'createdTo', 'status', 'bankingSegment'],
+    filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'status', 'bankingSegment'],
     columns: [
       { key: 'appraisalCreateDate', label: 'Create Date', field: 'appraisalCreateDate', type: 'datetime', sortKey: 'AppraisalCreateDate' },
       { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
@@ -122,7 +124,7 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas002',
     title: 'RCAS002 - Reappraisal Due',
-    filters: ['reviewType', 'stage', 'customerName'],
+    filters: ['appraisalNumber', 'reviewType', 'stage', 'customerName'],
     columns: [
       { key: 'reviewType', label: 'Review Type', field: 'reviewType', type: 'text' },
       { key: 'stage', label: 'Stage', field: 'stage', type: 'text' },
@@ -157,7 +159,7 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas004',
     title: 'RCAS004 - Inspection Progress (<100%)',
-    filters: ['createdFrom', 'createdTo', 'status'],
+    filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'status'],
     columns: [
       { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
       { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },
@@ -203,7 +205,7 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas008',
     title: 'RCAS008 - Service Quality Evaluation',
-    filters: ['approvedFrom', 'approvedTo', 'bankingSegment', 'appraisalCompany', 'evaluationStatus'],
+    filters: ['appraisalNumber', 'approvedFrom', 'approvedTo', 'bankingSegment', 'appraisalCompany', 'evaluationStatus'],
     columns: [
       { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
       { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
@@ -224,7 +226,7 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas009',
     title: 'RCAS009 - Fee Summary',
-    filters: ['createdFrom', 'createdTo', 'payType', 'appraisalCompany', 'feeStatus'],
+    filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'payType', 'appraisalCompany', 'feeStatus'],
     columns: [
       { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
       { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },

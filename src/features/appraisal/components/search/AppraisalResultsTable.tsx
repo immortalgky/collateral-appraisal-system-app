@@ -62,11 +62,15 @@ function AppraisalResultsTable({
 
   const formatSlaStatus = (item: AppraisalDto): string => {
     if (!item.slaStatus) return '-';
-    if (item.remainingHours !== null && item.remainingHours !== undefined) {
-      const days = Math.floor(Math.abs(item.remainingHours) / 24);
-      const hours = Math.abs(item.remainingHours) % 24;
+    // Actual CALENDAR time from now until the SLA due date (how much real time is left), rather than
+    // the business-hours figure — calendar is what the bank reads off the deadline date.
+    if (item.slaDueDate) {
+      const diffMs = new Date(item.slaDueDate).getTime() - Date.now();
+      const totalHours = Math.floor(Math.abs(diffMs) / 3_600_000);
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
       const timeStr = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
-      return item.remainingHours < 0
+      return diffMs < 0
         ? t('list.sla.overdue', { time: timeStr })
         : t('list.sla.left', { time: timeStr });
     }

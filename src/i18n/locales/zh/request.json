@@ -58,6 +58,8 @@
   },
   "forms": {
     "request": "申请",
+    "requestorDetail": "申请人信息",
+    "searchRequestor": "搜索申请人",
     "customers": "客户",
     "properties": "房产",
     "location": "位置",
@@ -70,6 +72,14 @@
   "fields": {
     "appraisalPurpose": "评估目的",
     "hasAppraisalBook": "客户携带评估手册",
+    "requestorEmployeeId": "员工编号",
+    "requestorName": "员工姓名",
+    "requestorEmail": "电子邮件",
+    "requestorContactNo": "联系电话",
+    "requestorAoCode": "AO代码",
+    "requestorCostCenterCode": "成本中心代码",
+    "requestorCostCenterDescription": "成本中心说明",
+    "requestorDepartment": "部门",
     "priority": "优先级",
     "priorityNormal": "普通",
     "priorityHigh": "紧急",
@@ -289,8 +299,10 @@
   },
   "searchUser": {
     "modalTitle": "选择用户",
-    "searchPlaceholder": "按姓名或邮箱搜索...",
-    "noResults": "未找到匹配的用户。"
+    "searchPlaceholder": "按员工编号或姓名搜索...",
+    "noResults": "未找到匹配的用户。",
+    "loading": "搜索中...",
+    "typeToSearch": "输入关键词搜索员工"
   },
   "searchAppraisal": {
     "modalTitle": "搜索历史评估报告",

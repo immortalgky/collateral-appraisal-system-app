@@ -1,41 +1,40 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Avatar from '@/shared/components/Avatar';
-import type { UserDtoType } from '../schemas/form';
+import type { RequestorDtoType } from '../schemas/form';
+import { useSearchRequestors, type RequestorInfoDto } from '../api/requestors';
 
 interface SearchUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (user: UserDtoType) => void;
+  onSelect: (user: RequestorDtoType) => void;
 }
-
-// Mock data for development
-const mockUsers: UserDtoType[] = [
-  { userId: 'P000000001', username: 'Somchai Prasert' },
-  { userId: 'P000000002', username: 'Nattaya Srisawat' },
-  { userId: 'P000000003', username: 'Wichai Kongpan' },
-  { userId: 'P000000004', username: 'Pranee Thongchai' },
-  { userId: 'P000000005', username: 'Kittisak Wongprasert' },
-  { userId: 'P000000006', username: 'Supaporn Limwattana' },
-];
 
 const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) => {
   const { t } = useTranslation(['request', 'common']);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedUser, setSelectedUser] = useState<UserDtoType | null>(null);
+  // Internal state keeps the full API result (employeeId used as selection key)
+  const [selectedUser, setSelectedUser] = useState<RequestorInfoDto | null>(null);
 
-  const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return mockUsers;
-    const query = searchQuery.toLowerCase();
-    return mockUsers.filter(user => user.username.toLowerCase().includes(query));
-  }, [searchQuery]);
+  const { data: results, isLoading } = useSearchRequestors(searchQuery);
 
   const handleSelect = () => {
     if (selectedUser) {
-      onSelect(selectedUser);
+      // Map to RequestorDtoType — exclude the auth GUID (userId); backend persists employeeId
+      const requestorDto: RequestorDtoType = {
+        employeeId: selectedUser.employeeId,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        contactNo: selectedUser.contactNo,
+        aoCode: selectedUser.aoCode,
+        costCenterCode: selectedUser.costCenterCode,
+        costCenterDescription: selectedUser.costCenterDescription,
+        department: selectedUser.department,
+      };
+      onSelect(requestorDto);
       handleClose();
     }
   };
@@ -68,33 +67,57 @@ const SearchUserModal = ({ isOpen, onClose, onSelect }: SearchUserModalProps) =>
         {/* Results List */}
         <div className="border border-gray-200 rounded-lg overflow-hidden">
           <div className="max-h-80 overflow-y-auto">
-            {filteredUsers.length === 0 ? (
+            {isLoading ? (
+              <div className="px-4 py-8 text-center text-gray-500">{t('searchUser.loading')}</div>
+            ) : searchQuery.trim().length === 0 ? (
+              <div className="px-4 py-8 text-center text-gray-400">
+                {t('searchUser.typeToSearch')}
+              </div>
+            ) : !results || results.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">{t('searchUser.noResults')}</div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {filteredUsers.map(user => (
+                {results.map(user => (
                   <button
-                    key={user.userId}
+                    key={user.employeeId}
                     type="button"
                     onClick={() => setSelectedUser(user)}
                     className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      selectedUser?.userId === user.userId
+                      selectedUser?.employeeId === user.employeeId
                         ? 'bg-primary-50 hover:bg-primary-100'
                         : 'hover:bg-gray-50'
                     }`}
                   >
                     {/* Avatar */}
-                    <Avatar name={user.username} size="lg" />
+                    <Avatar name={user.name} size="lg" />
 
                     {/* User Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 truncate">
-                        {user.username}
+                      <div className="text-sm font-medium text-gray-900 truncate">{user.name}</div>
+                      <div className="text-xs text-gray-500 truncate">
+                        {user.employeeId}
+                        {user.department ? ` · ${user.department}` : ''}
+                      </div>
+                      {/* Secondary line: extra requestor detail to help disambiguate */}
+                      <div className="text-xs text-gray-400 truncate">
+                        {[
+                          user.email,
+                          user.aoCode ? `${t('fields.requestorAoCode')}: ${user.aoCode}` : null,
+                          user.costCenterCode
+                            ? `${t('fields.requestorCostCenterCode')}: ${user.costCenterCode}${
+                                user.costCenterDescription
+                                  ? ` - ${user.costCenterDescription}`
+                                  : ''
+                              }`
+                            : null,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </div>
                     </div>
 
                     {/* Selected Indicator */}
-                    {selectedUser?.userId === user.userId && (
+                    {selectedUser?.employeeId === user.employeeId && (
                       <Icon
                         name="circle-check"
                         style="solid"

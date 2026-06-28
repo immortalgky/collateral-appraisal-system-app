@@ -272,14 +272,14 @@ export function WQSPanel({
       }
       // Restore building cost fields
       if (savedBuildingCost != null && savedBuildingCost !== 0) {
-        setValue('WQSFinalValue.buildingCost' as any, savedBuildingCost, { shouldDirty: true });
+        setValue('WQSFinalValue.buildingValue' as any, savedBuildingCost, { shouldDirty: true });
       }
       if (savedAppraisalPrice != null && savedAppraisalPrice !== 0) {
         setValue('WQSFinalValue.appraisalPrice' as any, savedAppraisalPrice, { shouldDirty: true });
       }
       // Restore toggles
       if (savedHasBuildingCost != null) {
-        setValue('WQSFinalValue.hasBuildingCost' as any, savedHasBuildingCost, {
+        setValue('WQSFinalValue.hasBuildingValue' as any, savedHasBuildingCost, {
           shouldDirty: false,
         });
       }
