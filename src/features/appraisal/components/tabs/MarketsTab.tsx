@@ -120,11 +120,11 @@ export const MarketsTab = () => {
       { appraisalId, comparableId: unlinkConfirm.id },
       {
         onSuccess: () => {
-          toast.success(t('toasts.comparableUnlinked'));
+          toast.success(t('toasts.comparableDeleted'));
           setUnlinkConfirm({ isOpen: false, id: null });
         },
         onError: () => {
-          toast.error(t('toasts.comparableUnlinkFailed'));
+          toast.error(t('toasts.comparableDeleteFailed'));
         },
       },
     );
@@ -298,7 +298,7 @@ export const MarketsTab = () => {
                           handleUnlink(comparable.id);
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
-                        title="Unlink comparable"
+                        title="Delete comparable"
                       >
                         <Icon name="trash-can" style="solid" />
                       </button>
@@ -316,9 +316,9 @@ export const MarketsTab = () => {
         isOpen={unlinkConfirm.isOpen}
         onClose={() => setUnlinkConfirm({ isOpen: false, id: null })}
         onConfirm={confirmUnlink}
-        title="Unlink Comparable"
-        message="Are you sure you want to unlink this comparable from the appraisal?"
-        confirmText="Unlink"
+        title="Delete Comparable"
+        message="Are you sure you want to delete this comparable from the appraisal?"
+        confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
       />
