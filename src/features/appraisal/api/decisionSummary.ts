@@ -138,6 +138,7 @@ export const useGetDecisionSummary = (appraisalId: string | undefined) => {
       return data;
     },
     enabled: !!appraisalId,
+    staleTime: 0,
   });
 };
 

@@ -1,6 +1,7 @@
 import { formatNumber } from '@/shared/utils/formatUtils';
 import type { GovernmentPriceRow } from '../../api/decisionSummary';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 interface GovernmentPriceTableProps {
   rows: GovernmentPriceRow[];
@@ -13,8 +14,13 @@ interface GovernmentPriceTableProps {
  */
 const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTableProps) => {
   const { t } = useTranslation('appraisal');
-  const totalPrice = rows.reduce((sum, row) => sum + (row.governmentPrice ?? 0), 0);
+  const totalPrice = rows
+    .filter(row => !row.isMissingFromSurvey)
+    .reduce((sum, row) => sum + (row.governmentPrice ?? 0), 0);
   const isSingleDeed = rows.length === 1;
+  const isExceedDeed = rows.length > 5;
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const visibleRows = isExpanded ? rows : rows.slice(0, 5);
 
   return (
     <div className="overflow-x-auto border border-gray-200 rounded-sm">
@@ -36,7 +42,7 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {rows.map((row, idx) => (
+          {visibleRows.map((row, idx) => (
             <tr key={idx} className="hover:bg-gray-50">
               <td className="px-3 py-2 text-gray-900">
                 <span className="inline-flex items-center gap-2">
@@ -67,6 +73,19 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
               </td>
             </tr>
           ))}
+          {isExceedDeed && (
+            <tr>
+              <td colSpan={4} className="px-3 py-2 text-center">
+                <button
+                  type="button"
+                  className="text-primary-600 hover:underline cursor-pointer"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                >
+                  {isExpanded ? 'Show less' : `Show more (${rows.length - 5}) deeds`}
+                </button>
+              </td>
+            </tr>
+          )}
         </tbody>
         {!isSingleDeed && (
           <tfoot>
