@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DocumentActionMenu from './DocumentActionMenu';
 import DocumentEditModal from './DocumentEditModal';
+import MoveDocumentModal, { type MoveTargetSection } from './MoveDocumentModal';
 import AppointmentLetterButton from './AppointmentLetterButton';
 import { useDownloadDocument, useUploadDocument } from '../api';
 import { getDocumentCategory, type UploadedDocument } from '../types/document';
@@ -24,6 +26,7 @@ interface UploadedDocumentRowProps {
   onDelete: (document: UploadedDocument) => void;
   onEdit: (document: UploadedDocument) => void;
   onReplace: (document: UploadedDocument) => void;
+  onMove: (document: UploadedDocument) => void;
   onView: (document: UploadedDocument) => void;
   onUpload: (document: UploadedDocument) => void;
   readOnly?: boolean;
@@ -37,6 +40,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   onDelete,
   onEdit,
   onReplace,
+  onMove,
   onView,
   onUpload,
   readOnly,
@@ -80,6 +84,8 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
   const hasFile = !!document.fileName;
   const isEmpty = !hasFile;
   const isRequiredEmpty = isRequired && !hasFile;
+  const noteText = document.notes?.trim() || '';
+  const hasNotes = noteText.length > 0;
 
   return (
     <tr
@@ -192,6 +198,51 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
       <td className="px-4 py-3 w-44 text-sm text-gray-700">
         {isEmpty ? '-' : formatDate(document.uploadedAt)}
       </td>
+      <td className="px-4 py-3 w-16 text-center">
+        {hasNotes ? (
+          <Popover className="relative inline-block">
+            <PopoverButton
+              aria-label={t('documents.notesLabel')}
+              title={t('documents.notesLabel')}
+              className="inline-flex items-center justify-center text-amber-500 hover:text-amber-600 focus:outline-none cursor-pointer"
+            >
+              <Icon name="note-sticky" style="solid" className="w-4 h-4" />
+            </PopoverButton>
+            <PopoverPanel
+              anchor="bottom end"
+              className="w-64 max-w-xs bg-white rounded-lg border border-neutral-300 shadow-lg p-3 z-50"
+            >
+              {({ close }) => (
+                <>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-[11px] font-semibold text-gray-500 uppercase">
+                      {t('documents.notesLabel')}
+                    </p>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          close();
+                          onEdit(document);
+                        }}
+                        aria-label={t('documentActions.editDetails')}
+                        title={t('documentActions.editDetails')}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus:outline-none cursor-pointer"
+                      >
+                        <Icon name="pen-to-square" style="regular" className="w-3 h-3" />
+                        {t('documentActions.editDetails')}
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{noteText}</p>
+                </>
+              )}
+            </PopoverPanel>
+          </Popover>
+        ) : (
+          <span className="text-sm text-gray-300">-</span>
+        )}
+      </td>
       <td className="px-4 py-3 w-20 text-center">
         {isUploading ? (
           <span className="text-xs text-gray-500">{t('documents.processing')}</span>
@@ -210,6 +261,7 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
             onDelete={onDelete}
             onEdit={onEdit}
             onReplace={onReplace}
+            onMove={onMove}
           />
         )}
       </td>
@@ -242,6 +294,12 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   } | null>(null);
   const [replacingDocument, setReplacingDocument] = useState<{
     docType: string;
+    docKey: string;
+    entityType: 'request' | 'title';
+    entityIndex: number;
+  } | null>(null);
+  const [movingDocument, setMovingDocument] = useState<{
+    document: UploadedDocument;
     entityType: 'request' | 'title';
     entityIndex: number;
   } | null>(null);
@@ -290,15 +348,15 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     }
   };
 
-  // Helper to create unique document identifier (includes set for uniqueness)
+  // Stable per-document identity. Saved docs use id/documentId; locally-created docs may carry a
+  // rowId; placeholders (one per type) fall back to documentType. Lets same-type duplicates coexist.
+  const getDocKey = (doc: UploadedDocument): string =>
+    doc.rowId ?? doc.id ?? doc.documentId ?? doc.documentType ?? '';
+
+  // Helper to create unique document identifier (per section + per document)
   // Uses | as separator to avoid issues with negative entityIndex (-1)
-  const getDocumentId = (
-    entityType: 'request' | 'title',
-    entityIndex: number,
-    docType: string,
-    set: number,
-  ) => {
-    return `${entityType}|${entityIndex}|${docType}|${set}`;
+  const getDocumentId = (entityType: 'request' | 'title', entityIndex: number, docKey: string) => {
+    return `${entityType}|${entityIndex}|${docKey}`;
   };
 
   useEffect(() => {
@@ -424,10 +482,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
     const { document, entityType, entityIndex } = deleteConfirm;
     const isRequired = document.isRequired;
+    const targetKey = getDocKey(document);
 
-    // Helper to identify specific document by type AND set
-    const isTargetDoc = (doc: UploadedDocument) =>
-      doc.documentType === document.documentType && doc.set === document.set;
+    // Helper to identify the specific document row
+    const isTargetDoc = (doc: UploadedDocument) => getDocKey(doc) === targetKey;
 
     if (isRequired) {
       // For required documents: clear file but keep placeholder
@@ -471,13 +529,67 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     if (!editingDocument) return;
 
     const { entityType, entityIndex } = editingDocument;
+    const targetKey = getDocKey(editingDocument.document);
 
     updateDocument(entityType, entityIndex, updatedDocument.documentType || '', docs =>
-      docs.map(doc => (doc.documentType === updatedDocument.documentType ? updatedDocument : doc)),
+      docs.map(doc => (getDocKey(doc) === targetKey ? updatedDocument : doc)),
     );
 
     setEditingDocument(null);
     toast.success(t('toasts.documentDetailsUpdated'));
+  };
+
+  const handleMove = (
+    document: UploadedDocument,
+    entityType: 'request' | 'title',
+    entityIndex: number,
+  ) => {
+    setMovingDocument({ document, entityType, entityIndex });
+  };
+
+  const performMove = (target: MoveTargetSection) => {
+    if (!movingDocument) return;
+
+    const { document, entityType, entityIndex } = movingDocument;
+    const movingKey = getDocKey(document);
+
+    // Remove from the source section (required placeholders are re-added by the required-doc hooks)
+    updateDocument(entityType, entityIndex, document.documentType || '', docs =>
+      docs.filter(doc => getDocKey(doc) !== movingKey),
+    );
+
+    // Build the moved doc: new identity so the backend deletes the source row and inserts a new one
+    // in the target collection; storage documentId (the file) is preserved.
+    const movedDoc: UploadedDocument = {
+      ...document,
+      id: null,
+      rowId: crypto.randomUUID(),
+      titleId:
+        target.entityType === 'title'
+          ? (watch(`titles.${target.entityIndex}.id`) ?? null)
+          : null,
+    };
+
+    updateDocument(target.entityType, target.entityIndex, document.documentType || '', docs => {
+      // Fill an existing empty placeholder of the same type (e.g. a required slot) instead of
+      // leaving it behind as a duplicate "Awaiting upload" row. Append only if no empty slot exists.
+      const emptyIdx = docs.findIndex(
+        d => d.documentType === movedDoc.documentType && !d.fileName && !d.isUploading,
+      );
+      if (emptyIdx >= 0) {
+        const placeholder = docs[emptyIdx];
+        const filled: UploadedDocument = {
+          ...movedDoc,
+          isRequired: placeholder.isRequired,
+          displayName: placeholder.displayName ?? movedDoc.displayName,
+        };
+        return docs.map((d, i) => (i === emptyIdx ? filled : d));
+      }
+      return [...docs, movedDoc];
+    });
+
+    setMovingDocument(null);
+    toast.success(t('toasts.documentMoved'));
   };
 
   const handleReplace = (
@@ -487,6 +599,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   ) => {
     setReplacingDocument({
       docType: document.documentType || '',
+      docKey: getDocKey(document),
       entityType,
       entityIndex,
     });
@@ -497,10 +610,13 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     const file = e.target.files?.[0];
     if (!file || !replacingDocument) return;
 
-    const { docType, entityType, entityIndex } = replacingDocument;
+    const { docType, docKey, entityType, entityIndex } = replacingDocument;
 
-    // Get current document to preserve metadata
-    const currentDoc = getDocumentForSlot(entityType, entityIndex, docType);
+    // Get current document to preserve metadata (match the exact row by key)
+    const currentDoc =
+      (entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex)).find(
+        d => getDocKey(d) === docKey,
+      ) || null;
 
     // Create new document preserving metadata
     const tempDocument: UploadedDocument = {
@@ -511,8 +627,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       fileName: file.name,
       uploadedAt: new Date().toISOString(),
       prefix: currentDoc?.prefix || null,
-      set: currentDoc?.set || 1,
-      documentDescription: currentDoc?.documentDescription || null,
+      notes: currentDoc?.notes || null,
       filePath: currentDoc?.filePath || null,
       createdWorkstation: currentDoc?.createdWorkstation || null,
       isRequired: currentDoc?.isRequired || false,
@@ -521,11 +636,12 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       file,
       isUploading: true,
       displayName: currentDoc?.displayName,
+      rowId: currentDoc?.rowId,
     };
 
     // Update document with uploading state
     updateDocument(entityType, entityIndex, docType, docs =>
-      docs.map(doc => (doc.documentType === docType ? tempDocument : doc)),
+      docs.map(doc => (getDocKey(doc) === docKey ? tempDocument : doc)),
     );
 
     // Reset replace state early
@@ -547,7 +663,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         {
           onSuccess: uploadedDoc => {
             updateDocument(entityType, entityIndex, docType, docs => {
-              const doc = docs.find(d => d.documentType === docType);
+              const doc = docs.find(d => getDocKey(d) === docKey);
               if (doc) {
                 doc.documentId = uploadedDoc.documentId;
                 doc.filePath = null;
@@ -563,7 +679,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
             // Revert to an original document on error
             if (currentDoc) {
               updateDocument(entityType, entityIndex, docType, docs =>
-                docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
+                docs.map(doc => (getDocKey(doc) === docKey ? currentDoc : doc)),
               );
             }
 
@@ -575,7 +691,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       // Session creation failed - revert to original
       if (currentDoc) {
         updateDocument(entityType, entityIndex, docType, docs =>
-          docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
+          docs.map(doc => (getDocKey(doc) === docKey ? currentDoc : doc)),
         );
       }
       toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
@@ -613,8 +729,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       fileName: file.name,
       uploadedAt: new Date().toISOString(),
       prefix: currentDoc?.prefix || null,
-      set: currentDoc?.set || 1,
-      documentDescription: currentDoc?.documentDescription || null,
+      notes: currentDoc?.notes || null,
       filePath: null,
       createdWorkstation: null,
       isRequired: currentDoc?.isRequired || false,
@@ -711,11 +826,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   const handleSelectDocument = (
     entityType: 'request' | 'title',
     entityIndex: number,
-    docType: string,
-    set: number,
+    docKey: string,
     selected: boolean,
   ) => {
-    const docId = getDocumentId(entityType, entityIndex, docType, set);
+    const docId = getDocumentId(entityType, entityIndex, docKey);
     setSelectedDocuments(prev => {
       const newSet = new Set(prev);
       if (selected) {
@@ -736,7 +850,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         section.documents.forEach(doc => {
           if (!doc.isUploading && doc.documentType && doc.fileName) {
             allDocIds.add(
-              getDocumentId(section.entityType, section.entityIndex, doc.documentType, doc.set),
+              getDocumentId(section.entityType, section.entityIndex, getDocKey(doc)),
             );
           }
         });
@@ -758,20 +872,19 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     let clearedCount = 0;
 
     selectedDocuments.forEach(docId => {
-      const [entityType, entityIndexStr, docType, setStr] = docId.split('|');
+      const [entityType, entityIndexStr, docKey] = docId.split('|');
       const entityIndex = parseInt(entityIndexStr);
-      const set = parseInt(setStr);
 
       // Get the document to check if it's required
       const docs =
         entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex);
-      const targetDoc = docs.find(doc => doc.documentType === docType && doc.set === set);
+      const targetDoc = docs.find(doc => getDocKey(doc) === docKey);
 
       if (targetDoc?.isRequired) {
         // For required documents: clear file but keep placeholder
-        updateDocument(entityType as 'request' | 'title', entityIndex, docType, docs =>
+        updateDocument(entityType as 'request' | 'title', entityIndex, docKey, docs =>
           docs.map(doc =>
-            doc.documentType === docType && doc.set === set
+            getDocKey(doc) === docKey
               ? {
                   ...doc,
                   fileName: null,
@@ -788,8 +901,8 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         clearedCount++;
       } else {
         // For non-required documents: remove entire record
-        updateDocument(entityType as 'request' | 'title', entityIndex, docType, docs =>
-          docs.filter(doc => !(doc.documentType === docType && doc.set === set)),
+        updateDocument(entityType as 'request' | 'title', entityIndex, docKey, docs =>
+          docs.filter(doc => getDocKey(doc) !== docKey),
         );
         deletedCount++;
       }
@@ -817,7 +930,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     section.documents
       .map(doc =>
         !doc.isUploading && doc.documentType && doc.fileName
-          ? getDocumentId(section.entityType, section.entityIndex, doc.documentType, doc.set)
+          ? getDocumentId(section.entityType, section.entityIndex, getDocKey(doc))
           : null,
       )
       .filter(Boolean),
@@ -980,6 +1093,9 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-44">
                   {t('documents.columnUploadedAt')}
                 </th>
+                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-16">
+                  {t('documents.notesLabel')}
+                </th>
                 <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-20"></th>
               </tr>
             </thead>
@@ -1044,17 +1160,17 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                   {!isCollapsed &&
                     (section.documents.length > 0 ? (
                       section.documents.map(doc => {
+                        const docKey = getDocKey(doc);
                         const docId = getDocumentId(
                           section.entityType,
                           section.entityIndex,
-                          doc.documentType || '',
-                          doc.set,
+                          docKey,
                         );
                         const isSelected = selectedDocuments.has(docId);
 
                         return (
                           <UploadedDocumentRow
-                            key={`${section.entityType}.${section.entityIndex}.${doc.documentType}.${doc.set}`}
+                            key={`${section.entityType}.${section.entityIndex}.${docKey}`}
                             document={doc}
                             entityType={section.entityType}
                             entityIndex={section.entityIndex}
@@ -1063,8 +1179,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                               handleSelectDocument(
                                 section.entityType,
                                 section.entityIndex,
-                                doc.documentType || '',
-                                doc.set,
+                                docKey,
                                 selected,
                               )
                             }
@@ -1073,6 +1188,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                             onReplace={d =>
                               handleReplace(d, section.entityType, section.entityIndex)
                             }
+                            onMove={d => handleMove(d, section.entityType, section.entityIndex)}
                             onView={handleView}
                             onUpload={d =>
                               handleUploadToSlot(d, section.entityType, section.entityIndex)
@@ -1127,6 +1243,28 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           onClose={() => setEditingDocument(null)}
           document={editingDocument.document}
           onSave={handleSaveEdit}
+        />
+      )}
+
+      {/* Move document modal */}
+      {movingDocument && (
+        <MoveDocumentModal
+          isOpen={true}
+          onClose={() => setMovingDocument(null)}
+          targets={generateDocumentSections()
+            .filter(
+              s =>
+                !(
+                  s.entityType === movingDocument.entityType &&
+                  s.entityIndex === movingDocument.entityIndex
+                ),
+            )
+            .map(s => ({
+              entityType: s.entityType,
+              entityIndex: s.entityIndex,
+              label: s.entityType === 'request' ? t('moveDocument.requestLevelLabel') : s.entityKey,
+            }))}
+          onConfirm={performMove}
         />
       )}
 

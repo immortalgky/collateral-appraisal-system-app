@@ -17,7 +17,6 @@ import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { DetailPageSkeleton } from '@/shared/components/Skeleton';
 import AddressForm from '../forms/AddressForm';
-import RequestorDetailForm from '../forms/RequestorDetailForm';
 import { useRequestLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 import Button from '@/shared/components/Button';
 import RequestRightMenu, { type LocalComment } from '../components/RequestRightMenu';
@@ -679,7 +678,6 @@ function RequestPage() {
                         </div>
                       )}
                       <CustomersForm />
-                      <RequestorDetailForm onSearch={openUserModal} readOnly={readOnly} />
                       {/* In create mode, wrap with AppraisalCopyProvider so AppraisalSelector
                           can receive the full copy callback via context */}
                       {isEditMode ? (
@@ -802,14 +800,14 @@ function RequestPage() {
           )}
         </form>
 
-        {/* User Search Modal for Requestor */}
-        {!readOnly && (
-          <SearchUserModal
-            isOpen={isUserModalOpen}
-            onClose={closeUserModal}
-            onSelect={handleRequestorSelect}
-          />
-        )}
+        {/* Requestor detail + search modal (opened from the right-panel requestor badge) */}
+        <SearchUserModal
+          isOpen={isUserModalOpen}
+          onClose={closeUserModal}
+          onSelect={handleRequestorSelect}
+          initialRequestor={methods.watch('requestor')}
+          readOnly={readOnly}
+        />
       </FormProvider>
 
       <ConfirmDialog

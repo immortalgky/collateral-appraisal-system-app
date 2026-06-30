@@ -23,7 +23,6 @@ interface FileAssignment {
   entityType: 'request' | 'title';
   entityIndex: number;
   docType: string;
-  set: number;
   comment: string;
 }
 
@@ -37,49 +36,9 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
   const { watch } = useFormContext();
   const titles = watch('titles') || [];
   const requestNumber = watch('requestNumber');
-  const requestDocuments = watch('documents') || [];
   const { data: documentTypes = [], isLoading: isLoadingTypes } = useGetDocumentTypes();
 
   const [assignments, setAssignments] = useState<Record<string, Partial<FileAssignment>>>({});
-
-  // Get the next set number for a given entity and document type
-  const getNextSetNumber = (
-    entityType: 'request' | 'title',
-    entityIndex: number,
-    docType: string,
-  ): number => {
-    // Get existing documents from form
-    const existingDocs =
-      entityType === 'request' ? requestDocuments : titles[entityIndex]?.documents || [];
-
-    // Filter by document type that have files (exclude empty placeholders)
-    const sameTypeDocs = existingDocs.filter(
-      (doc: any) => doc.documentType === docType && doc.fileName,
-    );
-
-    // Check if there's an empty placeholder for this type (would be filled, so don't increment)
-    const hasEmptyPlaceholder = existingDocs.some(
-      (doc: any) => doc.documentType === docType && !doc.fileName,
-    );
-
-    // Also check current assignments in this modal (for multiple files of same type)
-    const currentAssignments = Object.values(assignments).filter(
-      a => a.entityType === entityType && a.entityIndex === entityIndex && a.docType === docType,
-    );
-
-    const existingMaxSet =
-      sameTypeDocs.length > 0 ? Math.max(...sameTypeDocs.map((doc: any) => doc.set || 1)) : 0;
-
-    const assignmentMaxSet =
-      currentAssignments.length > 0 ? Math.max(...currentAssignments.map(a => a.set || 1)) : 0;
-
-    // If there's an empty placeholder that will be filled, use set 1
-    if (hasEmptyPlaceholder && sameTypeDocs.length === 0 && currentAssignments.length === 0) {
-      return 1;
-    }
-
-    return Math.max(existingMaxSet, assignmentMaxSet) + 1;
-  };
 
   // Reset assignments when uploadedFiles changes
   useEffect(() => {
@@ -96,7 +55,6 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
             entityType: 'request' as const,
             entityIndex: -1,
             docType: '', // No default - user must select
-            set: 1,
             comment: '',
           },
         }),
@@ -132,8 +90,6 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
         assignment.docType.trim() !== '' &&
         assignment.entityType !== undefined &&
         assignment.entityIndex !== undefined &&
-        assignment.set &&
-        assignment.set > 0 &&
         assignment.file &&
         assignment.fileName &&
         assignment.uploadDate
@@ -208,22 +164,6 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                   {t('fileAssignment.columnDocumentType')}
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                  <div className="flex items-center gap-1">
-                    <span>{t('fileAssignment.columnSet')}</span>
-                    <div className="group relative">
-                      <Icon
-                        name="circle-question"
-                        style="regular"
-                        className="w-3.5 h-3.5 text-gray-400 cursor-help"
-                      />
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                        {t('fileAssignment.columnSetTooltip')}
-                        <div className="absolute left-1/2 -translate-x-1/2 top-full border-4 border-transparent border-t-gray-800" />
-                      </div>
-                    </div>
-                  </div>
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
                   {t('fileAssignment.columnNotes')}
                 </th>
               </tr>
@@ -265,9 +205,8 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                             updateAssignment(file.documentId, 'entityType', 'title');
                             updateAssignment(file.documentId, 'entityIndex', index);
                           }
-                          // Reset docType and set when entity changes
+                          // Reset docType when entity changes
                           updateAssignment(file.documentId, 'docType', '');
-                          updateAssignment(file.documentId, 'set', 1);
                         }}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
@@ -283,21 +222,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                       <select
                         value={assignment?.docType || ''}
                         onChange={e => {
-                          const newDocType = e.target.value;
-                          updateAssignment(file.documentId, 'docType', newDocType);
-                          // Auto-set the next set number
-                          if (
-                            newDocType &&
-                            assignment?.entityType !== undefined &&
-                            assignment?.entityIndex !== undefined
-                          ) {
-                            const nextSet = getNextSetNumber(
-                              assignment.entityType,
-                              assignment.entityIndex,
-                              newDocType,
-                            );
-                            updateAssignment(file.documentId, 'set', nextSet);
-                          }
+                          updateAssignment(file.documentId, 'docType', e.target.value);
                         }}
                         className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
@@ -312,17 +237,6 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                           </option>
                         ))}
                       </select>
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        min="1"
-                        value={assignment?.set || 1}
-                        onChange={e =>
-                          updateAssignment(file.documentId, 'set', parseInt(e.target.value) || 1)
-                        }
-                        className="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
                     </td>
                     <td className="px-4 py-3">
                       <input

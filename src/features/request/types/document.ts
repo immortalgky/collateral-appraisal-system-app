@@ -6,8 +6,7 @@ export interface UploadedDocument {
   fileName: string | null;
   uploadedAt: string;
   prefix: string | null;
-  set: number;
-  documentDescription: string | null;
+  notes: string | null;
   filePath: string | null;
   createdWorkstation: string | null;
   isRequired: boolean;
@@ -17,6 +16,8 @@ export interface UploadedDocument {
   file?: File;
   isUploading?: boolean;
   displayName?: string | null;
+  /** Local-only stable row identity (used for UI keying when duplicates of a type can coexist). */
+  rowId?: string;
 }
 
 export interface DocumentChecklistItem {
