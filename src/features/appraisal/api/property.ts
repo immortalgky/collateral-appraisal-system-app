@@ -15,15 +15,32 @@ import type {
   GetMachineryPropertyResponseType,
   UpdateBuildingPropertyRequestType,
   UpdateCondoPropertyRequestType,
+  UpdateCondoPMAPropertyRequestType,
   UpdateLandAndBuildingPropertyRequestType,
   UpdateLandPropertyRequestType,
+  UpdateLandPMAPropertyRequestType,
   UpdateMachineryPropertyRequestType,
+  GetLandPMAPropertyResponseType,
+  GetCondoPMAPropertyResponseType,
+  CreateCondoPMAPropertyRequestType,
+  CreateCondoPMAPropertyResponseType,
+  CreateLandPMAPropertyRequestType,
+  CreateLandPMAPropertyResponseType,
 } from '@shared/schemas/v1';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { isAxiosError } from 'axios';
 import { propertyGroupKeys } from './propertyGroup';
 import type { createMachineryFormType } from '../schemas/form';
+
+// ─── Query Keys ──────────────────────────────────────────────────
+
+export const pmaKeys = {
+  landAndBuilding: (appraisalId: string, propertyId: string) =>
+    ['appraisals', appraisalId, 'land-and-building-pma', propertyId] as const,
+  condo: (appraisalId: string, propertyId: string) =>
+    ['appraisals', appraisalId, 'condo-pma', propertyId] as const,
+};
 
 // ─── Create Hooks ────────────────────────────────────────────────
 
@@ -79,6 +96,48 @@ export const useCreateCondoProperty = () => {
       data: CreateCondoPropertyRequestType;
     }): Promise<CreateCondoPropertyResponseType> => {
       const url = `/appraisals/${params.appraisalId}/condo-properties${params.groupId ? `?groupId=${params.groupId}` : ''}`;
+      const { data } = await axios.post(url, params.data);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+export const useCreateCondoPMAProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: CreateCondoPMAPropertyRequestType;
+    }): Promise<CreateCondoPMAPropertyResponseType> => {
+      const url = `/appraisals/${params.appraisalId}/condo-pma${params.groupId ? `?groupId=${params.groupId}` : ''}`;
+      const { data } = await axios.post(url, params.data);
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
+export const useCreateLandAndBuildingPMAProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      groupId?: string;
+      data: CreateLandPMAPropertyRequestType;
+    }): Promise<CreateLandPMAPropertyResponseType> => {
+      const url = `/appraisals/${params.appraisalId}/land-pma${params.groupId ? `?groupId=${params.groupId}` : ''}`;
       const { data } = await axios.post(url, params.data);
       return data;
     },
@@ -175,6 +234,40 @@ export const useGetCondoPropertyById = (appraisalId: string, propertyId?: string
     queryFn: async (): Promise<GetCondoPropertyResponseType> => {
       const { data } = await axios.get(
         `/appraisals/${appraisalId}/properties/${propertyId}/condo-detail`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetLandAndBuildingPMAPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: pmaKeys.landAndBuilding(appraisalId, propertyId!),
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetLandPMAPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/land-pma`,
+      );
+      return data;
+    },
+    retry: (failureCount, error) => {
+      if (isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
+  });
+};
+
+export const useGetCondoPMAPropertyById = (appraisalId: string, propertyId?: string) => {
+  return useQuery({
+    queryKey: pmaKeys.condo(appraisalId, propertyId!),
+    enabled: !!appraisalId && !!propertyId,
+    queryFn: async (): Promise<GetCondoPMAPropertyResponseType> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/properties/${propertyId}/condo-pma`,
       );
       return data;
     },
@@ -388,6 +481,56 @@ export const useUpdateCondoProperty = () => {
       });
       queryClient.invalidateQueries({
         queryKey: ['appraisals', variables.appraisalId, 'condo-properties', variables.propertyId],
+      });
+    },
+  });
+};
+
+export const useUpdateCondoPMAProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateCondoPMAPropertyRequestType;
+    }): Promise<void> => {
+      await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/condo-pma`,
+        params.data,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pmaKeys.condo(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+    },
+  });
+};
+
+export const useUpdateLandAndBuildingPMAProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateLandPMAPropertyRequestType;
+    }): Promise<void> => {
+      await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/land-pma`,
+        params.data,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pmaKeys.landAndBuilding(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
       });
     },
   });

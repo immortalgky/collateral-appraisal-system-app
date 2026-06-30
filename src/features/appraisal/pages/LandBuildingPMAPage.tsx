@@ -5,11 +5,18 @@ import {
   type createLandAndBuildingPMAFormType,
 } from '../schemas/form';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
-//import { useGetLandAndBuildingPMAPropertyById, useUpdateLandAndBuildingPMAProperty } from '../api';
-import { useEffect, useState } from 'react';
-import { mapLandAndBuildingPMAPropertyResponseToForm } from '../utils/mappers';
+import {
+  useCreateLandAndBuildingPMAProperty,
+  useGetLandAndBuildingPMAPropertyById,
+  useUpdateLandAndBuildingPMAProperty,
+} from '../api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  mapLandAndBuildingPMAFormToPayload,
+  mapLandAndBuildingPMAPropertyResponseToForm,
+} from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { FormProvider } from '@/shared/components/form';
@@ -25,6 +32,8 @@ const LandBuildingPMAPage = () => {
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useAppraisalId();
   const landAndBuildingPMAFormSchema = useLandAndBuildingPMAFormSchema();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId') ?? undefined;
 
   const methods = useForm<createLandAndBuildingPMAFormType>({
     defaultValues: createLandAndBuildingPMAFormDefault,
@@ -41,27 +50,46 @@ const LandBuildingPMAPage = () => {
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
-  //const { mutate, isPending } = useUpdateLandAndBuildingPMAProperty();
+  const { mutate: updateLandPMAProperties, isPending: isUpdating } =
+    useUpdateLandAndBuildingPMAProperty();
 
-  // const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
-  //   appraisalId,
-  //   propertyId,
-  // );
+  const { mutate: createLandPMAProperties, isPending: isCreating } =
+    useCreateLandAndBuildingPMAProperty();
 
-  const propertyData = undefined; // TODO: replace with useGetLandAndBuildingPMAPropertyById(appraisalId, propertyId)
-  const isLoading = false;
-  const isPending = false;
+  const isPending = isCreating || isUpdating;
+
+  const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
+    appraisalId,
+    propertyId,
+  );
 
   const onSubmit: SubmitHandler<createLandAndBuildingPMAFormType> = data => {
     setSaveAction('submit');
-
-    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    const payload = mapLandAndBuildingPMAFormToPayload(data);
+    if (propertyId) {
+      updateLandPMAProperties({ ...payload, appraisalId, propertyId } as any, {
+        onSuccess: () => reset(data),
+      });
+    } else {
+      createLandPMAProperties({ ...payload, appraisalId, groupId } as any, {
+        onSuccess: () => reset(data),
+      });
+    }
   };
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    const payload = mapLandAndBuildingPMAFormToPayload(data);
+    if (propertyId) {
+      updateLandPMAProperties({ ...payload, appraisalId, propertyId } as any, {
+        onSuccess: () => reset(data),
+      });
+    } else {
+      createLandPMAProperties({ ...payload, appraisalId, groupId } as any, {
+        onSuccess: () => reset(data),
+      });
+    }
   };
 
   const { isOpen, onToggle } = useDisclosure();
