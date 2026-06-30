@@ -23,6 +23,7 @@ import {
   inForestBoundaryFormFields,
   remarkFormFields,
 } from '../configs/fields';
+import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -73,14 +74,20 @@ function CondoDetailForm() {
     [],
   );
 
+  const fillIcon = useMemo(() => <PropertyNameTriggerIcon propertyType="U" />, []);
+
   const fields = useMemo<FormField[]>(
     () =>
-      condoFields.map(field =>
-        (field.name === 'latitude' || field.name === 'longitude') && field.type === 'number-input'
-          ? { ...field, rightIcon: pickerButton }
-          : field,
-      ),
-    [pickerButton],
+      condoFields.map(field => {
+        if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
+        if (
+          (field.name === 'latitude' || field.name === 'longitude') &&
+          field.type === 'number-input'
+        )
+          return { ...field, rightIcon: pickerButton };
+        return field;
+      }),
+    [pickerButton, fillIcon],
   );
 
   return (

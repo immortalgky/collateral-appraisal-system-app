@@ -1,7 +1,8 @@
-import { FormFields } from '@/shared/components/form';
+import { FormFields, type FormField } from '@/shared/components/form';
 import { machineInfoFields } from '../configs/fields';
 import { Icon } from '@/shared/components';
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
+import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
 
 interface SectionRowProps {
   title: string;
@@ -30,10 +31,20 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
 );
 
 const MachineryDetailForm = () => {
+  const fillIcon = useMemo(() => <PropertyNameTriggerIcon propertyType="MAC" />, []);
+
+  const machineFields = useMemo<FormField[]>(
+    () =>
+      machineInfoFields.map(field =>
+        field.name === 'propertyName' && fillIcon ? { ...field, rightIcon: fillIcon } : field,
+      ),
+    [fillIcon],
+  );
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
       <SectionRow title="Machinery Information" icon="building">
-        <FormFields fields={machineInfoFields} />
+        <FormFields fields={machineFields} />
       </SectionRow>
     </div>
   );
