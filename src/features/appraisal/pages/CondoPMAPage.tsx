@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   useCondoPMAFormSchema,
@@ -7,7 +7,7 @@ import {
 } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 //import { useGetCondoPMAPropertyById, useUpdateCondoPMAProperty } from '../api';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
@@ -19,12 +19,19 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import RightMenuPortal from '@/shared/components/RightMenuPortal';
 import CondoPMAForm from '../forms/CondoPMAForm';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import {
+  useCreateCondoPMAProperty,
+  useGetCondoPMAPropertyById,
+  useUpdateCondoPMAProperty,
+} from '../api';
 
 const CondoPMAPage = () => {
   const isReadOnly = usePageReadOnly();
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useAppraisalId();
   const condoPMAFormSchema = useCondoPMAFormSchema();
+  const [searchParams] = useSearchParams();
+  const groupId = searchParams.get('groupId') ?? undefined;
 
   const methods = useForm<createCondoPMAFormType>({
     defaultValues: createCondoPMAFormDefault,
@@ -41,24 +48,41 @@ const CondoPMAPage = () => {
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
-  //const { mutate, isPending } = useUpdateCondoPMAProperty();
+  const { mutate: updateCondoPMAProperties, isPending: isCreating } = useUpdateCondoPMAProperty();
+  const { mutate: createCondoPMAProperties, isPending: isUpdating } = useCreateCondoPMAProperty();
+  const isPending = isCreating || isUpdating;
 
-  //const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
-
-  const propertyData = undefined; // TODO: replace with useGetCondoPMAPropertyById(appraisalId, propertyId)
-  const isLoading = false;
-  const isPending = false;
+  const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
 
   const onSubmit: SubmitHandler<createCondoPMAFormType> = data => {
     setSaveAction('submit');
-
-    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    if (propertyId) {
+      updateCondoPMAProperties(
+        { data, appraisalId: appraisalId!, propertyId: propertyId },
+        { onSuccess: () => reset(data) },
+      );
+    } else {
+      createCondoPMAProperties(
+        { data, appraisalId: appraisalId!, groupId: groupId },
+        { onSuccess: () => reset(data) },
+      );
+    }
   };
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    //mutate({ ...data, apprId: appraisalId, propertyId: propertyId } as any);
+    if (propertyId) {
+      updateCondoPMAProperties(
+        { data, appraisalId: appraisalId!, propertyId: propertyId },
+        { onSuccess: () => reset(data) },
+      );
+    } else {
+      createCondoPMAProperties(
+        { data, appraisalId: appraisalId!, groupId: groupId },
+        { onSuccess: () => reset(data) },
+      );
+    }
   };
 
   const { isOpen, onToggle } = useDisclosure();
