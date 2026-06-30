@@ -353,6 +353,12 @@ function RequestPage() {
     setIsDuplicateDialogOpen(true);
   };
 
+  const defaultProperties = (properties: createRequestFormType['properties']) =>
+    properties.map(p => ({
+      ...p,
+      sellingPrice: p.sellingPrice === '' || p.sellingPrice == null ? null : Number(p.sellingPrice),
+    }));
+
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
     setSaveAction('save');
 
@@ -368,6 +374,7 @@ function RequestPage() {
           request: {
             ...restData,
             requestorEmployeeId,
+            properties: defaultProperties(data.properties),
           } as any,
         },
         {
@@ -397,6 +404,7 @@ function RequestPage() {
         {
           ...restData,
           requestorEmployeeId,
+          properties: defaultProperties(data.properties),
           sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
         } as CreateRequestRequestType,
@@ -434,6 +442,7 @@ function RequestPage() {
           request: {
             ...restData,
             requestorEmployeeId,
+            properties: defaultProperties(data.properties),
           } as any,
         },
         {
@@ -462,6 +471,7 @@ function RequestPage() {
         {
           ...restData,
           requestorEmployeeId,
+          properties: defaultProperties(data.properties),
           sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
         } as CreateDraftRequestRequestType,
@@ -524,6 +534,7 @@ function RequestPage() {
               request: {
                 ...restData,
                 requestorEmployeeId,
+                properties: defaultProperties(data.properties),
               } as any,
             },
             {
@@ -550,6 +561,7 @@ function RequestPage() {
             {
               ...restData,
               requestorEmployeeId,
+              properties: defaultProperties(data.properties),
               sessionId: uploadSessionIdRef.current,
               comments: commentsForApi,
             } as CreateRequestRequestType,
