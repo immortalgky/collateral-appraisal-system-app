@@ -1147,6 +1147,7 @@
     "missingFromSurvey": "ไม่พบในรังวัด"
   },
   "constructionSummaryTable": {
+    "villageLabel": "ชื่ออาคาร / โครงการ",
     "columns": {
       "milestone": "ช่วงการก่อสร้าง",
       "totalAppraisalValue": "มูลค่าประเมินรวม",

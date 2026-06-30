@@ -913,7 +913,10 @@ const DecisionSummaryPage = () => {
                   iconColor="yellow"
                   title={t('decisionSummaryPageExtra.constructionSummaryTitle')}
                 >
-                  <ConstructionSummaryTable rows={data.constructionSummary.rows} />
+                  <ConstructionSummaryTable
+                    village={data.constructionSummary.village}
+                    rows={data.constructionSummary.rows}
+                  />
                 </GroupCard>
               )}
 
