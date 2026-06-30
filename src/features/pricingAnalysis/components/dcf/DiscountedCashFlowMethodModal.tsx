@@ -6,6 +6,8 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import { methodParams } from '../../data/dcfParameters';
 import { useGetPricingParameters } from '../../api';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AssumptionEditDraftSchema } from '../../schemas/dcfMethodModalSchema';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
 import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { createDefaultMethod } from '../../domain/dcf/createEmptyMethodDetail';
@@ -53,6 +55,7 @@ export function DiscountedCashFlowMethodModal({
 }: DiscountedCashFlowMethodModalProps) {
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
+    resolver: zodResolver(AssumptionEditDraftSchema),
   });
 
   const { handleSubmit, reset, getValues, control, register, setValue } = methods;

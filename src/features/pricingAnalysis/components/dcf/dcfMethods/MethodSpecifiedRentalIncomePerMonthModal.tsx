@@ -2,7 +2,7 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 
@@ -16,7 +16,10 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
   isReadOnly,
   getOuterFormValues,
 }: MethodSpecifiedRentalIncomePerMonthModalProps) {
-  const { getValues } = useFormContext();
+  const {
+    getValues,
+    formState: { errors },
+  } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -98,8 +101,11 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
   }, [fields.length]);
   useDerivedFields({ rules });
 
+  const rowsError = (errors as any)?.method?.detail?.roomDetails?.message as string | undefined;
+
   return (
     <div className="flex flex-col gap-2">
+      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
           <table className={'table table-sm'}>

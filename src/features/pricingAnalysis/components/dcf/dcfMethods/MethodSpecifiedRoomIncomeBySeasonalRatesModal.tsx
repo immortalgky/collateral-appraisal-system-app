@@ -102,7 +102,12 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
   isReadOnly?: boolean;
   getOuterFormValues: UseFormGetValues<any>;
 }) {
-  const { control, getValues, setValue } = useFormContext();
+  const {
+    control,
+    getValues,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
 
   const { fields, append, remove, replace } = useFieldArray({
     control,
@@ -183,8 +188,11 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
   console.log(seasonCount);
 
+  const rowsError = (errors as any)?.method?.detail?.roomDetails?.message as string | undefined;
+
   return (
     <div className="flex flex-col gap-1.5">
+      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
       <div className="flex items-center gap-3">
         <div className="w-56">
           <span>Number of seasons</span>
