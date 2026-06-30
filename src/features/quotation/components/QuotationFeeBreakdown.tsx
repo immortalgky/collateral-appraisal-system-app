@@ -106,6 +106,7 @@ const QuotationFeeBreakdown = ({
               id={`fee-amount-${index}`}
               aria-label={t('columns.feeAmount')}
               disabled={readOnly}
+              maxIntegerDigits={15}
               decimalPlaces={2}
               min={0}
             />
@@ -127,6 +128,8 @@ const QuotationFeeBreakdown = ({
               id={`discount-${index}`}
               aria-label={t('columns.discount')}
               disabled={readOnly}
+              max={feeAmount}
+              maxIntegerDigits={15}
               decimalPlaces={2}
               min={0}
             />
@@ -149,6 +152,7 @@ const QuotationFeeBreakdown = ({
               aria-label={t('columns.discountNegotiate')}
               disabled={!isNegotiating}
               title={!isNegotiating ? 'Only editable during a negotiation round' : undefined}
+              maxIntegerDigits={15}
               decimalPlaces={2}
               min={0}
             />

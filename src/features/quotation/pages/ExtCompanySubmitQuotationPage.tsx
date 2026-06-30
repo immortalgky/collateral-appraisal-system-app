@@ -982,7 +982,7 @@ const ExtCompanySubmitQuotationPage = () => {
                                 disabled={!canEdit || isNegotiatingLock}
                                 decimalPlaces={0}
                                 thousandSeparator={false}
-                                maxIntegerDigits={3}
+                                maxIntegerDigits={2}
                                 min={1}
                                 error={errors.items?.[selectedIndex]?.estimatedDays?.message}
                               />
