@@ -12,7 +12,7 @@ import {
   useGetLandAndBuildingPMAPropertyById,
   useUpdateLandAndBuildingPMAProperty,
 } from '../api';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   mapLandAndBuildingPMAFormToPayload,
   mapLandAndBuildingPMAPropertyResponseToForm,
@@ -67,13 +67,19 @@ const LandBuildingPMAPage = () => {
     setSaveAction('submit');
     const payload = mapLandAndBuildingPMAFormToPayload(data);
     if (propertyId) {
-      updateLandPMAProperties({ ...payload, appraisalId, propertyId } as any, {
-        onSuccess: () => reset(data),
-      });
+      updateLandPMAProperties(
+        { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
+        {
+          onSuccess: () => reset(data),
+        },
+      );
     } else {
-      createLandPMAProperties({ ...payload, appraisalId, groupId } as any, {
-        onSuccess: () => reset(data),
-      });
+      createLandPMAProperties(
+        { data: payload, appraisalId: appraisalId!, groupId: groupId },
+        {
+          onSuccess: () => reset(data),
+        },
+      );
     }
   };
 
@@ -82,13 +88,19 @@ const LandBuildingPMAPage = () => {
     const data = getValues();
     const payload = mapLandAndBuildingPMAFormToPayload(data);
     if (propertyId) {
-      updateLandPMAProperties({ ...payload, appraisalId, propertyId } as any, {
-        onSuccess: () => reset(data),
-      });
+      updateLandPMAProperties(
+        { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
+        {
+          onSuccess: () => reset(data),
+        },
+      );
     } else {
-      createLandPMAProperties({ ...payload, appraisalId, groupId } as any, {
-        onSuccess: () => reset(data),
-      });
+      createLandPMAProperties(
+        { data: payload, appraisalId: appraisalId!, groupId: groupId },
+        {
+          onSuccess: () => reset(data),
+        },
+      );
     }
   };
 
