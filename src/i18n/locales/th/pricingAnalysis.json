@@ -348,6 +348,8 @@
     "depreciationRateRequired": "กรุณาระบุอัตราค่าเสื่อมราคา",
     "factorCodeRequired": "กรุณาระบุรหัสปัจจัย",
     "weightRequired": "กรุณาระบุน้ำหนัก",
+    "weightMax": "น้ำหนักต้องไม่เกิน 1.0",
+    "weightTotalExceeds": "น้ำหนักรวมทุกแถวต้องไม่เกิน 1.0",
     "intensityRequired": "กรุณาระบุความเข้ม",
     "collateralScoreRequired": "กรุณาระบุคะแนนหลักประกัน",
     "surveyScoreRequired": "กรุณาระบุคะแนนของการสำรวจที่ {{n}}",
