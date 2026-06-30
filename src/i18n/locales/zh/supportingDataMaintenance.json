@@ -9,8 +9,8 @@
     "archived": "Archived"
   },
   "columns": {
-    "supportingNumber": "Supporting No.",
-    "createdDate": "Created Date",
+    "supportingNumber": "External Running No.",
+    "createdDate": "Creation Date",
     "importChannel": "Import Channel",
     "sourceOfData": "Source of Data",
     "lastModifiedBy": "Last Modified By",
@@ -19,9 +19,9 @@
     "status": "Status",
     "no": "No.",
     "propertyName": "Property Name",
-    "type": "Type",
+    "type": "Collateral Type",
     "address": "Address",
-    "coordinates": "Coordinates"
+    "coordinates": "Latitude – Longitude"
   },
   "filterLabels": {
     "supportingNumber": "Supporting No.",
@@ -42,7 +42,8 @@
     "addItem": "Add Item",
     "saveDraft": "Save draft",
     "submit": "Submit",
-    "save": "Save"
+    "save": "Save",
+    "edit": "Edit"
   },
   "search": {
     "placeholder": "Search supporting data..."
@@ -86,7 +87,7 @@
     "importDate": "Import Date",
     "sourceOfData": "Source of Data",
     "appraisalCompany": "Appraisal Company",
-    "description": "Description",
+    "description": "Detail",
     "decision": "Decision",
     "remark": "Remark",
     "propertyName": "Property Name",

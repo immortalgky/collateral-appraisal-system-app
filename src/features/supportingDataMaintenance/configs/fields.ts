@@ -139,7 +139,7 @@ export const getLocationDetailFields = (t: T): FormField[] => [
     label: t('fields.houseNo'),
     name: 'houseNo',
     wrapperClassName: 'col-span-3',
-    maxLength: 30100,
+    maxLength: 17,
   },
   {
     type: 'location-selector',
@@ -251,7 +251,7 @@ export const getContactInformationFields = (t: T): FormField[] => [
     label: t('fields.phoneNo'),
     name: 'phoneNo',
     wrapperClassName: 'col-span-3',
-    maxLength: 40,
+    maxLength: 20,
   },
 ];
 

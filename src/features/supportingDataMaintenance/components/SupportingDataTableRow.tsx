@@ -8,6 +8,7 @@ interface SupportingDataTableRowProps {
   index: number;
   data: any;
   isReadOnly: boolean;
+  hasAuthorityToDecision: boolean;
   onEdit: (index: number) => void;
   onDelete: (index: number) => void;
   isBatchMode?: boolean;
@@ -19,6 +20,7 @@ export const SupportingDataTableRow = ({
   index,
   data,
   isReadOnly,
+  hasAuthorityToDecision,
   onEdit,
   onDelete,
   isBatchMode = false,
@@ -137,8 +139,13 @@ export const SupportingDataTableRow = ({
                         focus ? 'bg-gray-50' : ''
                       } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
                     >
-                      <Icon name="pen-to-square" className="text-xs text-gray-400" />
-                      {t('common:actions.edit')}
+                      <Icon
+                        name={
+                          hasAuthorityToDecision ? 'arrow-up-right-from-square' : 'pen-to-square'
+                        }
+                        className="text-xs text-gray-400"
+                      />
+                      {hasAuthorityToDecision ? t('actions.open') : t('actions.edit')}
                     </button>
                   )}
                 </MenuItem>
