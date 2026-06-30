@@ -18,8 +18,7 @@ const createPlaceholder = (
   fileName: null,
   uploadedAt: new Date().toISOString(),
   prefix: null,
-  set: 1,
-  documentDescription: null,
+  notes: null,
   filePath: null,
   createdWorkstation: null,
   isRequired,
@@ -71,27 +70,12 @@ export const useRequestLevelRequiredDocuments = () => {
       createPlaceholder(d.documentType, d.displayName, d.isRequired),
     );
 
-    // Find the minimum set number for each required document type
-    const minSetByType: Record<string, number> = {};
-    docsToKeep.forEach(doc => {
-      if (doc.documentType && requiredTypes.has(doc.documentType)) {
-        const currentMin = minSetByType[doc.documentType];
-        const docSet = doc.set ?? 1;
-        if (currentMin === undefined || docSet < currentMin) {
-          minSetByType[doc.documentType] = docSet;
-        }
-      }
-    });
-
     // Update isRequired flag and displayName from API data
     const updatedDocs = docsToKeep.map(doc => {
       const docType = doc.documentType || '';
-      const isRequiredType = requiredTypes.has(docType);
-      const docSet = doc.set ?? 1;
-      const isMinSet = minSetByType[docType] === docSet;
       return {
         ...doc,
-        isRequired: isRequiredType && isMinSet,
+        isRequired: requiredTypes.has(docType),
         displayName: doc.displayName || displayNameMap.get(docType) || null,
       };
     });
@@ -99,13 +83,12 @@ export const useRequestLevelRequiredDocuments = () => {
     // Combine: existing docs (with updated flags) + new placeholders
     const finalDocs = [...updatedDocs, ...newPlaceholders];
 
-    // Sort by: 1) isRequired (required first), 2) documentType, 3) set number
+    // Sort by: 1) isRequired (required first), 2) documentType
     finalDocs.sort((a, b) => {
       if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
       const typeA = a.documentType || '';
       const typeB = b.documentType || '';
-      if (typeA !== typeB) return typeA.localeCompare(typeB);
-      return (a.set ?? 1) - (b.set ?? 1);
+      return typeA.localeCompare(typeB);
     });
 
     setValue('documents', finalDocs, { shouldDirty: false });
@@ -161,27 +144,12 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
       createPlaceholder(d.documentType, d.displayName, d.isRequired),
     );
 
-    // Find the minimum set number for each required document type
-    const minSetByType: Record<string, number> = {};
-    docsToKeep.forEach(doc => {
-      if (doc.documentType && requiredTypes.has(doc.documentType)) {
-        const currentMin = minSetByType[doc.documentType];
-        const docSet = doc.set ?? 1;
-        if (currentMin === undefined || docSet < currentMin) {
-          minSetByType[doc.documentType] = docSet;
-        }
-      }
-    });
-
     // Update isRequired flag and displayName from API data
     const updatedDocs = docsToKeep.map(doc => {
       const docType = doc.documentType || '';
-      const isRequiredType = requiredTypes.has(docType);
-      const docSet = doc.set ?? 1;
-      const isMinSet = minSetByType[docType] === docSet;
       return {
         ...doc,
-        isRequired: isRequiredType && isMinSet,
+        isRequired: requiredTypes.has(docType),
         displayName: doc.displayName || displayNameMap.get(docType) || null,
       };
     });
@@ -189,13 +157,12 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
     // Combine: existing docs (with updated flags) + new placeholders
     const finalDocs = [...updatedDocs, ...newPlaceholders];
 
-    // Sort by: 1) isRequired (required first), 2) documentType, 3) set number
+    // Sort by: 1) isRequired (required first), 2) documentType
     finalDocs.sort((a, b) => {
       if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
       const typeA = a.documentType || '';
       const typeB = b.documentType || '';
-      if (typeA !== typeB) return typeA.localeCompare(typeB);
-      return (a.set ?? 1) - (b.set ?? 1);
+      return typeA.localeCompare(typeB);
     });
 
     setValue(`titles.${titleIndex}.documents`, finalDocs, { shouldDirty: false });

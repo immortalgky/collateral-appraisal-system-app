@@ -9,6 +9,7 @@ interface DocumentActionMenuProps {
   onDelete?: (document: UploadedDocument) => void;
   onEdit?: (document: UploadedDocument) => void;
   onReplace?: (document: UploadedDocument) => void;
+  onMove?: (document: UploadedDocument) => void;
 }
 
 const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
@@ -17,6 +18,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
   onDelete,
   onEdit,
   onReplace,
+  onMove,
 }) => {
   const { t } = useTranslation('request');
 
@@ -57,6 +59,22 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               >
                 <Icon name="pen-to-square" style="regular" className="w-4 h-4" />
                 {t('documentActions.editDetails')}
+              </button>
+            )}
+          </MenuItem>
+        )}
+
+        {onMove && (
+          <MenuItem>
+            {({ focus }) => (
+              <button
+                onClick={() => onMove(document)}
+                className={`${
+                  focus ? 'bg-primary-100' : ''
+                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
+              >
+                <Icon name="file-export" style="regular" className="w-4 h-4" />
+                {t('documentActions.moveTo')}
               </button>
             )}
           </MenuItem>
