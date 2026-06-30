@@ -1714,6 +1714,19 @@ export const contactFields: FormField[] = [
   },
 ];
 
+// =============================================================================
+// Requestor fields
+// =============================================================================
+
+/**
+ * Static fields for schema building (relative names — prefix with 'requestor' via prefixFields).
+ * employeeId is the identifier (bank code e.g. "P5229") and must be non-empty after a
+ * requestor is picked. Display-only fields remain nullish in the base schema and are not listed.
+ */
+export const requestorSchemaFields: FormField[] = [
+  { type: 'text-input', label: _st('Employee ID'), name: 'employeeId', required: true },
+];
+
 export const requestFields: FormField[] = [
   {
     type: 'dropdown',
@@ -1920,6 +1933,7 @@ export const propertiesFieldConfig: FieldArrayField = {
 
 export const allRequestFields: FormField[] = [
   ...requestFields,
+  ...prefixFields(requestorSchemaFields, 'requestor'),
   ...prefixFields(addressFields, 'detail.address'),
   ...prefixFields(contactFields, 'detail.contact'),
   ...appointmentAndFeeFields,

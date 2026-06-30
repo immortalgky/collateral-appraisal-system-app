@@ -21,6 +21,7 @@ function buildParams(filter: BaseReportFilter): Record<string, string | number |
 
   if (filter.sortBy) params.sortBy = filter.sortBy;
   if (filter.sortDir) params.sortDir = filter.sortDir;
+  if (filter.appraisalNumber) params.appraisalNumber = filter.appraisalNumber;
   if (filter.createdFrom) params.createdFrom = filter.createdFrom;
   if (filter.createdTo) params.createdTo = filter.createdTo;
   if (filter.approvedFrom) params.approvedFrom = filter.approvedFrom;
@@ -92,6 +93,7 @@ export function useReportExport(slug: string, filter: BaseReportFilter = {}): Us
         const exportParams: Record<string, string | number | undefined> = { format };
         if (filter.sortBy) exportParams.sortBy = filter.sortBy;
         if (filter.sortDir) exportParams.sortDir = filter.sortDir;
+        if (filter.appraisalNumber) exportParams.appraisalNumber = filter.appraisalNumber;
         if (filter.createdFrom) exportParams.createdFrom = filter.createdFrom;
         if (filter.createdTo) exportParams.createdTo = filter.createdTo;
         if (filter.approvedFrom) exportParams.approvedFrom = filter.approvedFrom;

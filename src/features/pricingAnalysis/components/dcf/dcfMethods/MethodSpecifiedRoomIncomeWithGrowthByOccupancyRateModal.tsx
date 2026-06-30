@@ -1,3 +1,4 @@
+import type { UseFormGetValues } from 'react-hook-form';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModalProps {
@@ -19,6 +20,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             fieldName={`${name}.saleableArea`}
             inputType={'number'}
             disabled={isReadOnly}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
           />
         </div>
       </div>
@@ -29,11 +31,17 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             fieldName={`${name}.totalNumberOfSaleableArea`}
             inputType={'number'}
             disabled={isReadOnly}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
           />
         </div>
         <span>Remark</span>
         <div className={'w-56'}>
-          <RHFInputCell fieldName={`${name}.remark`} inputType={'text'} disabled={isReadOnly} />
+          <RHFInputCell
+            fieldName={`${name}.remark`}
+            inputType={'text'}
+            disabled={isReadOnly}
+            text={{ maxLength: 4000 }}
+          />
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
@@ -43,6 +51,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             fieldName={`${name}.firstYearAmt`}
             inputType={'number'}
             disabled={isReadOnly}
+            number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
           />
         </div>
         <span className={''}>Bath/ Year</span>
@@ -75,6 +84,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             fieldName={`${name}.occupancyRateFirstYearPct`}
             inputType={'number'}
             disabled={isReadOnly}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>
         <span className={''}>% with growth</span>

@@ -620,6 +620,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               <SupportingDataTable
                 supportingId={supportingId}
                 isReadOnly={!hasAuthorityToEdit}
+                hasAuthorityToDecision={hasAuthorityToDecision}
                 onSelectSupportingData={handleSelectSupportingData}
                 onDeleteSupportingData={handleDeleteSupportingData}
                 isBatchMode={isBatchDeleteMode}

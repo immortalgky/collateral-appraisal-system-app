@@ -149,9 +149,9 @@ interface FinalValueBlock {
   includeLandArea: boolean;
   landArea: number | null;
   landValue: number | null;
-  buildingCost: number | null;
+  buildingValue: number | null;
   appraisalPrice: number | null;
-  hasBuildingCost: boolean;
+  hasBuildingValue: boolean;
 }
 
 /** Method types that use the /comparative-factors endpoint. */
@@ -733,13 +733,13 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
               )}
             </>
           )}
-          {data.finalValue.hasBuildingCost && (
+          {data.finalValue.hasBuildingValue && (
             <>
-              {data.finalValue.buildingCost != null && (
+              {data.finalValue.buildingValue != null && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">Building Cost</span>
                   <span className="text-xs font-medium text-gray-800">
-                    {formatNumber(data.finalValue.buildingCost, 2)}
+                    {formatNumber(data.finalValue.buildingValue, 2)}
                   </span>
                 </div>
               )}

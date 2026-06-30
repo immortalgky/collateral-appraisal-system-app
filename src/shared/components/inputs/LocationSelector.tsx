@@ -99,11 +99,11 @@ const LocationSelector = ({
   const handleAddressSelect = (address: ThaiAddress | null) => {
     setSelectedAddress(address);
     if (address) {
-      // Store codes
-      setValue(name, address.subDistrictCode, { shouldDirty: true });
-      setValue(districtField, address.districtCode, { shouldDirty: true });
-      setValue(provinceField, address.provinceCode, { shouldDirty: true });
-      setValue(postcodeField, address.postcode, { shouldDirty: true });
+      // Store codes (shouldValidate clears any stale "required" error)
+      setValue(name, address.subDistrictCode, { shouldDirty: true, shouldValidate: true });
+      setValue(districtField, address.districtCode, { shouldDirty: true, shouldValidate: true });
+      setValue(provinceField, address.provinceCode, { shouldDirty: true, shouldValidate: true });
+      setValue(postcodeField, address.postcode, { shouldDirty: true, shouldValidate: true });
 
       // Store names if fields are specified
       if (subDistrictNameField) {
@@ -116,11 +116,11 @@ const LocationSelector = ({
         setValue(provinceNameField, address.provinceName, { shouldDirty: true });
       }
     } else {
-      // Clear all fields
-      setValue(name, '', { shouldDirty: true });
-      setValue(districtField, '', { shouldDirty: true });
-      setValue(provinceField, '', { shouldDirty: true });
-      setValue(postcodeField, '', { shouldDirty: true });
+      // Clear all fields (shouldValidate re-applies "required" error when emptied)
+      setValue(name, '', { shouldDirty: true, shouldValidate: true });
+      setValue(districtField, '', { shouldDirty: true, shouldValidate: true });
+      setValue(provinceField, '', { shouldDirty: true, shouldValidate: true });
+      setValue(postcodeField, '', { shouldDirty: true, shouldValidate: true });
 
       if (subDistrictNameField) {
         setValue(subDistrictNameField, '', { shouldDirty: true });

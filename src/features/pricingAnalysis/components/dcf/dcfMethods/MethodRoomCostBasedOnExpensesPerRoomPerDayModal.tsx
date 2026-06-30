@@ -17,7 +17,10 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   getOuterFormValues,
   isReadOnly,
 }: MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps) {
-  const { getValues } = useFormContext();
+  const {
+    getValues,
+    formState: { errors },
+  } = useFormContext();
   const { fields, append, remove } = useFieldArray({ name: `${name}.roomDetails` });
 
   const handleOnAdd = () => {
@@ -101,8 +104,11 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   }, [fields.length]);
   useDerivedFields({ rules });
 
+  const rowsError = (errors as any)?.method?.detail?.roomDetails?.message as string | undefined;
+
   return (
     <div className="flex flex-col gap-2">
+      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer className="flex-1 min-h-0">
           <div className="overflow-auto max-h-[274px]">

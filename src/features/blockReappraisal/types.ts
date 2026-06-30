@@ -1,10 +1,12 @@
+import type { ProjectType } from '@/features/blockProject/types';
+
 // ─── List ──────────────────────────────────────────────────────────────────────
 
 export interface BlockReappraisalDueListItem {
   collateralMasterId: string;
   oldAppraisalNumber: string | null;
   projectName: string | null;
-  projectType: 'Condo' | 'LandAndBuilding';
+  projectType: ProjectType;
   projectSellingPrice: number | null;
   totalUnits: number;
   remainingUnits: number;
@@ -54,7 +56,7 @@ export interface BlockReappraisalUnitDetail {
 }
 
 export interface BlockReappraisalStructure {
-  projectType: 'Condo' | 'LandAndBuilding';
+  projectType: ProjectType;
   projectName: string | null;
   developer: string | null;
   address: string | null;
@@ -73,7 +75,7 @@ export interface BlockReappraisalDetailResult {
   collateralMasterId: string;
   oldAppraisalNumber: string | null;
   projectName: string | null;
-  projectType: 'Condo' | 'LandAndBuilding';
+  projectType: ProjectType;
   projectSellingPrice: number | null;
   totalUnits: number;
   remainingUnits: number;

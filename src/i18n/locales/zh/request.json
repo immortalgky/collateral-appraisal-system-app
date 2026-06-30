@@ -58,6 +58,8 @@
   },
   "forms": {
     "request": "申请",
+    "requestorDetail": "申请人信息",
+    "searchRequestor": "搜索申请人",
     "customers": "客户",
     "properties": "房产",
     "location": "位置",
@@ -70,6 +72,15 @@
   "fields": {
     "appraisalPurpose": "评估目的",
     "hasAppraisalBook": "客户携带评估手册",
+    "requestorEmployeeId": "员工编号",
+    "requestorUsername": "用户名",
+    "requestorName": "员工姓名",
+    "requestorEmail": "电子邮件",
+    "requestorContactNo": "联系电话",
+    "requestorAoCode": "AO代码",
+    "requestorCostCenterCode": "成本中心代码",
+    "requestorCostCenterDescription": "成本中心说明",
+    "requestorDepartment": "部门",
     "priority": "优先级",
     "priorityNormal": "普通",
     "priorityHigh": "紧急",
@@ -226,6 +237,7 @@
     "uploadedDocuments": "已上传文件",
     "required": "必须：",
     "requiredBadge": "必须",
+    "notesLabel": "备注",
     "awaitingUpload": "等待上传",
     "optional": "可选",
     "clickToUpload": "点击上传",
@@ -254,8 +266,6 @@
     "columnFile": "文件",
     "columnEntity": "实体",
     "columnDocumentType": "文件类型",
-    "columnSet": "套",
-    "columnSetTooltip": "同一文件类型多份副本的套编号",
     "columnNotes": "备注",
     "notesPlaceholder": "可选",
     "warningSelectAll": "请为所有文件选择实体和文件类型。",
@@ -267,7 +277,6 @@
     "modalTitle": "编辑文件详情",
     "documentType": "文件类型：",
     "uploadedBy": "上传者：",
-    "setNumber": "套编号",
     "notes": "备注",
     "notesPlaceholder": "添加备注...",
     "saveChanges": "保存更改",
@@ -289,8 +298,11 @@
   },
   "searchUser": {
     "modalTitle": "选择用户",
-    "searchPlaceholder": "按姓名或邮箱搜索...",
-    "noResults": "未找到匹配的用户。"
+    "searchPlaceholder": "按员工编号或姓名搜索...",
+    "noResults": "未找到匹配的用户。",
+    "loading": "搜索中...",
+    "typeToSearch": "输入关键词搜索员工",
+    "selectToViewDetail": "选择申请人以查看详细信息"
   },
   "searchAppraisal": {
     "modalTitle": "搜索历史评估报告",
@@ -355,6 +367,7 @@
     "documentDeleted": "文件已删除",
     "documentFileRemoved": "文件已删除，保留了必要文件占位符。",
     "documentDetailsUpdated": "文件详情已更新",
+    "documentMoved": "文件已移动",
     "documentReplaced": "文件替换成功",
     "documentReplaceFailed": "替换失败，请重试。",
     "documentUploaded": "文件上传成功",
@@ -392,9 +405,16 @@
   },
   "documentActions": {
     "view": "查看/下载",
-    "editDetails": "编辑详情",
+    "editDetails": "备注",
+    "moveTo": "移动到...",
     "replaceFile": "替换文件",
     "delete": "删除"
+  },
+  "moveDocument": {
+    "modalTitle": "移动文件",
+    "description": "选择要将此文件移动到的位置。",
+    "requestLevelLabel": "申请层级",
+    "confirm": "移动"
   },
   "validation": {
     "bankingSegmentRequired": "银行业务分部为必填项。",

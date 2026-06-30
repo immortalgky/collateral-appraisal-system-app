@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Textarea from '@/shared/components/inputs/Textarea';
 import type { UploadedDocument } from '../types/document';
 import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
 
@@ -20,23 +21,20 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
   onSave,
 }) => {
   const { t } = useTranslation(['request', 'common']);
-  const [set, setSet] = useState(document.set ?? 1);
-  const [notes, setNotes] = useState(document.documentDescription || '');
+  const [notes, setNotes] = useState(document.notes || '');
   const { data: documentTypes = [] } = useGetDocumentTypes();
 
   const handleSave = () => {
     onSave({
       ...document,
-      set,
-      documentDescription: notes.trim() || null,
+      notes: notes.trim() || null,
     });
     onClose();
   };
 
   const handleCancel = () => {
     // Reset to original values
-    setSet(document.set ?? 1);
-    setNotes(document.documentDescription || '');
+    setNotes(document.notes || '');
     onClose();
   };
 
@@ -105,33 +103,15 @@ const DocumentEditModal: React.FunctionComponent<DocumentEditModalProps> = ({
 
         {/* Editable fields */}
         <div className="space-y-4">
-          <div>
-            <label htmlFor="set" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('documentEdit.setNumber')}
-            </label>
-            <input
-              id="set"
-              type="number"
-              min="1"
-              value={set}
-              onChange={e => setSet(parseInt(e.target.value) || 1)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-              {t('documentEdit.notes')}
-            </label>
-            <textarea
-              id="notes"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              rows={3}
-              placeholder={t('documentEdit.notesPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-            />
-          </div>
+          <Textarea
+            id="notes"
+            label={t('documentEdit.notes')}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder={t('documentEdit.notesPlaceholder')}
+            maxLength={4000}
+            showCharCount
+          />
         </div>
 
         {/* Action buttons */}

@@ -72,13 +72,13 @@ export interface WQSFinalValue {
   slope: number;
   lowestEstimate: number;
   highestEstimate: number;
-  hasBuildingCost: boolean;
+  hasBuildingValue: boolean;
   includeLandArea: boolean;
   landArea?: number;
   usableArea?: number;
   // stored fields (backend persists these)
   landValue?: number; // user-edited land price
-  buildingCost?: number; // user-edited building cost
+  buildingValue?: number; // user-edited building value
   appraisalPrice?: number; // user-edited final total (hasBuildingCost only)
 }
 

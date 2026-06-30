@@ -10,8 +10,8 @@ import type { z } from 'zod';
 
 // Extract schemas for convenience
 const {
-  GetRequestResult,
-  GetRequestByIdResult,
+  GetRequestsResponse: GetRequestResult,
+  GetRequestByIdResponse: GetRequestByIdResult,
   UpdateRequestRequest,
   UpdateRequestResponse,
   DeleteRequestResponse,
@@ -171,7 +171,7 @@ export const useUpdateRequest = () => {
       const { data } = await axios.put(`/requests/${id}`, stripEmptyDocuments(request));
       return data;
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['requests'] });
       queryClient.invalidateQueries({ queryKey: ['my-requests'] });
       queryClient.invalidateQueries({ queryKey: ['request', variables.id] });

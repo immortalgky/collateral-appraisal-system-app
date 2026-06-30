@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/features/auth/store';
 import toast from 'react-hot-toast';
 import { getRelativeTimeString } from '@/shared/utils/dateUtils';
-import type { UserDtoType } from '../schemas/form';
+import type { UserDtoType, RequestorDtoType } from '../schemas/form';
 import { useAddComment, useUpdateComment, useDeleteComment, useGetComments } from '../api';
 import { SidebarLabel, InfoRow, StatCard, PersonRow } from '@/shared/components/rightmenu';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -83,7 +83,7 @@ const RequestRightMenu = ({
     documents?: { fileName?: string | null }[];
   }[];
   const creator = useWatch({ control, name: 'creator' }) as UserDtoType;
-  const requestor = useWatch({ control, name: 'requestor' }) as UserDtoType;
+  const requestor = useWatch({ control, name: 'requestor' }) as RequestorDtoType;
 
   const currentUser = useAuthStore(state => state.user);
 
@@ -359,9 +359,9 @@ const RequestRightMenu = ({
               <div className="mt-2 space-y-2">
                 <PersonRow
                   label={t('rightMenu.requestor')}
-                  name={requestor.username || currentUser?.name || t('rightMenu.notSet')}
+                  name={requestor?.name || t('rightMenu.notSet')}
                   avatar={null}
-                  isMe={requestor.username === currentUser?.username}
+                  isMe={requestor?.employeeId === currentUser?.username}
                   onClick={onRequestorClick}
                   editable
                 />

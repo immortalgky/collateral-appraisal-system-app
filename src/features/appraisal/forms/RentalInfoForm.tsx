@@ -8,6 +8,7 @@ import { rentalScheduleField, rentalGrowthPeriodField } from '../configs/fields'
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import DatePickerInput from '@/shared/components/inputs/DatePickerInput';
 import FormStringToggle from '@/shared/components/inputs/FormStringToggle';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 interface SectionRowProps {
   title: string;
@@ -149,7 +150,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
   // Resolve nested errors for prefixed paths
   const rentalErrors = namePrefix ? ((errors as any)?.[namePrefix] ?? {}) : errors;
 
-  // Auto-calculate toYear, growthAmount, and totalAmount for growth period entries
+  // Auto-sync toYear only — rate ↔ amount derived in onChange handlers below
   useEffect(() => {
     if (!watchedGrowthEntries?.length) return;
     watchedGrowthEntries.forEach((entry: any, idx: number) => {
@@ -158,42 +159,31 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
       if (entry?.toYear !== expectedToYear && expectedToYear > 0) {
         setValue(p(`growthPeriodEntries.${idx}.toYear`), expectedToYear, { shouldDirty: true });
       }
-      const prevTotal =
-        idx === 0
-          ? contractRentalFeePerYear
-          : (watchedGrowthEntries[idx - 1]?.totalAmount ?? contractRentalFeePerYear);
-
-      const rate = entry?.growthRate ?? 0;
-      // Only auto-calc growthAmount from rate when rate is non-zero
-      if (rate !== 0) {
-        const expectedAmount = Math.round((rate / 100) * prevTotal * 100) / 100;
-        if (entry?.growthAmount !== expectedAmount) {
-          setValue(p(`growthPeriodEntries.${idx}.growthAmount`), expectedAmount, {
-            shouldDirty: true,
-          });
-        }
-      }
-      // Always: totalAmount = prevTotal + growthAmount
-      const currentAmount = entry?.growthAmount ?? 0;
-      const expectedTotal = Math.round((prevTotal + currentAmount) * 100) / 100;
-      if (entry?.totalAmount !== expectedTotal) {
-        setValue(p(`growthPeriodEntries.${idx}.totalAmount`), expectedTotal, { shouldDirty: true });
-      }
     });
   }, [
-    watchedGrowthEntries
-      ?.map((e: any) => `${e?.fromYear}-${e?.growthRate}-${e?.growthAmount}-${e?.totalAmount}`)
-      .join(','),
+    watchedGrowthEntries?.map((e: any) => `${e?.fromYear}-${e?.toYear}`).join(','),
     numberOfYears,
-    contractRentalFeePerYear,
   ]);
 
-  const handleGrowthAmountChange = (idx: number, amount: number) => {
-    const prevTotal =
-      idx === 0
-        ? contractRentalFeePerYear
-        : (watchedGrowthEntries?.[idx - 1]?.totalAmount ?? contractRentalFeePerYear);
+  const getPrevTotal = (idx: number): number => {
+    if (idx === 0) return contractRentalFeePerYear;
+    const prev = getValues(p(`growthPeriodEntries.${idx - 1}.totalAmount`));
+    return prev ?? contractRentalFeePerYear;
+  };
+
+  const handleGrowthRateChange = (idx: number, rate: number) => {
+    const prevTotal = getPrevTotal(idx);
+    const amount = Math.round((rate / 100) * prevTotal * 100) / 100;
     const total = Math.round((prevTotal + amount) * 100) / 100;
+    setValue(p(`growthPeriodEntries.${idx}.growthAmount`), amount, { shouldDirty: true });
+    setValue(p(`growthPeriodEntries.${idx}.totalAmount`), total, { shouldDirty: true });
+  };
+
+  const handleGrowthAmountChange = (idx: number, amount: number) => {
+    const prevTotal = getPrevTotal(idx);
+    const total = Math.round((prevTotal + amount) * 100) / 100;
+    const derivedRate = prevTotal > 0 ? Math.round((amount / prevTotal) * 100 * 100) / 100 : 0;
+    setValue(p(`growthPeriodEntries.${idx}.growthRate`), derivedRate, { shouldDirty: true });
     setValue(p(`growthPeriodEntries.${idx}.totalAmount`), total, { shouldDirty: true });
   };
 
@@ -204,6 +194,14 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
   const [computedRows, setComputedRows] = useState<ScheduleRow[]>([]);
   const [isScheduleEditing, setIsScheduleEditing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [deleteGrowthConfirm, setDeleteGrowthConfirm] = useState<{
+    isOpen: boolean;
+    index: number | null;
+  }>({ isOpen: false, index: null });
+  const [deleteUpFrontConfirm, setDeleteUpFrontConfirm] = useState<{
+    isOpen: boolean;
+    index: number | null;
+  }>({ isOpen: false, index: null });
 
   const {
     fields: upFrontFields,
@@ -372,6 +370,10 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                                 maxIntegerDigits={3}
                                 rightIcon={<span className="text-xs">%</span>}
                                 className="!py-1.5"
+                                onChange={e => {
+                                  f.onChange(e);
+                                  handleGrowthRateChange(idx, e.target.value ?? 0);
+                                }}
                               />
                             )}
                           />
@@ -406,7 +408,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                         <td className="px-3 py-1.5">
                           <button
                             type="button"
-                            onClick={() => removeGrowth(idx)}
+                            onClick={() => setDeleteGrowthConfirm({ isOpen: true, index: idx })}
                             className="text-red-500 hover:text-red-700"
                           >
                             <Icon style="solid" name="xmark" className="size-4" />
@@ -483,7 +485,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                     <td className="px-3 py-1.5">
                       <button
                         type="button"
-                        onClick={() => removeUpFront(idx)}
+                        onClick={() => setDeleteUpFrontConfirm({ isOpen: true, index: idx })}
                         className="text-red-500 hover:text-red-700"
                       >
                         <Icon style="solid" name="xmark" className="size-4" />
@@ -722,6 +724,38 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
           </div>
         </SectionRow>
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteGrowthConfirm.isOpen}
+        onClose={() => setDeleteGrowthConfirm({ isOpen: false, index: null })}
+        onConfirm={() => {
+          if (deleteGrowthConfirm.index !== null) {
+            removeGrowth(deleteGrowthConfirm.index);
+            setDeleteGrowthConfirm({ isOpen: false, index: null });
+          }
+        }}
+        title="Delete Row"
+        message="Are you sure you want to delete this row? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={deleteUpFrontConfirm.isOpen}
+        onClose={() => setDeleteUpFrontConfirm({ isOpen: false, index: null })}
+        onConfirm={() => {
+          if (deleteUpFrontConfirm.index !== null) {
+            removeUpFront(deleteUpFrontConfirm.index);
+            setDeleteUpFrontConfirm({ isOpen: false, index: null });
+          }
+        }}
+        title="Delete Row"
+        message="Are you sure you want to delete this row? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 };

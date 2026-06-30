@@ -6,7 +6,7 @@ import { useActivityCompletionProgress } from '../hooks/useActivityCompletionPro
 
 export interface PhaseStepDto {
   group: string;
-  status: 'Completed' | 'Current' | 'Pending';
+  status: 'Completed' | 'Current' | 'Pending' | 'Cancelled';
 }
 
 export interface ActivityLogItemDto {
@@ -24,6 +24,7 @@ export interface ActivityLogItemDto {
   group: string | null;
   activityId: string | null;
   companyName: string | null;
+  movement: string | null;
 }
 
 export interface WorkflowProgressResponse {
@@ -61,6 +62,7 @@ export interface ActivityAction {
   label: string;
   assignmentMode: string;
   targetActivityId: string | null;
+  movement?: string; // 'F' | 'B' | 'C' — backend already sends this
 }
 
 export interface ActivityActionsResponse {

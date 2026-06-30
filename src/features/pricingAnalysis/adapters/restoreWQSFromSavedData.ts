@@ -180,7 +180,7 @@ export function restoreWQSFromSavedData({
         lowestEstimate: 0,
         highestEstimate: 0,
         landValue: 0,
-        buildingCost: 0,
+        buildingValue: 0,
         appraisalPrice: 0,
       },
       generateAt: new Date().toISOString(),

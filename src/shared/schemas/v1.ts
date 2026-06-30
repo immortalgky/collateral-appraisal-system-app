@@ -138,6 +138,19 @@ const GetRequestTitleByIdResponse = z
   })
   .passthrough();
 const UserInfoDto = z.object({ userId: z.string(), username: z.string() }).passthrough();
+/** Mirrors Request.Contracts.Requests.Dtos.RequestorDetailDto — returned by GET /requests/{id} */
+const RequestorDetailDto = z
+  .object({
+    employeeId: z.string(),
+    name: z.string(),
+    email: z.string().nullable(),
+    contactNo: z.string().nullable(),
+    aoCode: z.string().nullable(),
+    costCenterCode: z.string().nullable(),
+    costCenterDescription: z.string().nullable(),
+    department: z.string().nullable(),
+  })
+  .passthrough();
 const LoanDetailDto = z
   .object({
     bankingSegment: z.string().nullable(),
@@ -187,6 +200,7 @@ const RequestDetailDto = z
     hasAppraisalBook: z.boolean(),
     loanDetail: LoanDetailDto.nullable(),
     prevAppraisalId: z.string().uuid().nullable(),
+    prevAppraisalNumber: z.string().nullable(),
     address: AddressDto2.nullable(),
     contact: ContactDto.nullable(),
     appointment: AppointmentDto.nullable(),
@@ -225,7 +239,7 @@ const UpdateRequestRequest = z
   .object({
     purpose: z.string().nullable(),
     channel: z.string().nullable(),
-    requestor: UserInfoDto,
+    requestorEmployeeId: z.string(),
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
@@ -245,7 +259,7 @@ const GetRequestByIdResponse = z
     purpose: z.string().nullable(),
     channel: z.string().nullable(),
     requestedAt: z.string().datetime({ offset: true }).nullable(),
-    requestor: UserInfoDto,
+    requestor: RequestorDetailDto,
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
@@ -262,7 +276,7 @@ const UpdateDraftRequestRequest = z
   .object({
     purpose: z.string().nullable(),
     channel: z.string().nullable(),
-    requestor: UserInfoDto,
+    requestorEmployeeId: z.string(),
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
@@ -314,7 +328,7 @@ const CreateRequestRequest = z
     sessionId: z.string().uuid().nullable(),
     purpose: z.string().nullable(),
     channel: z.string().nullable(),
-    requestor: UserInfoDto,
+    requestorEmployeeId: z.string(),
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
@@ -332,7 +346,7 @@ const CreateDraftRequestRequest = z
     sessionId: z.string().uuid().nullable(),
     purpose: z.string().nullable(),
     channel: z.string().nullable(),
-    requestor: UserInfoDto,
+    requestorEmployeeId: z.string(),
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
@@ -1263,8 +1277,8 @@ const UpdateFinalValueRequest = z
     appraisalPrice: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
     priceDifferentiate: z.number().nullish().default(null),
-    hasBuildingCost: z.boolean().nullish().default(null),
-    buildingCost: z.number().nullish().default(null),
+    hasBuildingValue: z.boolean().nullish().default(null),
+    buildingValue: z.number().nullish().default(null),
     appraisalPriceWithBuilding: z.number().nullish().default(null),
     appraisalPriceWithBuildingRounded: z.number().nullish().default(null),
   })
@@ -1279,8 +1293,8 @@ const UpdateFinalValueResponse = z
     appraisalPrice: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
     priceDifferentiate: z.number().nullable(),
-    hasBuildingCost: z.boolean(),
-    buildingCost: z.number().nullable(),
+    hasBuildingValue: z.boolean(),
+    buildingValue: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
     appraisalPriceWithBuildingRounded: z.number().nullable(),
   })
@@ -1384,8 +1398,8 @@ const SetFinalValueRequest = z
     appraisalPrice: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
     priceDifferentiate: z.number().nullish().default(null),
-    hasBuildingCost: z.boolean().nullish().default(null),
-    buildingCost: z.number().nullish().default(null),
+    hasBuildingValue: z.boolean().nullish().default(null),
+    buildingValue: z.number().nullish().default(null),
     appraisalPriceWithBuilding: z.number().nullish().default(null),
     appraisalPriceWithBuildingRounded: z.number().nullish().default(null),
   })
@@ -1400,8 +1414,8 @@ const SetFinalValueResponse = z
     appraisalPrice: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
     priceDifferentiate: z.number().nullable(),
-    hasBuildingCost: z.boolean(),
-    buildingCost: z.number().nullable(),
+    hasBuildingValue: z.boolean(),
+    buildingValue: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
     appraisalPriceWithBuildingRounded: z.number().nullable(),
   })
@@ -1474,8 +1488,8 @@ const SaveComparativeAnalysisRequest = z
     comparativeAnalysisTemplateId: z.string().uuid().nullish().default(null),
     appraisalValue: z.number().nullish().default(null),
     finalValueAdjusted: z.number().nullish().default(null),
-    hasBuildingCost: z.boolean().nullish().default(null),
-    buildingCost: z.number().nullish().default(null),
+    hasBuildingValue: z.boolean().nullish().default(null),
+    buildingValue: z.number().nullish().default(null),
     appraisalPrice: z.number().nullish().default(null),
     includeLandArea: z.boolean().nullish().default(null),
     landArea: z.number().nullish().default(null),
@@ -3874,6 +3888,10 @@ const GetAppraisalByIdResponse = z
     propertyCount: z.number().int(),
     groupCount: z.number().int(),
     assignmentCount: z.number().int(),
+    companyName: z.string().nullable(),
+    appraiserName: z.string().nullable(),
+    appraisalDate: z.string().datetime({ offset: true }).nullable(),
+    appraisalValue: z.number().nullable(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
     createdBy: z.string().nullable(),
     updatedOn: z.string().datetime({ offset: true }).nullable(),

@@ -25,11 +25,22 @@ interface ConfigModalProps {
   onClose: () => void;
   editing: CompanyRoundRobinConfigDto | null;
   companies: CompanyOption[];
+  companiesError: boolean;
+  onRetryCompanies: () => void;
   onSave: (body: SaveCompanyRoundRobinConfigBody, id?: string) => void;
   isSaving: boolean;
 }
 
-function ConfigModal({ isOpen, onClose, editing, companies, onSave, isSaving }: ConfigModalProps) {
+function ConfigModal({
+  isOpen,
+  onClose,
+  editing,
+  companies,
+  companiesError,
+  onRetryCompanies,
+  onSave,
+  isSaving,
+}: ConfigModalProps) {
   const { t } = useTranslation('companyRoundRobinConfig');
   const [loanType, setLoanType] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -126,6 +137,18 @@ function ConfigModal({ isOpen, onClose, editing, companies, onSave, isSaving }: 
               {t('modal.addCompany')}
             </Button>
           </div>
+          {companiesError && (
+            <p className="text-xs text-red-600 mt-1 flex items-center gap-1.5">
+              {t('modal.companiesLoadError')}
+              <button
+                type="button"
+                onClick={onRetryCompanies}
+                className="underline hover:text-red-700"
+              >
+                {t('modal.retry')}
+              </button>
+            </p>
+          )}
         </div>
 
         {/* Entry rows */}
@@ -193,7 +216,8 @@ const CompanyRoundRobinConfigPage = () => {
   const modal = useDisclosure();
 
   const { data: configs = [], isLoading } = useListCompanyRoundRobinConfigs();
-  const { data: companies = [] } = useCompaniesQuery();
+  const { data: companies = [], isError: companiesError, refetch: refetchCompanies } =
+    useCompaniesQuery();
 
   const createConfig = useCreateCompanyRoundRobinConfig();
   const updateConfig = useUpdateCompanyRoundRobinConfig();
@@ -316,6 +340,8 @@ const CompanyRoundRobinConfigPage = () => {
         onClose={modal.onClose}
         editing={editing}
         companies={companies}
+        companiesError={companiesError}
+        onRetryCompanies={() => refetchCompanies()}
         onSave={handleSave}
         isSaving={createConfig.isPending || updateConfig.isPending}
       />

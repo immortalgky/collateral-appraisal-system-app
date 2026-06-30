@@ -87,6 +87,7 @@ export function CostMachinePanel({
 
   const methods = useForm<CostMachineFormType>({
     mode: 'onSubmit',
+    reValidateMode: 'onChange',
     resolver: zodResolver(CostMachineFormSchema),
   });
 

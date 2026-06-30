@@ -5,6 +5,7 @@ import {
   createRequestFormDefault,
   type createRequestFormType,
   type UserDtoType,
+  type RequestorDtoType,
 } from '@features/request/schemas/form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,6 +39,7 @@ import {
   useUpdateDraftRequest,
   useUpdateRequest,
 } from '../api';
+import { useSearchRequestors } from '../api/requestors';
 import { mapCopyTemplateToForm, mapRequestResponseToForm } from '../utils/mappers';
 import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
 import { AppraisalCopyProvider } from '../contexts/AppraisalCopyContext';
@@ -114,7 +116,7 @@ function RequestPage() {
   const isLoading = isEditMode && (isLoadingRequest || isFetching) && !minLoadingDone;
 
   // Update breadcrumb with request number (only in edit mode)
-  useBreadcrumb(isEditMode ? requestData?.requestNumber : undefined, 'folder-open');
+  useBreadcrumb(isEditMode ? (requestData?.requestNumber ?? undefined) : undefined, 'folder-open');
 
   // Form setup
   const methods = useForm<createRequestFormType>({
@@ -147,11 +149,57 @@ function RequestPage() {
             username: currentUser.name,
           };
           setValue('creator', userDto);
-          setValue('requestor', userDto);
+          // Default the requestor to the logged-in user — but only for bank users. The requestor
+          // must be a valid bank officer (employeeId resolves against auth.Officers); an external
+          // company user (companyId set) has no officer code, so we leave it blank and force an
+          // explicit pick. Only the basic identity is known from the auth store; the org detail
+          // (AO code, cost center, contact) is enriched by the effect below from GET /auth/requestors.
+          // setValue without shouldDirty so a freshly opened form isn't flagged as having unsaved changes.
+          if (!currentUser.companyId) {
+            const requestorDto: RequestorDtoType = {
+              employeeId: currentUser.username,
+              name: currentUser.name,
+              email: currentUser.email ?? null,
+              contactNo: null,
+              aoCode: null,
+              costCenterCode: null,
+              costCenterDescription: null,
+              department: currentUser.department ?? null,
+            };
+            setValue('requestor', requestorDto);
+          }
         }
       }
     }
   }, [isEditMode, requestId, currentUser, reset, setValue, location.state]);
+
+  // Resolve the logged-in user's full requestor detail (AO code, cost center, contact) so the
+  // defaulted requestor card shows the same fields a manual pick would. Create mode only.
+  const { data: selfRequestorResults } = useSearchRequestors(
+    !isEditMode && currentUser && !currentUser.companyId ? currentUser.username : '',
+  );
+
+  useEffect(() => {
+    if (isEditMode || !currentUser || currentUser.companyId || !selfRequestorResults) return;
+    // Match case-insensitively — username and the resolved employeeId can differ in casing.
+    const selfId = currentUser.username.toLowerCase();
+    const match = selfRequestorResults.find(r => r.employeeId.toLowerCase() === selfId);
+    if (!match) return;
+    // Only enrich while the requestor is still the defaulted current user — never overwrite an
+    // explicit pick the user made from the search modal.
+    if (getValues('requestor.employeeId')?.toLowerCase() !== selfId) return;
+    const requestorDto: RequestorDtoType = {
+      employeeId: match.employeeId,
+      name: match.name,
+      email: match.email,
+      contactNo: match.contactNo,
+      aoCode: match.aoCode,
+      costCenterCode: match.costCenterCode,
+      costCenterDescription: match.costCenterDescription,
+      department: match.department,
+    };
+    setValue('requestor', requestorDto);
+  }, [isEditMode, currentUser, selfRequestorResults, getValues, setValue]);
 
   // Update form when data is fetched (edit mode only)
   // Note: Comments are managed separately by RequestRightMenu via useGetComments API
@@ -196,8 +244,8 @@ function RequestPage() {
     onClose: closeUserModal,
   } = useDisclosure();
 
-  const handleRequestorSelect = (user: UserDtoType) => {
-    setValue('requestor', user);
+  const handleRequestorSelect = (user: RequestorDtoType) => {
+    setValue('requestor', user, { shouldDirty: true });
   };
 
   // Upload session management
@@ -314,17 +362,20 @@ function RequestPage() {
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
     setSaveAction('save');
 
+    // Extract requestor — only the employeeId (bank code) goes to the backend as requestorEmployeeId
+    const { requestor, ...restData } = data;
+    const requestorEmployeeId = requestor?.employeeId ?? '';
+
     if (isEditMode && requestId) {
       // Update existing request
       updateRequest(
         {
           id: requestId,
           request: {
-            ...data,
+            ...restData,
+            requestorEmployeeId,
             properties: defaultProperties(data.properties),
-            requestor: data.requestor ?? { userId: '', username: '' },
-            creator: data.creator ?? { userId: '', username: '' },
-          },
+          } as any,
         },
         {
           onSuccess: () => {
@@ -351,7 +402,8 @@ function RequestPage() {
 
       createRequest(
         {
-          ...data,
+          ...restData,
+          requestorEmployeeId,
           properties: defaultProperties(data.properties),
           sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
@@ -378,17 +430,20 @@ function RequestPage() {
     setSaveAction('draft');
     const data = getValues();
 
+    // Extract requestor — only the employeeId (bank code) goes to the backend as requestorEmployeeId
+    const { requestor, ...restData } = data;
+    const requestorEmployeeId = requestor?.employeeId ?? '';
+
     if (isEditMode && requestId) {
       // Update existing request as draft
       updateDraftRequest(
         {
           id: requestId,
           request: {
-            ...data,
+            ...restData,
+            requestorEmployeeId,
             properties: defaultProperties(data.properties),
-            requestor: data.requestor ?? { userId: '', username: '' },
-            creator: data.creator ?? { userId: '', username: '' },
-          },
+          } as any,
         },
         {
           onSuccess: () => {
@@ -414,7 +469,8 @@ function RequestPage() {
 
       createDraftRequest(
         {
-          ...data,
+          ...restData,
+          requestorEmployeeId,
           properties: defaultProperties(data.properties),
           sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
@@ -466,17 +522,20 @@ function RequestPage() {
     // Use handleSubmit to validate the form first
     handleSubmit(
       data => {
+        // Extract requestor — only the employeeId (bank code) goes to the backend as requestorEmployeeId
+        const { requestor, ...restData } = data;
+        const requestorEmployeeId = requestor?.employeeId ?? '';
+
         if (isEditMode && requestId) {
           // Update existing request first, then check and submit
           updateRequest(
             {
               id: requestId,
               request: {
-                ...data,
+                ...restData,
+                requestorEmployeeId,
                 properties: defaultProperties(data.properties),
-                requestor: data.requestor ?? { userId: '', username: '' },
-                creator: data.creator ?? { userId: '', username: '' },
-              },
+              } as any,
             },
             {
               onSuccess: () => {
@@ -500,7 +559,8 @@ function RequestPage() {
 
           createRequest(
             {
-              ...data,
+              ...restData,
+              requestorEmployeeId,
               properties: defaultProperties(data.properties),
               sessionId: uploadSessionIdRef.current,
               comments: commentsForApi,
@@ -651,7 +711,7 @@ function RequestPage() {
                 </Section>
 
                 <Section id="attach-document" anchor className="flex flex-col gap-6">
-                  <AttachDocumentForm getOrCreateSession={getOrCreateSession} />
+                  <AttachDocumentForm getOrCreateSession={getOrCreateSession} requestId={requestId} />
                 </Section>
               </div>
             </div>
@@ -752,14 +812,14 @@ function RequestPage() {
           )}
         </form>
 
-        {/* User Search Modal for Requestor */}
-        {!readOnly && (
-          <SearchUserModal
-            isOpen={isUserModalOpen}
-            onClose={closeUserModal}
-            onSelect={handleRequestorSelect}
-          />
-        )}
+        {/* Requestor detail + search modal (opened from the right-panel requestor badge) */}
+        <SearchUserModal
+          isOpen={isUserModalOpen}
+          onClose={closeUserModal}
+          onSelect={handleRequestorSelect}
+          initialRequestor={methods.watch('requestor')}
+          readOnly={readOnly}
+        />
       </FormProvider>
 
       <ConfirmDialog

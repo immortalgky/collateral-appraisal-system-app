@@ -70,7 +70,7 @@ function buildFinalValue(property?: Record<string, unknown>) {
     lowestEstimate: 0,
     highestEstimate: 0,
     landValue: 0,
-    buildingCost: 0,
+    buildingValue: 0,
     appraisalPrice: 0,
   };
 }

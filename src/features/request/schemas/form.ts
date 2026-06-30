@@ -13,6 +13,23 @@ const UserDto = z.object({
   username: z.string(),
 });
 
+/**
+ * Requestor snapshot stored in the form.
+ * employeeId (bank code e.g. "P5229") is sent as `requestorEmployeeId` at submit.
+ * All other fields are display-only — never sent to the backend.
+ * No GUID is stored: the backend persists employeeId, not the auth Guid.
+ */
+const RequestorDto = z.object({
+  employeeId: z.string(),
+  name: z.string().nullish(),
+  email: z.string().nullish(),
+  contactNo: z.string().nullish(),
+  aoCode: z.string().nullish(),
+  costCenterCode: z.string().nullish(),
+  costCenterDescription: z.string().nullish(),
+  department: z.string().nullish(),
+});
+
 function makeRequestDetailDto(t: TFunction<'request'>) {
   return z.object({
     hasAppraisalBook: z.boolean(),
@@ -97,8 +114,7 @@ const RequestTitleDocumentDto = z
     documentType: z.string().nullable(),
     fileName: z.string().nullable(),
     prefix: z.string().nullable(),
-    set: z.number().int(),
-    documentDescription: z.string().nullable(),
+    notes: z.string().nullable(),
     filePath: z.string().nullable(),
     createdWorkstation: z.string().nullable(),
     isRequired: z.boolean(),
@@ -127,7 +143,6 @@ const RequestDocumentDto = z
     documentType: z.string().nullable().optional(),
     fileName: z.string().nullable().optional(),
     prefix: z.string().nullable().optional(),
-    set: z.number().int().nullable().optional(),
     notes: z.string().nullable().optional(),
     filePath: z.string().nullable().optional(),
     source: z.string().nullable().optional(),
@@ -160,7 +175,7 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
     priority: z.string(),
     isPma: z.boolean(),
     creator: UserDto,
-    requestor: UserDto,
+    requestor: RequestorDto,
     detail: makeRequestDetailDto(t),
     customers: z.array(makeRequestCustomerDto(t)),
     properties: z.array(makeRequestPropertyDto(t)),
@@ -187,6 +202,7 @@ const _tStatic = ((key: string) => key) as TFunction<'request'>;
 export const createRequestForm = makeCreateRequestForm(_tStatic);
 
 export type UserDtoType = z.infer<typeof UserDto>;
+export type RequestorDtoType = z.infer<typeof RequestorDto>;
 export type RequestCommentDtoType = z.infer<ReturnType<typeof makeRequestCommentDto>>;
 export type createRequestFormType = z.infer<typeof createRequestForm>;
 export type RequestTitleDtoType = z.infer<typeof RequestTitleDto>;
@@ -210,8 +226,14 @@ export const createRequestFormDefault: createRequestFormType = {
     username: '',
   },
   requestor: {
-    userId: '',
-    username: '',
+    employeeId: '',
+    name: null,
+    email: null,
+    contactNo: null,
+    aoCode: null,
+    costCenterCode: null,
+    costCenterDescription: null,
+    department: null,
   },
   detail: {
     hasAppraisalBook: false,

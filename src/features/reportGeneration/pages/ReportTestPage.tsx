@@ -5,7 +5,8 @@ import ReportActionButtons from '../components/ReportActionButtons';
 import { useReportDefinitions } from '../hooks/useReportDefinitions';
 
 // The backend resolves the entered number to an entity id: Meeting-category reports use the
-// MeetingNo (e.g. "12/2567"); every other report uses the AppraisalNumber (e.g. "69000042").
+// MeetingNo (e.g. "12/2567"); Appointment-category reports accept a Request No. OR an Appraisal No.
+// (resolved to the RequestId); every other report uses the AppraisalNumber (e.g. "69000042").
 
 const ReportTestPage = () => {
   // Drive the picker from the DB-backed report registry so it never drifts from the backend.
@@ -20,10 +21,19 @@ const ReportTestPage = () => {
   const effectiveKey = reportTypeKey || definitions[0]?.reportTypeKey || '';
   const selectedDef = definitions.find(d => d.reportTypeKey === effectiveKey);
 
-  // Meeting-mode comes from the report's Category (authoritative), matching the backend resolver.
+  // Mode comes from the report's Category (authoritative), matching the backend resolver.
   const meetingMode = selectedDef?.category === 'Meeting';
-  const idLabel = meetingMode ? 'Meeting No.' : 'Appraisal No.';
-  const idPlaceholder = meetingMode ? 'e.g. 12/2567' : 'e.g. 69000042';
+  const appointmentMode = selectedDef?.category === 'Appointment';
+  const idLabel = meetingMode
+    ? 'Meeting No.'
+    : appointmentMode
+      ? 'Request No. / Appraisal No.'
+      : 'Appraisal No.';
+  const idPlaceholder = meetingMode
+    ? 'e.g. 12/2567'
+    : appointmentMode
+      ? 'Request No. or Appraisal No.'
+      : 'e.g. 69000042';
 
   // Switching report type clears the field — a number entered for one category (e.g. a MeetingNo
   // "12/2567") is meaningless for another and would just 404.
@@ -110,7 +120,7 @@ const ReportTestPage = () => {
               }}
             />
           ) : (
-            <p className="text-xs text-gray-400">Enter {meetingMode ? 'a Meeting No.' : 'an Appraisal No.'} to view or generate.</p>
+            <p className="text-xs text-gray-400">Enter {meetingMode ? 'a Meeting No.' : appointmentMode ? 'a Request No. or Appraisal No.' : 'an Appraisal No.'} to view or generate.</p>
           )}
 
           {objectUrl && (

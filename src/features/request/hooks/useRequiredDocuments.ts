@@ -18,8 +18,7 @@ const createPlaceholder = (
   fileName: null,
   uploadedAt: new Date().toISOString(),
   prefix: null,
-  set: 1,
-  documentDescription: null,
+  notes: null,
   filePath: null,
   createdWorkstation: null,
   isRequired,
@@ -48,7 +47,6 @@ export const useRequestLevelRequiredDocuments = () => {
       data.documents.filter(d => d.isRequired).map(d => d.documentType),
     );
     const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
-    const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
     // Keep docs that have files OR are in the checklist
     const docsToKeep = currentDocs.filter(
@@ -72,27 +70,12 @@ export const useRequestLevelRequiredDocuments = () => {
       createPlaceholder(d.documentType, d.displayName, d.isRequired),
     );
 
-    // Find the minimum set number for each required document type
-    const minSetByType: Record<string, number> = {};
-    docsToKeep.forEach(doc => {
-      if (doc.documentType && requiredTypes.has(doc.documentType)) {
-        const currentMin = minSetByType[doc.documentType];
-        const docSet = doc.set ?? 1;
-        if (currentMin === undefined || docSet < currentMin) {
-          minSetByType[doc.documentType] = docSet;
-        }
-      }
-    });
-
     // Update isRequired flag and displayName from API data
     const updatedDocs = docsToKeep.map(doc => {
       const docType = doc.documentType || '';
-      const isRequiredType = requiredTypes.has(docType);
-      const docSet = doc.set ?? 1;
-      const isMinSet = minSetByType[docType] === docSet;
       return {
         ...doc,
-        isRequired: isRequiredType && isMinSet,
+        isRequired: requiredTypes.has(docType),
         displayName: doc.displayName || displayNameMap.get(docType) || null,
       };
     });
@@ -100,13 +83,12 @@ export const useRequestLevelRequiredDocuments = () => {
     // Combine: existing docs (with updated flags) + new placeholders
     const finalDocs = [...updatedDocs, ...newPlaceholders];
 
-    // Sort by: 1) isRequired (required first), 2) documentType, 3) set number
+    // Sort by: 1) isRequired (required first), 2) documentType
     finalDocs.sort((a, b) => {
       if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
       const typeA = a.documentType || '';
       const typeB = b.documentType || '';
-      if (typeA !== typeB) return typeA.localeCompare(typeB);
-      return (a.set ?? 1) - (b.set ?? 1);
+      return typeA.localeCompare(typeB);
     });
 
     setValue('documents', finalDocs, { shouldDirty: false });
@@ -121,9 +103,13 @@ export const useRequestLevelRequiredDocuments = () => {
 export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
   const { setValue } = useFormContext();
   const collateralType = useWatch({ name: `titles.${titleIndex}.collateralType` });
+  const purpose = useWatch({ name: 'purpose' });
   const titleDocuments = useWatch({ name: `titles.${titleIndex}.documents` });
-  const { data } = useGetRequiredDocuments({ collateralType });
-  const prevCollateralTypeRef = useRef<string | undefined>(undefined);
+  // Pass purpose too so requirements scoped to BOTH collateral type AND purpose resolve.
+  // When no collateral is selected, pass empty params so the query is disabled and the
+  // title does NOT pick up the request-level (property = Any) documents.
+  const { data } = useGetRequiredDocuments(collateralType ? { collateralType, purpose } : {});
+  const prevScopeRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!data?.documents) return;
@@ -134,7 +120,6 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
       data.documents.filter(d => d.isRequired).map(d => d.documentType),
     );
     const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
-    const isRequiredMap = new Map(data.documents.map(d => [d.documentType, d.isRequired]));
 
     // Keep docs that have files OR are in the checklist
     const docsToKeep = currentDocs.filter(
@@ -151,39 +136,20 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
     );
 
     // No changes needed — all placeholders exist and metadata is set
-    if (
-      missingTypes.length === 0 &&
-      !needsUpdate &&
-      prevCollateralTypeRef.current === collateralType
-    )
-      return;
+    const scopeKey = `${collateralType ?? ''}|${purpose ?? ''}`;
+    if (missingTypes.length === 0 && !needsUpdate && prevScopeRef.current === scopeKey) return;
 
     // Create placeholders for all missing checklist types (isRequired from API)
     const newPlaceholders = missingTypes.map(d =>
       createPlaceholder(d.documentType, d.displayName, d.isRequired),
     );
 
-    // Find the minimum set number for each required document type
-    const minSetByType: Record<string, number> = {};
-    docsToKeep.forEach(doc => {
-      if (doc.documentType && requiredTypes.has(doc.documentType)) {
-        const currentMin = minSetByType[doc.documentType];
-        const docSet = doc.set ?? 1;
-        if (currentMin === undefined || docSet < currentMin) {
-          minSetByType[doc.documentType] = docSet;
-        }
-      }
-    });
-
     // Update isRequired flag and displayName from API data
     const updatedDocs = docsToKeep.map(doc => {
       const docType = doc.documentType || '';
-      const isRequiredType = requiredTypes.has(docType);
-      const docSet = doc.set ?? 1;
-      const isMinSet = minSetByType[docType] === docSet;
       return {
         ...doc,
-        isRequired: isRequiredType && isMinSet,
+        isRequired: requiredTypes.has(docType),
         displayName: doc.displayName || displayNameMap.get(docType) || null,
       };
     });
@@ -191,16 +157,15 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
     // Combine: existing docs (with updated flags) + new placeholders
     const finalDocs = [...updatedDocs, ...newPlaceholders];
 
-    // Sort by: 1) isRequired (required first), 2) documentType, 3) set number
+    // Sort by: 1) isRequired (required first), 2) documentType
     finalDocs.sort((a, b) => {
       if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
       const typeA = a.documentType || '';
       const typeB = b.documentType || '';
-      if (typeA !== typeB) return typeA.localeCompare(typeB);
-      return (a.set ?? 1) - (b.set ?? 1);
+      return typeA.localeCompare(typeB);
     });
 
     setValue(`titles.${titleIndex}.documents`, finalDocs, { shouldDirty: false });
-    prevCollateralTypeRef.current = collateralType;
-  }, [data, collateralType, titleDocuments, titleIndex, setValue]);
+    prevScopeRef.current = scopeKey;
+  }, [data, collateralType, purpose, titleDocuments, titleIndex, setValue]);
 };

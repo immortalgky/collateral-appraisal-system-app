@@ -34,6 +34,7 @@ interface FormState {
   lastName: string;
   position: string;
   department: string;
+  aoCode: string;
   companyId: string;
   roles: string[];
   groups: string[];
@@ -51,6 +52,7 @@ const EMPTY_FORM: FormState = {
   lastName: '',
   position: '',
   department: '',
+  aoCode: '',
   companyId: '',
   roles: [],
   groups: [],
@@ -122,6 +124,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
       teams: [],
       companyId: scope === 'Bank' ? '' : prev.companyId,
       department: scope === 'Company' ? '' : prev.department,
+      aoCode: scope === 'Company' ? '' : prev.aoCode,
     }));
     setAccessTab('roles');
   };
@@ -200,6 +203,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
         lastName: form.lastName.trim(),
         position: form.position.trim() || null,
         department: isCompany ? null : form.department.trim() || null,
+        aoCode: isCompany ? null : form.aoCode.trim() || null,
         companyId: isCompany ? form.companyId : null,
         roles: form.roles,
         groupIds: form.groups,
@@ -410,6 +414,12 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   label={t('fields.department')}
                   value={form.department}
                   onChange={e => setField('department', e.currentTarget.value)}
+                />
+                <TextInput
+                  label={t('fields.aoCode')}
+                  value={form.aoCode}
+                  onChange={e => setField('aoCode', e.currentTarget.value)}
+                  placeholder={t('placeholders.aoCode')}
                 />
               </>
             )}

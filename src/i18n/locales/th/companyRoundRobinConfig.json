@@ -31,7 +31,9 @@
     "weight": "น้ำหนัก",
     "noCompanies": "ยังไม่มีบริษัทในกลุ่ม",
     "isActive": "ใช้งาน",
-    "remove": "ลบ"
+    "remove": "ลบ",
+    "companiesLoadError": "ไม่สามารถโหลดรายชื่อบริษัทได้",
+    "retry": "ลองใหม่"
   },
   "confirm": {
     "delete": "ลบกลุ่ม {{scope}} หรือไม่?"

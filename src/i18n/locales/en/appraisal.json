@@ -470,6 +470,8 @@
     "loadingActivity": "Loading activity...",
     "loadingActions": "Loading actions...",
     "loadingAssignees": "Loading assignees...",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Select a reason...",
     "commentPlaceholders": {
       "default": "Enter your comments or reason for this decision...",
       "approve": "Why are you approving?",
@@ -708,6 +710,9 @@
     }
   },
   "forms": {
+    "propertyName": {
+      "autoFillLabel": "Auto-fill property name"
+    },
     "land": {
       "pageTitle": "Land Detail",
       "sectionTitleInfo": "Land Information",

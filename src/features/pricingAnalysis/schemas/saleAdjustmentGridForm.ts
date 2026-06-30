@@ -36,10 +36,12 @@ const SaleAdjustmentGridQualitative = (t: TFunction<'pricingAnalysis'>) =>
 const SaleAdjustmentGridCalculation = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
-      weight: z.number({
-        required_error: t('validation.weightRequired'),
-        invalid_type_error: t('validation.weightRequired'),
-      }),
+      weight: z
+        .number({
+          required_error: t('validation.weightRequired'),
+          invalid_type_error: t('validation.weightRequired'),
+        })
+        .max(1, t('validation.weightMax')),
     })
     .passthrough();
 
@@ -93,7 +95,20 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
       /** Qualitative section */
       saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative(t)),
       /** Calculation section */
-      saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation(t)),
+      saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation(t)).superRefine(
+        (items, ctx) => {
+          const total = items.reduce((sum, item) => sum + (item.weight ?? 0), 0);
+          if (total > 1) {
+            items.forEach((_, i) => {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: t('validation.weightTotalExceeds'),
+                path: [i, 'weight'],
+              });
+            });
+          }
+        },
+      ),
       /** Adjustment Factors (adjust percentage) section */
       saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor(t)),
       /** Final value section */
