@@ -198,6 +198,7 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                     (sum, item) => sum + (item.estimatedDays ?? 0),
                     0,
                   );
+                  const isDeclined = cq.status === 'Declined';
                   return (
                     <tr
                       key={cq.id}
@@ -207,27 +208,29 @@ const AdminShortlistPanel = ({ quotationId, companyQuotations }: AdminShortlistP
                       )}
                     >
                       <td className="px-4 py-3">
-                        <button
-                          type="button"
-                          onClick={() => handleToggle(cq)}
-                          disabled={isPending}
-                          className={clsx(
-                            'size-6 rounded border-2 flex items-center justify-center transition-colors',
-                            cq.isShortlisted
-                              ? 'bg-indigo-500 border-indigo-500'
-                              : 'border-gray-300 hover:border-indigo-400',
-                            isPending && 'opacity-50 cursor-not-allowed',
-                          )}
-                          aria-label={
-                            cq.isShortlisted
-                              ? t('aria.removeFromShortlist')
-                              : t('aria.addToShortlist')
-                          }
-                        >
-                          {cq.isShortlisted && (
-                            <Icon name="check" style="solid" className="size-3.5 text-white" />
-                          )}
-                        </button>
+                        {!isDeclined && (
+                          <button
+                            type="button"
+                            onClick={() => handleToggle(cq)}
+                            disabled={isPending}
+                            className={clsx(
+                              'size-6 rounded border-2 flex items-center justify-center transition-colors',
+                              cq.isShortlisted
+                                ? 'bg-indigo-500 border-indigo-500'
+                                : 'border-gray-300 hover:border-indigo-400',
+                              isPending && 'opacity-50 cursor-not-allowed',
+                            )}
+                            aria-label={
+                              cq.isShortlisted
+                                ? t('aria.removeFromShortlist')
+                                : t('aria.addToShortlist')
+                            }
+                          >
+                            {cq.isShortlisted && (
+                              <Icon name="check" style="solid" className="size-3.5 text-white" />
+                            )}
+                          </button>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm font-medium text-gray-900">
