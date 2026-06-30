@@ -38,9 +38,9 @@ const formatDateTime = (iso: string): string => {
 };
 
 /**
- * Only populate tooltip items for the Current step.
+ * Populate tooltip items for the Current step (pending items) and the Cancelled step
+ * (the activity carrying the cancel marker, Movement="C", which holds who cancelled + reason).
  * Completed and Pending steps show no tooltip.
- * All pending items for the current group are shown (no deduplication).
  */
 const buildStepItemMap = (
   steps: PhaseStepDto[],
@@ -49,9 +49,13 @@ const buildStepItemMap = (
   const map: Record<string, ActivityLogItemDto[]> = {};
 
   for (const step of steps) {
-    if (step.status !== 'Current') continue;
-    const items = activityLog.filter(i => i.group === step.group && i.status !== 'Completed');
-    if (items.length > 0) map[step.group] = items;
+    if (step.status === 'Current') {
+      const items = activityLog.filter(i => i.group === step.group && i.status !== 'Completed');
+      if (items.length > 0) map[step.group] = items;
+    } else if (step.status === 'Cancelled') {
+      const items = activityLog.filter(i => i.group === step.group && i.movement === 'C');
+      if (items.length > 0) map[step.group] = items;
+    }
   }
 
   return map;
@@ -68,6 +72,7 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
   const isCompleted = step.status === 'Completed';
   const isCurrent = step.status === 'Current';
   const isPending = step.status === 'Pending';
+  const isCancelled = step.status === 'Cancelled';
 
   const [open, setOpen] = useState(false);
 
@@ -93,12 +98,14 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
           isCompleted && 'bg-emerald-500 border-emerald-500',
           isCurrent && 'bg-white border-blue-500 ring-4 ring-blue-100',
           isPending && 'bg-white border-gray-300',
+          isCancelled && 'bg-red-500 border-red-500',
           items && 'cursor-pointer',
         )}
       >
         {isCompleted && <Icon name="check" style="solid" className="w-4 h-4 text-white" />}
         {isCurrent && <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />}
         {isPending && <span className="w-2.5 h-2.5 rounded-full bg-gray-300" />}
+        {isCancelled && <Icon name="xmark" style="solid" className="w-4 h-4 text-white" />}
       </div>
 
       {/* Label */}
@@ -108,6 +115,7 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
           isCompleted && 'text-emerald-600',
           isCurrent && 'text-blue-600',
           isPending && 'text-gray-400',
+          isCancelled && 'text-red-600',
         )}
       >
         {step.group}
@@ -136,6 +144,9 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
                 <div className="text-gray-400 mt-0.5">{formatDateTime(item.startDate)}</div>
                 {item.actionTaken && (
                   <div className="text-gray-300 mt-0.5">Action: {item.actionTaken}</div>
+                )}
+                {item.remark && (
+                  <div className="text-gray-300 mt-0.5">Reason: {item.remark}</div>
                 )}
               </div>
             ))}

@@ -473,6 +473,8 @@
     "loadingActivity": "กำลังโหลดกิจกรรม...",
     "loadingActions": "กำลังโหลดตัวเลือก...",
     "loadingAssignees": "กำลังโหลดรายชื่อ...",
+    "reasonLabel": "เหตุผล",
+    "reasonPlaceholder": "เลือกเหตุผล...",
     "commentPlaceholders": {
       "default": "ระบุความคิดเห็นหรือเหตุผลสำหรับการตัดสินใจนี้...",
       "approve": "ทำไมถึงอนุมัติ?",

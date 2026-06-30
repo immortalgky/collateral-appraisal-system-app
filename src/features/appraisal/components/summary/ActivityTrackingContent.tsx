@@ -5,7 +5,10 @@ import FormCard from '@/shared/components/sections/FormCard';
 import { useGetWorkflowProgress } from '@/features/appraisal/api/workflow';
 import { useGetAppraisalById } from '@/features/appraisal/api/appraisal';
 import { useGetRequestById } from '@/features/request/api/requests';
-import { useGetAssignment, useGetCompanyById } from '@/features/appraisal/api/administration';
+import {
+  findAddressBySubDistrictCode,
+  findProvinceNameByCode,
+} from '@/shared/data/thaiAddresses';
 import WorkflowProgressTrack from './WorkflowProgressTrack';
 import ActivityLogTable from './ActivityLogTable';
 
@@ -48,9 +51,6 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
   const { data, isLoading, isError } = useGetWorkflowProgress(appraisalId);
   const { data: appraisal } = useGetAppraisalById(appraisalId);
   const { data: request } = useGetRequestById(appraisal?.requestId);
-  const { data: assignments } = useGetAssignment(appraisalId);
-  const assignment = assignments?.[0];
-  const { data: company } = useGetCompanyById(assignment?.assigneeCompanyId ?? null);
 
   if (isLoading) {
     return (
@@ -81,16 +81,36 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
   const customer = request?.customers?.[0];
   const loanDetail = request?.detail?.loanDetail;
   const appointment = request?.detail?.appointment;
+  const address = request?.detail?.address;
+  // subDistrict / district / province are stored as geocodes — resolve them to Thai names
+  // via the shared address store (same lookup the request forms use), falling back to the
+  // raw code when the store has no match.
+  const geo = address?.subDistrict ? findAddressBySubDistrictCode(address.subDistrict) : undefined;
+  const provinceName =
+    geo?.provinceName ??
+    (address?.province ? findProvinceNameByCode(address.province) : undefined) ??
+    address?.province;
 
-  const appraiserParts = [
-    company?.companyName,
-    assignment?.externalAppraiserLicense && assignment?.externalAppraiserName
-      ? `${assignment.externalAppraiserLicense} - ${assignment.externalAppraiserName}`
-      : (assignment?.externalAppraiserName ?? null),
+  const locationParts = [
+    address?.houseNumber,
+    address?.projectName,
+    address?.moo && `Moo ${address.moo}`,
+    address?.soi && `Soi ${address.soi}`,
+    address?.road && `${address.road} Road`,
+    geo?.subDistrictName ?? address?.subDistrict,
+    geo?.districtName ?? address?.district,
+    provinceName,
+    address?.postcode,
   ].filter(Boolean);
-  const appraiserDisplay = appraiserParts.length > 0 ? appraiserParts.join(' : ') : null;
+  const locationDisplay = locationParts.length > 0 ? locationParts.join(', ') : null;
 
-  const flowType = assignment?.assignmentType ?? data.routeType;
+  // Appraiser is resolved server-side: external → company + internal follow-up staff;
+  // internal → the internal assignee. companyName is null for internal assignments.
+  const appraiserDisplay = appraisal?.companyName
+    ? [appraisal.companyName, appraisal.appraiserName].filter(Boolean).join(' — ')
+    : (appraisal?.appraiserName ?? null);
+
+  const flowType = data.routeType;
 
   return (
     <div className="flex flex-col gap-6 pb-6">
@@ -99,7 +119,10 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
         <table className="w-full">
           <tbody>
             <DetailRow label={t('pageHeader.appraisalNumber')} value={appraisal?.appraisalNumber} />
-            <DetailRow label="Ref Appraisal Number" value={null} />
+            <DetailRow
+              label="Previous Appraisal Number"
+              value={request?.detail?.prevAppraisalNumber}
+            />
             <DetailRow label="Customer Name" value={customer?.name} />
             <DetailRow
               label="Loan Limit"
@@ -107,11 +130,18 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                 loanDetail?.facilityLimit != null ? formatCurrency(loanDetail.facilityLimit) : null
               }
             />
+            <DetailRow label="Location" value={locationDisplay} />
             <DetailRow
-              label={t('appointment.sectionTitle')}
+              label="Appraisal Price"
+              value={
+                appraisal?.appraisalValue != null ? formatCurrency(appraisal.appraisalValue) : null
+              }
+            />
+            <DetailRow
+              label="Appointment Date"
               value={formatDateTime(appointment?.appointmentDateTime)}
             />
-            {appraiserDisplay && <DetailRow label="Appraiser" value={appraiserDisplay} />}
+            <DetailRow label="Appraiser" value={appraiserDisplay} />
             <DetailRow label="Flow" value={flowType} />
             <DetailRow label={t('common.status')} value={appraisal?.status} />
           </tbody>

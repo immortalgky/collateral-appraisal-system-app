@@ -20,6 +20,7 @@ import {
   useGetTaskHistory,
 } from '@/features/appraisal/api/workflow';
 import { useGetEligibleStaff } from '@/features/appraisal/api/administration';
+import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { RaiseFollowupDialog } from '@/features/document-followup/components/RaiseFollowupDialog';
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 
@@ -150,6 +151,8 @@ interface DecisionSectionProps {
   onCommentsChange: (value: string) => void;
   selectedAssigneeUserId: string | null;
   onAssigneeChange: (userId: string | null) => void;
+  selectedReasonCode: string | null;
+  onReasonChange: (code: string | null) => void;
 }
 
 const DecisionSection = ({
@@ -159,6 +162,8 @@ const DecisionSection = ({
   onCommentsChange,
   selectedAssigneeUserId,
   onAssigneeChange,
+  selectedReasonCode,
+  onReasonChange,
 }: DecisionSectionProps) => {
   const { t } = useTranslation('appraisal');
   const isPageReadOnly = usePageReadOnly();
@@ -194,6 +199,12 @@ const DecisionSection = ({
 
   const isManualAssignment =
     selectedAction?.assignmentMode === 'user' && !!selectedAction.targetActivityId;
+
+  // Reason dropdown: only shown for Cancel (C) or Routeback (B) movements.
+  // Hook must be called unconditionally — pass '' when no group so it returns [].
+  const movement = selectedAction?.movement;
+  const reasonGroup = movement === 'C' ? 'CancelReason' : movement === 'B' ? 'RoutebackReason' : null;
+  const reasonOptions = useParameterOptions(reasonGroup ?? '');
 
   const { data: eligibleStaff, isLoading: isStaffLoading } = useGetEligibleStaff(
     workflowInstanceId,
@@ -242,12 +253,8 @@ const DecisionSection = ({
           <div className="hidden lg:block w-px bg-gray-200" />
           <div className="lg:hidden my-6 h-px bg-gray-200" />
 
-          {/* Right: Decision Form */}
-          <InlineSubSection
-            title={t('decision.sectionTitle')}
-            className="min-w-0"
-            rightSlot={<span className="text-danger">*</span>}
-          >
+          {/* Right: Decision Form — fields carry their own labels, so no section header */}
+          <InlineSubSection className="min-w-0">
             {isReadOnly ? (
               // Read-only view
               <div className="space-y-4">
@@ -285,16 +292,22 @@ const DecisionSection = ({
                 ) : (
                   <>
                     {/* Decision dropdown — scales for any number of actions */}
-                    <Dropdown
-                      options={decisionOptions}
-                      value={selectedDecision ?? undefined}
-                      onChange={value => {
-                        // Clear stale assignee when decision changes — target activity may differ
-                        onAssigneeChange(null);
-                        onDecisionChange(value);
-                      }}
-                      placeholder={t('decision.decisionPlaceholder')}
-                    />
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-2">
+                        {t('decision.decisionLabel')}
+                        <span className="text-danger ml-0.5">*</span>
+                      </label>
+                      <Dropdown
+                        options={decisionOptions}
+                        value={selectedDecision ?? undefined}
+                        onChange={value => {
+                          // Clear stale assignee when decision changes — target activity may differ
+                          onAssigneeChange(null);
+                          onDecisionChange(value);
+                        }}
+                        placeholder={t('decision.decisionPlaceholder')}
+                      />
+                    </div>
 
                     {isManualAssignment &&
                       (isStaffLoading ? (
@@ -303,15 +316,39 @@ const DecisionSection = ({
                           {t('decision.loadingAssignees')}
                         </div>
                       ) : (
-                        <Dropdown
-                          label={t('decision.assignNextTo')}
-                          required
-                          options={(eligibleStaff ?? []).map(s => ({ value: s.id, label: s.name }))}
-                          value={selectedAssigneeUserId ?? undefined}
-                          onChange={onAssigneeChange}
-                          placeholder={t('decision.assigneePlaceholder')}
-                        />
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-2">
+                            {t('decision.assignNextTo')}
+                            <span className="text-danger ml-0.5">*</span>
+                          </label>
+                          <Dropdown
+                            options={(eligibleStaff ?? []).map(s => ({ value: s.id, label: s.name }))}
+                            value={selectedAssigneeUserId ?? undefined}
+                            onChange={onAssigneeChange}
+                            placeholder={t('decision.assigneePlaceholder')}
+                          />
+                        </div>
                       ))}
+
+                    {/* Reason dropdown — required for Cancel (C) and Routeback (B) */}
+                    {reasonGroup !== null && (
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-2">
+                          {t('decision.reasonLabel')}
+                          <span className="text-danger ml-0.5">*</span>
+                        </label>
+                        <Dropdown
+                          options={reasonOptions}
+                          value={selectedReasonCode ?? undefined}
+                          onChange={code => {
+                            onReasonChange(code);
+                            const desc = reasonOptions.find(o => o.value === code)?.label ?? '';
+                            onCommentsChange(desc);
+                          }}
+                          placeholder={t('decision.reasonPlaceholder')}
+                        />
+                      </div>
+                    )}
 
                     {/* Card-aware comment box: focus ring color matches selected decision */}
                     {(() => {
@@ -321,7 +358,9 @@ const DecisionSection = ({
                             badgeMap[selectedDecision] ?? selectedDecision,
                           )
                         : null;
-                      const ringClass = visual ? COLOR_CLASSES[visual.color].ring : '';
+                      const ringClass = visual
+                        ? COLOR_CLASSES[visual.color].ring
+                        : 'focus-within:ring-gray-200';
                       const placeholderKey = resolveCommentPlaceholderKey(
                         selectedDecision,
                         selectedDecision ? (badgeMap[selectedDecision] ?? null) : null,
@@ -330,18 +369,35 @@ const DecisionSection = ({
                         `decision.commentPlaceholders.${placeholderKey}` as `decision.commentPlaceholders.default`,
                       );
                       return (
-                        <div
-                          className={clsx(
-                            'rounded-xl focus-within:ring-2 transition-shadow',
-                            ringClass,
-                          )}
-                        >
-                          <Textarea
-                            label={t('decision.commentsLabel')}
-                            value={comments}
-                            onChange={e => onCommentsChange(e.target.value)}
-                            placeholder={placeholder}
-                          />
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-2">
+                            {t('decision.commentsLabel')}
+                          </label>
+                          <div
+                            className={clsx(
+                              'rounded-xl focus-within:ring-2 transition-shadow',
+                              ringClass,
+                            )}
+                          >
+                            <Textarea
+                              value={comments}
+                              onChange={e => onCommentsChange(e.target.value)}
+                              placeholder={placeholder}
+                              maxLength={4000}
+                              className="focus:outline-none! focus:ring-0! focus:border-gray-200!"
+                            />
+                          </div>
+                          {/* Char count outside the ring wrapper so the focus ring doesn't cover it */}
+                          <div className="mt-1 flex justify-end">
+                            <span
+                              className={clsx(
+                                'text-xs',
+                                comments.length > 4000 ? 'text-danger' : 'text-gray-400',
+                              )}
+                            >
+                              {comments.length}/4000
+                            </span>
+                          </div>
                         </div>
                       );
                     })()}
