@@ -272,6 +272,7 @@
     "discountExceedsFee": "Discount + Negotiated Discount exceeds Fee Amount on {{number}}",
     "enterNegotiatedDiscount": "Enter a Negotiated Discount on at least one appraisal before submitting",
     "mandaysExceeded": "Estimated Mandays exceeds the maximum duration for: {{list}}",
+    "feeAfterDiscountZero": "Fee after discount cannot be 0 for: {{list}}",
     "fixErrors": "Please fix the highlighted errors before submitting",
     "noLongerCancellable": "Quotation is no longer cancellable (status: {{status}})."
   },
@@ -463,6 +464,7 @@
     "closes": "Closes",
     "loadingDocument": "Loading document...",
     "discountsExceedFee": "Discounts exceed fee",
+    "feeAfterDiscountZero": "Fee after discount cannot be 0",
     "companyResponses": "Company Responses",
     "cancelQuotation": "Cancel Quotation",
     "quotationAwarded": "Quotation awarded to {{company}}.",

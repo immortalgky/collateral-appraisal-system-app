@@ -89,6 +89,7 @@ const QuotationFeeBreakdown = ({
   const fmt = (v: number) => (isNaN(v) ? '—' : THB.format(v));
 
   const discountOverflow = !isNaN(feeAfterDiscount) && feeAfterDiscount < 0;
+  const feeAfterDiscountZero = !isNaN(feeAfterDiscount) && feeAfterDiscount === 0;
 
   return (
     <div className="space-y-2">
@@ -165,16 +166,20 @@ const QuotationFeeBreakdown = ({
         {/* Fee After Discount */}
         <div
           className={`grid grid-cols-2 gap-3 items-center px-2.5 py-1.5 rounded ${
-            discountOverflow ? 'bg-red-50 border border-red-200' : ''
+            discountOverflow || feeAfterDiscountZero ? 'bg-red-50 border border-red-200' : ''
           }`}
         >
           <span className="text-sm text-gray-600 text-right">{t('columns.feeAfterDiscount')}</span>
           <span
             className={`text-sm font-semibold text-right tabular-nums ${
-              discountOverflow ? 'text-red-600' : 'text-gray-900'
+              discountOverflow || feeAfterDiscountZero ? 'text-red-600' : 'text-gray-900'
             }`}
           >
-            {discountOverflow ? t('shared.discountsExceedFee') : fmt(feeAfterDiscount)}
+            {discountOverflow
+              ? t('shared.discountsExceedFee')
+              : feeAfterDiscountZero
+                ? t('shared.feeAfterDiscountZero')
+                : fmt(feeAfterDiscount)}
           </span>
         </div>
 

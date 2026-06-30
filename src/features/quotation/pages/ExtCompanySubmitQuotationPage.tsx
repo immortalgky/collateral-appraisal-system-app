@@ -351,6 +351,11 @@ const ExtCompanySubmitQuotationPage = () => {
 
   const handleSubmitToChecker = () => {
     // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
+    const zeroFeeViolations = findZeroFeeViolations(getValues());
+    if (zeroFeeViolations.length > 0) {
+      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+      return;
+    }
     const violations = findDurationCapViolations(getValues());
     if (violations.length > 0) {
       toast.error(t('toasts.mandaysExceeded', { list: violations.join(', ') }));
@@ -380,6 +385,27 @@ const ExtCompanySubmitQuotationPage = () => {
         toast.error(e?.apiError?.detail ?? t('toasts.saveBeforeSubmitFailed'));
       },
     });
+  };
+
+  /**
+   * Returns a list of appraisal numbers where fee after discount equals 0.
+   * Submit paths block on this; save-draft does not.
+   */
+  const findZeroFeeViolations = (formValues: SubmitQuotationFormValues): string[] => {
+    const violations: string[] = [];
+    for (const item of formValues.items) {
+      const ap = appraisals.find(a => a.appraisalId === item.appraisalId);
+      const { feeAfterDiscount } = deriveFeeTotals(
+        item.feeAmount,
+        item.discount,
+        item.negotiatedDiscount,
+        item.vatPercent,
+      );
+      if (!isNaN(feeAfterDiscount) && feeAfterDiscount <= 0) {
+        violations.push(ap?.appraisalNumber?.trim() || item.appraisalId.slice(0, 8));
+      }
+    }
+    return violations;
   };
 
   /**
@@ -516,6 +542,11 @@ const ExtCompanySubmitQuotationPage = () => {
   );
 
   const handleSubmitQuotation = handleSubmit(values => {
+    const zeroFeeViolations = findZeroFeeViolations(values);
+    if (zeroFeeViolations.length > 0) {
+      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+      return;
+    }
     const violations = findDurationCapViolations(values);
     if (violations.length > 0) {
       toast.error(t('toasts.mandaysExceeded', { list: violations.join(', ') }));
