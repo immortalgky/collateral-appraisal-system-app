@@ -470,6 +470,12 @@ const ExtCompanySubmitQuotationPage = () => {
     values => {
       if (!openNegotiation || !mySubmission) return;
 
+      const zeroFeeViolations = findZeroFeeViolations(getValues());
+      if (zeroFeeViolations.length > 0) {
+        toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+        return;
+      }
+
       const items = values.items.map(item => ({
         appraisalId: item.appraisalId,
         negotiatedDiscount:
