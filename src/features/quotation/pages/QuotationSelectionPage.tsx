@@ -632,7 +632,7 @@ const QuotationSelectionPage = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => setIsNegotiationOpen(true)}
-                  disabled={!tentativeWinner}
+                  disabled={!tentativeWinner || (tentativeWinner.negotiationRounds ?? 0) >= 3}
                   className="text-indigo-600 border-indigo-300 hover:bg-indigo-50"
                 >
                   <Icon name="handshake" style="solid" className="size-3.5 mr-1.5" />
