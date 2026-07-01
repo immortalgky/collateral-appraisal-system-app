@@ -1138,6 +1138,7 @@
     "missingFromSurvey": "勘测中缺失"
   },
   "constructionSummaryTable": {
+    "villageLabel": "楼盘 / 项目",
     "columns": {
       "milestone": "里程碑",
       "totalAppraisalValue": "评估总价值",

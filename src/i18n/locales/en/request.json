@@ -73,6 +73,7 @@
     "appraisalPurpose": "Appraisal Purpose",
     "hasAppraisalBook": "Customer bring the appraisal book",
     "requestorEmployeeId": "Employee ID",
+    "requestorUsername": "Username",
     "requestorName": "Employee Name",
     "requestorEmail": "Email",
     "requestorContactNo": "Contact No",
@@ -236,6 +237,7 @@
     "uploadedDocuments": "Uploaded Documents",
     "required": "Required:",
     "requiredBadge": "Required",
+    "notesLabel": "Notes",
     "awaitingUpload": "Awaiting upload",
     "optional": "Optional",
     "clickToUpload": "Click to upload",
@@ -264,8 +266,6 @@
     "columnFile": "File",
     "columnEntity": "Entity",
     "columnDocumentType": "Document Type",
-    "columnSet": "Set",
-    "columnSetTooltip": "Set number for multiple copies of the same document",
     "columnNotes": "Notes",
     "notesPlaceholder": "Optional",
     "warningSelectAll": "Please select an entity and document type for all files.",
@@ -277,7 +277,6 @@
     "modalTitle": "Edit Document Details",
     "documentType": "Document Type:",
     "uploadedBy": "Uploaded By:",
-    "setNumber": "Set Number",
     "notes": "Notes",
     "notesPlaceholder": "Add notes...",
     "saveChanges": "Save Changes",
@@ -302,7 +301,8 @@
     "searchPlaceholder": "Search by Employee ID or name...",
     "noResults": "No users found matching your search.",
     "loading": "Searching...",
-    "typeToSearch": "Type to search for employees"
+    "typeToSearch": "Type to search for employees",
+    "selectToViewDetail": "Select a requestor to view their details"
   },
   "searchAppraisal": {
     "modalTitle": "Search Previous Appraisal Report",
@@ -367,6 +367,7 @@
     "documentDeleted": "Document deleted",
     "documentFileRemoved": "File removed. Required document placeholder retained.",
     "documentDetailsUpdated": "Document details updated",
+    "documentMoved": "Document moved",
     "documentReplaced": "Document replaced successfully",
     "documentReplaceFailed": "Replace failed. Please try again.",
     "documentUploaded": "Document uploaded successfully",
@@ -404,9 +405,16 @@
   },
   "documentActions": {
     "view": "View/Download",
-    "editDetails": "Edit details",
+    "editDetails": "Notes",
+    "moveTo": "Move to...",
     "replaceFile": "Replace file",
     "delete": "Delete"
+  },
+  "moveDocument": {
+    "modalTitle": "Move Document",
+    "description": "Select where to move this document.",
+    "requestLevelLabel": "Request level",
+    "confirm": "Move"
   },
   "validation": {
     "bankingSegmentRequired": "Banking segment is required.",

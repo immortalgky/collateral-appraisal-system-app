@@ -50,6 +50,7 @@ export interface ConstructionSummaryRow {
 }
 
 export interface ConstructionSummary {
+  village: string | null;
   rows: ConstructionSummaryRow[];
 }
 

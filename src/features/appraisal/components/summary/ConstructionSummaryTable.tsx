@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 interface Props {
   rows: ConstructionSummaryRow[];
+  village?: string | null;
 }
 
 const ROW_CONFIG: Record<
@@ -75,7 +76,7 @@ const ROW_CONFIG: Record<
 
 const DEFAULT_CONFIG = ROW_CONFIG['Previous'];
 
-const ConstructionSummaryTable = ({ rows }: Props) => {
+const ConstructionSummaryTable = ({ rows, village }: Props) => {
   const { t } = useTranslation('appraisal');
 
   const previousRow = rows.find(r => r.label === 'Previous');
@@ -84,6 +85,14 @@ const ConstructionSummaryTable = ({ rows }: Props) => {
 
   return (
     <div className="space-y-4">
+      {village && (
+        <div className="flex items-center gap-2 border-b border-gray-100 pb-3 text-sm text-gray-700">
+          <Icon name="house" style="solid" className="size-3.5 text-gray-400" />
+          <span className="text-gray-500">{t('constructionSummaryTable.villageLabel')}:</span>
+          <span className="font-medium text-gray-800">{village}</span>
+        </div>
+      )}
+
       <ConstructionTimelineBar
         prevValue={previousRow?.buildingValueConstructing ?? 0}
         currentValue={currentRow?.buildingValueConstructing ?? 0}

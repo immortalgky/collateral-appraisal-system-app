@@ -471,6 +471,7 @@ const DecisionSummaryPage = () => {
   // Decision state (lifted from DecisionSection)
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
   const [comments, setComments] = useState('');
+  const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
@@ -508,6 +509,9 @@ const DecisionSummaryPage = () => {
 
   const isManualAssignment =
     selectedAction?.assignmentMode === 'user' && !!selectedAction.targetActivityId;
+
+  const reasonRequired =
+    selectedAction?.movement === 'C' || selectedAction?.movement === 'B';
 
   // Form setup
   const mapDataToForm = useMemo(() => {
@@ -630,6 +634,10 @@ const DecisionSummaryPage = () => {
         ? { [targetId]: { runtimeAssignee: selectedAssigneeUserId } }
         : undefined;
 
+    if (reasonRequired && !reasonCode) {
+      return;
+    }
+
     completeActivity.mutate(
       {
         workflowInstanceId: workflowInstanceId!,
@@ -637,6 +645,7 @@ const DecisionSummaryPage = () => {
         input: {
           decisionTaken: selectedDecision!,
           comments,
+          ...(reasonCode && { reasonCode }),
           // For appraisal-initiation: refresh routing variables after maker edits
           ...(activityId === 'appraisal-initiation' && {
             isPma,
@@ -904,7 +913,10 @@ const DecisionSummaryPage = () => {
                   iconColor="yellow"
                   title={t('decisionSummaryPageExtra.constructionSummaryTitle')}
                 >
-                  <ConstructionSummaryTable rows={data.constructionSummary.rows} />
+                  <ConstructionSummaryTable
+                    village={data.constructionSummary.village}
+                    rows={data.constructionSummary.rows}
+                  />
                 </GroupCard>
               )}
 
@@ -1034,11 +1046,16 @@ const DecisionSummaryPage = () => {
               {/* Decision — standalone */}
               <DecisionSection
                 selectedDecision={selectedDecision}
-                onDecisionChange={setSelectedDecision}
+                onDecisionChange={value => {
+                  setSelectedDecision(value);
+                  setReasonCode(null);
+                }}
                 comments={comments}
                 onCommentsChange={setComments}
                 selectedAssigneeUserId={selectedAssigneeUserId}
                 onAssigneeChange={setSelectedAssigneeUserId}
+                selectedReasonCode={reasonCode}
+                onReasonChange={setReasonCode}
               />
             </div>
           </div>
@@ -1088,7 +1105,8 @@ const DecisionSummaryPage = () => {
                       completeActivity.isPending ||
                       (isTaskOwner && !selectedDecision) ||
                       (isTaskOwner && !!selectedDecision && !selectedAction) ||
-                      (isTaskOwner && isManualAssignment && !selectedAssigneeUserId)
+                      (isTaskOwner && isManualAssignment && !selectedAssigneeUserId) ||
+                      (isTaskOwner && reasonRequired && !reasonCode)
                     }
                     onClick={() => setIsConfirmOpen(true)}
                   >

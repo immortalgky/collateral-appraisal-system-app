@@ -17,7 +17,6 @@ import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { DetailPageSkeleton } from '@/shared/components/Skeleton';
 import AddressForm from '../forms/AddressForm';
-import RequestorDetailForm from '../forms/RequestorDetailForm';
 import { useRequestLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 import Button from '@/shared/components/Button';
 import RequestRightMenu, { type LocalComment } from '../components/RequestRightMenu';
@@ -354,6 +353,12 @@ function RequestPage() {
     setIsDuplicateDialogOpen(true);
   };
 
+  const defaultProperties = (properties: createRequestFormType['properties']) =>
+    properties.map(p => ({
+      ...p,
+      sellingPrice: p.sellingPrice === '' || p.sellingPrice == null ? null : Number(p.sellingPrice),
+    }));
+
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
     setSaveAction('save');
 
@@ -369,6 +374,7 @@ function RequestPage() {
           request: {
             ...restData,
             requestorEmployeeId,
+            properties: defaultProperties(data.properties),
           } as any,
         },
         {
@@ -398,6 +404,7 @@ function RequestPage() {
         {
           ...restData,
           requestorEmployeeId,
+          properties: defaultProperties(data.properties),
           sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
         } as CreateRequestRequestType,
@@ -435,6 +442,7 @@ function RequestPage() {
           request: {
             ...restData,
             requestorEmployeeId,
+            properties: defaultProperties(data.properties),
           } as any,
         },
         {
@@ -463,6 +471,7 @@ function RequestPage() {
         {
           ...restData,
           requestorEmployeeId,
+          properties: defaultProperties(data.properties),
           sessionId: uploadSessionIdRef.current,
           comments: commentsForApi,
         } as CreateDraftRequestRequestType,
@@ -525,6 +534,7 @@ function RequestPage() {
               request: {
                 ...restData,
                 requestorEmployeeId,
+                properties: defaultProperties(data.properties),
               } as any,
             },
             {
@@ -551,6 +561,7 @@ function RequestPage() {
             {
               ...restData,
               requestorEmployeeId,
+              properties: defaultProperties(data.properties),
               sessionId: uploadSessionIdRef.current,
               comments: commentsForApi,
             } as CreateRequestRequestType,
@@ -679,7 +690,6 @@ function RequestPage() {
                         </div>
                       )}
                       <CustomersForm />
-                      <RequestorDetailForm onSearch={openUserModal} readOnly={readOnly} />
                       {/* In create mode, wrap with AppraisalCopyProvider so AppraisalSelector
                           can receive the full copy callback via context */}
                       {isEditMode ? (
@@ -802,14 +812,14 @@ function RequestPage() {
           )}
         </form>
 
-        {/* User Search Modal for Requestor */}
-        {!readOnly && (
-          <SearchUserModal
-            isOpen={isUserModalOpen}
-            onClose={closeUserModal}
-            onSelect={handleRequestorSelect}
-          />
-        )}
+        {/* Requestor detail + search modal (opened from the right-panel requestor badge) */}
+        <SearchUserModal
+          isOpen={isUserModalOpen}
+          onClose={closeUserModal}
+          onSelect={handleRequestorSelect}
+          initialRequestor={methods.watch('requestor')}
+          readOnly={readOnly}
+        />
       </FormProvider>
 
       <ConfirmDialog

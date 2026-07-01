@@ -473,6 +473,8 @@
     "loadingActivity": "กำลังโหลดกิจกรรม...",
     "loadingActions": "กำลังโหลดตัวเลือก...",
     "loadingAssignees": "กำลังโหลดรายชื่อ...",
+    "reasonLabel": "เหตุผล",
+    "reasonPlaceholder": "เลือกเหตุผล...",
     "commentPlaceholders": {
       "default": "ระบุความคิดเห็นหรือเหตุผลสำหรับการตัดสินใจนี้...",
       "approve": "ทำไมถึงอนุมัติ?",
@@ -1145,6 +1147,7 @@
     "missingFromSurvey": "ไม่พบในรังวัด"
   },
   "constructionSummaryTable": {
+    "villageLabel": "ชื่ออาคาร / โครงการ",
     "columns": {
       "milestone": "ช่วงการก่อสร้าง",
       "totalAppraisalValue": "มูลค่าประเมินรวม",

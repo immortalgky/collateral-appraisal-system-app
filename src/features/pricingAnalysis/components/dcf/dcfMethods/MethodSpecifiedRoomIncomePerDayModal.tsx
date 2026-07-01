@@ -30,7 +30,11 @@ export function MethodSpecifyRoomIncomePerDayModal({
   templateList?: TemplateDtoType[] | undefined;
   ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }) {
-  const { getValues, setValue } = useFormContext();
+  const {
+    getValues,
+    setValue,
+    formState: { errors },
+  } = useFormContext();
   // Local state to cache the id obtained by ensureIncomeAnalysisId so the
   // button can function before the first save.
   const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
@@ -114,8 +118,11 @@ export function MethodSpecifyRoomIncomePerDayModal({
   }, [fields.length]);
   useDerivedFields({ rules });
 
+  const rowsError = (errors as any)?.method?.detail?.roomDetails?.message as string | undefined;
+
   return (
     <div className="flex flex-col gap-2">
+      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
           <table className={'table table-sm'}>
@@ -167,9 +174,7 @@ export function MethodSpecifyRoomIncomePerDayModal({
                         const roomOther = getValues(`${name}.roomDetails.${index}.roomTypeOther`);
                         const roomCode = String(roomType ?? '');
                         const anchorRefKey =
-                          roomCode === '99' && roomOther
-                            ? String(roomOther)
-                            : roomCode;
+                          roomCode === '99' && roomOther ? String(roomOther) : roomCode;
                         // The effective anchorId: already-saved id wins; fall back to locally ensured.
                         // Read from ref for latest value without stale closure inside onBeforeOpen.
                         const effectiveId = incomeAnalysisId ?? ensuredId;
@@ -188,7 +193,9 @@ export function MethodSpecifyRoomIncomePerDayModal({
                             templateList={templateList}
                             currentAnchorLabel={anchorRefKey}
                             onApplyValue={v =>
-                              setValue(`${name}.roomDetails.${index}.roomIncome`, v, { shouldDirty: true })
+                              setValue(`${name}.roomDetails.${index}.roomIncome`, v, {
+                                shouldDirty: true,
+                              })
                             }
                             onBeforeOpen={
                               effectiveId
@@ -210,7 +217,11 @@ export function MethodSpecifyRoomIncomePerDayModal({
                             fieldName={`${name}.roomDetails.${index}.roomIncome`}
                             inputType="number"
                             disabled={isReadOnly}
-                            number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
+                            number={{
+                              decimalPlaces: 2,
+                              maxIntegerDigits: 15,
+                              allowNegative: false,
+                            }}
                             rightIcon={refButton}
                             inputClassName={refButton ? '!pr-14' : undefined}
                           />

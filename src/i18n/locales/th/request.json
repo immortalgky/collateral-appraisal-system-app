@@ -226,6 +226,7 @@
     "uploadedDocuments": "เอกสารที่อัปโหลด",
     "required": "จำเป็น:",
     "requiredBadge": "จำเป็น",
+    "notesLabel": "หมายเหตุ",
     "awaitingUpload": "รอการอัปโหลด",
     "optional": "ไม่บังคับ",
     "clickToUpload": "คลิกเพื่ออัปโหลด",
@@ -254,8 +255,6 @@
     "columnFile": "ไฟล์",
     "columnEntity": "นิติบุคคล",
     "columnDocumentType": "ประเภทเอกสาร",
-    "columnSet": "ชุด",
-    "columnSetTooltip": "หมายเลขชุดสำหรับสำเนาเอกสารประเภทเดียวกันหลายชุด",
     "columnNotes": "หมายเหตุ",
     "notesPlaceholder": "ไม่บังคับ",
     "warningSelectAll": "กรุณาเลือกนิติบุคคลและประเภทเอกสารสำหรับทุกไฟล์",
@@ -267,7 +266,6 @@
     "modalTitle": "แก้ไขรายละเอียดเอกสาร",
     "documentType": "ประเภทเอกสาร:",
     "uploadedBy": "อัปโหลดโดย:",
-    "setNumber": "หมายเลขชุด",
     "notes": "หมายเหตุ",
     "notesPlaceholder": "เพิ่มหมายเหตุ...",
     "saveChanges": "บันทึกการเปลี่ยนแปลง",
@@ -355,6 +353,7 @@
     "documentDeleted": "ลบเอกสารแล้ว",
     "documentFileRemoved": "นำไฟล์ออกแล้ว ยังคงเก็บ placeholder เอกสารจำเป็นไว้",
     "documentDetailsUpdated": "อัปเดตรายละเอียดเอกสารแล้ว",
+    "documentMoved": "ย้ายเอกสารแล้ว",
     "documentReplaced": "แทนที่เอกสารสำเร็จ",
     "documentReplaceFailed": "แทนที่ไม่สำเร็จ กรุณาลองใหม่",
     "documentUploaded": "อัปโหลดเอกสารสำเร็จ",
@@ -392,9 +391,16 @@
   },
   "documentActions": {
     "view": "ดู/ดาวน์โหลด",
-    "editDetails": "แก้ไขรายละเอียด",
+    "editDetails": "หมายเหตุ",
+    "moveTo": "ย้ายไปยัง...",
     "replaceFile": "แทนที่ไฟล์",
     "delete": "ลบ"
+  },
+  "moveDocument": {
+    "modalTitle": "ย้ายเอกสาร",
+    "description": "เลือกตำแหน่งที่จะย้ายเอกสารนี้",
+    "requestLevelLabel": "ระดับคำขอ",
+    "confirm": "ย้าย"
   },
   "validation": {
     "bankingSegmentRequired": "กรุณาระบุกลุ่มลูกค้า",

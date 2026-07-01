@@ -307,6 +307,7 @@ export const factorDataDto = z
     parameterGroup: z.string().nullable().optional(),
     isActive: z.boolean().nullable().optional(),
     displaySeq: z.coerce.number().int().nullable().optional(),
+    isMandatory: z.boolean().nullable().optional(),
   })
   .passthrough();
 
@@ -329,7 +330,77 @@ export const createMarketComparableForm = z
     latitude: z.coerce.number().nullable().optional(),
     longitude: z.coerce.number().nullable().optional(),
   })
-  .passthrough();
+  .passthrough()
+  .superRefine((data, ctx) => {
+    // ── Static required fields ──────────────────────────────────────────────
+    if (!data.surveyName?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Comparable name is required',
+        path: ['surveyName'],
+      });
+    }
+    if (!data.infoDateTime?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Infomation DateTime is required',
+        path: ['infoDateTime'],
+      });
+    }
+    if (!data.templateCode) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Template is required',
+        path: ['templateCode'],
+      });
+    }
+    if (!data.propertyType) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Property type is required',
+        path: ['propertyType'],
+      });
+    }
+
+    const hasOfferPrice = data.offerPrice != null;
+    const hasSalePrice = data.salePrice != null;
+
+    if (!hasOfferPrice && !hasSalePrice) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Offer price is required when sale price is not provided',
+        path: ['offerPrice'],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Sale price is required when offer price is not provided',
+        path: ['salePrice'],
+      });
+    }
+
+    // ── saleDate required when salePrice got value ──────────────────────────
+    if (hasSalePrice && !data.saleDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Sale date is required when sale price is provided',
+        path: ['saleDate'],
+      });
+    }
+
+    // ── Template factor mandatory validation ─────────────────────────────────
+    (data.factorData ?? []).forEach((factor: any, index: number) => {
+      if (!factor.isMandatory || factor.dataType === 'Checkbox') return;
+      const val = factor.value;
+      const isEmpty = val == null || val === '' || (Array.isArray(val) && val.length === 0);
+      if (isEmpty) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `This factor is required`,
+          path: ['factorData', index, 'value'],
+        });
+      }
+    });
+  });
 
 export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;

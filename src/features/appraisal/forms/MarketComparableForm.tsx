@@ -244,20 +244,33 @@ const MarketComparableForm = () => {
       disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
       disabledValue: null,
       disableFutureDates: true,
+      requiredWhen: { field: 'salePrice', operator: 'isNotEmpty' },
     },
     {
-      type: 'text-input',
+      type: 'number-input',
       name: 'latitude',
       label: 'Latitude',
       wrapperClassName: 'col-span-6',
       rightIcon: pickerButton,
+      decimalPlaces: 6,
+      maxIntegerDigits: 3,
+      allowNegative: true,
+      allowZero: true,
+      min: -90,
+      max: 90,
     },
     {
-      type: 'text-input',
+      type: 'number-input',
       name: 'longitude',
       label: 'Longitude',
       wrapperClassName: 'col-span-6',
       rightIcon: pickerButton,
+      decimalPlaces: 6,
+      maxIntegerDigits: 3,
+      allowNegative: true,
+      allowZero: true,
+      min: -180,
+      max: 180,
     },
   ];
 
@@ -370,6 +383,7 @@ const MarketComparableForm = () => {
 };
 
 const buildFormField = (fac: any, index: number): FormField[] => {
+  const isRequired = !!fac.isMandatory;
   switch (fac.dataType) {
     case 'Dropdown':
       return [
@@ -379,6 +393,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
           label: '',
           wrapperClassName: 'col-span-12',
           group: fac.parameterGroup,
+          required: isRequired,
         },
         {
           type: 'text-input',
@@ -399,6 +414,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
           orientation: 'horizontal',
           group: fac.parameterGroup,
           wrapperClassName: 'col-span-12',
+          required: isRequired,
         },
         {
           type: 'text-input',
@@ -419,6 +435,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
           orientation: 'horizontal',
           group: fac.parameterGroup,
           wrapperClassName: 'col-span-12',
+          required: isRequired,
         },
         {
           type: 'text-input',
@@ -436,8 +453,6 @@ const buildFormField = (fac: any, index: number): FormField[] => {
         {
           type: 'checkbox',
           name: `factorData.[${index}].value`,
-          //orientation: 'horizontal',
-          //group: fac.parameterGroup,
           wrapperClassName: 'col-span-12',
         },
       ];
@@ -449,6 +464,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
           name: `factorData.[${index}].value`,
           label: '',
           wrapperClassName: 'col-span-12',
+          required: isRequired,
           ...(fac.fieldLength ? { maxIntegerDigits: fac.fieldLength } : {}),
           ...(fac.fieldDecimal ? { decimalPlaces: fac.fieldDecimal } : {}),
         },
@@ -461,6 +477,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
           name: `factorData.[${index}].value`,
           label: '',
           wrapperClassName: 'col-span-12',
+          required: isRequired,
           ...(fac.fieldLength ? { maxLength: fac.fieldLength } : {}),
         },
       ];
@@ -480,6 +497,7 @@ const defaultMarketComparableData = (newFactors: any[], oldData: any[] = []) => 
       parameterGroup: fac.parameterGroup ?? '',
       fieldLength: fac.fieldLength ?? 0,
       fieldDecimal: fac.fieldDecimal ?? 2,
+      isMandatory: fac.isMandatory ?? false,
       value:
         old?.value ??
         (fac.dataType === 'CheckboxGroup'

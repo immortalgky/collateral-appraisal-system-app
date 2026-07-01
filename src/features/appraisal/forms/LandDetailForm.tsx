@@ -27,6 +27,7 @@ import {
   roadSurfaceField,
   transpotationField,
 } from '../configs/fields';
+import { PropertyNameTriggerIcon, type PropertyType } from '../components/PropertyNameTriggerIcon';
 
 /** Section row component for form layout */
 interface SectionRowProps {
@@ -34,6 +35,9 @@ interface SectionRowProps {
   icon?: string;
   children: React.ReactNode;
   isLast?: boolean;
+}
+interface LandDetailFormProps {
+  propertyType?: PropertyType;
 }
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
@@ -61,7 +65,7 @@ const Card = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
-const LandDetailForm = () => {
+const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const { watch, setValue } = useFormContext();
@@ -79,17 +83,25 @@ const LandDetailForm = () => {
     [],
   );
 
+  const fillIcon = useMemo(
+    () => <PropertyNameTriggerIcon propertyType={propertyType} />,
+    [readOnly],
+  );
+
   // Inject the map-picker trigger onto the lat/lon inputs (hidden in read-only mode).
   const landFields = useMemo<FormField[]>(
     () =>
-      landInfoField.map(field =>
-        !readOnly &&
-        (field.name === 'latitude' || field.name === 'longitude') &&
-        field.type === 'number-input'
-          ? { ...field, rightIcon: pickerButton }
-          : field,
-      ),
-    [pickerButton, readOnly],
+      landInfoField.map(field => {
+        if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
+        if (
+          !readOnly &&
+          (field.name === 'latitude' || field.name === 'longitude') &&
+          field.type === 'number-input'
+        )
+          return { ...field, rightIcon: pickerButton };
+        return field;
+      }),
+    [pickerButton, fillIcon, readOnly],
   );
 
   return (
@@ -136,7 +148,10 @@ const LandDetailForm = () => {
           </Card>
         </SectionRow>
 
-        <SectionRow title={t('landCharacteristicsForm.sections.limitation')} icon="triangle-exclamation">
+        <SectionRow
+          title={t('landCharacteristicsForm.sections.limitation')}
+          icon="triangle-exclamation"
+        >
           <Card>
             <FormFields fields={expropriateField} />
           </Card>

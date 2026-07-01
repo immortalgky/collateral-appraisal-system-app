@@ -78,7 +78,7 @@ export function DiscountedCashFlowPanel({
     // shouldUnregister: true,
   });
 
-  const { reset, getValues, setValue, handleSubmit, formState } = methods;
+  const { reset, getValues, setValue, handleSubmit, formState, trigger } = methods;
 
   const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
@@ -98,9 +98,7 @@ export function DiscountedCashFlowPanel({
 
   const appraisalId = useAppraisalId() ?? '';
   const propertyId =
-    (findLeaseProperty(properties)?.propertyId as string) ??
-    properties?.[0]?.propertyId ??
-    '';
+    (findLeaseProperty(properties)?.propertyId as string) ?? properties?.[0]?.propertyId ?? '';
 
   const saveMutation = useSaveIncomeAnalysis();
   const previewMutation = usePreviewIncomeAnalysis();
@@ -260,6 +258,11 @@ export function DiscountedCashFlowPanel({
   }, [firePreview, methods]);
 
   const handleOnGenerate = async () => {
+    if (!selectedTemplateCode) {
+      trigger('templateCode');
+      return;
+    }
+
     if (!templateDto) return;
     const dcfTemplate = pricingTemplateDtoToDcfTemplate(templateDto);
     initializeDiscountedCashFlowForm(dcfTemplate, reset);
@@ -352,7 +355,12 @@ export function DiscountedCashFlowPanel({
    */
   const ensureIncomeAnalysisId = useCallback(async (): Promise<string | undefined> => {
     if (incomeAnalysisQuery.data?.id) return incomeAnalysisQuery.data.id;
-    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId || !appraisalId || !propertyId) {
+    if (
+      !activeMethod?.pricingAnalysisId ||
+      !activeMethod?.methodId ||
+      !appraisalId ||
+      !propertyId
+    ) {
       toast.error(t('toasts.missingIds'));
       return undefined;
     }
@@ -472,8 +480,7 @@ export function DiscountedCashFlowPanel({
               pricingAnalysisId={activeMethod?.pricingAnalysisId}
               marketSurveys={marketSurveys}
               subjectProperty={
-                (properties ?? []).find(p => isLeasePropertyType(p.propertyType)) ??
-                properties?.[0]
+                (properties ?? []).find(p => isLeasePropertyType(p.propertyType)) ?? properties?.[0]
               }
               ensureIncomeAnalysisId={ensureIncomeAnalysisId}
             />

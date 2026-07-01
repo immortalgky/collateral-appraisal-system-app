@@ -10,6 +10,7 @@ import { SupportingDataTableRow } from './SupportingDataTableRow';
 interface SupportingDataTableProps {
   supportingId: string;
   isReadOnly: boolean;
+  hasAuthorityToDecision: boolean;
   onSelectSupportingData: (id: string) => void;
   onDeleteSupportingData: (id: string) => void;
   isBatchMode?: boolean;
@@ -21,6 +22,7 @@ interface SupportingDataTableProps {
 export function SupportingDataTable({
   supportingId,
   isReadOnly,
+  hasAuthorityToDecision,
   onSelectSupportingData,
   onDeleteSupportingData,
   isBatchMode = false,
@@ -147,6 +149,7 @@ export function SupportingDataTable({
                     index={absoluteIndex}
                     data={item}
                     isReadOnly={isReadOnly}
+                    hasAuthorityToDecision={hasAuthorityToDecision}
                     onEdit={() => onSelectSupportingData(item.id)}
                     onDelete={() => onDeleteSupportingData(item.id)}
                     isBatchMode={isBatchMode}

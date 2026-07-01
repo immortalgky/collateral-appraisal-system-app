@@ -366,7 +366,7 @@ const CreateLandBuildingPage = () => {
                         anchor
                         className="flex flex-col gap-6 min-w-0 overflow-hidden"
                       >
-                        <LandDetailForm />
+                        <LandDetailForm propertyType="LB" />
                       </Section>
                     </div>
 
@@ -386,7 +386,7 @@ const CreateLandBuildingPage = () => {
                       </div>
                       <div className="h-px bg-gray-200" />
                       <Section id="building-info" anchor className="flex flex-col gap-6">
-                        <BuildingDetailForm />
+                        <BuildingDetailForm propertyType="LB" />
                       </Section>
                     </div>
 
