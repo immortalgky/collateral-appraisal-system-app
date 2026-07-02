@@ -137,7 +137,7 @@ export const useCreateLandAndBuildingPMAProperty = () => {
       groupId?: string;
       data: CreateLandPMAPropertyRequestType;
     }): Promise<CreateLandPMAPropertyResponseType> => {
-      const url = `/appraisals/${params.appraisalId}/land-pma${params.groupId ? `?groupId=${params.groupId}` : ''}`;
+      const url = `/appraisals/${params.appraisalId}/land-building-pma${params.groupId ? `?groupId=${params.groupId}` : ''}`;
       const { data } = await axios.post(url, params.data);
       return data;
     },
@@ -250,7 +250,7 @@ export const useGetLandAndBuildingPMAPropertyById = (appraisalId: string, proper
     enabled: !!appraisalId && !!propertyId,
     queryFn: async (): Promise<GetLandPMAPropertyResponseType> => {
       const { data } = await axios.get(
-        `/appraisals/${appraisalId}/properties/${propertyId}/land-pma`,
+        `/appraisals/${appraisalId}/properties/${propertyId}/land-building-pma`,
       );
       return data;
     },
@@ -521,7 +521,7 @@ export const useUpdateLandAndBuildingPMAProperty = () => {
       data: UpdateLandPMAPropertyRequestType;
     }): Promise<void> => {
       await axios.put(
-        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/land-pma`,
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/land-building-pma`,
         params.data,
       );
     },

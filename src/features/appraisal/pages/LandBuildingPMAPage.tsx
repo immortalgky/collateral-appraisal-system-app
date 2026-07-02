@@ -5,8 +5,8 @@ import {
   type createLandAndBuildingPMAFormType,
 } from '../schemas/form';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import {
   useCreateLandAndBuildingPMAProperty,
   useGetLandAndBuildingPMAPropertyById,
@@ -26,14 +26,20 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import LandBuildingPMAForm from '../forms/LandBuildingPMAForm';
 import RightMenuPortal from '@/shared/components/RightMenuPortal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const LandBuildingPMAPage = () => {
+  const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
   const { propertyId } = useParams<{ propertyId?: string }>();
   const appraisalId = useAppraisalId();
   const landAndBuildingPMAFormSchema = useLandAndBuildingPMAFormSchema();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const basePath = useBasePath();
   const groupId = searchParams.get('groupId') ?? undefined;
+  const isEditMode = Boolean(propertyId);
 
   const methods = useForm<createLandAndBuildingPMAFormType>({
     defaultValues: createLandAndBuildingPMAFormDefault,
@@ -46,7 +52,8 @@ const LandBuildingPMAPage = () => {
     formState: { isDirty },
   } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const hasDirtyFields = Object.keys(isDirty).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
@@ -66,18 +73,35 @@ const LandBuildingPMAPage = () => {
   const onSubmit: SubmitHandler<createLandAndBuildingPMAFormType> = data => {
     setSaveAction('submit');
     const payload = mapLandAndBuildingPMAFormToPayload(data);
-    if (propertyId) {
+    if (isEditMode && propertyId) {
       updateLandPMAProperties(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
         {
-          onSuccess: () => reset(data),
+          onSuccess: () => {
+            reset(getValues());
+            toast.success(t('toasts.propertyLandBuildingUpdated'));
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
         },
       );
     } else {
       createLandPMAProperties(
         { data: payload, appraisalId: appraisalId!, groupId: groupId },
         {
-          onSuccess: () => reset(data),
+          onSuccess: (response: any) => {
+            toast.success(t('toasts.propertyLandBuildingCreated'));
+            setSaveAction(null);
+            skipWarning();
+            navigate(`${basePath}/property/land-building/${response.propertyId}`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
+            setSaveAction(null);
+          },
         },
       );
     }
@@ -87,18 +111,37 @@ const LandBuildingPMAPage = () => {
     setSaveAction('draft');
     const data = getValues();
     const payload = mapLandAndBuildingPMAFormToPayload(data);
-    if (propertyId) {
+    if (isEditMode && propertyId) {
       updateLandPMAProperties(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
         {
-          onSuccess: () => reset(data),
+          onSuccess: () => {
+            reset(getValues());
+            toast.success(t('toasts.draftSaved'));
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
         },
       );
     } else {
       createLandPMAProperties(
         { data: payload, appraisalId: appraisalId!, groupId: groupId },
         {
-          onSuccess: () => reset(data),
+          onSuccess: (response: any) => {
+            toast.success(t('toasts.draftSaved'));
+            setSaveAction(null);
+            if (response.propertyId) {
+              skipWarning();
+              navigate(`${basePath}/property-pma/land-building/${response.propertyId}`);
+            }
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
         },
       );
     }
@@ -107,13 +150,13 @@ const LandBuildingPMAPage = () => {
   const { isOpen, onToggle } = useDisclosure();
 
   useEffect(() => {
-    if (propertyData) {
+    if (isEditMode && propertyData) {
       const formValue = mapLandAndBuildingPMAPropertyResponseToForm(propertyData);
       reset(formValue);
     }
-  }, [propertyData, reset]);
+  }, [isEditMode, propertyData, reset]);
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />

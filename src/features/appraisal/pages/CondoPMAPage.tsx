@@ -1,5 +1,5 @@
-import { useParams, useSearchParams } from 'react-router-dom';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import {
   useCondoPMAFormSchema,
   createCondoPMAFormDefault,
@@ -24,6 +24,8 @@ import {
   useGetCondoPMAPropertyById,
   useUpdateCondoPMAProperty,
 } from '../api';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const CondoPMAPage = () => {
   const isReadOnly = usePageReadOnly();
@@ -32,6 +34,10 @@ const CondoPMAPage = () => {
   const condoPMAFormSchema = useCondoPMAFormSchema();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId') ?? undefined;
+  const { t } = useTranslation('appraisal');
+  const navigate = useNavigate();
+  const basePath = useBasePath();
+  const isEditMode = Boolean(propertyId);
 
   const methods = useForm<createCondoPMAFormType>({
     defaultValues: createCondoPMAFormDefault,
@@ -44,7 +50,8 @@ const CondoPMAPage = () => {
     formState: { isDirty },
   } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const hasDirtyFields = Object.keys(isDirty).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
@@ -56,15 +63,36 @@ const CondoPMAPage = () => {
 
   const onSubmit: SubmitHandler<createCondoPMAFormType> = data => {
     setSaveAction('submit');
-    if (propertyId) {
+    if (isEditMode && propertyId) {
       updateCondoPMAProperties(
         { data, appraisalId: appraisalId!, propertyId: propertyId },
-        { onSuccess: () => reset(data) },
+        {
+          onSuccess: () => {
+            reset(getValues());
+            toast.success(t('toasts.propertyCondoUpdated'));
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to update property. Please try again.');
+            setSaveAction(null);
+          },
+        },
       );
     } else {
       createCondoPMAProperties(
         { data, appraisalId: appraisalId!, groupId: groupId },
-        { onSuccess: () => reset(data) },
+        {
+          onSuccess: async (response: any) => {
+            toast.success(t('toasts.propertyCondoCreated'));
+            setSaveAction(null);
+            skipWarning();
+            navigate(`${basePath}/property-pma/condo/${response.propertyId}`);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to create property. Please try again.');
+            setSaveAction(null);
+          },
+        },
       );
     }
   };
@@ -72,15 +100,38 @@ const CondoPMAPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    if (propertyId) {
+    if (isEditMode && propertyId) {
       updateCondoPMAProperties(
         { data, appraisalId: appraisalId!, propertyId: propertyId },
-        { onSuccess: () => reset(data) },
+        {
+          onSuccess: () => {
+            reset(getValues());
+            toast.success(t('toasts.draftSaved'));
+            setSaveAction(null);
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
       );
     } else {
       createCondoPMAProperties(
         { data, appraisalId: appraisalId!, groupId: groupId },
-        { onSuccess: () => reset(data) },
+        {
+          onSuccess: async (response: any) => {
+            toast.success(t('toasts.draftSaved'));
+            setSaveAction(null);
+            if (response.propertyId) {
+              skipWarning();
+              navigate(`${basePath}/property-pma/condo/${response.propertyId}`);
+            }
+          },
+          onError: (error: any) => {
+            toast.error(error.apiError?.detail || 'Failed to save draft. Please try again.');
+            setSaveAction(null);
+          },
+        },
       );
     }
   };
@@ -88,13 +139,13 @@ const CondoPMAPage = () => {
   const { isOpen, onToggle } = useDisclosure();
 
   useEffect(() => {
-    if (propertyData) {
+    if (isEditMode && propertyData) {
       const formValue = mapCondoPMAPropertyResponseToForm(propertyData);
       reset(formValue);
     }
-  }, [propertyData, reset]);
+  }, [isEditMode, propertyData, reset]);
 
-  if (isLoading) {
+  if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
