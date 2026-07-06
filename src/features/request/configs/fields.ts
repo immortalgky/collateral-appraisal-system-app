@@ -39,8 +39,8 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.priority'),
       name: 'priority',
       options: [
-        { name: 'normal', label: t('fields.priorityNormal') },
-        { name: 'high', label: t('fields.priorityHigh') },
+        { name: 'Normal', label: t('fields.priorityNormal') },
+        { name: 'High', label: t('fields.priorityHigh') },
       ],
       wrapperClassName: 'col-span-2',
     },
@@ -1749,8 +1749,8 @@ export const requestFields: FormField[] = [
     label: _st('Priority'),
     name: 'priority',
     options: [
-      { name: 'normal', label: 'Normal' },
-      { name: 'high', label: 'High' },
+      { name: 'Normal', label: 'Normal' },
+      { name: 'High', label: 'High' },
     ],
     wrapperClassName: 'col-span-2',
   },

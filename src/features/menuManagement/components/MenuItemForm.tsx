@@ -66,6 +66,7 @@ export interface MenuItemFormValues {
   iconColor: string | null;
   sortOrder: number;
   viewPermissionCode: string;
+  viewPermissionPrefix: string | null;
   editPermissionCode: string | null;
   translations: { languageCode: string; label: string }[];
 }
@@ -106,6 +107,7 @@ export function MenuItemForm({
     parent: `${fieldId}-parent`,
     path: `${fieldId}-path`,
     sortOrder: `${fieldId}-sortOrder`,
+    viewPermissionPrefix: `${fieldId}-viewPermissionPrefix`,
     labelInput: (lang: string) => `${fieldId}-label-${lang}`,
   };
 
@@ -119,6 +121,7 @@ export function MenuItemForm({
     iconColor: initial?.iconColor ?? null,
     sortOrder: initial?.sortOrder ?? 10,
     viewPermissionCode: initial?.viewPermissionCode ?? '',
+    viewPermissionPrefix: initial?.viewPermissionPrefix ?? null,
     editPermissionCode: initial?.editPermissionCode ?? null,
     translations: LANGS.map(lang => ({
       languageCode: lang,
@@ -137,9 +140,12 @@ export function MenuItemForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // PermissionSelect wraps a non-native Autocomplete, so the View permission's
-    // required-ness isn't enforced by the browser — guard it here.
-    if (!values.viewPermissionCode.trim()) {
+    // PermissionSelect wraps a non-native Autocomplete, so this isn't enforced by the
+    // browser — guard it here. At least one of viewPermissionCode / viewPermissionPrefix
+    // must be set (e.g. Monitoring uses only a prefix, with no discrete code).
+    const hasViewCode = values.viewPermissionCode.trim() !== '';
+    const hasViewPrefix = (values.viewPermissionPrefix ?? '').trim() !== '';
+    if (!hasViewCode && !hasViewPrefix) {
       setViewError(true);
       return;
     }
@@ -210,13 +216,14 @@ export function MenuItemForm({
           <p className="text-xs text-gray-400 mt-1">{t('form.pathHint')}</p>
         </div>
 
-        {/* View Permission — composite control */}
+        {/* View Permission — composite control. At least one of View Permission /
+            View Permission Prefix is required (see viewPermissionPrefix below). */}
         <div role="group" aria-labelledby={`${fieldId}-view-perm-label`}>
           <span
             id={`${fieldId}-view-perm-label`}
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t('form.viewPermission')} <span className="text-red-500">*</span>
+            {t('form.viewPermission')}
           </span>
           <PermissionSelect
             value={values.viewPermissionCode}
@@ -228,6 +235,23 @@ export function MenuItemForm({
           {viewError && (
             <p className="text-xs text-red-500 mt-1">{t('form.viewPermissionRequired')}</p>
           )}
+        </div>
+
+        {/* View Permission Prefix — plain text field, not an autocomplete. e.g.
+            "MONITORING:" grants view access to every permission with that prefix. */}
+        <div>
+          <TextInput
+            id={ids.viewPermissionPrefix}
+            label={t('form.viewPermissionPrefix')}
+            value={values.viewPermissionPrefix ?? ''}
+            onChange={e => {
+              const prefix = e.target.value || null;
+              setValues(v => ({ ...v, viewPermissionPrefix: prefix }));
+              if (prefix) setViewError(false);
+            }}
+            placeholder={t('form.viewPermissionPrefixPlaceholder')}
+          />
+          <p className="text-xs text-gray-400 mt-1">{t('form.viewPermissionPrefixHint')}</p>
         </div>
 
         {/* Edit Permission — composite control */}

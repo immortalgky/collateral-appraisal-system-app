@@ -59,6 +59,9 @@
     "iconColorNone": "No color",
     "sortOrder": "Sort Order",
     "viewPermission": "View Permission",
+    "viewPermissionPrefix": "View Permission Prefix",
+    "viewPermissionPrefixPlaceholder": "e.g. MONITORING:",
+    "viewPermissionPrefixHint": "Grants view access to every permission starting with this prefix. Required if View Permission is empty.",
     "editPermission": "Edit Permission",
     "labels": "Labels",
     "labelPlaceholderEn": "English label (required)",
@@ -66,7 +69,7 @@
     "labelAriaInput": "{{lang}} label",
     "submit": "Save",
     "submitting": "Saving...",
-    "viewPermissionRequired": "View permission is required"
+    "viewPermissionRequired": "Provide a view permission or a permission prefix."
   },
   "colors": {
     "Blue": "Blue",

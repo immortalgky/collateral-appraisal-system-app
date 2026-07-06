@@ -12,7 +12,7 @@ export const mapRequestResponseToForm = (
   return {
     purpose: response.purpose ?? '',
     channel: response.channel ?? '',
-    priority: response.priority ?? 'normal',
+    priority: response.priority ?? 'Normal',
     isPma: response.isPma ?? false,
     creator: response.creator ?? { userId: '', username: '' },
     // GET /requests/{id} returns RequestorDetailDto (employeeId + full snapshot, no GUID).
