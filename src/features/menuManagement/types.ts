@@ -35,6 +35,7 @@ export interface MenuItemAdminDto extends Omit<MenuTreeNode, 'children'> {
   scope: MenuScope;
   parentId: string | null;
   viewPermissionCode: string;
+  viewPermissionPrefix: string | null;
   editPermissionCode: string | null;
   isSystem: boolean;
   translations: MenuItemTranslationDto[];
@@ -57,6 +58,7 @@ export interface CreateMenuItemRequest {
   iconColor: string | null;
   sortOrder: number;
   viewPermissionCode: string;
+  viewPermissionPrefix: string | null;
   editPermissionCode: string | null;
   translations: MenuItemTranslationDto[];
 }

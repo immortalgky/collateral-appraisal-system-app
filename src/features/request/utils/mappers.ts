@@ -12,7 +12,9 @@ export const mapRequestResponseToForm = (
   return {
     purpose: response.purpose ?? '',
     channel: response.channel ?? '',
-    priority: response.priority ?? 'normal',
+    // Normalize legacy lower-case values (older responses / persisted drafts) to the
+    // Title-case radio option values so the priority field stays selected.
+    priority: response.priority?.toLowerCase() === 'high' ? 'High' : 'Normal',
     isPma: response.isPma ?? false,
     creator: response.creator ?? { userId: '', username: '' },
     // GET /requests/{id} returns RequestorDetailDto (employeeId + full snapshot, no GUID).
