@@ -111,6 +111,26 @@ export const useDownloadDocument = () => {
   });
 };
 
+/**
+ * Returns a function that opens a document inline in a new browser tab. The tab is
+ * opened synchronously within the click gesture (so Safari doesn't block it), then
+ * pointed at the blob URL once the download resolves.
+ */
+export const useViewDocument = () => {
+  const download = useDownloadDocument();
+  return (documentId: string) => {
+    const win = window.open('', '_blank');
+    download.mutate(documentId, {
+      onSuccess: ({ blob }) => {
+        const url = URL.createObjectURL(blob);
+        if (win) win.location.href = url;
+        else window.open(url, '_blank');
+      },
+      onError: () => win?.close(),
+    });
+  };
+};
+
 // ─── v7: GET /requests/{requestId}/documents ─────────────────────────────────
 
 const RequestDocumentItemSchema = z.object({

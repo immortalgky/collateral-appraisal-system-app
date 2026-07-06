@@ -71,6 +71,8 @@ const SendInvitationDialog = ({
         bcc: values.bcc,
         subject: values.subject,
         content: values.content,
+        // Send exactly what the user attached (invitation generated via the picker,
+        // uploads, or existing docs) — no auto-generation.
         attachments: values.attachments,
       },
       {
@@ -94,13 +96,17 @@ const SendInvitationDialog = ({
     );
   };
 
+  const title = isResend ? t('dialogs.resendInvitation') : t('dialogs.newEmail');
+
   return (
     <EmailCompositionModal
       isOpen={isOpen}
       onClose={onClose}
-      title={isResend ? t('dialogs.resendInvitation') : t('dialogs.newEmail')}
+      title={title}
+      showFrom={false}
       showAttachments={true}
       attachmentPicker={{ meetingId }}
+      requireAttachment={true}
       showCc={true}
       showBcc={true}
       subjectLabel={t('fields.subjectLabel')}

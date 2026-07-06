@@ -297,15 +297,17 @@
   "documents": {
     "title": "Meeting Documents",
     "generate": "Generate",
-    "invitation": "Invitation",
-    "minutes": "Minutes",
-    "uploadNew": "Upload new",
+    "invitation": "Meeting Invitation",
+    "minutes": "Meeting Minutes",
+    "uploadNew": "Upload",
     "loading": "Loading documents...",
     "empty": "No documents yet",
     "colFileName": "File Name",
     "colType": "Type",
     "colSource": "Source",
+    "colCreated": "Generated At",
     "colActions": "Actions",
+    "view": "View",
     "download": "Download",
     "remove": "Remove",
     "generated": "Document generated",
@@ -318,6 +320,7 @@
     "pickerTitle": "Select Attachments",
     "pickerHint": "Select documents to attach to the email",
     "pickerSelected": "{{count}} selected",
-    "pickerConfirm": "Confirm"
+    "pickerConfirm": "Confirm",
+    "generateInvitation": "Generate invitation"
   }
 }
