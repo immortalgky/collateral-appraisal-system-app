@@ -43,7 +43,7 @@ import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetai
 const QuotationSelectionPage = () => {
   const id = useQuotationIdFromRoute();
   const navigate = useNavigate();
-  const { t } = useTranslation(['quotation', 'common']);
+  const { t } = useTranslation(['quotation', 'appraisal', 'common']);
   const currentUser = useAuthStore(s => s.user);
   const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
   const { data: quotation, isLoading, isError } = useGetQuotationById(id);
@@ -548,6 +548,7 @@ const QuotationSelectionPage = () => {
         <AdminShortlistPanel
           quotationId={quotation.id}
           companyQuotations={quotation.companyQuotations ?? []}
+          appraisals={quotation.appraisals ?? []}
         />
       )}
 
@@ -632,10 +633,14 @@ const QuotationSelectionPage = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => setIsNegotiationOpen(true)}
-                  disabled={!tentativeWinner}
-                  className="text-indigo-600 border-indigo-300 hover:bg-indigo-50"
+                  disabled={!tentativeWinner || (tentativeWinner.negotiationRounds ?? 0) >= 3}
+                  title={
+                    (tentativeWinner?.negotiationRounds ?? 0) >= 3
+                      ? t('negotiation.maxRoundsReached')
+                      : undefined
+                  }
                 >
-                  <Icon name="handshake" style="solid" className="size-3.5 mr-1.5" />
+                  <Icon name="handshake" style="solid" className="size-3.5 mr-1.5 text-orange-500" />
                   {t('buttons.openNegotiation')}
                 </Button>
                 <Button
@@ -645,7 +650,7 @@ const QuotationSelectionPage = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-                  {t('buttons.award')}
+                  {t('quotation.finalize', { ns: 'appraisal' })}
                 </Button>
               </div>
             )}

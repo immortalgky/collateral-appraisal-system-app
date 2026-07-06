@@ -1,7 +1,13 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  useWatch,
+  type FieldErrors,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +34,32 @@ import QuotationFeeBreakdown, { deriveFeeTotals } from '../components/QuotationF
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 
 const THB = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' });
+
+/**
+ * Per-item field keys in the order they appear top-to-bottom on the form. Used to pick which
+ * validation error to surface in the toast so it matches the field RHF auto-focuses (RHF's errors
+ * object is keyed by registration order, not visual layout).
+ */
+const FIELD_ERROR_ORDER = [
+  'feeAmount',
+  'discount',
+  'negotiatedDiscount',
+  'vatPercent',
+  'estimatedDays',
+  'itemNotes',
+] as const;
+
+/**
+ * Maps a per-item field key to its input element's id prefix (the id is `${prefix}-${index}`), used
+ * by focusFieldError to scroll to and focus the first invalid field on submit failure. The summary
+ * rows themselves are not clickable. Fields with no visible input (e.g. vatPercent) are omitted.
+ */
+const FIELD_ELEMENT_ID_PREFIX: Record<string, string> = {
+  feeAmount: 'fee-amount',
+  discount: 'discount',
+  negotiatedDiscount: 'neg-discount',
+  estimatedDays: 'est-mandays',
+};
 
 // ─── Role-aware action bar ────────────────────────────────────────────────────
 
@@ -223,9 +255,13 @@ const ExtCompanySubmitQuotationPage = () => {
     control,
     reset,
     getValues,
-    formState: { errors },
+    formState: { errors, submitCount },
   } = useForm<SubmitQuotationFormValues>({
     resolver: zodResolver(submitQuotationFormSchema),
+    // We route focus through focusFieldError (via surfaceItemErrors) instead of RHF's built-in
+    // focus, because the errored field may live on a non-selected appraisal tab that RHF can't
+    // reach. Smoothness comes from the `scroll-smooth` container, same as the other forms.
+    shouldFocusError: false,
     defaultValues: {
       quotationNumber: '',
       items: [],
@@ -349,13 +385,93 @@ const ExtCompanySubmitQuotationPage = () => {
     });
   };
 
-  const handleSubmitToChecker = () => {
-    // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
-    const violations = findDurationCapViolations(getValues());
-    if (violations.length > 0) {
-      toast.error(t('toasts.mandaysExceeded', { list: violations.join(', ') }));
+  /**
+   * Invoked when a handleSubmit wrapper fails schema validation. The per-field errors are rendered
+   * in the summary banner at the top of the form (see `flatItemErrors`), so here we only jump to the
+   * first offending appraisal tab. A non-item (form-level) error still falls back to a toast.
+   */
+  const surfaceItemErrors = (errors: FieldErrors<SubmitQuotationFormValues>) => {
+    const itemErrors = (errors.items ?? []) as Array<
+      Record<string, { message?: string }> | undefined
+    >;
+    const idx = itemErrors.findIndex(e => e && Object.keys(e).length > 0);
+    if (idx >= 0) {
+      // Smooth-scroll to the first error in visual order (matches the summary banner's first row).
+      const itemErr = itemErrors[idx] ?? {};
+      const firstField = FIELD_ERROR_ORDER.find(key => itemErr[key]?.message) ?? '';
+      focusFieldError(idx, firstField);
       return;
     }
+    toast.error(t('toasts.fixErrors'), { id: 'quotation-submit-error' });
+  };
+
+  /**
+   * Flattens RHF's per-item validation errors into a single top-to-bottom list for the summary
+   * banner. Each entry carries the appraisal label + self-describing message (e.g. "Fee Amount is
+   * required") and the item index so its banner row can jump to that tab. Populated only after a
+   * submit attempt; auto-clears field-by-field as the user fixes them (reValidateMode: onChange).
+   */
+  const flatItemErrors = (() => {
+    const itemErrors = (errors.items ?? []) as Array<
+      Record<string, { message?: string }> | undefined
+    >;
+    const out: Array<{ index: number; label: string; message: string }> = [];
+    itemErrors.forEach((itemErr, index) => {
+      if (!itemErr) return;
+      const label = appraisals[index]?.appraisalNumber?.trim() || `#${index + 1}`;
+      FIELD_ERROR_ORDER.forEach(key => {
+        const message = itemErr[key]?.message;
+        if (message) out.push({ index, label, message });
+      });
+    });
+    return out;
+  })();
+
+  /**
+   * Duration-cap violations (Estimated Mandays > admin-set maxAppraisalDays). This is a business
+   * rule outside the Zod schema — the cap comes from `appraisals`, not the form — so it's computed
+   * reactively here and merged into the same banner instead of a separate toast.
+   */
+  const capViolations = (() => {
+    const out: Array<{ index: number; label: string; message: string }> = [];
+    (watchedItems ?? []).forEach((item, index) => {
+      const ap = appraisals[index];
+      const cap = ap?.maxAppraisalDays;
+      const entered = item?.estimatedDays;
+      if (cap != null && entered != null && entered > cap) {
+        const label = ap?.appraisalNumber?.trim() || `#${index + 1}`;
+        out.push({ index, label, message: t('shared.exceededMaxDuration', { cap }) });
+      }
+    });
+    return out;
+  })();
+
+  // Combined banner list: required-field errors + cap violations, grouped by appraisal order.
+  const bannerErrors = [...flatItemErrors, ...capViolations].sort((a, b) => a.index - b.index);
+
+  /**
+   * Jumps to an errored field: selects its appraisal tab, then — once the tab's inputs have
+   * committed to the DOM (two rAFs) — focuses the field. The `scroll-smooth` container turns the
+   * browser's focus-scroll into a glide, so no explicit scrollIntoView is needed.
+   */
+  const focusFieldError = (index: number, field: string) => {
+    setSelectedIndex(index);
+    const prefix = FIELD_ELEMENT_ID_PREFIX[field];
+    if (!prefix) return;
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        document.getElementById(`${prefix}-${index}`)?.focus();
+      }),
+    );
+  };
+
+  // Maker's Submit-to-Checker must pass the same Zod schema as the Checker's final submit —
+  // wrap it in handleSubmit so mandatory Fee Amount / Estimated Mandays are enforced before the
+  // draft is saved and promoted. (Save Draft stays lenient; only this promotion is gated.)
+  const handleSubmitToChecker = handleSubmit(values => {
+    // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
+    // The violation is surfaced in the validation banner + inline field message; just block here.
+    if (findDurationCapViolations(values).length > 0) return;
     // First save the draft, then promote to PendingCheckerReview
     saveDraft(buildDraftPayload(), {
       onSuccess: () => {
@@ -380,7 +496,7 @@ const ExtCompanySubmitQuotationPage = () => {
         toast.error(e?.apiError?.detail ?? t('toasts.saveBeforeSubmitFailed'));
       },
     });
-  };
+  }, surfaceItemErrors);
 
   /**
    * Returns a list of appraisal numbers whose Estimated Mandays exceeds the admin-set cap.
@@ -496,31 +612,12 @@ const ExtCompanySubmitQuotationPage = () => {
         },
       );
     },
-    errors => {
-      // Surface schema-validation failures (e.g. invalid Negotiated Discount on a tab the
-      // user isn't currently looking at) so they don't appear to be silently ignored.
-      const itemErrors = (errors.items ?? []) as Array<
-        Record<string, { message?: string }> | undefined
-      >;
-      const idx = itemErrors.findIndex(e => e && Object.keys(e).length > 0);
-      if (idx >= 0) {
-        const ap = appraisals[idx];
-        const firstMsg =
-          Object.values(itemErrors[idx] ?? {}).find(e => e?.message)?.message ?? 'Invalid value';
-        toast.error(`${ap?.appraisalNumber?.trim() || 'Appraisal'}: ${firstMsg}`);
-        if (idx !== selectedIndex) setSelectedIndex(idx);
-        return;
-      }
-      toast.error(t('toasts.fixErrors'));
-    },
+    surfaceItemErrors,
   );
 
   const handleSubmitQuotation = handleSubmit(values => {
-    const violations = findDurationCapViolations(values);
-    if (violations.length > 0) {
-      toast.error(t('toasts.mandaysExceeded', { list: violations.join(', ') }));
-      return;
-    }
+    // Duration-cap violation is surfaced in the validation banner + inline message; just block here.
+    if (findDurationCapViolations(values).length > 0) return;
     submitQuotation(
       {
         quotationNumber: values.quotationNumber,
@@ -554,7 +651,7 @@ const ExtCompanySubmitQuotationPage = () => {
         },
       },
     );
-  });
+  }, surfaceItemErrors);
 
   // ─── Derived flags ────────────────────────────────────────────────────────
   const isDeclined = mySubmission?.status === 'Declined';
@@ -661,8 +758,9 @@ const ExtCompanySubmitQuotationPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Scrollable content area — owns the page scroll; action bar below sits at shrink-0 */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
+      {/* Scrollable content area — owns the page scroll; action bar below sits at shrink-0.
+          `scroll-smooth` makes focus/anchor scrolls glide (repo-wide form convention). */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6 scroll-smooth">
         {/* ── Page header ───────────────────────────────────────────────────── */}
         <div className="mb-4">
           <div className="text-base font-semibold text-gray-900 leading-snug">
@@ -788,6 +886,24 @@ const ExtCompanySubmitQuotationPage = () => {
           <Alert variant="info" className="mb-4">
             {t('shared.readOnlyBanner', { stage: currentStageLabel })}
           </Alert>
+        )}
+
+        {/* ── Validation summary — missing/invalid fields + duration-cap violations, grouped by
+              appraisal. Shown only after a submit attempt; clears as each issue is fixed. ── */}
+        {canEdit && submitCount > 0 && bannerErrors.length > 0 && (
+          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-red-700">
+              <span aria-hidden="true">⚠</span>
+              {t('validation.summaryTitle', { count: bannerErrors.length })}
+            </p>
+            <ul className="space-y-0.5 text-xs text-red-600">
+              {bannerErrors.map((e, i) => (
+                <li key={`${e.index}-${i}`}>
+                  • {e.label} — {e.message}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {/* ── Main two-pane form — always rendered; inputs gate on canEdit (read-only when false) ── */}

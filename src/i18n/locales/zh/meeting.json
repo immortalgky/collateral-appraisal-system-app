@@ -297,15 +297,17 @@
   "documents": {
     "title": "会议文件",
     "generate": "生成",
-    "invitation": "邀请函",
+    "invitation": "会议邀请函",
     "minutes": "会议纪要",
-    "uploadNew": "上传新文件",
+    "uploadNew": "上传",
     "loading": "正在加载文件...",
     "empty": "暂无文件",
     "colFileName": "文件名",
     "colType": "类型",
     "colSource": "来源",
+    "colCreated": "创建时间",
     "colActions": "操作",
+    "view": "查看",
     "download": "下载",
     "remove": "移除",
     "generated": "文件已生成",
@@ -318,6 +320,7 @@
     "pickerTitle": "选择附件",
     "pickerHint": "选择要附在邮件中的文件",
     "pickerSelected": "已选 {{count}} 项",
-    "pickerConfirm": "确认"
+    "pickerConfirm": "确认",
+    "generateInvitation": "生成邀请函"
   }
 }

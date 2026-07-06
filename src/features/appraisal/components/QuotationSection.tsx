@@ -1393,6 +1393,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         <AdminShortlistPanel
           quotationId={activeQuotation.id}
           companyQuotations={quotationDetail?.companyQuotations ?? []}
+          appraisals={quotationDetail?.appraisals ?? []}
         />
         {renderCancelFooter()}
       </div>

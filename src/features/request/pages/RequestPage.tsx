@@ -346,7 +346,16 @@ function RequestPage() {
 
   const handleConfirmDuplicate = () => {
     const currentData = getValues();
-    navigate('/requests/new', { state: { duplicateData: currentData } });
+    // Copy request information only — attached documents stay independent (not copied)
+    const duplicateData = {
+      ...currentData,
+      documents: [],
+      titles: currentData.titles.map((title: createRequestFormType['titles'][number]) => ({
+        ...title,
+        documents: [],
+      })),
+    };
+    navigate('/requests/new', { state: { duplicateData } });
     setIsDuplicateDialogOpen(false);
   };
   const handleDuplicate = () => {
