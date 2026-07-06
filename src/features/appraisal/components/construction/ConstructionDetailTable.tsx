@@ -5,6 +5,7 @@ import NumberInput from '@shared/components/inputs/NumberInput';
 import Icon from '@shared/components/Icon';
 import { formatNumber } from '@shared/utils/formatUtils';
 import { schemas } from '@shared/schemas/v1';
+import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 
 type ConstructionWorkGroupDto = z.infer<typeof schemas.ConstructionWorkGroupDto>;
 
@@ -158,6 +159,7 @@ export function ConstructionDetailTable({
   ciMode,
 }: ConstructionDetailTableProps) {
   const isOverLimit = grandTotal.totalProportion > 100;
+  const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
 
   return (
     <div className="space-y-2">
@@ -224,7 +226,7 @@ export function ConstructionDetailTable({
                   existingItemIds={existingItemIds}
                   onAddSubItem={onAddSubItem}
                   onUpdateSubItem={onUpdateSubItem}
-                  onDeleteSubItem={onDeleteSubItem}
+                  onDeleteSubItem={index => setPendingDeleteIndex(index)}
                   readOnly={readOnly}
                   ciMode={ciMode}
                 />
@@ -268,6 +270,15 @@ export function ConstructionDetailTable({
           </tbody>
         </table>
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={pendingDeleteIndex !== null}
+        onClose={() => setPendingDeleteIndex(null)}
+        onConfirm={() => {
+          if (pendingDeleteIndex !== null) onDeleteSubItem(pendingDeleteIndex);
+          setPendingDeleteIndex(null);
+        }}
+      />
     </div>
   );
 }

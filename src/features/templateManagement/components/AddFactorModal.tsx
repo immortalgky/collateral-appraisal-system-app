@@ -27,6 +27,10 @@ interface AddFactorModalProps {
   excludeFactorIds: string[];
   onAdd: (selections: SelectedFactor[]) => void;
   isAdding?: boolean;
+  /** Show the per-factor Calculation selector column (default true). */
+  showCalculation?: boolean;
+  /** Show the per-factor Mandatory selector column (default true). */
+  showMandatory?: boolean;
 }
 
 const AddFactorModal = ({
@@ -36,6 +40,8 @@ const AddFactorModal = ({
   excludeFactorIds,
   onAdd,
   isAdding,
+  showCalculation = true,
+  showMandatory = true,
 }: AddFactorModalProps) => {
   const { t } = useTranslation(['templateManagement', 'common']);
   const language = useLocaleStore(s => s.language);
@@ -162,12 +168,16 @@ const AddFactorModal = ({
                 <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
                   {t('addFactorModal.columns.dataType')}
                 </th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
-                  {t('addFactorModal.columns.mandatory')}
-                </th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
-                  {t('addFactorModal.columns.calculation')}
-                </th>
+                {showMandatory && (
+                  <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
+                    {t('addFactorModal.columns.mandatory')}
+                  </th>
+                )}
+                {showCalculation && (
+                  <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
+                    {t('addFactorModal.columns.calculation')}
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -193,22 +203,26 @@ const AddFactorModal = ({
                       {getTranslatedFactorName(factor.translations, language)}
                     </td>
                     <td className="py-2 px-3 text-sm text-gray-600">{factor.dataType}</td>
-                    <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
-                      {isSelected && (
-                        <Checkbox
-                          checked={state?.isMandatory ?? false}
-                          onChange={checked => toggleMandatory(factor.id, checked)}
-                        />
-                      )}
-                    </td>
-                    <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
-                      {isSelected && (
-                        <Checkbox
-                          checked={state?.isCalculationFactor ?? false}
-                          onChange={checked => toggleCalculation(factor.id, checked)}
-                        />
-                      )}
-                    </td>
+                    {showMandatory && (
+                      <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
+                        {isSelected && (
+                          <Checkbox
+                            checked={state?.isMandatory ?? false}
+                            onChange={checked => toggleMandatory(factor.id, checked)}
+                          />
+                        )}
+                      </td>
+                    )}
+                    {showCalculation && (
+                      <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
+                        {isSelected && (
+                          <Checkbox
+                            checked={state?.isCalculationFactor ?? false}
+                            onChange={checked => toggleCalculation(factor.id, checked)}
+                          />
+                        )}
+                      </td>
+                    )}
                   </tr>
                 );
               })}

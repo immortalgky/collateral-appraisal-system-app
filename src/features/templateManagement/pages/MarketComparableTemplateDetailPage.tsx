@@ -2,17 +2,21 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
+import Switch from '@shared/components/inputs/Switch';
+import ConfirmDialog from '@shared/components/ConfirmDialog';
 import TemplateForm from '../components/TemplateForm';
-import TemplateFactorManager from '../components/TemplateFactorManager';
+import TemplateFactorManager, { type TemplateFactor } from '../components/TemplateFactorManager';
 import {
   useGetMCTemplateById,
   useCreateMCTemplate,
   useUpdateMCTemplate,
   useAddFactorToMCTemplate,
   useRemoveFactorFromMCTemplate,
+  useReorderMCTemplateFactors,
+  useToggleMCTemplateStatus,
+  useSetMCTemplateFactorMandatory,
 } from '../api/marketComparableTemplate';
 import { useGetFactors } from '../api/marketComparableFactor';
 
@@ -28,6 +32,9 @@ const MarketComparableTemplateDetailPage = () => {
   const updateMutation = useUpdateMCTemplate();
   const addFactorMutation = useAddFactorToMCTemplate();
   const removeFactorMutation = useRemoveFactorFromMCTemplate();
+  const reorderMutation = useReorderMCTemplateFactors();
+  const toggleStatus = useToggleMCTemplateStatus();
+  const setMandatoryMutation = useSetMCTemplateFactorMandatory();
 
   const [form, setForm] = useState({
     templateCode: '',
@@ -35,6 +42,7 @@ const MarketComparableTemplateDetailPage = () => {
     propertyType: '',
     description: null as string | null,
   });
+  const [deletingFactorId, setDeletingFactorId] = useState<string | null>(null);
 
   useEffect(() => {
     if (templateDetail) {
@@ -100,37 +108,60 @@ const MarketComparableTemplateDetailPage = () => {
 
   const handleToggleMandatory = (factorId: string, isMandatory: boolean) => {
     if (!templateId) return;
-    const existing = templateDetail?.factors?.find(f => f.factorId === factorId);
-    if (!existing) return;
-    removeFactorMutation.mutate(
-      { templateId, factorId },
+    setMandatoryMutation.mutate(
+      { templateId, factorId, isMandatory },
       {
-        onSuccess: () => {
-          addFactorMutation.mutate(
-            {
-              templateId: templateId!,
-              factorId,
-              displaySequence: existing.displaySequence,
-              isMandatory,
-            },
-            {
-              onSuccess: () => toast.success(t('toasts.mandatoryUpdated')),
-              onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
-            },
-          );
-        },
+        onSuccess: () => toast.success(t('toasts.mandatoryUpdated')),
         onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
       },
     );
   };
 
   const handleRemoveFactor = (factorId: string) => {
-    if (!templateId) return;
+    setDeletingFactorId(factorId);
+  };
+
+  const handleConfirmRemoveFactor = () => {
+    if (!templateId || !deletingFactorId) return;
     removeFactorMutation.mutate(
-      { templateId, factorId },
+      { templateId, factorId: deletingFactorId },
       {
-        onSuccess: () => toast.success(t('toasts.factorRemoved')),
-        onError: () => toast.error(t('toasts.factorRemoveFailed')),
+        onSuccess: () => {
+          toast.success(t('toasts.factorRemoved'));
+          setDeletingFactorId(null);
+        },
+        onError: () => {
+          toast.error(t('toasts.factorRemoveFailed'));
+          setDeletingFactorId(null);
+        },
+      },
+    );
+  };
+
+  const handleToggleStatus = (isActive: boolean) => {
+    if (!templateId) return;
+    toggleStatus.mutate(
+      { id: templateId, isActive },
+      {
+        onSuccess: () => toast.success(t('toasts.statusUpdated')),
+        onError: () => toast.error(t('toasts.statusUpdateFailed')),
+      },
+    );
+  };
+
+  const handleReorder = (reorderedFactors: TemplateFactor[]) => {
+    if (!templateId) return;
+    reorderMutation.mutate(
+      {
+        templateId,
+        factors: reorderedFactors.map(f => ({
+          factorId: f.factorId,
+          displaySequence: f.displaySequence,
+        })),
+      },
+      {
+        onSuccess: () => toast.success(t('toasts.factorsReordered')),
+        onError: () => toast.error(t('toasts.reorderFailed')),
       },
     );
   };
@@ -146,7 +177,7 @@ const MarketComparableTemplateDetailPage = () => {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="pb-8 space-y-6">
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/market-comparable-templates')}
@@ -155,13 +186,29 @@ const MarketComparableTemplateDetailPage = () => {
         >
           <Icon name="chevron-left" style="solid" className="size-5" />
         </button>
-        <SectionHeader
-          title={isEditMode ? t('templateDetail.mcEditTitle') : t('templateDetail.mcCreateTitle')}
-          subtitle={isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
-          icon="rectangle-list"
-          iconColor="cyan"
-          className="mb-0"
-        />
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">
+            {isEditMode ? t('templateDetail.mcEditTitle') : t('templateDetail.mcCreateTitle')}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
+          </p>
+        </div>
+        {isEditMode && templateDetail && (
+          <Switch
+            checked={templateDetail.isActive}
+            onChange={handleToggleStatus}
+            label={
+              templateDetail.isActive
+                ? t('templates.status.active')
+                : t('templates.status.inactive')
+            }
+            size="sm"
+            variant="status"
+            disabled={toggleStatus.isPending}
+            className="ml-auto shrink-0"
+          />
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -189,12 +236,26 @@ const MarketComparableTemplateDetailPage = () => {
             onAddFactor={handleAddFactors}
             onRemoveFactor={handleRemoveFactor}
             onToggleMandatory={handleToggleMandatory}
+            onReorder={handleReorder}
+            showCalculation={false}
             isAdding={addFactorMutation.isPending}
             isRemoving={removeFactorMutation.isPending}
-            isUpdating={addFactorMutation.isPending || removeFactorMutation.isPending}
+            isUpdating={setMandatoryMutation.isPending}
           />
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deletingFactorId}
+        onClose={() => setDeletingFactorId(null)}
+        onConfirm={handleConfirmRemoveFactor}
+        title={t('confirm.deleteFactorTitle')}
+        message={t('confirm.deleteFactor')}
+        confirmText={t('common:actions.remove')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+        isLoading={removeFactorMutation.isPending}
+      />
     </div>
   );
 };

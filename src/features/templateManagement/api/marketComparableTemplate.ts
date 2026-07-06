@@ -112,3 +112,66 @@ export const useRemoveFactorFromMCTemplate = () => {
     },
   });
 };
+
+export const useToggleMCTemplateStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      await axios.post(
+        `/market-comparable-templates/${id}/${isActive ? 'activate' : 'deactivate'}`,
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.mcTemplates });
+      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.mcTemplateDetail(variables.id) });
+    },
+  });
+};
+
+export const useSetMCTemplateFactorMandatory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      factorId,
+      isMandatory,
+    }: {
+      templateId: string;
+      factorId: string;
+      isMandatory: boolean;
+    }) => {
+      await axios.put(
+        `/market-comparable-templates/${templateId}/factors/${factorId}/mandatory`,
+        { isMandatory },
+      );
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.mcTemplateDetail(variables.templateId),
+      });
+    },
+  });
+};
+
+export const useReorderMCTemplateFactors = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      factors,
+    }: {
+      templateId: string;
+      factors: { factorId: string; displaySequence: number }[];
+    }) => {
+      await axios.put(`/market-comparable-templates/${templateId}/factors/reorder`, { factors });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.mcTemplateDetail(variables.templateId),
+      });
+    },
+  });
+};

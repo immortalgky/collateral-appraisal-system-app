@@ -11,6 +11,7 @@ import { FormProvider } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import ActionBar from '@/shared/components/ActionBar';
+import CancelButton from '@/shared/components/buttons/CancelButton';
 import Checkbox from '@/shared/components/inputs/Checkbox';
 import type { ApiError } from '@/shared/types/api';
 
@@ -895,7 +896,13 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
         {/* Sticky bottom action bar */}
         <ActionBar>
           <ActionBar.Left>
-            {!isReadOnly && <ActionBar.UnsavedIndicator show={isDirty || flagsDirty} />}
+            <CancelButton />
+            {!isReadOnly && (
+              <>
+                <ActionBar.Divider />
+                <ActionBar.UnsavedIndicator show={isDirty || flagsDirty} />
+              </>
+            )}
           </ActionBar.Left>
           {!isReadOnly && (
             <ActionBar.Right>
