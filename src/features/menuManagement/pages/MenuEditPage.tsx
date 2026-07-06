@@ -55,7 +55,7 @@ export default function MenuEditPage() {
         iconColor: values.iconColor,
         sortOrder: values.sortOrder,
         viewPermissionCode: values.viewPermissionCode,
-        viewPermissionPrefix: values.viewPermissionPrefix || null,
+        viewPermissionPrefix: values.viewPermissionPrefix?.trim() || null,
         editPermissionCode: values.editPermissionCode,
         translations: values.translations.filter(tr => tr.label.trim() !== ''),
       };
@@ -71,7 +71,7 @@ export default function MenuEditPage() {
         iconColor: values.iconColor,
         sortOrder: values.sortOrder,
         viewPermissionCode: values.viewPermissionCode,
-        viewPermissionPrefix: values.viewPermissionPrefix || null,
+        viewPermissionPrefix: values.viewPermissionPrefix?.trim() || null,
         editPermissionCode: values.editPermissionCode,
         translations: values.translations.filter(tr => tr.label.trim() !== ''),
       };

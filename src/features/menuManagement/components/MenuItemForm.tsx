@@ -247,7 +247,7 @@ export function MenuItemForm({
             onChange={e => {
               const prefix = e.target.value || null;
               setValues(v => ({ ...v, viewPermissionPrefix: prefix }));
-              if (prefix) setViewError(false);
+              if (prefix?.trim()) setViewError(false);
             }}
             placeholder={t('form.viewPermissionPrefixPlaceholder')}
           />
