@@ -276,6 +276,7 @@ export function ConstructionDetailTable({
         onClose={() => setPendingDeleteIndex(null)}
         onConfirm={() => {
           if (pendingDeleteIndex !== null) onDeleteSubItem(pendingDeleteIndex);
+          setPendingDeleteIndex(null);
         }}
       />
     </div>

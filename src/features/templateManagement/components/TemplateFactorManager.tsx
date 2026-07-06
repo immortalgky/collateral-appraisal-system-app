@@ -332,7 +332,7 @@ const TemplateFactorManager = ({
   const [showModal, setShowModal] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const factorMap = new Map(allFactors.map(f => [f.id, f]));
+  const factorMap = useMemo(() => new Map(allFactors.map(f => [f.id, f])), [allFactors]);
   const assignedFactorIds = factors.map(f => f.factorId);
 
   // Local order state so drag reorder is instant (no waiting for cache update)
@@ -399,9 +399,7 @@ const TemplateFactorManager = ({
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-    // factorMap is rebuilt each render; sortedFactors identity gates recompute.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortedFactors, sortKey, sortDir, language]);
+  }, [sortedFactors, sortKey, sortDir, language, factorMap]);
 
   const sortActive = sortKey !== null;
 

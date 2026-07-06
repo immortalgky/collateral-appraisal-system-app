@@ -95,7 +95,10 @@ const TemplateTable = ({
         });
 
   const totalPages = Math.ceil(sorted.length / pageSize);
-  const paged = sorted.slice(page * pageSize, page * pageSize + pageSize);
+  // Clamp against a shrunk data set so a stale page index can't render an empty page
+  // (the reset effect fires post-render; this closes the one-frame gap).
+  const currentPage = totalPages > 0 ? Math.min(page, totalPages - 1) : 0;
+  const paged = sorted.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
 
   const sortableHeader = (
     key: SortKey,
@@ -268,7 +271,7 @@ const TemplateTable = ({
 
       {sorted.length > 0 && (
         <Pagination
-          currentPage={page}
+          currentPage={currentPage}
           totalPages={totalPages}
           totalCount={sorted.length}
           pageSize={pageSize}
