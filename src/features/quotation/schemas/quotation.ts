@@ -314,13 +314,13 @@ export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
           invalid_type_error: t('validation.daysRequired'),
         })
         .int(t('validation.mustBeWhole'))
-        .positive(t('validation.daysRequired')),
+        .positive(t('validation.mustBePositive')),
       feeAmount: z
         .number({
           required_error: t('validation.feeRequired'),
           invalid_type_error: t('validation.feeRequired'),
         })
-        .positive(t('validation.feeRequired')),
+        .positive(t('validation.mustBePositive')),
       // Optional numeric fields — a cleared input emits null, so allow it (treated as 0 downstream).
       discount: z.number().nonnegative().nullable().optional(),
       negotiatedDiscount: z.number().nonnegative().nullable().optional(),
@@ -350,14 +350,14 @@ export const submitQuotationItemSchema = z
         invalid_type_error: 'Estimated Mandays is required',
       })
       .int('Must be a whole number')
-      .positive('Estimated Mandays is required'),
+      .positive('Estimated Mandays must be positive'),
     // Fee-breakdown fields — used in the Maker/Checker path.
     feeAmount: z
       .number({
         required_error: 'Fee Amount is required',
         invalid_type_error: 'Fee Amount is required',
       })
-      .positive('Fee Amount is required'),
+      .positive('Fee Amount must be positive'),
     // Optional numeric fields — a cleared input emits null, so allow it (treated as 0 downstream).
     discount: z.number().nonnegative().nullable().optional(),
     negotiatedDiscount: z.number().nonnegative().nullable().optional(),

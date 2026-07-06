@@ -50,9 +50,9 @@ const FIELD_ERROR_ORDER = [
 ] as const;
 
 /**
- * Maps a per-item field key to its input element's id prefix (the id is `${prefix}-${index}`), so a
- * validation-summary row can scroll to and focus the actual field. Fields with no visible input
- * (vatPercent is hidden) are omitted — clicking their row just switches the tab.
+ * Maps a per-item field key to its input element's id prefix (the id is `${prefix}-${index}`), used
+ * by focusFieldError to scroll to and focus the first invalid field on submit failure. The summary
+ * rows themselves are not clickable. Fields with no visible input (e.g. vatPercent) are omitted.
  */
 const FIELD_ELEMENT_ID_PREFIX: Record<string, string> = {
   feeAmount: 'fee-amount',

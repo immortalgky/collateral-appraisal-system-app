@@ -120,11 +120,15 @@ export const useViewDocument = () => {
   const download = useDownloadDocument();
   return (documentId: string) => {
     const win = window.open('', '_blank');
+    // Sever the opener link so the viewed document (e.g. HTML blob) can't reach window.opener.
+    if (win) win.opener = null;
     download.mutate(documentId, {
       onSuccess: ({ blob }) => {
         const url = URL.createObjectURL(blob);
         if (win) win.location.href = url;
-        else window.open(url, '_blank');
+        else window.open(url, '_blank', 'noopener');
+        // Revoke after a delay so the tab has time to load the blob (repo convention).
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
       },
       onError: () => win?.close(),
     });
