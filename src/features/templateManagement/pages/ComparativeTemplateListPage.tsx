@@ -1,57 +1,109 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
+import ConfirmDialog from '@shared/components/ConfirmDialog';
 import TemplateTable from '../components/TemplateTable';
+import TemplateListToolbar, {
+  filterTemplates,
+  type TemplateStatusFilter,
+} from '../components/TemplateListToolbar';
 import {
   useDeleteComparativeAnalysisTemplate,
   useGetComparativeAnalysisTemplates,
+  useToggleComparativeAnalysisTemplateStatus,
 } from '../api/comparativeTemplate';
 
 const ComparativeTemplateListPage = () => {
-  const { t } = useTranslation('templateManagement');
+  const { t } = useTranslation(['templateManagement', 'common']);
   const navigate = useNavigate();
   const { data: templates = [], isLoading } = useGetComparativeAnalysisTemplates();
   const deleteMutation = useDeleteComparativeAnalysisTemplate();
+  const toggleStatus = useToggleComparativeAnalysisTemplateStatus();
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<TemplateStatusFilter>('all');
 
-  const handleDelete = (id: string) => {
-    if (!confirm(t('confirm.deleteTemplate'))) return;
-    deleteMutation.mutate(id, {
-      onSuccess: () => toast.success(t('toasts.templateDeleted')),
-      onError: () => toast.error(t('toasts.templateDeleteFailed')),
+  const filtered = useMemo(
+    () => filterTemplates(templates, search, statusFilter),
+    [templates, search, statusFilter],
+  );
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget, {
+      onSuccess: () => {
+        toast.success(t('toasts.templateDeleted'));
+        setDeleteTarget(null);
+      },
+      onError: () => {
+        toast.error(t('toasts.templateDeleteFailed'));
+        setDeleteTarget(null);
+      },
     });
   };
 
+  const handleToggleStatus = (template: { id: string; isActive: boolean }) => {
+    toggleStatus.mutate(
+      { id: template.id, isActive: !template.isActive },
+      {
+        onSuccess: () => toast.success(t('toasts.statusUpdated')),
+        onError: () => toast.error(t('toasts.statusUpdateFailed')),
+      },
+    );
+  };
+
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <SectionHeader
-        title={t('templates.compPageTitle')}
-        subtitle={t('templates.compPageSubtitle')}
-        icon="chart-mixed"
-        iconColor="orange"
-        rightIcon={
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate('/comparative-templates/new')}
-            leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
-          >
-            {t('templates.createButton')}
-          </Button>
-        }
+    <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('templates.compPageTitle')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {templates.length}
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('templates.compPageSubtitle')}</p>
+        </div>
+        <Button size="sm" onClick={() => navigate('/comparative-templates/new')}>
+          <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
+          {t('templates.createButton')}
+        </Button>
+      </div>
+
+      <TemplateListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
       />
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <TemplateTable
-          templates={templates}
+          templates={filtered}
           basePath="/comparative-templates"
-          onDelete={handleDelete}
+          onDelete={setDeleteTarget}
+          onToggleStatus={handleToggleStatus}
           isLoading={isLoading}
           isDeleting={deleteMutation.isPending}
+          isTogglingStatus={toggleStatus.isPending}
+          fillHeight
         />
       </div>
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title={t('confirm.deleteTemplateTitle')}
+        message={t('confirm.deleteTemplate')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };

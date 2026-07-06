@@ -137,7 +137,9 @@
       "action": "Action"
     },
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "toggleHint": "Click to change",
+    "interactionHint": "Click a badge to change it, or drag rows to reorder."
   },
   "addFactorModal": {
     "title": "Add Factors",
@@ -160,6 +162,10 @@
   "toasts": {
     "factorCreated": "Factor created successfully",
     "factorCreateFailed": "Failed to create factor",
+    "factorDeleted": "Factor deleted successfully",
+    "factorDeleteFailed": "Failed to delete factor",
+    "statusUpdated": "Status updated",
+    "statusUpdateFailed": "Failed to update status",
     "factorUpdated": "Factor updated successfully",
     "factorUpdateFailed": "Failed to update factor",
     "templateCreated": "Template created successfully",
@@ -177,9 +183,18 @@
     "calculationUpdated": "Calculation factor updated",
     "calculationUpdateFailed": "Failed to update calculation factor",
     "defaultValuesUpdated": "Default values updated",
-    "defaultValuesUpdateFailed": "Failed to update default values"
+    "defaultValuesUpdateFailed": "Failed to update default values",
+    "factorsReordered": "Factor order updated",
+    "reorderFailed": "Failed to reorder factors"
   },
   "confirm": {
-    "deleteTemplate": "Are you sure you want to delete this template?"
+    "deleteTemplateTitle": "Delete Template",
+    "deleteTemplate": "Are you sure you want to delete this template?",
+    "deleteFactorTitle": "Remove Factor",
+    "deleteFactor": "Are you sure you want to remove this factor from the template?",
+    "deleteFactorDefTitle": "Delete Factor",
+    "deleteFactorDef": "Are you sure you want to delete this factor?",
+    "deleteTranslationTitle": "Remove Translation",
+    "deleteTranslation": "Are you sure you want to remove this translation?"
   }
 }

@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
+import Switch from '@shared/components/inputs/Switch';
+import ConfirmDialog from '@shared/components/ConfirmDialog';
 import TemplateForm from '../components/TemplateForm';
 import TemplateFactorManager from '../components/TemplateFactorManager';
 import type { TemplateFactor } from '../components/TemplateFactorManager';
@@ -14,7 +15,10 @@ import {
   useCreateComparativeAnalysisTemplate,
   useGetComparativeAnalysisTemplateById,
   useRemoveFactorFromComparativeAnalysisTemplate,
+  useReorderComparativeAnalysisTemplateFactors,
+  useToggleComparativeAnalysisTemplateStatus,
   useUpdateComparativeAnalysisTemplate,
+  useUpdateFactorInComparativeAnalysisTemplate,
 } from '../api/comparativeTemplate';
 import { templateMgmtKeys } from '../api/queryKeys';
 import { useGetFactors } from '../api/marketComparableFactor';
@@ -38,6 +42,10 @@ const ComparativeTemplateDetailPage = () => {
   const updateMutation = useUpdateComparativeAnalysisTemplate();
   const addFactorMutation = useAddFactorToComparativeAnalysisTemplate();
   const removeFactorMutation = useRemoveFactorFromComparativeAnalysisTemplate();
+  const updateFactorMutation = useUpdateFactorInComparativeAnalysisTemplate();
+  const reorderMutation = useReorderComparativeAnalysisTemplateFactors();
+  const toggleStatus = useToggleComparativeAnalysisTemplateStatus();
+  const [deletingFactorId, setDeletingFactorId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     templateCode: '',
@@ -96,6 +104,17 @@ const ComparativeTemplateDetailPage = () => {
     }
   };
 
+  const handleToggleStatus = (isActive: boolean) => {
+    if (!templateId) return;
+    toggleStatus.mutate(
+      { id: templateId, isActive },
+      {
+        onSuccess: () => toast.success(t('toasts.statusUpdated')),
+        onError: () => toast.error(t('toasts.statusUpdateFailed')),
+      },
+    );
+  };
+
   const handleAddFactors = (
     selections: { factorId: string; isMandatory: boolean; isCalculationFactor: boolean }[],
   ) => {
@@ -129,26 +148,17 @@ const ComparativeTemplateDetailPage = () => {
     if (!templateId) return;
     const existing = templateDetail?.comparativeFactors?.find(f => f.factorId === factorId);
     if (!existing) return;
-    removeFactorMutation.mutate(
-      { templateId, factorId },
+    updateFactorMutation.mutate(
       {
-        onSuccess: () => {
-          addFactorMutation.mutate(
-            {
-              templateId: templateId!,
-              factorId,
-              displaySequence: existing.displaySequence,
-              isMandatory,
-              isCalculationFactor: existing.isCalculationFactor,
-              defaultWeight: existing.defaultWeight ?? null,
-              defaultIntensity: existing.defaultIntensity ?? null,
-            },
-            {
-              onSuccess: () => toast.success(t('toasts.mandatoryUpdated')),
-              onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
-            },
-          );
-        },
+        templateId,
+        factorId,
+        isMandatory,
+        isCalculationFactor: existing.isCalculationFactor,
+        defaultWeight: existing.defaultWeight ?? null,
+        defaultIntensity: existing.defaultIntensity ?? null,
+      },
+      {
+        onSuccess: () => toast.success(t('toasts.mandatoryUpdated')),
         onError: () => toast.error(t('toasts.mandatoryUpdateFailed')),
       },
     );
@@ -158,26 +168,17 @@ const ComparativeTemplateDetailPage = () => {
     if (!templateId) return;
     const existing = templateDetail?.comparativeFactors?.find(f => f.factorId === factorId);
     if (!existing) return;
-    removeFactorMutation.mutate(
-      { templateId, factorId },
+    updateFactorMutation.mutate(
       {
-        onSuccess: () => {
-          addFactorMutation.mutate(
-            {
-              templateId: templateId!,
-              factorId,
-              displaySequence: existing.displaySequence,
-              isMandatory: existing.isMandatory,
-              isCalculationFactor,
-              defaultWeight: existing.defaultWeight ?? null,
-              defaultIntensity: existing.defaultIntensity ?? null,
-            },
-            {
-              onSuccess: () => toast.success(t('toasts.calculationUpdated')),
-              onError: () => toast.error(t('toasts.calculationUpdateFailed')),
-            },
-          );
-        },
+        templateId,
+        factorId,
+        isMandatory: existing.isMandatory,
+        isCalculationFactor,
+        defaultWeight: existing.defaultWeight ?? null,
+        defaultIntensity: existing.defaultIntensity ?? null,
+      },
+      {
+        onSuccess: () => toast.success(t('toasts.calculationUpdated')),
         onError: () => toast.error(t('toasts.calculationUpdateFailed')),
       },
     );
@@ -191,26 +192,17 @@ const ComparativeTemplateDetailPage = () => {
     if (!templateId) return;
     const existing = templateDetail?.comparativeFactors?.find(f => f.factorId === factorId);
     if (!existing) return;
-    removeFactorMutation.mutate(
-      { templateId, factorId },
+    updateFactorMutation.mutate(
       {
-        onSuccess: () => {
-          addFactorMutation.mutate(
-            {
-              templateId: templateId!,
-              factorId,
-              displaySequence: existing.displaySequence,
-              isMandatory: existing.isMandatory,
-              isCalculationFactor: existing.isCalculationFactor,
-              defaultWeight,
-              defaultIntensity,
-            },
-            {
-              onSuccess: () => toast.success(t('toasts.defaultValuesUpdated')),
-              onError: () => toast.error(t('toasts.defaultValuesUpdateFailed')),
-            },
-          );
-        },
+        templateId,
+        factorId,
+        isMandatory: existing.isMandatory,
+        isCalculationFactor: existing.isCalculationFactor,
+        defaultWeight,
+        defaultIntensity,
+      },
+      {
+        onSuccess: () => toast.success(t('toasts.defaultValuesUpdated')),
         onError: () => toast.error(t('toasts.defaultValuesUpdateFailed')),
       },
     );
@@ -218,6 +210,8 @@ const ComparativeTemplateDetailPage = () => {
 
   const handleReorder = (reorderedFactors: TemplateFactor[]) => {
     if (!templateId) return;
+
+    // Optimistically reflect the new order in the cached detail for instant feedback.
     queryClient.setQueryData<GetComparativeAnalysisTemplateByIdResponseType>(
       templateMgmtKeys.compTemplateDetail(templateId),
       old => {
@@ -231,15 +225,40 @@ const ComparativeTemplateDetailPage = () => {
         };
       },
     );
+
+    // Persist the new order; onSuccess invalidation reconciles with the server.
+    reorderMutation.mutate(
+      {
+        templateId,
+        factors: reorderedFactors.map(f => ({
+          factorId: f.factorId,
+          displaySequence: f.displaySequence,
+        })),
+      },
+      {
+        onSuccess: () => toast.success(t('toasts.factorsReordered')),
+        onError: () => toast.error(t('toasts.reorderFailed')),
+      },
+    );
   };
 
   const handleRemoveFactor = (factorId: string) => {
-    if (!templateId) return;
+    setDeletingFactorId(factorId);
+  };
+
+  const handleConfirmRemoveFactor = () => {
+    if (!templateId || !deletingFactorId) return;
     removeFactorMutation.mutate(
-      { templateId, factorId },
+      { templateId, factorId: deletingFactorId },
       {
-        onSuccess: () => toast.success(t('toasts.factorRemoved')),
-        onError: () => toast.error(t('toasts.factorRemoveFailed')),
+        onSuccess: () => {
+          toast.success(t('toasts.factorRemoved'));
+          setDeletingFactorId(null);
+        },
+        onError: () => {
+          toast.error(t('toasts.factorRemoveFailed'));
+          setDeletingFactorId(null);
+        },
       },
     );
   };
@@ -255,7 +274,7 @@ const ComparativeTemplateDetailPage = () => {
   }
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/comparative-templates')}
@@ -264,15 +283,29 @@ const ComparativeTemplateDetailPage = () => {
         >
           <Icon name="chevron-left" style="solid" className="size-5" />
         </button>
-        <SectionHeader
-          title={
-            isEditMode ? t('templateDetail.compEditTitle') : t('templateDetail.compCreateTitle')
-          }
-          subtitle={isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
-          icon="chart-mixed"
-          iconColor="orange"
-          className="mb-0"
-        />
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">
+            {isEditMode ? t('templateDetail.compEditTitle') : t('templateDetail.compCreateTitle')}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
+          </p>
+        </div>
+        {isEditMode && templateDetail && (
+          <Switch
+            checked={templateDetail.isActive}
+            onChange={handleToggleStatus}
+            label={
+              templateDetail.isActive
+                ? t('templates.status.active')
+                : t('templates.status.inactive')
+            }
+            size="sm"
+            variant="status"
+            disabled={toggleStatus.isPending}
+            className="ml-auto shrink-0"
+          />
+        )}
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
@@ -301,11 +334,24 @@ const ComparativeTemplateDetailPage = () => {
             onReorder={handleReorder}
             isAdding={addFactorMutation.isPending}
             isRemoving={removeFactorMutation.isPending}
-            isUpdating={addFactorMutation.isPending || removeFactorMutation.isPending}
+            isUpdating={updateFactorMutation.isPending}
             showDefaultWeight
+            showMandatory={false}
           />
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={!!deletingFactorId}
+        onClose={() => setDeletingFactorId(null)}
+        onConfirm={handleConfirmRemoveFactor}
+        title={t('confirm.deleteFactorTitle')}
+        message={t('confirm.deleteFactor')}
+        confirmText={t('common:actions.remove')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+        isLoading={removeFactorMutation.isPending}
+      />
     </div>
   );
 };

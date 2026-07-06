@@ -81,6 +81,42 @@ export const useDeleteComparativeAnalysisTemplate = () => {
   });
 };
 
+export const useToggleComparativeAnalysisTemplateStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      await axios.post(
+        `/comparative-analysis-templates/${id}/${isActive ? 'activate' : 'deactivate'}`,
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: templateMgmtKeys.compTemplates });
+    },
+  });
+};
+
+export const useReorderComparativeAnalysisTemplateFactors = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      factors,
+    }: {
+      templateId: string;
+      factors: { factorId: string; displaySequence: number }[];
+    }) => {
+      await axios.put(`/comparative-analysis-templates/${templateId}/factors/reorder`, { factors });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.compTemplateDetail(variables.templateId),
+      });
+    },
+  });
+};
+
 export const useAddFactorToComparativeAnalysisTemplate = () => {
   const queryClient = useQueryClient();
 
@@ -109,6 +145,40 @@ export const useRemoveFactorFromComparativeAnalysisTemplate = () => {
   return useMutation({
     mutationFn: async ({ templateId, factorId }: { templateId: string; factorId: string }) => {
       await axios.delete(`/comparative-analysis-templates/${templateId}/factors/${factorId}`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: templateMgmtKeys.compTemplateDetail(variables.templateId),
+      });
+    },
+  });
+};
+
+export const useUpdateFactorInComparativeAnalysisTemplate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      templateId,
+      factorId,
+      isMandatory,
+      isCalculationFactor,
+      defaultWeight,
+      defaultIntensity,
+    }: {
+      templateId: string;
+      factorId: string;
+      isMandatory: boolean;
+      isCalculationFactor: boolean;
+      defaultWeight: number | null;
+      defaultIntensity: number | null;
+    }) => {
+      await axios.put(`/comparative-analysis-templates/${templateId}/factors/${factorId}`, {
+        isMandatory,
+        isCalculationFactor,
+        defaultWeight,
+        defaultIntensity,
+      });
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

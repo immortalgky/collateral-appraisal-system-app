@@ -137,7 +137,9 @@
       "action": "การดำเนินการ"
     },
     "yes": "ใช่",
-    "no": "ไม่"
+    "no": "ไม่",
+    "toggleHint": "คลิกเพื่อเปลี่ยน",
+    "interactionHint": "คลิกที่แบดจ์เพื่อเปลี่ยนค่า หรือลากแถวเพื่อจัดลำดับ"
   },
   "addFactorModal": {
     "title": "เพิ่มปัจจัย",
@@ -160,6 +162,10 @@
   "toasts": {
     "factorCreated": "สร้างปัจจัยสำเร็จ",
     "factorCreateFailed": "ไม่สามารถสร้างปัจจัยได้",
+    "factorDeleted": "ลบปัจจัยสำเร็จ",
+    "factorDeleteFailed": "ไม่สามารถลบปัจจัยได้",
+    "statusUpdated": "อัปเดตสถานะแล้ว",
+    "statusUpdateFailed": "ไม่สามารถอัปเดตสถานะได้",
     "factorUpdated": "อัปเดตปัจจัยสำเร็จ",
     "factorUpdateFailed": "ไม่สามารถอัปเดตปัจจัยได้",
     "templateCreated": "สร้างแม่แบบสำเร็จ",
@@ -177,9 +183,18 @@
     "calculationUpdated": "อัปเดตปัจจัยการคำนวณแล้ว",
     "calculationUpdateFailed": "ไม่สามารถอัปเดตปัจจัยการคำนวณได้",
     "defaultValuesUpdated": "อัปเดตค่าเริ่มต้นแล้ว",
-    "defaultValuesUpdateFailed": "ไม่สามารถอัปเดตค่าเริ่มต้นได้"
+    "defaultValuesUpdateFailed": "ไม่สามารถอัปเดตค่าเริ่มต้นได้",
+    "factorsReordered": "อัปเดตลำดับปัจจัยแล้ว",
+    "reorderFailed": "ไม่สามารถจัดลำดับปัจจัยได้"
   },
   "confirm": {
-    "deleteTemplate": "คุณแน่ใจหรือว่าต้องการลบแม่แบบนี้?"
+    "deleteTemplateTitle": "ลบแม่แบบ",
+    "deleteTemplate": "คุณแน่ใจหรือว่าต้องการลบแม่แบบนี้?",
+    "deleteFactorTitle": "นำปัจจัยออก",
+    "deleteFactor": "คุณแน่ใจหรือว่าต้องการนำปัจจัยนี้ออกจากแม่แบบ?",
+    "deleteFactorDefTitle": "ลบปัจจัย",
+    "deleteFactorDef": "คุณแน่ใจหรือว่าต้องการลบปัจจัยนี้?",
+    "deleteTranslationTitle": "ลบคำแปล",
+    "deleteTranslation": "คุณแน่ใจหรือว่าต้องการลบคำแปลนี้?"
   }
 }

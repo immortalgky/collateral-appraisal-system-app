@@ -13,6 +13,8 @@ interface SwitchProps {
   size?: 'sm' | 'md' | 'lg';
   labelPosition?: 'left' | 'right';
   name?: string;
+  /** 'default' = neutral grey; 'status' = red when off, green when on */
+  variant?: 'default' | 'status';
 }
 
 const Switch = ({
@@ -27,6 +29,7 @@ const Switch = ({
   size = 'md',
   labelPosition = 'right',
   name,
+  variant = 'default',
 }: SwitchProps) => {
   const trackSizeStyles = {
     sm: 'h-5 w-9',
@@ -41,9 +44,9 @@ const Switch = ({
   };
 
   const translateStyles = {
-    sm: 'data-checked:translate-x-4',
-    md: 'data-checked:translate-x-5',
-    lg: 'data-checked:translate-x-7',
+    sm: 'translate-x-0.5 group-data-checked:translate-x-4',
+    md: 'translate-x-0.5 group-data-checked:translate-x-5',
+    lg: 'translate-x-0.5 group-data-checked:translate-x-7',
   };
 
   const switchElement = (
@@ -57,7 +60,11 @@ const Switch = ({
         'group relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2',
         trackSizeStyles[size],
-        disabled ? 'cursor-not-allowed bg-gray-200' : 'bg-gray-300 data-checked:bg-gray-700',
+        disabled
+          ? 'cursor-not-allowed bg-gray-200'
+          : variant === 'status'
+            ? 'bg-red-500 data-checked:bg-green-600'
+            : 'bg-gray-300 data-checked:bg-gray-700',
         error && 'ring-2 ring-danger',
       )}
     >

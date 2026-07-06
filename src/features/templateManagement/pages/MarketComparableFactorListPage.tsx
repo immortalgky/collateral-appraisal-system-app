@@ -1,15 +1,23 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
+import ConfirmDialog from '@shared/components/ConfirmDialog';
 import TextInput from '@shared/components/inputs/TextInput';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import NumberInput from '@shared/components/inputs/NumberInput';
+import Switch from '@shared/components/inputs/Switch';
 import FactorTable from '../components/FactorTable';
-import { useGetFactors, useCreateFactor, useUpdateFactor } from '../api/marketComparableFactor';
+import Pagination from '@shared/components/Pagination';
+import {
+  useGetFactors,
+  useCreateFactor,
+  useUpdateFactor,
+  useDeleteFactor,
+  useToggleFactorStatus,
+} from '../api/marketComparableFactor';
 import type { MarketComparableFactorDtoType } from '@/shared/schemas/v1';
 import clsx from 'clsx';
 import { getTranslatedFactorName } from '@shared/utils/translationUtils';
@@ -25,6 +33,7 @@ type FactorFormData = {
   fieldLength: number | null;
   fieldDecimal: number | null;
   parameterGroup: string | null;
+  isActive: boolean;
 };
 
 const emptyForm: FactorFormData = {
@@ -35,20 +44,69 @@ const emptyForm: FactorFormData = {
   fieldLength: null,
   fieldDecimal: null,
   parameterGroup: null,
+  isActive: true,
 };
 
 const MarketComparableFactorListPage = () => {
   const { t } = useTranslation(['templateManagement', 'common']);
   const language = useLocaleStore(s => s.language);
-  const { data: factors = [], isLoading } = useGetFactors();
+  const { data: factors = [], isLoading } = useGetFactors(false);
   const createFactor = useCreateFactor();
   const updateFactor = useUpdateFactor();
+  const deleteFactor = useDeleteFactor();
+  const toggleStatus = useToggleFactorStatus();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [sortKey, setSortKey] = useState<'code' | 'name' | 'fieldName' | 'dataType' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  // Three-stage cycle matching the task-list standard: unsorted -> asc -> desc -> unsorted.
+  const handleSort = (key: string) => {
+    const k = key as 'code' | 'name' | 'fieldName' | 'dataType';
+    if (sortKey !== k) {
+      setSortKey(k);
+      setSortDir('asc');
+    } else if (sortDir === 'asc') {
+      setSortDir('desc');
+    } else {
+      setSortKey(null);
+      setSortDir('asc');
+    }
+    setPage(0);
+  };
   const [showModal, setShowModal] = useState(false);
   const [editingFactor, setEditingFactor] = useState<MarketComparableFactorDtoType | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MarketComparableFactorDtoType | null>(null);
+  const [deletingTranslationIndex, setDeletingTranslationIndex] = useState<number | null>(null);
   const [form, setForm] = useState<FactorFormData>(emptyForm);
+
+  const handleToggleStatus = (factor: MarketComparableFactorDtoType) => {
+    toggleStatus.mutate(
+      { id: factor.id, isActive: !factor.isActive },
+      {
+        onSuccess: () => toast.success(t('toasts.statusUpdated')),
+        onError: () => toast.error(t('toasts.statusUpdateFailed')),
+      },
+    );
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteFactor.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success(t('toasts.factorDeleted'));
+        setDeleteTarget(null);
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onError: (err: any) => {
+        toast.error(err?.apiError?.detail ?? t('toasts.factorDeleteFailed'));
+        setDeleteTarget(null);
+      },
+    });
+  };
 
   const dataTypeOptions = [
     { value: 'Dropdown', label: t('factors.dataTypes.Dropdown') },
@@ -88,6 +146,7 @@ const MarketComparableFactorListPage = () => {
       fieldLength: factor.fieldLength,
       fieldDecimal: factor.fieldDecimal,
       parameterGroup: factor.parameterGroup,
+      isActive: factor.isActive,
     });
     setShowModal(true);
   };
@@ -123,6 +182,12 @@ const MarketComparableFactorListPage = () => {
       ...prev,
       translations: prev.translations.filter((_, i) => i !== index),
     }));
+  };
+
+  const handleConfirmRemoveTranslation = () => {
+    if (deletingTranslationIndex === null) return;
+    removeTranslation(deletingTranslationIndex);
+    setDeletingTranslationIndex(null);
   };
 
   const updateTranslation = (index: number, factorName: string) => {
@@ -163,6 +228,7 @@ const MarketComparableFactorListPage = () => {
           fieldDecimal: form.fieldDecimal,
           parameterGroup: form.parameterGroup,
           translations,
+          isActive: form.isActive,
         },
         {
           onSuccess: () => {
@@ -206,75 +272,128 @@ const MarketComparableFactorListPage = () => {
     inactive: t('factors.filterInactive'),
   };
 
-  return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <SectionHeader
-        title={t('factors.pageTitle')}
-        subtitle={t('factors.pageSubtitle')}
-        icon="database"
-        iconColor="purple"
-        rightIcon={
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleOpenCreate}
-            leftIcon={<Icon name="plus" style="solid" className="size-3.5" />}
-          >
-            {t('factors.createButton')}
-          </Button>
-        }
-      />
+  const filteredFactors = factors.filter(f => {
+    if (statusFilter === 'active' && !f.isActive) return false;
+    if (statusFilter === 'inactive' && f.isActive) return false;
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      f.factorCode.toLowerCase().includes(q) ||
+      getTranslatedFactorName(f.translations, language).toLowerCase().includes(q)
+    );
+  });
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
-        <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-          <div className="relative flex-1 max-w-sm">
-            <Icon
-              name="magnifying-glass"
-              style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={t('factors.searchPlaceholder')}
-              aria-label={t('factors.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-            />
+  const sortValue = (f: MarketComparableFactorDtoType) => {
+    switch (sortKey) {
+      case 'code':
+        return f.factorCode ?? '';
+      case 'name':
+        return getTranslatedFactorName(f.translations, language) ?? '';
+      case 'fieldName':
+        return f.fieldName ?? '';
+      case 'dataType':
+        return f.dataType ?? '';
+      default:
+        return '';
+    }
+  };
+
+  const sortedFactors = sortKey
+    ? [...filteredFactors].sort((a, b) => {
+        const cmp = sortValue(a).localeCompare(sortValue(b), undefined, { sensitivity: 'base' });
+        return sortDir === 'asc' ? cmp : -cmp;
+      })
+    : filteredFactors;
+
+  const totalPages = Math.max(1, Math.ceil(sortedFactors.length / pageSize));
+  const safePage = Math.min(page, totalPages - 1);
+  const pagedFactors = sortedFactors.slice(safePage * pageSize, safePage * pageSize + pageSize);
+
+  return (
+    <div className="flex flex-col gap-3 h-full min-h-0">
+      <div className="shrink-0 flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold text-gray-900">{t('factors.pageTitle')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              {factors.length}
+            </span>
           </div>
-          <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-sm">
-            {(['all', 'active', 'inactive'] as const).map(s => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatusFilter(s)}
-                className={clsx(
-                  'px-3 py-2 transition-colors',
-                  statusFilter === s
-                    ? 'bg-primary/10 text-primary font-medium'
-                    : 'text-gray-500 hover:bg-gray-50',
-                )}
-              >
-                {filterLabels[s]}
-              </button>
-            ))}
-          </div>
+          <p className="text-xs text-gray-500 mt-0.5">{t('factors.pageSubtitle')}</p>
         </div>
+        <Button size="sm" onClick={handleOpenCreate}>
+          <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
+          {t('factors.createButton')}
+        </Button>
+      </div>
+
+      <div className="shrink-0 flex flex-wrap items-center gap-3">
+        <div className="relative min-w-64">
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            value={search}
+            onChange={e => {
+              setSearch(e.target.value);
+              setPage(0);
+            }}
+            placeholder={t('factors.searchPlaceholder')}
+            aria-label={t('factors.searchPlaceholder')}
+            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          />
+        </div>
+        <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-sm">
+          {(['all', 'active', 'inactive'] as const).map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => {
+                setStatusFilter(s);
+                setPage(0);
+              }}
+              className={clsx(
+                'px-3 py-2 transition-colors',
+                statusFilter === s
+                  ? 'bg-primary/10 text-primary font-medium'
+                  : 'text-gray-500 hover:bg-gray-50',
+              )}
+            >
+              {filterLabels[s]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <FactorTable
-          factors={factors.filter(f => {
-            if (statusFilter === 'active' && !f.isActive) return false;
-            if (statusFilter === 'inactive' && f.isActive) return false;
-            if (!search.trim()) return true;
-            const q = search.toLowerCase();
-            return (
-              f.factorCode.toLowerCase().includes(q) ||
-              getTranslatedFactorName(f.translations, language).toLowerCase().includes(q)
-            );
-          })}
+          factors={pagedFactors}
           onEdit={handleOpenEdit}
+          onDelete={setDeleteTarget}
+          onToggleStatus={handleToggleStatus}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onSort={handleSort}
           isLoading={isLoading}
-          totalCount={factors.length}
+          isDeleting={deleteFactor.isPending}
+          isTogglingStatus={toggleStatus.isPending}
         />
+        {!isLoading && filteredFactors.length > 0 && (
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            totalCount={filteredFactors.length}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={size => {
+              setPageSize(size);
+              setPage(0);
+            }}
+          />
+        )}
       </div>
 
       <Modal
@@ -400,7 +519,7 @@ const MarketComparableFactorListPage = () => {
                         {!isEN ? (
                           <button
                             type="button"
-                            onClick={() => removeTranslation(index)}
+                            onClick={() => setDeletingTranslationIndex(index)}
                             aria-label={t('common:actions.remove')}
                             className="p-1 text-gray-400 hover:text-red-500 transition-colors"
                           >
@@ -420,15 +539,55 @@ const MarketComparableFactorListPage = () => {
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 mt-6">
-          <Button variant="ghost" size="sm" onClick={() => setShowModal(false)}>
-            {t('common:actions.cancel')}
-          </Button>
-          <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSubmit}>
-            {editingFactor ? t('common:actions.save') : t('common:actions.create')}
-          </Button>
+        <div className="flex items-center justify-between gap-2 mt-6">
+          <div>
+            {editingFactor && (
+              <Switch
+                checked={form.isActive}
+                onChange={checked => setForm(prev => ({ ...prev, isActive: checked }))}
+                label={
+                  form.isActive
+                    ? t('factors.status.active')
+                    : t('factors.status.inactive')
+                }
+                size="sm"
+                variant="status"
+              />
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowModal(false)}>
+              {t('common:actions.cancel')}
+            </Button>
+            <Button variant="primary" size="sm" isLoading={isSaving} onClick={handleSubmit}>
+              {editingFactor ? t('common:actions.save') : t('common:actions.create')}
+            </Button>
+          </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title={t('confirm.deleteFactorDefTitle')}
+        message={t('confirm.deleteFactorDef')}
+        confirmText={t('common:actions.delete')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+        isLoading={deleteFactor.isPending}
+      />
+
+      <ConfirmDialog
+        isOpen={deletingTranslationIndex !== null}
+        onClose={() => setDeletingTranslationIndex(null)}
+        onConfirm={handleConfirmRemoveTranslation}
+        title={t('confirm.deleteTranslationTitle')}
+        message={t('confirm.deleteTranslation')}
+        confirmText={t('common:actions.remove')}
+        cancelText={t('common:actions.cancel')}
+        variant="danger"
+      />
     </div>
   );
 };
