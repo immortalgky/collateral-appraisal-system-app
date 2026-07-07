@@ -26,6 +26,8 @@ export interface PaymentRecord {
 export interface AppointmentData {
   dateTime: string | null;
   location: string | null;
+  contactPerson: string | null;
+  contactPhone: string | null;
   appraiser?: {
     id: string;
     name: string;

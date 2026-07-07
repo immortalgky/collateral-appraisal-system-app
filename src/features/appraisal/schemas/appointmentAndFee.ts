@@ -34,6 +34,8 @@ export const PaymentRecordSchema = z.object({
 export const AppointmentSchema = z.object({
   dateTime: z.string().nullable(),
   location: z.string().nullable(),
+  contactPerson: z.string().nullable(),
+  contactPhone: z.string().nullable(),
 });
 
 /**
@@ -83,12 +85,16 @@ export const makeRescheduleFormSchema = (t: TFunction<'appraisal'>) =>
     dateTime: z.string().min(1, t('validation.dateTimeRequired')),
     location: z.string().min(1, t('validation.locationRequired')),
     reason: z.string().optional(),
+    contactPerson: z.string().min(1, t('validation.contactPersonRequired')),
+    contactPhone: z.string().min(1, t('validation.contactPhoneRequired')),
   });
 
 export const RescheduleFormSchema = z.object({
   dateTime: z.string().min(1, 'Date and time is required'),
   location: z.string().min(1, 'Location is required'),
   reason: z.string().optional(),
+  contactPerson: z.string().min(1, 'Contact person name is required'),
+  contactPhone: z.string().min(1, 'Contact phone no is required'),
 });
 
 /**

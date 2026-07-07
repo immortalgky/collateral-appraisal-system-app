@@ -82,7 +82,6 @@ export default function AppointmentAndFeePage() {
   // Get the first fee record
   const currentFee = fees.length > 0 ? fees[0] : null;
 
-
   const isNewAppointment = !appointment;
 
   // Real assignment id — present on both appointment and fee DTOs (schema-typed field).
@@ -96,7 +95,7 @@ export default function AppointmentAndFeePage() {
   // Summary string for the submit button label
   const summaryText = buildApprovalSummaryParts(approvalState, {
     dateLabel: t('approval.summary.dateChange'),
-    feeLabel: (count) => t('approval.summary.fees', { count }),
+    feeLabel: count => t('approval.summary.fees', { count }),
   });
 
   // ---- Handlers ----
@@ -104,6 +103,8 @@ export default function AppointmentAndFeePage() {
     dateTime: string;
     location: string;
     reason?: string;
+    contactPerson?: string | null;
+    contactPhone?: string | null;
   }) => {
     try {
       if (isNewAppointment) {
@@ -113,8 +114,8 @@ export default function AppointmentAndFeePage() {
           appointmentDateTime: data.dateTime,
           appointedBy: currentUser?.username ?? '',
           locationDetail: data.location,
-          contactPerson: null,
-          contactPhone: null,
+          contactPerson: data.contactPerson ?? null,
+          contactPhone: data.contactPhone ?? null,
         });
         toast.success(t('appointment.toasts.scheduled'));
       } else {
@@ -123,6 +124,7 @@ export default function AppointmentAndFeePage() {
           appointmentId: appointment!.id,
           changedBy: currentUser?.username ?? '',
           newDateTime: data.dateTime,
+          locationDetail: data.location,
           reason: data.reason || null,
         });
         toast.success(t('appointment.toasts.rescheduled'));
@@ -321,7 +323,6 @@ export default function AppointmentAndFeePage() {
       {/* Main Content - Scrollable */}
       <div className="flex-1 min-h-0 overflow-y-auto">
         <div className="flex flex-col gap-6 pb-6 pr-4">
-
           {/* Global approval banner */}
           {hasDraft && (
             <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-300 text-amber-800">
@@ -424,6 +425,8 @@ export default function AppointmentAndFeePage() {
         defaultValues={{
           dateTime: appointment?.appointmentDateTime ?? null,
           location: appointment?.locationDetail ?? null,
+          contactPerson: appointment?.contactPerson ?? null,
+          contactPhone: appointment?.contactPhone ?? null,
         }}
         isNewAppointment={isNewAppointment}
         isLoading={createAppointment.isPending || rescheduleAppointment.isPending}
