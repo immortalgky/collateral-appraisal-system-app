@@ -13,9 +13,9 @@ import type {
   GetCondoPropertyResponseType,
   GetLandAndBuildingPropertyResponseType,
   GetMachineryPropertyResponseType,
+  GetLandPMAPropertyResponseType,
+  GetCondoPMAPropertyResponseType,
 } from '@shared/schemas/v1';
-import type { GetCondoPMAPropertyByIdResultType } from '@/shared/forms/typeCondo';
-import type { GetLandAndBuildingPMAPropertyByIdResultType } from '@/shared/forms/typeLandBuilding';
 import type { CurrentAssignment } from '@features/appraisal/types/administration';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 
@@ -482,36 +482,8 @@ export const mapMachineryPropertyResponseToForm = (
   };
 };
 
-export const mapLandAndBuildingPMAPropertyResponseToForm = (
-  response: GetLandAndBuildingPMAPropertyByIdResultType,
-): createLandAndBuildingPMAFormType => {
-  const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
-    : undefined;
-  return {
-    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
-    sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forcedSalePrice ?? 0,
-    titleNo: response.titleNo ?? '',
-    rawang: response.rawang ?? '',
-    landNo: response.landNo ?? '',
-    surveyNo: response.surveyNo ?? '',
-    bookNumber: response.bookNumber ?? '',
-    pageNumber: response.pageNumber ?? '',
-    areaRai: response.areaRai ?? 0,
-    areaNgan: response.areaNgan ?? 0,
-    areaSquareWa: response.areaSquareWa ?? 0,
-    subDistrict: response.subDistrict ?? '',
-    subDistrictName: addressLookup?.subDistrictName ?? '',
-    district: response.district ?? '',
-    districtName: addressLookup?.districtName ?? '',
-    province: response.province ?? '',
-    provinceName: addressLookup?.provinceName ?? '',
-  };
-};
-
 export const mapCondoPMAPropertyResponseToForm = (
-  response: GetCondoPMAPropertyByIdResultType,
+  response: GetCondoPMAPropertyResponseType,
 ): createCondoPMAFormType => {
   const addressLookup = response.subDistrict
     ? findAddressBySubDistrictCode(response.subDistrict)
@@ -660,5 +632,86 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
     selectedCompany: null as null,
     selectedFollowupStaff: null as null,
     remarks: '',
+  };
+};
+
+export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPMAFormType) => {
+  const {
+    sellingPrice,
+    forcedSalePrice,
+    buildingInsurancePrice,
+    subDistrict,
+    district,
+    province,
+    titleNumber,
+    rawang,
+    landNumber,
+    surveyNumber,
+    bookNumber,
+    pageNumber,
+    areaRai,
+    areaNgan,
+    areaSquareWa,
+    ...rest
+  } = data;
+
+  const titles =
+    titleNumber || rawang || landNumber || surveyNumber
+      ? [
+          {
+            titleNumber: titleNumber ?? '',
+            titleType: 'DEED',
+            rawang: rawang ?? null,
+            landParcelNumber: landNumber ?? null,
+            surveyNumber: surveyNumber ?? null,
+            bookNumber: bookNumber ?? null,
+            pageNumber: pageNumber ?? null,
+            rai: areaRai ?? null,
+            ngan: areaNgan ?? null,
+            squareWa: areaSquareWa ?? null,
+          },
+        ]
+      : [];
+
+  return {
+    ...rest,
+    sellingPrice: sellingPrice ?? null,
+    forcedSalePrice: forcedSalePrice ?? null,
+    buildingInsurancePrice: buildingInsurancePrice ?? null,
+    subDistrict: subDistrict || null,
+    district: district || null,
+    province: province || null,
+    titles,
+  };
+};
+
+export const mapLandAndBuildingPMAPropertyResponseToForm = (
+  response: GetLandPMAPropertyResponseType,
+): createLandAndBuildingPMAFormType => {
+  const addressLookup = response.subDistrict
+    ? findAddressBySubDistrictCode(response.subDistrict)
+    : undefined;
+
+  const title = response.titles?.[0];
+
+  return {
+    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    sellingPrice: response.sellingPrice ?? 0,
+    forcedSalePrice: response.forcedSalePrice ?? 0,
+    titleNumber: title?.titleNumber ?? '',
+    rawang: title?.rawang ?? '',
+    landNumber: title?.landParcelNumber ?? '',
+    surveyNumber: title?.surveyNumber ?? '',
+    bookNumber: title?.bookNumber ?? '',
+    pageNumber: title?.pageNumber ?? '',
+    areaRai: title?.rai ?? 0,
+    areaNgan: title?.ngan ?? 0,
+    areaSquareWa: title?.squareWa ?? 0,
+    subDistrict: response.subDistrict ?? '',
+    subDistrictName: addressLookup?.subDistrictName ?? '',
+    district: response.district ?? '',
+    districtName: addressLookup?.districtName ?? '',
+    province: response.province ?? '',
+    provinceName: addressLookup?.provinceName ?? '',
   };
 };
