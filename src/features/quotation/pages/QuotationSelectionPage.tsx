@@ -634,7 +634,6 @@ const QuotationSelectionPage = () => {
                   variant="outline"
                   onClick={() => setIsNegotiationOpen(true)}
                   disabled={!tentativeWinner || (tentativeWinner.negotiationRounds ?? 0) >= 3}
-                  className="text-indigo-600 border-indigo-300 hover:bg-indigo-50"
                   title={
                     (tentativeWinner?.negotiationRounds ?? 0) >= 3
                       ? t('negotiation.maxRoundsReached')

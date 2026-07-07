@@ -157,6 +157,7 @@ const QuotationFeeBreakdown = ({
               maxIntegerDigits={15}
               decimalPlaces={2}
               min={0}
+              max={feeAmount - (discount ?? 0)}
             />
           )}
         />

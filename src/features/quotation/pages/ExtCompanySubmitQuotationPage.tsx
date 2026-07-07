@@ -465,7 +465,7 @@ const ExtCompanySubmitQuotationPage = () => {
   const handleSubmitToChecker = handleSubmit(values => {
     // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
 
-    const zeroFeeViolations = findZeroFeeViolations(getValues());
+    const zeroFeeViolations = findZeroFeeViolations(values);
     if (zeroFeeViolations.length > 0) {
       toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
       return;
@@ -513,7 +513,7 @@ const ExtCompanySubmitQuotationPage = () => {
         item.negotiatedDiscount,
         item.vatPercent,
       );
-      if (!isNaN(feeAfterDiscount) && feeAfterDiscount <= 0) {
+      if (!isNaN(feeAfterDiscount) && feeAfterDiscount === 0) {
         violations.push(ap?.appraisalNumber?.trim() || item.appraisalId.slice(0, 8));
       }
     }
