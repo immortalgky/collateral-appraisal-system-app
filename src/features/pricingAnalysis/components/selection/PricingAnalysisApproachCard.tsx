@@ -13,6 +13,7 @@ interface PricingAnalysisApproachCardProps {
   onToggle: () => void;
   onSelectCandidateApproach: (approachType: string) => void;
   onViewLayoutChange?: (layout: ViewLayout) => void;
+  disabled?: boolean;
 }
 
 export const PricingAnalysisApproachCard = ({
@@ -23,6 +24,7 @@ export const PricingAnalysisApproachCard = ({
   onToggle,
   onSelectCandidateApproach,
   onViewLayoutChange,
+  disabled = false,
 }: PricingAnalysisApproachCardProps) => {
   const isReadOnly = usePageReadOnly();
   const hasSelectedMethods = approach.methods.some(m => m.isIncluded);
@@ -78,8 +80,9 @@ export const PricingAnalysisApproachCard = ({
         ) : (
           <button
             type="button"
+            disabled={disabled}
             onClick={() => onSelectCandidateApproach(approach.approachType)}
-            className="cursor-pointer shrink-0"
+            className={clsx('shrink-0', disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer')}
           >
             <div
               className={clsx(

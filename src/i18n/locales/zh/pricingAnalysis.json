@@ -47,7 +47,11 @@
     "manualUploadClick": "Click to upload PDF",
     "manualRemark": "Remark",
     "manualRemarkPlaceholder": "Add any remarks or notes for this manual appraisal...",
-    "openPdf": "Open PDF"
+    "openPdf": "Open PDF",
+    "attachedDocuments": "Attached documents",
+    "untitledDocument": "Untitled document",
+    "removeDocumentTitle": "Remove document",
+    "removeDocumentMessage": "Remove \"{{fileName}}\"? This cannot be undone."
   },
   "methodStatus": {
     "calculated": "Calculated",
@@ -77,13 +81,17 @@
     "methodNotSelected": "Method does not select",
     "methodAdded": "Method added",
     "methodDeleted": "Method deleted",
+    "documentRemoved": "Document removed",
+    "documentRemoveFailed": "Failed to remove document",
+    "documentRequired": "At least one document is required",
     "saveSelectionFirst": "Save selection first to generate method and approach IDs before calculation.",
     "uploadXlsxOnly": "Only .xlsx files are accepted",
     "uploadMaxSize": "File must be ≤ 5 MB",
     "uploadFailed": "Upload failed",
     "uploadDeleted": "Upload deleted",
     "deleteFailed": "Delete failed",
-    "uploadSuccess": "Uploaded {{n}} rows"
+    "uploadSuccess": "Uploaded {{n}} rows",
+    "someFilesFailed": "Failed to save: {{files}}"
   },
   "footer": {
     "cancel": "Cancel",

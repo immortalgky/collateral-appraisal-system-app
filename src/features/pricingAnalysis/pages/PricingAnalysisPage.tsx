@@ -27,11 +27,9 @@ import { createInitialState } from '@features/pricingAnalysis/store/createInitia
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
-import { useSetFinalValue } from '@features/pricingAnalysis/api';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
 import { MethodSectionRenderer } from '@features/pricingAnalysis/components/MethodSectionRenderer';
 import type { PricingServerData } from '@features/pricingAnalysis/types/selection';
-import type { SetFinalValueRequestType } from '@features/pricingAnalysis/schemas';
 import { propertyGroupKeys } from '@features/appraisal/api/propertyGroup';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -63,6 +61,9 @@ const initialState: SelectionState = {
   editSaved: [],
   summarySelected: [],
   systemCalculationMode: 'System',
+  dirtyManualValueKeys: [],
+  dirtyMethodApproachTypes: [],
+  dirtyApproachSelection: false,
 };
 
 // ─── Subject discriminant ─────────────────────────────────────────────────────
@@ -335,6 +336,8 @@ function PricingAnalysisContent({
         pricingAnalysisId,
         approaches,
         useSystemCalc: (pricingSelection as any)?.useSystemCalc,
+        remark: pricingSelection?.remark,
+        documents: pricingSelection?.documents,
       },
     });
 
@@ -401,39 +404,25 @@ function PricingAnalysisContent({
     setIsDirty(check);
   };
 
-  // (8b) Manual mode — set final value on blur
-  const setFinalValueMutation = useSetFinalValue();
-  const handleManualValueChange = useCallback(
+  // (8b) Update method value on manual mode when (1) immediately on blur (2) debounce ~1s after typeing stop
+  const handleManualValueSync = useCallback(
     ({
       approachType,
       methodType,
       value,
+      methodId,
     }: {
       approachType: string;
       methodType: string;
       value: number;
+      methodId?: string;
     }) => {
-      // Find the method's server ID from summarySelected
-      const approach = state.summarySelected?.find(a => a.approachType === approachType);
-      const method = approach?.methods.find(m => m.methodType === methodType);
-      if (!method?.id) return;
-
-      setFinalValueMutation.mutate(
-        {
-          pricingAnalysisId,
-          methodId: method.id,
-          request: {
-            finalValue: value,
-            finalValueRounded: value,
-          } as SetFinalValueRequestType,
-        },
-        {
-          onSuccess: () => toast.success(t('toasts.valueSaved')),
-          onError: () => toast.error(t('toasts.valueFailed')),
-        },
-      );
+      dispatch({
+        type: 'SUMMARY_UPDATE_METHOD_VALUE',
+        payload: { approachType, methodType, value, methodId },
+      });
     },
-    [state.summarySelected, pricingAnalysisId, setFinalValueMutation],
+    [dispatch],
   );
 
   // (9) Assemble server data for context
@@ -490,6 +479,7 @@ function PricingAnalysisContent({
                         }}
                         onSelectCalculationMethod={calcFlow.startCalculation}
                         onSummaryModeSave={selectionActions.saveSummary}
+                        isSummarySaving={selectionActions.isSavingSummary}
                         onEditModeSave={selectionActions.saveEdit}
                         onToggleMethod={selectionActions.toggleMethod}
                         onPricingAnalysisAccordionChange={onPricingAnalysisAccordionChange}
@@ -511,7 +501,9 @@ function PricingAnalysisContent({
                         pricingContext={pricingContext}
                         modelThumbnailSrc={modelThumbnailSrc}
                         deleteConfirm={selectionActions.deleteConfirm}
-                        onManualValueChange={handleManualValueChange}
+                        onManualValueSync={handleManualValueSync}
+                        onRequestRemoveDocument={selectionActions.requestRemoveDocument}
+                        removeDocumentConfirm={selectionActions.removeDocumentConfirm}
                       />
                       {!isCalcLoading && (
                         <MethodSectionRenderer
