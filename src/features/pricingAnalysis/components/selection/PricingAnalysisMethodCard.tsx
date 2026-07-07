@@ -79,7 +79,7 @@ export const PricingAnalysisMethodCard = ({
       >
         <Icon name={method.icon} style="solid" className="size-3 shrink-0" />
         <span className="flex-1 text-left font-medium">{method.label}</span>
-        {onDeleteMethod && method.id && (
+        {!isReadOnly && onDeleteMethod && method.id && (
           <button
             type="button"
             className="shrink-0 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
@@ -179,16 +179,25 @@ export const PricingAnalysisMethodCard = ({
 
         {/* Hero value or manual input */}
         {isManualMode ? (
-          <NumberInput
-            value={manualInput}
-            onChange={handleManualChange}
-            onBlur={handleManualBlur}
-            onKeyDown={handleManualKeyDown}
-            decimalPlaces={2}
-            placeholder="0.00"
-            rightIcon={<Icon name="baht-sign" style="light" className="size-3.5" />}
-            className="text-xl font-semibold"
-          />
+          isReadOnly ? (
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-semibold text-gray-800">
+                {Number(method.appraisalValue).toLocaleString()}
+              </span>
+              <Icon name="baht-sign" style="light" className="size-3.5 text-gray-400" />
+            </div>
+          ) : (
+            <NumberInput
+              value={manualInput}
+              onChange={handleManualChange}
+              onBlur={handleManualBlur}
+              onKeyDown={handleManualKeyDown}
+              decimalPlaces={2}
+              placeholder="0.00"
+              rightIcon={<Icon name="baht-sign" style="light" className="size-3.5" />}
+              className="text-xl font-semibold"
+            />
+          )
         ) : (
           <div className="flex items-baseline gap-1">
             <span
@@ -292,17 +301,24 @@ export const PricingAnalysisMethodCard = ({
         {method.label}
       </span>
       {isManualMode ? (
-        <NumberInput
-          value={manualInput}
-          onChange={handleManualChange}
-          onBlur={handleManualBlur}
-          onKeyDown={handleManualKeyDown}
-          decimalPlaces={2}
-          placeholder="0.00"
-          fullWidth={false}
-          className="w-40"
-          rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
-        />
+        isReadOnly ? (
+          <div className="flex items-center gap-1 text-sm font-semibold text-gray-600">
+            <span>{Number(method.appraisalValue).toLocaleString()}</span>
+            <Icon name="baht-sign" style="light" className="size-3" />
+          </div>
+        ) : (
+          <NumberInput
+            value={manualInput}
+            onChange={handleManualChange}
+            onBlur={handleManualBlur}
+            onKeyDown={handleManualKeyDown}
+            decimalPlaces={2}
+            placeholder="0.00"
+            fullWidth={false}
+            className="w-40"
+            rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
+          />
+        )
       ) : (
         <div
           className={clsx(

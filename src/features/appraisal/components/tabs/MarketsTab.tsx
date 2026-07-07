@@ -279,17 +279,32 @@ export const MarketsTab = () => {
                     </span>
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-1.5">
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleViewComparable(comparable.marketComparableId);
-                      }}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
-                      title="Edit comparable"
-                    >
-                      <Icon name="pencil" style="solid" />
-                    </button>
+                    {readOnly ? (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleViewComparable(comparable.marketComparableId);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                        title="Edit comparable"
+                      >
+                        <Icon name="eye" style="solid" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleViewComparable(comparable.marketComparableId);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                        title="Edit comparable"
+                      >
+                        <Icon name="pencil" style="solid" />
+                      </button>
+                    )}
+
                     {!readOnly && (
                       <button
                         type="button"
