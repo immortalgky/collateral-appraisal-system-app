@@ -150,14 +150,29 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
+    // Helper bound
+    function getScrollParent(node: HTMLElement | null): HTMLElement | null {
+      let el = node?.parentElement ?? null;
+      while (el) {
+        const { overflowX, overflowY } = getComputedStyle(el);
+        if (/(auto|scroll|hidden)/.test(overflowX + overflowY)) return el;
+        el = el.parentElement;
+      }
+      return null;
+    }
+
     // Calculate position when opening (flip to top if not enough space below)
     useEffect(() => {
       if (isOpen && inputRef.current) {
         const rect = inputRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const calendarHeight = 320; // approximate height of calendar
+        const scrollParent = getScrollParent(inputRef.current);
+        const bounds = scrollParent
+          ? scrollParent.getBoundingClientRect()
+          : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth };
 
-        if (spaceBelow < calendarHeight && rect.top > calendarHeight) {
+        const spaceBelow = bounds.bottom - rect.bottom;
+        const calendarHeight = 320; // approximate height of calendar
+        if (spaceBelow < calendarHeight && rect.top - bounds.top > calendarHeight) {
           setPosition('top');
         } else {
           setPosition('bottom');
@@ -167,8 +182,8 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
         // clipped by a scrollable/narrow container (e.g. a search panel). When there
         // isn't room on the right, anchor to the input's right edge so it expands left.
         const calendarWidth = 300; // approximate width of calendar
-        const spaceRight = window.innerWidth - rect.left;
-        if (spaceRight < calendarWidth && rect.right > calendarWidth) {
+        const spaceRight = bounds.right - rect.left;
+        if (spaceRight < calendarWidth && rect.right - bounds.left > calendarWidth) {
           setAlign('right');
         } else {
           setAlign('left');
