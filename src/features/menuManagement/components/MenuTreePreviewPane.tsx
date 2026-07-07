@@ -28,7 +28,11 @@ function buildVisible(
   out: PreviewNode[],
 ) {
   nodes.forEach(item => {
-    const canView = roleCodes ? roleCodes.has(item.viewPermissionCode) : true;
+    const canView = roleCodes
+      ? roleCodes.has(item.viewPermissionCode) ||
+        (!!item.viewPermissionPrefix &&
+          [...roleCodes].some(code => code.startsWith(item.viewPermissionPrefix!)))
+      : true;
     if (!canView) return; // parent hidden → whole subtree unreachable
     const canEdit = roleCodes
       ? !item.editPermissionCode || roleCodes.has(item.editPermissionCode)

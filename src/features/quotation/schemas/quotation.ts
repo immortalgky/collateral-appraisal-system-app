@@ -109,6 +109,8 @@ export const AppraisalSummarySchema = z.object({
   customerName: z.string().nullable().optional(),
   /** Admin-set maximum appraisal duration in days — null if not set by the requester. */
   maxAppraisalDays: z.number().int().nullable().optional(),
+  /** Appraisal type: New | ReAppraisal | Progressive | PreAppraisal. Gates the Send-to-RM action. */
+  appraisalType: z.string().nullable().optional(),
 });
 
 export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;
@@ -307,13 +309,22 @@ export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
     .object({
       appraisalId: z.string().uuid(),
       estimatedDays: z
-        .number({ required_error: t('validation.daysRequired') })
+        .number({
+          required_error: t('validation.daysRequired'),
+          invalid_type_error: t('validation.daysRequired'),
+        })
         .int(t('validation.mustBeWhole'))
         .positive(t('validation.mustBePositive')),
-      feeAmount: z.number().nonnegative().optional(),
-      discount: z.number().nonnegative().optional(),
+      feeAmount: z
+        .number({
+          required_error: t('validation.feeRequired'),
+          invalid_type_error: t('validation.feeRequired'),
+        })
+        .positive(t('validation.mustBePositive')),
+      // Optional numeric fields — a cleared input emits null, so allow it (treated as 0 downstream).
+      discount: z.number().nonnegative().nullable().optional(),
       negotiatedDiscount: z.number().nonnegative().nullable().optional(),
-      vatPercent: z.number().nonnegative().optional(),
+      vatPercent: z.number().nonnegative().nullable().optional(),
       itemNotes: z.string().nullable().optional(),
     })
     .superRefine((item, ctx) => {
@@ -334,14 +345,23 @@ export const submitQuotationItemSchema = z
     appraisalId: z.string().uuid(),
     // Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
     estimatedDays: z
-      .number({ required_error: 'Days is required' })
+      .number({
+        required_error: 'Estimated Mandays is required',
+        invalid_type_error: 'Estimated Mandays is required',
+      })
       .int('Must be a whole number')
-      .positive('Must be positive'),
+      .positive('Estimated Mandays must be positive'),
     // Fee-breakdown fields — used in the Maker/Checker path.
-    feeAmount: z.number().nonnegative().optional(),
-    discount: z.number().nonnegative().optional(),
+    feeAmount: z
+      .number({
+        required_error: 'Fee Amount is required',
+        invalid_type_error: 'Fee Amount is required',
+      })
+      .positive('Fee Amount must be positive'),
+    // Optional numeric fields — a cleared input emits null, so allow it (treated as 0 downstream).
+    discount: z.number().nonnegative().nullable().optional(),
     negotiatedDiscount: z.number().nonnegative().nullable().optional(),
-    vatPercent: z.number().nonnegative().optional(),
+    vatPercent: z.number().nonnegative().nullable().optional(),
     /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
     itemNotes: z.string().nullable().optional(),
   })

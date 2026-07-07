@@ -2543,7 +2543,7 @@ export const landAndBuildingPMAFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Land No.',
-    name: 'landNo',
+    name: 'landNumber',
     wrapperClassName: 'col-span-3',
     required: true,
     maxLength: 10,
@@ -2551,7 +2551,7 @@ export const landAndBuildingPMAFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Survey No.',
-    name: 'surveyNo',
+    name: 'surveyNumber',
     wrapperClassName: 'col-span-3',
     required: true,
     maxLength: 10,
@@ -2559,7 +2559,7 @@ export const landAndBuildingPMAFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Title Deed No.',
-    name: 'titleNo',
+    name: 'titleNumber',
     wrapperClassName: 'col-span-3',
     required: true,
     maxLength: 200,

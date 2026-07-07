@@ -1758,6 +1758,7 @@ const MarketComparableTemplateDto = z
     isActive: z.boolean(),
     createdOn: z.string().datetime({ offset: true }).nullable(),
     updatedOn: z.string().datetime({ offset: true }).nullable(),
+    factorCount: z.number().int(),
   })
   .passthrough();
 const GetMarketComparableTemplatesResponse = z
@@ -1940,6 +1941,7 @@ const UpdateMarketComparableFactorRequest = z
     fieldDecimal: z.number().int().nullable(),
     parameterGroup: z.string().nullable(),
     translations: z.array(FactorTranslationRequest),
+    isActive: z.boolean(),
   })
   .passthrough();
 const UpdateMarketComparableFactorResponse = z.object({ id: z.string().uuid() }).passthrough();

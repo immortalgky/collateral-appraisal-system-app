@@ -217,7 +217,9 @@ const CreateCondoPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
                         <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {t('createPage.photosSection')}
+                      </h2>
                     </div>
                     <div className="h-px bg-gray-200 mb-4" />
                     {appraisalId && (
@@ -235,7 +237,9 @@ const CreateCondoPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
                         <Icon name="building" style="solid" className="w-5 h-5 text-violet-600" />
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.condoSection')}</h2>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {t('createPage.condoSection')}
+                      </h2>
                     </div>
                     <div className="h-px bg-gray-200" />
                   </Section>

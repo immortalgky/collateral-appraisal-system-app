@@ -528,97 +528,102 @@ export default function ModelListingTab({ projectType }: ModelListingTabProps) {
       </div>
 
       {/* Model List */}
-      {models.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-          <Icon name={isCondo(projectType) ? 'layer-group' : 'house'} className="text-4xl mb-3" />
-          <p className="text-sm font-medium text-gray-500">{t('modelListing.noModels')}</p>
-          <p className="text-xs text-gray-400 mt-1">{t('modelListing.noModelsHint')}</p>
-        </div>
-      ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 overflow-y-auto">
-          {models.map(model => (
-            <ModelCard
-              key={model.id}
-              model={model}
-              projectType={projectType}
-              thumbnailSrc={thumbnailByModelId.get(model.id)}
-              viewMode="grid"
-              readOnly={readOnly}
-              onClick={() => handleModelClick(model.id)}
-              onPricingAnalysis={() => handlePricingAnalysis(model)}
-              isPricingAnalysisPending={
-                isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
-              }
-              onDelete={e => {
-                e.stopPropagation();
-                setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' });
-              }}
+      <div className="flex-1 min-h-0 overflow-y-auto pb-4">
+        {models.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+            <Icon
+              name={isCondo(projectType) ? 'layer-group' : 'house'}
+              className="text-4xl mb-3"
             />
-          ))}
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 z-10">
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('modelListing.cols.image')}
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('modelListing.cols.modelName')}
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('modelListing.cols.usableArea')}
-                </th>
-                {isCondo(projectType) ? (
-                  <>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('modelListing.cols.startingPrice')}
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('modelListing.cols.roomType')}
-                    </th>
-                  </>
-                ) : (
-                  <>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('modelListing.cols.landAreaStd')}
-                    </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('modelListing.cols.houses')}
-                    </th>
-                  </>
-                )}
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {t('modelListing.cols.standardPrice')}
-                </th>
-                <th className="w-28 px-2 py-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {models.map(model => (
-                <ModelCard
-                  key={model.id}
-                  model={model}
-                  projectType={projectType}
-                  thumbnailSrc={thumbnailByModelId.get(model.id)}
-                  viewMode="list"
-                  readOnly={readOnly}
-                  onClick={() => handleModelClick(model.id)}
-                  onPricingAnalysis={() => handlePricingAnalysis(model)}
-                  isPricingAnalysisPending={
-                    isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
-                  }
-                  onDelete={e => {
-                    e.stopPropagation();
-                    setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' });
-                  }}
-                />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            <p className="text-sm font-medium text-gray-500">{t('modelListing.noModels')}</p>
+            <p className="text-xs text-gray-400 mt-1">{t('modelListing.noModelsHint')}</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {models.map(model => (
+              <ModelCard
+                key={model.id}
+                model={model}
+                projectType={projectType}
+                thumbnailSrc={thumbnailByModelId.get(model.id)}
+                viewMode="grid"
+                readOnly={readOnly}
+                onClick={() => handleModelClick(model.id)}
+                onPricingAnalysis={() => handlePricingAnalysis(model)}
+                isPricingAnalysisPending={
+                  isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
+                }
+                onDelete={e => {
+                  e.stopPropagation();
+                  setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' });
+                }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-xl border border-gray-200">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 z-10">
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="w-14 px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('modelListing.cols.image')}
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('modelListing.cols.modelName')}
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('modelListing.cols.usableArea')}
+                  </th>
+                  {isCondo(projectType) ? (
+                    <>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {t('modelListing.cols.startingPrice')}
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {t('modelListing.cols.roomType')}
+                      </th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {t('modelListing.cols.landAreaStd')}
+                      </th>
+                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {t('modelListing.cols.houses')}
+                      </th>
+                    </>
+                  )}
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('modelListing.cols.standardPrice')}
+                  </th>
+                  <th className="w-28 px-2 py-2" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {models.map(model => (
+                  <ModelCard
+                    key={model.id}
+                    model={model}
+                    projectType={projectType}
+                    thumbnailSrc={thumbnailByModelId.get(model.id)}
+                    viewMode="list"
+                    readOnly={readOnly}
+                    onClick={() => handleModelClick(model.id)}
+                    onPricingAnalysis={() => handlePricingAnalysis(model)}
+                    isPricingAnalysisPending={
+                      isCreatingPricingAnalysis && pricingMutationVars?.modelId === model.id
+                    }
+                    onDelete={e => {
+                      e.stopPropagation();
+                      setDeleteTarget({ id: model.id, name: model.modelName ?? 'this model' });
+                    }}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog
         isOpen={deleteTarget !== null}

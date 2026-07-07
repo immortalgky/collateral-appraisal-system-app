@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { MarketComparableFactorDtoType } from '@/shared/schemas/v1';
 import Icon from '@shared/components/Icon';
-import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import { getTranslatedFactorName } from '@shared/utils/translationUtils';
 import { useLocaleStore } from '@shared/store';
@@ -9,7 +8,14 @@ import { useLocaleStore } from '@shared/store';
 interface FactorTableProps {
   factors: MarketComparableFactorDtoType[];
   onEdit?: (factor: MarketComparableFactorDtoType) => void;
+  onDelete?: (factor: MarketComparableFactorDtoType) => void;
+  onToggleStatus?: (factor: MarketComparableFactorDtoType) => void;
+  sortKey?: string | null;
+  sortDir?: 'asc' | 'desc';
+  onSort?: (key: string) => void;
   isLoading?: boolean;
+  isDeleting?: boolean;
+  isTogglingStatus?: boolean;
   totalCount?: number;
 }
 
@@ -22,9 +28,59 @@ const dataTypeBadgeColor: Record<string, string> = {
   Text: 'bg-gray-100 text-gray-600',
 };
 
-const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProps) => {
+const FactorTable = ({
+  factors,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+  sortKey,
+  sortDir,
+  onSort,
+  isLoading,
+  isDeleting,
+  isTogglingStatus,
+  totalCount,
+}: FactorTableProps) => {
   const { t } = useTranslation(['templateManagement', 'common']);
   const language = useLocaleStore(s => s.language);
+
+  const sortableHeader = (
+    key: string,
+    label: string,
+    align: 'left' | 'center',
+    widthClass?: string,
+  ) => {
+    const isActive = sortKey === key;
+    return (
+      <th
+        className={clsx(
+          'px-4 py-3 text-xs font-semibold text-gray-500',
+          align === 'center' ? 'text-center' : 'text-left',
+          widthClass,
+        )}
+        aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
+      >
+        <button
+          type="button"
+          onClick={() => onSort?.(key)}
+          className={clsx(
+            'group inline-flex items-center gap-1 select-none transition-colors hover:text-gray-700',
+            align === 'center' && 'justify-center',
+          )}
+        >
+          <span>{label}</span>
+          <Icon
+            style="solid"
+            name={isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
+            className={clsx(
+              'size-2.5',
+              isActive ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-500',
+            )}
+          />
+        </button>
+      </th>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -44,7 +100,7 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
   }
 
   return (
-    <div>
+    <div className="flex-1 min-h-0 flex flex-col">
       {totalCount != null && totalCount !== factors.length && (
         <div className="px-4 pb-2 pt-1">
           <span className="text-xs text-gray-400">
@@ -52,30 +108,22 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
           </span>
         </div>
       )}
-      <div className="overflow-x-auto">
-        <table className="table w-full">
-          <thead>
-            <tr className="bg-primary/10">
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-36">
-                {t('factors.columns.code')}
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
-                {t('factors.columns.name')}
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-36">
-                {t('factors.columns.fieldName')}
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-36">
-                {t('factors.columns.dataType')}
-              </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+      <div className="flex-1 min-h-0 overflow-auto">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 z-10">
+            <tr className="border-b border-gray-100 bg-gray-50">
+              {sortableHeader('code', t('factors.columns.code'), 'center', 'w-16')}
+              {sortableHeader('name', t('factors.columns.name'), 'left')}
+              {sortableHeader('fieldName', t('factors.columns.fieldName'), 'left', 'w-36')}
+              {sortableHeader('dataType', t('factors.columns.dataType'), 'center', 'w-36')}
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 text-left">
                 {t('factors.columns.config')}
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 text-center w-24">
                 {t('factors.columns.status')}
               </th>
-              {onEdit && (
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24">
+              {(onEdit || onDelete || onToggleStatus) && (
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 text-center w-28">
                   {t('factors.columns.action')}
                 </th>
               )}
@@ -101,14 +149,18 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
               return (
                 <tr
                   key={factor.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  onClick={() => onEdit?.(factor)}
+                  className={clsx(
+                    'border-b border-gray-100 hover:bg-gray-50 transition-colors',
+                    onEdit && 'cursor-pointer',
+                  )}
                 >
-                  <td className="py-3 px-4">
-                    <span className="text-sm font-mono font-medium text-gray-800">
+                  <td className="py-2.5 px-4 text-center">
+                    <span className="text-sm text-gray-800">
                       {factor.factorCode}
                     </span>
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 px-4">
                     <div className="text-sm text-gray-900">
                       {getTranslatedFactorName(factor.translations, language)}
                     </div>
@@ -125,10 +177,10 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
                       </div>
                     )}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-2.5 px-4">
                     <span className="text-sm font-mono text-gray-500">{factor.fieldName}</span>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2.5 px-4 text-center">
                     <span
                       className={clsx(
                         'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
@@ -138,7 +190,7 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
                       {dataTypeLabel}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-500">
+                  <td className="py-2.5 px-4 text-sm text-gray-500">
                     {['Dropdown', 'Radio', 'CheckboxGroup'].includes(factor.dataType) &&
                       factor.parameterGroup && (
                         <div className="flex items-center gap-1">
@@ -171,7 +223,7 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
                     )}
                     {factor.dataType === 'Checkbox' && <span className="text-gray-400">-</span>}
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2.5 px-4 text-center">
                     <span
                       className={clsx(
                         'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
@@ -183,18 +235,60 @@ const FactorTable = ({ factors, onEdit, isLoading, totalCount }: FactorTableProp
                       {factor.isActive ? t('factors.status.active') : t('factors.status.inactive')}
                     </span>
                   </td>
-                  {onEdit && (
-                    <td className="py-3 px-4 text-center">
-                      <Button
-                        variant="ghost"
-                        size="xs"
-                        onClick={() => onEdit(factor)}
-                        leftIcon={
-                          <Icon name="pen-to-square" style="regular" className="size-3.5" />
-                        }
+                  {(onEdit || onDelete || onToggleStatus) && (
+                    <td className="py-2.5 px-4 text-center">
+                      <div
+                        className="flex items-center justify-center gap-1"
+                        onClick={e => e.stopPropagation()}
                       >
-                        {t('common:actions.edit')}
-                      </Button>
+                        {onEdit && (
+                          <button
+                            type="button"
+                            onClick={() => onEdit(factor)}
+                            className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                            title={t('common:actions.edit')}
+                            aria-label={t('common:actions.edit')}
+                          >
+                            <Icon name="pen" style="regular" className="size-4" />
+                          </button>
+                        )}
+                        {onToggleStatus && (
+                          <button
+                            type="button"
+                            onClick={() => onToggleStatus(factor)}
+                            disabled={isTogglingStatus}
+                            className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                            title={
+                              factor.isActive
+                                ? t('common:actions.deactivate')
+                                : t('common:actions.activate')
+                            }
+                            aria-label={
+                              factor.isActive
+                                ? t('common:actions.deactivate')
+                                : t('common:actions.activate')
+                            }
+                          >
+                            <Icon
+                              name={factor.isActive ? 'toggle-on' : 'toggle-off'}
+                              style="regular"
+                              className="size-4"
+                            />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            type="button"
+                            onClick={() => onDelete(factor)}
+                            disabled={isDeleting}
+                            className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                            title={t('common:actions.delete')}
+                            aria-label={t('common:actions.delete')}
+                          >
+                            <Icon name="trash" style="regular" className="size-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>

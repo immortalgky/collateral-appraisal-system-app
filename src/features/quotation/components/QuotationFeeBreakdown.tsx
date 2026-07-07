@@ -25,9 +25,9 @@ export function roundHalfAwayFromZero(value: number, decimals: number): number {
  */
 export function deriveFeeTotals(
   feeAmount: number | undefined,
-  discount: number | undefined,
+  discount: number | null | undefined,
   negotiatedDiscount: number | null | undefined,
-  vatPercent: number | undefined,
+  vatPercent: number | null | undefined,
 ): { feeAfterDiscount: number; vatAmount: number; netAmount: number } {
   const fa = Number(feeAmount);
   if (!Number.isFinite(fa)) {
@@ -101,7 +101,7 @@ const QuotationFeeBreakdown = ({
         <Controller
           control={control}
           name={`items.${index}.feeAmount`}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <NumberInput
               {...field}
               id={`fee-amount-${index}`}
@@ -110,6 +110,7 @@ const QuotationFeeBreakdown = ({
               maxIntegerDigits={15}
               decimalPlaces={2}
               min={0}
+              error={fieldState.error?.message}
             />
           )}
         />

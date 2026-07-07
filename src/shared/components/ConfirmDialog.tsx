@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import Icon from './Icon';
 import { useLoadingStore } from '@shared/store';
 
@@ -64,6 +65,22 @@ const ConfirmDialog = ({
   loadingText,
 }: ConfirmDialogProps) => {
   const progressMessage = useLoadingStore(s => s.message);
+
+  // Intercept Escape while open so it closes THIS dialog and does not bubble up to
+  // an underlying Headless modal (which would otherwise close behind the confirm).
+  // Capture phase + stopPropagation ensures we win over the modal's Escape handler.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isLoading) onClose();
+    };
+    document.addEventListener('keydown', onKeyDown, true);
+    return () => document.removeEventListener('keydown', onKeyDown, true);
+  }, [isOpen, isLoading, onClose]);
+
   if (!isOpen) return null;
 
   const showProgress = !children && isLoading && showActivityProgress && !!progressMessage;
@@ -103,7 +120,7 @@ const ConfirmDialog = ({
     // Don't auto-close - let the caller handle it (especially for async operations)
   };
 
-  return (
+  return createPortal(
     <dialog className="modal modal-open z-[60]">
       <div className={`modal-box bg-white rounded-2xl shadow-xl ${children ? 'max-w-md' : 'max-w-sm'}`}>
         <div className="flex flex-col items-center text-center">
@@ -175,7 +192,8 @@ const ConfirmDialog = ({
           close
         </button>
       </div>
-    </dialog>
+    </dialog>,
+    document.body,
   );
 };
 

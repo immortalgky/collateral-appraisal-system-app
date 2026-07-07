@@ -286,7 +286,9 @@
     "mustBePositive": "Must be positive",
     "noteMax": "Note must be 500 characters or fewer",
     "atLeastOneItem": "At least one appraisal item is required",
+    "summaryTitle": "Please fix {{count}} field(s) before submitting",
     "daysRequired": "Days is required",
+    "feeRequired": "Fee amount is required",
     "mustBeWhole": "Must be a whole number",
     "discountExceedsFee": "Discount + Negotiated Discount cannot exceed Fee Amount",
     "invalidEmail": "Invalid email"
@@ -326,6 +328,7 @@
     "hintMultiple": "\"Select as Winner\" is disabled with multiple shortlisted — use \"Send to RM\" instead.",
     "selectWinnerHint0": "Shortlist exactly one company to enable",
     "selectWinnerHintMulti": "Disabled when more than one company is shortlisted — use Send to RM instead",
+    "sendToRmReAppraisalHint": "Can't send to RM — this quotation contains a Re-Appraisal appraisal.",
     "sendToRmTitle": "Send Shortlist to RM",
     "sendToRmConfirm": "Confirm shortlist submission",
     "sendToRmBody": "You are sending {{count}} shortlisted company bid(s) to the RM for final selection. The RM will pick a tentative winner from these submissions.",
