@@ -108,7 +108,7 @@ export interface GetSupportingDataByIdType {
   importChannel: string;
   importDate: string;
   sourceOfData: string;
-  appraisalCompany: string;
+  appraisalCompanyId: string;
   description: string;
   movement?: string;
   remark?: string;
@@ -129,6 +129,7 @@ export interface CreateSupportingDataType {
   importDate: string;
   sourceOfData: string;
   description: string;
+  appraisalCompanyId?: string;
 }
 
 export interface CreateDecisionDataType {
