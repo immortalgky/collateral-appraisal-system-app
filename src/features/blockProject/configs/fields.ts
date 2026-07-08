@@ -18,21 +18,22 @@ export const projectInformationFields: FormField[] = [
     name: 'projectName',
     required: true,
     wrapperClassName: 'col-span-8',
-    maxLength: 200,
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Project Description',
     name: 'projectDescription',
     wrapperClassName: 'col-span-12',
-    maxLength: 500,
+    maxLength: 200,
+    showCharCount: true,
   },
   {
     type: 'text-input',
     label: 'Developer',
     name: 'developer',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
+    maxLength: 50,
   },
   {
     type: 'text-input',
@@ -211,8 +212,9 @@ export const projectDetailFields: FormField[] = [
     type: 'textarea',
     label: 'Remark',
     name: 'remark',
-    maxLength: 500,
+    maxLength: 4000,
     wrapperClassName: 'col-span-12',
+    showCharCount: true,
   },
 ];
 
