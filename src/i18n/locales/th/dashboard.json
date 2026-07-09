@@ -46,6 +46,11 @@
     "customTo": "ถึง",
     "apply": "นำไปใช้"
   },
+  "segment": {
+    "all": "ทุกกลุ่มธุรกิจ",
+    "Retail": "รายย่อย",
+    "IBG": "IBG"
+  },
   "taskSummary": {
     "title": "สรุปงาน",
     "notStarted": "ยังไม่เริ่ม",
@@ -98,6 +103,20 @@
       "created": "สร้างแล้ว",
       "completed": "เสร็จสิ้น"
     },
+    "mode": {
+      "overview": "ภาพรวม",
+      "byType": "ตามประเภท"
+    },
+    "metric": {
+      "created": "สร้างแล้ว",
+      "completed": "เสร็จสิ้น"
+    },
+    "types": {
+      "New": "รายใหม่",
+      "ReAppraisal": "ประเมินใหม่",
+      "Progressive": "ตามความคืบหน้า",
+      "PreAppraisal": "ประเมินเบื้องต้น"
+    },
     "table": {
       "period": "งวด",
       "created": "สร้างแล้ว",
@@ -108,7 +127,8 @@
     "rangeInfo": "ช่วง: {{from}} – {{to}} · {{buckets}} ช่วง{{bucketPlural}} · {{days}} วัน",
     "aria": {
       "expand": "ขยายวิดเจ็ต",
-      "menu": "เมนูวิดเจ็ต"
+      "menu": "เมนูวิดเจ็ต",
+      "toggleSeries": "สลับ {{label}}"
     },
     "menu": {
       "refresh": "รีเฟรช",
@@ -180,13 +200,18 @@
     "clickBarHint": "คลิกแถบเพื่อดูการประเมินของบริษัทนั้น",
     "clearCompanyFilter": "ล้างตัวกรองบริษัท",
     "noData": "ไม่มีข้อมูลบริษัทสำหรับช่วงนี้",
+    "unknownCompany": "ไม่ทราบบริษัท ({{count}})",
     "chart": {
       "assigned": "มอบหมายแล้ว",
-      "completed": "เสร็จสิ้น"
+      "overdue": "เกินกำหนด",
+      "inProgress": "กำลังดำเนินการ",
+      "completed": "เสร็จสิ้น",
+      "delivered": "ส่งแล้ว {{pct}}%"
     },
     "aria": {
       "filterByCompany": "กรองตามบริษัท",
-      "menu": "เมนูวิดเจ็ต"
+      "menu": "เมนูวิดเจ็ต",
+      "toggleSeries": "สลับ {{label}}"
     },
     "menu": {
       "refresh": "รีเฟรช",
@@ -195,12 +220,13 @@
     "error": "ไม่สามารถโหลดสรุปบริษัทได้"
   },
   "quotationSummary": {
-    "title": "สรุปงานใบเสนอราคา",
+    "title": "รายการงานผู้ดูแลระบบ",
     "pendingCreation": "รอสร้างใบเสนอราคา",
     "waitingSubmission": "รอบริษัทส่งเอกสาร",
     "waitingRm": "รอ RM เลือก",
+    "pendingApprovals": "รออนุมัติค่าบริการ/เลื่อนนัด",
     "openList": "เปิดรายการ",
-    "error": "ไม่สามารถโหลดสรุปงานใบเสนอราคาได้"
+    "error": "ไม่สามารถโหลดรายการงานผู้ดูแลระบบได้"
   },
   "calendar": {
     "title": "ปฏิทิน",
@@ -224,6 +250,7 @@
       "filterByTopic": "กรองตามหัวข้อ",
       "selectMonth": "เลือกเดือน",
       "selectYear": "เลือกปี",
+      "selectDate": "เลือกวันที่",
       "previous": "ก่อนหน้า",
       "next": "ถัดไป"
     },
@@ -280,7 +307,12 @@
     "today": "วันนี้",
     "topicsLabel": "หัวข้อ",
     "noEventsForDay": "ไม่มีกิจกรรมสำหรับวันนี้",
-    "error": "ไม่สามารถโหลดกิจกรรมปฏิทินได้"
+    "error": "ไม่สามารถโหลดกิจกรรมปฏิทินได้",
+    "next7Days": "7 วันข้างหน้า",
+    "eventsCount": "{{count}} กิจกรรม",
+    "todayGroupLabel": "วันนี้",
+    "noUpcoming": "ไม่มีกิจกรรมที่กำลังจะมาถึง",
+    "close": "ปิด"
   },
   "reminders": {
     "title": "การแจ้งเตือน",
@@ -346,8 +378,8 @@
       "description": "กราฟแท่งของการประเมินภายนอก"
     },
     "quotationTaskSummary": {
-      "title": "สรุปงานใบเสนอราคา",
-      "description": "ติดตามขั้นตอนใบเสนอราคาสำหรับ intAdmin"
+      "title": "รายการงานผู้ดูแลระบบ",
+      "description": "รายการงานผู้ดูแลระบบ: ขั้นตอนใบเสนอราคาและรายการรออนุมัติ"
     },
     "calendar": {
       "title": "ปฏิทิน",

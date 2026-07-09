@@ -26,6 +26,8 @@ import Modal from '@shared/components/Modal';
 import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
 import PeriodSelect from './PeriodSelect';
+import SegmentSelect from './SegmentSelect';
+import ChartTooltip from './ChartTooltip';
 import WidgetError from './WidgetError';
 import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { formatDistanceToNow } from 'date-fns';
@@ -49,15 +51,49 @@ type DataPoint = {
   bucketTo: string;
 };
 
+type WidgetMode = 'overview' | 'byType';
+type MetricKey = 'created' | 'completed';
+
 type TotalAppraisalsSettings = {
   period?: PeriodPresetKey;
   from?: string;
   to?: string;
+  mode?: WidgetMode;
+  metric?: MetricKey;
+  bankingSegment?: string;
+  hidden?: string[]; // series keys toggled off via the legend
 };
 
 const WIDGET_ID = 'total-appraisals';
 
 const EMPTY_SETTINGS: TotalAppraisalsSettings = Object.freeze({}) as TotalAppraisalsSettings;
+
+// Known appraisal types get a stable order + color and a translated label.
+// Must match the backend AppraisalType values (Modules/Appraisal .../AppraisalTypes.cs).
+// The actual set plotted is derived from the API response (see typeKeys) so any
+// extra/legacy value still shows (as an "extra" series) rather than being silently
+// dropped — otherwise the by-type totals would not reconcile with overview.
+const APPRAISAL_TYPES = ['New', 'ReAppraisal', 'Progressive', 'PreAppraisal'] as const;
+type AppraisalTypeKey = (typeof APPRAISAL_TYPES)[number];
+const TYPE_COLORS: Record<AppraisalTypeKey, string> = {
+  New: '#3b82f6',
+  ReAppraisal: '#10b981',
+  Progressive: '#f59e0b',
+  PreAppraisal: '#8b5cf6',
+};
+// Colors for any type not in APPRAISAL_TYPES (assigned by position).
+const EXTRA_TYPE_COLORS = ['#ec4899', '#14b8a6', '#a855f7', '#f97316', '#64748b'];
+
+const isKnownType = (type: string): type is AppraisalTypeKey =>
+  (APPRAISAL_TYPES as readonly string[]).includes(type);
+
+type ByTypePoint = {
+  key: string;
+  label: string;
+  bucketFrom: string;
+  bucketTo: string;
+  counts: Record<string, number>;
+};
 
 const getBackendPeriod = (granularity: 'day' | 'week' | 'month'): string =>
   granularity === 'day' ? 'daily' : granularity === 'week' ? 'daily' : 'monthly';
@@ -151,11 +187,38 @@ function TotalAppraisalsWidget() {
     [presetKey, today, customRange],
   );
   const apiPeriod = getBackendPeriod(range.granularity);
+  const mode: WidgetMode = settings.mode ?? 'overview';
+  const metric: MetricKey = settings.metric ?? 'created';
+  const bankingSegment = settings.bankingSegment;
+  const isByType = mode === 'byType';
 
-  const current = useAppraisalCounts(apiPeriod, toIsoDate(range.from), toIsoDate(range.to));
-  const prior = useAppraisalCounts(apiPeriod, toIsoDate(range.prevFrom), toIsoDate(range.prevTo));
-  const updatedLabel = current.dataUpdatedAt
-    ? formatDistanceToNow(current.dataUpdatedAt, { addSuffix: false })
+  const current = useAppraisalCounts(
+    apiPeriod,
+    toIsoDate(range.from),
+    toIsoDate(range.to),
+    false,
+    bankingSegment,
+    { enabled: !isByType },
+  );
+  const prior = useAppraisalCounts(
+    apiPeriod,
+    toIsoDate(range.prevFrom),
+    toIsoDate(range.prevTo),
+    false,
+    bankingSegment,
+    { enabled: !isByType },
+  );
+  const byType = useAppraisalCounts(
+    apiPeriod,
+    toIsoDate(range.from),
+    toIsoDate(range.to),
+    true,
+    bankingSegment,
+    { enabled: isByType },
+  );
+  const activeUpdatedAt = isByType ? byType.dataUpdatedAt : current.dataUpdatedAt;
+  const updatedLabel = activeUpdatedAt
+    ? formatDistanceToNow(activeUpdatedAt, { addSuffix: false })
     : null;
 
   const data: DataPoint[] = useMemo(() => {
@@ -238,8 +301,113 @@ function TotalAppraisalsWidget() {
     [totals.created, range.from, range.to, today],
   );
 
-  const isLoading = current.isLoading || prior.isLoading;
-  const isError = current.isError || prior.isError;
+  // Series to plot: the four known types (stable order) plus any extra/legacy
+  // AppraisalType returned by the API, so by-type totals always reconcile with
+  // overview instead of silently dropping unknown values.
+  const typeKeys = useMemo(() => {
+    const extra: string[] = [];
+    for (const item of byType.data?.items ?? []) {
+      const type = item.appraisalType;
+      if (type && !isKnownType(type) && !extra.includes(type)) extra.push(type);
+    }
+    extra.sort();
+    return [...APPRAISAL_TYPES, ...extra];
+  }, [byType.data]);
+
+  const byTypeData: ByTypePoint[] = useMemo(() => {
+    const buckets = buildBuckets(range.from, range.to, range.granularity);
+    const map = new Map<string, Record<string, number>>();
+    for (const item of byType.data?.items ?? []) {
+      if (!item.period || !item.appraisalType) continue;
+      const d = parseApiPeriod(item.period);
+      if (!d) continue;
+      const k = bucketKeyForDate(d, range.granularity);
+      const row = map.get(k) ?? {};
+      const value = metric === 'created' ? item.createdCount : item.completedCount;
+      row[item.appraisalType] = (row[item.appraisalType] ?? 0) + value;
+      map.set(k, row);
+    }
+    return buckets.map(b => {
+      const row = map.get(b.key) ?? {};
+      const counts: Record<string, number> = {};
+      for (const type of typeKeys) counts[type] = row[type] ?? 0;
+      return {
+        key: b.key,
+        label: b.label,
+        bucketFrom: toIsoDate(b.bucketFrom),
+        bucketTo: toIsoDate(b.bucketTo),
+        counts,
+      };
+    });
+  }, [byType.data, range, metric, typeKeys]);
+
+  const byTypeTotals = useMemo(() => {
+    const totals: Record<string, number> = Object.fromEntries(typeKeys.map(type => [type, 0]));
+    for (const point of byTypeData) {
+      for (const type of typeKeys) totals[type] += point.counts[type];
+    }
+    return totals;
+  }, [byTypeData, typeKeys]);
+
+  const typeColor = (type: string, idx: number): string =>
+    isKnownType(type) ? TYPE_COLORS[type] : EXTRA_TYPE_COLORS[idx % EXTRA_TYPE_COLORS.length];
+  const typeLabel = (type: string): string =>
+    isKnownType(type) ? t(`totalAppraisals.types.${type}`) : type;
+
+  // Legend-driven series hiding. Overview and by-type use distinct, stable keys
+  // (prevCreated/created/completed vs. appraisal-type names) so one persisted set serves both.
+  const hidden = useMemo(() => new Set(settings.hidden ?? []), [settings.hidden]);
+  const toggleSeries = (key: string) => {
+    const next = new Set(hidden);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    updateSettings(WIDGET_ID, { hidden: Array.from(next) } as TotalAppraisalsSettings);
+  };
+
+  const overviewSeries = [
+    { key: 'prevCreated', color: '#f59e0b', label: t('totalAppraisals.chart.prevPeriod') },
+    { key: 'created', color: '#3b82f6', label: t('totalAppraisals.chart.created') },
+    { key: 'completed', color: '#10b981', label: t('totalAppraisals.chart.completed') },
+  ];
+  const byTypeSeries = typeKeys.map((type, idx) => ({
+    key: type,
+    color: typeColor(type, idx),
+    label: typeLabel(type),
+  }));
+
+  // Clickable legend (recharts `content`) — stays inside the chart so it also shows in
+  // the expanded modal; items remain visible when hidden so they can be toggled back.
+  const renderLineLegend = (series: { key: string; color: string; label: string }[]) => (
+    <div className="flex items-center justify-center gap-4 pt-2 flex-wrap">
+      {series.map(s => {
+        const isHidden = hidden.has(s.key);
+        return (
+          <button
+            key={s.key}
+            type="button"
+            onClick={() => toggleSeries(s.key)}
+            aria-pressed={!isHidden}
+            aria-label={t('totalAppraisals.aria.toggleSeries', { label: s.label })}
+            className="flex items-center gap-1.5 text-xs"
+          >
+            <span
+              className="inline-block w-2.5 h-2.5 rounded-full"
+              style={{
+                backgroundColor: isHidden ? 'transparent' : s.color,
+                boxShadow: `inset 0 0 0 2px ${s.color}`,
+              }}
+            />
+            <span className={isHidden ? 'text-gray-400 line-through' : 'text-gray-600'}>
+              {s.label}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const isLoading = isByType ? byType.isLoading : current.isLoading || prior.isLoading;
+  const isError = isByType ? byType.isError : current.isError || prior.isError;
 
   const handlePeriodChange = (key: PeriodPresetKey, custom?: { from: Date; to: Date }) => {
     updateSettings(WIDGET_ID, {
@@ -255,19 +423,40 @@ function TotalAppraisalsWidget() {
   };
 
   const handleReset = () => {
-    updateSettings(WIDGET_ID, { period: undefined, from: undefined, to: undefined });
+    updateSettings(WIDGET_ID, {
+      period: undefined,
+      from: undefined,
+      to: undefined,
+      mode: undefined,
+      metric: undefined,
+      bankingSegment: undefined,
+    });
     setMenuOpen(false);
+  };
+
+  const handleModeChange = (next: WidgetMode) => {
+    updateSettings(WIDGET_ID, { mode: next } as TotalAppraisalsSettings);
+  };
+
+  const handleMetricChange = (next: MetricKey) => {
+    updateSettings(WIDGET_ID, { metric: next } as TotalAppraisalsSettings);
+  };
+
+  const handleSegmentChange = (segment?: string) => {
+    updateSettings(WIDGET_ID, { bankingSegment: segment } as TotalAppraisalsSettings);
+  };
+
+  const navigateToBucket = (bucketFrom?: string, bucketTo?: string) => {
+    if (!bucketFrom || !bucketTo) return;
+    const params = new URLSearchParams({ createdFrom: bucketFrom, createdTo: bucketTo });
+    // Close expand modal before navigating so it doesn't sit open behind the new route.
+    setExpanded(false);
+    navigate(`/appraisals/list?${params}`);
   };
 
   const handleDotClick = (point: DataPoint | undefined) => {
     if (!point) return;
-    const params = new URLSearchParams({
-      createdFrom: point.bucketFrom,
-      createdTo: point.bucketTo,
-    });
-    // Close expand modal before navigating so it doesn't sit open behind the new route.
-    setExpanded(false);
-    navigate(`/appraisals/list?${params}`);
+    navigateToBucket(point.bucketFrom, point.bucketTo);
   };
 
   const renderKpi = (
@@ -321,15 +510,8 @@ function TotalAppraisalsWidget() {
           tickLine={false}
           width={40}
         />
-        <Tooltip
-          cursor={{ stroke: '#e5e7eb' }}
-          contentStyle={{
-            borderRadius: 8,
-            border: '1px solid #e5e7eb',
-            fontSize: 12,
-          }}
-        />
-        <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+        <Tooltip cursor={{ stroke: '#e5e7eb' }} content={<ChartTooltip />} />
+        <Legend content={() => renderLineLegend(overviewSeries)} />
         <Line
           type="monotone"
           dataKey="prevCreated"
@@ -339,6 +521,7 @@ function TotalAppraisalsWidget() {
           strokeDasharray="4 4"
           dot={false}
           activeDot={false}
+          hide={hidden.has('prevCreated')}
         />
         <Line
           type="monotone"
@@ -348,6 +531,7 @@ function TotalAppraisalsWidget() {
           strokeWidth={2.5}
           dot={{ r: 3, fill: '#3b82f6' }}
           activeDot={{ r: 5, cursor: 'pointer' }}
+          hide={hidden.has('created')}
         />
         <Line
           type="monotone"
@@ -357,7 +541,48 @@ function TotalAppraisalsWidget() {
           strokeWidth={2.5}
           dot={{ r: 3, fill: '#10b981' }}
           activeDot={{ r: 5, cursor: 'pointer' }}
+          hide={hidden.has('completed')}
         />
+      </ComposedChart>
+    </ResponsiveContainer>
+  );
+
+  const byTypeChartContent = (
+    <ResponsiveContainer width="100%" height="100%">
+      <ComposedChart
+        data={byTypeData}
+        margin={{ top: 10, right: 12, left: -16, bottom: 0 }}
+        onClick={state => {
+          const idx = state?.activeIndex;
+          if (typeof idx === 'number' && byTypeData[idx]) {
+            const p = byTypeData[idx];
+            navigateToBucket(p.bucketFrom, p.bucketTo);
+          }
+        }}
+      >
+        <CartesianGrid stroke="#f3f4f6" vertical={false} />
+        <XAxis
+          dataKey="label"
+          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40} />
+        <Tooltip cursor={{ stroke: '#e5e7eb' }} content={<ChartTooltip />} />
+        <Legend content={() => renderLineLegend(byTypeSeries)} />
+        {typeKeys.map((type, idx) => (
+          <Line
+            key={type}
+            type="monotone"
+            dataKey={(p: ByTypePoint) => p.counts[type]}
+            name={typeLabel(type)}
+            stroke={typeColor(type, idx)}
+            strokeWidth={2}
+            dot={{ r: 2, fill: typeColor(type, idx) }}
+            activeDot={{ r: 5, cursor: 'pointer' }}
+            hide={hidden.has(type)}
+          />
+        ))}
       </ComposedChart>
     </ResponsiveContainer>
   );
@@ -368,9 +593,44 @@ function TotalAppraisalsWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <h3 className="font-semibold text-gray-800">{t('totalAppraisals.title')}</h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
+              <SegmentSelect value={bankingSegment} onChange={handleSegmentChange} />
+              <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-xs">
+                {(['overview', 'byType'] as const).map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleModeChange(m)}
+                    className={`px-2 py-1 rounded-md transition-colors ${
+                      mode === m
+                        ? 'bg-gray-100 text-gray-800 font-medium'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {t(`totalAppraisals.mode.${m}`)}
+                  </button>
+                ))}
+              </div>
+              {isByType && (
+                <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-xs">
+                  {(['created', 'completed'] as const).map(mk => (
+                    <button
+                      key={mk}
+                      type="button"
+                      onClick={() => handleMetricChange(mk)}
+                      className={`px-2 py-1 rounded-md transition-colors ${
+                        metric === mk
+                          ? 'bg-gray-100 text-gray-800 font-medium'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {t(`totalAppraisals.metric.${mk}`)}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
@@ -445,24 +705,41 @@ function TotalAppraisalsWidget() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                {renderKpi(
-                  t('totalAppraisals.kpi.created'),
-                  totals.created.toLocaleString(),
-                  totals.createdYoY,
-                )}
-                {renderKpi(
-                  t('totalAppraisals.kpi.completed'),
-                  totals.completed.toLocaleString(),
-                  totals.completedYoY,
-                )}
-                {renderKpi(
-                  t('totalAppraisals.kpi.completionRate'),
-                  `${totals.completionRate.toFixed(1)}%`,
-                  totals.completionRateDeltaPp,
-                  true,
-                )}
-              </div>
+              {isByType ? (
+                <div className="flex flex-wrap gap-x-6 gap-y-2 mb-4">
+                  {typeKeys.map((type, idx) => (
+                    <div key={type} className="flex items-center gap-2">
+                      <span
+                        className="size-2.5 rounded-full"
+                        style={{ backgroundColor: typeColor(type, idx) }}
+                      />
+                      <span className="text-xs text-gray-500">{typeLabel(type)}</span>
+                      <span className="text-sm font-semibold text-gray-800 tabular-nums">
+                        {byTypeTotals[type].toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  {renderKpi(
+                    t('totalAppraisals.kpi.created'),
+                    totals.created.toLocaleString(),
+                    totals.createdYoY,
+                  )}
+                  {renderKpi(
+                    t('totalAppraisals.kpi.completed'),
+                    totals.completed.toLocaleString(),
+                    totals.completedYoY,
+                  )}
+                  {renderKpi(
+                    t('totalAppraisals.kpi.completionRate'),
+                    `${totals.completionRate.toFixed(1)}%`,
+                    totals.completionRateDeltaPp,
+                    true,
+                  )}
+                </div>
+              )}
 
               {pace.isFutureRange && totals.created > 0 && (
                 <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
@@ -494,7 +771,15 @@ function TotalAppraisalsWidget() {
               )}
 
               <div className="h-56">
-                {data.every(d => d.created === 0 && d.completed === 0) ? (
+                {isByType ? (
+                  byTypeData.every(p => typeKeys.every(type => p.counts[type] === 0)) ? (
+                    <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                      {t('totalAppraisals.noData')}
+                    </div>
+                  ) : (
+                    byTypeChartContent
+                  )
+                ) : data.every(d => d.created === 0 && d.completed === 0) ? (
                   <div className="h-full flex items-center justify-center text-sm text-gray-400">
                     {t('totalAppraisals.noData')}
                   </div>
@@ -514,39 +799,66 @@ function TotalAppraisalsWidget() {
         size="2xl"
       >
         <div className="space-y-4">
-          <div className="h-80">{chartContent}</div>
+          <div className="h-80">{isByType ? byTypeChartContent : chartContent}</div>
           <div className="overflow-auto max-h-72 border border-gray-100 rounded-lg">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                <tr>
-                  <th className="px-3 py-2 text-left">{t('totalAppraisals.table.period')}</th>
-                  <th className="px-3 py-2 text-right">{t('totalAppraisals.table.created')}</th>
-                  <th className="px-3 py-2 text-right">{t('totalAppraisals.table.completed')}</th>
-                  <th className="px-3 py-2 text-right">
-                    {t('totalAppraisals.table.completionPct')}
-                  </th>
-                  <th className="px-3 py-2 text-right">{t('totalAppraisals.table.prior')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {data.map(d => {
-                  const rate = d.created > 0 ? (d.completed / d.created) * 100 : 0;
-                  return (
-                    <tr key={d.key} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 text-gray-700">{d.label}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{d.created}</td>
-                      <td className="px-3 py-2 text-right tabular-nums">{d.completed}</td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-500">
-                        {rate.toFixed(1)}%
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-400">
-                        {d.prevCreated}
-                      </td>
+            {isByType ? (
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                  <tr>
+                    <th className="px-3 py-2 text-left">{t('totalAppraisals.table.period')}</th>
+                    {typeKeys.map(type => (
+                      <th key={type} className="px-3 py-2 text-right">
+                        {typeLabel(type)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {byTypeData.map(p => (
+                    <tr key={p.key} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-gray-700">{p.label}</td>
+                      {typeKeys.map(type => (
+                        <td key={type} className="px-3 py-2 text-right tabular-nums">
+                          {p.counts[type]}
+                        </td>
+                      ))}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                  <tr>
+                    <th className="px-3 py-2 text-left">{t('totalAppraisals.table.period')}</th>
+                    <th className="px-3 py-2 text-right">{t('totalAppraisals.table.created')}</th>
+                    <th className="px-3 py-2 text-right">{t('totalAppraisals.table.completed')}</th>
+                    <th className="px-3 py-2 text-right">
+                      {t('totalAppraisals.table.completionPct')}
+                    </th>
+                    <th className="px-3 py-2 text-right">{t('totalAppraisals.table.prior')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {data.map(d => {
+                    const rate = d.created > 0 ? (d.completed / d.created) * 100 : 0;
+                    return (
+                      <tr key={d.key} className="hover:bg-gray-50">
+                        <td className="px-3 py-2 text-gray-700">{d.label}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{d.created}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">{d.completed}</td>
+                        <td className="px-3 py-2 text-right tabular-nums text-gray-500">
+                          {rate.toFixed(1)}%
+                        </td>
+                        <td className="px-3 py-2 text-right tabular-nums text-gray-400">
+                          {d.prevCreated}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
           </div>
           <p className="text-xs text-gray-500">
             {t('totalAppraisals.table.period')}: {format(range.from, 'd MMM yyyy')} –{' '}

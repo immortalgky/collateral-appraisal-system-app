@@ -114,6 +114,11 @@ function TaskListingPage() {
     DEFAULT_CONFIG,
   );
 
+  // Pool tab column layout — its own key so it persists independently of My Task, but
+  // the dropdown renders inline in the pool toolbar (parity with the personal tab).
+  const poolCols = useColumnVisibility('task-columns-pool', DEFAULT_CONFIG);
+  const poolWidths = useColumnWidths('task-columns-pool', DEFAULT_CONFIG);
+
   const tableRef = useRef<HTMLTableElement>(null);
 
   const ACTIONS_COL_WIDTH = 32; // w-8 = 2rem = 32px
@@ -434,6 +439,18 @@ function TaskListingPage() {
                 </span>
               )}
             </button>
+
+            {/* Columns */}
+            <div className="mb-2">
+              <ColumnVisibilityDropdown
+                orderedColumns={poolCols.orderedColumns}
+                hidden={poolCols.hidden}
+                alwaysVisible={poolCols.alwaysVisible}
+                onToggle={poolCols.toggleColumn}
+                onReorder={poolCols.reorderColumns}
+                onReset={() => { poolCols.resetToDefault(); poolWidths.resetWidths(); }}
+              />
+            </div>
           </>
         )}
 
@@ -596,6 +613,9 @@ function TaskListingPage() {
             externalSearch={debouncedPoolSearch}
             externalFilters={poolFilters}
             onCountChange={setPoolTotalCount}
+            visibleColumns={poolCols.visibleColumns}
+            colWidths={poolWidths.widths}
+            onColWidthChange={poolWidths.setWidth}
           />
         </>
       )}

@@ -41,11 +41,11 @@ function resolveReturnPath(appraisalId: string, locationState: unknown): string 
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.appraisalId?.toLowerCase() === appraisalId?.toLowerCase()) {
-        return parsed.returnPath ?? '/appraisals/search';
+        return parsed.returnPath ?? '/appraisals/list';
       }
     }
   } catch { /* ignore */ }
-  return '/appraisals/search';
+  return '/appraisals/list';
 }
 
 const userNavigation = [

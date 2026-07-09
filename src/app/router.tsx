@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
-import { lazy } from 'react';
+import { lazyWithRetry as lazy } from '@shared/utils/lazyWithRetry';
 // Eager — structural shell, route guards, read-only wrappers, and helpers that
 // must be available immediately (no spinner on the critical path).
 import LoginPage from '@features/auth/pages/LoginPage';

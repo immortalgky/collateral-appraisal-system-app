@@ -212,6 +212,9 @@ export const mapBuildingPropertyResponseToForm = (
 export const mapCondoPropertyResponseToForm = (
   response: GetCondoPropertyResponseType,
 ): createCondoFormType => {
+  const addressLookup = response.subDistrict
+    ? findAddressBySubDistrictCode(response.subDistrict)
+    : undefined;
   return {
     ownerName: response.ownerName ?? '',
 
@@ -229,8 +232,11 @@ export const mapCondoPropertyResponseToForm = (
     longitude: response.longitude ?? 0,
 
     subDistrict: response.subDistrict ?? '',
+    subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
+    districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
+    provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
 
     isOwnerVerified: response.isOwnerVerified ?? false,
