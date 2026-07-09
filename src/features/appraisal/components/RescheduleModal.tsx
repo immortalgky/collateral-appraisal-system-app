@@ -8,6 +8,7 @@ import Button from '@shared/components/Button';
 import DateTimeInput from '@shared/components/inputs/DateTimeInput';
 import Textarea from '@shared/components/inputs/Textarea';
 import { RescheduleFormSchema } from '../schemas/appointmentAndFee';
+import { TextInput } from '@/shared/components';
 
 type RescheduleFormData = z.infer<typeof RescheduleFormSchema>;
 
@@ -18,6 +19,8 @@ interface RescheduleModalProps {
   defaultValues?: {
     dateTime: string | null;
     location: string | null;
+    contactPerson: string | null;
+    contactPhone: string | null;
   };
   /** Whether this is a new appointment (not a reschedule) */
   isNewAppointment?: boolean;
@@ -44,6 +47,8 @@ export default function RescheduleModal({
       dateTime: defaultValues?.dateTime || '',
       location: defaultValues?.location || '',
       reason: '',
+      contactPerson: defaultValues?.contactPerson || '',
+      contactPhone: defaultValues?.contactPhone || '',
     },
   });
 
@@ -62,6 +67,8 @@ export default function RescheduleModal({
         dateTime: defaultValues?.dateTime || '',
         location: defaultValues?.location || '',
         reason: '',
+        contactPerson: defaultValues?.contactPerson || '',
+        contactPhone: defaultValues?.contactPhone || '',
       });
     }
     // Only reset when modal opens, not when defaultValues reference changes
@@ -110,6 +117,28 @@ export default function RescheduleModal({
             error={errors.location?.message}
             disabled={readOnly}
           />
+
+          {/* Contact */}
+          {isNewAppointment && (
+            <>
+              <TextInput
+                label={t('appointment.scheduleModal.contactPersonLabel')}
+                required
+                placeholder={t('appointment.scheduleModal.contactPersonPlaceholder')}
+                {...register('contactPerson')}
+                error={errors.contactPerson?.message}
+                disabled={readOnly}
+              />
+              <TextInput
+                label={t('appointment.scheduleModal.contactPhoneLabel')}
+                required
+                placeholder={t('appointment.scheduleModal.contactPhonePlaceholder')}
+                {...register('contactPhone')}
+                error={errors.contactPhone?.message}
+                disabled={readOnly}
+              />
+            </>
+          )}
 
           {/* Reason Input - only shown when rescheduling */}
           {!isNewAppointment && (

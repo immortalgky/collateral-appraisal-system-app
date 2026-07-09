@@ -95,7 +95,11 @@
       "locationLabel": "สถานที่",
       "locationPlaceholder": "ระบุรายละเอียดสถานที่นัดหมาย",
       "reasonLabel": "เหตุผลในการเลื่อนนัด",
-      "reasonPlaceholder": "ระบุเหตุผล (ไม่บังคับ)"
+      "reasonPlaceholder": "ระบุเหตุผล (ไม่บังคับ)",
+      "contactPersonLabel": "ชื่อผู้ติดต่อ",
+      "contactPersonPlaceholder": "ระบุชื่อผู้ติดต่อ",
+      "contactPhoneLabel": "เบอร์โทรผู้ติดต่อ",
+      "contactPhonePlaceholder": "ระบุเบอร์โทรผู้ติดต่อ"
     },
     "cancelDialog": {
       "title": "ยกเลิกการนัดหมาย?",
@@ -386,10 +390,7 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": [
-        "ยังไม่ตรวจสอบ",
-        "ตรวจสอบแล้ว"
-      ],
+      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",

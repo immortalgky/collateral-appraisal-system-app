@@ -95,7 +95,11 @@
       "locationLabel": "Location",
       "locationPlaceholder": "Enter appointment location details",
       "reasonLabel": "Reason for Rescheduling",
-      "reasonPlaceholder": "Enter reason for rescheduling (optional)"
+      "reasonPlaceholder": "Enter reason for rescheduling (optional)",
+      "contactPersonLabel": "Contact Person Name",
+      "contactPersonPlaceholder": "Enter contact person name",
+      "contactPhoneLabel": "Contact Phone No",
+      "contactPhonePlaceholder": "Enter contact phone number"
     },
     "cancelDialog": {
       "title": "Cancel Appointment?",
@@ -752,6 +756,8 @@
   "validation": {
     "dateTimeRequired": "Date and time is required",
     "locationRequired": "Location is required",
+    "contactPersonRequired": "Contact person name is required",
+    "contactPhoneRequired": "Contact phone no is required",
     "descriptionRequired": "Description is required",
     "amountNonNegative": "Amount must be non-negative",
     "amountPositive": "Amount must be greater than 0",

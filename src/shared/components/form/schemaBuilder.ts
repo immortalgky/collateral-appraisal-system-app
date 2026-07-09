@@ -148,6 +148,13 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
             .min(1, requiredMsg)
         : z.string();
       break;
+    case 'parameter-search':
+      schema = staticRequired
+        ? z
+            .string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+            .min(1, requiredMsg)
+        : z.string();
+      break;
 
     case 'checkbox-group': {
       const arr = z.array(z.string());
