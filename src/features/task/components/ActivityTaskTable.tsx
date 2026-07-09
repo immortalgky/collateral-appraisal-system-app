@@ -10,7 +10,7 @@ import PoolTaskListPage from '../pages/PoolTaskListPage';
 import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
-import { columnDefs, getActivityColumnConfig, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
+import { columnDefs, getActivityColumnConfig, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
@@ -100,6 +100,11 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     'task-columns-' + activityId,
     columnConfig,
   );
+
+  // Pool tab column layout — own key so it persists independently, dropdown rendered
+  // inline in the pool toolbar (parity with the personal tab).
+  const poolCols = useColumnVisibility('task-columns-pool', DEFAULT_CONFIG);
+  const poolWidths = useColumnWidths('task-columns-pool', DEFAULT_CONFIG);
 
   const tableRef = useRef<HTMLTableElement>(null);
 
@@ -366,6 +371,18 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                 </span>
               )}
             </button>
+
+            {/* Columns */}
+            <div className="mb-2">
+              <ColumnVisibilityDropdown
+                orderedColumns={poolCols.orderedColumns}
+                hidden={poolCols.hidden}
+                alwaysVisible={poolCols.alwaysVisible}
+                onToggle={poolCols.toggleColumn}
+                onReorder={poolCols.reorderColumns}
+                onReset={() => { poolCols.resetToDefault(); poolWidths.resetWidths(); }}
+              />
+            </div>
           </>
         )}
 
@@ -527,6 +544,9 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             activityId={activityId}
             externalSearch={debouncedPoolSearch}
             externalFilters={poolFilters}
+            visibleColumns={poolCols.visibleColumns}
+            colWidths={poolWidths.widths}
+            onColWidthChange={poolWidths.setWidth}
           />
         </>
       )}

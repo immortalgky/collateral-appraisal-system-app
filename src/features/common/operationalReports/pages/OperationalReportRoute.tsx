@@ -36,7 +36,7 @@ function OperationalReportRoute() {
     );
   }
 
-  return <OperationalReportPage config={config} />;
+  return <OperationalReportPage key={config.slug} config={config} />;
 }
 
 export default OperationalReportRoute;

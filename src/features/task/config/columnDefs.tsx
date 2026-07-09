@@ -11,15 +11,6 @@ import { DateCell } from '@features/common/monitoring/components/DateCell';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-const formatDate = (dateString?: string | null): string => {
-  if (!dateString) return '-';
-  try {
-    return format(new Date(dateString), 'dd/MM/yyyy');
-  } catch {
-    return dateString;
-  }
-};
-
 const AVATAR_COLORS = [
   'bg-blue-100 text-blue-700',
   'bg-emerald-100 text-emerald-700',
@@ -64,39 +55,65 @@ function PersonCell({ name }: { name: string | null | undefined }) {
 function DueDateCell({
   dateString,
   slaStatus,
+  slaDurationHours,
 }: {
   dateString: string | null | undefined;
   slaStatus: string | null;
+  slaDurationHours?: number | null;
 }) {
-  if (!dateString) return <>-</>;
+  // Independent of dateString: an appointment-anchored task can have a known
+  // SLA budget before a due date is computed.
+  const durationChip =
+    slaDurationHours != null ? (
+      <span className="text-xs text-gray-400 mt-0.5">{slaDurationHours}h</span>
+    ) : null;
+
+  if (!dateString) {
+    if (!durationChip) return <>-</>;
+    return (
+      <div className="flex flex-col">
+        <span>-</span>
+        {durationChip}
+      </div>
+    );
+  }
   try {
     const formatted = format(new Date(dateString), 'dd/MM/yyyy');
     // Drive icon/color from the backend slaStatus so this cell agrees with the
     // SLA Status badge and the row tint (proportional 75%-of-window rule), rather
     // than a fixed client-side day threshold.
     const bucket = bucketForSlaStatus(slaStatus);
+    let dateLine: ReactNode;
     if (bucket === 'breached')
-      return (
+      dateLine = (
         <span className="inline-flex items-center gap-1 text-red-600 font-medium text-sm">
           <Icon style="solid" name="circle-exclamation" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
-    if (bucket === 'atRisk')
-      return (
+    else if (bucket === 'atRisk')
+      dateLine = (
         <span className="inline-flex items-center gap-1 text-amber-600 font-medium text-sm">
           <Icon style="solid" name="clock" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
-    if (bucket === 'healthy')
-      return (
+    else if (bucket === 'healthy')
+      dateLine = (
         <span className="inline-flex items-center gap-1 text-emerald-600 font-medium text-sm">
           <Icon style="solid" name="circle-check" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
-    return <>{formatted}</>;
+    else dateLine = <>{formatted}</>;
+
+    if (!durationChip) return dateLine;
+    return (
+      <div className="flex flex-col">
+        {dateLine}
+        {durationChip}
+      </div>
+    );
   } catch {
     return <>{dateString}</>;
   }
@@ -124,21 +141,6 @@ function HoursCell({
     else cls = 'text-emerald-600';
   }
   return <span className={`text-sm ${cls}`}>{label}</span>;
-}
-
-function AppointmentCell({ dateString }: { dateString: string | null | undefined }) {
-  if (!dateString) return <>-</>;
-  try {
-    const date = new Date(dateString);
-    return (
-      <div className="flex items-center gap-1.5 min-w-0">
-        <Icon style="regular" name="calendar" className="size-3 text-gray-400 flex-shrink-0" />
-        <span className="text-sm">{format(date, 'dd/MM/yyyy HH:mm')}</span>
-      </div>
-    );
-  } catch {
-    return <>{dateString}</>;
-  }
 }
 
 // ── Column definitions ─────────────────────────────────────────────────────
@@ -247,13 +249,13 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     label: 'Appointment Date',
     sortField: 'appointmentDateTime',
     width: 150,
-    render: task => <AppointmentCell dateString={task.appointmentDateTime} />,
+    render: task => <DateCell value={task.appointmentDateTime} withTime withAgo />,
   },
   requestedAt: {
     label: 'Requested At',
     sortField: 'RequestedAt',
-    width: 140,
-    render: task => formatDate(task.requestedAt),
+    width: 150,
+    render: task => <DateCell value={task.requestedAt} withTime withAgo />,
   },
   requestedBy: {
     label: 'Requested By',
@@ -261,16 +263,16 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     render: task => <PersonCell name={task.requestedByName ?? task.requestedBy} />,
   },
   reportReceivedAt: {
-    label: 'Report Received At',
+    label: 'Report Received Date',
     sortField: 'ReportReceivedAt',
     width: 150,
-    render: task => formatDate(task.reportReceivedAt),
+    render: task => <DateCell value={task.reportReceivedAt} withTime withAgo />,
   },
   requestReceivedDate: {
     label: 'Request Received Date',
     sortField: 'requestReceivedDate',
     width: 150,
-    render: task => <AppointmentCell dateString={task.requestReceivedDate} />,
+    render: task => <DateCell value={task.requestReceivedDate} withTime withAgo />,
   },
   internalFollowupStaff: {
     label: 'Internal Followup Staff',
@@ -306,7 +308,13 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     label: 'SLA Due',
     sortField: 'dueAt',
     width: 140,
-    render: task => <DueDateCell dateString={task.dueAt} slaStatus={task.slaStatus} />,
+    render: task => (
+      <DueDateCell
+        dateString={task.dueAt}
+        slaStatus={task.slaStatus}
+        slaDurationHours={task.slaDurationHours}
+      />
+    ),
   },
   elapsedHours: {
     label: 'Elapsed (hrs)',
@@ -361,7 +369,6 @@ const DEFAULT_COLUMNS: ColumnKey[] = [
   'reportReceivedAt',
   'internalFollowupStaff',
   'appraiser',
-  'requestReceivedDate',
   'assignedDate',
   'movement',
   'dueAt',

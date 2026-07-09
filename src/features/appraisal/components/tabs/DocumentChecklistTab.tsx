@@ -1,4 +1,5 @@
-import { lazy, Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
+import { lazyWithRetry } from '@shared/utils/lazyWithRetry';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
@@ -33,7 +34,7 @@ import type { AnnotationResult } from '@shared/components/ImageAnnotationEditor'
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import DataErrorState from '@/shared/components/DataErrorState';
 
-const ImageAnnotationEditor = lazy(
+const ImageAnnotationEditor = lazyWithRetry(
   () => import('@shared/components/ImageAnnotationEditor/ImageAnnotationEditor'),
 );
 

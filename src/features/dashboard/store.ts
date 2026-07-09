@@ -33,10 +33,14 @@ type DashboardStore = {
 
 // Merge persisted widgets with DEFAULT_WIDGETS to include any new widgets
 const mergeWidgets = (persistedWidgets: Widget[]): Widget[] => {
-  const existingIds = new Set(persistedWidgets.map(w => w.id));
+  // Drop any persisted widget whose type is no longer known (e.g. a removed
+  // widget type). Otherwise WIDGET_CONFIGS[type] lookups below (and in
+  // canPlaceInSidebar) would be undefined and crash the dashboard.
+  const knownWidgets = persistedWidgets.filter(w => WIDGET_CONFIGS[w.type]);
+  const existingIds = new Set(knownWidgets.map(w => w.id));
   const newWidgets = DEFAULT_WIDGETS.filter(w => !existingIds.has(w.id));
   // Ensure all widgets have position and settings fields
-  const updatedWidgets = persistedWidgets.map(w => ({
+  const updatedWidgets = knownWidgets.map(w => ({
     ...w,
     position: w.position || (canPlaceInSidebar(w.type) ? 'sidebar' : 'main'),
     settings: w.settings ?? {},

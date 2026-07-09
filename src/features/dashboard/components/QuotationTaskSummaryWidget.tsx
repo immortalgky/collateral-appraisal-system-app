@@ -77,13 +77,13 @@ function QuotationTaskSummaryWidget() {
         {isError ? (
           <WidgetError message={t('quotationSummary.error')} onRetry={() => refetch()} />
         ) : isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
               <KpiCardSkeleton key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <KpiCard
               label={t('quotationSummary.pendingCreation')}
               count={data?.pendingQuotationCreation ?? 0}
@@ -113,6 +113,16 @@ function QuotationTaskSummaryWidget() {
               cardBg="bg-white"
               openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/quotations?status=PendingRmSelection')}
+            />
+            <KpiCard
+              label={t('quotationSummary.pendingApprovals')}
+              count={data?.pendingApprovals ?? 0}
+              icon="file-circle-check"
+              iconColor="text-amber-500"
+              iconBg="bg-amber-50"
+              cardBg="bg-white"
+              openListLabel={t('quotationSummary.openList')}
+              onClick={() => navigate('/tasks?activityId=fee-appointment-approval')}
             />
           </div>
         )}

@@ -46,6 +46,11 @@
     "customTo": "至",
     "apply": "应用"
   },
+  "segment": {
+    "all": "全部业务板块",
+    "Retail": "零售",
+    "IBG": "IBG"
+  },
   "taskSummary": {
     "title": "任务摘要",
     "notStarted": "未开始",
@@ -98,6 +103,20 @@
       "created": "已创建",
       "completed": "已完成"
     },
+    "mode": {
+      "overview": "总览",
+      "byType": "按类型"
+    },
+    "metric": {
+      "created": "已创建",
+      "completed": "已完成"
+    },
+    "types": {
+      "New": "新估",
+      "ReAppraisal": "重新估价",
+      "Progressive": "分阶段",
+      "PreAppraisal": "预估价"
+    },
     "table": {
       "period": "周期",
       "created": "已创建",
@@ -108,7 +127,8 @@
     "rangeInfo": "范围：{{from}} – {{to}} · {{buckets}} 个周期{{bucketPlural}} · {{days}} 天",
     "aria": {
       "expand": "展开小部件",
-      "menu": "小部件菜单"
+      "menu": "小部件菜单",
+      "toggleSeries": "切换{{label}}"
     },
     "menu": {
       "refresh": "刷新",
@@ -180,13 +200,18 @@
     "clickBarHint": "点击条形图查看该公司的评估",
     "clearCompanyFilter": "清除公司筛选",
     "noData": "该期间没有公司数据",
+    "unknownCompany": "未知公司（{{count}}）",
     "chart": {
       "assigned": "已分配",
-      "completed": "已完成"
+      "overdue": "已逾期",
+      "inProgress": "进行中",
+      "completed": "已完成",
+      "delivered": "已交付 {{pct}}%"
     },
     "aria": {
       "filterByCompany": "按公司筛选",
-      "menu": "小部件菜单"
+      "menu": "小部件菜单",
+      "toggleSeries": "切换{{label}}"
     },
     "menu": {
       "refresh": "刷新",
@@ -195,12 +220,13 @@
     "error": "无法加载公司摘要"
   },
   "quotationSummary": {
-    "title": "报价任务摘要",
+    "title": "管理员工作列表",
     "pendingCreation": "待创建报价",
     "waitingSubmission": "等待公司提交",
     "waitingRm": "等待RM选择",
+    "pendingApprovals": "待审批费用/改期",
     "openList": "打开列表",
-    "error": "无法加载报价任务摘要"
+    "error": "无法加载管理员工作列表"
   },
   "calendar": {
     "title": "日历",
@@ -224,6 +250,7 @@
       "filterByTopic": "按主题筛选",
       "selectMonth": "选择月份",
       "selectYear": "选择年份",
+      "selectDate": "选择日期",
       "previous": "上一个",
       "next": "下一个"
     },
@@ -280,7 +307,12 @@
     "today": "今天",
     "topicsLabel": "主题",
     "noEventsForDay": "本日没有活动。",
-    "error": "无法加载日历事件"
+    "error": "无法加载日历事件",
+    "next7Days": "未来7天",
+    "eventsCount": "{{count}} 个事件",
+    "todayGroupLabel": "今天",
+    "noUpcoming": "没有即将到来的事件",
+    "close": "关闭"
   },
   "reminders": {
     "title": "提醒",
@@ -346,8 +378,8 @@
       "description": "外部评估条形图"
     },
     "quotationTaskSummary": {
-      "title": "报价任务摘要",
-      "description": "跟踪 intAdmin 的报价流程阶段"
+      "title": "管理员工作列表",
+      "description": "管理员工作列表：报价流程和待审批事项"
     },
     "calendar": {
       "title": "日历",
