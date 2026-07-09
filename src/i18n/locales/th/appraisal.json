@@ -824,8 +824,8 @@
     "galleryPhotoDeletedCount": "ลบ {{count}} รูปภาพแล้ว",
     "galleryPhotoDeletedPartial": "ลบสำเร็จ {{deleted}}, ล้มเหลว {{failed}}",
     "galleryPhotoSelectFirst": "กรุณาเลือกรูปภาพอย่างน้อยหนึ่งรูป",
-    "comparableUnlinked": "ยกเลิกการเชื่อมโยงข้อมูลเปรียบเทียบสำเร็จ",
-    "comparableUnlinkFailed": "ยกเลิกการเชื่อมโยงข้อมูลเปรียบเทียบล้มเหลว",
+    "comparableDeleted": "ลบข้อมูลเปรียบเทียบสำเร็จ",
+    "comparableDeleteFailed": "ลบข้อมูลเปรียบเทียบล้มเหลว",
     "lawItemDeleted": "ลบรายการสำเร็จ",
     "lawItemDeleteFailed": "ลบรายการล้มเหลว",
     "lawImageUploaded": "อัปโหลด \"{{name}}\" สำเร็จ",
@@ -1144,7 +1144,9 @@
       "total": "รวม",
       "avg": "เฉลี่ย"
     },
-    "missingFromSurvey": "ไม่พบในรังวัด"
+    "missingFromSurvey": "ไม่พบในรังวัด",
+    "showLess": "แสดงน้อยลง",
+    "showMore": "แสดงเพิ่มเติม ({{remaining}} ฉบับ)"
   },
   "constructionSummaryTable": {
     "villageLabel": "ชื่ออาคาร / โครงการ",

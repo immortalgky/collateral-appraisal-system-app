@@ -38,6 +38,7 @@ import { mapSupportingDataResponseToForm } from '../utils/mapper';
 import { SUPPORTING_STATUS } from '../constants/parameters';
 import { useTranslation } from 'react-i18next';
 import useBreadcrumb from '@/shared/hooks/useBreadcrumb';
+import { useCompanyStore } from '@/shared/store';
 
 function SupportingDataMaintenanceDetailListPageSkeleton() {
   return (
@@ -158,6 +159,13 @@ export function SupportingDataMaintenanceDetailListPage() {
     }
     return defaultSupportingData;
   }, [hasSupportingId, supportingData]);
+
+  // Enrich company factors, new map avoid option showing id as value in form.
+  const companies = useCompanyStore(s => s.companies);
+  const companyOptions = useMemo(
+    () => companies.map(c => ({ value: c.id, label: c.companyName })),
+    [companies],
+  );
 
   /**
    * Submit supporting detail - staff
@@ -341,7 +349,6 @@ export function SupportingDataMaintenanceDetailListPage() {
   const onSubmitDecision: SubmitHandler<decisionFormType> = data => {
     setSaveAction('submit');
     // Submit goes through react-hook-form so Zod validation runs first.
-    console.log('Submit (decision):', data);
     if (hasSupportingId) {
       submitSupportingData(
         { supportingId: supportingId!, data: data as any },
@@ -483,7 +490,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               <div className="flex-1 flex flex-col gap-6">
                 <div className="grid grid-cols-12 gap-4">
                   <FormFields
-                    fields={getSupportingDataFields(t)}
+                    fields={getSupportingDataFields(t, companyOptions)}
                     disabled={!hasAuthorityToEdit && hasSupportingId}
                   />
                 </div>

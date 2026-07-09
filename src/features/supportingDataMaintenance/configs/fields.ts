@@ -1,11 +1,12 @@
 import { type FormField } from '@/shared/components/form';
-import { APPRAISAL_COMPANY_PARAMS, DECISION_PARAMS } from '../constants/parameters';
+import { DECISION_PARAMS } from '../constants/parameters';
 import { REMARK_REQUIRED_DECISIONS } from '../constants/enums';
 import type { TFunction } from 'i18next';
+import type { ListBoxItem } from '@/shared/components';
 
 type T = TFunction<'supportingDataMaintenance'>;
 
-export const getSupportingDataFields = (t: T): FormField[] => [
+export const getSupportingDataFields = (t: T, companyOptions: ListBoxItem[] = []): FormField[] => [
   {
     type: 'dropdown',
     label: t('fields.importChannel'),
@@ -30,6 +31,14 @@ export const getSupportingDataFields = (t: T): FormField[] => [
     group: 'SourceofData',
     wrapperClassName: 'col-span-2',
     required: true,
+  },
+  {
+    type: 'dropdown',
+    label: t('fields.appraisalCompany'),
+    name: 'appraisalCompanyId',
+    options: companyOptions,
+    wrapperClassName: 'col-span-2',
+    showValuePrefix: false,
   },
   {
     type: 'text-input',

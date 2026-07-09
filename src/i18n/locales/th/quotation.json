@@ -272,6 +272,7 @@
     "discountExceedsFee": "ส่วนลด + ส่วนลดเจรจาเกินค่าธรรมเนียมใน {{number}}",
     "enterNegotiatedDiscount": "กรุณากรอกส่วนลดเจรจาสำหรับการประเมินอย่างน้อยหนึ่งรายการก่อนส่ง",
     "mandaysExceeded": "แมนเดย์ประมาณการเกินระยะเวลาสูงสุดสำหรับ: {{list}}",
+    "feeAfterDiscountZero": "ค่าธรรมเนียมหลังหักส่วนลดต้องไม่เป็น 0 สำหรับ: {{list}}",
     "fixErrors": "กรุณาแก้ไขข้อผิดพลาดที่ไฮไลต์ก่อนส่ง",
     "noLongerCancellable": "ไม่สามารถยกเลิกใบเสนอราคาได้อีกต่อไป (สถานะ: {{status}})"
   },
@@ -466,6 +467,7 @@
     "closes": "ปิดรับ",
     "loadingDocument": "กำลังโหลดเอกสาร...",
     "discountsExceedFee": "ส่วนลดเกินค่าธรรมเนียม",
+    "feeAfterDiscountZero": "ค่าธรรมเนียมหลังหักส่วนลดต้องไม่เป็น 0",
     "companyResponses": "การตอบรับของบริษัท",
     "cancelQuotation": "ยกเลิกใบเสนอราคา",
     "quotationAwarded": "มอบงานให้ {{company}} แล้ว",

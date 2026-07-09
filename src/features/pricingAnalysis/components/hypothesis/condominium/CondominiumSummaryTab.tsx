@@ -68,16 +68,11 @@ export function CondominiumSummaryTab({
         <SectionPrimary title="Land Area Details">
           <FieldRow label="Area According to Title Deed" tooltip={CONDO_TIPS.areaTitleDeed}>
             <div className="ml-auto flex items-center gap-2">
-              <span className="min-w-[110px] text-right tabular-nums text-xs font-medium text-gray-800">
+              <span className="text-right tabular-nums text-xs font-medium text-gray-800">
                 {fmt(areaTitleDeedSqWa)}
               </span>
-              <span className="text-[11px] text-gray-500 whitespace-nowrap">Sq.W</span>
-            </div>
-          </FieldRow>
-
-          <FieldRow label="">
-            <div className="ml-auto flex items-center gap-2">
-              <span className="min-w-[110px] text-right tabular-nums text-xs font-medium text-gray-800">
+              <span className="text-[11px] text-gray-500 whitespace-nowrap">Sq.W &asymp;</span>
+              <span className="text-right tabular-nums text-xs font-medium text-gray-800">
                 {fmt(areaTitleDeedSqM)}
               </span>
               <span className="text-[11px] text-gray-500 whitespace-nowrap">Sq.M</span>

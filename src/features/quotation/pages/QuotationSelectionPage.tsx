@@ -640,7 +640,11 @@ const QuotationSelectionPage = () => {
                       : undefined
                   }
                 >
-                  <Icon name="handshake" style="solid" className="size-3.5 mr-1.5 text-orange-500" />
+                  <Icon
+                    name="handshake"
+                    style="solid"
+                    className="size-3.5 mr-1.5 text-orange-500"
+                  />
                   {t('buttons.openNegotiation')}
                 </Button>
                 <Button
