@@ -252,6 +252,7 @@ function ExternalTaskSummaryWidget() {
       from: undefined,
       to: undefined,
       companyId: undefined,
+      hidden: undefined, // restore legend series toggled off, so reset is a true default view
     });
     setMenuOpen(false);
   };

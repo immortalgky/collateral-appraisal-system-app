@@ -430,6 +430,7 @@ function TotalAppraisalsWidget() {
       mode: undefined,
       metric: undefined,
       bankingSegment: undefined,
+      hidden: undefined, // restore legend series toggled off, so reset is a true default view
     });
     setMenuOpen(false);
   };

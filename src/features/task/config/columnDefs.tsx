@@ -264,6 +264,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   },
   reportReceivedAt: {
     label: 'Report Received Date',
+    sortField: 'ReportReceivedAt',
     width: 150,
     render: task => <DateCell value={task.reportReceivedAt} withTime withAgo />,
   },

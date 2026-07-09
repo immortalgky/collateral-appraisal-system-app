@@ -402,17 +402,22 @@ function PoolTaskListPage({
               )}
             </button>
 
-            <ColumnVisibilityDropdown
-              orderedColumns={internalCols.orderedColumns}
-              hidden={internalCols.hidden}
-              alwaysVisible={internalCols.alwaysVisible}
-              onToggle={internalCols.toggleColumn}
-              onReorder={internalCols.reorderColumns}
-              onReset={() => {
-                internalCols.resetToDefault();
-                internalWidths.resetWidths();
-              }}
-            />
+            {/* Only render our own column dropdown when the layout is unmanaged. When embedded
+                (TaskListingPage/ActivityTaskTable) the columns are controlled via props and the
+                parent owns the dropdown — rendering it here would duplicate a non-functional one. */}
+            {propVisibleColumns === undefined && (
+              <ColumnVisibilityDropdown
+                orderedColumns={internalCols.orderedColumns}
+                hidden={internalCols.hidden}
+                alwaysVisible={internalCols.alwaysVisible}
+                onToggle={internalCols.toggleColumn}
+                onReorder={internalCols.reorderColumns}
+                onReset={() => {
+                  internalCols.resetToDefault();
+                  internalWidths.resetWidths();
+                }}
+              />
+            )}
           </div>
 
           {activeFilterChips.length > 0 && (

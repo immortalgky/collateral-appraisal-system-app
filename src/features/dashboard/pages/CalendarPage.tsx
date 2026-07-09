@@ -411,6 +411,8 @@ function MonthView({
             />
             <div
               role="dialog"
+              aria-modal="true"
+              aria-labelledby="day-popover-title"
               className="fixed z-50 w-64 max-h-80 flex flex-col bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
               style={{
                 left: Math.max(8, Math.min(dayPopover.rect.left, window.innerWidth - 256 - 8)),
@@ -419,7 +421,7 @@ function MonthView({
             >
               <div className="shrink-0 px-3 py-2 border-b border-gray-100 flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-xs font-semibold text-gray-800">
+                  <p id="day-popover-title" className="text-xs font-semibold text-gray-800">
                     {format(dayPopover.date, 'EEEE, d MMM yyyy')}
                   </p>
                   <p className="text-[11px] text-gray-400">

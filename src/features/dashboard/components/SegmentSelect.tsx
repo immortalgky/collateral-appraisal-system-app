@@ -65,7 +65,7 @@ function SegmentSelect({ value, onChange }: SegmentSelectProps) {
                   type="button"
                   onClick={() => select(seg)}
                   className={`w-full text-left px-2 py-1.5 rounded hover:bg-gray-100 ${
-                    value === seg ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                    known === seg ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
                   }`}
                 >
                   {t(`segment.${seg}`)}
