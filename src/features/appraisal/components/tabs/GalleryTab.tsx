@@ -937,10 +937,10 @@ export const GalleryTab = () => {
               <PhotoGridView
                 images={filteredImages}
                 onImageClick={handleImageClick}
-                onImageDelete={handleImageDelete}
-                onImageEdit={handleImageEdit}
+                onImageDelete={readOnly ? undefined : handleImageDelete}
+                onImageEdit={readOnly ? undefined : handleImageEdit}
                 selectedImageIds={selectedImageIds}
-                onSelectionChange={setSelectedImageIds}
+                onSelectionChange={readOnly ? undefined : setSelectedImageIds}
                 showUsedBadge
               />
             )}
@@ -949,10 +949,10 @@ export const GalleryTab = () => {
               <PhotoListView
                 images={filteredImages}
                 onImageClick={handleImageClick}
-                onImageDelete={handleImageDelete}
-                onImageEdit={handleImageEdit}
+                onImageDelete={readOnly ? undefined : handleImageDelete}
+                onImageEdit={readOnly ? undefined : handleImageEdit}
                 selectedImageIds={selectedImageIds}
-                onSelectionChange={setSelectedImageIds}
+                onSelectionChange={readOnly ? undefined : setSelectedImageIds}
                 showUsedBadge
               />
             )}
@@ -987,28 +987,32 @@ export const GalleryTab = () => {
           photos={filteredImages}
           onClose={handleCloseModal}
           onNavigate={handleNavigate}
-          onSaveDescription={async (caption: string) => {
-            if (!appraisalId) return;
-            try {
-              await updateGalleryPhoto({
-                appraisalId,
-                photoId: selectedImage.id,
-                caption: caption || null,
-                photoCategory: selectedImage.photoCategory,
-                latitude: selectedImage.latitude,
-                longitude: selectedImage.longitude,
-                capturedAt: selectedImage.capturedAt,
-              });
-              setSelectedImage(prev =>
-                prev
-                  ? { ...prev, caption: caption || null, description: caption || undefined }
-                  : null,
-              );
-              toast.success(t('toasts.descriptionUpdated'));
-            } catch {
-              toast.error(t('toasts.descriptionUpdateFailed'));
-            }
-          }}
+          onSaveDescription={
+            readOnly
+              ? undefined
+              : async (caption: string) => {
+                  if (!appraisalId) return;
+                  try {
+                    await updateGalleryPhoto({
+                      appraisalId,
+                      photoId: selectedImage.id,
+                      caption: caption || null,
+                      photoCategory: selectedImage.photoCategory,
+                      latitude: selectedImage.latitude,
+                      longitude: selectedImage.longitude,
+                      capturedAt: selectedImage.capturedAt,
+                    });
+                    setSelectedImage(prev =>
+                      prev
+                        ? { ...prev, caption: caption || null, description: caption || undefined }
+                        : null,
+                    );
+                    toast.success(t('toasts.descriptionUpdated'));
+                  } catch {
+                    toast.error(t('toasts.descriptionUpdateFailed'));
+                  }
+                }
+          }
           isSavingDescription={isUpdating}
           onDelete={
             readOnly

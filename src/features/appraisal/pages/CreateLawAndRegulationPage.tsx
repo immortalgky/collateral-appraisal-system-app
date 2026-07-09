@@ -530,7 +530,7 @@ const CreateLawAndRegulationPage = () => {
             {/* Form fields (Header dropdown + Remark textarea) */}
             <Section id="form-section">
               <div className="flex flex-col gap-6">
-                <FormFields fields={formFields} />
+                <FormFields fields={formFields} disabled={isReadOnly} />
               </div>
             </Section>
 

@@ -8,6 +8,7 @@ import type { PricingAnalysisConfigType } from '../../schemas';
 import type { ViewMode } from '@features/pricingAnalysis/store/selectionReducer';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 interface PricingAnalysisApproachAccordionProps {
   viewMode: ViewMode;
@@ -48,6 +49,7 @@ export const PricingAnalysisApproachAccordion = ({
   const hasSelectedMethods = approach.methods.some(m => m.isIncluded);
   const [isOpen, setIsOpen] = useState(viewMode === 'editing' ? true : false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const isReadOnly = usePageReadOnly();
 
   // Methods from config that are not yet selected in the approach
   const selectedMethodTypes = new Set(
@@ -86,12 +88,12 @@ export const PricingAnalysisApproachAccordion = ({
                 onToggleMethod={onToggleMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
                 onSelectCandidateMethod={onSelectCandidateMethod}
-                onDeleteMethod={onDeleteMethod}
+                onDeleteMethod={isReadOnly ? undefined : onDeleteMethod}
               />
             ))}
 
             {/* + Add Method inline list */}
-            {onAddMethod && availableMethods.length > 0 && (
+            {!isReadOnly && onAddMethod && availableMethods.length > 0 && (
               <div>
                 <button
                   type="button"
