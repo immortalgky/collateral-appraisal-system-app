@@ -120,11 +120,11 @@ export const MarketsTab = () => {
       { appraisalId, comparableId: unlinkConfirm.id },
       {
         onSuccess: () => {
-          toast.success(t('toasts.comparableUnlinked'));
+          toast.success(t('toasts.comparableDeleted'));
           setUnlinkConfirm({ isOpen: false, id: null });
         },
         onError: () => {
-          toast.error(t('toasts.comparableUnlinkFailed'));
+          toast.error(t('toasts.comparableDeleteFailed'));
         },
       },
     );
@@ -279,17 +279,32 @@ export const MarketsTab = () => {
                     </span>
                   </div>
                   <div className="col-span-2 flex items-center justify-end gap-1.5">
-                    <button
-                      type="button"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleViewComparable(comparable.marketComparableId);
-                      }}
-                      className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
-                      title="Edit comparable"
-                    >
-                      <Icon name="pencil" style="solid" />
-                    </button>
+                    {readOnly ? (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleViewComparable(comparable.marketComparableId);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                        title="Edit comparable"
+                      >
+                        <Icon name="eye" style="solid" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleViewComparable(comparable.marketComparableId);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+                        title="Edit comparable"
+                      >
+                        <Icon name="pencil" style="solid" />
+                      </button>
+                    )}
+
                     {!readOnly && (
                       <button
                         type="button"
@@ -298,7 +313,7 @@ export const MarketsTab = () => {
                           handleUnlink(comparable.id);
                         }}
                         className="w-7 h-7 flex items-center justify-center rounded-lg text-sm text-red-500 bg-red-50 hover:bg-red-100 transition-colors"
-                        title="Unlink comparable"
+                        title="Delete comparable"
                       >
                         <Icon name="trash-can" style="solid" />
                       </button>
@@ -316,9 +331,9 @@ export const MarketsTab = () => {
         isOpen={unlinkConfirm.isOpen}
         onClose={() => setUnlinkConfirm({ isOpen: false, id: null })}
         onConfirm={confirmUnlink}
-        title="Unlink Comparable"
-        message="Are you sure you want to unlink this comparable from the appraisal?"
-        confirmText="Unlink"
+        title="Delete Comparable"
+        message="Are you sure you want to delete this comparable from the appraisal?"
+        confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
       />

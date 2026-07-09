@@ -9,6 +9,7 @@ import Icon from '@shared/components/Icon';
 import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
 import PeriodSelect from './PeriodSelect';
+import SegmentSelect from './SegmentSelect';
 import WidgetError from './WidgetError';
 import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { useAppraisalStatusSummary, type AppraisalStatusSummaryFilters } from '../api';
@@ -284,16 +285,13 @@ function ProgressSummaryWidget() {
                         className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </label>
-                    <label className="flex flex-col gap-1 text-xs text-gray-500">
+                    <div className="flex flex-col gap-1 text-xs text-gray-500">
                       {t('progressSummary.filters.bankingSegment')}
-                      <input
-                        type="text"
-                        value={bankingInput}
-                        onChange={e => setBankingInput(e.target.value)}
-                        placeholder={t('progressSummary.filters.bankingPlaceholder')}
-                        className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      <SegmentSelect
+                        value={bankingInput || undefined}
+                        onChange={seg => setBankingInput(seg ?? '')}
                       />
-                    </label>
+                    </div>
                     <div className="flex items-center justify-between gap-2 pt-1">
                       <label className="inline-flex items-center gap-2 text-xs text-gray-600">
                         <input

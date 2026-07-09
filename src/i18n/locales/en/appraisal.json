@@ -830,8 +830,8 @@
     "galleryPhotoDeletedCount": "Deleted {{count}} photo(s)",
     "galleryPhotoDeletedPartial": "Deleted {{deleted}}, failed {{failed}}",
     "galleryPhotoSelectFirst": "Please select at least one photo",
-    "comparableUnlinked": "Comparable unlinked successfully",
-    "comparableUnlinkFailed": "Failed to unlink comparable",
+    "comparableDeleted": "Market comparable deleted successfully",
+    "comparableDeleteFailed": "Failed to delete market comparable",
     "lawItemDeleted": "Item deleted successfully",
     "lawItemDeleteFailed": "Failed to delete item",
     "lawImageUploaded": "Uploaded \"{{name}}\"",
@@ -1150,7 +1150,9 @@
       "total": "Total",
       "avg": "avg"
     },
-    "missingFromSurvey": "Missing from survey"
+    "missingFromSurvey": "Missing from survey",
+    "showLess": "Show less",
+    "showMore": "Show more ({{remaining}}) deeds"
   },
   "constructionSummaryTable": {
     "villageLabel": "Village / Project",

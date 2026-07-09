@@ -1,13 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  Controller,
-  useFieldArray,
-  useForm,
-  useWatch,
-  type FieldErrors,
-} from 'react-hook-form';
+import { Controller, useFieldArray, useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -470,6 +464,13 @@ const ExtCompanySubmitQuotationPage = () => {
   // draft is saved and promoted. (Save Draft stays lenient; only this promotion is gated.)
   const handleSubmitToChecker = handleSubmit(values => {
     // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
+
+    const zeroFeeViolations = findZeroFeeViolations(values);
+    if (zeroFeeViolations.length > 0) {
+      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+      return;
+    }
+
     // The violation is surfaced in the validation banner + inline field message; just block here.
     if (findDurationCapViolations(values).length > 0) return;
     // First save the draft, then promote to PendingCheckerReview
@@ -497,6 +498,27 @@ const ExtCompanySubmitQuotationPage = () => {
       },
     });
   }, surfaceItemErrors);
+
+  /**
+   * Returns a list of appraisal numbers where fee after discount equals 0.
+   * Submit paths block on this; save-draft does not.
+   */
+  const findZeroFeeViolations = (formValues: SubmitQuotationFormValues): string[] => {
+    const violations: string[] = [];
+    for (const item of formValues.items) {
+      const ap = appraisals.find(a => a.appraisalId === item.appraisalId);
+      const { feeAfterDiscount } = deriveFeeTotals(
+        item.feeAmount,
+        item.discount,
+        item.negotiatedDiscount,
+        item.vatPercent,
+      );
+      if (!isNaN(feeAfterDiscount) && feeAfterDiscount === 0) {
+        violations.push(ap?.appraisalNumber?.trim() || item.appraisalId.slice(0, 8));
+      }
+    }
+    return violations;
+  };
 
   /**
    * Returns a list of appraisal numbers whose Estimated Mandays exceeds the admin-set cap.
@@ -556,66 +578,75 @@ const ExtCompanySubmitQuotationPage = () => {
    * negotiation round. The backend publishes the workflow resume event itself, so
    * we don't call advanceWorkflowStage here.
    */
-  const handleSubmitNegotiation = handleSubmit(
-    values => {
-      if (!openNegotiation || !mySubmission) return;
+  const handleSubmitNegotiation = handleSubmit(values => {
+    if (!openNegotiation || !mySubmission) return;
 
-      const items = values.items.map(item => ({
-        appraisalId: item.appraisalId,
-        negotiatedDiscount:
-          item.negotiatedDiscount == null || isNaN(Number(item.negotiatedDiscount))
-            ? null
-            : Number(item.negotiatedDiscount),
-      }));
+    const zeroFeeViolations = findZeroFeeViolations(getValues());
+    if (zeroFeeViolations.length > 0) {
+      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+      return;
+    }
 
-      // Per-item over-cap check (defensive; the schema's superRefine also catches this,
-      // but a hidden tab's error would be silent without an explicit pre-flight).
-      const overCap = values.items.find(item => {
-        const fee = Number(item.feeAmount) || 0;
-        const disc = Number(item.discount) || 0;
-        const neg = Number(item.negotiatedDiscount) || 0;
-        return fee > 0 && disc + neg > fee;
-      });
-      if (overCap) {
-        const ap = appraisals.find(a => a.appraisalId === overCap.appraisalId);
-        toast.error(
-          t('toasts.discountExceedsFee', { number: ap?.appraisalNumber?.trim() || 'an appraisal' }),
-        );
-        return;
-      }
+    const items = values.items.map(item => ({
+      appraisalId: item.appraisalId,
+      negotiatedDiscount:
+        item.negotiatedDiscount == null || isNaN(Number(item.negotiatedDiscount))
+          ? null
+          : Number(item.negotiatedDiscount),
+    }));
 
-      const hasAnyDiscount = items.some(
-        i => i.negotiatedDiscount != null && i.negotiatedDiscount > 0,
+    // Per-item over-cap check (defensive; the schema's superRefine also catches this,
+    // but a hidden tab's error would be silent without an explicit pre-flight).
+    const overCap = values.items.find(item => {
+      const fee = Number(item.feeAmount) || 0;
+      const disc = Number(item.discount) || 0;
+      const neg = Number(item.negotiatedDiscount) || 0;
+      return fee > 0 && disc + neg > fee;
+    });
+    if (overCap) {
+      const ap = appraisals.find(a => a.appraisalId === overCap.appraisalId);
+      toast.error(
+        t('toasts.discountExceedsFee', { number: ap?.appraisalNumber?.trim() || 'an appraisal' }),
       );
-      if (!hasAnyDiscount) {
-        toast.error(t('toasts.enterNegotiatedDiscount'));
-        return;
-      }
+      return;
+    }
 
-      respondNegotiation(
-        {
-          negotiationId: openNegotiation.id,
-          companyQuotationId: mySubmission.id,
-          verb: 'Counter',
-          message: values.remarks ?? null,
-          items,
+    const hasAnyDiscount = items.some(
+      i => i.negotiatedDiscount != null && i.negotiatedDiscount > 0,
+    );
+    if (!hasAnyDiscount) {
+      toast.error(t('toasts.enterNegotiatedDiscount'));
+      return;
+    }
+
+    respondNegotiation(
+      {
+        negotiationId: openNegotiation.id,
+        companyQuotationId: mySubmission.id,
+        verb: 'Counter',
+        message: values.remarks ?? null,
+        items,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('toasts.proposalSent'));
+          navigateAfterSubmit();
         },
-        {
-          onSuccess: () => {
-            toast.success(t('toasts.proposalSent'));
-            navigateAfterSubmit();
-          },
-          onError: (err: unknown) => {
-            const e = err as { apiError?: { detail?: string } };
-            toast.error(e?.apiError?.detail ?? t('toasts.proposalFailed'));
-          },
+        onError: (err: unknown) => {
+          const e = err as { apiError?: { detail?: string } };
+          toast.error(e?.apiError?.detail ?? t('toasts.proposalFailed'));
         },
-      );
-    },
-    surfaceItemErrors,
-  );
+      },
+    );
+  }, surfaceItemErrors);
 
   const handleSubmitQuotation = handleSubmit(values => {
+    const zeroFeeViolations = findZeroFeeViolations(values);
+    if (zeroFeeViolations.length > 0) {
+      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+      return;
+    }
+
     // Duration-cap violation is surfaced in the validation banner + inline message; just block here.
     if (findDurationCapViolations(values).length > 0) return;
     submitQuotation(
@@ -1098,7 +1129,7 @@ const ExtCompanySubmitQuotationPage = () => {
                                 disabled={!canEdit || isNegotiatingLock}
                                 decimalPlaces={0}
                                 thousandSeparator={false}
-                                maxIntegerDigits={3}
+                                maxIntegerDigits={2}
                                 min={1}
                                 error={errors.items?.[selectedIndex]?.estimatedDays?.message}
                               />

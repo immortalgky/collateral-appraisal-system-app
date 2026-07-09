@@ -6,11 +6,12 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
+  LabelList,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from 'recharts';
 
 import { formatDistanceToNow } from 'date-fns';
@@ -36,6 +37,7 @@ type ExternalTaskSettings = {
   from?: string;
   to?: string;
   companyId?: string;
+  hidden?: string[]; // segment keys toggled off via the legend
 };
 
 const EMPTY_SETTINGS: ExternalTaskSettings = Object.freeze({}) as ExternalTaskSettings;
@@ -44,8 +46,79 @@ type Row = {
   companyId: string;
   name: string;
   assigned: number;
+  overdue: number;
+  inProgress: number;
   completed: number;
 };
+
+// Backend fallback label for an AssigneeCompanyId with no auth.Companies match
+// (COALESCE(..., N'(pending)') in the summary query).
+const PENDING = '(pending)';
+
+const SEGMENT_COLORS = {
+  overdue: '#ef4444',
+  inProgress: '#3b82f6',
+  completed: '#10b981',
+} as const;
+
+type SeriesKey = 'overdue' | 'inProgress' | 'completed';
+
+// Render/legend order. `bar` is the (possibly zeroed-when-hidden) key the chart plots.
+const SERIES = [
+  { key: 'overdue', bar: 'barOverdue', color: SEGMENT_COLORS.overdue, labelKey: 'externalSummary.chart.overdue' },
+  { key: 'inProgress', bar: 'barInProgress', color: SEGMENT_COLORS.inProgress, labelKey: 'externalSummary.chart.inProgress' },
+  { key: 'completed', bar: 'barCompleted', color: SEGMENT_COLORS.completed, labelKey: 'externalSummary.chart.completed' },
+] as const;
+
+// Row augmented with per-segment bar values (0 when that series is hidden) and their sum.
+type ChartRow = Row & {
+  barOverdue: number;
+  barInProgress: number;
+  barCompleted: number;
+  visible: number;
+};
+
+type SummaryTooltipProps = {
+  active?: boolean;
+  payload?: Array<{ payload?: ChartRow }>;
+};
+
+function SummaryTooltip({ active, payload }: SummaryTooltipProps) {
+  const { t } = useTranslation('dashboard');
+  if (!active || !payload?.length) return null;
+  const row = payload[0]?.payload;
+  if (!row) return null;
+
+  // Only the currently-visible (non-hidden, non-zero) segments; total matches the bar.
+  const segments = [
+    { color: SEGMENT_COLORS.overdue, label: t('externalSummary.chart.overdue'), value: row.barOverdue },
+    { color: SEGMENT_COLORS.inProgress, label: t('externalSummary.chart.inProgress'), value: row.barInProgress },
+    { color: SEGMENT_COLORS.completed, label: t('externalSummary.chart.completed'), value: row.barCompleted },
+  ].filter(s => s.value > 0);
+  const pct = row.visible > 0 ? Math.round((row.barCompleted / row.visible) * 100) : 0;
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white shadow-sm px-3 py-2 text-xs min-w-[168px]">
+      <p className="font-semibold text-gray-800 mb-1.5">{row.name}</p>
+      <div className="space-y-1">
+        {segments.map(s => (
+          <div key={s.label} className="flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+            <span className="text-gray-600">{s.label}</span>
+            <span className="ml-auto font-medium text-gray-800 tabular-nums">{s.value}</span>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1.5 pt-1.5 border-t border-gray-100 flex items-center gap-2">
+        <span className="text-gray-600">{t('externalSummary.chart.assigned')}</span>
+        <span className="ml-auto font-semibold text-gray-800 tabular-nums">{row.visible}</span>
+      </div>
+      {row.barCompleted > 0 && (
+        <p className="text-gray-400 mt-0.5">{t('externalSummary.chart.delivered', { pct })}</p>
+      )}
+    </div>
+  );
+}
 
 function ExternalTaskSummaryWidget() {
   const { t } = useTranslation('dashboard');
@@ -92,21 +165,73 @@ function ExternalTaskSummaryWidget() {
     ? formatDistanceToNow(dataUpdatedAt, { addSuffix: false })
     : null;
 
-  const allRows: Row[] = useMemo(() => {
+  // Named companies (sorted by volume). Companies the backend couldn't resolve
+  // (name === PENDING) are excluded here and rolled up into a single Unknown row below.
+  const namedRows: Row[] = useMemo(() => {
     return (data?.items ?? [])
+      .filter(item => item.companyName && item.companyName !== PENDING)
       .map(item => ({
         companyId: item.companyId,
-        name: item.companyName || 'Unknown',
+        name: item.companyName,
+        // buckets are mutually exclusive and sum to assigned (server-computed live)
         assigned: item.assignedCount,
+        overdue: item.overdueCount,
+        inProgress: item.inProgressCount,
         completed: item.completedCount,
       }))
-      .sort((a, b) => b.assigned + b.completed - (a.assigned + a.completed));
+      .sort((a, b) => b.assigned - a.assigned);
   }, [data]);
 
-  const rows = useMemo(
-    () => (settings.companyId ? allRows.filter(r => r.companyId === settings.companyId) : allRows),
-    [allRows, settings.companyId],
-  );
+  // One de-emphasized aggregate row (companyId '' = sentinel: non-clickable, greyed).
+  const allRows: Row[] = useMemo(() => {
+    const pending = (data?.items ?? []).filter(
+      item => !item.companyName || item.companyName === PENDING,
+    );
+    if (pending.length === 0) return namedRows;
+    const unknown: Row = {
+      companyId: '',
+      name: t('externalSummary.unknownCompany', { count: pending.length }),
+      assigned: pending.reduce((s, i) => s + i.assignedCount, 0),
+      overdue: pending.reduce((s, i) => s + i.overdueCount, 0),
+      inProgress: pending.reduce((s, i) => s + i.inProgressCount, 0),
+      completed: pending.reduce((s, i) => s + i.completedCount, 0),
+    };
+    return [...namedRows, unknown];
+  }, [data, namedRows, t]);
+
+  const hidden = useMemo(() => new Set(settings.hidden ?? []), [settings.hidden]);
+
+  const toggleSeries = (key: SeriesKey) => {
+    const next = new Set(hidden);
+    if (next.has(key)) next.delete(key);
+    else next.add(key);
+    updateSettings(WIDGET_ID, { hidden: Array.from(next) } as ExternalTaskSettings);
+  };
+
+  // Zero out hidden segments, then sort by the visible sum (desc) so the ranking follows
+  // whatever series are currently shown. The Unknown aggregate stays pinned to the bottom.
+  const rows: ChartRow[] = useMemo(() => {
+    const filtered = settings.companyId
+      ? allRows.filter(r => r.companyId === settings.companyId)
+      : allRows;
+    return filtered
+      .map(r => {
+        const barOverdue = hidden.has('overdue') ? 0 : r.overdue;
+        const barInProgress = hidden.has('inProgress') ? 0 : r.inProgress;
+        const barCompleted = hidden.has('completed') ? 0 : r.completed;
+        return {
+          ...r,
+          barOverdue,
+          barInProgress,
+          barCompleted,
+          visible: barOverdue + barInProgress + barCompleted,
+        };
+      })
+      .sort((a, b) => {
+        if (!a.companyId !== !b.companyId) return a.companyId ? -1 : 1;
+        return b.visible - a.visible;
+      });
+  }, [allRows, settings.companyId, hidden]);
 
   const handlePeriodChange = (key: PeriodPresetKey, custom?: { from: Date; to: Date }) => {
     updateSettings(WIDGET_ID, {
@@ -127,6 +252,7 @@ function ExternalTaskSummaryWidget() {
       from: undefined,
       to: undefined,
       companyId: undefined,
+      hidden: undefined, // restore legend series toggled off, so reset is a true default view
     });
     setMenuOpen(false);
   };
@@ -148,13 +274,13 @@ function ExternalTaskSummaryWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800 truncate">{t('externalSummary.title')}</h3>
+              <h3 className="font-semibold text-gray-800">{t('externalSummary.title')}</h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div className="flex items-center gap-2">
-            {allRows.length > 0 && (
+            {namedRows.length > 0 && (
               <select
                 value={settings.companyId ?? ''}
                 onChange={e =>
@@ -164,7 +290,7 @@ function ExternalTaskSummaryWidget() {
                 aria-label={t('externalSummary.aria.filterByCompany')}
               >
                 <option value="">{t('externalSummary.allCompanies')}</option>
-                {allRows.map(r => (
+                {namedRows.map(r => (
                   <option key={r.companyId} value={r.companyId}>
                     {r.name}
                   </option>
@@ -245,7 +371,7 @@ function ExternalTaskSummaryWidget() {
                 <BarChart
                   data={rows}
                   layout="vertical"
-                  margin={{ top: 4, right: 24, left: 8, bottom: 0 }}
+                  margin={{ top: 4, right: 40, left: 0, bottom: 0 }}
                   barCategoryGap={8}
                 >
                   <CartesianGrid horizontal={false} stroke="#f3f4f6" />
@@ -258,42 +384,110 @@ function ExternalTaskSummaryWidget() {
                   <YAxis
                     type="category"
                     dataKey="name"
-                    width={140}
+                    width={118}
                     tick={{ fontSize: 12, fill: '#4b5563' }}
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                    contentStyle={{
-                      borderRadius: 8,
-                      border: '1px solid #e5e7eb',
-                      fontSize: 12,
-                    }}
-                  />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                  <Tooltip cursor={{ fill: 'rgba(0,0,0,0.03)' }} content={<SummaryTooltip />} />
+                  {/* Single stack whose total length == the visible sum. Segments are
+                      mutually exclusive; overdue anchors at the axis origin so every company
+                      shares a baseline, then in-progress, then completed. Hidden series are
+                      zeroed (bar* keys). The Unknown aggregate (companyId '') is greyed via
+                      per-row Cell opacity and is not clickable. `completed` carries the total
+                      label at the stack's right end (minPointSize keeps the cap present even
+                      when its value is 0; the cap is made invisible in that case). */}
                   <Bar
-                    dataKey="assigned"
-                    name={t('externalSummary.chart.assigned')}
-                    fill="#3b82f6"
+                    dataKey="barOverdue"
+                    stackId="assigned"
+                    fill={SEGMENT_COLORS.overdue}
                     cursor="pointer"
                     onClick={data => {
-                      const row = (data as { payload?: Row }).payload;
-                      if (row) drillDown(row.companyId);
+                      const row = (data as { payload?: ChartRow }).payload;
+                      if (row?.companyId) drillDown(row.companyId);
                     }}
-                  />
+                  >
+                    {rows.map(r => (
+                      <Cell
+                        key={r.companyId || r.name}
+                        fill={SEGMENT_COLORS.overdue}
+                        fillOpacity={r.companyId ? 1 : 0.35}
+                      />
+                    ))}
+                  </Bar>
                   <Bar
-                    dataKey="completed"
-                    name={t('externalSummary.chart.completed')}
-                    fill="#10b981"
+                    dataKey="barInProgress"
+                    stackId="assigned"
+                    fill={SEGMENT_COLORS.inProgress}
                     cursor="pointer"
                     onClick={data => {
-                      const row = (data as { payload?: Row }).payload;
-                      if (row) drillDown(row.companyId);
+                      const row = (data as { payload?: ChartRow }).payload;
+                      if (row?.companyId) drillDown(row.companyId);
                     }}
-                  />
+                  >
+                    {rows.map(r => (
+                      <Cell
+                        key={r.companyId || r.name}
+                        fill={SEGMENT_COLORS.inProgress}
+                        fillOpacity={r.companyId ? 1 : 0.35}
+                      />
+                    ))}
+                  </Bar>
+                  <Bar
+                    dataKey="barCompleted"
+                    stackId="assigned"
+                    fill={SEGMENT_COLORS.completed}
+                    cursor="pointer"
+                    minPointSize={2}
+                    onClick={data => {
+                      const row = (data as { payload?: ChartRow }).payload;
+                      if (row?.companyId) drillDown(row.companyId);
+                    }}
+                  >
+                    {rows.map(r => (
+                      <Cell
+                        key={r.companyId || r.name}
+                        fill={SEGMENT_COLORS.completed}
+                        fillOpacity={r.barCompleted === 0 ? 0 : r.companyId ? 1 : 0.35}
+                      />
+                    ))}
+                    <LabelList
+                      dataKey="visible"
+                      position="right"
+                      style={{ fontSize: 11, fill: '#6b7280', fontWeight: 600 }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
+
+              {/* Clickable legend — toggle a series off to drop it from the bars and
+                  re-rank companies by the remaining (visible) total. */}
+              <div className="flex items-center justify-center gap-4 pt-3 flex-wrap">
+                {SERIES.map(s => {
+                  const isHidden = hidden.has(s.key);
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => toggleSeries(s.key)}
+                      aria-pressed={!isHidden}
+                      aria-label={t('externalSummary.aria.toggleSeries', { label: t(s.labelKey) })}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      <span
+                        className="inline-block w-2.5 h-2.5 rounded-full"
+                        style={{
+                          backgroundColor: isHidden ? 'transparent' : s.color,
+                          boxShadow: `inset 0 0 0 2px ${s.color}`,
+                        }}
+                      />
+                      <span className={isHidden ? 'text-gray-400 line-through' : 'text-gray-600'}>
+                        {t(s.labelKey)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </>
           )}
         </div>

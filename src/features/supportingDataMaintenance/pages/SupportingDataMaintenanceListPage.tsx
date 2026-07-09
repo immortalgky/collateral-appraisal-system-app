@@ -96,21 +96,25 @@ export function SupportingDataMaintenanceListPage() {
       {
         key: 'importChannel',
         label: t('columns.importChannel'),
+        sortField: 'importChannel',
         render: item => (item.importChannel ? getImportChannelLabel(item.importChannel) : '-'),
       },
       {
         key: 'sourceOfData',
         label: t('columns.sourceOfData'),
+        sortField: 'sourceOfData',
         render: item => (item.sourceOfData ? getSourceOfDataLabel(item.sourceOfData) : '-'),
       },
       {
         key: 'lastModifiedBy',
         label: t('columns.lastModifiedBy'),
+        sortField: 'lastModifiedBy',
         render: item => item.lastModifiedBy ?? '-',
       },
       {
         key: 'lastModifiedDate',
         label: t('columns.lastModifiedDate'),
+        sortField: 'lastModifiedDate',
         render: item => formatLocaleDateTime(item.lastModifiedDate, i18n.language),
       },
       {

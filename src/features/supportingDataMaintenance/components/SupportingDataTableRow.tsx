@@ -140,12 +140,10 @@ export const SupportingDataTableRow = ({
                       } flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700`}
                     >
                       <Icon
-                        name={
-                          hasAuthorityToDecision ? 'arrow-up-right-from-square' : 'pen-to-square'
-                        }
+                        name={hasAuthorityToDecision ? 'eye' : 'pen-to-square'}
                         className="text-xs text-gray-400"
                       />
-                      {hasAuthorityToDecision ? t('actions.open') : t('actions.edit')}
+                      {hasAuthorityToDecision ? t('actions.view') : t('actions.edit')}
                     </button>
                   )}
                 </MenuItem>

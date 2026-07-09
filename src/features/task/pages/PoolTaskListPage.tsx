@@ -14,28 +14,16 @@ import { useWorkflowHub } from '../hooks/useWorkflowHub';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { columnDefs, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
+import { columnDefs, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
 import type { ColumnKey } from '../config/columnDefs';
 import { useColumnWidths } from '../hooks/useColumnWidths';
+import { useColumnVisibility } from '../hooks/useColumnVisibility';
 import { ColumnResizeHandle } from '../components/ColumnResizeHandle';
+import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
 
 type SortDirection = 'asc' | 'desc';
-
-const POOL_COLUMNS = [
-  'appraisalNumber',
-  'customerName',
-  'taskType',
-  'purpose',
-  'propertyType',
-  'status',
-  'assignedDate',
-  'dueAt',
-  'slaStatus',
-  'movement',
-  'priority',
-] as const;
 
 const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
@@ -112,9 +100,23 @@ interface PoolTaskListPageProps {
   externalSearch?: string;
   externalFilters?: TaskFilterParams;
   onCountChange?: (count: number) => void;
+  // Column layout — supplied by the parent so the columns dropdown can live inline in
+  // the parent toolbar (single shared source). Falls back to internal state when the
+  // page is rendered standalone (uncontrolled).
+  visibleColumns?: ColumnKey[];
+  colWidths?: Record<string, number>;
+  onColWidthChange?: (key: ColumnKey, px: number) => void;
 }
 
-function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCountChange }: PoolTaskListPageProps) {
+function PoolTaskListPage({
+  activityId,
+  externalSearch,
+  externalFilters,
+  onCountChange,
+  visibleColumns: propVisibleColumns,
+  colWidths: propColWidths,
+  onColWidthChange,
+}: PoolTaskListPageProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUsername = useAuthStore(s => s.user?.username);
@@ -167,20 +169,22 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCount
   const pendingTaskIdRef = useRef<string | null>(null);
   const [openMenuTaskId, setOpenMenuTaskId] = useState<string | null>(null);
 
-  // Column widths
-  const poolColumnConfig = useMemo(
-    () => ({ columns: [...POOL_COLUMNS] as ColumnKey[], stickyColumn: 'appraisalNumber' as const }),
-    [],
-  );
-  const { widths: colWidths, setWidth: setColWidth } = useColumnWidths(
-    'task-columns-pool',
-    poolColumnConfig,
-  );
+  // Column visibility / order (show-hide + drag reorder), persisted per-tab.
+  // Same DEFAULT_CONFIG as My Task so default headers match; own storage key so
+  // customization stays independent. When a parent controls the layout (embedded
+  // in the task listing / activity toolbar), it owns this state and passes the
+  // resolved values in as props — these internal hooks are the standalone fallback.
+  const internalCols = useColumnVisibility('task-columns-pool', DEFAULT_CONFIG);
+  const internalWidths = useColumnWidths('task-columns-pool', DEFAULT_CONFIG);
+
+  const visibleColumns = propVisibleColumns ?? internalCols.visibleColumns;
+  const colWidths = propColWidths ?? internalWidths.widths;
+  const setColWidth = onColWidthChange ?? internalWidths.setWidth;
   const tableRef = useRef<HTMLTableElement>(null);
   const ACTIONS_COL_WIDTH = 40; // w-10 = 2.5rem = 40px
   const totalTableWidth = useMemo(
-    () => POOL_COLUMNS.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH,
-    [colWidths],
+    () => visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH,
+    [visibleColumns, colWidths],
   );
   const getAutoFitWidth = useCallback(
     (_key: string, colIndex: number): (() => number | null) =>
@@ -397,6 +401,23 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCount
                 </span>
               )}
             </button>
+
+            {/* Only render our own column dropdown when the layout is unmanaged. When embedded
+                (TaskListingPage/ActivityTaskTable) the columns are controlled via props and the
+                parent owns the dropdown — rendering it here would duplicate a non-functional one. */}
+            {propVisibleColumns === undefined && (
+              <ColumnVisibilityDropdown
+                orderedColumns={internalCols.orderedColumns}
+                hidden={internalCols.hidden}
+                alwaysVisible={internalCols.alwaysVisible}
+                onToggle={internalCols.toggleColumn}
+                onReorder={internalCols.reorderColumns}
+                onReset={() => {
+                  internalCols.resetToDefault();
+                  internalWidths.resetWidths();
+                }}
+              />
+            )}
           </div>
 
           {activeFilterChips.length > 0 && (
@@ -442,19 +463,19 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCount
             style={{ width: totalTableWidth }}
           >
             <colgroup>
-              {POOL_COLUMNS.map(key => (
+              {visibleColumns.map(key => (
                 <col key={key} style={{ width: colWidths[key] }} />
               ))}
               <col style={{ width: ACTIONS_COL_WIDTH }} />
             </colgroup>
             <thead className="sticky top-0 z-20">
               <tr className="bg-gray-50 border-b border-gray-200">
-                {POOL_COLUMNS.map((key, colIndex) => {
+                {visibleColumns.map((key, colIndex) => {
                   const col = columnDefs[key];
                   const isActive = sortField === col.sortField;
                   const base =
                     'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
-                  const isSticky = key === 'appraisalNumber';
+                  const isSticky = key === DEFAULT_CONFIG.stickyColumn;
                   const thClass = isSticky
                     ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                     : col.sortField
@@ -487,10 +508,10 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCount
             </thead>
             <tbody className="divide-y divide-gray-100">
               {isLoading ? (
-                <TableRowSkeleton columns={POOL_COLUMNS.map(() => ({ width: 'w-24' }))} rows={8} />
+                <TableRowSkeleton columns={visibleColumns.map(() => ({ width: 'w-24' }))} rows={8} />
               ) : tasks.length === 0 ? (
                 <tr>
-                  <td colSpan={POOL_COLUMNS.length + 2} className="py-24">
+                  <td colSpan={visibleColumns.length + 2} className="py-24">
                     <div className="flex flex-col items-center gap-4">
                       <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
                         <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
@@ -537,9 +558,9 @@ function PoolTaskListPage({ activityId, externalSearch, externalFilters, onCount
                             : `hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
                       }`}
                     >
-                      {POOL_COLUMNS.map(key => {
+                      {visibleColumns.map(key => {
                         const col = columnDefs[key];
-                        const isSticky = key === 'appraisalNumber';
+                        const isSticky = key === DEFAULT_CONFIG.stickyColumn;
                         const tdClass = isSticky
                           ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                           : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap');

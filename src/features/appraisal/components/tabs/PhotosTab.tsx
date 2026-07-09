@@ -795,12 +795,15 @@ export const PhotosTab = () => {
               <PhotoGridView
                 images={gridImages}
                 onImageClick={image => setPreviewPhoto(image)}
-                onImageDelete={image =>
-                  setDeleteConfirm({
-                    type: 'photo',
-                    id: image.id,
-                    name: image.fileName || image.alt,
-                  })
+                onImageDelete={
+                  readOnly
+                    ? undefined
+                    : image =>
+                        setDeleteConfirm({
+                          type: 'photo',
+                          id: image.id,
+                          name: image.fileName || image.alt,
+                        })
                 }
                 showUsedBadge={false}
                 prepend={
@@ -871,37 +874,45 @@ export const PhotosTab = () => {
           onClose={() => setPreviewPhoto(null)}
           onNavigate={setPreviewPhoto}
           showInUseStatus={false}
-          onDelete={() => {
-            setDeleteConfirm({
-              type: 'photo',
-              id: previewPhoto.id,
-              name: previewPhoto.caption || previewPhoto.fileName || 'Photo',
-            });
-            setPreviewPhoto(null);
-          }}
-          onSaveDescription={async (caption: string) => {
-            if (!appraisalId || !previewPhoto.documentId) return;
-            try {
-              const dto = galleryPhotoByDocId.get(previewPhoto.documentId);
-              if (!dto) {
-                toast.error(t('toasts.galleryPhotoNotFound'));
-                return;
-              }
-              await updateGalleryPhotoApi({
-                appraisalId,
-                photoId: dto.id,
-                caption: caption || null,
-                photoCategory: dto.photoCategory ?? null,
-                latitude: dto.latitude ?? null,
-                longitude: dto.longitude ?? null,
-                capturedAt: dto.capturedAt ?? null,
-              });
-              setPreviewPhoto(prev => (prev ? { ...prev, caption: caption || null } : null));
-              toast.success(t('toasts.descriptionUpdated'));
-            } catch {
-              toast.error(t('toasts.descriptionUpdateFailed'));
-            }
-          }}
+          onDelete={
+            readOnly
+              ? undefined
+              : () => {
+                  setDeleteConfirm({
+                    type: 'photo',
+                    id: previewPhoto.id,
+                    name: previewPhoto.caption || previewPhoto.fileName || 'Photo',
+                  });
+                  setPreviewPhoto(null);
+                }
+          }
+          onSaveDescription={
+            readOnly
+              ? undefined
+              : async (caption: string) => {
+                  if (!appraisalId || !previewPhoto.documentId) return;
+                  try {
+                    const dto = galleryPhotoByDocId.get(previewPhoto.documentId);
+                    if (!dto) {
+                      toast.error(t('toasts.galleryPhotoNotFound'));
+                      return;
+                    }
+                    await updateGalleryPhotoApi({
+                      appraisalId,
+                      photoId: dto.id,
+                      caption: caption || null,
+                      photoCategory: dto.photoCategory ?? null,
+                      latitude: dto.latitude ?? null,
+                      longitude: dto.longitude ?? null,
+                      capturedAt: dto.capturedAt ?? null,
+                    });
+                    setPreviewPhoto(prev => (prev ? { ...prev, caption: caption || null } : null));
+                    toast.success(t('toasts.descriptionUpdated'));
+                  } catch {
+                    toast.error(t('toasts.descriptionUpdateFailed'));
+                  }
+                }
+          }
           isSavingDescription={isUpdatingDescription}
         />
       )}

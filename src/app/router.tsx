@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
-import { lazy } from 'react';
+import { lazyWithRetry as lazy } from '@shared/utils/lazyWithRetry';
 // Eager — structural shell, route guards, read-only wrappers, and helpers that
 // must be available immediately (no spinner on the critical path).
 import LoginPage from '@features/auth/pages/LoginPage';
@@ -1253,6 +1253,14 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'condo/new',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <CondoPMAPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
             path: 'condo/:propertyId',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
@@ -1262,6 +1270,14 @@ export const router = createBrowserRouter([
           },
           {
             path: 'land-building/:propertyId',
+            element: (
+              <AppraisalReadOnlyWrapper pageName="Property Information">
+                <LandBuildingPMAPage />
+              </AppraisalReadOnlyWrapper>
+            ),
+          },
+          {
+            path: 'land-building/new',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
                 <LandBuildingPMAPage />

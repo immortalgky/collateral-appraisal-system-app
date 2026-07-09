@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import {
   useForm,
   FormProvider,
@@ -14,6 +14,10 @@ import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import clsx from 'clsx';
+import { MarketReferenceButton } from '../../MarketReferenceButton';
+import { PricingAnalysisSubjectType } from '@/features/pricingAnalysis/api/references';
+import type { MarketComparableDetailType } from '@/features/pricingAnalysis/schemas';
+import type { TemplateDtoType } from '@/shared/schemas/v1';
 
 type SeasonRateInput = {
   seasonId: string;
@@ -97,11 +101,24 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
   name,
   isReadOnly,
   getOuterFormValues,
+  incomeAnalysisId,
+  hostMethodId,
+  marketSurveys,
+  templateList,
+  ensureIncomeAnalysisId,
 }: {
   name: string;
   isReadOnly?: boolean;
   getOuterFormValues: UseFormGetValues<any>;
+  incomeAnalysisId?: string;
+  hostMethodId?: string;
+  marketSurveys?: MarketComparableDetailType[];
+  templateList?: TemplateDtoType[] | undefined;
+  ensureIncomeAnalysisId?: () => Promise<string | undefined>;
 }) {
+  // Local state to cache the id obtained by ensureIncomeAnalysisId so the
+  // button can function before the first save.
+  const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
   const {
     control,
     getValues,
@@ -326,16 +343,70 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                       return (
                         <Fragment key={`${field.id}-${seasonIndex}`}>
                           <td className="border-b border-gray-300 p-1">
-                            <RHFInputCell
-                              fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
-                              inputType="number"
-                              disabled={isReadOnly}
-                              number={{
-                                decimalPlaces: 2,
-                                maxIntegerDigits: 15,
-                                allowNegative: false,
-                              }}
-                            />
+                            {(() => {
+                              const roomType = getValues(
+                                `${name}.roomDetails.${rowIndex}.roomType`,
+                              );
+                              const roomOther = getValues(
+                                `${name}.roomDetails.${rowIndex}.roomTypeOther`,
+                              );
+                              const roomCode = String(roomType ?? '');
+                              const anchorRefKey =
+                                roomCode === '99' && roomOther ? String(roomOther) : roomCode;
+                              const effectiveId = incomeAnalysisId ?? ensuredId;
+                              const refButton = !isReadOnly ? (
+                                <MarketReferenceButton
+                                  compact
+                                  label="WQS"
+                                  subjectType={PricingAnalysisSubjectType.RoomIncomeRef}
+                                  // Pass the live value; after onBeforeOpen resolves the state update
+                                  // will have re-rendered with the new id, and the modal reads anchorId
+                                  // from the prop at open time.
+                                  anchorId={effectiveId ?? ''}
+                                  anchorRefKey={anchorRefKey}
+                                  hostMethodId={hostMethodId}
+                                  marketSurveys={marketSurveys ?? []}
+                                  templateList={templateList}
+                                  currentAnchorLabel={anchorRefKey}
+                                  onApplyValue={v =>
+                                    setValue(
+                                      `${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`,
+                                      v,
+                                      {
+                                        shouldDirty: true,
+                                      },
+                                    )
+                                  }
+                                  onBeforeOpen={
+                                    effectiveId
+                                      ? undefined
+                                      : async () => {
+                                          const id = await ensureIncomeAnalysisId?.();
+                                          if (id) {
+                                            setEnsuredId(id);
+                                          }
+                                          // Throw to abort open if still no id (save failed, toast shown)
+                                          if (!id) throw new Error('no-id');
+                                        }
+                                  }
+                                  className="pointer-events-auto shrink-0"
+                                />
+                              ) : null;
+                              return (
+                                <RHFInputCell
+                                  fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.roomIncome`}
+                                  inputType="number"
+                                  disabled={isReadOnly}
+                                  number={{
+                                    decimalPlaces: 2,
+                                    maxIntegerDigits: 15,
+                                    allowNegative: false,
+                                  }}
+                                  rightIcon={refButton}
+                                  inputClassName={refButton ? '!pr-14' : undefined}
+                                />
+                              );
+                            })()}
                           </td>
                           <td className="border-b border-gray-300 p-1">
                             <RHFInputCell

@@ -67,6 +67,7 @@ export const defaultSupportingData: createSupportingDataFormType = {
   importChannel: null,
   importDate: null,
   sourceOfData: null,
+  appraisalCompanyId: null,
   description: null,
 };
 

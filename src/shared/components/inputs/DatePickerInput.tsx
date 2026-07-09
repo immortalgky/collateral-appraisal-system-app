@@ -1,35 +1,48 @@
 import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { DayPicker, type DropdownProps } from 'react-day-picker';
+import { DayPicker } from 'react-day-picker';
 import { format, formatISO, isValid, parse } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
 import { buildDisabledMatcher, validateDateConstraints } from './dateConstraints';
-import { ScrollableSelect } from './ScrollableSelect';
+import { CalendarNavHeader } from './CalendarNavHeader';
+import { MonthYearPanel } from './MonthYearPanel';
 
-function CompactRdpDropdown(props: DropdownProps) {
-  const { options = [], value, onChange, 'aria-label': ariaLabel } = props;
-  return (
-    <ScrollableSelect
-      ariaLabel={ariaLabel}
-      variant="ghost"
-      value={String(value ?? '')}
-      options={options.map(o => ({
-        value: String(o.value),
-        label: o.label,
-        disabled: o.disabled,
-      }))}
-      onChange={next => {
-        if (!onChange) return;
-        const synthetic = {
-          target: { value: next },
-        } as React.ChangeEvent<HTMLSelectElement>;
-        onChange(synthetic);
-      }}
-      maxHeightClass="max-h-48"
-    />
-  );
-}
+const MONTH_LABELS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+// Hide RDP's built-in month caption — we render our own CalendarNavHeader above the grid.
+const HiddenCaption = () => <></>;
+
+// Compact react-day-picker sizing. These vars MUST live on the DayPicker root: v9's
+// stylesheet declares `.rdp-root { --rdp-day-width: 44px }`, so the same vars set on an
+// ancestor never win. An inline style on the root beats that class rule.
+const CALENDAR_RDP_STYLE = {
+  '--rdp-day-width': '1.75rem',
+  '--rdp-day-height': '1.75rem',
+  '--rdp-day_button-width': '1.75rem',
+  '--rdp-day_button-height': '1.75rem',
+  '--rdp-day_button-border-radius': '0.25rem',
+  '--rdp-weekday-padding': '0',
+  '--rdp-weekday-opacity': '0.6',
+  '--rdp-font-family': 'inherit',
+  '--rdp-accent-color': 'var(--color-primary)',
+} as React.CSSProperties;
+
+// Single-letter weekday headers (M T W T F S S) to match the design.
+const formatNarrowWeekday = (date: Date) => date.toLocaleDateString('en-US', { weekday: 'narrow' });
 
 interface DatePickerInputProps {
   label?: string;
@@ -93,6 +106,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
+    const [showMonths, setShowMonths] = useState(false);
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
     const [align, setAlign] = useState<'left' | 'right'>('left');
     const [constraintError, setConstraintError] = useState<string | null>(null);
@@ -181,7 +195,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
         // Horizontal flip: a left-aligned calendar overflows to the right and can be
         // clipped by a scrollable/narrow container (e.g. a search panel). When there
         // isn't room on the right, anchor to the input's right edge so it expands left.
-        const calendarWidth = 300; // approximate width of calendar
+        const calendarWidth = 460; // calendar + month/year panel when expanded
         const spaceRight = bounds.right - rect.left;
         if (spaceRight < calendarWidth && rect.right - bounds.left > calendarWidth) {
           setAlign('right');
@@ -278,6 +292,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
 
     const handleInputClick = () => {
       if (!isDisabled) {
+        setShowMonths(false);
         setIsOpen(true);
       }
     };
@@ -363,37 +378,55 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
               position === 'bottom' ? 'mt-1' : 'bottom-full mb-1',
               align === 'right' ? 'right-0' : 'left-0',
             )}
-            style={
-              {
-                '--rdp-day-width': '1.75rem',
-                '--rdp-day-height': '1.75rem',
-                '--rdp-day_button-width': '1.75rem',
-                '--rdp-day_button-height': '1.75rem',
-                '--rdp-day_button-border-radius': '0.25rem',
-                '--rdp-weekday-padding': '0',
-                '--rdp-nav_button-width': '1.5rem',
-                '--rdp-nav_button-height': '1.5rem',
-                '--rdp-month_caption-font': '600 0.8125rem/1 inherit',
-                '--rdp-weekday-opacity': '0.6',
-                '--rdp-font-family': 'inherit',
-              } as React.CSSProperties
-            }
           >
-            <DayPicker
-              className="react-day-picker p-2 text-xs"
-              captionLayout="dropdown"
-              mode="single"
-              navLayout="around"
-              selected={selectedDate}
-              onSelect={handleDaySelect}
-              month={month}
-              onMonthChange={setMonth}
-              showOutsideDays
-              reverseYears
-              endMonth={new Date(new Date().getFullYear() + 100, 12, 0)}
-              disabled={disabledMatcher}
-              components={{ Dropdown: CompactRdpDropdown }}
-            />
+            <div className="flex">
+              <div className="p-2">
+                <CalendarNavHeader
+                  label={format(month, 'MMMM yyyy')}
+                  onPrev={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+                  onNext={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+                  onToggle={() => setShowMonths(s => !s)}
+                  expanded={showMonths}
+                  className="mb-1 px-1"
+                />
+                <DayPicker
+                  className="react-day-picker text-xs"
+                  style={CALENDAR_RDP_STYLE}
+                  weekStartsOn={1}
+                  formatters={{ formatWeekdayName: formatNarrowWeekday }}
+                  mode="single"
+                  hideNavigation
+                  selected={selectedDate}
+                  onSelect={handleDaySelect}
+                  month={month}
+                  onMonthChange={setMonth}
+                  showOutsideDays
+                  disabled={disabledMatcher}
+                  components={{ MonthCaption: HiddenCaption }}
+                />
+              </div>
+              {showMonths && (
+                <div className="w-44 p-2 pl-3 border-l border-gray-200">
+                  <MonthYearPanel
+                    year={month.getFullYear()}
+                    selectedMonth={month.getMonth()}
+                    monthLabels={MONTH_LABELS_SHORT}
+                    onSelectMonth={m => {
+                      setMonth(new Date(month.getFullYear(), m, 1));
+                      setShowMonths(false);
+                    }}
+                    onStepYear={delta =>
+                      setMonth(new Date(month.getFullYear() + delta, month.getMonth(), 1))
+                    }
+                    onSelectYear={y => setMonth(new Date(y, month.getMonth(), 1))}
+                    onToday={() => {
+                      setMonth(new Date());
+                      setShowMonths(false);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 

@@ -9,6 +9,9 @@ export type TaskSummaryResponse = {
 
 export type AppraisalCountItem = {
   period: string | null;
+  // Only present when the request is made with groupByType=true; one item per
+  // (period, appraisalType) pair. Null/absent in the default overview response.
+  appraisalType?: string | null;
   createdCount: number;
   completedCount: number;
 };
@@ -43,6 +46,8 @@ export type CompanyAppraisalSummaryItem = {
   companyName: string;
   assignedCount: number;
   completedCount: number;
+  overdueCount: number;
+  inProgressCount: number;
 };
 
 export type CompanyAppraisalSummaryResponse = {
@@ -105,4 +110,5 @@ export type QuotationTaskSummaryResponse = {
   pendingQuotationCreation: number;
   waitingCompanySubmission: number;
   waitingRmSelection: number;
+  pendingApprovals: number;
 };

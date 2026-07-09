@@ -46,6 +46,11 @@
     "customTo": "To",
     "apply": "Apply"
   },
+  "segment": {
+    "all": "All Segments",
+    "Retail": "Retail",
+    "IBG": "IBG"
+  },
   "taskSummary": {
     "title": "Task Summary",
     "notStarted": "Not Started",
@@ -98,6 +103,20 @@
       "created": "Created",
       "completed": "Completed"
     },
+    "mode": {
+      "overview": "Overview",
+      "byType": "By Type"
+    },
+    "metric": {
+      "created": "Created",
+      "completed": "Completed"
+    },
+    "types": {
+      "New": "New",
+      "ReAppraisal": "Re-Appraisal",
+      "Progressive": "Progressive",
+      "PreAppraisal": "Pre-Appraisal"
+    },
     "table": {
       "period": "Period",
       "created": "Created",
@@ -108,7 +127,8 @@
     "rangeInfo": "Range: {{from}} – {{to}} · {{buckets}} bucket{{bucketPlural}} · {{days}} days",
     "aria": {
       "expand": "Expand widget",
-      "menu": "Widget menu"
+      "menu": "Widget menu",
+      "toggleSeries": "Toggle {{label}}"
     },
     "menu": {
       "refresh": "Refresh",
@@ -180,13 +200,18 @@
     "clickBarHint": "Click a bar to view that company's appraisals",
     "clearCompanyFilter": "Clear company filter",
     "noData": "No company data for this period",
+    "unknownCompany": "Unknown ({{count}})",
     "chart": {
       "assigned": "Assigned",
-      "completed": "Completed"
+      "overdue": "Overdue",
+      "inProgress": "In Progress",
+      "completed": "Completed",
+      "delivered": "{{pct}}% delivered"
     },
     "aria": {
       "filterByCompany": "Filter by company",
-      "menu": "Widget menu"
+      "menu": "Widget menu",
+      "toggleSeries": "Toggle {{label}}"
     },
     "menu": {
       "refresh": "Refresh",
@@ -195,12 +220,13 @@
     "error": "Unable to load company summary"
   },
   "quotationSummary": {
-    "title": "Quotation Task Summary",
+    "title": "Admin Worklist",
     "pendingCreation": "Pending Quotation Creation",
     "waitingSubmission": "Waiting Company Submission",
     "waitingRm": "Waiting RM Selection",
+    "pendingApprovals": "Pending Fee/Reschedule Approvals",
     "openList": "Open list",
-    "error": "Unable to load quotation task summary"
+    "error": "Unable to load admin worklist"
   },
   "calendar": {
     "title": "Calendar",
@@ -224,6 +250,7 @@
       "filterByTopic": "Filter by topic",
       "selectMonth": "Select month",
       "selectYear": "Select year",
+      "selectDate": "Select date",
       "previous": "Previous",
       "next": "Next"
     },
@@ -280,7 +307,12 @@
     "today": "Today",
     "topicsLabel": "Topics",
     "noEventsForDay": "No events for this day.",
-    "error": "Unable to load calendar events"
+    "error": "Unable to load calendar events",
+    "next7Days": "Next 7 days",
+    "eventsCount": "{{count}} events",
+    "todayGroupLabel": "Today",
+    "noUpcoming": "No upcoming events",
+    "close": "Close"
   },
   "reminders": {
     "title": "Reminders",
@@ -346,8 +378,8 @@
       "description": "Bar chart of external appraisals"
     },
     "quotationTaskSummary": {
-      "title": "Quotation Task Summary",
-      "description": "Track quotation pipeline stages for intAdmin"
+      "title": "Admin Worklist",
+      "description": "Admin worklist: quotation pipeline and pending approvals"
     },
     "calendar": {
       "title": "Calendar",

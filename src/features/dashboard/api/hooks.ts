@@ -19,6 +19,8 @@ export type AppraisalCountsFilters = {
   period?: string;
   from?: string;
   to?: string;
+  groupByType?: boolean;
+  bankingSegment?: string;
 };
 
 export type AppraisalStatusSummaryFilters = {
@@ -63,11 +65,19 @@ export const useTaskSummary = (filters: TaskSummaryFilters = {}) => {
   });
 };
 
-export const useAppraisalCounts = (period = 'monthly', from?: string, to?: string) => {
+export const useAppraisalCounts = (
+  period = 'monthly',
+  from?: string,
+  to?: string,
+  groupByType?: boolean,
+  bankingSegment?: string,
+  options: { enabled?: boolean } = {},
+) => {
   return useQuery({
-    queryKey: dashboardKeys.appraisalCounts({ period, from, to }),
-    queryFn: () => dashboardApi.getAppraisalCounts(period, from, to),
+    queryKey: dashboardKeys.appraisalCounts({ period, from, to, groupByType, bankingSegment }),
+    queryFn: () => dashboardApi.getAppraisalCounts(period, from, to, groupByType, bankingSegment),
     staleTime: DASHBOARD_STALE_TIME,
+    enabled: options.enabled ?? true,
   });
 };
 

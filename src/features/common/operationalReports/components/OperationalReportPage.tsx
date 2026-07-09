@@ -4,6 +4,8 @@ import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Input from '@shared/components/Input';
+import Autocomplete from '@shared/components/inputs/Autocomplete';
+import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { useOperationalReport, useReportExport } from '../api/operationalReportsApi';
 import type { BaseReportFilter, SortDir } from '../api/operationalReportsApi';
@@ -84,6 +86,15 @@ const DATE_FIELDS = new Set<FilterField>([
   'approvedTo',
 ]);
 
+/**
+ * Fields that render as a searchable dropdown bound to a fixed option list.
+ * `evaluationStatus`/`feeStatus` intentionally stay free text — they use
+ * different domains and have no shared option list yet.
+ */
+const OPTION_FIELDS: Partial<Record<FilterField, { value: string; label: string }[]>> = {
+  status: APPRAISAL_STATUS_FILTER_OPTIONS,
+};
+
 function FilterPanel({ filters, values, onChange, onReset }: FilterPanelProps) {
   const hasAny = filters.some(f => Boolean((values as Record<string, unknown>)[f]));
 
@@ -94,11 +105,24 @@ function FilterPanel({ filters, values, onChange, onReset }: FilterPanelProps) {
           const val = ((values as Record<string, unknown>)[field] as string) ?? '';
           const label = FILTER_LABELS[field];
           const isDate = DATE_FIELDS.has(field);
+          const options = OPTION_FIELDS[field];
 
           return (
             <div key={field} className="flex flex-col gap-1 min-w-[160px]">
               <label className="text-xs font-medium text-gray-600">{label}</label>
-              {isDate ? (
+              {options ? (
+                <Autocomplete
+                  items={options}
+                  value={val}
+                  onChange={v => onChange({ [field]: v || undefined })}
+                  displayText={options.find(o => o.value === val)?.label}
+                  placeholder={`All ${label}`}
+                  showAllOnFocus
+                  menuClassName="w-full"
+                  filterItems={(item, text) =>
+                    item.label.toLowerCase().includes(text.toLowerCase())}
+                />
+              ) : isDate ? (
                 <input
                   type="date"
                   value={val}

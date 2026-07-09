@@ -4,6 +4,8 @@ export { default as CheckboxGroup } from './CheckboxGroup';
 export type { CheckboxOption } from './CheckboxGroup';
 export { default as DateInput } from './DateInput';
 export { default as DateTimeInput } from './DateTimeInput';
+export { default as CalendarNavHeader } from './CalendarNavHeader';
+export { default as MonthYearPanel } from './MonthYearPanel';
 export { default as Dropdown } from './Dropdown';
 export type { ListBoxItem } from './Dropdown';
 export { default as MultiSelectDropdown } from './MultiSelectDropdown';

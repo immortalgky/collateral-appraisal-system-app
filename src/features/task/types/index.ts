@@ -116,6 +116,7 @@ export interface Task {
   priority: string | null;
   dueAt: string | null;
   slaStatus: string | null;
+  slaDurationHours: number | null;
   elapsedHours: number | null;
   remainingHours: number | null;
   // New fields added to backend DTO

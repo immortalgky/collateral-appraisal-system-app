@@ -43,7 +43,7 @@ export const mapSupportingDataResponseToForm = (
     importChannel: response.importChannel ?? null,
     importDate: response.importDate ?? null,
     sourceOfData: response.sourceOfData ?? null,
-    appraisalCompany: response.appraisalCompany ?? null,
     description: response.description ?? null,
+    appraisalCompanyId: response.appraisalCompanyId ?? null,
   };
 };

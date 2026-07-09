@@ -23,10 +23,18 @@ export const dashboardApi = {
     return data;
   },
 
-  getAppraisalCounts: async (period = 'monthly', from?: string, to?: string) => {
+  getAppraisalCounts: async (
+    period = 'monthly',
+    from?: string,
+    to?: string,
+    groupByType?: boolean,
+    bankingSegment?: string,
+  ) => {
     const params = new URLSearchParams({ period });
     if (from) params.set('from', from);
     if (to) params.set('to', to);
+    if (groupByType) params.set('groupByType', 'true');
+    if (bankingSegment) params.set('bankingSegment', bankingSegment);
     const { data } = await axios.get<AppraisalCountsResponse>(
       `/dashboard/appraisal-counts?${params}`,
     );

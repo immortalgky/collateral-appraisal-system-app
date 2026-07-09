@@ -54,7 +54,15 @@ export function DiscountedCashFlowModalRenderer({
     }
     // Method 02
     case 'specifiedRoomIncomeBySeasonalRates':
-      return <MethodSpecifiedRoomIncomeBySeasonalRatesModal {...props} />;
+      return (
+        <MethodSpecifiedRoomIncomeBySeasonalRatesModal
+          {...props}
+          incomeAnalysisId={incomeAnalysisId}
+          hostMethodId={hostMethodId}
+          marketSurveys={marketSurveys}
+          ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+        />
+      );
     // Method 03
     case 'specifiedRoomIncomeWithGrowth':
       return <MethodSpecifiedRoomIncomeWithGrowthModal {...props} />;
@@ -63,7 +71,15 @@ export function DiscountedCashFlowModalRenderer({
       return <MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal {...props} />;
     // Method 05
     case 'specifiedRentalIncomePerMonth':
-      return <MethodSpecifiedRentalIncomePerMonthModal {...props} />;
+      return (
+        <MethodSpecifiedRentalIncomePerMonthModal
+          {...props}
+          incomeAnalysisId={incomeAnalysisId}
+          hostMethodId={hostMethodId}
+          marketSurveys={marketSurveys}
+          ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+        />
+      );
     // Method 06
     case 'specifiedRentalIncomePerSquareMeter':
       return <MethodSpecifiedRentalIncomePerSquareMeterModal {...props} />;
