@@ -1135,7 +1135,9 @@
       "total": "合计",
       "avg": "平均"
     },
-    "missingFromSurvey": "勘测中缺失"
+    "missingFromSurvey": "勘测中缺失",
+    "showLess": "收起",
+    "showMore": "显示更多（还有 {{remaining}} 份）"
   },
   "constructionSummaryTable": {
     "villageLabel": "楼盘 / 项目",

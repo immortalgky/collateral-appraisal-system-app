@@ -1144,7 +1144,9 @@
       "total": "รวม",
       "avg": "เฉลี่ย"
     },
-    "missingFromSurvey": "ไม่พบในรังวัด"
+    "missingFromSurvey": "ไม่พบในรังวัด",
+    "showLess": "แสดงน้อยลง",
+    "showMore": "แสดงเพิ่มเติม ({{remaining}} ฉบับ)"
   },
   "constructionSummaryTable": {
     "villageLabel": "ชื่ออาคาร / โครงการ",

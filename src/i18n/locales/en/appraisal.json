@@ -1144,7 +1144,9 @@
       "total": "Total",
       "avg": "avg"
     },
-    "missingFromSurvey": "Missing from survey"
+    "missingFromSurvey": "Missing from survey",
+    "showLess": "Show less",
+    "showMore": "Show more ({{remaining}}) deeds"
   },
   "constructionSummaryTable": {
     "villageLabel": "Village / Project",

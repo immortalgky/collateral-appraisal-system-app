@@ -121,7 +121,12 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
             className="text-primary-600 hover:underline cursor-pointer text-sm"
             onClick={() => setIsExpanded(prev => !prev)}
           >
-            {isExpanded ? 'Show less' : `Show more (${rows.length - MAX_INITIAL_ROWS}) deeds`}
+            {isExpanded
+              ? t('governmentPriceTable.showLess', { defaultValue: 'Show less' })
+              : t('governmentPriceTable.showMore', {
+                  remaining: rows.length - MAX_INITIAL_ROWS,
+                  defaultValue: 'Show more ({{remaining}}) deeds',
+                })}
           </button>
         </div>
       )}
