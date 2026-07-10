@@ -24,7 +24,9 @@ import BlockLandDetailForm from './BlockLandDetailForm';
 import {
   createLandForm,
   createLandFormDefault,
+  createProjectLandForm,
   type createLandFormType,
+  type createProjectLandFormType,
 } from '@/features/appraisal/schemas/form';
 import { mapLandPropertyResponseToForm } from '@/features/appraisal/utils/mappers';
 import type { ApiError } from '@/shared/types/api';
@@ -60,9 +62,9 @@ export default function ProjectLandForm() {
     return createLandFormDefault;
   }, [landData]);
 
-  const methods = useForm<createLandFormType>({
+  const methods = useForm<createProjectLandFormType>({
     defaultValues: formDefaults,
-    resolver: zodResolver(createLandForm),
+    resolver: zodResolver(createProjectLandForm),
   });
   const {
     handleSubmit,

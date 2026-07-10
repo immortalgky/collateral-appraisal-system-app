@@ -263,46 +263,65 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
           <TextInput
             label={t('fields.companyName')}
             value={editForm.name}
-            onChange={e => setEditForm(prev => ({ ...prev, name: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, name: value }));
+            }}
             required
             placeholder={t('placeholders.companyName')}
           />
           <TextInput
             label={t('fields.companyNameLocal')}
             value={editForm.nameLocal ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, nameLocal: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, nameLocal: value }));
+            }}
             placeholder={t('placeholders.companyNameLocal')}
           />
           <TextInput
             label={t('fields.taxId')}
             value={editForm.taxId ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, taxId: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, taxId: value }));
+            }}
             placeholder={t('placeholders.taxId')}
           />
           <TextInput
             label={t('fields.phone')}
             value={editForm.phone ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, phone: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, phone: value }));
+            }}
             placeholder={t('placeholders.phone')}
           />
           <TextInput
             label={t('fields.email')}
             value={editForm.email ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, email: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, email: value }));
+            }}
             placeholder={t('placeholders.email')}
           />
           <TextInput
             label={t('fields.contactPerson')}
             value={editForm.contactPerson ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, contactPerson: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, contactPerson: value }));
+            }}
             placeholder={t('placeholders.contactPerson')}
           />
           <TextInput
             label={t('fields.hostCompanyCode')}
             value={editForm.hostCompanyCode ?? ''}
-            onChange={e =>
-              setEditForm(prev => ({ ...prev, hostCompanyCode: e.currentTarget.value }))
-            }
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, hostCompanyCode: value }));
+            }}
             placeholder={t('placeholders.hostCompanyCode')}
             maxLength={10}
           />
@@ -322,9 +341,10 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
             <TextInput
               label={t('fields.addressLine1')}
               value={editForm.addressLine1 ?? ''}
-              onChange={e =>
-                setEditForm(prev => ({ ...prev, addressLine1: e.currentTarget.value }))
-              }
+              onChange={e => {
+                const value = e.currentTarget.value;
+                setEditForm(prev => ({ ...prev, addressLine1: value }));
+              }}
               placeholder={t('placeholders.addressLine1')}
             />
           </div>
@@ -332,9 +352,10 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
             <TextInput
               label={t('fields.addressLine2')}
               value={editForm.addressLine2 ?? ''}
-              onChange={e =>
-                setEditForm(prev => ({ ...prev, addressLine2: e.currentTarget.value }))
-              }
+              onChange={e => {
+                const value = e.currentTarget.value;
+                setEditForm(prev => ({ ...prev, addressLine2: value }));
+              }}
               placeholder={t('placeholders.addressLine2')}
             />
           </div>
@@ -351,24 +372,29 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
           <TextInput
             label={t('fields.bankAccountNo')}
             value={editForm.bankAccountNo ?? ''}
-            onChange={e => setEditForm(prev => ({ ...prev, bankAccountNo: e.currentTarget.value }))}
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, bankAccountNo: value }));
+            }}
             placeholder={t('placeholders.bankAccountNo')}
           />
           <TextInput
             label={t('fields.bankAccountName')}
             value={editForm.bankAccountName ?? ''}
-            onChange={e =>
-              setEditForm(prev => ({ ...prev, bankAccountName: e.currentTarget.value }))
-            }
+            onChange={e => {
+              const value = e.currentTarget.value;
+              setEditForm(prev => ({ ...prev, bankAccountName: value }));
+            }}
             placeholder={t('placeholders.bankAccountName')}
           />
           <div className="col-span-2">
             <TextInput
               label={t('fields.loanTypes')}
               value={editForm.loanTypesStr}
-              onChange={e =>
-                setEditForm(prev => ({ ...prev, loanTypesStr: e.currentTarget.value }))
-              }
+              onChange={e => {
+                const value = e.currentTarget.value;
+                setEditForm(prev => ({ ...prev, loanTypesStr: value }));
+              }}
               placeholder={t('placeholders.loanTypes')}
             />
             <p className="text-xs text-gray-400 mt-1">{t('hints.loanTypesComma')}</p>

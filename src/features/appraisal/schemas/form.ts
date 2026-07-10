@@ -95,6 +95,20 @@ export const createLandForm = buildFormSchema(allLandFields, createLandFormBase)
   rentedOutRefinement,
 );
 
+export const createProjectLandForm = buildFormSchema(
+  [
+    ...allLandFields,
+    {
+      type: 'parameter-search',
+      label: 'Land Office',
+      name: 'landOffice',
+      group: 'LandOffice',
+      wrapperClassName: 'col-span-4',
+    },
+  ],
+  createLandFormBase,
+).superRefine(rentedOutRefinement);
+
 const surfaceFormItem = z.object({
   fromFloorNumber: z.coerce.number().nullable().optional(),
   toFloorNumber: z.coerce.number().nullable().optional(),
@@ -405,6 +419,7 @@ export const createMarketComparableForm = z
 export type createCondoFormType = z.infer<typeof createCondoForm>;
 export type createBuildingFormType = z.infer<typeof createBuildingForm>;
 export type createLandFormType = z.infer<typeof createLandForm>;
+export type createProjectLandFormType = z.infer<typeof createProjectLandForm>;
 export type createLandAndBuildingFormType = z.infer<typeof createLandAndBuildingForm>;
 export type createMachineryFormType = z.infer<typeof createMachineryForm>;
 export type createLandAndBuildingPMAFormType = z.infer<typeof createLandAndBuildingPMAForm>;

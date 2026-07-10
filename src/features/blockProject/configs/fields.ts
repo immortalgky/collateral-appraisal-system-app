@@ -276,6 +276,7 @@ export const pricingLandAssumptionFields: FormField[] = [
     label: 'Land Increase / Decrease (Baht/Sq.Wa)',
     name: 'landIncreaseDecreaseRate',
     decimalPlaces: 2,
+    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-6',
   },
 ];
@@ -395,7 +396,7 @@ export const condoModelInfoFields: FormField[] = [
     name: 'modelName',
     required: true,
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
+    maxLength: 100,
   },
   {
     type: 'textarea',
@@ -492,7 +493,7 @@ export const condoTowerInfoFields: FormField[] = [
     label: 'Tower Name',
     name: 'towerName',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
+    maxLength: 100,
   },
   {
     type: 'text-input',
@@ -500,7 +501,7 @@ export const condoTowerInfoFields: FormField[] = [
     name: 'condoRegistrationNumber',
     required: true,
     wrapperClassName: 'col-span-6',
-    maxLength: 100,
+    maxLength: 10,
   },
   {
     type: 'number-input',
@@ -550,7 +551,7 @@ export const condoTowerConditionFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
-    maxLength: 200,
+    maxLength: 100,
   },
   {
     type: 'radio-group',
@@ -599,7 +600,7 @@ export const condoTowerLocationFields: FormField[] = [
     type: 'radio-group',
     label: 'Road Surface',
     name: 'roadSurfaceType',
-    group: 'Condo_RoadSurface',
+    group: 'RoadSurface',
     variant: 'button',
     orientation: 'horizontal',
     wrapperClassName: 'col-span-12',
@@ -612,6 +613,7 @@ export const condoTowerLocationFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roadSurfaceType', is: '99' },
     requiredWhen: { field: 'roadSurfaceType', is: '99' },
+    maxLength: 100,
   },
 ];
 
@@ -633,6 +635,8 @@ export const condoTowerStructureFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'number-input',
@@ -678,6 +682,8 @@ export const condoTowerRoofFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99', operator: 'contains' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -706,14 +712,14 @@ export const condoTowerLegalFields: FormField[] = [
       ],
       match: 'any',
     },
-    maxLength: 200,
+    maxLength: 20,
   },
   {
     type: 'text-input',
     label: 'Expropriation Remark',
     name: 'expropriationRemark',
     wrapperClassName: 'col-span-12',
-    maxLength: 200,
+    maxLength: 4000,
   },
   {
     type: 'boolean-toggle',
@@ -1019,7 +1025,7 @@ export const lbModelBuildingDetailFields: FormField[] = [
     label: 'Construction Style Remark',
     name: 'constructionStyleRemark',
     wrapperClassName: 'col-span-12',
-    maxLength: 200,
+    maxLength: 4000,
   },
   {
     type: 'radio-group',
@@ -1037,6 +1043,8 @@ export const lbModelBuildingDetailFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'constructionType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
   {
     type: 'radio-group',
@@ -1054,6 +1062,8 @@ export const lbModelBuildingDetailFields: FormField[] = [
     placeholder: 'Please specify...',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'utilizationType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -1226,5 +1236,40 @@ export const projectLandInfoFields: FormField[] = [
     required: true,
     maxLength: 100,
     showCharCount: true,
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Check Owner',
+    name: 'isOwnerVerified',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Owner',
+    name: 'ownerName',
+    wrapperClassName: 'col-span-4',
+    disableWhen: { field: 'isOwnerVerified', is: false },
+    requiredWhen: { field: 'isOwnerVerified', is: true },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+    maxLength: 100,
+  },
+  {
+    type: 'radio-group',
+    label: 'Is Obligation',
+    name: 'hasObligation',
+    orientation: 'horizontal',
+    variant: 'button',
+    group: 'Obligation',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'text-input',
+    label: 'Obligation',
+    name: 'obligationDetails',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
+    maxLength: 200,
   },
 ];
