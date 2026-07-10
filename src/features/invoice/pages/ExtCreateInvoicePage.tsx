@@ -472,6 +472,9 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
+                  <th className="text-center font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                    No.
+                  </th>
                   <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.appraisalReportNo')}
                   </th>
@@ -542,7 +545,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                     </td>
                   </tr>
                 ) : (
-                  assignments.map(item => {
+                  assignments.map((item, index) => {
                     const isSelected = selectedIds.has(item.assignmentId);
                     return (
                       <tr
@@ -557,6 +560,9 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                             onChange={() => toggleItem(item)}
                             className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                           />
+                        </td>
+                        <td className="px-3 py-2.5 text-center text-gray-600 tabular-nums whitespace-nowrap text-xs">
+                          {index + 1}
                         </td>
                         <td className="px-3 py-2.5 font-medium text-primary whitespace-nowrap text-xs">
                           {item.appraisalNumber ?? '—'}
