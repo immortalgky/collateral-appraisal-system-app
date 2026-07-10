@@ -13,7 +13,6 @@ import {
   allMachineryFields,
   rentalScheduleField,
 } from '../configs/fields';
-import { useFormSchema } from '@/shared/components/form';
 
 const landTitleItem = z.object({
   titleNumber: z.string(),
