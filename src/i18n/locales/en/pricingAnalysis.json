@@ -443,6 +443,7 @@
     "colAvgArea": "Avg Area (Sq.Wa)",
     "colTotalArea": "Total Area (Sq.Wa)",
     "colTotalRevenue": "Total (Project Selling Price)",
+    "noCol": "No.",
     "fileCol": "File",
     "uploadedCol": "Uploaded",
     "rowsCol": "Rows",
