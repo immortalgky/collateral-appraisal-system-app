@@ -332,6 +332,17 @@ export function MethodSpecifyRoomIncomePerDayModal({
           </div>
         </div>
         <div className="flex flex-row gap-1.5 items-center">
+          <span className={'w-56'}>Remark</span>
+          <div className={'flex-1'}>
+            <RHFInputCell
+              fieldName={`${name}.remark`}
+              inputType={'text'}
+              disabled={isReadOnly}
+              text={{ maxLength: 200 }}
+            />
+          </div>
+        </div>
+        <div className="flex flex-row gap-1.5 items-center">
           <span className={'w-56'}>Increase Rate</span>
           <div className={'w-44'}>
             <RHFInputCell
