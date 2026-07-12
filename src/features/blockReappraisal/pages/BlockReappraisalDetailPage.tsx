@@ -42,7 +42,6 @@ function groupByModel(
 
 // ─── Create confirm modal ─────────────────────────────────────────────────────
 
-
 // ─── Create success modal ─────────────────────────────────────────────────────
 
 interface CreateSuccessModalProps {
@@ -112,7 +111,7 @@ function Field({ label, value }: { label: string; value?: string | number | null
 // ─── Read-only Condo units table ──────────────────────────────────────────────
 
 function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
-  const { t } = useTranslation('blockReappraisal');
+  const { t, i18n } = useTranslation('blockReappraisal');
   return (
     <table className="w-full min-w-max text-xs">
       <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
@@ -139,8 +138,17 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
           <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.sellingPrice')}
           </th>
+          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.appraisalValue')}
+          </th>
           <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.isSold')}
+          </th>
+          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.updatedAt')}
+          </th>
+          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.updatedBy')}
           </th>
         </tr>
       </thead>
@@ -159,6 +167,9 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
             <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
               {formatNumber(u.sellingPrice)}
             </td>
+            <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
+              {formatNumber(u.lastAppraisedValue)}
+            </td>
             <td className="py-2 px-3 text-center">
               {u.isSold ? (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
@@ -170,6 +181,10 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
                 </span>
               )}
             </td>
+            <td className="py-2 px-3 text-gray-700">
+              {formatLocaleDate(u.updatedAt, i18n.language) ?? '-'}
+            </td>
+            <td className="py-2 px-3 text-gray-700">{u.updatedBy ?? '-'}</td>
           </tr>
         ))}
       </tbody>
@@ -180,7 +195,7 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
 // ─── Read-only Land & Building units table ────────────────────────────────────
 
 function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
-  const { t } = useTranslation('blockReappraisal');
+  const { t, i18n } = useTranslation('blockReappraisal');
   return (
     <table className="w-full min-w-max text-xs">
       <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
@@ -207,8 +222,17 @@ function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[]
           <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.sellingPrice')}
           </th>
+          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.appraisalValue')}
+          </th>
           <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.isSold')}
+          </th>
+          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.updatedAt')}
+          </th>
+          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.updatedBy')}
           </th>
         </tr>
       </thead>
@@ -229,6 +253,9 @@ function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[]
             <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
               {formatNumber(u.sellingPrice)}
             </td>
+            <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
+              {formatNumber(u.lastAppraisedValue)}
+            </td>
             <td className="py-2 px-3 text-center">
               {u.isSold ? (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
@@ -240,6 +267,10 @@ function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[]
                 </span>
               )}
             </td>
+            <td className="py-2 px-3 text-gray-700">
+              {formatLocaleDate(u.updatedAt, i18n.language) ?? '-'}
+            </td>
+            <td className="py-2 px-3 text-gray-700">{u.updatedBy ?? '-'}</td>
           </tr>
         ))}
       </tbody>
@@ -329,7 +360,11 @@ function BlockReappraisalDetailPage() {
           </p>
           <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/standalone/block-reappraisal')}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/standalone/block-reappraisal')}
+        >
           {t('detail.backToList')}
         </Button>
       </div>

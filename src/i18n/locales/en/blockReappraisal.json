@@ -109,11 +109,14 @@
       "modelType": "Model Type",
       "usableArea": "Usable Area (sq.m.)",
       "sellingPrice": "Selling Price (Baht)",
+      "appraisalValue": "Appraisal Value",
       "plotNo": "Plot No",
       "houseNo": "House No",
       "numFloors": "No. of Floors",
       "landArea": "Land Area (Sq.Wa)",
-      "isSold": "Status"
+      "isSold": "Status",
+      "updatedAt": "Updated At",
+      "updatedBy": "Updated By"
     }
   }
 }

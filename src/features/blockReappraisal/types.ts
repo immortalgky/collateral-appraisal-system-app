@@ -53,6 +53,10 @@ export interface BlockReappraisalUnitDetail {
   numberOfFloors: number | null;
   /** LandAndBuilding only */
   landArea: number | null;
+
+  lastAppraisedValue: number | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
 }
 
 export interface BlockReappraisalStructure {

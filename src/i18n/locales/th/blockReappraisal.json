@@ -109,11 +109,14 @@
       "modelType": "ประเภทแบบ",
       "usableArea": "พื้นที่ใช้สอย (ตร.ม.)",
       "sellingPrice": "ราคาขาย (บาท)",
+      "appraisalValue": "มูลค่าประเมิน",
       "plotNo": "เลขแปลง",
       "houseNo": "เลขที่บ้าน",
       "numFloors": "จำนวนชั้น",
       "landArea": "เนื้อที่ดิน (ตร.วา)",
-      "isSold": "สถานะ"
+      "isSold": "สถานะ",
+      "updatedAt": "อัปเดตล่าสุดเมื่อ",
+      "updatedBy": "อัปเดตล่าสุดโดย"
     }
   }
 }
