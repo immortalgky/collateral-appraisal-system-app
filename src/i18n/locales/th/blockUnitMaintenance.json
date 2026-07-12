@@ -48,7 +48,9 @@
       "all": "ทั้งหมด",
       "sold": "ขายแล้ว",
       "available": "คงเหลือ",
-      "soldLoan": "ขายแบบสินเชื่อ"
+      "soldLoan": "ขายแบบสินเชื่อ",
+      "appraisalMin": "ราคาต่ำสุด",
+      "appraisalMax": "ราคาสูงสุด"
     },
     "bulk": {
       "selectedCount_one": "เลือก {{count}} รายการ",
@@ -69,11 +71,14 @@
       "modelType": "ประเภทแบบ",
       "usableAreaSqm": "พื้นที่ใช้สอย (ตร.ม.)",
       "sellingPriceBaht": "ราคาขาย (บาท)",
+      "appraisalValue": "มูลค่าประเมิน",
       "plotNo": "เลขแปลง",
       "houseNo": "เลขที่บ้าน",
       "modelName": "ชื่อแบบ",
       "numFloors": "จำนวนชั้น",
-      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)"
+      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)",
+      "updatedAt": "อัปเดตล่าสุดเมื่อ",
+      "updatedBy": "อัปเดตล่าสุดโดย"
     }
   },
   "units": {
