@@ -598,6 +598,7 @@ export interface SaveHypothesisAnalysisResult {
   condominiumSummary?: CondominiumSummaryDto | null;
   /** FSD C01 — system-derived from property group's land titles. Null for project-model analyses. */
   totalLandAreaFromTitles?: number | null;
+  costItems?: CostItemDto[] | null;
 }
 
 // ─── Preview request / response ───────────────────────────────────────────────

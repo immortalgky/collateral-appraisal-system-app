@@ -478,6 +478,7 @@ export function LandBuildingTabs({
         mapSavedToFormValues({
           ...savedData,
           landBuildingSummary: result.landBuildingSummary ?? savedData.landBuildingSummary,
+          costItems: result.costItems ?? savedData.costItems,
         }),
       );
       onSaveSuccess(finalValue);
