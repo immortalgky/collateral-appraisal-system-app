@@ -126,6 +126,24 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
 
   return (
     <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="flex flex-row gap-1.5 items-center">
+          <span className={'w-56'}>Total Building Area</span>
+          <div className={'w-44 text-right'}>
+            <RHFInputCell
+              fieldName={`${name}.totalBuildingArea`}
+              inputType={'number'}
+              disabled={isReadOnly}
+              number={{
+                decimalPlaces: 2,
+                maxIntegerDigits: 11,
+                allowNegative: false,
+              }}
+            />
+          </div>
+          <span>Sq. Meter</span>
+        </div>
+      </div>
       {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
       <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
@@ -196,7 +214,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         fieldName={`${name}.areaDetail.${index}.saleableArea`}
                         inputType="number"
                         disabled={isReadOnly}
-                        number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
+                        number={{ decimalPlaces: 2, maxIntegerDigits: 11, allowNegative: false }}
                       />
                     </td>
                     <td className="px-1.5 py-1.5 border-b border-gray-300">

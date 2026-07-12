@@ -151,6 +151,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
   sumTotalRentalIncomePerYear: number;
   avgRentalRatePerMonth: number;
   totalSaleableArea: number; // collect to db
+  totalBuildingArea: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
   occupancyRateFirstYearPct: number; // collect to db
