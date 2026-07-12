@@ -274,7 +274,10 @@ const AdminShortlistPanel = ({
                         <span className="text-sm text-gray-600">{fmtDateTime(cq.submittedAt)}</span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <QuotationStatusBadge status={cq.status} />
+                        <QuotationStatusBadge
+                          status={cq.status}
+                          reason={isDeclined ? cq.declineReason : undefined}
+                        />
                       </td>
                       <td className="px-4 py-3 text-center">
                         {cq.id &&

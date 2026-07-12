@@ -66,6 +66,13 @@ export const EDIT_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['New', 'Invita
 /** Statuses in which the meeting can be cancelled. */
 export const CANCEL_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['New', 'InvitationSent']);
 
+/**
+ * Statuses in which the meeting can be manually ended.
+ * Mirrors the backend Meeting.EndNow guard — only an in-progress meeting
+ * (InvitationSent + StartAt passed, surfaced as InProgress) can be ended.
+ */
+export const END_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set(['InProgress']);
+
 /** Statuses in which the invitation can be re-sent (idempotent on the backend). */
 export const RESEND_INVITATION_ELIGIBLE: ReadonlySet<MeetingStatus> = new Set([
   'InvitationSent',

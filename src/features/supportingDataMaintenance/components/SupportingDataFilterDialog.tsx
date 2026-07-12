@@ -123,6 +123,18 @@ export function SupportingDataFilterDialog({
               setValues(v => ({ ...v, status: status as SupportingDataParams['status'] }))
             }
           />
+          <TextInput
+            label={t('filterDialog.website')}
+            placeholder={t('filterDialog.websitePlaceholder')}
+            value={values.website ?? ''}
+            onChange={e => setValues(v => ({ ...v, website: e.target.value || undefined }))}
+          />
+          <TextInput
+            label={t('filterDialog.phoneNo')}
+            placeholder={t('filterDialog.phoneNoPlaceholder')}
+            value={values.phoneNo ?? ''}
+            onChange={e => setValues(v => ({ ...v, phoneNo: e.target.value || undefined }))}
+          />
         </section>
 
         <section className="space-y-4">

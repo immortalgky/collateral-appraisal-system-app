@@ -10,6 +10,8 @@ export interface PrevAppraisalSnapshot {
   appraisalNumber: string | null;
   appraisalValue: number | null;
   appointmentDate: string | null;
+  /** Round number the NEW request would be (current appraisal's round + 1) */
+  nextInspectionNumber?: number;
 }
 
 export interface CopyTemplateLoanDetail {

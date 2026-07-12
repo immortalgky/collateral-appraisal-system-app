@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //import { useGetCondoPMAPropertyById, useUpdateCondoPMAProperty } from '../api';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
-import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
+import { Badge, Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { FormProvider } from '@/shared/components/form';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -22,6 +22,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import {
   useCreateCondoPMAProperty,
   useGetCondoPMAPropertyById,
+  useSaveCondoPMAPropertyDraft,
   useUpdateCondoPMAProperty,
 } from '../api';
 import { useTranslation } from 'react-i18next';
@@ -56,8 +57,10 @@ const CondoPMAPage = () => {
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
   const { mutate: updateCondoPMAProperties, isPending: isCreating } = useUpdateCondoPMAProperty();
+  const { mutate: saveCondoPMAPropertiesDraft, isPending: isSavingDraft } =
+    useSaveCondoPMAPropertyDraft();
   const { mutate: createCondoPMAProperties, isPending: isUpdating } = useCreateCondoPMAProperty();
-  const isPending = isCreating || isUpdating;
+  const isPending = isCreating || isUpdating || isSavingDraft;
 
   const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
 
@@ -101,7 +104,7 @@ const CondoPMAPage = () => {
     setSaveAction('draft');
     const data = getValues();
     if (isEditMode && propertyId) {
-      updateCondoPMAProperties(
+      saveCondoPMAPropertiesDraft(
         { data, appraisalId: appraisalId!, propertyId: propertyId },
         {
           onSuccess: () => {
@@ -156,7 +159,7 @@ const CondoPMAPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
+      <div className="shrink-0 pb-4 flex items-center justify-between">
         <NavAnchors
           containerId="form-scroll-container"
           anchors={[
@@ -164,6 +167,41 @@ const CondoPMAPage = () => {
             { label: 'Property', id: 'property-section', icon: 'city' },
           ]}
         />
+        {isEditMode &&
+          propertyData?.externalSyncStatus &&
+          propertyData.externalSyncStatus !== 'NotSynced' && (
+            <div
+              className="flex items-center gap-2 shrink-0"
+              title={
+                propertyData.externalSyncStatus === 'Failed'
+                  ? (propertyData.externalSyncError ?? undefined)
+                  : undefined
+              }
+            >
+              {propertyData.externalSyncStatus === 'Delivered' && (
+                <Badge type="externalSyncStatus" value="Delivered" size="sm">
+                  Synced
+                </Badge>
+              )}
+              {propertyData.externalSyncStatus === 'Pending' && (
+                <Badge type="externalSyncStatus" value="Pending" size="sm">
+                  Syncing…
+                </Badge>
+              )}
+              {propertyData.externalSyncStatus === 'Failed' && (
+                <>
+                  <Badge type="externalSyncStatus" value="Failed" size="sm">
+                    Sync failed
+                  </Badge>
+                  {propertyData.externalSyncError && (
+                    <span className="text-xs text-red-600 truncate max-w-xs">
+                      — {propertyData.externalSyncError}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
       </div>
 
       <FormProvider methods={methods} schema={condoPMAFormSchema}>
@@ -217,7 +255,7 @@ const CondoPMAPage = () => {
                     type="button"
                     onClick={handleSaveDraft}
                     isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending}
+                    disabled={isPending || !isDirty}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
@@ -225,7 +263,7 @@ const CondoPMAPage = () => {
                   <Button
                     type="submit"
                     isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending}
+                    disabled={isPending || (!isDirty && propertyData?.externalSyncStatus !== 'Failed')}
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
                     Save

@@ -4,9 +4,11 @@ import 'react-day-picker/style.css';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import Icon from '@/shared/components/Icon';
 import { useBulkCreateMeetings, useGetMeetings } from '../api/meetings';
 
 interface BulkCreateMeetingsDialogProps {
@@ -26,7 +28,7 @@ const BulkCreateMeetingsDialog = ({
   onClose,
   onSuccess,
 }: BulkCreateMeetingsDialogProps) => {
-  const { t } = useTranslation('meeting');
+  const { t, i18n } = useTranslation('meeting');
   const bulkCreate = useBulkCreateMeetings();
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [visibleMonth, setVisibleMonth] = useState<Date>(() => new Date());
@@ -77,6 +79,44 @@ const BulkCreateMeetingsDialog = ({
     onClose();
   };
 
+  // A day can be picked if it is not in the past and does not already have a meeting.
+  const isSelectable = (d: Date) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (d < today) return false;
+    return !meetingsByDate.has(dateKey(d));
+  };
+
+  // Add every selectable day of the visible month matching the predicate to the
+  // current selection (union — existing manual picks are preserved).
+  const addMatchingDays = (matches: (d: Date) => boolean) => {
+    const year = visibleMonth.getFullYear();
+    const month = visibleMonth.getMonth();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const picks: Date[] = [];
+    for (let day = 1; day <= lastDay; day++) {
+      const d = new Date(year, month, day);
+      if (matches(d) && isSelectable(d)) picks.push(d);
+    }
+    setSelectedDates(prev => {
+      const merged = new Map(prev.map(d => [d.getTime(), d]));
+      for (const d of picks) merged.set(d.getTime(), d);
+      return Array.from(merged.values());
+    });
+  };
+
+  const goToToday = () => setVisibleMonth(new Date());
+
+  // Mon..Fri quick-pick buttons, short weekday names localized to the current language.
+  const weekdayButtons = useMemo(() => {
+    const monday = new Date(2024, 0, 8); // a known Monday
+    return Array.from({ length: 5 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return { day: i + 1, label: d.toLocaleDateString(i18n.language, { weekday: 'short' }) };
+    });
+  }, [i18n.language]);
+
   const handleSubmit = () => {
     if (selectedDates.length === 0) {
       toast.error(t('toasts.pickAtLeastOneDate'));
@@ -114,6 +154,31 @@ const BulkCreateMeetingsDialog = ({
       <div className="space-y-4">
         <p className="text-sm text-gray-600">{t('bulkCreateDialog.description')}</p>
 
+        {/* Quick-select helpers */}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button variant="outline" size="sm" type="button" onClick={goToToday}>
+            <Icon name="calendar-days" style="solid" className="size-3.5 mr-1.5" />
+            {t('bulkCreateDialog.today')}
+          </Button>
+          <span className="h-5 w-px bg-gray-200" aria-hidden />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">{t('bulkCreateDialog.everyWeekday')}</span>
+            <div className="flex items-center gap-1.5">
+              {weekdayButtons.map(w => (
+                <button
+                  key={w.day}
+                  type="button"
+                  onClick={() => addMatchingDays(d => d.getDay() === w.day)}
+                  title={t('bulkCreateDialog.everyDayTooltip', { day: w.label })}
+                  className="inline-flex items-center justify-center size-9 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors"
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Date picker */}
         <div
           className="flex justify-center border border-gray-200 rounded-lg p-4"
@@ -130,6 +195,9 @@ const BulkCreateMeetingsDialog = ({
         >
           <DayPicker
             className="react-day-picker bulk-meetings-calendar"
+            // Set the accent on the rdp root itself (inline beats the stylesheet default),
+            // so the selected-day ring is the brand green instead of the default blue.
+            style={{ '--rdp-accent-color': 'var(--color-primary)' } as React.CSSProperties}
             mode="multiple"
             selected={selectedDates}
             onSelect={dates => setSelectedDates(dates ?? [])}
@@ -142,14 +210,28 @@ const BulkCreateMeetingsDialog = ({
             }}
             components={{
               DayButton: (props: DayButtonProps) => {
-                const { day, modifiers, children, ...buttonProps } = props;
+                const { day, modifiers, children, className: rdpClass, ...buttonProps } = props;
                 const meetingNos = meetingsByDate.get(dateKey(day.date)) ?? [];
                 const visible = meetingNos.slice(0, 2);
                 const overflow = meetingNos.length - visible.length;
+                const selected = modifiers.selected;
+                const dayTitle =
+                  meetingNos.length > 0
+                    ? t('bulkCreateDialog.tooltipHasMeeting', { no: meetingNos.join(', ') })
+                    : modifiers.disabled
+                      ? t('bulkCreateDialog.tooltipPast')
+                      : undefined;
                 return (
-                  <button {...buttonProps}>
+                  <button {...buttonProps} title={dayTitle} className={rdpClass}>
                     <span className="flex h-full w-full flex-col items-center justify-start gap-0.5 py-1 leading-tight">
-                      <span className="text-sm font-medium">{children}</span>
+                      <span
+                        className={clsx(
+                          'text-sm',
+                          selected ? 'font-semibold text-primary' : 'font-medium',
+                        )}
+                      >
+                        {children}
+                      </span>
                       {meetingNos.length > 0 && (
                         <span className="flex flex-col items-stretch gap-0.5 w-full px-2">
                           {visible.map(no => (
@@ -183,6 +265,22 @@ const BulkCreateMeetingsDialog = ({
           />
         </div>
 
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded bg-primary" />
+            {t('bulkCreateDialog.legendSelected')}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded bg-amber-100 border border-amber-300" />
+            {t('bulkCreateDialog.legendHasMeeting')}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded bg-gray-100 border border-gray-300" />
+            {t('bulkCreateDialog.legendPast')}
+          </span>
+        </div>
+
         {selectedDates.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {selectedDates
@@ -191,15 +289,16 @@ const BulkCreateMeetingsDialog = ({
               .map(d => (
                 <span
                   key={d.toISOString()}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 shadow-sm"
                 >
+                  <Icon name="calendar-days" style="solid" className="size-3 text-primary" />
                   {formatDate(d)}
                   <button
                     type="button"
                     onClick={() =>
                       setSelectedDates(prev => prev.filter(x => x.getTime() !== d.getTime()))
                     }
-                    className="hover:text-blue-900 focus:outline-none"
+                    className="hover:text-primary/70 focus:outline-none"
                     aria-label={t('aria.removeDate', { date: formatDate(d) })}
                   >
                     ×
@@ -210,11 +309,22 @@ const BulkCreateMeetingsDialog = ({
         )}
 
         <div className="flex items-center justify-between gap-3 pt-2">
-          <p className="text-xs text-gray-500">
-            {selectedDates.length === 1
-              ? t('bulkCreateDialog.datesSelected', { n: selectedDates.length })
-              : t('bulkCreateDialog.datesSelectedPlural', { n: selectedDates.length })}
-          </p>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span>
+              {selectedDates.length === 1
+                ? t('bulkCreateDialog.willCreate', { n: selectedDates.length })
+                : t('bulkCreateDialog.willCreatePlural', { n: selectedDates.length })}
+            </span>
+            {selectedDates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedDates([])}
+                className="text-primary hover:underline focus:outline-none"
+              >
+                {t('buttons.clear')}
+              </button>
+            )}
+          </div>
           <div className="flex gap-3">
             <Button
               variant="ghost"

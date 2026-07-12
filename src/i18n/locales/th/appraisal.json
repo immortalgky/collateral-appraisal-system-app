@@ -278,7 +278,16 @@
       "quotationLocked": "ล็อคการมอบหมาย — งานอยู่ใน Quotation #{{quotationNumber}} ({{status}}) ยกเลิกหรือนำออกเพื่อเปลี่ยนแปลง",
       "quotationNotFinalized": "Quotation ต้องเสร็จสิ้นพร้อมผู้ชนะก่อนส่งออกภายนอก",
       "loadingActions": "กำลังโหลดตัวเลือก กรุณาลองใหม่อีกครั้ง",
-      "selectAssignee": "กรุณาเลือกผู้รับมอบหมายถัดไปก่อนส่ง"
+      "selectAssignee": "กรุณาเลือกผู้รับมอบหมายถัดไปก่อนส่ง",
+      "draftSaved": "บันทึกฉบับร่างแล้ว",
+      "draftSaveFailed": "ไม่สามารถบันทึกฉบับร่างได้"
+    },
+    "saveDraft": "บันทึกฉบับร่าง",
+    "savingDraft": "กำลังบันทึก...",
+    "remark": {
+      "title": "หมายเหตุ",
+      "subtitle": "หมายเหตุเพิ่มเติมเกี่ยวกับการมอบหมายนี้ (ไม่บังคับ)",
+      "placeholder": "กรอกหมายเหตุสำหรับการมอบหมายนี้..."
     }
   },
   "quotation": {
@@ -300,6 +309,7 @@
     "cancelling": "กำลังยกเลิก...",
     "goBack": "กลับ",
     "back": "ย้อนกลับ",
+    "next": "ถัดไป",
     "cancel": "ยกเลิก",
     "confirmSend": "ยืนยันและส่ง",
     "removeFromQuotation": "นำงานประเมินนี้ออกจากใบเสนอราคา",
@@ -312,6 +322,8 @@
     "cancelReasonPlaceholder": "ทำไมถึงยกเลิกใบเสนอราคานี้?",
     "draftHint": "ใบเสนอราคานี้ยังเป็นฉบับร่าง เพิ่มงานประเมิน เชิญบริษัท แล้วคลิก ส่งใบเสนอราคา เพื่อเปิดรับการเสนอราคา",
     "notSet": "ยังไม่กำหนด",
+    "maxAppraisalDuration": "ระยะเวลาประเมินสูงสุด (วัน)",
+    "specialRequirements": "ข้อกำหนดพิเศษ",
     "closes": "ปิดรับ",
     "hoursRemaining": "เหลือ {{n}} ชั่วโมง",
     "stats": {
@@ -336,7 +348,7 @@
     "maximumNegotiationRounds": "ถึงรอบการเจรจาสูงสุดแล้ว",
     "shareDocuments": {
       "title": "แชร์เอกสาร",
-      "step": "ขั้นตอนที่ 2 จาก 2 — เลือกเอกสารที่จะแชร์กับบริษัทที่เชิญ",
+      "step": "ขั้นตอนที่ 1 จาก 2 — เลือกเอกสารที่จะแชร์กับบริษัทที่เชิญ",
       "noAppraisals": "ไม่มีงานประเมินสำหรับแชร์เอกสาร",
       "loadingDocuments": "กำลังโหลดเอกสาร...",
       "noRequestLinked": "ไม่มีคำขอที่เชื่อมกับงานประเมินนี้ ไม่สามารถโหลดเอกสารได้",
@@ -354,7 +366,8 @@
       "noCompaniesFound": "ไม่พบบริษัท",
       "cutOffTime": "เวลาปิดรับ",
       "appraisalsLabel": "งานประเมิน",
-      "cutOffTimeRequired": "กรุณาระบุเวลาปิดรับ"
+      "cutOffTimeRequired": "กรุณาระบุเวลาปิดรับ",
+      "maxAppraisalDurationHelper": "ระยะเวลาสูงสุดที่คุณอนุญาตให้ผู้ประเมินดำเนินการประเมินนี้ให้เสร็จ"
     },
     "emailModal": {
       "title": "ร่างอีเมลส่งให้บริษัทประเมินภายนอก"
@@ -390,7 +403,10 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
+      "priceVerificationOptions": [
+        "ยังไม่ตรวจสอบ",
+        "ตรวจสอบแล้ว"
+      ],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
@@ -491,7 +507,19 @@
       "markets": "ตลาด",
       "gallery": "แกลเลอรี",
       "photos": "รูปภาพ",
-      "laws": "กฎหมายและข้อบังคับ"
+      "laws": "กฎหมายและข้อบังคับ",
+      "machinery": "สรุปเครื่องจักร"
+    },
+    "machinerySummary": {
+      "title": "สรุปเครื่องจักร",
+      "subtitle": "ข้อมูลเครื่องจักรโดยรวมของการประเมินทั้งหมด (ทุกเครื่อง)",
+      "generalSection": "ข้อมูลเครื่องจักรทั่วไป",
+      "generalSubtitle": "จำนวนและสภาพโดยรวม",
+      "legalSection": "สิทธิและกฎหมาย",
+      "legalSubtitle": "กรรมสิทธิ์ ที่ตั้ง และภาระผูกพัน",
+      "save": "บันทึก",
+      "saved": "บันทึกสรุปเครื่องจักรแล้ว",
+      "saveFailed": "บันทึกสรุปเครื่องจักรไม่สำเร็จ"
     }
   },
   "properties": {
@@ -585,6 +613,13 @@
       "channel": "ช่องทาง",
       "status": "สถานะ",
       "requestor": "ผู้ขอ"
+    },
+    "remarkFooter": {
+      "label": "ความคิดเห็น",
+      "placeholder": "กรอกความคิดเห็น...",
+      "save": "บันทึก",
+      "saved": "บันทึกความคิดเห็นแล้ว",
+      "saveFailed": "บันทึกความคิดเห็นไม่สำเร็จ"
     }
   },
   "activityTracking": {
@@ -705,6 +740,7 @@
   },
   "constructionInspection": {
     "sectionTitle": "การตรวจสอบการก่อสร้าง",
+    "inspectionRound": "ครั้งที่ {{n}}",
     "summary": "สรุปการก่อสร้าง",
     "columns": {
       "description": "รายละเอียด",

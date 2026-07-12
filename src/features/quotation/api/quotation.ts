@@ -77,6 +77,7 @@ export interface GetQuotationsParams {
   search?: string;
   cutOffTimeFrom?: string;
   cutOffTimeTo?: string;
+  companyId?: string;
 }
 
 export interface QuotationListItem {
@@ -110,6 +111,7 @@ export const useGetQuotations = (params: GetQuotationsParams = {}) => {
     ...(params.search && { search: params.search }),
     ...(params.cutOffTimeFrom && { cutOffTimeFrom: params.cutOffTimeFrom }),
     ...(params.cutOffTimeTo && { cutOffTimeTo: params.cutOffTimeTo }),
+    ...(params.companyId && { companyId: params.companyId }),
   });
 
   return useQuery({
@@ -123,6 +125,7 @@ export const useGetQuotations = (params: GetQuotationsParams = {}) => {
           ...(params.search && { Search: params.search }),
           ...(params.cutOffTimeFrom && { CutOffTimeFrom: params.cutOffTimeFrom }),
           ...(params.cutOffTimeTo && { CutOffTimeTo: params.cutOffTimeTo }),
+          ...(params.companyId && { CompanyId: params.companyId }),
         },
       });
       const result = data.quotations ?? data;
@@ -473,6 +476,14 @@ export const useSubmitQuotation = (quotationId: string) => {
       contactName?: string | null;
       contactEmail?: string | null;
       contactPhone?: string | null;
+      /**
+       * "Not participate" flag — reuses this same submit pipeline instead of a separate decline
+       * endpoint. Authoritative server-side: true finalizes the company as Declined (workflow
+       * resumes "Decline"); false finalizes as Submitted (workflow resumes "Submit"). When true,
+       * send `items: []` — pricing is ignored.
+       */
+      notParticipating?: boolean;
+      declineReason?: string | null;
     }) => {
       const { data } = await axios.put(`/quotations/${quotationId}/submit`, payload);
       return data;
@@ -750,7 +761,8 @@ export const useTakeWorkflowAction = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
   });

@@ -87,6 +87,7 @@
     "prevAppraisalReportNo": "上次评估报告编号",
     "prevAppraisalValue": "上次评估价值",
     "prevAppraisalDate": "上次评估日期",
+    "inspectionNumber": "检验次数",
     "channel": "渠道",
     "bankingSegment": "银行业务分部",
     "loanApplicationNo": "贷款申请编号",

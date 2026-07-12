@@ -73,7 +73,12 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
                         <span className="text-sm font-medium text-gray-900">
                           {row.activityName}
                         </span>
-                        {row.remark && <p className="text-xs text-gray-400 mt-0.5">{row.remark}</p>}
+                        {row.remark && (
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            <span className="font-medium text-gray-500">{t('fields.reason')}:</span>{' '}
+                            {row.remark}
+                          </p>
+                        )}
                       </td>
                       <td className="px-4 py-2">
                         <span className="text-sm text-gray-600">

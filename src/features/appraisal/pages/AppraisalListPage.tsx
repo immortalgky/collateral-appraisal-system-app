@@ -96,7 +96,7 @@ function AppraisalListPage() {
   ]);
 
   // Data hooks
-  const { data, isLoading, isError, error, refetch } = useAppraisalSearch({
+  const { data, isFetching, isError, error, refetch } = useAppraisalSearch({
     search: debouncedSearch || undefined,
     pageNumber,
     pageSize,
@@ -104,6 +104,9 @@ function AppraisalListPage() {
     sortDir,
     ...filters,
   });
+
+  // Loading feedback: true only while a request is in flight (not during typing/debounce)
+  const isSearchPending = isFetching;
 
   const { data: smartViews = [] } = useSmartViews();
   const { data: savedSearches = [] } = useSavedSearches('appraisal');
@@ -257,16 +260,24 @@ function AppraisalListPage() {
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"
           />
-          {searchTerm && (
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setDebouncedSearch('');
-              }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <Icon style="solid" name="xmark" className="size-4" />
-            </button>
+          {isSearchPending ? (
+            <Icon
+              style="solid"
+              name="spinner"
+              className="absolute right-3 top-1/2 -translate-y-1/2 size-4 animate-spin text-primary"
+            />
+          ) : (
+            searchTerm && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setDebouncedSearch('');
+                }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <Icon style="solid" name="xmark" className="size-4" />
+              </button>
+            )
           )}
         </div>
         <SearchFilterBar
@@ -310,11 +321,13 @@ function AppraisalListPage() {
         <AppraisalResultsTable
           columns={appraisalColumns}
           items={items}
-          isLoading={isLoading}
+          isLoading={isFetching}
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
           onRowClick={handleRowClick}
+          pageNumber={pageNumber}
+          pageSize={pageSize}
         />
         <Pagination
           currentPage={pageNumber}

@@ -1,7 +1,12 @@
 import { useMemo, useState, useRef } from 'react';
 import { useFormContext, useFieldArray, useWatch } from 'react-hook-form';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useTranslation } from 'react-i18next';
+import {
+  useBasePath,
+  useAppraisalId,
+  useAppraisalInspectionNumber,
+} from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
 import Toggle from '@shared/components/inputs/Toggle';
 import { formatNumber } from '@shared/utils/formatUtils';
@@ -21,9 +26,11 @@ interface ConstructionInspectionTabProps {
 }
 
 export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInspectionTabProps) {
+  const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
   const appraisalId = useAppraisalId();
+  const inspectionNumber = useAppraisalInspectionNumber();
   const { propertyId } = useParams<{ propertyId: string }>();
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId');
@@ -275,6 +282,11 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
               <Icon name="clipboard-check" style="solid" className="size-4 text-primary" />
             </div>
             <h2 className="text-sm font-semibold text-gray-900">Construction Inspection</h2>
+            {inspectionNumber != null && (
+              <span className="px-2 py-0.5 text-[10px] font-semibold text-primary bg-primary/10 rounded-full">
+                {t('constructionInspection.inspectionRound', { n: inspectionNumber })}
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

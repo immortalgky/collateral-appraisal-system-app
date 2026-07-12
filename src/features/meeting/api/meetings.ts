@@ -56,6 +56,8 @@ export const meetingKeys = {
         ...(params.customerName && { customerName: params.customerName }),
         ...(params.fromDate && { fromDate: params.fromDate }),
         ...(params.toDate && { toDate: params.toDate }),
+        ...(params.sortBy && { sortBy: params.sortBy }),
+        ...(params.sortDir && { sortDir: params.sortDir }),
       },
     ] as const,
   detail: (id: string) => ['meeting', id] as const,
@@ -89,6 +91,8 @@ export const useGetMeetings = (params: GetMeetingsParams = {}) => {
           ...(params.customerName && { CustomerName: params.customerName }),
           ...(params.fromDate && { FromDate: params.fromDate }),
           ...(params.toDate && { ToDate: params.toDate }),
+          ...(params.sortBy && { SortBy: params.sortBy }),
+          ...(params.sortDir && { SortDir: params.sortDir }),
         },
       });
       return data;
@@ -228,6 +232,22 @@ export const useCutOffMeeting = () => {
   return useMutation({
     mutationFn: async ({ id }: { id: string }) => {
       await axios.post(`/meetings/${id}/cut-off`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: meetingKeys.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: meetingKeys.queueAll });
+      queryClient.invalidateQueries({ queryKey: meetingKeys.all });
+    },
+  });
+};
+
+/** POST /meetings/{id}/end */
+export const useEndMeeting = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id }: { id: string }) => {
+      await axios.post(`/meetings/${id}/end`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: meetingKeys.detail(variables.id) });

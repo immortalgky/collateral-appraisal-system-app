@@ -5,7 +5,10 @@ import { useState } from 'react';
 
 interface GovernmentPriceTableProps {
   rows: GovernmentPriceRow[];
+  /** Total land area of all titles, including missing-from-survey. */
   totalArea: number;
+  /** Non-missing area the AVG is computed over (shown under the AVG). */
+  surveyedArea: number;
   avgPerSqWa: number;
 }
 
@@ -40,7 +43,12 @@ const SharedColGroup = () => (
  *   [show more/less button row – always visible]   ← before footer
  *   [tfoot table – fixed]
  */
-const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTableProps) => {
+const GovernmentPriceTable = ({
+  rows,
+  totalArea,
+  surveyedArea,
+  avgPerSqWa,
+}: GovernmentPriceTableProps) => {
   const { t } = useTranslation('appraisal');
   const totalPrice = rows
     .filter(row => !row.isMissingFromSurvey)
@@ -79,7 +87,12 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
           <SharedColGroup />
           <tbody className="divide-y divide-gray-100">
             {visibleRows.map((row, idx) => (
-              <tr key={idx} className="hover:bg-gray-50">
+              <tr
+                key={idx}
+                className={
+                  row.isMissingFromSurvey ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'
+                }
+              >
                 <td className="px-3 py-2 text-gray-900">
                   <span className="inline-flex items-center gap-2">
                     {row.titleNumber ?? '-'}
@@ -144,10 +157,19 @@ const GovernmentPriceTable = ({ rows, totalArea, avgPerSqWa }: GovernmentPriceTa
                 {formatNumber(totalArea, 2)}
               </td>
               <td className="px-3 py-3 text-right text-gray-700 tabular-nums">
-                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mr-1.5">
-                  {t('governmentPriceTable.footer.avg')}
-                </span>
-                {formatNumber(avgPerSqWa, 2)}
+                <div>
+                  <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium mr-1.5">
+                    {t('governmentPriceTable.footer.avg')}
+                  </span>
+                  {formatNumber(avgPerSqWa, 2)}
+                </div>
+                {surveyedArea !== totalArea && (
+                  <div className="mt-0.5 text-xs font-medium text-amber-700 tabular-nums">
+                    {t('governmentPriceTable.footer.avgBasis', {
+                      area: formatNumber(surveyedArea, 2),
+                    })}
+                  </div>
+                )}
               </td>
               <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">
                 {formatNumber(totalPrice, 2)}

@@ -15,7 +15,7 @@
  *   Gross mode:  B06 = min(100, year × annualDepreciationPercent)
  *   Period mode: B06 = min(100, Σ (toYear − atYear + 1) × depreciationPerYear)
  */
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { FormProvider, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import {
@@ -26,6 +26,7 @@ import {
   NumberInput,
   TextInput,
 } from '@/shared/components';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { LandBuildingFormValues } from '../../../schemas/hypothesisForm';
 
 // Derive the row type directly from the form schema so it stays in sync.
@@ -162,6 +163,9 @@ export function HypothesisCostOfBuildingModal({
 
   const { register, handleSubmit, reset, watch, setValue, getValues, control } = methods;
 
+  // Confirmation before deleting the building row
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
   // Re-initialise whenever the modal opens
   useEffect(() => {
     if (isOpen) {
@@ -249,6 +253,7 @@ export function HypothesisCostOfBuildingModal({
   if (!isOpen) return null;
 
   return createPortal(
+    <>
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
       <div className="flex flex-col w-full max-w-3xl bg-white rounded-xl shadow-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
@@ -503,7 +508,7 @@ export function HypothesisCostOfBuildingModal({
                   <Button
                     variant="outline"
                     type="button"
-                    onClick={onDelete}
+                    onClick={() => setConfirmDeleteOpen(true)}
                     className="text-red-600 border-red-200 hover:bg-red-50"
                   >
                     <Icon name="trash" className="size-3.5 mr-1" />
@@ -524,7 +529,21 @@ export function HypothesisCostOfBuildingModal({
           </form>
         </FormProvider>
       </div>
-    </div>,
+    </div>
+    <ConfirmDialog
+      isOpen={confirmDeleteOpen}
+      title="Delete Building Row"
+      message="Are you sure you want to delete this building row? This action cannot be undone."
+      confirmText="Delete"
+      cancelText="Cancel"
+      variant="danger"
+      onConfirm={() => {
+        setConfirmDeleteOpen(false);
+        onDelete?.();
+      }}
+      onClose={() => setConfirmDeleteOpen(false)}
+    />
+    </>,
     document.body,
   );
 }

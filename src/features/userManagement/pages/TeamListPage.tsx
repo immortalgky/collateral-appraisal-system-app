@@ -6,6 +6,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Textarea from '@shared/components/inputs/Textarea';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import TeamDetailPanel from '../components/TeamDetailPanel';
 import ListSortMenu from '../components/ListSortMenu';
@@ -196,7 +197,12 @@ const TeamListPage = () => {
                 >
                   <div className="text-sm font-medium text-gray-800 truncate">{team.name}</div>
                   {team.description && (
-                    <div className="mt-0.5 text-xs text-gray-400 truncate">{team.description}</div>
+                    <div
+                      className="mt-0.5 text-xs text-gray-400 line-clamp-2"
+                      title={team.description}
+                    >
+                      {team.description}
+                    </div>
                   )}
                   <div className="mt-0.5 text-xs text-gray-400">
                     {t('counts.members', { count: team.memberCount })}
@@ -257,13 +263,15 @@ const TeamListPage = () => {
               <option value="Company">{t('tabs.company')}</option>
             </select>
           </div>
-          <TextInput
+          <Textarea
             label={t('fields.description')}
             value={createForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, description: value }));
             }}
+            maxLength={500}
+            showCharCount
             placeholder={t('placeholders.teamDescription')}
           />
         </div>

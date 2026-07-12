@@ -265,6 +265,7 @@ const CreateQuotationModal = ({
             placeholder="dd/mm/yyyy hh:mm"
             value={cutOffDateTime}
             onChange={setCutOffDateTime}
+            disablePastDates
           />
         </div>
 

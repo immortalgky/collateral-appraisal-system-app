@@ -12,6 +12,13 @@ import { MENU_KEYS } from './useMenuList';
 // Non-component caller: namespace-bound t resolved from the i18n instance.
 const t = i18n.getFixedT(null, 'menuManagement');
 
+// The axios interceptor attaches the parsed ProblemDetails as `apiError`. Prefer its
+// `detail` (the specific backend reason, e.g. a duplicate key) over the generic toast.
+function errorDetail(err: unknown): string | null {
+  const detail = (err as { apiError?: { detail?: string | null } })?.apiError?.detail;
+  return detail?.trim() ? detail.trim() : null;
+}
+
 export function useGetMenuById(id: string | null) {
   return useQuery({
     queryKey: MENU_KEYS.detail(id ?? ''),
@@ -28,8 +35,8 @@ export function useCreateMenuItem() {
       queryClient.invalidateQueries({ queryKey: MENU_KEYS.all });
       toast.success(t('toasts.created', { key: data.itemKey }));
     },
-    onError: () => {
-      toast.error(t('toasts.createFailed'));
+    onError: err => {
+      toast.error(errorDetail(err) ?? t('toasts.createFailed'));
     },
   });
 }
@@ -43,8 +50,8 @@ export function useUpdateMenuItem() {
       queryClient.invalidateQueries({ queryKey: MENU_KEYS.detail(id) });
       toast.success(t('toasts.updated'));
     },
-    onError: () => {
-      toast.error(t('toasts.updateFailed'));
+    onError: err => {
+      toast.error(errorDetail(err) ?? t('toasts.updateFailed'));
     },
   });
 }

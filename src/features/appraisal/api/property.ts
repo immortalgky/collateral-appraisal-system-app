@@ -511,6 +511,31 @@ export const useUpdateCondoPMAProperty = () => {
   });
 };
 
+export const useSaveCondoPMAPropertyDraft = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateCondoPMAPropertyRequestType;
+    }): Promise<void> => {
+      await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/condo-pma/draft`,
+        params.data,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pmaKeys.condo(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+    },
+  });
+};
+
 export const useUpdateLandAndBuildingPMAProperty = () => {
   const queryClient = useQueryClient();
 
@@ -522,6 +547,31 @@ export const useUpdateLandAndBuildingPMAProperty = () => {
     }): Promise<void> => {
       await axios.put(
         `/appraisals/${params.appraisalId}/properties/${params.propertyId}/land-building-pma`,
+        params.data,
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pmaKeys.landAndBuilding(variables.appraisalId, variables.propertyId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
+      });
+    },
+  });
+};
+
+export const useSaveLandAndBuildingPMAPropertyDraft = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      propertyId: string;
+      data: UpdateLandPMAPropertyRequestType;
+    }): Promise<void> => {
+      await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/land-building-pma/draft`,
         params.data,
       );
     },

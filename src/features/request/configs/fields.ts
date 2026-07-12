@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { FieldArrayField, FormField } from '@/shared/components/form';
+import type { ListBoxItem } from '@/shared/components';
 import { mapCollateral } from '@features/request/data/mapCollateral.ts';
 
 // =============================================================================
@@ -15,6 +16,9 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 // Request fields (from RequestForm.tsx)
 // Uses full dotted paths — no namePrefix at render time.
 // =============================================================================
+
+// Purpose codes that make this request a Construction Inspection
+const CI_PURPOSES = ['06', '11'];
 
 export function makeRequestFields(t: TFunction<'request'>): FormField[] {
   return [
@@ -68,6 +72,22 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       wrapperClassName: 'col-span-1',
       disableFutureDates: true,
       disableToday: true,
+    },
+    {
+      type: 'number-input',
+      label: t('fields.inspectionNumber'),
+      name: 'detail.inspectionNumber',
+      disabled: true,
+      wrapperClassName: 'col-span-1',
+      decimalPlaces: 0,
+      // Construction Inspection only, and only once a prior appraisal has been copied.
+      showWhen: {
+        conditions: [
+          { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
+          { field: 'detail.inspectionNumber', operator: 'isNotEmpty' },
+        ],
+        match: 'all',
+      },
     },
     {
       type: 'dropdown',
@@ -207,7 +227,10 @@ export function makeAddressFields(t: TFunction<'request'>): FormField[] {
 // Short names — rendered with namePrefix="detail.contact".
 // =============================================================================
 
-export function makeContactFields(t: TFunction<'request'>): FormField[] {
+export function makeContactFields(
+  t: TFunction<'request'>,
+  dealerOptions: ListBoxItem[] = [],
+): FormField[] {
   return [
     {
       type: 'text-input',
@@ -226,11 +249,11 @@ export function makeContactFields(t: TFunction<'request'>): FormField[] {
       maxLength: 40,
     },
     {
-      type: 'dropdown',
+      type: 'parameter-search',
       label: t('fields.dealerCode'),
       name: 'dealerCode',
       wrapperClassName: 'col-span-6',
-      group: 'Dealer',
+      options: dealerOptions,
     },
   ];
 }

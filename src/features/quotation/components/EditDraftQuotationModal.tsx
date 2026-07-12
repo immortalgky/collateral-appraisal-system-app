@@ -290,6 +290,9 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         cutOffTime,
         companyIds: selectedCompanies.map(c => c.id),
         appraisals: appraisalEntries,
+        // This modal doesn't edit special requirements — preserve the current value
+        // so the unconditional server-side set doesn't clear it.
+        specialRequirements: quotation.specialRequirements ?? null,
       });
       await setSharedDocsAsync(docPayload);
       toast.success(t('toasts.draftUpdated'));

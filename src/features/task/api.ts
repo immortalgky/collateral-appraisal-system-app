@@ -1,8 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
   GetPoolTasksParams,
   GetTasksParams,
+  GroupByField,
   PoolTaskListResponse,
   Task,
   TaskDateType,
@@ -108,43 +109,175 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
   });
 };
 
+/** Page size for a single Kanban column's infinite-scroll fetch. */
+export const KANBAN_PAGE_SIZE = 15;
+
+/** Mutually-exclusive task lifecycle bucket, used by the 'status' Kanban column. */
+export type TaskStatusBucket = 'NotStarted' | 'InProgress' | 'Overdue';
+
+export interface KanbanColumnParams
+  extends Omit<GetTasksParams, 'pageNumber' | 'pageSize'> {
+  purpose?: string;
+  taskType?: string;
+  taskStatusBucket?: TaskStatusBucket;
+}
+
+interface KanbanColumnPage {
+  items: Task[];
+  count: number;
+}
+
+/** Data scope for the Kanban board — which endpoint family backs the columns. */
+export type KanbanScope = 'me' | 'pool';
+
 /**
- * Hook for fetching all tasks for Kanban view (no pagination, large page)
- * GET /tasks/me
+ * Hook for fetching one Kanban column's tasks, paged and appended as the user
+ * scrolls (react-query v5 useInfiniteQuery).
+ * GET /tasks/me (scope 'me') or GET /tasks/pool (scope 'pool')
  */
-export const useGetTasksForKanban = (
-  params: Omit<GetTasksParams, 'pageNumber' | 'pageSize'> = {},
+export const useKanbanColumnTasks = (
+  params: KanbanColumnParams = {},
+  options: { enabled?: boolean; scope?: KanbanScope } = {},
 ) => {
-  const { search, taskName, status, priority, activityId } = params;
+  const { enabled, scope = 'me' } = options;
+  const {
+    search,
+    taskName,
+    status,
+    priority,
+    activityId,
+    appraisalNumber,
+    customerName,
+    pendingTaskStatus,
+    slaStatus,
+    purpose,
+    taskType,
+    taskStatusBucket,
+    sortBy,
+    sortDir,
+    dateType,
+    dateFrom,
+    dateTo,
+  } = params;
+
+  const endpoint = scope === 'pool' ? '/tasks/pool' : '/tasks/me';
 
   const queryKey = [
-    'my-tasks-kanban',
+    'kanban-column',
+    scope,
     {
       ...(search && { search }),
       ...(taskName && { taskName }),
       ...(status && { status }),
       ...(priority && { priority }),
       ...(activityId && { activityId }),
+      ...(appraisalNumber && { appraisalNumber }),
+      ...(customerName && { customerName }),
+      ...(pendingTaskStatus && { pendingTaskStatus }),
+      ...(slaStatus && { slaStatus }),
+      ...(purpose && { purpose }),
+      ...(taskType && { taskType }),
+      ...(taskStatusBucket && { taskStatusBucket }),
+      ...(sortBy && { sortBy }),
+      ...(sortDir && { sortDir }),
+      ...(dateType && { dateType }),
+      ...(dateFrom && { dateFrom }),
+      ...(dateTo && { dateTo }),
     },
   ];
 
-  return useQuery({
+  return useInfiniteQuery({
     queryKey,
-    queryFn: async (): Promise<Task[]> => {
-      const { data } = await axios.get('/tasks/me', {
+    queryFn: async ({ pageParam }): Promise<KanbanColumnPage> => {
+      const { data } = await axios.get(endpoint, {
         params: {
-          PageNumber: 0,
-          PageSize: 200,
+          PageNumber: pageParam,
+          PageSize: KANBAN_PAGE_SIZE,
           ...(search && { Search: search }),
           ...(taskName && { TaskName: taskName }),
           ...(status && { Status: status }),
           ...(priority && { Priority: priority }),
           ...(activityId && { ActivityId: activityId }),
+          ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
+          ...(customerName && { CustomerName: customerName }),
+          ...(pendingTaskStatus && { TaskStatus: pendingTaskStatus }),
+          ...(slaStatus && { SlaStatus: slaStatus }),
+          ...(purpose && { Purpose: purpose }),
+          ...(taskType && { TaskType: taskType }),
+          ...(taskStatusBucket && { TaskStatusBucket: taskStatusBucket }),
+          ...(sortBy && { SortBy: sortBy }),
+          ...(sortDir && { SortDir: sortDir }),
+          ...toDateQueryParams(dateType, dateFrom, dateTo),
         },
       });
 
       const result = data.result ?? data;
-      return result.items ?? [];
+      return { items: result.items ?? [], count: result.count ?? 0 };
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const loaded = allPages.reduce((n, page) => n + page.items.length, 0);
+      return loaded < (lastPage.count ?? 0) ? allPages.length : undefined;
+    },
+    staleTime: 30 * 1000,
+    enabled,
+  });
+};
+
+export interface TaskGroupCount {
+  /** Raw group key — e.g. 'NotStarted'/'Breached'/an activityId/a raw purpose string. */
+  value: string;
+  count: number;
+}
+
+/**
+ * Per-lane counts for a Kanban grouping dimension. Drives which columns render
+ * (backend omits groups with count=0) and their initial ordering.
+ * GET /tasks/me/group-counts (scope 'me') or GET /tasks/pool/group-counts (scope 'pool')
+ */
+export const useTaskGroupCounts = (
+  groupBy: GroupByField,
+  baseFilters: Record<string, unknown> = {},
+  scope: KanbanScope = 'me',
+) => {
+  const {
+    search,
+    taskName,
+    status,
+    priority,
+    activityId,
+    appraisalNumber,
+    customerName,
+    pendingTaskStatus,
+    slaStatus,
+    purpose,
+    dateType,
+    dateFrom,
+    dateTo,
+  } = baseFilters as unknown as KanbanColumnParams;
+
+  const endpoint = scope === 'pool' ? '/tasks/pool/group-counts' : '/tasks/me/group-counts';
+
+  return useQuery({
+    queryKey: ['task-group-counts', scope, groupBy, baseFilters],
+    queryFn: async (): Promise<TaskGroupCount[]> => {
+      const { data } = await axios.get(endpoint, {
+        params: {
+          GroupBy: groupBy,
+          ...(search && { Search: search }),
+          ...(taskName && { TaskName: taskName }),
+          ...(status && { Status: status }),
+          ...(priority && { Priority: priority }),
+          ...(activityId && { ActivityId: activityId }),
+          ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
+          ...(customerName && { CustomerName: customerName }),
+          ...(pendingTaskStatus && { TaskStatus: pendingTaskStatus }),
+          ...(slaStatus && { SlaStatus: slaStatus }),
+          ...(purpose && { Purpose: purpose }),
+          ...toDateQueryParams(dateType, dateFrom, dateTo),
+        },
+      });
+      return data.result ?? [];
     },
     staleTime: 30 * 1000,
   });
@@ -275,6 +408,8 @@ export const useClaimTask = () => {
     mutationFn: (taskId: string) => axios.post(`/tasks/${taskId}/claim`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },
@@ -330,6 +465,8 @@ export const useOpenTask = () => {
         // Task status changed (Not Started → In Progress) — invalidate both lists
         // so they reflect the new status when the user navigates back
         queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+        queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
         queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }

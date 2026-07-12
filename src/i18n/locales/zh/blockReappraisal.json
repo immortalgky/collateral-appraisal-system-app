@@ -22,20 +22,20 @@
     "daysLeft": "{{days}}天"
   },
   "filter": {
-    "title": "Filter",
-    "button": "Filters",
+    "title": "Filters",
     "fields": {
-      "projectName": "Project Name",
-      "oldAppraisalNumber": "Old Appraisal Report No."
+      "search": "Search",
+      "lastAppraisedDate": "Last Appraised Date",
+      "remainingDay": "Remaining Day"
     },
     "placeholders": {
-      "projectName": "Enter project name",
-      "oldAppraisalNumber": "Enter report number"
+      "search": "Project name or appraisal number",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "min": "Min",
+      "max": "Max"
     },
-    "chips": {
-      "projectName": "Project Name",
-      "oldAppraisalNumber": "Report No."
-    }
+    "clear": "Clear filters"
   },
   "empty": {
     "noMatching": "No matching projects",
@@ -101,19 +101,22 @@
   "units": {
     "sold": "Sold",
     "available": "Available",
+    "updatedByLine": "by {{name}}",
     "cols": {
-      "floor": "Floor",
+      "floor": "Floor Number",
       "towerName": "Tower Name",
       "regNumber": "Reg. Number",
-      "roomNo": "Room No",
-      "modelType": "Model Type",
-      "usableArea": "Usable Area (sq.m.)",
+      "roomNo": "Room Number",
+      "modelType": "Model Name",
+      "usableArea": "Usable Area (Sq.M.)",
       "sellingPrice": "Selling Price (Baht)",
+      "appraisalValue": "Estimate Price (Baht)",
       "plotNo": "Plot No",
       "houseNo": "House No",
       "numFloors": "No. of Floors",
       "landArea": "Land Area (Sq.Wa)",
-      "isSold": "Status"
+      "isSold": "Status",
+      "lastUpdated": "Last Updated"
     }
   }
 }

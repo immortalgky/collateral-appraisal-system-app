@@ -563,7 +563,8 @@ function FieldRenderer({
         return (
           <ParameterSearchInput
             {...fieldProps}
-            group={(passedField as any).group}
+            group={(passedField as any).group ?? ''}
+            options={(passedField as any).options}
             label={passedField.label}
             {...{ required: isRequired, disabled: isDisabled }}
             error={error?.message}

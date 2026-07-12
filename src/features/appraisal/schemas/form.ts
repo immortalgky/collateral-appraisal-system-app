@@ -11,6 +11,7 @@ import {
   allLandFields,
   allLeaseAgreementFields,
   allMachineryFields,
+  allMachinerySummaryFields,
   rentalScheduleField,
 } from '../configs/fields';
 
@@ -283,8 +284,27 @@ export const createCondoPMAFormBase = makeCondoPMAFormBase(
   ((key: string) => key) as unknown as TFunction<'appraisal'>,
 );
 
+// Rai/Ngan/Sq.Wa are individually optional; the land area is required as a whole — enforced by the
+// computed Total Sq.Wa being > 0 (i.e. at least one of Rai/Ngan/Sq.Wa provided). The error is
+// attached to the read-only `totalSquareWa` field so it surfaces there.
+const landAreaTotalRefinement = (
+  data: { areaRai?: number | null; areaNgan?: number | null; areaSquareWa?: number | null },
+  ctx: z.RefinementCtx,
+) => {
+  const total = (data.areaRai ?? 0) * 400 + (data.areaNgan ?? 0) * 100 + (data.areaSquareWa ?? 0);
+  if (total <= 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['totalSquareWa'],
+      message: 'Total Sq.Wa must be greater than 0',
+    });
+  }
+};
+
 export const makeLandAndBuildingPMAForm = (t: TFunction<'appraisal'>) =>
-  buildFormSchema(allLandAndBuildingPMAFields, makeLandAndBuildingPMAFormBase(t));
+  buildFormSchema(allLandAndBuildingPMAFields, makeLandAndBuildingPMAFormBase(t)).superRefine(
+    landAreaTotalRefinement,
+  );
 
 export const makeCondoPMAForm = (t: TFunction<'appraisal'>) =>
   buildFormSchema(allCondoPMAFields, makeCondoPMAFormBase(t));
@@ -865,6 +885,7 @@ export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormTy
   areaRai: 0,
   areaNgan: 0,
   areaSquareWa: 0,
+  totalSquareWa: 0,
   subDistrict: '',
   subDistrictName: '',
   district: '',
@@ -1039,4 +1060,35 @@ export const createLeaseAgreementCondoFormDefault: createLeaseAgreementCondoForm
   ...createCondoFormDefault,
   leaseAgreement: null,
   rentalInfo: null,
+};
+
+// =============================================================================
+// Machinery Summary (appraisal-level — global for all machines)
+// =============================================================================
+
+export const machinerySummaryForm = buildFormSchema(allMachinerySummaryFields);
+export type machinerySummaryFormType = z.infer<typeof machinerySummaryForm>;
+
+export const machinerySummaryFormDefault: machinerySummaryFormType = {
+  // Section 3.1 — general
+  inIndustrial: null,
+  surveyedNumber: null,
+  appraisalNumber: null,
+  installedAndUseCount: null,
+  appraisalScrapCount: null,
+  appraisedByDocumentCount: null,
+  notInstalledCount: null,
+  maintenance: null,
+  exterior: null,
+  performance: null,
+  marketDemandAvailable: null,
+  marketDemand: null,
+  // Section 3.3 — rights & legal
+  proprietor: null,
+  owner: null,
+  machineAddress: null,
+  latitude: null,
+  longitude: null,
+  obligation: null,
+  other: null,
 };

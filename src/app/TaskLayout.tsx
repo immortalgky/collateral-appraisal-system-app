@@ -9,6 +9,7 @@ import ErrorBoundary from '@shared/components/ErrorBoundary';
 import SuspenseOutlet from '@shared/components/SuspenseOutlet';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
+import { useDealersQuery } from '@shared/api/dealers';
 import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
@@ -162,6 +163,11 @@ const tabLabelsByPageSegment: Record<string, Record<string, { label: string; ico
 
 function ParameterLoader() {
   useParametersQuery();
+  return null;
+}
+
+function DealerLoader() {
+  useDealersQuery();
   return null;
 }
 
@@ -374,6 +380,7 @@ function TaskLayout() {
           isPma: appraisalData?.isPma ?? true,
           isBlock: appraisalData?.isBlock ?? false,
           blockProjectType: appraisalData?.blockProjectType ?? undefined,
+          inspectionNumber: (appraisalData as any)?.inspectionNumber ?? null,
           ...commonWorkflowFields,
         },
         isLoading: false,
@@ -559,6 +566,7 @@ function TaskLayout() {
     <AppraisalProvider value={contextValue}>
       <ActivityMenuSync activityId={taskData?.activityId} />
       <ParameterLoader />
+      <DealerLoader />
       <AddressLoader />
       {body}
     </AppraisalProvider>

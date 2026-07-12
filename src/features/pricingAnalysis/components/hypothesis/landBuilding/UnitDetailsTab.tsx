@@ -211,6 +211,7 @@ export function UnitDetailsTab({
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-center px-4 py-2 font-medium text-gray-500 w-12">{t('upload.noCol')}</th>
                 <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.fileCol')}</th>
                 <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.uploadedCol')}</th>
                 <th className="text-right px-4 py-2 font-medium text-gray-500">{t('upload.rowsCol')}</th>
@@ -219,8 +220,11 @@ export function UnitDetailsTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {uploads.map(u => (
+              {[...uploads]
+                .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+                .map((u, index) => (
                 <tr key={u.id} className={u.isActive ? 'bg-green-50' : ''}>
+                  <td className="px-4 py-2 text-center tabular-nums text-gray-500">{index + 1}</td>
                   <td className="px-4 py-2 font-medium text-gray-700">
                     <div className="flex items-center gap-1.5">
                       <Icon
@@ -232,7 +236,14 @@ export function UnitDetailsTab({
                     </div>
                   </td>
                   <td className="px-4 py-2 text-gray-500">
-                    {new Date(u.uploadedAt).toLocaleDateString()}
+                    {new Date(u.uploadedAt).toLocaleString(undefined, {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: false,
+                    })}
                   </td>
                   <td className="px-4 py-2 text-right tabular-nums text-gray-700">
                     {u.rowCount.toLocaleString()}

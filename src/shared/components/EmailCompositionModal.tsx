@@ -167,7 +167,14 @@ const EmailCompositionModal = ({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="xl">
-      <form onSubmit={handleSubmit(submit)} noValidate className="flex flex-col gap-4">
+      <form
+        onSubmit={(e) => {
+          e.stopPropagation(); // don't let the portaled modal submit bubble to a page <form>
+          handleSubmit(submit)(e);
+        }}
+        noValidate
+        className="flex flex-col gap-4"
+      >
         {/* From (optional — hidden when the sender is fixed by server config) */}
         {showFrom && (
           <div>

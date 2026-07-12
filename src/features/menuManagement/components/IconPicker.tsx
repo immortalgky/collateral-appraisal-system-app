@@ -30,6 +30,8 @@ interface IconPickerProps {
   onChangeIcon: (name: string) => void;
   onChangeStyle: (style: IconStyle) => void;
   disabled?: boolean;
+  /** Render the trigger with an error border (e.g. failed a required-field check). */
+  invalid?: boolean;
 }
 
 /**
@@ -42,6 +44,7 @@ export function IconPicker({
   onChangeIcon,
   onChangeStyle,
   disabled = false,
+  invalid = false,
 }: IconPickerProps) {
   const { t } = useTranslation('menuManagement');
   const [isOpen, setIsOpen] = useState(false);
@@ -91,7 +94,10 @@ export function IconPicker({
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(o => !o)}
-        className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-invalid={invalid}
+        className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${
+          invalid ? 'border-danger' : 'border-gray-200'
+        }`}
       >
         {value ? (
           <>

@@ -37,6 +37,8 @@ interface AutocompleteProps {
   ariaLabel?: string;
   /** Width (and any extra) classes for the dropdown panel. Defaults to a fixed `w-56`; pass `w-full` to match the input. */
   menuClassName?: string;
+  /** Render the input with an error border (e.g. failed a required-field check). */
+  invalid?: boolean;
 }
 
 function Autocomplete({
@@ -51,6 +53,7 @@ function Autocomplete({
   onInputChange,
   ariaLabel,
   menuClassName = 'w-56',
+  invalid = false,
 }: AutocompleteProps) {
   const listId = useId();
   const [inputText, setInputText] = useState('');
@@ -181,7 +184,12 @@ function Autocomplete({
           onFocus={handleFocus}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white pr-7"
+          aria-invalid={invalid}
+          className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 outline-none bg-white pr-7 ${
+            invalid
+              ? 'border-danger focus:ring-danger focus:border-danger'
+              : 'border-gray-200 focus:ring-primary focus:border-primary'
+          }`}
         />
         {inputText && (
           <button

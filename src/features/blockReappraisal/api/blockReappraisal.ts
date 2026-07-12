@@ -29,16 +29,22 @@ export function useBlockReappraisalDueList(params: BlockReappraisalListParams = 
       const {
         pageNumber = 0,
         pageSize = 20,
-        projectName,
-        oldAppraisalNumber,
+        search,
+        lastAppraisedDateFrom,
+        lastAppraisedDateTo,
+        remainingDayMin,
+        remainingDayMax,
       } = params;
 
       const { data } = await axios.get('/block-reappraisal', {
         params: {
           pageNumber,
           pageSize,
-          ...(projectName && { projectName }),
-          ...(oldAppraisalNumber && { oldAppraisalNumber }),
+          ...(search && { search }),
+          ...(lastAppraisedDateFrom && { lastAppraisedDateFrom }),
+          ...(lastAppraisedDateTo && { lastAppraisedDateTo }),
+          ...(remainingDayMin != null && { remainingDayMin }),
+          ...(remainingDayMax != null && { remainingDayMax }),
         },
       });
 

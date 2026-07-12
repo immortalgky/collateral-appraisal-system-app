@@ -82,7 +82,10 @@ export const useCreateAssignment = () => {
 
   return useMutation({
     mutationFn: async (
-      request: AssignAppraisalRequestType & { appraisalId: string },
+      // `remark` is persisted alongside the assign action. The generated AssignAppraisalRequestType
+      // is `.passthrough()`, so it forwards at runtime; widened here for local type-safety until the
+      // client schema is regenerated to include it.
+      request: AssignAppraisalRequestType & { appraisalId: string; remark?: string | null },
     ): Promise<AssignAppraisalResponseType> => {
       const { appraisalId, ...body } = request;
       const { data } = await axios.post(`/appraisals/${appraisalId}/assignments`, body);
@@ -96,9 +99,47 @@ export const useCreateAssignment = () => {
       // counts; otherwise the just-submitted task lingers in the (cached) list.
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
+    },
+  });
+};
+
+/**
+ * Request body for saving an assignment draft.
+ * Mirrors the backend SaveAssignmentDraftRequest (PUT /appraisals/{id}/assignments/draft).
+ */
+export interface SaveAssignmentDraftBody {
+  assignmentType: string;
+  assigneeUserId?: string | null;
+  assigneeCompanyId?: string | null;
+  assignmentMethod?: string | null;
+  internalAppraiserId?: string | null;
+  internalFollowupAssignmentMethod?: string | null;
+  remark?: string | null;
+}
+
+/**
+ * Save the in-progress assignment decision (selections + remark) as a draft, without assigning.
+ * PUT /appraisals/{appraisalId}/assignments/draft
+ * Persists onto the existing Pending AppraisalAssignment row; the workflow task stays Pending.
+ */
+export const useSaveAssignmentDraft = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: SaveAssignmentDraftBody & { appraisalId: string },
+    ): Promise<void> => {
+      const { appraisalId, ...body } = request;
+      await axios.put(`/appraisals/${appraisalId}/assignments/draft`, body);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'assignments'],
+      });
     },
   });
 };

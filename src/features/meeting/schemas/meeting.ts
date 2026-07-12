@@ -37,12 +37,11 @@ export const makeMeetingSchemas = (t: TFunction<'meeting'>) => {
   const locationField = z
     .string()
     .trim()
-    .max(200, t('validation.locationMax'))
-    .optional()
-    .or(z.literal(''));
+    .min(1, t('validation.locationRequired'))
+    .max(200, t('validation.locationMax'));
 
-  const buildFromToField = () =>
-    z.string().trim().max(200, t('validation.fromToMax')).optional().or(z.literal(''));
+  const buildFromToField = (requiredMessage: string) =>
+    z.string().trim().min(1, requiredMessage).max(200, t('validation.fromToMax'));
 
   const startAtField = z
     .string()
@@ -65,8 +64,8 @@ export const makeMeetingSchemas = (t: TFunction<'meeting'>) => {
     .object({
       title: titleField,
       location: locationField,
-      fromText: buildFromToField(),
-      toText: buildFromToField(),
+      fromText: buildFromToField(t('validation.fromRequired')),
+      toText: buildFromToField(t('validation.toRequired')),
       startAt: startAtField,
       endAt: endAtField,
     })
@@ -130,8 +129,8 @@ export const makeMeetingSchemas = (t: TFunction<'meeting'>) => {
 // These provide stable TypeScript types without requiring a TFunction.
 
 const _titleField = z.string().trim().min(1).max(200);
-const _locationField = z.string().trim().max(200).optional().or(z.literal(''));
-const _fromToField = z.string().trim().max(200).optional().or(z.literal(''));
+const _locationField = z.string().trim().min(1).max(200);
+const _fromToField = z.string().trim().min(1).max(200);
 const _startAtField = z.string().datetime({ local: true, offset: true });
 const _endAtField = z.string().datetime({ local: true, offset: true });
 

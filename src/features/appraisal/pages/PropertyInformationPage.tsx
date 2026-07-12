@@ -5,17 +5,19 @@ import { useTranslation } from 'react-i18next';
 // and the layout breadcrumb can append the active tab as a structural crumb.
 import clsx from 'clsx';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import { useIsCiAppraisal, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useEnrichedPropertyGroups } from '@/features/appraisal/hooks/useEnrichedPropertyGroups';
 import Icon from '@shared/components/Icon';
 import {
   GalleryTab,
   LawsRegulationTab,
+  MachinerySummaryTab,
   MarketsTab,
   PhotosTab,
   PropertiesTab,
 } from '../components/tabs';
 
-type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws';
+type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws' | 'machinery';
 type ViewMode = 'grid' | 'list';
 
 interface Tab {
@@ -24,11 +26,20 @@ interface Tab {
   icon: string;
 }
 
-const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws'];
+const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws', 'machinery'];
 
 export default function PropertyInformationPage() {
   const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
+
+  // The Machinery Summary tab is appraisal-level (one record per appraisal) and
+  // only relevant when the appraisal actually contains machinery.
+  const appraisalId = useAppraisalId();
+  const { groups } = useEnrichedPropertyGroups(appraisalId);
+  // PropertyItem.type carries the raw backend property-type code at runtime
+  // (e.g. 'MAC' for machinery); its declared union is display-oriented, so
+  // compare as a string.
+  const hasMachinery = groups.some(g => g.items.some(i => (i.type as string) === 'MAC'));
 
   const TABS: Tab[] = [
     { id: 'properties', label: t('propertyInfo.tabs.properties'), icon: 'buildings' },
@@ -36,19 +47,25 @@ export default function PropertyInformationPage() {
     { id: 'gallery', label: t('propertyInfo.tabs.gallery'), icon: 'images' },
     { id: 'photos', label: t('propertyInfo.tabs.photos'), icon: 'camera' },
     { id: 'laws', label: t('propertyInfo.tabs.laws'), icon: 'gavel' },
+    ...(hasMachinery
+      ? [{ id: 'machinery' as const, label: t('propertyInfo.tabs.machinery'), icon: 'gears' }]
+      : []),
   ];
   const isCiAppraisal = useIsCiAppraisal();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
-  const activeTab: TabId = tabParam && VALID_TABS.includes(tabParam) ? tabParam : 'properties';
+  const isTabAvailable = (id: TabId | null): id is TabId =>
+    !!id && VALID_TABS.includes(id) && (id !== 'machinery' || hasMachinery);
+  const activeTab: TabId = isTabAvailable(tabParam) ? tabParam : 'properties';
 
   // Seed `?tab=properties` on first arrival so the URL is the source of truth
   // (the layout breadcrumb reads `?tab=` to render the active-tab crumb).
   useEffect(() => {
-    if (!tabParam || !VALID_TABS.includes(tabParam)) {
+    if (!isTabAvailable(tabParam)) {
       setSearchParams({ tab: 'properties' }, { replace: true });
     }
-  }, [tabParam, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam, hasMachinery, setSearchParams]);
 
   const handleTabChange = (tabId: TabId) => {
     setSearchParams({ tab: tabId }, { replace: true });
@@ -68,6 +85,8 @@ export default function PropertyInformationPage() {
         return <PhotosTab />;
       case 'laws':
         return <LawsRegulationTab />;
+      case 'machinery':
+        return <MachinerySummaryTab />;
       default:
         return null;
     }

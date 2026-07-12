@@ -48,7 +48,7 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       followupStaffId: z.string().nullable(),
       selectedFollowupStaff: internalStaffSchema.nullable(),
       followupStaffMethod: z.enum(['manual', 'roundrobin']),
-      remarks: z.string().max(500, t('validation.remarksMaxLength')),
+      remarks: z.string().max(4000, t('validation.remarksMaxLength')),
     })
     .refine(
       data => {

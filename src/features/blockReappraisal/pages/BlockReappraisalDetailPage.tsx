@@ -6,7 +6,7 @@ import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { formatLocaleDate } from '@/shared/utils/dateUtils';
+import { formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { SoldDonut } from '@/features/blockUnitMaintenance/components/SoldDonut';
 import { ModelBreakdown } from '@/features/blockUnitMaintenance/components/ModelBreakdown';
 import type { ModelStat } from '@/features/blockUnitMaintenance/components/ModelBreakdown';
@@ -41,7 +41,6 @@ function groupByModel(
 }
 
 // ─── Create confirm modal ─────────────────────────────────────────────────────
-
 
 // ─── Create success modal ─────────────────────────────────────────────────────
 
@@ -109,10 +108,21 @@ function Field({ label, value }: { label: string; value?: string | number | null
   );
 }
 
+// Neutral pill + colored dot (same style as the SLA status badge on the task list).
+function UnitStatusBadge({ isSold }: { isSold: boolean }) {
+  const { t } = useTranslation('blockReappraisal');
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-100 text-gray-700">
+      <span className={`size-1.5 rounded-full ${isSold ? 'bg-red-500' : 'bg-green-500'}`} />
+      {isSold ? t('units.sold') : t('units.available')}
+    </span>
+  );
+}
+
 // ─── Read-only Condo units table ──────────────────────────────────────────────
 
 function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
-  const { t } = useTranslation('blockReappraisal');
+  const { t, i18n } = useTranslation('blockReappraisal');
   return (
     <table className="w-full min-w-max text-xs">
       <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
@@ -139,8 +149,14 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
           <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.sellingPrice')}
           </th>
+          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.appraisalValue')}
+          </th>
           <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.isSold')}
+          </th>
+          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.lastUpdated')}
           </th>
         </tr>
       </thead>
@@ -159,15 +175,18 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
             <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
               {formatNumber(u.sellingPrice)}
             </td>
+            <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
+              {formatNumber(u.lastAppraisedValue)}
+            </td>
             <td className="py-2 px-3 text-center">
-              {u.isSold ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
-                  {t('units.sold')}
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
-                  {t('units.available')}
-                </span>
+              <UnitStatusBadge isSold={u.isSold} />
+            </td>
+            <td className="py-2 px-3 text-gray-700 whitespace-nowrap">
+              <div>{formatLocaleDateTime(u.updatedAt, i18n.language)}</div>
+              {u.updatedBy && (
+                <div className="text-[10px] text-gray-400">
+                  {t('units.updatedByLine', { name: u.updatedBy })}
+                </div>
               )}
             </td>
           </tr>
@@ -180,7 +199,7 @@ function CondoUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
 // ─── Read-only Land & Building units table ────────────────────────────────────
 
 function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[] }) {
-  const { t } = useTranslation('blockReappraisal');
+  const { t, i18n } = useTranslation('blockReappraisal');
   return (
     <table className="w-full min-w-max text-xs">
       <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
@@ -207,8 +226,14 @@ function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[]
           <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.sellingPrice')}
           </th>
+          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.appraisalValue')}
+          </th>
           <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
             {t('units.cols.isSold')}
+          </th>
+          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            {t('units.cols.lastUpdated')}
           </th>
         </tr>
       </thead>
@@ -229,15 +254,18 @@ function LandBuildingUnitsTable({ units }: { units: BlockReappraisalUnitDetail[]
             <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
               {formatNumber(u.sellingPrice)}
             </td>
+            <td className="py-2 px-3 text-gray-700 tabular-nums text-right">
+              {formatNumber(u.lastAppraisedValue)}
+            </td>
             <td className="py-2 px-3 text-center">
-              {u.isSold ? (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-50 text-red-700 border border-red-200">
-                  {t('units.sold')}
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
-                  {t('units.available')}
-                </span>
+              <UnitStatusBadge isSold={u.isSold} />
+            </td>
+            <td className="py-2 px-3 text-gray-700 whitespace-nowrap">
+              <div>{formatLocaleDateTime(u.updatedAt, i18n.language)}</div>
+              {u.updatedBy && (
+                <div className="text-[10px] text-gray-400">
+                  {t('units.updatedByLine', { name: u.updatedBy })}
+                </div>
               )}
             </td>
           </tr>
@@ -329,7 +357,11 @@ function BlockReappraisalDetailPage() {
           </p>
           <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/standalone/block-reappraisal')}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/standalone/block-reappraisal')}
+        >
           {t('detail.backToList')}
         </Button>
       </div>

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import NumberInput from '@/shared/components/inputs/NumberInput';
 import CreateQuotationModal from './CreateQuotationModal';
 import ExistingDraftPicker from '@/features/quotation/components/ExistingDraftPicker';
 import {
@@ -50,6 +51,7 @@ const QuotationEntryModal = ({
   const { t } = useTranslation('appraisal');
   const [activeTab, setActiveTab] = useState<Tab>('new');
   const [selectedDraft, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
+  const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
 
   // Fetch existing drafts for the "Add to Existing" tab
   const { data: drafts = [], isLoading: isDraftsLoading } = useGetMyDraftsForAssembly(
@@ -62,6 +64,7 @@ const QuotationEntryModal = ({
   const handleClose = () => {
     setActiveTab('new');
     setSelectedDraft(null);
+    setMaxAppraisalDays(null);
     onClose();
   };
 
@@ -81,6 +84,7 @@ const QuotationEntryModal = ({
         bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: [],
         existingQuotationRequestId: selectedDraft.id,
+        maxAppraisalDays: maxAppraisalDays ?? null,
       },
       {
         onSuccess: () => {
@@ -159,6 +163,23 @@ const QuotationEntryModal = ({
                   {selectedDraft.totalAppraisals} existing appraisal
                   {selectedDraft.totalAppraisals !== 1 ? 's' : ''})
                 </p>
+              </div>
+            )}
+
+            {/* Max Appraisal Duration — per-appraisal cap for the appraisal being added */}
+            {selectedDraft && (
+              <div>
+                <NumberInput
+                  label="Max Appraisal Duration (Day)"
+                  helperText="Maximum duration you allow the appraiser to complete this appraisal. Applies to the appraisal being added."
+                  placeholder="e.g. 7"
+                  value={maxAppraisalDays}
+                  decimalPlaces={0}
+                  thousandSeparator={false}
+                  maxIntegerDigits={3}
+                  min={1}
+                  onChange={e => setMaxAppraisalDays(e.target.value)}
+                />
               </div>
             )}
 

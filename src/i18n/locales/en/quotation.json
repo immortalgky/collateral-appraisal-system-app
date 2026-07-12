@@ -48,13 +48,15 @@
     "allStatuses": "All statuses",
     "cutOffFrom": "Cut Off From",
     "cutOffTo": "Cut Off To",
-    "searchPlaceholder": "Quotation number or requester"
+    "searchPlaceholder": "Quotation no., appraisal no., or customer",
+    "searchHint": "Matches from the start. Use * as a wildcard (e.g. abc*).",
+    "company": "Company"
   },
   "columns": {
     "quotationNumber": "Quotation #",
     "status": "Status",
     "cutOffTime": "Cut Off Time",
-    "noOfAppraisal": "No of Appraisal",
+    "noOfAppraisal": "No of Appraisal(s)",
     "response": "Response",
     "createdDate": "Created Date",
     "receivedAt": "Received At",
@@ -168,6 +170,7 @@
   "aria": {
     "rowActions": "Row actions",
     "viewInvitedCompanies": "View invited companies",
+    "viewAppraisals": "View appraisals",
     "closeViewer": "Close viewer",
     "removeFromShortlist": "Remove from shortlist",
     "addToShortlist": "Add to shortlist",
@@ -258,7 +261,7 @@
     "selectWinnerFailed": "Failed to select company as winner",
     "withdrawn": "You have opted out of this quotation",
     "declineFailed": "Invitation declined successfully",
-    "declined": "Invitation declined successfully",
+    "declined": "Invitation declined",
     "actionFailed": "Action failed. Please try again.",
     "appraisalRemoved": "Appraisal {{number}} removed from quotation",
     "appraisalRemoveFailed": "Failed to remove appraisal",
@@ -353,7 +356,7 @@
   "decline": {
     "declineTitle": "Decline Invitation",
     "withdrawTitle": "Opt Out of Quotation",
-    "declineBody": "You are declining this invitation. The bank will be notified and you will not be able to participate in this quotation.",
+    "declineBody": "You are marking this company as not participating in this quotation. This is saved as a draft and only finalized when it's submitted — you can still change your mind before then.",
     "withdrawBody": "You will no longer participate in this quotation. Any information you submitted will be retracted and will not be considered.",
     "decliningButton": "Declining...",
     "optingOutButton": "Opting out..."
@@ -412,6 +415,12 @@
     "title": "Invited Companies",
     "totalLabel": "{{count}} total",
     "pending": "Pending"
+  },
+  "appraisalsPopover": {
+    "title": "Appraisals",
+    "totalLabel": "{{count}} total",
+    "maxDays": "Max {{count}} days",
+    "notSet": "Not set"
   },
   "email": {
     "draftingTitle": "Drafting email to send to external appraisal company",
@@ -490,7 +499,9 @@
     "teamReview": "review by your team",
     "exceededMaxDuration": "Exceeds the maximum duration set by the requester ({{cap}} days).",
     "priorCompanyExcluded": "1 prior company excluded (appeal flow — most recent appraiser of this collateral).",
-    "searchCompanyName": "Search company name..."
+    "searchCompanyName": "Search company name...",
+    "notParticipatingTitle": "Not Participating",
+    "notParticipatingNoReason": "No reason provided."
   },
   "role": {
     "Maker": "Maker",

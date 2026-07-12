@@ -8,17 +8,21 @@ interface GetDocumentTypesResponse {
 
 export const documentTypeKeys = {
   all: ['documentTypes'] as const,
+  list: (category?: string) => ['documentTypes', category ?? 'all'] as const,
 };
 
 /**
  * Fetches document types from GET /document-types.
  * Returns active types sorted by sortOrder.
+ * Pass a category (e.g. 'SUBMIT_DOC') to scope the list server-side.
  */
-export const useGetDocumentTypes = () => {
+export const useGetDocumentTypes = (category?: string) => {
   return useQuery({
-    queryKey: documentTypeKeys.all,
+    queryKey: documentTypeKeys.list(category),
     queryFn: async (): Promise<DocumentTypeDtoType[]> => {
-      const { data } = await axios.get<GetDocumentTypesResponse>('/document-types');
+      const { data } = await axios.get<GetDocumentTypesResponse>('/document-types', {
+        params: category ? { category } : undefined,
+      });
       return (data.documentTypes ?? [])
         .filter(dt => dt.isActive !== false)
         .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));

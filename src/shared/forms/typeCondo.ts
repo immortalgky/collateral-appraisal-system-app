@@ -268,6 +268,9 @@ export const GetCondoPMAPropertyByIdResult = z.object({
   districtName: z.string(),
   province: z.string(),
   provinceName: z.string(),
+  externalSyncStatus: z.enum(['NotSynced', 'Pending', 'Delivered', 'Failed']).nullish(),
+  externalSyncError: z.string().nullish(),
+  externalSyncedAt: z.string().nullish(),
 });
 
 export const UpdateCondoPMARequest = z.object({

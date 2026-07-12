@@ -17,6 +17,10 @@ interface AppraisalResultsTableProps {
   onSort: (field: string) => void;
   onRowClick: (item: AppraisalDto) => void;
   loadingRowId?: string;
+  /** 0-based current page index, used to compute a continuous running row number */
+  pageNumber?: number;
+  /** Number of rows per page, used to compute a continuous running row number */
+  pageSize?: number;
 }
 
 function AppraisalResultsTable({
@@ -28,6 +32,8 @@ function AppraisalResultsTable({
   onSort,
   onRowClick,
   loadingRowId,
+  pageNumber = 0,
+  pageSize = 0,
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
   const titleAddresses = useAddressStore(s => s.titleAddresses);
@@ -143,7 +149,9 @@ function AppraisalResultsTable({
                         : 'hover:bg-gray-50 cursor-pointer'
                   }`}
                 >
-                  <td className="px-3 py-2.5 text-gray-400 text-sm">{index + 1}</td>
+                  <td className="px-3 py-2.5 text-gray-400 text-sm">
+                    {pageNumber * pageSize + index + 1}
+                  </td>
                   {columns.map(col => (
                     <td key={col.key} className="px-3 py-2.5 text-gray-600 text-sm">
                       {col.render ? (
