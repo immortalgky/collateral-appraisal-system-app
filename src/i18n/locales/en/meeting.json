@@ -142,7 +142,10 @@
     "agendaChairmanInformedPlaceholder": "Information to chairman...",
     "agendaOthers": "Others",
     "agendaOthersPlaceholder": "Any other agenda items...",
-    "subjectLabel": "Title"
+    "subjectLabel": "Title",
+    "locationPlaceholder": "Enter location",
+    "fromPlaceholder": "Enter from",
+    "toPlaceholder": "Enter to"
   },
   "dialogs": {
     "newMeeting": "New Meeting",
@@ -282,7 +285,9 @@
     "endAfterStart": "End must be after start",
     "reasonRequired": "Reason is required",
     "reasonMax": "Reason must be 500 characters or fewer",
-    "pickAtLeastOneDate": "Pick at least one date"
+    "pickAtLeastOneDate": "Pick at least one date",
+    "locationRequired": "Location is required",
+    "fromToRequired": "This field is required"
   },
   "aria": {
     "rowActions": "Row actions",

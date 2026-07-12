@@ -245,14 +245,14 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
             htmlFor="meeting-fromText"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
-            {t('fields.from')}
+            {t('fields.from')} <span className="text-red-500">*</span>
           </label>
           <input
             id="meeting-fromText"
             type="text"
             {...register('fromText')}
             className={sharedInputClass}
-            placeholder={t('fields.optionalPlaceholder')}
+            placeholder={t('fields.fromPlaceholder')}
           />
           {errors.fromText && (
             <p className="mt-1 text-xs text-red-600">{errors.fromText.message}</p>
@@ -260,14 +260,14 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
         </div>
         <div>
           <label htmlFor="meeting-toText" className="block text-sm font-medium text-gray-700 mb-1">
-            {t('fields.to')}
+            {t('fields.to')} <span className="text-red-500">*</span>
           </label>
           <input
             id="meeting-toText"
             type="text"
             {...register('toText')}
             className={sharedInputClass}
-            placeholder={t('fields.optionalPlaceholder')}
+            placeholder={t('fields.toPlaceholder')}
           />
           {errors.toText && <p className="mt-1 text-xs text-red-600">{errors.toText.message}</p>}
         </div>
@@ -276,14 +276,14 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
       {/* Location */}
       <div>
         <label htmlFor="meeting-location" className="block text-sm font-medium text-gray-700 mb-1">
-          {t('fields.location')}
+          {t('fields.location')} <span className="text-red-500">*</span>
         </label>
         <input
           id="meeting-location"
           type="text"
           {...register('location')}
           className={sharedInputClass}
-          placeholder={t('fields.optionalPlaceholder')}
+          placeholder={t('fields.locationPlaceholder')}
         />
         {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
       </div>
