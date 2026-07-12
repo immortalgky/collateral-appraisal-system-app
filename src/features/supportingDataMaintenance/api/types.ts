@@ -39,6 +39,8 @@ export interface GetSupportingDataMaintenanceListParams {
   dateType?: SupportingDataDateType;
   dateFrom?: string;
   dateTo?: string;
+  website?: string;
+  phoneNo?: string;
 }
 
 export interface SupportingDataMaintenance {
@@ -84,6 +86,8 @@ export interface SupportingDataParams {
   dateType?: SupportingDataDateType;
   dateFrom?: string;
   dateTo?: string;
+  website?: string;
+  phoneNo?: string;
 }
 
 export interface GetSupportingDataDetailListParams {
