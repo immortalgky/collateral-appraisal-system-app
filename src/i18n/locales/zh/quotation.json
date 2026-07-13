@@ -48,12 +48,15 @@
     "allStatuses": "All statuses",
     "cutOffFrom": "Cut Off From",
     "cutOffTo": "Cut Off To",
-    "searchPlaceholder": "Quotation no., appraisal no., or customer",
-    "searchHint": "Matches from the start. Use * as a wildcard (e.g. abc*).",
+    "searchBy": "Search by",
+    "searchPlaceholder": "Search...",
+    "quotationNoPlaceholder": "Quotation no.",
+    "appraisalNoPlaceholder": "Appraisal no.",
+    "customerNamePlaceholder": "Customer name",
     "company": "Company"
   },
   "columns": {
-    "quotationNumber": "Quotation #",
+    "quotationNumber": "Quotation Number",
     "status": "Status",
     "cutOffTime": "Cut Off Time",
     "noOfAppraisal": "No of Appraisal(s)",

@@ -4,13 +4,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import Input from '@/shared/components/Input';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { DateInput } from '@/shared/components/inputs';
 import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete';
+import MultiSelectDropdown from '@/shared/components/inputs/MultiSelectDropdown';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
+import SearchByInput from '../components/SearchByInput';
+import SortableTh from '@/features/taskMonitor/components/SortableTh';
+import type { SortDir } from '@/features/taskMonitor/types';
 import { useCancelQuotation, useGetQuotations, type QuotationListItem } from '../api/quotation';
 import { z } from 'zod';
 import { QuotationStatusSchema } from '../schemas/quotation';
@@ -22,6 +25,9 @@ type QuotationStatus = z.infer<typeof QuotationStatusSchema>;
 const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : undefined);
 
 const QUOTATION_STATUS_OPTIONS: QuotationStatus[] = QuotationStatusSchema.options;
+
+// Single search box + a "search by" selector: only the chosen field is sent to the backend.
+type SearchField = 'quotationNo' | 'appraisalNo' | 'customerName';
 
 const TERMINAL_STATUSES = new Set(['Finalized', 'Cancelled', 'Closed']);
 
@@ -93,14 +99,30 @@ function QuotationListingPage() {
   const [pageSize, setPageSize] = useState(10);
 
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
+  const [searchField, setSearchField] = useState<SearchField>('quotationNo');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
+  const [statuses, setStatuses] = useState<string[]>(() => searchParams.getAll('status'));
   const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
   const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
   const [companyFilter, setCompanyFilter] = useState(''); // company Guid from the picker
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir] = useState<SortDir | undefined>(undefined);
 
-  // Debounced search — matches quotation number, requester, appraisal number, or customer
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const handleSortChange = (key: string | undefined, dir: SortDir | undefined) => {
+    setSortBy(key);
+    setSortDir(dir);
+    setPageNumber(0);
+  };
+
+  // Debounced search term — only the value is debounced; switching field applies immediately.
+  const [debouncedTerm, setDebouncedTerm] = useState('');
+
+  const statusOptions = QUOTATION_STATUS_OPTIONS.map(s => ({ value: s, label: t(`status.${s}`) }));
+  const searchFieldOptions = [
+    { value: 'quotationNo', label: t('filters.quotationNoPlaceholder'), icon: 'file-invoice' },
+    { value: 'appraisalNo', label: t('filters.appraisalNoPlaceholder'), icon: 'building' },
+    { value: 'customerName', label: t('filters.customerNamePlaceholder'), icon: 'user' },
+  ];
 
   // Delete confirmation state — backed by the existing /cancel endpoint
   // (Cancel is the soft-delete path; idempotent for non-terminal statuses).
@@ -116,7 +138,7 @@ function QuotationListingPage() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
+      setDebouncedTerm(searchTerm);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
@@ -124,16 +146,21 @@ function QuotationListingPage() {
   // Reset to first page when filters change
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, statusFilter, cutOffTimeFrom, cutOffTimeTo, companyFilter]);
+  }, [debouncedTerm, searchField, statuses, cutOffTimeFrom, cutOffTimeTo, companyFilter]);
 
+  const term = debouncedTerm || undefined;
   const { data, isLoading, isFetching, isError, error } = useGetQuotations({
     pageNumber,
     pageSize,
-    search: debouncedSearch || undefined,
-    status: statusFilter || undefined,
+    quotationNo: searchField === 'quotationNo' ? term : undefined,
+    appraisalNo: searchField === 'appraisalNo' ? term : undefined,
+    customerName: searchField === 'customerName' ? term : undefined,
+    statuses: statuses.length ? statuses : undefined,
     cutOffTimeFrom: toDateOnly(cutOffTimeFrom),
     cutOffTimeTo: toDateOnly(cutOffTimeTo),
     companyId: companyFilter || undefined,
+    sortBy,
+    sortDir,
   });
 
   const items = data?.items ?? [];
@@ -144,11 +171,11 @@ function QuotationListingPage() {
   const isRefetching = isFetching && !isFirstLoad;
 
   const hasFilters =
-    searchTerm || statusFilter || cutOffTimeFrom || cutOffTimeTo || companyFilter;
+    searchTerm || statuses.length || cutOffTimeFrom || cutOffTimeTo || companyFilter;
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
+    setStatuses([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
     setCompanyFilter('');
@@ -185,29 +212,32 @@ function QuotationListingPage() {
 
       {/* Filters Bar */}
       <div className="shrink-0 flex items-end gap-3 pb-1 flex-wrap">
-        {/* Search */}
-        <div className="flex-1 min-w-[20rem] max-w-lg">
-          <Input
-            placeholder={t('filters.searchPlaceholder')}
+        {/* Search — one bar: "search by" selector + input */}
+        <div className="flex flex-col gap-1">
+          <label className="block text-xs font-medium text-gray-700">{t('filters.searchBy')}</label>
+          <SearchByInput
+            options={searchFieldOptions}
+            field={searchField}
+            onFieldChange={v => setSearchField(v as SearchField)}
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
+            onChange={setSearchTerm}
+            placeholder={t('filters.searchPlaceholder')}
+            className="w-96"
           />
         </div>
 
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none bg-white min-w-36 hover:border-gray-300"
-        >
-          <option value="">{t('filters.allStatuses')}</option>
-          {QUOTATION_STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>
-              {t(`status.${s}`)}
-            </option>
-          ))}
-        </select>
+        {/* Status Filter — multi-select */}
+        <div className="flex flex-col gap-1">
+          <label className="block text-xs font-medium text-gray-700">{t('columns.status')}</label>
+          <MultiSelectDropdown
+            options={statusOptions}
+            value={statuses}
+            onChange={setStatuses}
+            placeholder={t('filters.allStatuses')}
+            showValuePrefix={false}
+            className="min-w-40"
+          />
+        </div>
 
         {/* Cut Off Time — From */}
         <div className="w-40">
@@ -250,33 +280,56 @@ function QuotationListingPage() {
         )}
       </div>
 
-      {/* Search hint */}
-      <p className="shrink-0 -mt-2 text-xs text-gray-400">{t('filters.searchHint')}</p>
-
       {/* Table */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.quotationNumber')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.status')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.cutOffTime')}
-                </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.noOfAppraisal')}
-                </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.response')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.createdDate')}
-                </th>
+                <SortableTh
+                  label={t('columns.quotationNumber')}
+                  sortKey="QuotationNumber"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.customerName')}
+                  sortKey="CustomerName"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.status')}
+                  sortKey="Status"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.cutOffTime')}
+                  sortKey="CutOffTime"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.noOfAppraisal')}
+                  sortKey="TotalAppraisals"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                  className="text-center"
+                />
+                <SortableTh label={t('columns.response')} className="text-center" />
+                <SortableTh
+                  label={t('columns.createdDate')}
+                  sortKey="RequestDate"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
                 <th className="w-10 px-4 py-2.5" aria-label={t('common:actions.viewDetails')} />
               </tr>
             </thead>
@@ -287,6 +340,7 @@ function QuotationListingPage() {
                 <TableRowSkeleton
                   columns={[
                     { width: 'w-28' },
+                    { width: 'w-32' },
                     { width: 'w-24' },
                     { width: 'w-32' },
                     { width: 'w-12' },
@@ -298,7 +352,7 @@ function QuotationListingPage() {
                 />
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16">
+                  <td colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-gray-500 font-medium">{t('empty.noQuotations')}</p>
@@ -321,6 +375,19 @@ function QuotationListingPage() {
                     >
                       <td className="px-4 py-2.5">
                         <span className="font-medium text-primary">{item.quotationNumber}</span>
+                      </td>
+                      <td
+                        className="px-4 py-2.5 text-gray-600 max-w-[16rem]"
+                        title={item.customerNames ?? undefined}
+                      >
+                        <span className="inline-block max-w-full truncate align-bottom">
+                          {item.customerName ?? '—'}
+                        </span>
+                        {item.customerCount > 1 && (
+                          <span className="ml-1 text-xs text-gray-400">
+                            +{item.customerCount - 1}
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <QuotationStatusBadge status={item.status} />
