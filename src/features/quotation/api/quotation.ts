@@ -73,11 +73,15 @@ export const useGetAppraisalQuotations = (appraisalId: string | null | undefined
 export interface GetQuotationsParams {
   pageNumber?: number;
   pageSize?: number;
-  status?: string;
-  search?: string;
+  statuses?: string[];
+  quotationNo?: string;
+  appraisalNo?: string;
+  customerName?: string;
   cutOffTimeFrom?: string;
   cutOffTimeTo?: string;
   companyId?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
 }
 
 export interface QuotationListItem {
@@ -90,6 +94,9 @@ export interface QuotationListItem {
   totalAppraisals: number;
   totalCompaniesInvited: number;
   totalQuotationsReceived: number;
+  customerName?: string | null;
+  customerCount: number;
+  customerNames?: string | null;
 }
 
 export interface PaginatedQuotations {
@@ -107,25 +114,35 @@ export const useGetQuotations = (params: GetQuotationsParams = {}) => {
   const queryKey = quotationKeys.list({
     pageNumber: params.pageNumber ?? 0,
     pageSize: params.pageSize ?? 10,
-    ...(params.status && { status: params.status }),
-    ...(params.search && { search: params.search }),
+    ...(params.statuses?.length && { statuses: params.statuses }),
+    ...(params.quotationNo && { quotationNo: params.quotationNo }),
+    ...(params.appraisalNo && { appraisalNo: params.appraisalNo }),
+    ...(params.customerName && { customerName: params.customerName }),
     ...(params.cutOffTimeFrom && { cutOffTimeFrom: params.cutOffTimeFrom }),
     ...(params.cutOffTimeTo && { cutOffTimeTo: params.cutOffTimeTo }),
     ...(params.companyId && { companyId: params.companyId }),
+    ...(params.sortBy && { sortBy: params.sortBy }),
+    ...(params.sortDir && { sortDir: params.sortDir }),
   });
 
   return useQuery({
     queryKey,
     queryFn: async (): Promise<PaginatedQuotations> => {
       const { data } = await axios.get('/quotations', {
+        // indexes:null → repeated params (?Statuses=A&Statuses=B) which Carter binds to string[]?
+        paramsSerializer: { indexes: null },
         params: {
           PageNumber: params.pageNumber ?? 0,
           PageSize: params.pageSize ?? 10,
-          ...(params.status && { Status: params.status }),
-          ...(params.search && { Search: params.search }),
+          ...(params.statuses?.length && { Statuses: params.statuses }),
+          ...(params.quotationNo && { QuotationNo: params.quotationNo }),
+          ...(params.appraisalNo && { AppraisalNo: params.appraisalNo }),
+          ...(params.customerName && { CustomerName: params.customerName }),
           ...(params.cutOffTimeFrom && { CutOffTimeFrom: params.cutOffTimeFrom }),
           ...(params.cutOffTimeTo && { CutOffTimeTo: params.cutOffTimeTo }),
           ...(params.companyId && { CompanyId: params.companyId }),
+          ...(params.sortBy && { SortBy: params.sortBy }),
+          ...(params.sortDir && { SortDir: params.sortDir }),
         },
       });
       const result = data.quotations ?? data;
@@ -157,6 +174,9 @@ export interface MyInvitationDto {
   quotedBy: string | null;
   companyStatus: string;
   hasSubmitted: boolean;
+  customerName?: string | null;
+  customerCount: number;
+  customerNames?: string | null;
 }
 
 export interface PaginatedMyInvitations {
@@ -169,10 +189,14 @@ export interface PaginatedMyInvitations {
 export interface GetMyInvitationsParams {
   pageNumber?: number;
   pageSize?: number;
-  status?: string;
-  search?: string;
+  statuses?: string[];
+  quotationNo?: string;
+  appraisalNo?: string;
+  customerName?: string;
   cutOffTimeFrom?: string;
   cutOffTimeTo?: string;
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
 }
 
 /**
@@ -184,23 +208,33 @@ export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
   const queryKey = quotationKeys.myInvitations({
     pageNumber: params.pageNumber ?? 0,
     pageSize: params.pageSize ?? 10,
-    ...(params.status && { status: params.status }),
-    ...(params.search && { search: params.search }),
+    ...(params.statuses?.length && { statuses: params.statuses }),
+    ...(params.quotationNo && { quotationNo: params.quotationNo }),
+    ...(params.appraisalNo && { appraisalNo: params.appraisalNo }),
+    ...(params.customerName && { customerName: params.customerName }),
     ...(params.cutOffTimeFrom && { cutOffTimeFrom: params.cutOffTimeFrom }),
     ...(params.cutOffTimeTo && { cutOffTimeTo: params.cutOffTimeTo }),
+    ...(params.sortBy && { sortBy: params.sortBy }),
+    ...(params.sortDir && { sortDir: params.sortDir }),
   });
 
   return useQuery({
     queryKey,
     queryFn: async (): Promise<PaginatedMyInvitations> => {
       const { data } = await axios.get('/quotations/my-invitations', {
+        // indexes:null → repeated params (?Statuses=A&Statuses=B) which Carter binds to string[]?
+        paramsSerializer: { indexes: null },
         params: {
           PageNumber: params.pageNumber ?? 0,
           PageSize: params.pageSize ?? 10,
-          ...(params.status && { Status: params.status }),
-          ...(params.search && { Search: params.search }),
+          ...(params.statuses?.length && { Statuses: params.statuses }),
+          ...(params.quotationNo && { QuotationNo: params.quotationNo }),
+          ...(params.appraisalNo && { AppraisalNo: params.appraisalNo }),
+          ...(params.customerName && { CustomerName: params.customerName }),
           ...(params.cutOffTimeFrom && { CutOffTimeFrom: params.cutOffTimeFrom }),
           ...(params.cutOffTimeTo && { CutOffTimeTo: params.cutOffTimeTo }),
+          ...(params.sortBy && { SortBy: params.sortBy }),
+          ...(params.sortDir && { SortDir: params.sortDir }),
         },
       });
       const result = data.invitations ?? data;

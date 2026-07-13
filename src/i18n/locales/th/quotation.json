@@ -48,12 +48,15 @@
     "allStatuses": "ทุกสถานะ",
     "cutOffFrom": "วันที่ปิดรับ (จาก)",
     "cutOffTo": "วันที่ปิดรับ (ถึง)",
-    "searchPlaceholder": "เลขที่ใบเสนอราคา, เลขที่ประเมิน หรือลูกค้า",
-    "searchHint": "ค้นหาจากตัวขึ้นต้น ใช้ * เป็นไวลด์การ์ด (เช่น abc*)",
+    "searchBy": "ค้นหาโดย",
+    "searchPlaceholder": "ค้นหา...",
+    "quotationNoPlaceholder": "เลขที่ใบเสนอราคา",
+    "appraisalNoPlaceholder": "เลขที่ประเมิน",
+    "customerNamePlaceholder": "ชื่อลูกค้า",
     "company": "บริษัท"
   },
   "columns": {
-    "quotationNumber": "เลขที่ #",
+    "quotationNumber": "เลขที่ใบเสนอราคา",
     "status": "สถานะ",
     "cutOffTime": "เวลาปิดรับ",
     "noOfAppraisal": "จำนวนการประเมิน",

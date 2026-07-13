@@ -3,12 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
-import Input from '@/shared/components/Input';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { DateInput } from '@/shared/components/inputs';
+import MultiSelectDropdown from '@/shared/components/inputs/MultiSelectDropdown';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import MyInvitationStatusBadge from '../components/MyInvitationStatusBadge';
+import SearchByInput from '../components/SearchByInput';
+import SortableTh from '@/features/taskMonitor/components/SortableTh';
+import type { SortDir } from '@/features/taskMonitor/types';
 import { useGetMyInvitations } from '../api/quotation';
 
 /** Slice a DatePickerInput ISO value down to the `yyyy-MM-dd` slug the backend's
@@ -27,6 +30,9 @@ const VENDOR_STATUS_CODES = [
   'Declined',
   'Cancelled',
 ] as const;
+
+// Single search box + a "search by" selector: only the chosen field is sent to the backend.
+type SearchField = 'quotationNo' | 'appraisalNo' | 'customerName';
 
 const formatCurrency = (amount: number | null) => {
   if (amount == null) return '—';
@@ -50,32 +56,56 @@ const ExtCompanyInvitationListPage = () => {
   const [pageSize, setPageSize] = useState(10);
 
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
+  const [searchField, setSearchField] = useState<SearchField>('quotationNo');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statuses, setStatuses] = useState<string[]>([]);
   const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
   const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortDir, setSortDir] = useState<SortDir | undefined>(undefined);
 
-  // Debounced search
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const handleSortChange = (key: string | undefined, dir: SortDir | undefined) => {
+    setSortBy(key);
+    setSortDir(dir);
+    setPageNumber(0);
+  };
+
+  // Debounced search term — only the value is debounced; switching field applies immediately.
+  const [debouncedTerm, setDebouncedTerm] = useState('');
+
+  const statusOptions = VENDOR_STATUS_CODES.map(code => ({
+    value: code,
+    label: t(`vendorStatus.${code}` as `vendorStatus.${(typeof VENDOR_STATUS_CODES)[number]}`),
+  }));
+  const searchFieldOptions = [
+    { value: 'quotationNo', label: t('filters.quotationNoPlaceholder'), icon: 'file-invoice' },
+    { value: 'appraisalNo', label: t('filters.appraisalNoPlaceholder'), icon: 'building' },
+    { value: 'customerName', label: t('filters.customerNamePlaceholder'), icon: 'user' },
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
+      setDebouncedTerm(searchTerm);
     }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, statusFilter, cutOffTimeFrom, cutOffTimeTo]);
+  }, [debouncedTerm, searchField, statuses, cutOffTimeFrom, cutOffTimeTo]);
 
+  const term = debouncedTerm || undefined;
   const { data, isLoading, isFetching, isError, error } = useGetMyInvitations({
     pageNumber,
     pageSize,
-    search: debouncedSearch || undefined,
-    status: statusFilter || undefined,
+    quotationNo: searchField === 'quotationNo' ? term : undefined,
+    appraisalNo: searchField === 'appraisalNo' ? term : undefined,
+    customerName: searchField === 'customerName' ? term : undefined,
+    statuses: statuses.length ? statuses : undefined,
     cutOffTimeFrom: toDateOnly(cutOffTimeFrom),
     cutOffTimeTo: toDateOnly(cutOffTimeTo),
+    sortBy,
+    sortDir,
   });
 
   const items = data?.items ?? [];
@@ -85,11 +115,11 @@ const ExtCompanyInvitationListPage = () => {
   const isFirstLoad = isLoading && items.length === 0;
   const isRefetching = isFetching && !isFirstLoad;
 
-  const hasFilters = searchTerm || statusFilter || cutOffTimeFrom || cutOffTimeTo;
+  const hasFilters = searchTerm || statuses.length || cutOffTimeFrom || cutOffTimeTo;
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
+    setStatuses([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
   };
@@ -121,29 +151,32 @@ const ExtCompanyInvitationListPage = () => {
 
       {/* Filters Bar */}
       <div className="shrink-0 flex items-end gap-3 pb-1 flex-wrap">
-        {/* Search */}
-        <div className="flex-1 max-w-xs">
-          <Input
-            placeholder={t('filters.searchPlaceholder')}
+        {/* Search — one bar: "search by" selector + input */}
+        <div className="flex flex-col gap-1">
+          <label className="block text-xs font-medium text-gray-700">{t('filters.searchBy')}</label>
+          <SearchByInput
+            options={searchFieldOptions}
+            field={searchField}
+            onFieldChange={v => setSearchField(v as SearchField)}
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
+            onChange={setSearchTerm}
+            placeholder={t('filters.searchPlaceholder')}
+            className="w-96"
           />
         </div>
 
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none bg-white min-w-36 hover:border-gray-300"
-        >
-          <option value="">{t('filters.allStatuses')}</option>
-          {VENDOR_STATUS_CODES.map(code => (
-            <option key={code} value={code}>
-              {t(`vendorStatus.${code}` as `vendorStatus.${(typeof VENDOR_STATUS_CODES)[number]}`)}
-            </option>
-          ))}
-        </select>
+        {/* Status Filter — multi-select */}
+        <div className="flex flex-col gap-1">
+          <label className="block text-xs font-medium text-gray-700">{t('columns.status')}</label>
+          <MultiSelectDropdown
+            options={statusOptions}
+            value={statuses}
+            onChange={setStatuses}
+            placeholder={t('filters.allStatuses')}
+            showValuePrefix={false}
+            className="min-w-40"
+          />
+        </div>
 
         {/* Cut Off Time — From */}
         <div className="w-40">
@@ -179,30 +212,65 @@ const ExtCompanyInvitationListPage = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.quotationNumber')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.status')}
-                </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.noOfAppraisal')}
-                </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.totalFeeAmount')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.receivedAt')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.cutOffTime')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.quotedBy')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.quotedAt')}
-                </th>
+                <SortableTh
+                  label={t('columns.quotationNumber')}
+                  sortKey="QuotationNumber"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.customerName')}
+                  sortKey="CustomerName"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.status')}
+                  sortKey="CompanyStatus"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.noOfAppraisal')}
+                  sortKey="TotalAppraisals"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                  className="text-center"
+                />
+                <SortableTh
+                  label={t('columns.totalFeeAmount')}
+                  sortKey="TotalFeeAmount"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                  className="text-right"
+                />
+                <SortableTh
+                  label={t('columns.receivedAt')}
+                  sortKey="ReceivedAt"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh
+                  label={t('columns.cutOffTime')}
+                  sortKey="CutOffTime"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
+                <SortableTh label={t('columns.quotedBy')} />
+                <SortableTh
+                  label={t('columns.quotedAt')}
+                  sortKey="QuotedAt"
+                  activeSortKey={sortBy}
+                  activeSortDir={sortDir}
+                  onSortChange={handleSortChange}
+                />
               </tr>
             </thead>
             <tbody
@@ -212,6 +280,7 @@ const ExtCompanyInvitationListPage = () => {
                 <TableRowSkeleton
                   columns={[
                     { width: 'w-28' },
+                    { width: 'w-32' },
                     { width: 'w-12' },
                     { width: 'w-24' },
                     { width: 'w-24' },
@@ -224,7 +293,7 @@ const ExtCompanyInvitationListPage = () => {
                 />
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16">
+                  <td colSpan={9} className="text-center py-16">
                     <div className="flex flex-col items-center gap-3">
                       <Icon name="inbox" style="regular" className="size-12 text-gray-300" />
                       <div className="text-center">
@@ -249,6 +318,17 @@ const ExtCompanyInvitationListPage = () => {
                   >
                     <td className="px-4 py-2.5">
                       <span className="font-medium text-primary">{item.quotationNumber}</span>
+                    </td>
+                    <td
+                      className="px-4 py-2.5 text-gray-600 max-w-[16rem]"
+                      title={item.customerNames ?? undefined}
+                    >
+                      <span className="inline-block max-w-full truncate align-bottom">
+                        {item.customerName ?? '—'}
+                      </span>
+                      {item.customerCount > 1 && (
+                        <span className="ml-1 text-xs text-gray-400">+{item.customerCount - 1}</span>
+                      )}
                     </td>
                     <td className="px-4 py-2.5">
                       <MyInvitationStatusBadge status={item.companyStatus} />
