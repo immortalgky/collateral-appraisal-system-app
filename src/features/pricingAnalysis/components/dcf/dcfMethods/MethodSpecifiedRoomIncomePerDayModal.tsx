@@ -330,9 +330,7 @@ export function MethodSpecifyRoomIncomePerDayModal({
               )}
             />
           </div>
-        </div>
-        <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Remark</span>
+          <span>Remark</span>
           <div className={'flex-1'}>
             <RHFInputCell
               fieldName={`${name}.remark`}
