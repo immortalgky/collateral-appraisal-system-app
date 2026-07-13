@@ -39,6 +39,7 @@ import {
   useCompleteActivity,
   useGetActivityActions,
   useGetTaskById,
+  useGetWorkflowProgress,
   useSaveTaskDecisionDraft,
 } from '../api/workflow';
 import {
@@ -464,7 +465,16 @@ const DecisionSummaryPage = () => {
   const activityId = useActivityId();
   const isTaskOwner = useIsTaskOwner();
 
-  // Section visibility by activity
+  // On the appraisal route (no taskId) the context has no workflow ids, so the live
+  // approval / activity-tracking / meeting sections would render empty. Resolve them
+  // from the appraisal's workflow progress and fall back to context on the task route.
+  const { data: workflowProgress } = useGetWorkflowProgress(taskId ? undefined : appraisalId);
+  const resolvedWorkflowInstanceId =
+    workflowInstanceId ?? workflowProgress?.workflowInstanceId ?? undefined;
+  const resolvedActivityId = activityId ?? workflowProgress?.currentActivityId ?? undefined;
+
+  // Section visibility by activity — intentionally keyed off the *context* activityId
+  // (undefined on the appraisal route) so Appraisal Search still shows all sections.
   const sectionConfig = activityId
     ? (ACTIVITY_SECTION_CONFIG[activityId] ?? { sections: [] })
     : null; // null = no activityId = show all sections
@@ -1088,8 +1098,8 @@ const DecisionSummaryPage = () => {
                   section below (avoids the "not active yet" placeholder next to real history). */}
               {showSection('committeeApproval') && !isTerminalStatus(appraisal?.status) && (
                 <LiveApprovalListSection
-                  workflowInstanceId={workflowInstanceId}
-                  activityId={activityId}
+                  workflowInstanceId={resolvedWorkflowInstanceId}
+                  activityId={resolvedActivityId}
                 />
               )}
 
@@ -1111,6 +1121,8 @@ const DecisionSummaryPage = () => {
                 onAssigneeChange={setSelectedAssigneeUserId}
                 selectedReasonCode={reasonCode}
                 onReasonChange={setReasonCode}
+                workflowInstanceId={resolvedWorkflowInstanceId}
+                activityId={resolvedActivityId}
               />
             </div>
           </div>
@@ -1147,7 +1159,11 @@ const DecisionSummaryPage = () => {
                     <Button
                       variant="outline"
                       type="submit"
-                      disabled={!appraisalId || (!isDirty && !draftDirty) || isSaving}
+                      disabled={
+                        (!appraisalId && !(isTaskOwner && !!taskId)) ||
+                        (!isDirty && !draftDirty) ||
+                        isSaving
+                      }
                     >
                       <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
                       {t('decisionSummaryPageExtra.saveButton')}
