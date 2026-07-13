@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { useIsCiAppraisal, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useEnrichedPropertyGroups } from '@/features/appraisal/hooks/useEnrichedPropertyGroups';
+import { usePropertyBasePath } from '@/features/appraisal/hooks/usePropertyBasePath';
 import Icon from '@shared/components/Icon';
 import {
   GalleryTab,
@@ -31,6 +32,7 @@ const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws
 export default function PropertyInformationPage() {
   const { t } = useTranslation('appraisal');
   const isReadOnly = usePageReadOnly();
+  const isPma = usePropertyBasePath() === 'property-pma';
 
   // The Machinery Summary tab is appraisal-level (one record per appraisal) and
   // only relevant when the appraisal actually contains machinery.
@@ -55,7 +57,10 @@ export default function PropertyInformationPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
   const isTabAvailable = (id: TabId | null): id is TabId =>
-    !!id && VALID_TABS.includes(id) && (id !== 'machinery' || hasMachinery);
+    !!id &&
+    VALID_TABS.includes(id) &&
+    (id !== 'machinery' || hasMachinery) &&
+    (!isPma || id === 'properties');
   const activeTab: TabId = isTabAvailable(tabParam) ? tabParam : 'properties';
 
   // Seed `?tab=properties` on first arrival so the URL is the source of truth
@@ -65,13 +70,15 @@ export default function PropertyInformationPage() {
       setSearchParams({ tab: 'properties' }, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabParam, hasMachinery, setSearchParams]);
+  }, [tabParam, hasMachinery, isPma, setSearchParams]);
 
   const handleTabChange = (tabId: TabId) => {
     setSearchParams({ tab: tabId }, { replace: true });
   };
 
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+  const visibleTabs = isPma ? TABS.filter(tab => tab.id === 'properties') : TABS;
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -98,7 +105,7 @@ export default function PropertyInformationPage() {
         {/* Tab Navigation - Compact */}
         <div className="shrink-0 pb-4">
           <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">
-            {TABS.map(tab => {
+            {visibleTabs.map(tab => {
               const isActive = activeTab === tab.id;
               return (
                 <button

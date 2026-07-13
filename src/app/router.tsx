@@ -761,7 +761,7 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <PropertyInformationPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -769,7 +769,7 @@ export const router = createBrowserRouter([
           {
             path: 'condo/:propertyId',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <CondoPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -777,7 +777,7 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/:propertyId',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <LandBuildingPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -846,7 +846,7 @@ export const router = createBrowserRouter([
           {
             path: 'condo/:propertyId/pma',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <CondoPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -870,7 +870,7 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/:propertyId/pma',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <LandBuildingPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1247,7 +1247,7 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <PropertyInformationPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1255,7 +1255,7 @@ export const router = createBrowserRouter([
           {
             path: 'condo/new',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <CondoPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1263,7 +1263,7 @@ export const router = createBrowserRouter([
           {
             path: 'condo/:propertyId',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <CondoPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1271,7 +1271,7 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/:propertyId',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <LandBuildingPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1279,7 +1279,7 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/new',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <LandBuildingPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1348,7 +1348,7 @@ export const router = createBrowserRouter([
           {
             path: 'condo/:propertyId/pma',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <CondoPMAPage />
               </AppraisalReadOnlyWrapper>
             ),
@@ -1372,7 +1372,7 @@ export const router = createBrowserRouter([
           {
             path: 'land-building/:propertyId/pma',
             element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information">
+              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
                 <LandBuildingPMAPage />
               </AppraisalReadOnlyWrapper>
             ),

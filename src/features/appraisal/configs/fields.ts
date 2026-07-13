@@ -2687,23 +2687,7 @@ export const landAndBuildingPMAFields: FormField[] = [
 // =============================================================================
 // Condominium PMA fields
 // =============================================================================
-export const condoPMAFields: FormField[] = [
-  {
-    type: 'text-input',
-    label: 'Construction on Title Deed Number',
-    name: 'builtOnTitleNumber',
-    wrapperClassName: 'col-span-6',
-    required: true,
-    maxLength: 200,
-  },
-  {
-    type: 'text-input',
-    label: 'Condominium Registration Number',
-    name: 'condoRegistrationNumber',
-    wrapperClassName: 'col-span-3',
-    required: true,
-    maxLength: 10,
-  },
+export const condoPmaDetailFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Room Number',
@@ -2730,12 +2714,31 @@ export const condoPMAFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Condominium Name',
+    label: 'Condo Name',
     name: 'condoName',
     wrapperClassName: 'col-span-6',
     required: true,
     maxLength: 100,
   },
+  {
+    type: 'text-input',
+    label: 'Condo Registration Number',
+    name: 'condoRegistrationNumber',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Construction on Title Deed Number',
+    name: 'builtOnTitleNumber',
+    wrapperClassName: 'col-span-6',
+    required: true,
+    maxLength: 200,
+  },
+];
+
+export const condoPmaAddressFields: FormField[] = [
   {
     type: 'location-selector',
     label: 'Sub District',
@@ -2767,6 +2770,8 @@ export const condoPMAFields: FormField[] = [
     wrapperClassName: 'col-span-3',
   },
 ];
+
+export const condoPMAFields: FormField[] = [...condoPmaDetailFields, ...condoPmaAddressFields];
 
 export const allCondoPMAFields: FormField[] = [...pmaField, ...condoPMAFields];
 

@@ -180,6 +180,7 @@ const PAGE_NAME_TO_ITEM_KEY: Record<string, string> = {
   Administration: 'appraisal.administration',
   'Appointment & Fee': 'appraisal.appointment',
   'Property Information': 'appraisal.property',
+  'Property Information (PMA)': 'appraisal.property-pma',
   'Document Checklist': 'appraisal.documents',
   'Summary & Decision': 'appraisal.summary',
   '360 Summary': 'appraisal.360',

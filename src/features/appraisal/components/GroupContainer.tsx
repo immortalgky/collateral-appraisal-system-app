@@ -23,6 +23,7 @@ type ViewMode = 'grid' | 'list';
 interface GroupContainerProps {
   group: PropertyGroup;
   viewMode: ViewMode;
+  isPma?: boolean;
   onDeleteGroup: (groupId: string) => void;
   onRenameGroup: (groupId: string, newName: string) => void;
   onContextMenu: (e: React.MouseEvent, property: PropertyItem, groupId: string) => void;
@@ -41,6 +42,7 @@ export const GroupContainer = React.memo(
   ({
     group,
     viewMode,
+    isPma = false,
     onDeleteGroup,
     onRenameGroup,
     onContextMenu,
@@ -194,7 +196,7 @@ export const GroupContainer = React.memo(
                       style="solid"
                     />
                   </DisclosureButton>
-                  {isEditing && !readOnly ? (
+                  {isEditing && !readOnly && !isPma ? (
                     <input
                       ref={inputRef}
                       value={editValue}
@@ -205,9 +207,9 @@ export const GroupContainer = React.memo(
                     />
                   ) : (
                     <h2
-                      className={`text-xs font-semibold text-gray-900 ${readOnly ? '' : 'cursor-pointer hover:text-primary'} transition-colors`}
-                      onClick={readOnly ? undefined : () => setIsEditing(true)}
-                      title={readOnly ? undefined : 'Click to rename'}
+                      className={`text-xs font-semibold text-gray-900 ${readOnly || isPma ? '' : 'cursor-pointer hover:text-primary'} transition-colors`}
+                      onClick={readOnly || isPma ? undefined : () => setIsEditing(true)}
+                      title={readOnly || isPma ? undefined : 'Click to rename'}
                     >
                       {group.name}
                     </h2>
@@ -228,7 +230,7 @@ export const GroupContainer = React.memo(
                       ))}
                     </>
                   )}
-                  {!readOnly && (
+                  {!readOnly && !isPma && (
                     <button
                       onClick={() => onDeleteGroup(group.id)}
                       disabled={isDeletingGroup}
@@ -244,18 +246,20 @@ export const GroupContainer = React.memo(
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    className="relative p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 cursor-pointer rounded-md transition-colors"
-                    onClick={() => handleOnClickPricingButton()}
-                    title="Pricing Analysis"
-                  >
-                    <Icon name="badge-dollar" className="text-base" />
-                    <span
-                      className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${
-                        group.pricingAnalysisId ? 'bg-emerald-500' : 'bg-gray-300'
-                      }`}
-                    />
-                  </button>
+                  {!isPma && (
+                    <button
+                      className="relative p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 cursor-pointer rounded-md transition-colors"
+                      onClick={() => handleOnClickPricingButton()}
+                      title="Pricing Analysis"
+                    >
+                      <Icon name="badge-dollar" className="text-base" />
+                      <span
+                        className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${
+                          group.pricingAnalysisId ? 'bg-emerald-500' : 'bg-gray-300'
+                        }`}
+                      />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -497,7 +501,7 @@ export const GroupContainer = React.memo(
                         <div className="flex flex-col items-center justify-center py-4 text-gray-400">
                           <Icon name="folder-open" className="text-2xl mb-2" />
                           <p className="text-xs mb-3">Drop properties here or add below</p>
-                          {!readOnly && <PropertyTypeDropdown groupId={group.id} />}
+                          {!readOnly && !isPma && <PropertyTypeDropdown groupId={group.id} />}
                         </div>
                       )}
                     </div>
@@ -506,7 +510,7 @@ export const GroupContainer = React.memo(
                     <div className="flex flex-col items-center justify-center py-8 text-gray-400 bg-gray-50/50 rounded-lg">
                       <Icon name="folder-open" className="text-2xl mb-2" />
                       <p className="text-xs mb-3">Drop properties here or add below</p>
-                      {!readOnly && <PropertyTypeDropdown groupId={group.id} />}
+                      {!readOnly && !isPma && <PropertyTypeDropdown groupId={group.id} />}
                     </div>
                   ) : (
                     <PropertyTable
@@ -521,7 +525,7 @@ export const GroupContainer = React.memo(
                   )}
 
                   {/* Add Property Button (only when items exist) */}
-                  {!readOnly && group.items.length > 0 && (
+                  {!readOnly && !isPma && group.items.length > 0 && (
                     <div className="mt-2 flex justify-center">
                       <PropertyTypeDropdown groupId={group.id} />
                     </div>
