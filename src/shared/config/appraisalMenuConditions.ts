@@ -17,15 +17,9 @@ export type AppraisalMenuCondition = {
  * canEdit value.
  */
 export const appraisalMenuConditions: Record<string, AppraisalMenuCondition> = {
-  // Property Information — shown for all appraisal types except PMA.
-  // For block appraisals the href is overridden in useNavigation to point at the block page.
-  'appraisal.property': {
-    showWhen: ctx => !ctx.isPma,
-  },
-  // Property Information (PMA variant)
-  'appraisal.property-pma': {
-    showWhen: ctx => ctx.isPma === true,
-  },
+  // Property Information — the normal property page. Visibility is activity-scoped via
+  // ActivityMenuOverrides (hidden on int-pma-input, where the PMA variant takes over), so no
+  // code-side showWhen here. For block appraisals the href is overridden in useNavigation.
   // Block Condo / Village items are collapsed into "Property Information" above — always hide.
   'appraisal.block-condo': {
     showWhen: () => false,

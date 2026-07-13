@@ -70,6 +70,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   const basePath = useBasePath();
   const appraisalId = useAppraisalId();
   const propertyBasePath = usePropertyBasePath();
+  const isPma = propertyBasePath === 'property-pma';
 
   // Pre-flight validation gate for pricing analysis (plug-and-play; reusable elsewhere)
   const { open: openPricingValidation, modal: pricingValidationModal } = usePricingValidationGate();
@@ -457,7 +458,10 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   const contextMenuItems = readOnly
     ? [{ label: t('properties.contextMenu.view'), icon: 'eye', onClick: handleEdit }]
-    : [
+    : isPma
+      ? // PMA mode: only Edit (opens the PMA editor); Move/Copy/Paste/Delete are hidden.
+        [{ label: t('properties.contextMenu.edit'), icon: 'pen-to-square', onClick: handleEdit }]
+      : [
         {
           label: t('properties.contextMenu.edit'),
           icon: 'pen-to-square',
@@ -561,7 +565,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         </div>
 
         {/* Add New Group Button */}
-        {!readOnly && (
+        {!readOnly && !isPma && (
           <Button
             variant="primary"
             onClick={handleAddGroup}
@@ -599,6 +603,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
                 key={group.id}
                 group={group}
                 viewMode={viewMode}
+                isPma={isPma}
                 onDeleteGroup={handleDeleteGroup}
                 onRenameGroup={handleRenameGroup}
                 onContextMenu={handleContextMenu}

@@ -11,8 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //import { useGetCondoPMAPropertyById, useUpdateCondoPMAProperty } from '../api';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
-import { Badge, Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
+import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
 import { FormProvider } from '@/shared/components/form';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
@@ -158,52 +157,6 @@ const CondoPMAPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4 flex items-center justify-between">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: 'PMA', id: 'pma-section', icon: 'file-invoice-dollar' },
-            { label: 'Property', id: 'property-section', icon: 'city' },
-          ]}
-        />
-        {isEditMode &&
-          propertyData?.externalSyncStatus &&
-          propertyData.externalSyncStatus !== 'NotSynced' && (
-            <div
-              className="flex items-center gap-2 shrink-0"
-              title={
-                propertyData.externalSyncStatus === 'Failed'
-                  ? (propertyData.externalSyncError ?? undefined)
-                  : undefined
-              }
-            >
-              {propertyData.externalSyncStatus === 'Delivered' && (
-                <Badge type="externalSyncStatus" value="Delivered" size="sm">
-                  Synced
-                </Badge>
-              )}
-              {propertyData.externalSyncStatus === 'Pending' && (
-                <Badge type="externalSyncStatus" value="Pending" size="sm">
-                  Syncing…
-                </Badge>
-              )}
-              {propertyData.externalSyncStatus === 'Failed' && (
-                <>
-                  <Badge type="externalSyncStatus" value="Failed" size="sm">
-                    Sync failed
-                  </Badge>
-                  {propertyData.externalSyncError && (
-                    <span className="text-xs text-red-600 truncate max-w-xs">
-                      — {propertyData.externalSyncError}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-      </div>
-
       <FormProvider methods={methods} schema={condoPMAFormSchema}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -224,7 +177,11 @@ const CondoPMAPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <CondoPMAForm />
+                    <CondoPMAForm
+                      externalSyncStatus={isEditMode ? propertyData?.externalSyncStatus : undefined}
+                      externalSyncError={isEditMode ? propertyData?.externalSyncError : undefined}
+                      externalSyncedAt={isEditMode ? propertyData?.externalSyncedAt : undefined}
+                    />
                   </Section>
                 </div>
               </ResizableSidebar.Main>
