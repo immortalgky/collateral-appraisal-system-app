@@ -16,7 +16,10 @@ import {
   useCreateOrGetReference,
   type PricingAnalysisSubjectType,
   type ReferenceDto,
+  useDeleteReference,
 } from '../api/references';
+import { useState } from 'react';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -44,10 +47,14 @@ function formatNumber(v: number | null | undefined): string {
 
 function methodTypeLabel(methodType: string): string {
   switch (methodType) {
-    case 'WQS_MARKET': return 'WQS';
-    case 'SAG_MARKET': return 'SAG';
-    case 'DC_MARKET': return 'DC';
-    default: return methodType;
+    case 'WQS_MARKET':
+      return 'WQS';
+    case 'SAG_MARKET':
+      return 'SAG';
+    case 'DC_MARKET':
+      return 'DC';
+    default:
+      return methodType;
   }
 }
 
@@ -64,8 +71,15 @@ export function MarketReferenceList({
   currentAnchorLabel,
 }: MarketReferenceListProps) {
   const { t } = useTranslation('pricingAnalysis');
+  const [deleteTarget, setDeleteTarget] = useState<ReferenceDto | null>(null);
 
-  const { data, isLoading, isError, refetch } = useGetReferences(subjectType, anchorId, anchorRefKey);
+  const { data, isLoading, isError, refetch } = useGetReferences(
+    subjectType,
+    anchorId,
+    anchorRefKey,
+  );
+  const deleteMutation = useDeleteReference();
+
   const createMutation = useCreateOrGetReference();
 
   const references = data?.references ?? [];
@@ -93,6 +107,24 @@ export function MarketReferenceList({
       onOpenReference(syntheticRef);
     } catch {
       toast.error(t('marketRef.createFailed'));
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync({
+        pricingAnalysisId: deleteTarget.pricingAnalysisId,
+        subjectType: deleteTarget.subjectType,
+        anchorId: deleteTarget.anchorId,
+        anchorRefKey: deleteTarget.anchorRefKey,
+        // No group-level context here (unlike GroupReferencesSection) — omit so
+        // useDeleteReference's onSuccess skips the group-references invalidation.
+      });
+    } catch {
+      toast.error(t('groupReferences.deleteFailed'));
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -164,7 +196,16 @@ export function MarketReferenceList({
                     <Icon name="arrow-up-right-from-square" className="size-3" />
                     {t('marketRef.openReference')}
                   </button>
-                  {/* Delete: hidden until backend exposes DELETE /pricing-analysis/{id} for references */}
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteTarget(ref)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 border border-red-200/50 rounded-lg hover:bg-red-50 transition-colors"
+                      title={t('groupReferences.deleteReference')}
+                    >
+                      <Icon name="trash" style="solid" className="size-3" />
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -188,7 +229,9 @@ export function MarketReferenceList({
                           {methodTypeLabel(method.methodType)}
                         </span>
                         <div className="flex flex-col">
-                          <span className="text-xs text-gray-500">{t('marketRef.valuePerUnit')}</span>
+                          <span className="text-xs text-gray-500">
+                            {t('marketRef.valuePerUnit')}
+                          </span>
                           <span
                             className={clsx(
                               'text-sm font-semibold tabular-nums',
@@ -240,6 +283,14 @@ export function MarketReferenceList({
         </button>
       )}
 
+      <ConfirmDialog
+        isOpen={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        variant="danger"
+        title={t('groupReferences.deleteReference')}
+        message={t('groupReferences.deleteConfirm')}
+      />
     </div>
   );
 }
