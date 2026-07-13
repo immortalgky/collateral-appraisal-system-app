@@ -665,7 +665,7 @@ export function SupportingDataMaintenanceDetailListPage() {
       {/* Action bar */}
       <ActionBar>
         <ActionBar.Left>
-          <CancelButton fallbackPath="/standalone/supporting-data-maintenance" />
+          <CancelButton />
         </ActionBar.Left>
         <ActionBar.Right>
           {(hasAuthorityToEdit || !hasSupportingId) && (

@@ -134,19 +134,36 @@ export function MenuItemForm({
       ...v,
       translations: v.translations.map(tr => (tr.languageCode === lang ? { ...tr, label } : tr)),
     }));
+    if (lang === 'en' && label.trim()) setLabelError(false);
   };
 
+  const [itemKeyError, setItemKeyError] = useState(false);
+  const [iconError, setIconError] = useState(false);
   const [viewError, setViewError] = useState(false);
+  const [labelError, setLabelError] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // PermissionSelect wraps a non-native Autocomplete, so this isn't enforced by the
-    // browser — guard it here. At least one of viewPermissionCode / viewPermissionPrefix
-    // must be set (e.g. Monitoring uses only a prefix, with no discrete code).
-    const hasViewCode = values.viewPermissionCode.trim() !== '';
-    const hasViewPrefix = (values.viewPermissionPrefix ?? '').trim() !== '';
-    if (!hasViewCode && !hasViewPrefix) {
-      setViewError(true);
+    // The base Input doesn't enforce native `required`, and the label inputs sit in hidden
+    // tabs — so mirror the backend NotEmpty rules here instead of relying on the browser.
+    // Validate every required field up front and surface all inline errors at once.
+    const itemKeyMissing = values.itemKey.trim() === '';
+    const iconMissing = values.iconName.trim() === '';
+    // At least one of viewPermissionCode / viewPermissionPrefix must be set (e.g. Monitoring
+    // uses only a prefix, with no discrete code).
+    const viewMissing =
+      values.viewPermissionCode.trim() === '' && (values.viewPermissionPrefix ?? '').trim() === '';
+    // Empty translations get filtered out before POST, so a blank EN label would send an
+    // empty list and trip the backend "at least one translation" validator.
+    const labelMissing = getTranslation(values.translations, 'en').trim() === '';
+
+    setItemKeyError(itemKeyMissing);
+    setIconError(iconMissing);
+    setViewError(viewMissing);
+    setLabelError(labelMissing);
+
+    if (itemKeyMissing || iconMissing || viewMissing || labelMissing) {
+      if (labelMissing) setActiveTab('en');
       return;
     }
     onSubmit(values);
@@ -162,9 +179,14 @@ export function MenuItemForm({
             label={t('form.itemKey')}
             required
             value={values.itemKey}
-            onChange={e => setValues(v => ({ ...v, itemKey: e.target.value }))}
+            onChange={e => {
+              const itemKey = e.target.value;
+              setValues(v => ({ ...v, itemKey }));
+              if (itemKey.trim()) setItemKeyError(false);
+            }}
             disabled={isSystem}
             placeholder={t('form.itemKeyPlaceholder')}
+            error={itemKeyError ? t('form.itemKeyRequired') : undefined}
           />
           {isSystem && <p className="text-xs text-amber-600 mt-1">{t('form.itemKeyLocked')}</p>}
         </div>
@@ -224,6 +246,7 @@ export function MenuItemForm({
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             {t('form.viewPermission')}
+            <span className="text-red-500 ml-0.5">*</span>
           </span>
           <PermissionSelect
             value={values.viewPermissionCode}
@@ -231,6 +254,7 @@ export function MenuItemForm({
               setValues(v => ({ ...v, viewPermissionCode: code }));
               if (code) setViewError(false);
             }}
+            invalid={viewError}
           />
           {viewError && (
             <p className="text-xs text-red-500 mt-1">{t('form.viewPermissionRequired')}</p>
@@ -277,13 +301,19 @@ export function MenuItemForm({
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             {t('form.icon')}
+            <span className="text-red-500 ml-0.5">*</span>
           </span>
           <IconPicker
             value={values.iconName}
             styleValue={values.iconStyle}
-            onChangeIcon={name => setValues(v => ({ ...v, iconName: name }))}
+            onChangeIcon={name => {
+              setValues(v => ({ ...v, iconName: name }));
+              if (name.trim()) setIconError(false);
+            }}
             onChangeStyle={style => setValues(v => ({ ...v, iconStyle: style }))}
+            invalid={iconError}
           />
+          {iconError && <p className="text-xs text-red-500 mt-1">{t('form.iconRequired')}</p>}
         </div>
 
         {/* Icon Color — composite control, use role=group */}
@@ -372,6 +402,7 @@ export function MenuItemForm({
                   value={getTranslation(values.translations, lang)}
                   onChange={e => updateTranslation(lang, e.target.value)}
                   required={lang === 'en'}
+                  error={lang === 'en' && labelError ? t('form.labelRequired') : undefined}
                   placeholder={
                     lang === 'en'
                       ? t('form.labelPlaceholderEn')

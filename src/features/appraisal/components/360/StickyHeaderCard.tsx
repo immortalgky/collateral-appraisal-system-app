@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import type { GetDecisionSummaryResponse } from '../../api/decisionSummary';
@@ -9,8 +11,12 @@ type AppraisalData = Record<string, any> | undefined;
 interface StickyHeaderCardProps {
   appraisal: AppraisalData;
   decisionSummary: GetDecisionSummaryResponse | undefined;
-  customerName?: string;
-  contactNumber?: string;
+  customerName?: string | null;
+  contactNumber?: string | null;
+  /** Optional action buttons rendered as a divided row inside the header card */
+  actions?: ReactNode;
+  /** Shrinks the header (avatar, name, padding) once the content is scrolled */
+  compact?: boolean;
 }
 
 const StickyHeaderCard = ({
@@ -18,22 +24,44 @@ const StickyHeaderCard = ({
   decisionSummary,
   customerName,
   contactNumber,
+  actions,
+  compact = false,
 }: StickyHeaderCardProps) => {
   const { t } = useTranslation('appraisal');
   return (
-    <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm rounded-2xl">
-      <div className="px-6 py-4">
+    <div className="sticky top-0 z-10 bg-white border border-gray-100 shadow-sm rounded-2xl transition-all duration-200">
+      <div className={clsx('px-6 transition-all duration-200', compact ? 'py-2.5' : 'py-4')}>
         <div className="flex items-center justify-between">
           {/* Left: Customer & appraisal info */}
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/20">
-              <Icon name="user" style="solid" className="w-5 h-5 text-white" />
+            <div
+              className={clsx(
+                'flex items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-teal-600 shadow-lg shadow-teal-500/20 transition-all duration-200',
+                compact ? 'h-9 w-9' : 'h-12 w-12',
+              )}
+            >
+              <Icon
+                name="user"
+                style="solid"
+                className={clsx('text-white transition-all duration-200', compact ? 'h-4 w-4' : 'h-5 w-5')}
+              />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight">
+              <h1
+                className={clsx(
+                  'font-bold text-gray-900 tracking-tight transition-all duration-200',
+                  compact ? 'text-lg' : 'text-xl',
+                )}
+              >
                 {customerName || '-'}
               </h1>
-              <div className="flex items-center gap-2 mt-3">
+              {/* Chips collapse away when compact to reclaim vertical space */}
+              <div
+                className={clsx(
+                  'flex items-center gap-2 overflow-hidden transition-all duration-200',
+                  compact ? 'mt-0 max-h-0 opacity-0' : 'mt-3 max-h-8 opacity-100',
+                )}
+              >
                 {appraisal?.appraisalNumber && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-xs font-medium text-gray-600">
                     <Icon name="hashtag" style="solid" className="w-2.5 h-2.5 text-gray-400" />
@@ -70,6 +98,18 @@ const StickyHeaderCard = ({
           </div>
         </div>
       </div>
+
+      {/* Action buttons — combined into the header card */}
+      {actions && (
+        <div
+          className={clsx(
+            'flex justify-end gap-2 border-t border-gray-100 px-3 transition-all duration-200',
+            compact ? 'py-1.5' : 'py-2.5',
+          )}
+        >
+          {actions}
+        </div>
+      )}
     </div>
   );
 };

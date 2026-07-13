@@ -69,7 +69,10 @@
     "labelAriaInput": "{{lang}} label",
     "submit": "Save",
     "submitting": "Saving...",
-    "viewPermissionRequired": "Provide a view permission or a permission prefix."
+    "viewPermissionRequired": "Provide a view permission or a permission prefix.",
+    "labelRequired": "English label is required.",
+    "itemKeyRequired": "Item key is required.",
+    "iconRequired": "Icon is required."
   },
   "colors": {
     "Blue": "Blue",

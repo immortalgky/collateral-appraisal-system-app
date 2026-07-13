@@ -43,6 +43,7 @@ export interface MeetingQueueItemDto {
   appraisalId: string;
   appraisalNo: string | null;
   facilityLimit: number;
+  appraisalValue: number;
   workflowInstanceId: string;
   activityId: string;
   meetingId: string | null;
@@ -72,6 +73,8 @@ export interface MeetingListItemDto {
   cutOffAt: string | null;
   location: string | null;
   itemCount: number;
+  updatedAt: string | null;
+  updatedBy: string | null;
 }
 
 /** A single appraisal that has been added to a meeting. */
@@ -260,6 +263,8 @@ export interface GetMeetingsParams {
   customerName?: string;
   fromDate?: string;
   toDate?: string;
+  sortBy?: 'meetingNo' | 'startAt' | 'itemCount';
+  sortDir?: 'asc' | 'desc';
   pageNumber?: number;
   pageSize?: number;
 }

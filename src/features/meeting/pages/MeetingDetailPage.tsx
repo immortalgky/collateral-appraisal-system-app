@@ -10,6 +10,7 @@ import {
   CANCEL_ELIGIBLE,
   CUT_OFF_ELIGIBLE,
   EDIT_ELIGIBLE,
+  END_ELIGIBLE,
   ITEM_ACTION_ELIGIBLE,
   ITEM_REMOVE_ELIGIBLE,
   MEETING_PERMISSIONS,
@@ -21,6 +22,7 @@ import AddItemsDialog from '../components/AddItemsDialog';
 import AgendaForm from '../components/AgendaForm';
 import CancelMeetingDialog from '../components/CancelMeetingDialog';
 import CutOffReviewDialog from '../components/CutOffReviewDialog';
+import EndMeetingDialog from '../components/EndMeetingDialog';
 import MeetingDocumentsDialog from '../components/MeetingDocumentsDialog';
 import MeetingFormDialog from '../components/MeetingFormDialog';
 import MeetingItemsGrouped from '../components/MeetingItemsGrouped';
@@ -58,6 +60,7 @@ const MeetingDetailPage = () => {
   const sendInvitationDialog = useDisclosure();
   const resendInvitationDialog = useDisclosure();
   const cancelDialog = useDisclosure();
+  const endDialog = useDisclosure();
   const addItemsDialog = useDisclosure();
   const documentsDialog = useDisclosure();
 
@@ -139,6 +142,13 @@ const MeetingDetailPage = () => {
               <Icon name="folder-open" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.documents')}
             </Button>
+
+            {END_ELIGIBLE.has(status) && (
+              <Button size="sm" type="button" onClick={endDialog.onOpen}>
+                <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
+                {t('buttons.endMeeting')}
+              </Button>
+            )}
 
             {CANCEL_ELIGIBLE.has(status) && (
               <Button variant="danger" size="sm" type="button" onClick={cancelDialog.onOpen}>
@@ -336,6 +346,12 @@ const MeetingDetailPage = () => {
       <CancelMeetingDialog
         isOpen={cancelDialog.isOpen}
         onClose={cancelDialog.onClose}
+        meetingId={meeting.id}
+      />
+
+      <EndMeetingDialog
+        isOpen={endDialog.isOpen}
+        onClose={endDialog.onClose}
         meetingId={meeting.id}
       />
 

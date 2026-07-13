@@ -6,6 +6,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Textarea from '@shared/components/inputs/Textarea';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
@@ -358,7 +359,9 @@ const PermissionListPage = () => {
                   {selectedPermission.description && (
                     <div>
                       <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
-                      <div className="text-sm text-gray-600">{selectedPermission.description}</div>
+                      <div className="text-sm text-gray-600 whitespace-pre-line break-words">
+                        {selectedPermission.description}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -434,10 +437,12 @@ const PermissionListPage = () => {
             options={MODULE_OPTIONS}
             required
           />
-          <TextInput
+          <Textarea
             label={t('fields.description')}
             value={form.description}
             onChange={e => updateField('description', e.currentTarget.value)}
+            maxLength={500}
+            showCharCount
             placeholder={t('placeholders.permissionDescription')}
           />
         </div>

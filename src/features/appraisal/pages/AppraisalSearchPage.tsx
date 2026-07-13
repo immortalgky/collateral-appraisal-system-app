@@ -214,6 +214,8 @@ function AppraisalSearchPage() {
               items={items}
               isLoading={isLoading}
               onAppraisalClick={setSelectedAppraisalId}
+              pageNumber={pageNumber}
+              pageSize={pageSize}
             />
 
             {/* Pagination */}

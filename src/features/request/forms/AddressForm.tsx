@@ -2,12 +2,17 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
 import { SectionHeader } from '@shared/components';
+import { useDealerOptions } from '@/shared/utils/parameterUtils';
 import { makeAddressFields, makeContactFields } from '../configs/fields';
 
 const AddressForm = () => {
   const { t } = useTranslation('request');
   const addressFields = useMemo(() => makeAddressFields(t), [t]);
-  const contactFields = useMemo(() => makeContactFields(t), [t]);
+  const dealerOptions = useDealerOptions();
+  const contactFields = useMemo(
+    () => makeContactFields(t, dealerOptions),
+    [t, dealerOptions],
+  );
 
   return (
     <div>

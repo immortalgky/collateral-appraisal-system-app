@@ -69,7 +69,8 @@ export function useNotificationHub() {
         }
         if (notification.type === 'DocumentFollowupRaised') {
           queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-          queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+          queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+          queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
           queryClient.invalidateQueries({ queryKey: ['task-counts'] });
         }
       }
@@ -79,7 +80,8 @@ export function useNotificationHub() {
       if (TASK_NOTIFICATION_TYPES.has(notification.type)) {
         queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
         queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
-        queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+        queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+        queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
         queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }
@@ -112,7 +114,8 @@ export function useNotificationHub() {
       }
       fetchNotifications(username);
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     });
 

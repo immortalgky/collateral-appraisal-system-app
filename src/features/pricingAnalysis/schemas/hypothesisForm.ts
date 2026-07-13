@@ -111,10 +111,18 @@ export type HypothesisCostItemFormRow = z.infer<typeof HypothesisCostItemSchema>
 export const LandBuildingSummaryFormSchema = z.object({
   /** FSD field C01: Total land area (Sq.Wa). */
   totalArea: z.number().nonnegative().optional().nullable(),
-  /** FSD field C02: Selling area as N% of total area. */
-  sellingAreaPercent: z.number().min(0).max(100).optional().nullable(),
-  /** FSD field C10: Public utility area as N% of total area. */
-  publicUtilityAreaPercent: z.number().min(0).max(100).optional().nullable(),
+  /**
+   * FSD field C02: Selling area as N% of total area.
+   * Server-computed ratio (sum of unit selling areas ÷ total area), not user-editable.
+   * Can legitimately exceed 100% when combined unit area > entered total area, so no .max(100);
+   * out-of-band values are surfaced as a warning in the UI (isSellingAreaOutOfBand), not blocked.
+   */
+  sellingAreaPercent: z.number().min(0).optional().nullable(),
+  /**
+   * FSD field C10: Public utility area as N% of total area.
+   * Server-computed ratio (same mechanism as sellingAreaPercent), not user-editable — no .max(100).
+   */
+  publicUtilityAreaPercent: z.number().min(0).optional().nullable(),
   /** FSD field C16: Estimated sales units per month. */
   estSalesPeriod: z.number().int().positive().optional().nullable(),
   /** FSD field C27: Public utility construction cost (Baht/SqWa). */

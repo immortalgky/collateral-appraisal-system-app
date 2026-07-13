@@ -7,7 +7,7 @@ import {
   getRowVariantClasses,
 } from '@features/common/monitoring/components/SlaCells';
 import PoolTaskListPage from '../pages/PoolTaskListPage';
-import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
+import { useGetTaskCounts, useGetTasks } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
 import { columnDefs, getActivityColumnConfig, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
@@ -52,9 +52,8 @@ const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
 };
 
 const groupByOptions: { value: GroupByField; label: string }[] = [
-  { value: 'status', label: 'Appraisal Status' },
+  { value: 'status', label: 'Task Status' },
   { value: 'purpose', label: 'Purpose' },
-  { value: 'taskType', label: 'Task Type' },
   { value: 'priority', label: 'Priority' },
 ];
 
@@ -179,21 +178,17 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     ...filters,
   });
 
-  const { data: kanbanTasks, isLoading: isKanbanLoading } = useGetTasksForKanban({
-    search: debouncedSearch || undefined,
-    activityId,
-  });
-
+  // The board owns its own (per-column) loading state now — this min-loading
+  // smoothing only applies to the list/table view.
   const [minLoadingDone, setMinLoadingDone] = useState(true);
   useEffect(() => {
-    const loading = viewMode === 'list' ? isListLoading : isKanbanLoading;
-    if (loading) {
+    if (isListLoading) {
       setMinLoadingDone(false);
       setTimeout(() => setMinLoadingDone(true), 400);
     }
-  }, [isListLoading, isKanbanLoading, viewMode]);
+  }, [isListLoading]);
 
-  const isLoading = (viewMode === 'list' ? isListLoading : isKanbanLoading) || !minLoadingDone;
+  const isLoading = isListLoading || !minLoadingDone;
 
   const paginatedResult: TaskListResponse | undefined = data;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
@@ -736,7 +731,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             </div>
           ) : (
             <div className="flex-1 min-h-0">
-              <TaskKanbanBoard tasks={kanbanTasks || []} groupBy={groupBy} isLoading={isLoading} />
+              <TaskKanbanBoard
+                groupBy={groupBy}
+                baseFilters={{ search: debouncedSearch || undefined, activityId, ...filters }}
+              />
             </div>
           )}
 

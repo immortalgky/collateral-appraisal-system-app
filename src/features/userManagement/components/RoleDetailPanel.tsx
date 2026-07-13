@@ -5,6 +5,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Textarea from '@shared/components/inputs/Textarea';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
@@ -113,7 +114,10 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
         setShowDelete(false);
         onDeleted();
       },
-      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.roleDeleteFailed')),
+      onError: (err: any) => {
+        toast.error(err?.apiError?.detail ?? t('toasts.roleDeleteFailed'));
+        setShowDelete(false);
+      },
     });
   };
 
@@ -168,7 +172,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
           {role.description && (
             <div>
               <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
-              <div className="text-sm text-gray-600">{role.description}</div>
+              <div className="text-sm text-gray-600 whitespace-pre-line break-words">
+                {role.description}
+              </div>
             </div>
           )}
         </div>
@@ -207,7 +213,9 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
                   {p.permissionCode}
                 </code>
                 {p.description && (
-                  <div className="text-xs text-gray-400 mt-0.5">{p.description}</div>
+                  <div className="text-xs text-gray-400 mt-0.5 line-clamp-2" title={p.description}>
+                    {p.description}
+                  </div>
                 )}
               </div>
             ))
@@ -312,13 +320,15 @@ const RoleDetailPanel = ({ roleId, onDeleted }: RoleDetailPanelProps) => {
             options={SCOPE_OPTIONS}
             required
           />
-          <TextInput
+          <Textarea
             label={t('fields.description')}
             value={editForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setEditForm(prev => ({ ...prev, description: value }));
             }}
+            maxLength={500}
+            showCharCount
             placeholder={t('placeholders.briefDescription')}
           />
         </div>

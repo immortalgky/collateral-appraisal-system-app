@@ -1,4 +1,4 @@
-import type { Parameter } from './types/api';
+import type { Dealer, Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
 export type Theme = 'light' | 'dark';
@@ -25,6 +25,12 @@ export type ParameterStore = {
 };
 
 export type StoredParameters = Record<string, Parameter[]>;
+
+export type DealerStore = {
+  dealers: Dealer[];
+  isLoaded: boolean;
+  setDealers: (dealers: Dealer[]) => void;
+};
 
 export type LoadingStore = {
   isLoading: boolean;

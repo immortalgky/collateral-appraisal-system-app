@@ -10,6 +10,7 @@ import { useAppraisalId, useBasePath } from '@/features/appraisal/context/Apprai
 import {
   useCreateLandAndBuildingPMAProperty,
   useGetLandAndBuildingPMAPropertyById,
+  useSaveLandAndBuildingPMAPropertyDraft,
   useUpdateLandAndBuildingPMAProperty,
 } from '../api';
 import { useEffect, useState } from 'react';
@@ -18,7 +19,6 @@ import {
   mapLandAndBuildingPMAPropertyResponseToForm,
 } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { FormProvider } from '@/shared/components/form';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -60,10 +60,13 @@ const LandBuildingPMAPage = () => {
   const { mutate: updateLandPMAProperties, isPending: isUpdating } =
     useUpdateLandAndBuildingPMAProperty();
 
+  const { mutate: saveLandPMAPropertiesDraft, isPending: isSavingDraft } =
+    useSaveLandAndBuildingPMAPropertyDraft();
+
   const { mutate: createLandPMAProperties, isPending: isCreating } =
     useCreateLandAndBuildingPMAProperty();
 
-  const isPending = isCreating || isUpdating;
+  const isPending = isCreating || isUpdating || isSavingDraft;
 
   const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
     appraisalId,
@@ -112,7 +115,7 @@ const LandBuildingPMAPage = () => {
     const data = getValues();
     const payload = mapLandAndBuildingPMAFormToPayload(data);
     if (isEditMode && propertyId) {
-      updateLandPMAProperties(
+      saveLandPMAPropertiesDraft(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
         {
           onSuccess: () => {
@@ -166,17 +169,6 @@ const LandBuildingPMAPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: 'PMA', id: 'pma-section', icon: 'file-invoice-dollar' },
-            { label: 'Property', id: 'property-section', icon: 'house-chimney' },
-          ]}
-        />
-      </div>
-
       <FormProvider methods={methods} schema={landAndBuildingPMAFormSchema}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -197,7 +189,11 @@ const LandBuildingPMAPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <LandBuildingPMAForm />
+                    <LandBuildingPMAForm
+                      externalSyncStatus={isEditMode ? propertyData?.externalSyncStatus : undefined}
+                      externalSyncError={isEditMode ? propertyData?.externalSyncError : undefined}
+                      externalSyncedAt={isEditMode ? propertyData?.externalSyncedAt : undefined}
+                    />
                   </Section>
                 </div>
               </ResizableSidebar.Main>
@@ -228,7 +224,7 @@ const LandBuildingPMAPage = () => {
                     type="button"
                     onClick={handleSaveDraft}
                     isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending}
+                    disabled={isPending || !isDirty}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
@@ -236,7 +232,7 @@ const LandBuildingPMAPage = () => {
                   <Button
                     type="submit"
                     isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending}
+                    disabled={isPending || (!isDirty && propertyData?.externalSyncStatus !== 'Failed')}
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
                     Save

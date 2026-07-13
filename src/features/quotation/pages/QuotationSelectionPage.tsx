@@ -7,6 +7,7 @@ import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import {
   useCancelQuotation,
   useGetQuotationById,
@@ -157,9 +158,16 @@ const QuotationSelectionPage = () => {
       ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
       : '—';
 
+  // PropertyType code → locale description (e.g. "LB" → "ที่ดินพร้อมสิ่งปลูกสร้าง").
+  const propertyTypeParams = useParametersByGroup('PropertyType');
+
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotation?.appraisals ?? [];
     const dueDate = quotation?.cutOffTime ? new Date(quotation.cutOffTime) : null;
+    const propertyTypeDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return propertyTypeParams.find(p => p.code === code)?.description ?? code;
+    };
 
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
@@ -183,7 +191,7 @@ const QuotationSelectionPage = () => {
     const appraisalList = appraisals
       .map(
         (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`,
+          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${propertyTypeDescription(a.propertyType)}`,
       )
       .join('\n');
 
@@ -201,7 +209,7 @@ const QuotationSelectionPage = () => {
       subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
       content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
     };
-  }, [quotation, currentUser]);
+  }, [quotation, currentUser, propertyTypeParams]);
 
   if (isLoading) {
     return (
@@ -1028,6 +1036,7 @@ const QuotationSelectionPage = () => {
         onClose={() => setIsSendConfirmOpen(false)}
         title={t('email.draftingTitle')}
         defaultValues={defaultEmailValues}
+        showFrom={false}
         showCc={true}
         showBcc={true}
         showAttachments={false}

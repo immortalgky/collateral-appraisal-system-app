@@ -313,7 +313,7 @@ const RequestRightMenu = ({
             <div>
               <SidebarLabel>{t('rightMenu.status')}</SidebarLabel>
               <div className="flex items-center gap-2 mt-2">
-                <Badge type="status" value={requestData?.status || 'Draft'} />
+                <Badge type="status" value={requestData?.status} />
               </div>
             </div>
 

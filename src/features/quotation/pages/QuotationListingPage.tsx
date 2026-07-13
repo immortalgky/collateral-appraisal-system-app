@@ -8,7 +8,8 @@ import Input from '@/shared/components/Input';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { DateInput } from '@/shared/components/inputs';
-import { formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
+import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete';
+import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import { useCancelQuotation, useGetQuotations, type QuotationListItem } from '../api/quotation';
 import { z } from 'zod';
@@ -96,8 +97,9 @@ function QuotationListingPage() {
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
   const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
   const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
+  const [companyFilter, setCompanyFilter] = useState(''); // company Guid from the picker
 
-  // Debounced search
+  // Debounced search — matches quotation number, requester, appraisal number, or customer
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Delete confirmation state — backed by the existing /cancel endpoint
@@ -122,7 +124,7 @@ function QuotationListingPage() {
   // Reset to first page when filters change
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, statusFilter, cutOffTimeFrom, cutOffTimeTo]);
+  }, [debouncedSearch, statusFilter, cutOffTimeFrom, cutOffTimeTo, companyFilter]);
 
   const { data, isLoading, isFetching, isError, error } = useGetQuotations({
     pageNumber,
@@ -131,6 +133,7 @@ function QuotationListingPage() {
     status: statusFilter || undefined,
     cutOffTimeFrom: toDateOnly(cutOffTimeFrom),
     cutOffTimeTo: toDateOnly(cutOffTimeTo),
+    companyId: companyFilter || undefined,
   });
 
   const items = data?.items ?? [];
@@ -140,13 +143,15 @@ function QuotationListingPage() {
   const isFirstLoad = isLoading && items.length === 0;
   const isRefetching = isFetching && !isFirstLoad;
 
-  const hasFilters = searchTerm || statusFilter || cutOffTimeFrom || cutOffTimeTo;
+  const hasFilters =
+    searchTerm || statusFilter || cutOffTimeFrom || cutOffTimeTo || companyFilter;
 
   const handleClearFilters = () => {
     setSearchTerm('');
     setStatusFilter('');
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
+    setCompanyFilter('');
   };
 
   if (isError) {
@@ -181,7 +186,7 @@ function QuotationListingPage() {
       {/* Filters Bar */}
       <div className="shrink-0 flex items-end gap-3 pb-1 flex-wrap">
         {/* Search */}
-        <div className="flex-1 max-w-xs">
+        <div className="flex-1 min-w-[20rem] max-w-lg">
           <Input
             placeholder={t('filters.searchPlaceholder')}
             value={searchTerm}
@@ -224,6 +229,18 @@ function QuotationListingPage() {
           />
         </div>
 
+        {/* Company */}
+        <div className="w-52 flex flex-col gap-1">
+          <label className="block text-xs font-medium text-gray-700">
+            {t('filters.company')}
+          </label>
+          <CompanyAutocomplete
+            value={companyFilter}
+            onChange={setCompanyFilter}
+            placeholder={t('placeholders.searchCompany')}
+          />
+        </div>
+
         {/* Clear Filters */}
         {hasFilters && (
           <Button variant="ghost" size="xs" onClick={handleClearFilters}>
@@ -232,6 +249,9 @@ function QuotationListingPage() {
           </Button>
         )}
       </div>
+
+      {/* Search hint */}
+      <p className="shrink-0 -mt-2 text-xs text-gray-400">{t('filters.searchHint')}</p>
 
       {/* Table */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
@@ -315,7 +335,7 @@ function QuotationListingPage() {
                         {item.totalQuotationsReceived}/{item.totalCompaniesInvited}
                       </td>
                       <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
-                        {formatLocaleDate(item.requestDate, i18n.language)}
+                        {formatLocaleDateTime(item.requestDate, i18n.language)}
                       </td>
                       <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
                         <RowActionsMenu

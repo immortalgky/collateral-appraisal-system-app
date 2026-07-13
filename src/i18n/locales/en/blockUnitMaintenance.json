@@ -17,7 +17,9 @@
       "unsoldUnits": "Unsold",
       "salesProgress": "Sales Progress",
       "updatedOn": "Last Updated At",
-      "updatedBy": "Last Updated By"
+      "updatedBy": "Last Updated By",
+      "updated": "Last Updated",
+      "by": "by"
     },
     "projectType": {
       "label": "Project Type",
@@ -48,7 +50,9 @@
       "all": "All",
       "sold": "Sold",
       "available": "Available",
-      "soldLoan": "Sold via Loan"
+      "soldLoan": "Sold via Loan",
+      "appraisalMin": "Appraisal min",
+      "appraisalMax": "Appraisal max"
     },
     "bulk": {
       "selectedCount_one": "{{count}} selected",
@@ -69,11 +73,14 @@
       "modelType": "Model Type",
       "usableAreaSqm": "Usable Area (sq.m.)",
       "sellingPriceBaht": "Selling Price (Baht)",
+      "appraisalValue": "Appraisal Value",
       "plotNo": "Plot No",
       "houseNo": "House No",
       "modelName": "Model Name",
       "numFloors": "No. of Floors",
-      "landAreaSqWa": "Land Area (Sq.Wa)"
+      "landAreaSqWa": "Land Area (Sq.Wa)",
+      "updatedAt": "Updated At",
+      "updatedBy": "Updated By"
     }
   },
   "units": {

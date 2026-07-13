@@ -3,7 +3,7 @@ import ActivityCompletionChecklist from '../components/ActivityCompletionCheckli
 import ActivityCompletionErrors from '../components/ActivityCompletionErrors';
 import { useActivityProgressStore } from '../store/activityProgressStore';
 import type { StructuredValidationError, StructuredWarning } from '../api/workflow';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAppraisalId,
@@ -35,7 +35,12 @@ import { FormReadOnlyContext } from '@/shared/components/form/context';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useConnectionStatus } from '@/features/notification/hooks/useConnectionStatus';
 import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
-import { useCompleteActivity, useGetActivityActions } from '../api/workflow';
+import {
+  useCompleteActivity,
+  useGetActivityActions,
+  useGetTaskById,
+  useSaveTaskDecisionDraft,
+} from '../api/workflow';
 import {
   decisionSummaryFormDefaults,
   decisionSummaryFormSchema,
@@ -212,6 +217,7 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         name: 'condition',
         label: t('decisionSummary.fields.conditionDetails'),
         placeholder: t('decisionSummary.fields.conditionDetailsPlaceholder'),
+        wrapperClassName: 'mt-3',
       },
     ],
     remarkFields: [
@@ -227,6 +233,7 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         name: 'remark',
         label: t('decisionSummary.fields.remarkDetails'),
         placeholder: t('decisionSummary.fields.remarkPlaceholder'),
+        wrapperClassName: 'mt-3',
       },
     ],
     appraiserOpinionFields: [
@@ -242,6 +249,7 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         name: 'appraiserOpinion',
         label: t('decisionSummary.fields.appraiserOpinion'),
         placeholder: t('decisionSummary.fields.appraiserOpinionPlaceholder'),
+        wrapperClassName: 'mt-3',
       },
     ],
     committeeOpinionFields: [
@@ -259,6 +267,7 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.committeeOpinion'),
         required: true,
         placeholder: t('decisionSummary.fields.committeeOpinionPlaceholder'),
+        wrapperClassName: 'mt-3',
       },
     ],
     reviewPriceFields: [
@@ -448,6 +457,7 @@ const DecisionSummaryPage = () => {
   const { t } = useTranslation('appraisal');
   const fields = makeDecisionFields(t);
   const navigate = useNavigate();
+  const { taskId } = useParams<{ taskId: string }>();
   const appraisalId = useAppraisalId();
   const isReadOnly = usePageReadOnly();
   const workflowInstanceId = useWorkflowInstanceId();
@@ -501,6 +511,31 @@ const DecisionSummaryPage = () => {
   // submitting fallback message is adjusted instead of waiting on step animations.
   const hubStatus = useConnectionStatus();
   const { data: actionsData } = useGetActivityActions(workflowInstanceId, activityId);
+
+  // Task decision draft — same per-task draft the 360 Comment footer reads/writes.
+  // Same query key as TaskLayout's fetch, so this is served from cache when present.
+  const { data: taskData } = useGetTaskById(taskId);
+  const { mutate: saveDraft } = useSaveTaskDecisionDraft();
+
+  // Seed decision state from the draft ONCE so later refetches / mid-session edits
+  // are not clobbered (mirrors the reason-overwrite behavior in DecisionSection).
+  const draftSeededRef = useRef(false);
+  useEffect(() => {
+    if (draftSeededRef.current || taskData === undefined) return;
+    setSelectedDecision(taskData.decisionTaken ?? null);
+    setComments(taskData.comment ?? '');
+    setReasonCode(taskData.reasonCode ?? null);
+    setSelectedAssigneeUserId(taskData.assignee ?? null);
+    draftSeededRef.current = true;
+  }, [taskData]);
+
+  // True when the decision draft diverges from what was seeded — lets a comment-only
+  // change enable Save even when the RHF form itself (`isDirty`) hasn't changed.
+  const draftDirty =
+    selectedDecision !== (taskData?.decisionTaken ?? null) ||
+    comments !== (taskData?.comment ?? '') ||
+    reasonCode !== (taskData?.reasonCode ?? null) ||
+    selectedAssigneeUserId !== (taskData?.assignee ?? null);
 
   const selectedAction = useMemo(
     () => (actionsData?.actions ?? []).find(a => a.value === selectedDecision) ?? null,
@@ -702,8 +737,12 @@ const DecisionSummaryPage = () => {
     );
   };
 
-  const onSubmit = (formData: DecisionSummaryFormType) => {
-    const canComplete = isTaskOwner && workflowInstanceId && activityId && selectedDecision;
+  // Persist the decision. `complete` distinguishes the two footer actions:
+  //   Save   → persist summary + task draft only (never completes the activity)
+  //   Submit → save summary, then complete the workflow activity (via ConfirmDialog)
+  const persistDecision = (formData: DecisionSummaryFormType, complete: boolean) => {
+    const canComplete =
+      complete && isTaskOwner && workflowInstanceId && activityId && selectedDecision;
 
     // Guard: if this user is the task owner, ensure actions have loaded and the picked
     // decision resolves to a known action — otherwise a manual-mode action could silently
@@ -714,14 +753,33 @@ const DecisionSummaryPage = () => {
       return;
     }
 
-    if (isManualAssignment && !selectedAssigneeUserId) {
+    if (complete && isManualAssignment && !selectedAssigneeUserId) {
       setIsConfirmOpen(false);
       toast.error(t('administration.toasts.selectAssignee'));
       return;
     }
 
-    if (appraisalId) {
-      // Normal path: save summary first, then optionally complete activity
+    const draftPayload =
+      isTaskOwner && taskId
+        ? {
+            taskId,
+            decisionTaken: selectedDecision,
+            comment: comments,
+            reasonCode,
+            assignee: selectedAssigneeUserId,
+          }
+        : null;
+
+    // Only persist the summary form when completing, or when the activity actually has
+    // editable summary sections — review-only activities just persist the decision draft.
+    const shouldSaveSummary = !!appraisalId && (complete || hasEditableSections);
+
+    if (shouldSaveSummary) {
+      // On Save, also keep the per-task decision draft (and the 360 Comment footer) in
+      // sync. On Submit, completion writes the final decision to the CompletedTask.
+      if (!complete && draftPayload) {
+        saveDraft(draftPayload);
+      }
       saveSummary(
         { appraisalId, body: formData },
         {
@@ -739,13 +797,32 @@ const DecisionSummaryPage = () => {
           },
         },
       );
-    } else {
-      // No appraisal yet: skip summary save, complete activity directly
+      return;
+    }
+
+    if (complete) {
+      // No appraisal / nothing to save: complete the activity directly.
       if (canComplete) {
         doCompleteActivity();
       }
+      return;
+    }
+
+    // Save on a review-only activity (no editable summary) → persist the draft on its own.
+    if (draftPayload) {
+      saveDraft(draftPayload, {
+        onSuccess: () => {
+          setIsConfirmOpen(false);
+          toast.success(t('decisionSummary.toasts.saved'));
+        },
+        onError: () => toast.error(t('decisionSummary.toasts.saveFailed')),
+      });
     }
   };
+
+  // Save button (and Enter key) → persist only. Submit → complete (via ConfirmDialog).
+  const onSave = (formData: DecisionSummaryFormType) => persistDecision(formData, false);
+  const onSubmit = (formData: DecisionSummaryFormType) => persistDecision(formData, true);
 
   const handleCancel = () => {
     if (data) {
@@ -778,7 +855,7 @@ const DecisionSummaryPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0">
       <FormProvider methods={methods} schema={decisionSummaryFormSchema}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+        <form onSubmit={handleSubmit(onSave)} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">
               {/* Group A — Valuation */}
@@ -896,6 +973,7 @@ const DecisionSummaryPage = () => {
                         <GovernmentPriceTable
                           rows={data.governmentPrices}
                           totalArea={data.governmentPriceTotalArea ?? 0}
+                          surveyedArea={data.governmentPriceSurveyedArea ?? 0}
                           avgPerSqWa={data.governmentPriceAvgPerSqWa ?? 0}
                         />
                       ) : (
@@ -975,44 +1053,21 @@ const DecisionSummaryPage = () => {
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
-                  {showSection('appraiserOpinion') && showSection('committeeOpinion') ? (
-                    <div className="grid grid-cols-2 gap-6">
-                      <SectionReadOnlyWrap
-                        forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}
-                      >
-                        <InlineSubSection title={t('decisionSummary.fields.appraiserOpinions')}>
-                          <FormFields fields={fields.appraiserOpinionFields} />
-                        </InlineSubSection>
-                      </SectionReadOnlyWrap>
-                      <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('committeeOpinion')}>
-                        <InlineSubSection title={t('decisionSummary.fields.committeeOpinions')}>
-                          <FormFields fields={fields.committeeOpinionFields} />
-                        </InlineSubSection>
-                      </SectionReadOnlyWrap>
-                    </div>
-                  ) : (
-                    <>
-                      {showSection('appraiserOpinion') && (
-                        <SectionReadOnlyWrap
-                          forceReadOnly={
-                            shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock
-                          }
-                        >
-                          <InlineSubSection title={t('decisionSummary.fields.appraiserOpinions')}>
-                            <FormFields fields={fields.appraiserOpinionFields} />
-                          </InlineSubSection>
-                        </SectionReadOnlyWrap>
-                      )}
-                      {showSection('committeeOpinion') && (
-                        <SectionReadOnlyWrap
-                          forceReadOnly={shouldForceReadOnly('committeeOpinion')}
-                        >
-                          <InlineSubSection title={t('decisionSummary.fields.committeeOpinions')}>
-                            <FormFields fields={fields.committeeOpinionFields} />
-                          </InlineSubSection>
-                        </SectionReadOnlyWrap>
-                      )}
-                    </>
+                  {showSection('appraiserOpinion') && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}
+                    >
+                      <InlineSubSection title={t('decisionSummary.fields.appraiserOpinions')}>
+                        <FormFields fields={fields.appraiserOpinionFields} />
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
+                  )}
+                  {showSection('committeeOpinion') && (
+                    <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('committeeOpinion')}>
+                      <InlineSubSection title={t('decisionSummary.fields.committeeOpinions')}>
+                        <FormFields fields={fields.committeeOpinionFields} />
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
                   )}
                   {showSection('additionalAssumptions') && (
                     <SectionReadOnlyWrap
@@ -1088,11 +1143,11 @@ const DecisionSummaryPage = () => {
                   )}
                 </div>
                 <div className="flex gap-3">
-                  {hasEditableSections && (
+                  {(hasEditableSections || (isTaskOwner && !!taskId)) && (
                     <Button
                       variant="outline"
                       type="submit"
-                      disabled={!appraisalId || !isDirty || isSaving}
+                      disabled={!appraisalId || (!isDirty && !draftDirty) || isSaving}
                     >
                       <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
                       {t('decisionSummaryPageExtra.saveButton')}

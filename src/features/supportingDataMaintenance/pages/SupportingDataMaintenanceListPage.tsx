@@ -36,6 +36,8 @@ const FILTER_KEYS: (keyof GetSupportingDataMaintenanceListParams)[] = [
   'dateType',
   'dateFrom',
   'dateTo',
+  'website',
+  'phoneNo',
 ];
 
 const readFiltersFromSearchParams = (
@@ -143,6 +145,8 @@ export function SupportingDataMaintenanceListPage() {
     dateTo: t('filterLabels.dateTo'),
     status: t('filterLabels.status'),
     importChannel: t('filterLabels.importChannel'),
+    website: t('filterLabels.website'),
+    phoneNo: t('filterLabels.phoneNo'),
   };
 
   // Hydrate from URL on mount
@@ -246,6 +250,8 @@ export function SupportingDataMaintenanceListPage() {
     if (filters.dateType) next.set('dateType', filters.dateType);
     if (filters.supportingNumber) next.set('supportingNumber', filters.supportingNumber);
     // if (filters.importChannel) next.set('importChannel', filters.importChannel);
+    if (filters.website) next.set('website', filters.website);
+    if (filters.phoneNo) next.set('phoneNo', filters.phoneNo);
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }

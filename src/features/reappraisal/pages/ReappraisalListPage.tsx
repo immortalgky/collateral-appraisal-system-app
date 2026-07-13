@@ -88,10 +88,44 @@ function ReappraisalListPage() {
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [filters, setFilters] = useState<ReappraisalFilterValues>({});
 
+  // Sort — sortField carries the whitelisted PascalCase view column name.
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
   const queryParams: ReappraisalCandidateListParams = {
     pageNumber,
     pageSize,
     ...filters,
+    sortBy: sortField ?? undefined,
+    sortDir: sortDirection,
+  };
+
+  // Three-state cycle: unsorted -> asc -> desc -> unsorted
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc');
+      } else {
+        setSortField(null);
+        setSortDirection('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+    setPageNumber(0);
+  };
+
+  const SortIcon = ({ field }: { field: string }) => {
+    if (sortField !== field)
+      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+    return (
+      <Icon
+        style="solid"
+        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
+        className="size-2.5 text-primary"
+      />
+    );
   };
 
   const { data, isLoading, isError, error } = useReappraisalCandidates(queryParams);
@@ -209,24 +243,30 @@ function ReappraisalListPage() {
           <table className="w-full min-w-max text-sm">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.oldAppraisalReportNumber')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.cifNumber')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.customerName')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.reviewType')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.remainingDay')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.appraisalDate')}
-                </th>
+                {[
+                  { key: 'OldAppraisalReportNumber', label: t('columns.oldAppraisalReportNumber') },
+                  { key: 'CifNumber', label: t('columns.cifNumber') },
+                  { key: 'CustomerName', label: t('columns.customerName') },
+                  { key: 'ReviewType', label: t('columns.reviewType') },
+                  { key: 'RemainingDay', label: t('columns.remainingDay') },
+                  { key: 'AppraisalDate', label: t('columns.appraisalDate') },
+                ].map(col => {
+                  const isActive = sortField === col.key;
+                  return (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className={`px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                        isActive ? 'text-primary' : 'text-gray-500'
+                      }`}
+                    >
+                      <div className="inline-flex items-center gap-1">
+                        {col.label}
+                        <SortIcon field={col.key} />
+                      </div>
+                    </th>
+                  );
+                })}
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
                   {t('columns.channel')}
                 </th>

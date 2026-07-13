@@ -1,4 +1,18 @@
+import { useState } from 'react';
 import clsx from 'clsx';
+import {
+  useFloating,
+  useClick,
+  useDismiss,
+  useRole,
+  useInteractions,
+  FloatingFocusManager,
+  FloatingPortal,
+  autoUpdate,
+  flip,
+  offset,
+  shift,
+} from '@floating-ui/react';
 import { useTranslation } from 'react-i18next';
 import type { QuotationStatus } from '@/features/appraisal/types/administration';
 
@@ -27,22 +41,72 @@ const STATUS_CLASS: Record<string, string> = {
 interface QuotationStatusBadgeProps {
   status: string;
   className?: string;
+  /**
+   * Optional reason shown in a click-to-reveal popover on the chip (e.g. a company's decline
+   * reason). Mirrors InvitedCompaniesPopover's floating-ui interaction pattern. When omitted or
+   * blank, the chip renders as a plain, non-interactive span — unchanged from prior behavior.
+   */
+  reason?: string | null;
 }
 
-const QuotationStatusBadge = ({ status, className }: QuotationStatusBadgeProps) => {
+const QuotationStatusBadge = ({ status, className, reason }: QuotationStatusBadgeProps) => {
   const { t } = useTranslation('quotation');
+  const [open, setOpen] = useState(false);
+
   const label = t(`status.${status}` as `status.${string}`, { defaultValue: status });
-  const cls = STATUS_CLASS[status] ?? 'bg-gray-100 text-gray-700';
+  const chipClassName = clsx(
+    'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+    STATUS_CLASS[status] ?? 'bg-gray-100 text-gray-700',
+    className,
+  );
+
+  const { refs, floatingStyles, context } = useFloating({
+    open,
+    onOpenChange: setOpen,
+    placement: 'top',
+    whileElementsMounted: autoUpdate,
+    middleware: [offset(6), flip(), shift({ padding: 8 })],
+  });
+
+  const click = useClick(context);
+  const dismiss = useDismiss(context);
+  const role = useRole(context, { role: 'dialog' });
+  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss, role]);
+
+  const trimmedReason = reason?.trim();
+  if (!trimmedReason) {
+    return <span className={chipClassName}>{label}</span>;
+  }
+
   return (
-    <span
-      className={clsx(
-        'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-        cls,
-        className,
+    <>
+      <button
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        type="button"
+        className={clsx(chipClassName, 'cursor-help hover:opacity-80 transition-opacity')}
+      >
+        {label}
+      </button>
+
+      {open && (
+        <FloatingPortal>
+          <FloatingFocusManager context={context} modal={false}>
+            <div
+              ref={refs.setFloating}
+              style={floatingStyles}
+              {...getFloatingProps()}
+              className="z-50 bg-white rounded-lg border border-gray-200 shadow-lg max-w-xs px-3 py-2"
+            >
+              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+                {t('fields.reason')}
+              </p>
+              <p className="text-xs text-gray-700 whitespace-pre-wrap">{trimmedReason}</p>
+            </div>
+          </FloatingFocusManager>
+        </FloatingPortal>
       )}
-    >
-      {label}
-    </span>
+    </>
   );
 };
 

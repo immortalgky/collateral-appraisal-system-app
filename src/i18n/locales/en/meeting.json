@@ -6,7 +6,7 @@
     },
     "queue": {
       "title": "Awaiting Meeting Queue",
-      "subtitle": "Tier-3 appraisals (facility limit > 30M) waiting to be assigned to a meeting"
+      "subtitle": "Tier-3 appraisals (appraisal value > 30M) waiting to be assigned to a meeting"
     }
   },
   "tabs": {
@@ -19,10 +19,13 @@
     "status": "Status",
     "start": "Start",
     "end": "End",
-    "cutOff": "Cut-off",
+    "cutOff": "Last Cut-off",
     "items": "Items",
+    "lastUpdated": "Last Updated",
+    "by": "by",
     "appraisalNo": "Appraisal #",
     "facilityLimit": "Facility Limit",
+    "appraisalValue": "Appraisal Value",
     "enqueued": "Enqueued",
     "memberNo": "No.",
     "memberName": "Member Name",
@@ -37,6 +40,7 @@
   },
   "filters": {
     "searchPlaceholder": "Search meeting no. or customer name",
+    "searchHint": "Matches from the start. Use * as a wildcard (e.g. abc*).",
     "allStatus": "All Status",
     "from": "From",
     "to": "To"
@@ -69,6 +73,8 @@
     "keepMeeting": "Keep Meeting",
     "cancelMeeting": "Cancel Meeting",
     "confirmCutOff": "Confirm Cut-Off",
+    "endMeeting": "End Meeting",
+    "confirmEnd": "End Meeting",
     "addMemberSubmit": "Add Member",
     "cancelMemberAdd": "Cancel",
     "documents": "Documents"
@@ -77,6 +83,7 @@
     "cutOff": "Cut Off",
     "sendInvitation": "Send Invitation",
     "resendInvitation": "Resend Invitation",
+    "endMeeting": "End Meeting",
     "cancel": "Cancel"
   },
   "status": {
@@ -149,13 +156,14 @@
     "editMeeting": "Edit Meeting",
     "cancelMeeting": "Cancel Meeting",
     "confirmCutOff": "Confirm Cut-Off",
+    "endMeeting": "End Meeting",
     "releaseAppraisal": "Release Appraisal",
     "removeAppraisal": "Remove Appraisal",
     "routeBackAppraisal": "Route Back Appraisal",
     "addAppraisalsFromQueue": "Add Appraisals from Queue",
     "addMember": "Add Member",
     "addToExistingMeeting": "Add to Existing Meeting",
-    "bulkCreateMeetings": "Bulk Create Meetings",
+    "bulkCreateMeetings": "Create Meeting(s)",
     "resendInvitation": "Resend Invitation",
     "newEmail": "New Email"
   },
@@ -203,6 +211,11 @@
     "ackNote": "Acknowledgement items (sub-committee approvals pending since last meeting) are auto-included by the backend.",
     "processing": "Processing..."
   },
+  "endDialog": {
+    "description": "Mark this meeting as ended. Acknowledgement items are acknowledged and the meeting is closed.",
+    "note": "Ending is only possible when no decision item is still pending release or routed back. Otherwise release or reinstate those items first.",
+    "processing": "Ending..."
+  },
   "releaseDialog": {
     "confirm": "Release {{label}} to all meeting members for approval? Each member will receive it as a parallel approval task.",
     "releasing": "Releasing..."
@@ -220,7 +233,18 @@
     "datesSelected": "{{n}} date selected",
     "datesSelectedPlural": "{{n}} dates selected",
     "creating": "Creating...",
-    "overflow": "+{{n}} more"
+    "overflow": "+{{n}} more",
+    "today": "Today",
+    "allWeekdays": "All weekdays",
+    "everyWeekday": "Every",
+    "everyDayTooltip": "Select every {{day}}",
+    "legendSelected": "Selected",
+    "legendHasMeeting": "Has meeting",
+    "legendPast": "Past / unavailable",
+    "tooltipHasMeeting": "Already has meeting {{no}}",
+    "tooltipPast": "Unavailable date",
+    "willCreate": "{{n}} meeting will be created",
+    "willCreatePlural": "{{n}} meetings will be created"
   },
   "addItemsDialog": {
     "selectedCount": "{{selected}} of {{total}} selected",
@@ -245,6 +269,8 @@
     "meetingCancelFailed": "Failed to cancel meeting",
     "cutOffCompleted": "Cut-off completed — new queued items added to this meeting",
     "cutOffFailed": "Failed to perform cut-off",
+    "meetingEnded": "Meeting ended",
+    "meetingEndFailed": "Failed to end meeting",
     "invitationSent": "Invitation emailed — Meeting No. {{no}}",
     "invitationResent": "Invitation re-sent — Meeting No. {{no}}",
     "invitationFailed": "Failed to send invitation",
@@ -276,7 +302,10 @@
     "titleRequired": "Title is required",
     "titleMax": "Title must be 200 characters or fewer",
     "locationMax": "Location must be 200 characters or fewer",
+    "locationRequired": "Location is required",
     "fromToMax": "Must be 200 characters or fewer",
+    "fromRequired": "From is required",
+    "toRequired": "To is required",
     "startRequired": "Start date is required",
     "endRequired": "End date is required",
     "endAfterStart": "End must be after start",

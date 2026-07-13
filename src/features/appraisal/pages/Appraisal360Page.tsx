@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useParams } from 'react-router-dom';
+import { useAppraisalId, useIsTaskOwner } from '@/features/appraisal/context/AppraisalContext';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useGetAppraisalById } from '../api/appraisal';
 import { useGetDecisionSummary } from '../api/decisionSummary';
+import { useGetTaskById } from '../api/workflow';
 import { useGetRequestById } from '@features/request/api/requests';
 import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyType } from '../types';
@@ -15,6 +18,7 @@ import type {
 } from '@/features/common/historySearch/types';
 
 import StickyHeaderCard from '../components/360/StickyHeaderCard';
+import StickyRemarkFooter from '../components/360/StickyRemarkFooter';
 import RequestInfoSection from '../components/360/RequestInfoSection';
 import PropertyGroupsSection from '../components/360/PropertyGroupsSection';
 import PricingAnalysisSection from '../components/360/PricingAnalysisSection';
@@ -34,8 +38,13 @@ type SlideOverState =
 
 const Appraisal360Page = () => {
   const appraisalId = useAppraisalId();
+  const { taskId } = useParams<{ taskId: string }>();
+  const isTaskOwner = useIsTaskOwner();
+  const isReadOnly = usePageReadOnly();
   const [slideOver, setSlideOver] = useState<SlideOverState>({ type: 'closed' });
   const [mapOpen, setMapOpen] = useState(false);
+  // Collapse the sticky header once the content is scrolled past a small threshold.
+  const [scrolled, setScrolled] = useState(false);
 
   // Data hooks
   const {
@@ -45,6 +54,9 @@ const Appraisal360Page = () => {
     error: appraisalError,
     refetch: refetchAppraisal,
   } = useGetAppraisalById(appraisalId);
+  // Task decision draft — powers the editable Comment footer below. Same query key
+  // as TaskLayout's fetch, so this is served from cache when opened via /tasks/:taskId.
+  const { data: taskData } = useGetTaskById(taskId);
   const {
     data: request,
     isError: isRequestError,
@@ -157,20 +169,16 @@ const Appraisal360Page = () => {
   }
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="relative flex flex-col h-full min-h-0">
       {/* Sticky Header */}
       <StickyHeaderCard
         appraisal={appraisal}
         decisionSummary={decisionSummary}
         customerName={request?.customers?.[0]?.name}
         contactNumber={request?.customers?.[0]?.contactNumber}
-      />
-
-      {/* Scrollable Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        <div className="flex flex-col gap-6 p-6">
-          {/* Download Actions */}
-          <div className="flex justify-end gap-2">
+        compact={scrolled}
+        actions={
+          <>
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
@@ -194,13 +202,35 @@ const Appraisal360Page = () => {
             <button
               type="button"
               onClick={() => setMapOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg shadow-sm hover:bg-blue-100 hover:border-blue-300 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
             >
-              <Icon name="map-location-dot" style="solid" className="w-3.5 h-3.5" />
+              {/* Google Maps-style multicolor pin */}
+              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" aria-hidden="true">
+                <defs>
+                  <clipPath id="gmapPin">
+                    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z" />
+                  </clipPath>
+                </defs>
+                <g clipPath="url(#gmapPin)">
+                  <rect x="0" y="0" width="12" height="9" fill="#4285F4" />
+                  <rect x="12" y="0" width="12" height="9" fill="#EA4335" />
+                  <rect x="0" y="9" width="12" height="15" fill="#FBBC04" />
+                  <rect x="12" y="9" width="12" height="15" fill="#34A853" />
+                </g>
+                <circle cx="12" cy="9" r="2.6" fill="#fff" />
+              </svg>
               View on Map
             </button>
-          </div>
+          </>
+        }
+      />
 
+      {/* Scrollable Content */}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto"
+        onScroll={e => setScrolled(e.currentTarget.scrollTop > 8)}
+      >
+        <div className="flex flex-col gap-6 py-6">
           {/* Request Information */}
           {isRequestError ? (
             <DataErrorState
@@ -240,6 +270,13 @@ const Appraisal360Page = () => {
           <FooterSection appraisal={appraisal} />
         </div>
       </div>
+
+      {/* Sticky Remark Footer */}
+      <StickyRemarkFooter
+        taskId={taskId}
+        taskDraft={taskData}
+        canEdit={!!taskId && isTaskOwner && !isReadOnly}
+      />
 
       {/* Slide-Over Panels */}
       <SlideOverPanel

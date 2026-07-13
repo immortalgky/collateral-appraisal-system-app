@@ -11,6 +11,8 @@ interface PermissionSelectProps {
   /** Placeholder shown for an optional permission (e.g. "None (read-only)") */
   emptyLabel?: string;
   allowEmpty?: boolean;
+  /** Render with an error border (e.g. failed a required-field check). */
+  invalid?: boolean;
 }
 
 /**
@@ -23,6 +25,7 @@ export function PermissionSelect({
   placeholder,
   emptyLabel,
   allowEmpty = false,
+  invalid = false,
 }: PermissionSelectProps) {
   const { t } = useTranslation('menuManagement');
   const { data, isLoading } = useGetPermissions({ pageSize: 500 });
@@ -59,6 +62,7 @@ export function PermissionSelect({
       filterItems={(item, text) => item.label.toLowerCase().includes(text.toLowerCase())}
       ariaLabel={t('permissionSelect.searchPlaceholder')}
       menuClassName="w-full"
+      invalid={invalid}
     />
   );
 }

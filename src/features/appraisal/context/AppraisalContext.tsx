@@ -33,6 +33,9 @@ export interface AppraisalData {
   /** Whether the request has an appraisal book */
   hasAppraisalBook?: boolean;
 
+  /** Persisted Construction Inspection round number (null/undefined for non-CI appraisals) */
+  inspectionNumber?: number | null;
+
   // Workflow task context (set when opened from task list)
   workflowInstanceId?: string;
   activityId?: string;
@@ -146,6 +149,15 @@ export function useAppraisalFacilityLimit(): number {
 export function useAppraisalHasAppraisalBook(): boolean {
   const context = useContext(AppraisalContext);
   return context?.appraisal?.hasAppraisalBook ?? false;
+}
+
+/**
+ * Hook to get the persisted Construction Inspection round number.
+ * Returns undefined for non-CI appraisals or when not yet loaded.
+ */
+export function useAppraisalInspectionNumber(): number | null | undefined {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.inspectionNumber;
 }
 
 /**

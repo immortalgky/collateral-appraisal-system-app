@@ -20,8 +20,16 @@ export interface BlockReappraisalDueListItem {
 export interface BlockReappraisalListParams {
   pageNumber?: number;
   pageSize?: number;
-  projectName?: string;
-  oldAppraisalNumber?: string;
+  /** Matches either Project Name or Old Appraisal Report No. */
+  search?: string;
+  /** ISO date (yyyy-MM-dd) — inclusive lower bound on Last Appraised Date */
+  lastAppraisedDateFrom?: string;
+  /** ISO date (yyyy-MM-dd) — inclusive upper bound on Last Appraised Date */
+  lastAppraisedDateTo?: string;
+  /** Inclusive lower bound on Remaining Day */
+  remainingDayMin?: number;
+  /** Inclusive upper bound on Remaining Day */
+  remainingDayMax?: number;
 }
 
 export type BlockReappraisalFilterValues = Omit<
@@ -53,6 +61,10 @@ export interface BlockReappraisalUnitDetail {
   numberOfFloors: number | null;
   /** LandAndBuilding only */
   landArea: number | null;
+
+  lastAppraisedValue: number | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
 }
 
 export interface BlockReappraisalStructure {

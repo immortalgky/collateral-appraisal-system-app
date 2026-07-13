@@ -7,7 +7,7 @@ import Pagination from '@/shared/components/Pagination';
 import Button from '@/shared/components/Button';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { Dropdown } from '@/shared/components/inputs';
-import { formatLocaleDate } from '@/shared/utils/dateUtils';
+import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { useParameterOptions, useParametersByGroup } from '@/shared/utils/parameterUtils';
 import {
   useGetBlockUnitMaintenanceList,
@@ -70,7 +70,7 @@ const SortableTh = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const TOTAL_COLS = 7; // number of <td/th> columns in the listing table
+const TOTAL_COLS = 6; // number of <td/th> columns in the listing table
 
 const BlockUnitMaintenancePage = () => {
   const navigate = useNavigate();
@@ -155,7 +155,7 @@ const BlockUnitMaintenancePage = () => {
 
       {/* Filter bar */}
       <div className="shrink-0 flex flex-wrap items-end gap-2">
-        <div className="w-72">
+        <div className="w-96">
           <Input
             placeholder={t('list.filter.searchPlaceholder')}
             value={search}
@@ -187,7 +187,6 @@ const BlockUnitMaintenancePage = () => {
               setDeveloper(e.target.value);
               setPageNumber(0);
             }}
-            leftIcon={<Icon style="solid" name="building" className="size-3.5" />}
           />
         </div>
         {hasActiveFilters && (
@@ -217,8 +216,7 @@ const BlockUnitMaintenancePage = () => {
               <col className="w-40" />
               <col className="w-32" />
               <col className="w-64" />
-              <col className="w-32" />
-              <col className="w-28" />
+              <col className="w-44" />
             </colgroup>
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
@@ -248,10 +246,7 @@ const BlockUnitMaintenancePage = () => {
                   {t('list.col.salesProgress')}
                 </SortableTh>
                 <SortableTh field="updatedOn" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
-                  {t('list.col.updatedOn')}
-                </SortableTh>
-                <SortableTh field="updatedBy" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
-                  {t('list.col.updatedBy')}
+                  {t('list.col.updated')}
                 </SortableTh>
               </tr>
             </thead>
@@ -266,8 +261,7 @@ const BlockUnitMaintenancePage = () => {
                     { width: 'w-32' },
                     { width: 'w-28' },
                     { width: 'w-48' },
-                    { width: 'w-20' },
-                    { width: 'w-20' },
+                    { width: 'w-24' },
                   ]}
                   rows={5}
                 />
@@ -328,11 +322,13 @@ const BlockUnitMaintenancePage = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">
-                        {formatLocaleDate(item.updatedOn, i18n.language)}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-600 text-xs truncate">
-                        {item.updatedBy ?? '—'}
+                      <td className="px-4 py-2.5 whitespace-nowrap">
+                        <div className="text-xs text-gray-600">
+                          {formatLocaleDateTime(item.updatedOn, i18n.language)}
+                        </div>
+                        <div className="text-[11px] text-gray-400 truncate">
+                          {item.updatedBy ? `${t('list.col.by')} ${item.updatedBy}` : '—'}
+                        </div>
                       </td>
                     </tr>
                   );

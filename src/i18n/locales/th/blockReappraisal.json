@@ -22,20 +22,20 @@
     "daysLeft": "{{days}} วัน"
   },
   "filter": {
-    "title": "กรอง",
-    "button": "ตัวกรอง",
+    "title": "ตัวกรอง",
     "fields": {
-      "projectName": "ชื่อโครงการ",
-      "oldAppraisalNumber": "เลขที่รายงานประเมินเดิม"
+      "search": "ค้นหา",
+      "lastAppraisedDate": "วันที่ประเมินล่าสุด",
+      "remainingDay": "วันคงเหลือ"
     },
     "placeholders": {
-      "projectName": "กรอกชื่อโครงการ",
-      "oldAppraisalNumber": "กรอกเลขที่รายงาน"
+      "search": "ชื่อโครงการ หรือ เลขที่รายงาน",
+      "dateFrom": "จาก",
+      "dateTo": "ถึง",
+      "min": "ต่ำสุด",
+      "max": "สูงสุด"
     },
-    "chips": {
-      "projectName": "ชื่อโครงการ",
-      "oldAppraisalNumber": "เลขที่รายงาน"
-    }
+    "clear": "ล้างตัวกรอง"
   },
   "empty": {
     "noMatching": "ไม่พบโครงการที่ตรงกัน",
@@ -101,19 +101,22 @@
   "units": {
     "sold": "ขายแล้ว",
     "available": "คงเหลือ",
+    "updatedByLine": "โดย {{name}}",
     "cols": {
-      "floor": "ชั้น",
+      "floor": "หมายเลขชั้น",
       "towerName": "ชื่ออาคาร",
       "regNumber": "เลขทะเบียน",
-      "roomNo": "เลขห้อง",
-      "modelType": "ประเภทแบบ",
+      "roomNo": "หมายเลขห้อง",
+      "modelType": "ชื่อแบบ",
       "usableArea": "พื้นที่ใช้สอย (ตร.ม.)",
       "sellingPrice": "ราคาขาย (บาท)",
+      "appraisalValue": "ราคาประเมิน (บาท)",
       "plotNo": "เลขแปลง",
       "houseNo": "เลขที่บ้าน",
       "numFloors": "จำนวนชั้น",
       "landArea": "เนื้อที่ดิน (ตร.วา)",
-      "isSold": "สถานะ"
+      "isSold": "สถานะ",
+      "lastUpdated": "อัปเดตล่าสุด"
     }
   }
 }

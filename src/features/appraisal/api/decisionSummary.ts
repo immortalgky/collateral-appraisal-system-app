@@ -64,6 +64,8 @@ export type DecisionSummaryData = GetDecisionSummaryResponse & {
   blockModelPrices: BlockModelPriceRow[] | null;
   constructionSummary: ConstructionSummary | null;
   appraisalDate: string | null;
+  /** Non-missing land area the AVG Baht/Sq.Wa is computed over (govTotalArea includes missing). */
+  governmentPriceSurveyedArea: number;
 };
 
 /**

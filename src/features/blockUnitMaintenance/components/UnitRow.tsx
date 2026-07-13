@@ -1,6 +1,8 @@
 import type { TFunction } from 'i18next';
 import { isCondo } from '@/features/blockProject/types';
 import type { ProjectType, ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
+import { formatLocaleDate } from '@/shared/utils/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 interface UnitRowProps {
   unit: ProjectUnitDetail;
@@ -34,6 +36,7 @@ export const UnitRow = ({
   t,
 }: UnitRowProps) => {
   const { isSold, purchaseBy, loanBankName } = editState;
+  const { i18n } = useTranslation('blockUnitMaintenance');
 
   const handleSoldChange = (checked: boolean) => {
     onChange(unit.id, {
@@ -60,6 +63,7 @@ export const UnitRow = ({
       <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
       <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
       <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-2 px-3 text-gray-900 text-right">{fmt(unit.lastAppraisedValue)}</td>
     </>
   ) : (
     <>
@@ -71,6 +75,7 @@ export const UnitRow = ({
       <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.landArea)}</td>
       <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
       <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-2 px-3 text-gray-900 text-right">{fmt(unit.lastAppraisedValue)}</td>
     </>
   );
 
@@ -151,6 +156,10 @@ export const UnitRow = ({
           className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
         />
       </td>
+      <td className="py-2 px-3 text-gray-900">
+        {formatLocaleDate(unit.updatedAt, i18n.language) ?? '-'}
+      </td>
+      <td className="py-2 px-3 text-gray-900">{unit.updatedBy ?? '-'}</td>
     </tr>
   );
 };

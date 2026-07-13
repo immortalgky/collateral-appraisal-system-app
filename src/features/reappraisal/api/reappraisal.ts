@@ -39,6 +39,8 @@ export function useReappraisalCandidates(params: ReappraisalCandidateListParams 
         reviewDateTo,
         remainingDayFrom,
         remainingDayTo,
+        sortBy,
+        sortDir,
       } = params;
 
       const { data } = await axios.get('/reappraisal/candidates', {
@@ -54,6 +56,7 @@ export function useReappraisalCandidates(params: ReappraisalCandidateListParams 
           ...(reviewDateTo && { reviewDateTo }),
           ...(remainingDayFrom != null && { remainingDayFrom }),
           ...(remainingDayTo != null && { remainingDayTo }),
+          ...(sortBy && { sortBy, sortDir }),
         },
       });
 

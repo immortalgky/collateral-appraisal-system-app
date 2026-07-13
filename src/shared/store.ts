@@ -8,6 +8,7 @@ import type {
   BreadcrumbStore,
   CompanyItem,
   CompanyStore,
+  DealerStore,
   LoadingStore,
   LocaleStore,
   ParameterStore,
@@ -20,7 +21,7 @@ import {
   SIDEBAR_MAX_WIDTH,
   SIDEBAR_DEFAULT_WIDTH,
 } from './components/sidebarConstants';
-import type { Parameter } from './types/api';
+import type { Dealer, Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
 export const useUIStore = create<UIStore>()(
@@ -84,6 +85,12 @@ export const useParameterStore = create<ParameterStore>(set => ({
       isLoaded: true,
     });
   },
+}));
+
+export const useDealerStore = create<DealerStore>(set => ({
+  dealers: [],
+  isLoaded: false,
+  setDealers: (dealers: Dealer[]) => set({ dealers, isLoaded: true }),
 }));
 
 // Ref-count so that overlapping callers (e.g. two concurrent task completions,

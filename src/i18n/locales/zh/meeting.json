@@ -6,7 +6,7 @@
     },
     "queue": {
       "title": "等待会议队列",
-      "subtitle": "等待分配会议的三级评估（融资限额 > 3000万）"
+      "subtitle": "等待分配会议的三级评估（评估价值 > 3000万）"
     }
   },
   "tabs": {
@@ -19,10 +19,13 @@
     "status": "状态",
     "start": "开始",
     "end": "结束",
-    "cutOff": "截止",
+    "cutOff": "最近截止",
     "items": "项目",
+    "lastUpdated": "最近更新",
+    "by": "由",
     "appraisalNo": "评估编号",
     "facilityLimit": "融资限额",
+    "appraisalValue": "评估价值",
     "enqueued": "入队时间",
     "memberNo": "序号",
     "memberName": "委员姓名",
@@ -37,6 +40,7 @@
   },
   "filters": {
     "searchPlaceholder": "搜索会议编号或客户名称",
+    "searchHint": "从开头匹配。使用 * 作为通配符（例如 abc*）。",
     "allStatus": "全部状态",
     "from": "从",
     "to": "至"
@@ -69,6 +73,8 @@
     "keepMeeting": "保留会议",
     "cancelMeeting": "取消会议",
     "confirmCutOff": "确认截止",
+    "endMeeting": "结束会议",
+    "confirmEnd": "结束会议",
     "addMemberSubmit": "添加委员",
     "cancelMemberAdd": "取消",
     "documents": "文件"
@@ -77,6 +83,7 @@
     "cutOff": "截止",
     "sendInvitation": "发送邀请",
     "resendInvitation": "重新发送邀请",
+    "endMeeting": "结束会议",
     "cancel": "取消"
   },
   "status": {
@@ -149,13 +156,14 @@
     "editMeeting": "编辑会议",
     "cancelMeeting": "取消会议",
     "confirmCutOff": "确认截止",
+    "endMeeting": "结束会议",
     "releaseAppraisal": "发布评估",
     "removeAppraisal": "移除评估",
     "routeBackAppraisal": "退回评估",
     "addAppraisalsFromQueue": "从队列添加评估",
     "addMember": "添加委员",
     "addToExistingMeeting": "添加到现有会议",
-    "bulkCreateMeetings": "批量创建会议",
+    "bulkCreateMeetings": "创建会议",
     "resendInvitation": "重新发送邀请",
     "newEmail": "新邮件"
   },
@@ -203,6 +211,11 @@
     "ackNote": "确认项目（自上次会议以来待处理的小组委员会审批）将由系统自动纳入。",
     "processing": "处理中..."
   },
+  "endDialog": {
+    "description": "将此会议标记为已结束。确认待知会事项并关闭会议。",
+    "note": "仅当没有仍待发布或被退回的决议事项时才能结束会议。否则请先发布或恢复这些事项。",
+    "processing": "正在结束..."
+  },
   "releaseDialog": {
     "confirm": "将 {{label}} 发布给所有会议成员审批？每位成员将收到一个并行审批任务。",
     "releasing": "发布中..."
@@ -220,7 +233,18 @@
     "datesSelected": "已选 {{n}} 个日期",
     "datesSelectedPlural": "已选 {{n}} 个日期",
     "creating": "创建中...",
-    "overflow": "+{{n}} 更多"
+    "overflow": "+{{n}} 更多",
+    "today": "今天",
+    "allWeekdays": "所有工作日",
+    "everyWeekday": "每",
+    "everyDayTooltip": "选择每个{{day}}",
+    "legendSelected": "已选择",
+    "legendHasMeeting": "已有会议",
+    "legendPast": "过去 / 不可用",
+    "tooltipHasMeeting": "已有会议 {{no}}",
+    "tooltipPast": "不可用日期",
+    "willCreate": "将创建 {{n}} 个会议",
+    "willCreatePlural": "将创建 {{n}} 个会议"
   },
   "addItemsDialog": {
     "selectedCount": "已选 {{selected}} / {{total}}",
@@ -245,6 +269,8 @@
     "meetingCancelFailed": "取消会议失败",
     "cutOffCompleted": "截止完成 — 新队列项目已添加到本次会议",
     "cutOffFailed": "执行截止失败",
+    "meetingEnded": "会议已结束",
+    "meetingEndFailed": "结束会议失败",
     "invitationSent": "邀请已发送邮件 — 会议编号 {{no}}",
     "invitationResent": "邀请已重新发送 — 会议编号 {{no}}",
     "invitationFailed": "发送邀请失败",
@@ -277,6 +303,8 @@
     "titleMax": "标题不得超过200个字符",
     "locationMax": "地点不得超过200个字符",
     "fromToMax": "不得超过200个字符",
+    "fromRequired": "必须填写发件人",
+    "toRequired": "必须填写收件人",
     "startRequired": "开始日期为必填项",
     "endRequired": "结束日期为必填项",
     "endAfterStart": "结束时间必须在开始时间之后",

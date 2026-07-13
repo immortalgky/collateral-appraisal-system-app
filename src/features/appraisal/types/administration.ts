@@ -77,6 +77,9 @@ export interface CurrentAssignment {
   cancellationReason: string | null;
   internalAppraiserId: string | null;
   internalFollowupAssignmentMethod: string | null;
+  remark: string | null;
+  // Set when the admin has saved a draft; null for a freshly-created (never-drafted) assignment.
+  draftSavedAt: string | null;
   createdOn: string | null;
 }
 

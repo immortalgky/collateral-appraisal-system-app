@@ -6,7 +6,9 @@ import type {
   createLandFormType,
   createLandAndBuildingPMAFormType,
   createMachineryFormType,
+  machinerySummaryFormType,
 } from '@/features/appraisal/schemas/form';
+import type { MachinerySummaryResponse } from '@/features/appraisal/api/machinerySummary';
 import type {
   GetLandPropertyResponseType,
   GetBuildingPropertyResponseType,
@@ -637,7 +639,7 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
     selectedStaff: null as null,
     selectedCompany: null as null,
     selectedFollowupStaff: null as null,
-    remarks: '',
+    remarks: response.remark ?? '',
   };
 };
 
@@ -719,5 +721,37 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
     districtName: addressLookup?.districtName ?? '',
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
+  };
+};
+
+/**
+ * Map the appraisal-level machinery summary response into form values.
+ * A null response (nothing saved yet) yields empty defaults.
+ */
+export const mapMachinerySummaryResponseToForm = (
+  response: MachinerySummaryResponse | null | undefined,
+): machinerySummaryFormType => {
+  return {
+    // Section 3.1 — general
+    inIndustrial: response?.inIndustrial ?? null,
+    surveyedNumber: response?.surveyedNumber ?? null,
+    appraisalNumber: response?.appraisalNumber ?? null,
+    installedAndUseCount: response?.installedAndUseCount ?? null,
+    appraisalScrapCount: response?.appraisalScrapCount ?? null,
+    appraisedByDocumentCount: response?.appraisedByDocumentCount ?? null,
+    notInstalledCount: response?.notInstalledCount ?? null,
+    maintenance: response?.maintenance ?? null,
+    exterior: response?.exterior ?? null,
+    performance: response?.performance ?? null,
+    marketDemandAvailable: response?.marketDemandAvailable ?? null,
+    marketDemand: response?.marketDemand ?? null,
+    // Section 3.3 — rights & legal
+    proprietor: response?.proprietor ?? null,
+    owner: response?.owner ?? null,
+    machineAddress: response?.machineAddress ?? null,
+    latitude: response?.latitude ?? null,
+    longitude: response?.longitude ?? null,
+    obligation: response?.obligation ?? null,
+    other: response?.other ?? null,
   };
 };

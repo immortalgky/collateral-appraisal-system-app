@@ -3,7 +3,14 @@ import clsx from 'clsx';
 
 type BadgeVariant = 'default' | 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info';
 type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
-type BadgeType = 'status' | 'priority' | 'channel' | 'property' | 'vote' | 'supportingDataStatus';
+type BadgeType =
+  | 'status'
+  | 'priority'
+  | 'channel'
+  | 'property'
+  | 'vote'
+  | 'supportingDataStatus'
+  | 'externalSyncStatus';
 type BadgeStyle = 'soft' | 'solid' | 'outline' | 'minimal' | 'ghost';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
@@ -97,8 +104,11 @@ const typeColorMap: Record<BadgeType, Record<string, ColorKey>> = {
   status: {
     new: 'blue',
     draft: 'amber',
+    submitted: 'purple',
+    assigned: 'green',
     pending: 'purple',
     inprogress: 'cyan',
+    underreview: 'blue',
     completed: 'emerald',
     cancelled: 'gray',
     rejected: 'red',
@@ -149,6 +159,18 @@ const typeColorMap: Record<BadgeType, Record<string, ColorKey>> = {
     reject: 'red',
     route_back: 'purple',
   },
+  externalSyncStatus: {
+    pending: 'amber',
+    delivered: 'emerald',
+    failed: 'red',
+    notsynced: 'gray',
+  },
+};
+
+/** Human-readable labels for status codes (display only; color still keyed off raw value) */
+const statusLabelMap: Record<string, string> = {
+  inprogress: 'In Progress',
+  underreview: 'Under Review',
 };
 
 const sizeStyles = {
@@ -184,6 +206,7 @@ const Badge = ({
   const normalizedValue = value?.toLowerCase() ?? '';
   const colorKey: ColorKey =
     type && value ? (typeColorMap[type]?.[normalizedValue] ?? 'gray') : 'gray';
+  const displayLabel = type === 'status' ? statusLabelMap[normalizedValue] : undefined;
 
   const colors = colorTokens[colorKey];
   const styleClasses = colors[badgeStyle];
@@ -204,7 +227,7 @@ const Badge = ({
       {...props}
     >
       {showDot && <span className={clsx('rounded-full shrink-0', dotColor, dotSizeStyles[size])} />}
-      {children ?? value ?? '-'}
+      {children ?? displayLabel ?? value ?? '-'}
       {removable && (
         <button
           type="button"

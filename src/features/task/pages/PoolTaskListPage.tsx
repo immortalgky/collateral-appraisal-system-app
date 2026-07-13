@@ -7,10 +7,11 @@ import {
   bucketForSlaStatus,
   getRowVariantClasses,
 } from '@features/common/monitoring/components/SlaCells';
-import type { PoolTask, TaskFilterParams } from '../types';
+import type { GroupByField, PoolTask, TaskFilterParams } from '../types';
 import { useAuthStore } from '@features/auth/store';
 import type { PoolTaskUpdateEvent } from '../hooks/useWorkflowHub';
 import { useWorkflowHub } from '../hooks/useWorkflowHub';
+import { usePoolKanbanRealtime } from '../hooks/usePoolKanbanRealtime';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
@@ -22,8 +23,34 @@ import { ColumnResizeHandle } from '../components/ColumnResizeHandle';
 import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
+import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
+import { PoolTaskKanbanCard } from '../components/PoolTaskKanbanCard';
 
 type SortDirection = 'asc' | 'desc';
+type ViewMode = 'grid' | 'list';
+
+const VIEW_STORAGE_KEY = 'task-view-pool';
+const GROUPBY_STORAGE_KEY = 'task-groupby-pool';
+
+const GROUP_BY_VALUES: GroupByField[] = ['status', 'purpose', 'priority', 'activity', 'slaStatus'];
+
+function readStoredViewMode(): ViewMode {
+  try {
+    const v = localStorage.getItem(VIEW_STORAGE_KEY);
+    return v === 'grid' || v === 'list' ? v : 'list';
+  } catch {
+    return 'list';
+  }
+}
+
+function readStoredGroupBy(): GroupByField {
+  try {
+    const v = localStorage.getItem(GROUPBY_STORAGE_KEY);
+    return v && (GROUP_BY_VALUES as string[]).includes(v) ? (v as GroupByField) : 'status';
+  } catch {
+    return 'status';
+  }
+}
 
 const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   appraisalNumber: 'Appraisal No.',
@@ -106,6 +133,11 @@ interface PoolTaskListPageProps {
   visibleColumns?: ColumnKey[];
   colWidths?: Record<string, number>;
   onColWidthChange?: (key: ColumnKey, px: number) => void;
+  // View/grouping — supplied by the parent so the list⇄board toggle and group-by
+  // select can live inline in the parent's shared toolbar (mirrors the personal
+  // tab). Falls back to internal (localStorage-backed) state when standalone.
+  viewMode?: ViewMode;
+  groupBy?: GroupByField;
 }
 
 function PoolTaskListPage({
@@ -116,12 +148,25 @@ function PoolTaskListPage({
   visibleColumns: propVisibleColumns,
   colWidths: propColWidths,
   onColWidthChange,
+  viewMode: propViewMode,
+  groupBy: propGroupBy,
 }: PoolTaskListPageProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUsername = useAuthStore(s => s.user?.username);
   const userRoles = useAuthStore(s => s.user?.roles ?? []);
   const isControlled = externalSearch !== undefined || externalFilters !== undefined;
+
+  // Standalone fallback only — when embedded, the parent (TaskListingPage /
+  // ActivityTaskTable) owns this state and renders the toggle in its own toolbar,
+  // so there's no in-body control left here to change it. Read once from the
+  // same storage keys the parent writes to, so a later embed pick up wherever
+  // a standalone render left off.
+  const [internalViewMode] = useState<ViewMode>(readStoredViewMode);
+  const [internalGroupBy] = useState<GroupByField>(readStoredGroupBy);
+
+  const viewMode = propViewMode ?? internalViewMode;
+  const groupBy = propGroupBy ?? internalGroupBy;
 
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(25);
@@ -297,6 +342,9 @@ function PoolTaskListPage({
   );
 
   useWorkflowHub({ poolGroups: userRoles, onPoolTaskUpdate: handlePoolTaskUpdate });
+  // Keeps the pool Kanban board's caches (separate query keys from the table's
+  // ['pool-tasks']) in sync — active regardless of which view is currently shown.
+  usePoolKanbanRealtime();
 
   const handleSort = (field: string) => {
     if (sortField === field) {
@@ -454,7 +502,26 @@ function PoolTaskListPage({
         </>
       )}
 
-      {/* Table */}
+      {viewMode === 'grid' ? (
+        <div className="flex-1 min-h-0">
+          <TaskKanbanBoard
+            scope="pool"
+            groupBy={groupBy}
+            baseFilters={{
+              search: debouncedSearch || undefined,
+              ...(activityId && { activityId }),
+              ...filters,
+            }}
+            renderCard={task => (
+              <PoolTaskKanbanCard
+                task={task as PoolTask}
+                onClick={() => handleEditInPool(task as PoolTask)}
+              />
+            )}
+            onTaskClick={task => handleEditInPool(task as PoolTask)}
+          />
+        </div>
+      ) : (
       <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table
@@ -694,6 +761,7 @@ function PoolTaskListPage({
           }}
         />
       </div>
+      )}
     </div>
   );
 }

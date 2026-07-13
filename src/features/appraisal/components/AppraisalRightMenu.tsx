@@ -303,7 +303,12 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                 <InfoRow
                   icon="circle-check"
                   label="Status"
-                  value={<Badge type="status" value={appraisal.status || 'draft'} />}
+                  value={
+                    <Badge
+                      type="status"
+                      value={appraisal.appraisalReportNo ? appraisal.status : requestData?.status}
+                    />
+                  }
                 />
                 <InfoRow
                   icon="money-bill-wave"

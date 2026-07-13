@@ -55,6 +55,12 @@ export interface TaskDetailResult {
   isOwner: boolean;
   workingBy: string | null;
   lockedAt: string | null;
+
+  /** In-progress decision draft, saved via useSaveTaskDecisionDraft — seeds the review form on reload. */
+  decisionTaken: string | null;
+  comment: string | null;
+  reasonCode: string | null;
+  assignee: string | null;
 }
 
 export interface ActivityAction {
@@ -129,6 +135,44 @@ export const useGetTaskById = (taskId: string | undefined) => {
     },
     enabled: !!taskId,
     retry: false,
+  });
+};
+
+/**
+ * Hook for saving an in-progress decision draft for a task (owner-only, 403 otherwise).
+ * PUT /tasks/{taskId}/decision-draft
+ *
+ * Persists the task owner's in-progress decision (action, comment, reason code, next
+ * assignee) so it survives page reloads and stays in sync between the 360 Comment
+ * footer and the Summary & Decision page. It's a full-replace PUT — callers should
+ * pass through the other three draft values so they aren't nulled out.
+ */
+export const useSaveTaskDecisionDraft = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      taskId,
+      decisionTaken,
+      comment,
+      reasonCode,
+      assignee,
+    }: {
+      taskId: string;
+      decisionTaken: string | null;
+      comment: string | null;
+      reasonCode: string | null;
+      assignee: string | null;
+    }): Promise<void> => {
+      await axios.put(`/tasks/${taskId}/decision-draft`, {
+        decisionTaken,
+        comment,
+        reasonCode,
+        assignee,
+      });
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['task', variables.taskId] });
+    },
   });
 };
 
@@ -230,7 +274,8 @@ export const useCompleteActivity = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-progress'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
     },

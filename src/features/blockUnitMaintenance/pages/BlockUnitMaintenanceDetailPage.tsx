@@ -16,6 +16,7 @@ import { ModelBreakdown } from '../components/ModelBreakdown';
 import type { ModelStat } from '../components/ModelBreakdown';
 import { isCondo } from '@/features/blockProject/types';
 import type { ProjectType, ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
+import { NumberInput } from '@/shared/components';
 
 const LOAN_BANK_LIST_ID = 'block-unit-maint-loan-banks';
 
@@ -126,6 +127,8 @@ const BlockUnitMaintenanceDetailPage = () => {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [minValue, setMinValue] = useState<number | null>(null);
+  const [maxValue, setMaxValue] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [bulkLoanBank, setBulkLoanBank] = useState('');
   const [edits, setEdits] = useState<Map<string, UnitEditState>>(() => new Map());
@@ -302,6 +305,14 @@ const BlockUnitMaintenanceDetailPage = () => {
   const filteredUnits = useMemo(() => {
     return liveUnits.filter(u => {
       if (!matchUnit(u, search.trim())) return false;
+
+      if (minValue != null && (u.lastAppraisedValue == null || u.lastAppraisedValue < minValue)) {
+        return false;
+      }
+      if (maxValue != null && (u.lastAppraisedValue == null || u.lastAppraisedValue > maxValue)) {
+        return false;
+      }
+
       switch (statusFilter) {
         case 'sold':
           return u.isSold;
@@ -314,7 +325,7 @@ const BlockUnitMaintenanceDetailPage = () => {
           return true;
       }
     });
-  }, [liveUnits, search, statusFilter]);
+  }, [liveUnits, search, statusFilter, minValue, maxValue]);
 
   // Master checkbox state for the currently-filtered list.
   const filteredIds = useMemo(() => filteredUnits.map(u => u.id), [filteredUnits]);
@@ -411,14 +422,31 @@ const BlockUnitMaintenanceDetailPage = () => {
             leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
           />
         </div>
+        <div className="flex items-center gap-1.5">
+          <NumberInput
+            className="w-28"
+            placeholder={t('detail.filter.appraisalMin')}
+            value={minValue}
+            onChange={e => setMinValue(e.target.value)}
+          />
+          <span className="text-gray-400">–</span>
+          <NumberInput
+            className="w-28"
+            placeholder={t('detail.filter.appraisalMax')}
+            value={maxValue}
+            onChange={e => setMaxValue(e.target.value)}
+          />
+        </div>
         <StatusChips value={statusFilter} onChange={setStatusFilter} counts={chipCounts} t={t} />
-        {(search || statusFilter !== 'all') && (
+        {(search || statusFilter !== 'all' || minValue != null || maxValue != null) && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               setSearch('');
               setStatusFilter('all');
+              setMinValue(null);
+              setMaxValue(null);
             }}
           >
             <Icon style="regular" name="xmark" className="size-3.5 mr-1" />
@@ -506,6 +534,9 @@ const BlockUnitMaintenanceDetailPage = () => {
                   <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('detail.cols.sellingPriceBaht')}
                   </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.appraisalValue')}
+                  </th>
                   <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
@@ -514,6 +545,12 @@ const BlockUnitMaintenanceDetailPage = () => {
                   </th>
                   <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.loanBankName')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.updatedAt')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.updatedBy')}
                   </th>
                 </tr>
               ) : (
@@ -554,6 +591,9 @@ const BlockUnitMaintenanceDetailPage = () => {
                   <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('detail.cols.sellingPriceBaht')}
                   </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.appraisalValue')}
+                  </th>
                   <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
@@ -563,24 +603,30 @@ const BlockUnitMaintenanceDetailPage = () => {
                   <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.updatedAt')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('detail.cols.updatedBy')}
+                  </th>
                 </tr>
               )}
             </thead>
             <tbody>
               {isLoading ? (
                 <TableRowSkeleton
-                  columns={Array.from({ length: 12 }, () => ({ width: 'w-16' }))}
+                  columns={Array.from({ length: 13 }, () => ({ width: 'w-16' }))}
                   rows={8}
                 />
               ) : isError ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-10 text-center text-sm text-red-500">
+                  <td colSpan={13} className="px-4 py-10 text-center text-sm text-red-500">
                     {t('errors.unitLoadFailed')}
                   </td>
                 </tr>
               ) : filteredUnits.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-16">
+                  <td colSpan={13} className="px-4 py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-sm text-gray-500">{t('units.empty')}</p>
