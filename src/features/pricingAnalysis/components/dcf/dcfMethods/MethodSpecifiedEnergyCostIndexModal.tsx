@@ -20,6 +20,7 @@ export function MethodSpecifiedEnergyCostIndexModal({
             fieldName={`${name}.energyCostIndex`}
             inputType={'number'}
             disabled={isReadOnly}
+            number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
       </div>
@@ -39,6 +40,7 @@ export function MethodSpecifiedEnergyCostIndexModal({
             fieldName={`${name}.increaseRateYrs`}
             inputType={'number'}
             disabled={isReadOnly}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
         <span className={''}>year(s)</span>
