@@ -6,6 +6,7 @@ import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
+import { useTranslation } from 'react-i18next';
 
 interface MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps {
   name: string;
@@ -17,6 +18,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
   getOuterFormValues,
   isReadOnly,
 }: MethodRoomCostBasedOnExpensesPerRoomPerDayModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const {
     getValues,
     formState: { errors },
@@ -115,28 +117,28 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
             <table className={'table table-sm'}>
               <thead>
                 <tr>
-                  <th className="px-1.5 py-1.5 bg-gray-100">Room Type</th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">{t('dcf.common.roomType')}</th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Room Cost</span>
-                      <span>Bath / Room / Day</span>
+                      <span>{t('dcf.methods.roomCostBasedOnExpenses.roomCost')}</span>
+                      <span>{t('dcf.methods.roomCostBasedOnExpenses.unitPerRoomDay')}</span>
                     </div>
                   </th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Saleable Area</span>
+                      <span>{t('dcf.common.saleableArea')}</span>
                     </div>
                   </th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Total Room Expenses</span>
-                      <span>Bath / Day</span>
+                      <span>{t('dcf.methods.roomCostBasedOnExpenses.totalRoomExpenses')}</span>
+                      <span>{t('dcf.methods.roomCostBasedOnExpenses.unitPerDay')}</span>
                     </div>
                   </th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Total Room Expenses</span>
-                      <span>Bath / Year</span>
+                      <span>{t('dcf.methods.roomCostBasedOnExpenses.totalRoomExpenses')}</span>
+                      <span>{t('dcf.common.bahtPerYear')}</span>
                     </div>
                   </th>
                 </tr>
@@ -170,7 +172,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                               type="button"
                               onClick={() => handleOnRemove(index)}
                               className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                              title="Delete"
+                              title={t('dcf.common.delete')}
                             >
                               <Icon style="solid" name="trash" className="size-1" />
                             </button>
@@ -230,7 +232,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
                         onClick={() => handleOnAdd()}
                         className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                       >
-                        + Add Room
+                        {t('dcf.common.addRoom')}
                       </button>
                     </td>
                     <td></td>
@@ -282,7 +284,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Room Expenses</span>
+          <span className={'w-56'}>{t('dcf.methods.roomCostBasedOnExpenses.totalRoomExpenses')}</span>
           <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumTotalRoomExpensePerYear`}
@@ -292,10 +294,10 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
               )}
             />
           </div>
-          <span>Baht / Year</span>
+          <span>{t('dcf.common.bahtPerYear')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-56'}>{t('dcf.common.increaseRate')}</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -308,7 +310,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
               }}
             />
           </div>
-          <span className={''}>every</span>
+          <span className={''}>{t('dcf.common.every')}</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
@@ -322,10 +324,10 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
               }}
             />
           </div>
-          <span className={'w-44'}>year(s)</span>
+          <span className={'w-44'}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Start In</span>
+          <span className={'w-56'}>{t('dcf.common.startIn')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.startIn`}
@@ -339,7 +341,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
         </div>
       </div>
     </div>

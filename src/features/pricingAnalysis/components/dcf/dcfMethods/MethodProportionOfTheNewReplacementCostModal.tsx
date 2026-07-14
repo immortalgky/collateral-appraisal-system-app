@@ -1,4 +1,5 @@
 import type { UseFormGetValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodProportionOfTheNewReplacementCostModalProps {
@@ -11,10 +12,11 @@ export function MethodProportionOfTheNewReplacementCostModal({
   isReadOnly,
   getOuterFormValues,
 }: MethodProportionOfTheNewReplacementCostModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Proportions</span>
+        <span className={'w-56'}>{t('dcf.common.proportions')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.proportionPct`}
@@ -28,11 +30,11 @@ export function MethodProportionOfTheNewReplacementCostModal({
           />
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={''}>% of new replacement cost</span>
+          <span className={''}>{t('dcf.methods.proportionOfNewReplacementCost.percentOfNewReplacementCost')}</span>
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Increase Rate</span>
+        <span className={'w-56'}>{t('dcf.common.increaseRate')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -45,7 +47,7 @@ export function MethodProportionOfTheNewReplacementCostModal({
             }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
@@ -59,10 +61,10 @@ export function MethodProportionOfTheNewReplacementCostModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
+        <span className={'w-56'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -76,7 +78,7 @@ export function MethodProportionOfTheNewReplacementCostModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { StickyLabelTable } from '../layout/StickyLabelTable';
 import { useMemo } from 'react';
 import { useDerivedFields } from '../../adapters/useDerivedFieldArray';
 import { buildMethodCalculationRules } from '../../domain/dcf/useCalculations';
+import { useTranslation } from 'react-i18next';
 
 export interface SectionColor {
   bg: string;
@@ -98,6 +99,7 @@ export function DiscountedCashFlowTable({
   marketSurveys,
   ensureIncomeAnalysisId,
 }: DiscountedCashFlowTableProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { control } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
 
@@ -155,6 +157,7 @@ export function DiscountedCashFlowTable({
             <tr className="bg-white">
               <td className="flex-1 text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300">
                 <div className="flex flex-row justify-end items-center gap-1.5">
+                  <span>{t('dcf.common.projectionPeriod')}</span>
                   <div className="w-16">
                     <RHFInputCell
                       fieldName="totalNumberOfYears"
@@ -168,7 +171,9 @@ export function DiscountedCashFlowTable({
                       }}
                     />
                   </div>
-                  <span>Years</span>
+                  <span>{t('dcf.common.years')}</span>
+                  <span>/</span>
+                  <span>{t('dcf.common.daysPerYear')}</span>
                   <div className="w-16">
                     <RHFInputCell
                       fieldName="totalNumberOfDayInYear"
@@ -182,7 +187,7 @@ export function DiscountedCashFlowTable({
                       }}
                     />
                   </div>
-                  <span>Days in a year</span>
+                  <span>{t('dcf.common.days')}</span>
                 </div>
               </td>
               {Array.from({ length: totalNumberOfYears }, (_, i) => (
@@ -192,7 +197,7 @@ export function DiscountedCashFlowTable({
                     'text-right text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300 min-w-[120px]',
                   )}
                 >
-                  Year {i + 1}
+                  {t('dcf.common.yearColumn', { year: i + 1 })}
                 </th>
               ))}
             </tr>

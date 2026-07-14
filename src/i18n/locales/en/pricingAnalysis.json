@@ -211,7 +211,119 @@
     "title": "Discounted Cash Flow",
     "highestBestUsed": "Highest and Best Used",
     "assumptions": "Assumptions",
-    "viewSummary": "View Assumption Summary"
+    "viewSummary": "View Assumption Summary",
+    "common": {
+      "startIn": "Start In",
+      "year": "year(s)",
+      "every": "every",
+      "percentEvery": "% every",
+      "percentWithGrowth": "% with growth",
+      "increaseRate": "Increase Rate",
+      "increase": "Increase Rate",
+      "remark": "Remark",
+      "roomType": "Room Type",
+      "roomIncome": "Room Income",
+      "totalRoomIncome": "Total Room Income",
+      "saleableArea": "Saleable Area",
+      "totalNumberOfSaleableArea": "Total Number of Saleable Area",
+      "occupancyRateFirstYear": "Occupancy Rate - First Year",
+      "averageRoomRate": "Average Room Rate",
+      "delete": "Delete",
+      "addRoom": "+ Add Room",
+      "total": "Total",
+      "totals": "Totals",
+      "bahtPerDay": "Baht/ Day",
+      "bahtPerYear": "Baht/ Year",
+      "bahtPerMonth": "Baht/ Month",
+      "sqMeter": "Sq. Meter",
+      "baht": "Baht",
+      "proportions": "Proportions",
+      "bahtPerRoomPerDay": "Baht/ Room/ Day",
+      "projectionPeriod": "Projection Period:",
+      "daysPerYear": "Days per Year:",
+      "years": "years",
+      "days": "days",
+      "yearColumn": "Year {{year}}"
+    },
+    "methods": {
+      "roomIncomePerDay": {
+        "roomIncomeHeader": "Room Income",
+        "totalRoomIncomeHeader": "Total Room Income"
+      },
+      "roomIncomeBySeasonalRates": {
+        "numberOfSeasons": "Number of seasons",
+        "seasonName": "Season Name",
+        "numberOfMonths": "No. Of Month",
+        "seasonDescription": "Season Description",
+        "roomIncomeHeader": "Room Income",
+        "totalPerDay": "Total / Day",
+        "addRoomType": "+ Add Room Type",
+        "averageRoomPerDay": "Average/ Room/ Day",
+        "averageRoomPerSeason": "Average/ Room/ Season"
+      },
+      "rentalIncomePerSquareMeter": {
+        "totalBuildingArea": "Total Building Area",
+        "areaDescription": "Area Description",
+        "rentalPrice": "Rental Price",
+        "unitPerSqmMonth": "Bath / Sq.M / Month",
+        "totalSaleableArea": "Total Saleable Area",
+        "sqM": "Sq. M",
+        "totalRentalIncome": "Total Rental Income",
+        "averageRentalPrice": "Average Rental Price",
+        "unitBahtSqmMonth": "Baht/ Sq. Meter/ Month"
+      },
+      "proportion": {
+        "percentOf": "% of"
+      },
+      "rentalIncomePerMonth": {
+        "unitPerRoomMonth": "Bath / Room / Month"
+      },
+      "positionBasedSalary": {
+        "jobPosition": "Job Position",
+        "salary": "Salary",
+        "unitPerPersonMonth": "Bath / Person / Month",
+        "numberOfEmployees": "Number of Employees",
+        "totalSalary": "Total Salary",
+        "addJobPosition": "+ Add Job Position"
+      },
+      "roomCostBasedOnExpenses": {
+        "roomCost": "Room Cost",
+        "unitPerRoomDay": "Bath / Room / Day",
+        "totalRoomExpenses": "Total Room Expenses",
+        "unitPerDay": "Bath / Day"
+      },
+      "tierOfPropertyValue": {
+        "totalGovLandPrice": "Total government land appraisal price",
+        "totalGovBuildingPrice": "Total government building appraisal price",
+        "govLandPriceIncreaseBy": "Government land prices increase by",
+        "taxRatesTableTitle": "Land and Building Tax Rates",
+        "estimatedPrice": "Estimated Price (Baht)",
+        "taxRate": "Tax Rate (%)",
+        "taxCeiling": "Tax Ceiling (Baht)",
+        "from": "From",
+        "to": "To",
+        "taxTableTitle": "Land and Building Tax",
+        "yearLabel": "Year {{year}}",
+        "row1Label": "(1) Government Land Price (with annual increase)",
+        "row2Label": "(2) Government Price for Buildings",
+        "row3Label": "(1+2) Total price of Government Property",
+        "propertyTaxRow": "Property tax on Government Appraisal Price"
+      },
+      "proportionOfNewReplacementCost": {
+        "percentOfNewReplacementCost": "% of new replacement cost"
+      },
+      "foodAndBeverageExpenses": {
+        "label": "Food and Beverage Expenses",
+        "unitPerRoomDay": "Baht/ Room/ Day"
+      },
+      "valueWithGrowth": {
+        "firstYearAmount": "First year amount"
+      },
+      "energyCostIndex": {
+        "energyCostIndex": "Energy Cost Index",
+        "energyCostIncreaseRate": "Energy Cost Increase Rate"
+      }
+    }
   },
   "profitRent": {
     "title": "Profit Rent Analysis",

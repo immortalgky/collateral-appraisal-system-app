@@ -22,6 +22,7 @@ interface MethodSpecifiedRoomIncomePerDay {
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
   startIn: number;
+  remark?: string; // collect to db
 
   // table
   saleableArea: number[];
@@ -66,6 +67,7 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
   startIn: number;
+  remark?: string; // collect to db
 
   // table
   saleableArea: number[];
@@ -150,6 +152,7 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
   sumTotalRentalIncomePerYear: number;
   avgRentalRatePerMonth: number;
   totalSaleableArea: number; // collect to db
+  totalBuildingArea: number; // collect to db
   increaseRatePct: number; // collect to db
   increaseRateYrs: number; // collect to db
   occupancyRateFirstYearPct: number; // collect to db
