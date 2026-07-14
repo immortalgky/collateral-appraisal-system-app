@@ -318,14 +318,28 @@ function ServiceQualityEvaluationDetailPage() {
             {/* Row 1 — identity & subject of evaluation */}
             <InfoRow label={t('detail.info.appraisalNumber')} value={header?.appraisalNumber ?? appraisalNumber ?? '—'} />
             <InfoRow label={t('detail.info.customerName')} value={header?.customerName ?? '—'} />
-            <InfoRow label={t('detail.info.appraiserCompany')} value={header?.appraiserCompanyName ?? '—'} />
-            <InfoRow label={t('detail.info.appraisalDepartment')} value={header?.departmentOfAppraisal ?? '—'} />
+            <InfoRow
+              label={t('detail.info.appraiserCompany')}
+              value={header?.appraiserCompanyName ?? '—'}
+            />
+            <InfoRow
+              label={t('detail.info.internalAppraiser')}
+              value={
+                header?.internalAppraiserName
+                  ? `${header.internalAppraiserId} - ${header.internalAppraiserName}`
+                  : '—'
+              }
+            />
             {/* Row 2 — what was appraised & when */}
             <InfoRow label={t('detail.info.propertyType')} value={header?.collateralTypes ?? '—'} />
             <InfoRow label={t('detail.info.appraisalDate')} value={header?.inspectionDates ?? '—'} />
             <InfoRow
               label={t('detail.info.reportReceivedDate')}
               value={formatLocaleDate(header?.reportReceivedDate, i18n.language)}
+            />
+            <InfoRow
+              label={t('detail.info.appraisalDepartment')}
+              value={header?.departmentOfAppraisal ?? '—'}
             />
           </dl>
         </div>
@@ -355,7 +369,7 @@ function ServiceQualityEvaluationDetailPage() {
                     No
                   </th>
                   <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
-                    Criteria for consideration
+                    Criteria of consideration
                   </th>
                   <th className="text-center font-medium text-gray-600 px-3 py-2.5 text-xs">
                     Weight
@@ -389,7 +403,11 @@ function ServiceQualityEvaluationDetailPage() {
                     />
                   );
                 })}
-                <EvaluationTotalRow values={watchedValues} totalLabel="Total" configs={configs} />
+                <EvaluationTotalRow
+                  values={watchedValues}
+                  totalLabel="Total Score"
+                  configs={configs}
+                />
               </tbody>
             </table>
           </div>

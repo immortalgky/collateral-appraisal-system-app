@@ -118,7 +118,7 @@ function TaskMonitorTable({
     { key: 'slaStatus', label: t('columns.sla'), sortKey: 'SlaStatus' },
     { key: 'assignedAt', label: t('columns.assigned'), sortKey: 'AssignedAt' },
     { key: 'dueAt', label: t('columns.dueAt'), sortKey: 'DueAt' },
-    { key: 'actions', label: '' },
+    { key: 'actions', label: 'Action' },
   ];
 
   if (!isLoading && tasks.length === 0) {
