@@ -23,6 +23,7 @@ import { CondoUnitDetailsTab } from './CondoUnitDetailsTab';
 import { CondominiumSummaryTab } from './CondominiumSummaryTab';
 import type { UseMutationResult } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { getErrorMessage, isAxiosError } from '@/shared/utils/errorUtils';
 
 type CondoTabId = 'unitDetails' | 'summary';
 
@@ -270,8 +271,13 @@ export function CondominiumTabs({
         }),
       );
       onSaveSuccess(finalValue);
-    } catch {
-      toast.error(t('hypothesis.toasts.saveFailed'));
+    } catch (error) {
+      // Surface the backend's actual reason (ProblemDetails.detail) instead of a blanket
+      // "Failed to save" — e.g. an out-of-range Indoor Sales Area % from a too-small
+      // Total Building Area now returns a clear 400 message.
+      toast.error(
+        isAxiosError(error) ? getErrorMessage(error) : t('hypothesis.toasts.saveFailed'),
+      );
     }
   };
 
