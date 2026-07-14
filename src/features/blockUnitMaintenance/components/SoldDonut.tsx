@@ -3,6 +3,8 @@ interface SoldDonutProps {
   total: number;
   /** Pre-translated "Sold" caption shown under the percentage. */
   soldLabel: string;
+  /** Outer diameter in px (default 180). Pass a smaller value for compact layouts. */
+  size?: number;
 }
 
 /**
@@ -11,10 +13,9 @@ interface SoldDonutProps {
  * in BlockReappraisalDetailPage without duplication. Labels are passed in
  * (already translated) so the component stays namespace-agnostic.
  */
-export const SoldDonut = ({ sold, total, soldLabel }: SoldDonutProps) => {
+export const SoldDonut = ({ sold, total, soldLabel, size = 180 }: SoldDonutProps) => {
   const pct = total > 0 ? (sold / total) * 100 : 0;
-  const size = 180;
-  const stroke = 18;
+  const stroke = size >= 160 ? 18 : 14;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
   const arcFraction = 0.75;

@@ -34,6 +34,8 @@ export function useBlockReappraisalDueList(params: BlockReappraisalListParams = 
         lastAppraisedDateTo,
         remainingDayMin,
         remainingDayMax,
+        sortBy,
+        sortDir,
       } = params;
 
       const { data } = await axios.get('/block-reappraisal', {
@@ -45,6 +47,7 @@ export function useBlockReappraisalDueList(params: BlockReappraisalListParams = 
           ...(lastAppraisedDateTo && { lastAppraisedDateTo }),
           ...(remainingDayMin != null && { remainingDayMin }),
           ...(remainingDayMax != null && { remainingDayMax }),
+          ...(sortBy && { sortBy, sortDir }),
         },
       });
 

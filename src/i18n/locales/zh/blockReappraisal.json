@@ -10,11 +10,11 @@
     "landAndBuilding": "Land & Building"
   },
   "columns": {
-    "oldAppraisalNumber": "Old Appraisal Report No.",
+    "oldAppraisalNumber": "Prev Appraisal Number",
     "projectName": "Project Name",
     "projectSellingPrice": "Project Selling Price (Baht)",
-    "remainingTotalUnit": "Remaining / Total Unit",
-    "lastAppraisedDate": "Last Appraised Date",
+    "remainingTotalUnit": "Available / Total Unit",
+    "lastAppraisedDate": "Last Appraisal Date",
     "remainingDay": "Remaining Day"
   },
   "remainingDayBadge": {
@@ -25,7 +25,7 @@
     "title": "Filters",
     "fields": {
       "search": "Search",
-      "lastAppraisedDate": "Last Appraised Date",
+      "lastAppraisedDate": "Last Appraisal Date",
       "remainingDay": "Remaining Day"
     },
     "placeholders": {
@@ -54,7 +54,7 @@
   },
   "actions": {
     "createRequest": "Initiate reappraisal request",
-    "notRequired": "Reappraisal Not Required"
+    "notRequired": "Reappraisal not required"
   },
   "detail": {
     "backToList": "Back to list",
@@ -62,6 +62,25 @@
     "oldAppraisalLabel": "Old Appraisal No.:",
     "fields": {
       "dueDate": "Due Date"
+    },
+    "filter": {
+      "searchPlaceholder": "门牌号 / 地块 / 房号 / 户型",
+      "estimateMin": "估价下限",
+      "estimateMax": "估价上限",
+      "all": "全部",
+      "sold": "已售",
+      "available": "可售",
+      "clear": "清除筛选",
+      "noMatch": "没有符合筛选条件的单元"
+    },
+    "dueBadge": {
+      "overdue": "已逾期 {{days}} 天",
+      "today": "今日到期",
+      "inDays": "{{days}} 天后到期"
+    },
+    "kpi": {
+      "totalEstimate": "估价总值（泰铢）",
+      "avgEstimate": "平均估价（泰铢）"
     },
     "overview": {
       "title": "Unit Overview",
@@ -101,6 +120,8 @@
   "units": {
     "sold": "Sold",
     "available": "Available",
+    "soldHint": "已售单元",
+    "availableHint": "可售（未售）单元",
     "updatedByLine": "by {{name}}",
     "cols": {
       "floor": "Floor Number",
@@ -108,7 +129,7 @@
       "regNumber": "Reg. Number",
       "roomNo": "Room Number",
       "modelType": "Model Name",
-      "usableArea": "Usable Area (Sq.M.)",
+      "usableArea": "Usable Area (Sq.M)",
       "sellingPrice": "Selling Price (Baht)",
       "appraisalValue": "Estimate Price (Baht)",
       "plotNo": "Plot No",
