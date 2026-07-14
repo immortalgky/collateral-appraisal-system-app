@@ -1,4 +1,5 @@
 import type { UseFormGetValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedEnergyCostIndexModalProps {
@@ -11,10 +12,11 @@ export function MethodSpecifiedEnergyCostIndexModal({
   isReadOnly,
   getOuterFormValues,
 }: MethodSpecifiedEnergyCostIndexModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <div className="flex flex-col gap-2 mb-4">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Energy Cost Index</span>
+        <span className={'w-56'}>{t('dcf.methods.energyCostIndex.energyCostIndex')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.energyCostIndex`}
@@ -25,7 +27,7 @@ export function MethodSpecifiedEnergyCostIndexModal({
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Energy Cost Increase Rate</span>
+        <span className={'w-56'}>{t('dcf.methods.energyCostIndex.energyCostIncreaseRate')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -34,7 +36,7 @@ export function MethodSpecifiedEnergyCostIndexModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
@@ -43,10 +45,10 @@ export function MethodSpecifiedEnergyCostIndexModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
+        <span className={'w-56'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -60,7 +62,7 @@ export function MethodSpecifiedEnergyCostIndexModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
     </div>
   );

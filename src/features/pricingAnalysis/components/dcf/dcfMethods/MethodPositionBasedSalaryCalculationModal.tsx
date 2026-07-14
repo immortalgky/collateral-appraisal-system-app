@@ -6,6 +6,7 @@ import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toNumber } from '../../../domain/calculation';
 import { jobPositionParameters } from '@/features/pricingAnalysis/data/dcfParameters';
+import { useTranslation } from 'react-i18next';
 
 interface MethodPositionBasedSalaryCalculationModalProps {
   name: string;
@@ -17,6 +18,7 @@ export function MethodPositionBasedSalaryCalculationModal({
   getOuterFormValues,
   isReadOnly,
 }: MethodPositionBasedSalaryCalculationModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const {
     getValues,
     formState: { errors },
@@ -110,22 +112,22 @@ export function MethodPositionBasedSalaryCalculationModal({
             <table className={'table table-sm'}>
               <thead>
                 <tr>
-                  <th className="px-1.5 py-1.5 bg-gray-100">Job Position</th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">{t('dcf.methods.positionBasedSalary.jobPosition')}</th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Salary</span>
-                      <span>Bath / Person / Month</span>
+                      <span>{t('dcf.methods.positionBasedSalary.salary')}</span>
+                      <span>{t('dcf.methods.positionBasedSalary.unitPerPersonMonth')}</span>
                     </div>
                   </th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Number of Employees</span>
+                      <span>{t('dcf.methods.positionBasedSalary.numberOfEmployees')}</span>
                     </div>
                   </th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
-                      <span>Total Salary</span>
-                      <span>Bath / Year</span>
+                      <span>{t('dcf.methods.positionBasedSalary.totalSalary')}</span>
+                      <span>{t('dcf.common.bahtPerYear')}</span>
                     </div>
                   </th>
                 </tr>
@@ -159,7 +161,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                               type="button"
                               onClick={() => handleOnRemove(index)}
                               className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                              title="Delete"
+                              title={t('dcf.common.delete')}
                             >
                               <Icon style="solid" name="trash" className="size-1" />
                             </button>
@@ -206,7 +208,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                         onClick={() => handleOnAdd()}
                         className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                       >
-                        + Add Job Position
+                        {t('dcf.methods.positionBasedSalary.addJobPosition')}
                       </button>
                     </td>
                     <td></td>
@@ -215,7 +217,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                   </tr>
                 )}
                 <tr>
-                  <td className="sticky bottom-0 px-1.5 bg-white">Total</td>
+                  <td className="sticky bottom-0 px-1.5 bg-white">{t('dcf.common.total')}</td>
                   <td className="sticky bottom-0 px-1.5 bg-white">
                     <div className="text-right">
                       <RHFInputCell
@@ -257,7 +259,7 @@ export function MethodPositionBasedSalaryCalculationModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Salary</span>
+          <span className={'w-56'}>{t('dcf.methods.positionBasedSalary.totalSalary')}</span>
           <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumTotalSalaryPerYear`}
@@ -267,10 +269,10 @@ export function MethodPositionBasedSalaryCalculationModal({
               )}
             />
           </div>
-          <span>Baht / Year</span>
+          <span>{t('dcf.common.bahtPerYear')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-56'}>{t('dcf.common.increaseRate')}</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -283,7 +285,7 @@ export function MethodPositionBasedSalaryCalculationModal({
               }}
             />
           </div>
-          <span className={''}>% every</span>
+          <span className={''}>{t('dcf.common.percentEvery')}</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
@@ -297,10 +299,10 @@ export function MethodPositionBasedSalaryCalculationModal({
               }}
             />
           </div>
-          <span className={'w-44'}>year(s)</span>
+          <span className={'w-44'}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Start In</span>
+          <span className={'w-56'}>{t('dcf.common.startIn')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.startIn`}
@@ -314,7 +316,7 @@ export function MethodPositionBasedSalaryCalculationModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
         </div>
       </div>
     </div>

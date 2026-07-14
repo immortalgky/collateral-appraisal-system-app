@@ -9,8 +9,9 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import { ScrollableTableContainer } from '@features/pricingAnalysis/components/ScrollableTableContainer.tsx';
 import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { useMemo } from 'react';
-import { type UseFormGetValues } from 'react-hook-form';
+import { useWatch, type UseFormGetValues } from 'react-hook-form';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
+import { useTranslation } from 'react-i18next';
 
 export function MethodParameterBasedOnTierOfPropertyValueModal({
   name,
@@ -23,6 +24,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   getOuterFormValues: UseFormGetValues<any>;
   isReadOnly?: boolean;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   const landGovPrice = (properties ?? [])
     .filter(p => p.propertyType === 'L' || p.propertyType === 'LSL' || p.propertyType === 'LS')
     .flatMap((p: any) => p.titles ?? [])
@@ -37,7 +39,6 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
     .reduce((sum: number, d: any) => sum + toNumber(d.priceAfterDepreciation ?? 0), 0);
 
   const totalNumberOfYears = toNumber(getOuterFormValues('totalNumberOfYears'));
-
   const rules = useMemo(() => {
     return Array.from({ length: totalNumberOfYears }, (_, idx) => [
       {
@@ -99,25 +100,27 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-80'}>Total government land appraisal price</span>
+        <span className={'w-80'}>{t('dcf.methods.tierOfPropertyValue.totalGovLandPrice')}</span>
         <div className={'flex flex-row w-44 gap-1.5'}>
           <span className="w-44 text-right">
             {landGovPrice ? Number(landGovPrice).toLocaleString() : 0}
           </span>
-          <span>Baht</span>
+          <span>{t('dcf.common.baht')}</span>
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-80'}>Total government building appraisal price</span>
+        <span className={'w-80'}>{t('dcf.methods.tierOfPropertyValue.totalGovBuildingPrice')}</span>
         <div className={'flex flex-row w-44 gap-1.5'}>
           <span className="w-44 text-right">
             {buildingGovPrice ? Number(buildingGovPrice).toLocaleString() : 0}
           </span>
-          <span>Baht</span>
+          <span>{t('dcf.common.baht')}</span>
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-80'}>Government land prices increase by</span>
+        <span className={'w-80'}>
+          {t('dcf.methods.tierOfPropertyValue.govLandPriceIncreaseBy')}
+        </span>
         <div className="w-44">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -126,7 +129,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
@@ -135,10 +138,10 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-80'}>Start in</span>
+        <span className={'w-80'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -160,23 +163,27 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             <thead>
               <tr>
                 <th colSpan={4} className="border-b border-gray-300 text-center">
-                  Land and Building Tax Rates
+                  {t('dcf.methods.tierOfPropertyValue.taxRatesTableTitle')}
                 </th>
               </tr>
               <tr>
                 <th colSpan={2} rowSpan={1} className="border-b border-r border-gray-300">
-                  Estimated Price (Baht)
+                  {t('dcf.methods.tierOfPropertyValue.estimatedPrice')}
                 </th>
                 <th colSpan={1} rowSpan={2} className="border-b border-r border-gray-300">
-                  Tax Rate
+                  {t('dcf.methods.tierOfPropertyValue.taxRate')}
                 </th>
                 <th colSpan={1} rowSpan={2} className="border-b border-gray-300">
-                  Tax Ceiling (Baht)
+                  {t('dcf.methods.tierOfPropertyValue.taxCeiling')}
                 </th>
               </tr>
               <tr>
-                <th className="border-b border-gray-300">From</th>
-                <th className="border-b border-r border-gray-300">To</th>
+                <th className="border-b border-gray-300">
+                  {t('dcf.methods.tierOfPropertyValue.from')}
+                </th>
+                <th className="border-b border-r border-gray-300">
+                  {t('dcf.methods.tierOfPropertyValue.to')}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -195,7 +202,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                           : '-'}
                       </td>
                       <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
-                        {toFixed2(t.taxRate * 100)}
+                        {`${toFixed2(t.taxRate * 100)} %`}
                       </td>
                       <td className="border-b border-gray-300 px-1.5 py-2 text-right">
                         {t.maxValue
@@ -217,19 +224,19 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             <thead>
               <tr>
                 <th colSpan={totalNumberOfYears + 1} className="border-b border-gray-300">
-                  Land and Building Tax
+                  {t('dcf.methods.tierOfPropertyValue.taxTableTitle')}
                 </th>
               </tr>
               <tr>
                 <th></th>
                 {Array.from({ length: totalNumberOfYears }, (_, i) => (
-                  <th key={i}>Year {i + 1}</th>
+                  <th key={i}>{t('dcf.methods.tierOfPropertyValue.yearLabel', { year: i + 1 })}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>(1) Government land prices increase by 10% every 4 years</td>
+                <td>{t('dcf.methods.tierOfPropertyValue.row1Label')}</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td key={idx} className="text-right">
                     <RHFInputCell
@@ -243,7 +250,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 ))}
               </tr>
               <tr>
-                <td>(2) Government building prices</td>
+                <td>{t('dcf.methods.tierOfPropertyValue.row2Label')}</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td key={idx} className="text-right">
                     <span>{buildingGovPrice ? buildingGovPrice.toLocaleString() : 0}</span>
@@ -251,7 +258,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 ))}
               </tr>
               <tr>
-                <td>(1+2) Total price of government property</td>
+                <td>{t('dcf.methods.tierOfPropertyValue.row3Label')}</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td key={idx} className="text-right">
                     <RHFInputCell
@@ -265,7 +272,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 ))}
               </tr>
               <tr>
-                <td>Property tax</td>
+                <td>{t('dcf.methods.tierOfPropertyValue.propertyTaxRow')}</td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td key={idx} className="text-right">
                     <div className="flex flex-row justify-between items-center">

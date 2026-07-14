@@ -67,6 +67,7 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
   occupancyRatePct: number; // collect to db
   occupancyRateYrs: number; // collect to db
   startIn: number;
+  remark?: string; // collect to db
 
   // table
   saleableArea: number[];

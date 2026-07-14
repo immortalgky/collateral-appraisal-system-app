@@ -2,6 +2,7 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
@@ -33,6 +34,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
   // Local state to cache the id obtained by ensureIncomeAnalysisId so the
   // button can function before the first save.
   const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
+  const { t } = useTranslation('pricingAnalysis');
 
   const {
     getValues,
@@ -130,24 +132,24 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
           <table className={'table table-sm'}>
             <thead>
               <tr>
-                <th className="px-1.5 py-1.5 bg-gray-100">Room Type</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">{t('dcf.common.roomType')}</th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Room Income</span>
-                    <span>Bath / Room / Month</span>
+                    <span>{t('dcf.common.roomIncome')}</span>
+                    <span>{t('dcf.methods.rentalIncomePerMonth.unitPerRoomMonth')}</span>
                   </div>
                 </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">Saleable Area</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">{t('dcf.common.saleableArea')}</th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Room Income</span>
-                    <span>Bath / Month</span>
+                    <span>{t('dcf.common.totalRoomIncome')}</span>
+                    <span>{t('dcf.common.bahtPerMonth')}</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Room Income</span>
-                    <span>Bath / Year</span>
+                    <span>{t('dcf.common.totalRoomIncome')}</span>
+                    <span>{t('dcf.common.bahtPerYear')}</span>
                   </div>
                 </th>
               </tr>
@@ -181,7 +183,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
                             type="button"
                             onClick={() => handleOnRemove(index)}
                             className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                            title="Delete"
+                            title={t('dcf.common.delete')}
                           >
                             <Icon style="solid" name="trash" className="size-1" />
                           </button>
@@ -289,7 +291,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
                       onClick={() => handleOnAdd()}
                       className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                     >
-                      + Add Room
+                      {t('dcf.common.addRoom')}
                     </button>
                   </td>
                   <td></td>
@@ -298,7 +300,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
                 </tr>
               )}
               <tr>
-                <td className="sticky bottom-0 px-1.5 bg-white"></td>
+                <td className="sticky bottom-0 px-1.5 bg-white">{t('dcf.common.totals')}</td>
                 <td className="sticky bottom-0 px-1.5 bg-white"></td>
                 <td className="sticky bottom-0 px-1.5 bg-white">
                   <div className="text-right">
@@ -340,7 +342,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Room Income</span>
+          <span className={'w-56'}>{t('dcf.common.roomIncome')}</span>
           <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumRoomIncomePerYear`}
@@ -350,10 +352,10 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
               )}
             />
           </div>
-          <span>Baht/ Year</span>
+          <span>{t('dcf.common.bahtPerYear')}</span>
         </div>
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Number of Saleable Area</span>
+          <span className={'w-56'}>{t('dcf.common.totalNumberOfSaleableArea')}</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}
@@ -364,7 +366,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-56'}>{t('dcf.common.increaseRate')}</span>
           <div className={'w-56'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -377,7 +379,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
               }}
             />
           </div>
-          <span className={''}>every</span>
+          <span className={''}>{t('dcf.common.every')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
@@ -391,10 +393,10 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
               }}
             />
           </div>
-          <span className={'w-44'}>year(s)</span>
+          <span className={'w-44'}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Start In</span>
+          <span className={'w-56'}>{t('dcf.common.startIn')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.startIn`}
@@ -408,7 +410,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
         </div>
       </div>
     </div>

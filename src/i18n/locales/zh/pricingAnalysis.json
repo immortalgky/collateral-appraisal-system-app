@@ -211,7 +211,119 @@
     "title": "Discounted Cash Flow",
     "highestBestUsed": "Highest and Best Used",
     "assumptions": "Assumptions",
-    "viewSummary": "View Assumption Summary"
+    "viewSummary": "View Assumption Summary",
+    "common": {
+      "startIn": "开始年份",
+      "year": "年",
+      "every": "每",
+      "percentEvery": "% 每",
+      "percentWithGrowth": "% 并增长",
+      "increaseRate": "增长率",
+      "increase": "增长率",
+      "remark": "备注",
+      "roomType": "房型",
+      "roomIncome": "客房收入",
+      "totalRoomIncome": "客房收入合计",
+      "saleableArea": "可售面积",
+      "totalNumberOfSaleableArea": "可售面积合计",
+      "occupancyRateFirstYear": "入住率 - 第一年",
+      "averageRoomRate": "平均房价",
+      "delete": "删除",
+      "addRoom": "+ 添加房间",
+      "total": "合计",
+      "totals": "总计",
+      "bahtPerDay": "泰铢/ 天",
+      "bahtPerYear": "泰铢/ 年",
+      "bahtPerMonth": "泰铢/ 月",
+      "sqMeter": "平方米",
+      "baht": "泰铢",
+      "proportions": "比例",
+      "bahtPerRoomPerDay": "泰铢/ 间/ 天",
+      "projectionPeriod": "预测期:",
+      "daysPerYear": "每年天数:",
+      "years": "年",
+      "days": "天",
+      "yearColumn": "第 {{year}} 年"
+    },
+    "methods": {
+      "roomIncomePerDay": {
+        "roomIncomeHeader": "客房收入",
+        "totalRoomIncomeHeader": "客房收入合计"
+      },
+      "roomIncomeBySeasonalRates": {
+        "numberOfSeasons": "季节数量",
+        "seasonName": "季节名称",
+        "numberOfMonths": "月数",
+        "seasonDescription": "季节说明",
+        "roomIncomeHeader": "客房收入",
+        "totalPerDay": "合计/ 天",
+        "addRoomType": "+ 添加房型",
+        "averageRoomPerDay": "平均/ 间/ 天",
+        "averageRoomPerSeason": "平均/ 间/ 季"
+      },
+      "rentalIncomePerSquareMeter": {
+        "totalBuildingArea": "建筑面积合计",
+        "areaDescription": "区域说明",
+        "rentalPrice": "租金价格",
+        "unitPerSqmMonth": "泰铢 / 平方米 / 月",
+        "totalSaleableArea": "可售面积合计",
+        "sqM": "平方米",
+        "totalRentalIncome": "租金收入合计",
+        "averageRentalPrice": "平均租金价格",
+        "unitBahtSqmMonth": "泰铢/ 平方米/ 月"
+      },
+      "proportion": {
+        "percentOf": "% 占"
+      },
+      "rentalIncomePerMonth": {
+        "unitPerRoomMonth": "泰铢 / 间 / 月"
+      },
+      "positionBasedSalary": {
+        "jobPosition": "职位",
+        "salary": "薪资",
+        "unitPerPersonMonth": "泰铢 / 人 / 月",
+        "numberOfEmployees": "员工人数",
+        "totalSalary": "薪资合计",
+        "addJobPosition": "+ 添加职位"
+      },
+      "roomCostBasedOnExpenses": {
+        "roomCost": "客房成本",
+        "unitPerRoomDay": "泰铢 / 间 / 天",
+        "totalRoomExpenses": "客房费用合计",
+        "unitPerDay": "泰铢 / 天"
+      },
+      "tierOfPropertyValue": {
+        "totalGovLandPrice": "政府评估土地总价",
+        "totalGovBuildingPrice": "政府评估建筑总价",
+        "govLandPriceIncreaseBy": "政府地价增长",
+        "taxRatesTableTitle": "土地和建筑物税率",
+        "estimatedPrice": "评估价格 (泰铢)",
+        "taxRate": "税率 (%)",
+        "taxCeiling": "税额上限 (泰铢)",
+        "from": "从",
+        "to": "到",
+        "taxTableTitle": "土地和建筑物税",
+        "yearLabel": "第 {{year}} 年",
+        "row1Label": "(1) 政府地价 (每年递增)",
+        "row2Label": "(2) 政府建筑评估价格",
+        "row3Label": "(1+2) 政府财产总价",
+        "propertyTaxRow": "基于政府评估价格的财产税"
+      },
+      "proportionOfNewReplacementCost": {
+        "percentOfNewReplacementCost": "% 重置成本"
+      },
+      "foodAndBeverageExpenses": {
+        "label": "餐饮费用",
+        "unitPerRoomDay": "泰铢/ 间/ 天"
+      },
+      "valueWithGrowth": {
+        "firstYearAmount": "第一年金额"
+      },
+      "energyCostIndex": {
+        "energyCostIndex": "能源成本指数",
+        "energyCostIncreaseRate": "能源成本增长率"
+      }
+    }
   },
   "profitRent": {
     "title": "Profit Rent Analysis",

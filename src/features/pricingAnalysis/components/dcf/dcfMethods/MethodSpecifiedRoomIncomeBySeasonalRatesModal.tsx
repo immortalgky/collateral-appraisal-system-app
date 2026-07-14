@@ -18,6 +18,7 @@ import { MarketReferenceButton } from '../../MarketReferenceButton';
 import { PricingAnalysisSubjectType } from '@/features/pricingAnalysis/api/references';
 import type { MarketComparableDetailType } from '@/features/pricingAnalysis/schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
+import { useTranslation } from 'react-i18next';
 
 type SeasonRateInput = {
   seasonId: string;
@@ -119,6 +120,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
   // Local state to cache the id obtained by ensureIncomeAnalysisId so the
   // button can function before the first save.
   const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
+  const { t } = useTranslation('pricingAnalysis');
   const {
     control,
     getValues,
@@ -178,7 +180,6 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
             const numberOfMonths =
               getValues(`${name}.seasonDetails.${seasonIndex}.numberOfMonths`) ?? 0;
             const avgTotalRoomIncomePerSeason = avgTotalRoomIncomePerDay * numberOfMonths * 30;
-            console.log(getValues(`${name}.seasonDetails.${seasonIndex}.numberOfMonths`));
             return toNumber(avgTotalRoomIncomePerSeason);
           },
         };
@@ -203,16 +204,14 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
   useDerivedFields({ rules });
 
-  console.log(seasonCount);
-
   const rowsError = (errors as any)?.method?.detail?.roomDetails?.message as string | undefined;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
       <div className="flex items-center gap-3">
         <div className="w-56">
-          <span>Number of seasons</span>
+          <span>{t('dcf.methods.roomIncomeBySeasonalRates.numberOfSeasons')}</span>
         </div>
         <div className="w-56">
           <RHFInputCell
@@ -223,7 +222,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               if (v) handleSeasonCountChange(v);
               return v;
             }}
-            number={{ decimalPlaces: 0, maxIntegerDigits: 1, allowNegative: false }}
+            number={{ decimalPlaces: 0, maxIntegerDigits: 2, allowNegative: false }}
           />
         </div>
       </div>
@@ -234,7 +233,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
             <thead>
               <tr>
                 <th rowSpan={2} className="border-b border-r border-gray-300">
-                  Room Type
+                  {t('dcf.common.roomType')}
                 </th>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                   <th
@@ -244,7 +243,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                   >
                     <div className="flex flex-col gap-2 p-1.5">
                       <div className="flex flex-row items-center">
-                        <span className="w-64">Season Name</span>
+                        <span className="w-64">
+                          {t('dcf.methods.roomIncomeBySeasonalRates.seasonName')}
+                        </span>
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.seasonName`}
                           inputType="text"
@@ -253,7 +254,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                         />
                       </div>
                       <div className="flex flex-row items-center">
-                        <span className="w-64">No. Of Month</span>
+                        <span className="w-64">
+                          {t('dcf.methods.roomIncomeBySeasonalRates.numberOfMonths')}
+                        </span>
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.numberOfMonths`}
                           inputType="number"
@@ -267,7 +270,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                         />
                       </div>
                       <div className="flex flex-row items-center">
-                        <span className="w-64">Season Description</span>
+                        <span className="w-64">
+                          {t('dcf.methods.roomIncomeBySeasonalRates.seasonDescription')}
+                        </span>
                         <RHFInputCell
                           fieldName={`${name}.seasonDetails.${seasonIndex}.description`}
                           inputType="text"
@@ -282,15 +287,21 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               <tr>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                   <Fragment key={seasonIndex}>
-                    <th className="border-b border-gray-300 text-right">Room Income</th>
-                    <th className="border-b border-gray-300 text-right">Saleable Area</th>
+                    <th className="flex flex-col border-b border-gray-300 text-right">
+                      <span>{t('dcf.methods.roomIncomeBySeasonalRates.roomIncomeHeader')}</span>
+                      <span>{t('dcf.common.bahtPerRoomPerDay')}</span>
+                    </th>
+                    <th className="border-b border-gray-300 text-right">
+                      {t('dcf.common.saleableArea')}
+                    </th>
                     <th
                       className={clsx(
-                        'border-b border-gray-300 text-right',
+                        'flex flex-col border-b border-gray-300 text-right',
                         seasonCount > 1 ? 'border-r' : 0,
                       )}
                     >
-                      Total / Day
+                      <span>{t('dcf.common.totalRoomIncome')}</span>
+                      <span>{t('dcf.common.bahtPerDay')}</span>
                     </th>
                   </Fragment>
                 ))}
@@ -326,7 +337,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                             type="button"
                             onClick={() => remove(rowIndex)}
                             className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                            title="Delete"
+                            title={t('dcf.common.delete')}
                           >
                             <Icon style="solid" name="trash" className="size-1" />
                           </button>
@@ -338,7 +349,6 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                       const cell = rows[rowIndex]?.seasons?.[seasonIndex];
                       const total =
                         (Number(cell?.roomIncome) || 0) * (Number(cell?.saleableArea) || 0);
-                      console.log(rows, cell, total);
 
                       return (
                         <Fragment key={`${field.id}-${seasonIndex}`}>
@@ -442,7 +452,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                       onClick={() => append(createEmptyRow(seasonCount))}
                       className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                     >
-                      + Add Room Type
+                      {t('dcf.methods.roomIncomeBySeasonalRates.addRoomType')}
                     </button>
                   </td>
                   {Array.from({ length: seasonCount }, (_, seasonIndex) => {
@@ -465,7 +475,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
             <tfoot>
               <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">Totals</td>
+                <td className="border-b border-r border-gray-300 p-1.5">
+                  {t('dcf.common.totals')}
+                </td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
 
@@ -488,7 +500,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                 })}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Day</td>
+                <td className="border-b border-r border-gray-300 p-1.5">
+                  {t('dcf.methods.roomIncomeBySeasonalRates.averageRoomPerDay')}
+                </td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
@@ -509,7 +523,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                 })}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">Average/ Room/ Season</td>
+                <td className="border-b border-r border-gray-300 p-1.5">
+                  {t('dcf.methods.roomIncomeBySeasonalRates.averageRoomPerSeason')}
+                </td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                   const totals = calculateSeasonTotals(rows, seasonIndex);
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
@@ -536,7 +552,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Average Room Rate</span>
+          <span className={'w-56'}>{t('dcf.common.averageRoomRate')}</span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRoomRate`}
@@ -548,7 +564,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
           </div>
         </div>
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Number of Saleable Area</span>
+          <span className={'w-56'}>{t('dcf.common.totalNumberOfSaleableArea')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}
@@ -559,7 +575,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
           </div>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-56'}>{t('dcf.common.increaseRate')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -572,7 +588,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               }}
             />
           </div>
-          <span className={''}>every</span>
+          <span className={''}>{t('dcf.common.every')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
@@ -586,10 +602,10 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               }}
             />
           </div>
-          <span className={'w-44'}>year(s)</span>
+          <span className={'w-44'}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Occupancy Rate - First Year</span>
+          <span className={'w-56'}>{t('dcf.common.occupancyRateFirstYear')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRateFirstYearPct`}
@@ -603,7 +619,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               }}
             />
           </div>
-          <span className={''}>% with growth</span>
+          <span className={''}>{t('dcf.common.percentWithGrowth')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRatePct`}
@@ -617,7 +633,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               }}
             />
           </div>
-          <span className={''}>% every</span>
+          <span className={''}>{t('dcf.common.percentEvery')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRateYrs`}
@@ -631,10 +647,10 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Start In</span>
+          <span className={'w-56'}>{t('dcf.common.startIn')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.startIn`}
@@ -648,7 +664,18 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
+        </div>
+        <div className="flex flex-row gap-1.5">
+          <span className={'w-56'}>{t('dcf.common.remark')}</span>
+          <div className={'flex-1'}>
+            <RHFInputCell
+              fieldName={`${name}.remark`}
+              inputType={'text'}
+              disabled={isReadOnly}
+              text={{ maxLength: 200 }}
+            />
+          </div>
         </div>
       </div>
     </div>

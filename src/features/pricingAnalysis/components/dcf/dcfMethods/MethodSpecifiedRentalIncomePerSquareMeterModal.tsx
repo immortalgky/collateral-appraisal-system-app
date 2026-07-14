@@ -2,6 +2,7 @@ import { Icon } from '@/shared/components';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { toDecimal, toNumber } from '../../../domain/calculation';
@@ -16,6 +17,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
   isReadOnly,
   getOuterFormValues,
 }: MethodSpecifiedRentalIncomePerSquareMeterModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const {
     formState: { errors },
   } = useFormContext();
@@ -128,7 +130,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Total Building Area</span>
+          <span className={'w-56'}>{t('dcf.methods.rentalIncomePerSquareMeter.totalBuildingArea')}</span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.totalBuildingArea`}
@@ -141,7 +143,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span>Sq. Meter</span>
+          <span>{t('dcf.common.sqMeter')}</span>
         </div>
       </div>
       {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
@@ -150,29 +152,31 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           <table className={'table table-sm'}>
             <thead>
               <tr>
-                <th className="px-1.5 py-1.5 bg-gray-100">Area Description</th>
+                <th className="px-1.5 py-1.5 bg-gray-100">
+                  {t('dcf.methods.rentalIncomePerSquareMeter.areaDescription')}
+                </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Rental Price</span>
-                    <span>Bath / Sq.M / Month</span>
+                    <span>{t('dcf.methods.rentalIncomePerSquareMeter.rentalPrice')}</span>
+                    <span>{t('dcf.methods.rentalIncomePerSquareMeter.unitPerSqmMonth')}</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Saleable Area</span>
-                    <span>Sq. M</span>
+                    <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalSaleableArea')}</span>
+                    <span>{t('dcf.methods.rentalIncomePerSquareMeter.sqM')}</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Rental Income</span>
-                    <span>Bath / Month</span>
+                    <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalRentalIncome')}</span>
+                    <span>{t('dcf.common.bahtPerMonth')}</span>
                   </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <div className="flex flex-col gap-1.5">
-                    <span>Total Rental Income</span>
-                    <span>Bath / Year</span>
+                    <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalRentalIncome')}</span>
+                    <span>{t('dcf.common.bahtPerYear')}</span>
                   </div>
                 </th>
               </tr>
@@ -194,7 +198,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                             type="button"
                             onClick={() => handleOnRemove(index)}
                             className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
-                            title="Delete"
+                            title={t('dcf.common.delete')}
                           >
                             <Icon style="solid" name="trash" className="size-1" />
                           </button>
@@ -250,7 +254,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                       onClick={() => handleOnAdd()}
                       className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
                     >
-                      + Add Room
+                      {t('dcf.common.addRoom')}
                     </button>
                   </td>
                   <td></td>
@@ -311,7 +315,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>Average Rental Price</span>
+          <span className={'w-56'}>{t('dcf.methods.rentalIncomePerSquareMeter.averageRentalPrice')}</span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRentalRatePerMonth`}
@@ -321,10 +325,10 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               )}
             />
           </div>
-          <span>Baht/ Sq. Meter/ Month</span>
+          <span>{t('dcf.methods.rentalIncomePerSquareMeter.unitBahtSqmMonth')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Total Saleable Area</span>
+          <span className={'w-56'}>{t('dcf.methods.rentalIncomePerSquareMeter.totalSaleableArea')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}
@@ -333,10 +337,10 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
             />
           </div>
-          <span className={''}>Sq. Meter</span>
+          <span className={''}>{t('dcf.common.sqMeter')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Increase Rate</span>
+          <span className={'w-56'}>{t('dcf.common.increaseRate')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRatePct`}
@@ -349,7 +353,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span className={''}>every</span>
+          <span className={''}>{t('dcf.common.every')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.increaseRateYrs`}
@@ -363,10 +367,10 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span className={'w-44'}>year(s)</span>
+          <span className={'w-44'}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Occupancy Rate - First Year</span>
+          <span className={'w-56'}>{t('dcf.common.occupancyRateFirstYear')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRateFirstYearPct`}
@@ -380,7 +384,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span className={''}>% with growth</span>
+          <span className={''}>{t('dcf.common.percentWithGrowth')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRatePct`}
@@ -394,7 +398,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span className={''}>% every</span>
+          <span className={''}>{t('dcf.common.percentEvery')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.occupancyRateYrs`}
@@ -408,10 +412,10 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>Start In</span>
+          <span className={'w-56'}>{t('dcf.common.startIn')}</span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.startIn`}
@@ -425,7 +429,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               }}
             />
           </div>
-          <span className={''}>year(s)</span>
+          <span className={''}>{t('dcf.common.year')}</span>
         </div>
       </div>
     </div>
