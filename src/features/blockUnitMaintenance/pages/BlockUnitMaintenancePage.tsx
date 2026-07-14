@@ -34,6 +34,7 @@ const SortableTh = ({
   sortDir,
   onSort,
   align = 'left',
+  className = '',
   children,
 }: {
   field: string;
@@ -41,19 +42,19 @@ const SortableTh = ({
   sortDir: 'asc' | 'desc';
   onSort: (f: string) => void;
   align?: 'left' | 'center' | 'right';
+  className?: string;
   children: React.ReactNode;
 }) => {
   const isActive = sortBy === field;
   const alignCls =
     align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
-  const flexAlign =
-    align === 'right' ? 'flex-row-reverse' : align === 'center' ? 'justify-center' : '';
+  const flexAlign = align === 'center' ? 'justify-center' : '';
   const iconName = isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
   return (
     <th
       onClick={() => onSort(field)}
-      className={`font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
-        isActive ? 'text-primary' : 'text-gray-600'
+      className={`px-4 py-2.5 text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
+        isActive ? 'text-primary' : 'text-gray-500'
       }`}
     >
       <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
@@ -181,6 +182,7 @@ const BlockUnitMaintenancePage = () => {
         </div>
         <div className="w-56">
           <Input
+            label={t('list.filter.developerLabel')}
             placeholder={t('list.filter.developerPlaceholder')}
             value={developer}
             onChange={e => {
@@ -209,7 +211,7 @@ const BlockUnitMaintenancePage = () => {
       {/* Table card */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-sm">
             <colgroup>
               <col className="w-36" />
               <col className="w-48" />
@@ -233,10 +235,11 @@ const BlockUnitMaintenancePage = () => {
                   sortBy={sortBy}
                   sortDir={sortDir}
                   onSort={toggleSort}
+                  className="w-full"
                 >
                   {t('list.col.projectName')}
                 </SortableTh>
-                <th className="font-medium px-4 py-2.5 text-gray-600 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-left whitespace-nowrap">
                   {t('list.col.projectType')}
                 </th>
                 <SortableTh field="developer" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
@@ -298,15 +301,15 @@ const BlockUnitMaintenancePage = () => {
                       <td className="px-4 py-2.5 text-gray-700 truncate">
                         {item.projectName ?? '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700">
+                      <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">
                         {projectTypeDescMap.get(item.projectType) ?? item.projectType}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600 truncate">
+                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                         {item.developer ?? '—'}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                          <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-violet-400 to-indigo-500 transition-[width]"
                               style={{ width: `${pct}%` }}

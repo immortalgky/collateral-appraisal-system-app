@@ -10,11 +10,11 @@
     "landAndBuilding": "Land & Building"
   },
   "columns": {
-    "oldAppraisalNumber": "Old Appraisal Report No.",
+    "oldAppraisalNumber": "Prev Appraisal Number",
     "projectName": "Project Name",
     "projectSellingPrice": "Project Selling Price (Baht)",
-    "remainingTotalUnit": "Remaining / Total Unit",
-    "lastAppraisedDate": "Last Appraised Date",
+    "remainingTotalUnit": "Available / Total Unit",
+    "lastAppraisedDate": "Last Appraisal Date",
     "remainingDay": "Remaining Day"
   },
   "remainingDayBadge": {
@@ -25,7 +25,7 @@
     "title": "Filters",
     "fields": {
       "search": "Search",
-      "lastAppraisedDate": "Last Appraised Date",
+      "lastAppraisedDate": "Last Appraisal Date",
       "remainingDay": "Remaining Day"
     },
     "placeholders": {
@@ -54,7 +54,7 @@
   },
   "actions": {
     "createRequest": "Initiate reappraisal request",
-    "notRequired": "Reappraisal Not Required"
+    "notRequired": "Reappraisal not required"
   },
   "detail": {
     "backToList": "Back to list",
@@ -62,6 +62,25 @@
     "oldAppraisalLabel": "Old Appraisal No.:",
     "fields": {
       "dueDate": "Due Date"
+    },
+    "filter": {
+      "searchPlaceholder": "House Number / Plot / Room / Model",
+      "estimateMin": "Estimate min",
+      "estimateMax": "Estimate max",
+      "all": "All",
+      "sold": "Sold",
+      "available": "Available",
+      "clear": "Clear filters",
+      "noMatch": "No units match the filters"
+    },
+    "dueBadge": {
+      "overdue": "Overdue by {{days}}d",
+      "today": "Due today",
+      "inDays": "Due in {{days}}d"
+    },
+    "kpi": {
+      "totalEstimate": "Total Est. Value (Baht)",
+      "avgEstimate": "Avg Est. Value (Baht)"
     },
     "overview": {
       "title": "Unit Overview",
@@ -101,6 +120,8 @@
   "units": {
     "sold": "Sold",
     "available": "Available",
+    "soldHint": "Sold unit",
+    "availableHint": "Available (unsold) unit",
     "updatedByLine": "by {{name}}",
     "cols": {
       "floor": "Floor Number",
@@ -108,7 +129,7 @@
       "regNumber": "Reg. Number",
       "roomNo": "Room Number",
       "modelType": "Model Name",
-      "usableArea": "Usable Area (Sq.M.)",
+      "usableArea": "Usable Area (Sq.M)",
       "sellingPrice": "Selling Price (Baht)",
       "appraisalValue": "Estimate Price (Baht)",
       "plotNo": "Plot No",

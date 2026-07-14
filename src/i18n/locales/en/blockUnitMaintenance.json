@@ -27,7 +27,8 @@
     },
     "filter": {
       "searchPlaceholder": "Search appraisal number, project name…",
-      "developerPlaceholder": "Filter by developer"
+      "developerLabel": "Developer",
+      "developerPlaceholder": "Developer name"
     }
   },
   "detail": {
@@ -51,8 +52,8 @@
       "sold": "Sold",
       "available": "Available",
       "soldLoan": "Sold via Loan",
-      "appraisalMin": "Appraisal min",
-      "appraisalMax": "Appraisal max"
+      "appraisalMin": "Estimate min",
+      "appraisalMax": "Estimate max"
     },
     "bulk": {
       "selectedCount_one": "{{count}} selected",
@@ -65,26 +66,32 @@
     },
     "donutSoldLabel": "Sold Unit",
     "unitSuffix": "Unit",
+    "kpi": {
+      "totalEstimate": "Total Est. Value (Baht)",
+      "avgEstimate": "Avg Est. Value (Baht)"
+    },
     "cols": {
-      "floor": "Floor",
+      "floor": "Floor Number",
       "towerName": "Tower Name",
       "regNumber": "Reg. Number",
-      "roomNo": "Room No",
-      "modelType": "Model Type",
-      "usableAreaSqm": "Usable Area (sq.m.)",
+      "roomNo": "Room Number",
+      "modelType": "Model Name",
+      "usableAreaSqm": "Usable Area (Sq.M)",
       "sellingPriceBaht": "Selling Price (Baht)",
-      "appraisalValue": "Appraisal Value",
+      "appraisalValue": "Estimate Price (Baht)",
       "plotNo": "Plot No",
       "houseNo": "House No",
       "modelName": "Model Name",
       "numFloors": "No. of Floors",
       "landAreaSqWa": "Land Area (Sq.Wa)",
       "updatedAt": "Updated At",
-      "updatedBy": "Updated By"
+      "updatedBy": "Updated By",
+      "lastUpdated": "Last Updated"
     }
   },
   "units": {
     "title": "Units",
+    "updatedByLine": "by {{name}}",
     "empty": "No units found for this project",
     "saveChanges": "Save Changes",
     "saving": "Saving...",

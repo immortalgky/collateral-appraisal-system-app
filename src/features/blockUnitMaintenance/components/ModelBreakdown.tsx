@@ -9,6 +9,10 @@ interface ModelBreakdownProps {
   emptyLabel: string;
   /** Pre-translated suffix shown after each count (e.g. "units"). */
   unitSuffix: string;
+  /** Optional heading text color class (e.g. "text-violet-700"). Defaults to gray-900. */
+  accentClass?: string;
+  /** Optional leading dot background class (e.g. "bg-violet-500"). Hidden when omitted. */
+  dotClass?: string;
 }
 
 /**
@@ -21,10 +25,17 @@ export const ModelBreakdown = ({
   stats,
   emptyLabel,
   unitSuffix,
+  accentClass,
+  dotClass,
 }: ModelBreakdownProps) => {
   return (
     <div>
-      <h4 className="text-sm font-semibold text-gray-900 mb-2">{heading}</h4>
+      <h4
+        className={`text-sm font-semibold mb-2 flex items-center gap-1.5 ${accentClass ?? 'text-gray-900'}`}
+      >
+        {dotClass && <span className={`size-2 rounded-full ${dotClass}`} />}
+        {heading}
+      </h4>
       <div className="border-t border-gray-200">
         {stats.length === 0 ? (
           <div className="py-3 text-xs text-gray-400">{emptyLabel}</div>

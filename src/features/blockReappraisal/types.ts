@@ -30,6 +30,10 @@ export interface BlockReappraisalListParams {
   remainingDayMin?: number;
   /** Inclusive upper bound on Remaining Day */
   remainingDayMax?: number;
+  /** Column key to sort by (e.g. 'projectName', 'remainingDay'). */
+  sortBy?: string;
+  /** Sort direction. */
+  sortDir?: 'asc' | 'desc';
 }
 
 export type BlockReappraisalFilterValues = Omit<
