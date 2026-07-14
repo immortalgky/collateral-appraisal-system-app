@@ -55,10 +55,17 @@ export interface PendingQuotation {
   totalCompaniesInvited: number;
   totalQuotationsReceived: number;
   rmUsername: string | null;
+  rmFullName?: string | null;
+  customerName?: string | null;
+  customerCount: number;
+  customerNames?: string | null;
 }
 
 export interface PendingQuotationFilter extends BaseMonitoringFilter {
   status?: string[];
+  quotationNo?: string;
+  appraisalNo?: string;
+  customerName?: string;
   cutOffTimeFrom?: string;
   cutOffTimeTo?: string;
 }
