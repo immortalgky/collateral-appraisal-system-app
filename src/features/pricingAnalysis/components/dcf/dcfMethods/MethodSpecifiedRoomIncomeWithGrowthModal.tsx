@@ -36,15 +36,6 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
           />
         </div>
-        <span>{t('dcf.common.remark')}</span>
-        <div className={'w-56'}>
-          <RHFInputCell
-            fieldName={`${name}.remark`}
-            inputType={'text'}
-            disabled={isReadOnly}
-            text={{ maxLength: 4000 }}
-          />
-        </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
         <span className={'w-56'}>{t('dcf.common.roomIncome')}</span>
@@ -95,6 +86,17 @@ export function MethodSpecifiedRoomIncomeWithGrowthModal({
           />
         </div>
         <span className={''}>{t('dcf.common.year')}</span>
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-56'}>{t('dcf.common.remark')}</span>
+        <div className={'flex-1'}>
+          <RHFInputCell
+            fieldName={`${name}.remark`}
+            inputType={'text'}
+            disabled={isReadOnly}
+            text={{ maxLength: 4000 }}
+          />
+        </div>
       </div>
     </div>
   );
