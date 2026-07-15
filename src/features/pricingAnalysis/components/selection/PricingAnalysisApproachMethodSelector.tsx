@@ -399,7 +399,7 @@ export const PricingAnalysisApproachMethodSelector = ({
             <div className="border border-t border-gray-200 w-full"></div>
             <Button
               type="button"
-              disabled={isSummarySaving}
+              disabled={isSummarySaving || isReadOnly}
               isLoading={isSummarySaving}
               onClick={async () => {
                 const { success, failedFileNames } = await onSummaryModeSave(pdfFiles, remark);
@@ -414,7 +414,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                 }
               }}
             >
-              Save
+              {t('footer.save')}
             </Button>
           </div>
         </div>

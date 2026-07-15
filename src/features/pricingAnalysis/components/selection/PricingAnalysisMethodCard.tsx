@@ -54,7 +54,7 @@ export const PricingAnalysisMethodCard = ({
 }: PricingAnalysisMethodCardProps) => {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
-  const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue || null);
+  const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue ?? null);
   const debouncedManualInput = useDebounce(manualInput, MANUAL_VALUE_DEBOUNCE_MS);
 
   // Local-only sync: 1s after the user stops typing, push the value into the reducer
@@ -73,8 +73,15 @@ export const PricingAnalysisMethodCard = ({
       value: debouncedManualInput,
       methodId: method.id,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedManualInput]);
+  }, [
+    debouncedManualInput,
+    isManualMode,
+    onManualValueSync,
+    approachType,
+    method.methodType,
+    method.id,
+    method.appraisalValue,
+  ]);
 
   const handleManualChange = (e: { target: { name?: string; value: number | null } }) => {
     setManualInput(e.target.value);
@@ -100,7 +107,7 @@ export const PricingAnalysisMethodCard = ({
 
   const handleManualKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      setManualInput(method.appraisalValue || null);
+      setManualInput(method.appraisalValue ?? null);
       (e.target as HTMLInputElement).blur();
     }
   };

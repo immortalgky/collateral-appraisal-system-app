@@ -79,6 +79,7 @@
     "selectionSaved": "Selection saved",
     "calculateFirst": "Please calculate appraisal value.",
     "methodNotSelected": "Method does not select",
+    "approachNotSelected": "Approach does not select",
     "methodAdded": "Method added",
     "methodDeleted": "Method deleted",
     "documentRemoved": "Document removed",

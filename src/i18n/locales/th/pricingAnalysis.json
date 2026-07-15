@@ -80,6 +80,7 @@
     "calculateFirst": "กรุณาคำนวณมูลค่าประเมินก่อน",
     "methodNotSelected": "ไม่ได้เลือกวิธีการ",
     "methodAdded": "เพิ่มวิธีการแล้ว",
+    "approachNotSelected": "ไม่ได้เลือกแนวทาง",
     "methodDeleted": "ลบวิธีการแล้ว",
     "documentRemoved": "ลบเอกสารแล้ว",
     "documentRemoveFailed": "ลบเอกสารไม่สำเร็จ",
