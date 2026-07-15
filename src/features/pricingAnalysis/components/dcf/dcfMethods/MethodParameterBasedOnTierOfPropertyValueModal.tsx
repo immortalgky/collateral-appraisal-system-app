@@ -9,7 +9,7 @@ import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInpu
 import { ScrollableTableContainer } from '@features/pricingAnalysis/components/ScrollableTableContainer.tsx';
 import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { useMemo } from 'react';
-import { useWatch, type UseFormGetValues } from 'react-hook-form';
+import { type UseFormGetValues } from 'react-hook-form';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
 import { useTranslation } from 'react-i18next';
 

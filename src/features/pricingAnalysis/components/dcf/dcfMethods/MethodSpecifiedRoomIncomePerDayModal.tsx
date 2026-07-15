@@ -133,11 +133,13 @@ export function MethodSpecifyRoomIncomePerDayModal({
                 <th className="px-1.5 py-1.5 bg-gray-100">
                   <span className="text-sm">{t('dcf.common.roomType')}</span>
                 </th>
-                <th className="flex flex-col gap-1.5 px-1.5 py-1.5 bg-gray-100">
-                  <span className="text-sm">
-                    {t('dcf.methods.roomIncomePerDay.roomIncomeHeader')}
-                  </span>
-                  <span className="text-sm">{t('dcf.common.bahtPerRoomPerDay')}</span>
+                <th className="gap-1.5 px-1.5 py-1.5 bg-gray-100">
+                  <div className="flex flex-col">
+                    <span className="text-sm">
+                      {t('dcf.methods.roomIncomePerDay.roomIncomeHeader')}
+                    </span>
+                    <span className="text-sm">{t('dcf.common.bahtPerRoomPerDay')}</span>
+                  </div>
                 </th>
                 <th className="px-1.5 py-1.5 bg-gray-100">{t('dcf.common.saleableArea')}</th>
                 <th className="px-1.5 py-1.5 bg-gray-100">
@@ -441,7 +443,7 @@ export function MethodSpecifyRoomIncomePerDayModal({
               fieldName={`${name}.remark`}
               inputType={'text'}
               disabled={isReadOnly}
-              text={{ maxLength: 200 }}
+              text={{ maxLength: 4000 }}
             />
           </div>
         </div>

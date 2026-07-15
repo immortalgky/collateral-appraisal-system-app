@@ -230,7 +230,11 @@ export function DiscountedCashFlowMethodModal({
                 {assumptionType === 'M99' ? (
                   <div className="flex items-center gap-1.5">
                     <span>Description</span>
-                    <RHFInputCell fieldName="assumptionName" inputType="text" />
+                    <RHFInputCell
+                      fieldName="assumptionName"
+                      inputType="text"
+                      text={{ maxLength: 100 }}
+                    />
                   </div>
                 ) : (
                   // Keep assumptionName registered so reset() values survive handleSubmit
