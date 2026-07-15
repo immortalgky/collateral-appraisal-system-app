@@ -33,6 +33,8 @@
     "status": "Status",
     "assignedDate": "Assigned Date",
     "pic": "PIC",
+    "picPersons": "Persons",
+    "picGroups": "Groups",
     "movement": "Movement",
     "ola": "OLA (T/A/V)",
     "priority": "Priority",
@@ -101,7 +103,8 @@
     "title": "Pending Evaluation",
     "description": "Appraisal company evaluations pending completion",
     "search": "Search appraisal number or customer name...",
-    "filterEvaluationStatus": "Evaluation Status"
+    "filterEvaluationStatus": "Evaluation Status",
+    "staffFilter": "All followup staff"
   },
   "meetingFollowup": {
     "title": "Meeting Follow-up",

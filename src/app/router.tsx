@@ -148,6 +148,9 @@ const CollateralMasterDetailPage = lazy(
 const BackfillReportPage = lazy(
   () => import('@/features/collateralMaster/pages/BackfillReportPage')
 );
+const BackfillHostCollateralIdPage = lazy(
+  () => import('@/features/collateralMaster/pages/BackfillHostCollateralIdPage')
+);
 const QuotationSelectionPage = lazy(
   () => import('@/features/quotation/pages/QuotationSelectionPage')
 );
@@ -591,6 +594,7 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <CollateralCatalogPage /> },
               { path: 'backfill', element: <BackfillReportPage /> },
+              { path: 'host-id-backfill', element: <BackfillHostCollateralIdPage /> },
               { path: ':masterId', element: <CollateralMasterDetailPage /> },
             ],
           },

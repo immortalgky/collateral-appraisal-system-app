@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { format, formatDistanceToNowStrict, parseISO } from 'date-fns';
 import Icon from '@shared/components/Icon';
 
 // ─── Variant helpers ──────────────────────────────────────────────────────────
@@ -77,9 +77,16 @@ interface SlaDueCellProps {
   assignedDate: string | null;
   targetHours: number | null;
   slaStatus: string | null;
+  /** Resolved SLA policy budget (e.g. 48) shown as a subtle "48h" chip under the due date. */
+  slaDurationHours?: number | null;
 }
 
-export function SlaDueCell({ assignedDate, targetHours, slaStatus }: SlaDueCellProps) {
+export function SlaDueCell({
+  assignedDate,
+  targetHours,
+  slaStatus,
+  slaDurationHours,
+}: SlaDueCellProps) {
   if (!assignedDate || targetHours == null) {
     return <span className="text-gray-400 text-xs">—</span>;
   }
@@ -109,8 +116,20 @@ export function SlaDueCell({ assignedDate, targetHours, slaStatus }: SlaDueCellP
 
   return (
     <span className="inline-flex items-center gap-1.5 text-xs tabular-nums text-gray-700">
-      <Icon style="solid" name={iconName} className={`size-3.5 ${iconColor}`} />
-      {format(dueDate, 'dd/MM/yyyy')}
+      <Icon style="solid" name={iconName} className={`size-3.5 shrink-0 ${iconColor}`} />
+      <span className="flex flex-col gap-0.5">
+        <span className="inline-flex items-center gap-1.5">
+          {format(dueDate, 'dd/MM/yyyy HH:mm')}
+          {slaDurationHours != null && (
+            <span className="inline-flex items-center rounded border border-gray-200 px-1 py-px text-[10px] font-medium text-gray-500 tabular-nums">
+              {slaDurationHours}h
+            </span>
+          )}
+        </span>
+        <span className="text-[10px] text-gray-400">
+          {formatDistanceToNowStrict(dueDate, { addSuffix: true })}
+        </span>
+      </span>
     </span>
   );
 }
