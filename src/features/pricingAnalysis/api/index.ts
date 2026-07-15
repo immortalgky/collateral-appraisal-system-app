@@ -21,6 +21,8 @@ import {
   type UpdateFinalValueResponseType,
   type UpdateMethodRequestType,
   type UpdateMethodResponseType,
+  type UpdateRemarkRequestType,
+  type UpdateRemarkResponseType,
 } from '../schemas';
 import { pricingAnalysisKeys } from './queryKeys';
 
@@ -337,9 +339,11 @@ export function useDeletePricingAnalysisMethod() {
  * Select a method as primary (sets others in the same approach to Alternative)
  * POST /pricing-analysis/{id}/methods/{methodId}/select
  */
+// Not invalidated here — this is only ever called in a per-approach loop from
+// saveSummary (useSelectionActions), which does one consolidated invalidate after
+// the whole batch lands so the UI updates in a single pass instead of ticking
+// checkboxes in as each call in the loop resolves.
 export function useSelectMethod() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({
       pricingAnalysisId,
@@ -350,6 +354,114 @@ export function useSelectMethod() {
     }): Promise<SelectMethodResponseType> => {
       const { data: response } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/select`,
+      );
+      return response;
+    },
+  });
+}
+
+// ==================== Select Approach Hook ====================
+
+/**
+ * Select an approach as the final approach for the analysis (sets all other approaches
+ * as unselected) and propagates its value to FinalAppraisedValue. Split out from
+ * SelectMethod on the backend — call this separately once the approach's method has
+ * already been selected via useSelectMethod.
+ * POST /pricing-analysis/{id}/approaches/{approachId}/select
+ *
+ * TODO: swap SelectApproachResponseType below for the generated schema type once the
+ * API client is regenerated from the updated OpenAPI spec (new endpoint just added
+ * server-side, not in schemas.ts yet).
+ */
+type SelectApproachResponseType = {
+  id: string;
+  approachType: string;
+  finalAppraisedValue: number | null;
+};
+
+// Not invalidated here — only called once from saveSummary (useSelectionActions),
+// which does a single consolidated invalidate after the whole batch lands.
+export function useSelectApproach() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      approachId,
+    }: {
+      pricingAnalysisId: string;
+      approachId: string;
+    }): Promise<SelectApproachResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/approaches/${approachId}/select`,
+      );
+      return response;
+    },
+  });
+}
+
+// ==================== Pricing Analysis Document Hooks ====================
+
+/**
+ * TODO: swap these inline types for generated schema types once the API client is
+ * regenerated from the updated OpenAPI spec — these three endpoints were just added
+ * server-side and aren't in schemas.ts yet.
+ */
+type PricingAnalysisDocumentResponseType = {
+  id: string;
+  pricingAnalysisId: string;
+  documentId: string | null;
+  fileName: string | null;
+};
+
+type RemovePricingAnalysisDocumentResponseType = {
+  documentEntryId: string;
+  isSuccess: boolean;
+};
+
+/**
+ * Attach an already-uploaded document (via POST /documents on the Document module)
+ * to a pricing analysis.
+ * POST /pricing-analysis/{id}/documents
+ */
+// Not invalidated here — this is called in a per-file loop from saveSummary
+// (useSelectionActions), which does one consolidated invalidate after the whole
+// batch (values, selections, documents, remark) lands.
+export function useAttachPricingAnalysisDocument() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      documentId,
+      fileName,
+    }: {
+      pricingAnalysisId: string;
+      documentId: string;
+      fileName?: string | null;
+    }): Promise<PricingAnalysisDocumentResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/documents`,
+        { documentId, fileName },
+      );
+      return response;
+    },
+  });
+}
+
+/**
+ * Delete a document entry from a pricing analysis entirely (not just unlink the file).
+ * DELETE /pricing-analysis/{id}/documents/{documentEntryId}
+ */
+export function useRemovePricingAnalysisDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      documentEntryId,
+    }: {
+      pricingAnalysisId: string;
+      documentEntryId: string;
+    }): Promise<RemovePricingAnalysisDocumentResponseType> => {
+      const { data: response } = await axios.delete(
+        `/pricing-analysis/${pricingAnalysisId}/documents/${documentEntryId}`,
       );
       return response;
     },
@@ -421,6 +533,27 @@ export function useUpdateFinalValue() {
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
       });
+    },
+  });
+}
+
+// ==================== Remark Hooks ====================
+// Not invalidated here — only called once from saveSummary (useSelectionActions),
+// which does a single consolidated invalidate after the whole batch lands.
+export function useUpdateRemark() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      request: UpdateRemarkRequestType;
+    }): Promise<UpdateRemarkResponseType> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/remark`,
+        request,
+      );
+      return response;
     },
   });
 }

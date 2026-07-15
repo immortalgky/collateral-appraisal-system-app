@@ -12,6 +12,7 @@ import { schemas } from '@shared/schemas/v1';
 // -- Pricing Analysis --
 export const GetPricingAnalysisResponse = schemas.GetPricingAnalysisResponse;
 export type GetPricingAnalysisResponseType = z.infer<typeof schemas.GetPricingAnalysisResponse>;
+export type PricingAnalysisDocumentDtoType = z.infer<typeof schemas.PricingAnalysisDocumentDto>;
 
 // -- Approaches & Methods --
 export type AddPricingAnalysisApproachRequestType = z.infer<typeof schemas.AddApproachRequest>;
@@ -60,6 +61,10 @@ export type SetFinalValueRequestType = z.infer<typeof schemas.SetFinalValueReque
 export type SetFinalValueResponseType = z.infer<typeof schemas.SetFinalValueResponse>;
 export type UpdateFinalValueRequestType = z.infer<typeof schemas.UpdateFinalValueRequest>;
 export type UpdateFinalValueResponseType = z.infer<typeof schemas.UpdateFinalValueResponse>;
+
+// -- Remark --
+export type UpdateRemarkRequestType = z.infer<typeof schemas.UpdateRemarkRequest>;
+export type UpdateRemarkResponseType = z.infer<typeof schemas.UpdateRemarkResponse>;
 
 // -- Select Method --
 export type SelectMethodResponseType = z.infer<typeof schemas.SelectMethodResponse>;

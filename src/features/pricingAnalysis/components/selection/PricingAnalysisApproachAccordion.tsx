@@ -25,7 +25,13 @@ interface PricingAnalysisApproachAccordionProps {
   configMethods?: PricingAnalysisConfigType['methods'];
   onViewLayoutChange?: (layout: ViewLayout) => void;
   isManualMode?: boolean;
-  onManualValueChange?: (arg: { approachType: string; methodType: string; value: number }) => void;
+  onManualValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
+  disabled?: boolean;
 }
 
 export const PricingAnalysisApproachAccordion = ({
@@ -43,7 +49,8 @@ export const PricingAnalysisApproachAccordion = ({
   configMethods,
   onViewLayoutChange,
   isManualMode,
-  onManualValueChange,
+  onManualValueSync,
+  disabled = false,
 }: PricingAnalysisApproachAccordionProps) => {
   const { t } = useTranslation('pricingAnalysis');
   const hasSelectedMethods = approach.methods.some(m => m.isIncluded);
@@ -146,6 +153,7 @@ export const PricingAnalysisApproachAccordion = ({
         onToggle={() => setIsOpen(!isOpen)}
         onSelectCandidateApproach={onSelectCandidateApproach}
         onViewLayoutChange={onViewLayoutChange}
+        disabled={disabled}
       />
       <div
         className={clsx(
@@ -167,7 +175,8 @@ export const PricingAnalysisApproachAccordion = ({
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
                 isManualMode={isManualMode}
-                onManualValueChange={onManualValueChange}
+                onManualValueSync={onManualValueSync}
+                disabled={disabled}
               />
             ))}
           </div>
@@ -185,7 +194,8 @@ export const PricingAnalysisApproachAccordion = ({
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
                 isManualMode={isManualMode}
-                onManualValueChange={onManualValueChange}
+                onManualValueSync={onManualValueSync}
+                disabled={disabled}
               />
             ))}
           </div>
