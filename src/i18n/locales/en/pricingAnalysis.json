@@ -265,7 +265,7 @@
         "totalBuildingArea": "Total Building Area",
         "areaDescription": "Area Description",
         "rentalPrice": "Rental Price",
-        "unitPerSqmMonth": "Bath / Sq.M / Month",
+        "unitPerSqmMonth": "Baht / Sq.M / Month",
         "totalSaleableArea": "Total Saleable Area",
         "sqM": "Sq. M",
         "totalRentalIncome": "Total Rental Income",
@@ -276,21 +276,21 @@
         "percentOf": "% of"
       },
       "rentalIncomePerMonth": {
-        "unitPerRoomMonth": "Bath / Room / Month"
+        "unitPerRoomMonth": "Baht / Room / Month"
       },
       "positionBasedSalary": {
         "jobPosition": "Job Position",
         "salary": "Salary",
-        "unitPerPersonMonth": "Bath / Person / Month",
+        "unitPerPersonMonth": "Baht / Person / Month",
         "numberOfEmployees": "Number of Employees",
         "totalSalary": "Total Salary",
         "addJobPosition": "+ Add Job Position"
       },
       "roomCostBasedOnExpenses": {
         "roomCost": "Room Cost",
-        "unitPerRoomDay": "Bath / Room / Day",
+        "unitPerRoomDay": "Baht / Room / Day",
         "totalRoomExpenses": "Total Room Expenses",
-        "unitPerDay": "Bath / Day"
+        "unitPerDay": "Baht / Day"
       },
       "tierOfPropertyValue": {
         "totalGovLandPrice": "Total government land appraisal price",

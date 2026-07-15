@@ -287,21 +287,25 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               <tr>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                   <Fragment key={seasonIndex}>
-                    <th className="flex flex-col border-b border-gray-300 text-right">
-                      <span>{t('dcf.methods.roomIncomeBySeasonalRates.roomIncomeHeader')}</span>
-                      <span>{t('dcf.common.bahtPerRoomPerDay')}</span>
+                    <th className="border-b border-gray-300 text-right">
+                      <div className="flex flex-col">
+                        <span>{t('dcf.methods.roomIncomeBySeasonalRates.roomIncomeHeader')}</span>
+                        <span>{t('dcf.common.bahtPerRoomPerDay')}</span>
+                      </div>
                     </th>
                     <th className="border-b border-gray-300 text-right">
                       {t('dcf.common.saleableArea')}
                     </th>
                     <th
                       className={clsx(
-                        'flex flex-col border-b border-gray-300 text-right',
+                        'border-b border-gray-300 text-right',
                         seasonCount > 1 ? 'border-r' : 0,
                       )}
                     >
-                      <span>{t('dcf.common.totalRoomIncome')}</span>
-                      <span>{t('dcf.common.bahtPerDay')}</span>
+                      <div className="flex flex-col">
+                        <span>{t('dcf.common.totalRoomIncome')}</span>
+                        <span>{t('dcf.common.bahtPerDay')}</span>
+                      </div>
                     </th>
                   </Fragment>
                 ))}
@@ -673,7 +677,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               fieldName={`${name}.remark`}
               inputType={'text'}
               disabled={isReadOnly}
-              text={{ maxLength: 200 }}
+              text={{ maxLength: 4000 }}
             />
           </div>
         </div>
