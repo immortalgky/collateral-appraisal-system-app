@@ -305,7 +305,7 @@
         "taxTableTitle": "Land and Building Tax",
         "yearLabel": "Year {{year}}",
         "row1Label": "(1) Government Land Price (with annual increase)",
-        "row2Label": "(2) Government Price for Buildings",
+        "row2Label": "(2) Government Price for Building",
         "row3Label": "(1+2) Total price of Government Property",
         "propertyTaxRow": "Property tax on Government Appraisal Price"
       },
@@ -317,7 +317,7 @@
         "unitPerRoomDay": "Baht/ Room/ Day"
       },
       "valueWithGrowth": {
-        "firstYearAmount": "First year amount"
+        "firstYearAmount": "First Year Amount"
       },
       "energyCostIndex": {
         "energyCostIndex": "Energy Cost Index",

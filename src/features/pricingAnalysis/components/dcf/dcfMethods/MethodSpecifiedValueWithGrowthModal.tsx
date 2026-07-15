@@ -28,7 +28,10 @@ export function MethodSpecifiedValueWithGrowthModal({
             }}
           />
         </div>
-        <span className={''}>{t('dcf.common.increase')}</span>
+        <span>{t('dcf.common.bahtPerYear')}</span>
+      </div>
+      <div className="flex flex-row gap-1.5 items-center">
+        <span className={'w-56'}>{t('dcf.common.increase')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
