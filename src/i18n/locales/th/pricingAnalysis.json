@@ -47,7 +47,11 @@
     "manualUploadClick": "คลิกเพื่ออัปโหลด PDF",
     "manualRemark": "หมายเหตุ",
     "manualRemarkPlaceholder": "เพิ่มหมายเหตุหรือบันทึกสำหรับการประเมินด้วยตนเองนี้...",
-    "openPdf": "เปิด PDF"
+    "openPdf": "เปิด PDF",
+    "attachedDocuments": "เอกสารที่แนบ",
+    "untitledDocument": "เอกสารไม่มีชื่อ",
+    "removeDocumentTitle": "ลบเอกสาร",
+    "removeDocumentMessage": "ลบ \"{{fileName}}\" ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
   },
   "methodStatus": {
     "calculated": "คำนวณแล้ว",
@@ -76,14 +80,19 @@
     "calculateFirst": "กรุณาคำนวณมูลค่าประเมินก่อน",
     "methodNotSelected": "ไม่ได้เลือกวิธีการ",
     "methodAdded": "เพิ่มวิธีการแล้ว",
+    "approachNotSelected": "ไม่ได้เลือกแนวทาง",
     "methodDeleted": "ลบวิธีการแล้ว",
+    "documentRemoved": "ลบเอกสารแล้ว",
+    "documentRemoveFailed": "ลบเอกสารไม่สำเร็จ",
+    "documentRequired": "ต้องมีเอกสารอย่างน้อย 1 ฉบับ",
     "saveSelectionFirst": "บันทึกการเลือกก่อนเพื่อสร้าง ID วิธีการและแนวทางก่อนการคำนวณ",
     "uploadXlsxOnly": "รับเฉพาะไฟล์ .xlsx เท่านั้น",
     "uploadMaxSize": "ไฟล์ต้องมีขนาดไม่เกิน 5 MB",
     "uploadFailed": "อัปโหลดไม่สำเร็จ",
     "uploadDeleted": "ลบการอัปโหลดแล้ว",
     "deleteFailed": "ลบไม่สำเร็จ",
-    "uploadSuccess": "อัปโหลด {{n}} แถวสำเร็จ"
+    "uploadSuccess": "อัปโหลด {{n}} แถวสำเร็จ",
+    "someFilesFailed": "บันทึกไม่สำเร็จ: {{files}}"
   },
   "footer": {
     "cancel": "ยกเลิก",
