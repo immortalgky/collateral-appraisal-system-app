@@ -13,6 +13,7 @@ import { DateInput, Dropdown, TextInput } from '@/shared/components/inputs';
 import {
   CANCEL_ELIGIBLE,
   CUT_OFF_ELIGIBLE,
+  END_ELIGIBLE,
   MEETING_PERMISSIONS,
   MEETING_STATUS_OPTIONS,
   RESEND_INVITATION_ELIGIBLE,
@@ -23,32 +24,71 @@ import type { MeetingListItemDto, MeetingStatus } from '../api/types';
 import BulkCreateMeetingsDialog from '../components/BulkCreateMeetingsDialog';
 import CancelMeetingDialog from '../components/CancelMeetingDialog';
 import CutOffReviewDialog from '../components/CutOffReviewDialog';
-import MeetingFormDialog from '../components/MeetingFormDialog';
+import EndMeetingDialog from '../components/EndMeetingDialog';
+import MeetingDocumentsDialog from '../components/MeetingDocumentsDialog';
 import MeetingNoBadge from '../components/MeetingNoBadge';
 import MeetingStatusBadge from '../components/MeetingStatusBadge';
 import SendInvitationDialog from '../components/SendInvitationDialog';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
+/** Compact 24-hour timestamp: dd/MM/yyyy HH:mm. */
 const formatDateTime = (iso: string | null): string => {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 // ── Row action menu ───────────────────────────────────────────────────────────
+
+type ActionTone = 'blue' | 'amber' | 'green' | 'violet' | 'red' | 'gray';
 
 interface RowAction {
   label: string;
   icon: string;
   onClick: () => void;
-  variant?: 'danger';
+  tone?: ActionTone;
 }
+
+const ACTION_TONE: Record<ActionTone, string> = {
+  blue: 'text-blue-600 hover:bg-blue-50',
+  amber: 'text-amber-600 hover:bg-amber-50',
+  green: 'text-emerald-600 hover:bg-emerald-50',
+  violet: 'text-violet-600 hover:bg-violet-50',
+  red: 'text-red-600 hover:bg-red-50',
+  gray: 'text-gray-700 hover:bg-gray-50',
+};
+
+const MENU_PANEL_CLASS =
+  'bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[168px]';
+
+interface ActionMenuItemsProps {
+  actions: RowAction[];
+  onClose: () => void;
+}
+
+const ActionMenuItems = ({ actions, onClose }: ActionMenuItemsProps) => (
+  <>
+    {actions.map((action, i) => (
+      <button
+        key={action.label}
+        type="button"
+        onClick={e => {
+          e.stopPropagation();
+          onClose();
+          action.onClick();
+        }}
+        className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-left transition-colors ${
+          ACTION_TONE[action.tone ?? 'gray']
+        }${action.tone === 'red' && i > 0 ? ' mt-1 border-t border-gray-100 pt-2.5' : ''}`}
+      >
+        <Icon name={action.icon} style="solid" className="size-3.5 shrink-0" />
+        {action.label}
+      </button>
+    ))}
+  </>
+);
 
 interface RowActionsMenuProps {
   actions: RowAction[];
@@ -83,24 +123,8 @@ const RowActionsMenu = ({ actions }: RowActionsMenuProps) => {
               setOpen(false);
             }}
           />
-          <div className="absolute right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[160px]">
-            {actions.map(action => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={e => {
-                  e.stopPropagation();
-                  setOpen(false);
-                  action.onClick();
-                }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors ${
-                  action.variant === 'danger' ? 'text-red-600 hover:bg-red-50' : 'text-gray-700'
-                }`}
-              >
-                <Icon name={action.icon} style="solid" className="size-3.5 shrink-0" />
-                {action.label}
-              </button>
-            ))}
+          <div className={`absolute right-0 top-full mt-1 z-30 ${MENU_PANEL_CLASS}`}>
+            <ActionMenuItems actions={actions} onClose={() => setOpen(false)} />
           </div>
         </>
       )}
@@ -117,6 +141,8 @@ interface MeetingRowProps {
   onCutOff: (meeting: MeetingListItemDto) => void;
   onSendInvitation: (meeting: MeetingListItemDto) => void;
   onResendInvitation: (meeting: MeetingListItemDto) => void;
+  onEndMeeting: (meeting: MeetingListItemDto) => void;
+  onDocuments: (meeting: MeetingListItemDto) => void;
   onCancel: (meeting: MeetingListItemDto) => void;
 }
 
@@ -127,19 +153,30 @@ const MeetingRow = ({
   onCutOff,
   onSendInvitation,
   onResendInvitation,
+  onEndMeeting,
+  onDocuments,
   onCancel,
 }: MeetingRowProps) => {
   const { t } = useTranslation('meeting');
   const { status } = meeting;
   const isNew = status === 'New';
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
 
   const actions: RowAction[] = [];
+
+  actions.push({
+    label: t('buttons.documents'),
+    icon: 'folder-open',
+    onClick: () => onDocuments(meeting),
+    tone: 'blue',
+  });
 
   if (isAdmin && CUT_OFF_ELIGIBLE.has(status)) {
     actions.push({
       label: t('actions.cutOff'),
       icon: 'scissors',
       onClick: () => onCutOff(meeting),
+      tone: 'amber',
     });
   }
 
@@ -148,6 +185,7 @@ const MeetingRow = ({
       label: t('actions.sendInvitation'),
       icon: 'envelope',
       onClick: () => onSendInvitation(meeting),
+      tone: 'green',
     });
   }
 
@@ -156,6 +194,16 @@ const MeetingRow = ({
       label: t('actions.resendInvitation'),
       icon: 'paper-plane',
       onClick: () => onResendInvitation(meeting),
+      tone: 'green',
+    });
+  }
+
+  if (isAdmin && END_ELIGIBLE.has(status)) {
+    actions.push({
+      label: t('actions.endMeeting'),
+      icon: 'flag-checkered',
+      onClick: () => onEndMeeting(meeting),
+      tone: 'violet',
     });
   }
 
@@ -164,7 +212,7 @@ const MeetingRow = ({
       label: t('actions.cancel'),
       icon: 'xmark',
       onClick: () => onCancel(meeting),
-      variant: 'danger',
+      tone: 'red',
     });
   }
 
@@ -172,6 +220,11 @@ const MeetingRow = ({
     <tr
       key={meeting.id}
       onClick={() => onNavigate(meeting.id)}
+      onContextMenu={e => {
+        if (actions.length === 0) return;
+        e.preventDefault();
+        setCtxMenu({ x: e.clientX, y: e.clientY });
+      }}
       className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
     >
       <td className="px-4 py-3">
@@ -182,14 +235,37 @@ const MeetingRow = ({
         <MeetingStatusBadge status={meeting.status} />
       </td>
       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-        {formatDateTime(meeting.startAt)}
+        {formatDateTime(meeting.startAt)} - {formatDateTime(meeting.endAt)}
       </td>
-      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDateTime(meeting.endAt)}</td>
       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
         {formatDateTime(meeting.cutOffAt)}
       </td>
       <td className="px-4 py-3 text-right text-gray-600">{meeting.itemCount}</td>
+      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+        <div>{formatDateTime(meeting.updatedAt)}</div>
+        <div className="text-xs text-gray-400">
+          {meeting.updatedBy ? `${t('columns.by')} ${meeting.updatedBy}` : '—'}
+        </div>
+      </td>
       <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
+        {ctxMenu && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setCtxMenu(null)}
+              onContextMenu={e => {
+                e.preventDefault();
+                setCtxMenu(null);
+              }}
+            />
+            <div
+              className={`fixed z-50 ${MENU_PANEL_CLASS}`}
+              style={{ top: ctxMenu.y, left: ctxMenu.x }}
+            >
+              <ActionMenuItems actions={actions} onClose={() => setCtxMenu(null)} />
+            </div>
+          </>
+        )}
         <RowActionsMenu actions={actions} />
       </td>
     </tr>
@@ -199,6 +275,8 @@ const MeetingRow = ({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 type MeetingTab = 'active' | 'history';
+
+type SortField = 'meetingNo' | 'startAt' | 'itemCount';
 
 const HISTORY_STATUSES: MeetingStatus[] = ['Ended', 'Cancelled'];
 const ACTIVE_STATUSES: MeetingStatus[] = MEETING_STATUS_OPTIONS.filter(
@@ -215,23 +293,26 @@ const MeetingListPage = () => {
   const [toDate, setToDate] = useState<string | undefined>(undefined);
   const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>('');
   const debouncedSearch = useDebounce(searchInput, 400);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(20);
 
-  const newMeetingDialog = useDisclosure();
   const bulkCreateDialog = useDisclosure();
   const [selectedMeeting, setSelectedMeeting] = useState<MeetingListItemDto | null>(null);
   const [isResend, setIsResend] = useState(false);
   const cutOffDialog = useDisclosure();
   const sendInvitationDialog = useDisclosure();
+  const endDialog = useDisclosure();
   const cancelDialog = useDisclosure();
+  const documentsDialog = useDisclosure();
 
   const statusOptions = tab === 'history' ? HISTORY_STATUSES : ACTIVE_STATUSES;
 
-  // Reset page when any filter input changes.
+  // Reset page when any filter or sort input changes.
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, fromDate, toDate, statusFilter, tab]);
+  }, [debouncedSearch, fromDate, toDate, statusFilter, tab, sortField, sortDir]);
 
   const { data, isLoading, isError, refetch } = useGetMeetings({
     status: statusFilter || undefined,
@@ -239,9 +320,36 @@ const MeetingListPage = () => {
     search: debouncedSearch || undefined,
     fromDate: fromDate || undefined,
     toDate: toDate || undefined,
+    sortBy: sortField ?? undefined,
+    sortDir: sortField ? sortDir : undefined,
     pageNumber,
     pageSize,
   });
+
+  // Click a sortable header: same field toggles asc → desc → unsorted; new field starts asc.
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDir === 'asc') setSortDir('desc');
+      else {
+        setSortField(null);
+        setSortDir('asc');
+      }
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) =>
+    sortField !== field ? (
+      <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />
+    ) : (
+      <Icon
+        style="solid"
+        name={sortDir === 'asc' ? 'sort-up' : 'sort-down'}
+        className="size-2.5 text-primary"
+      />
+    );
 
   const clearFilters = () => {
     setSearchInput('');
@@ -279,6 +387,16 @@ const MeetingListPage = () => {
     sendInvitationDialog.onOpen();
   };
 
+  const handleEndMeeting = (meeting: MeetingListItemDto) => {
+    setSelectedMeeting(meeting);
+    endDialog.onOpen();
+  };
+
+  const handleDocuments = (meeting: MeetingListItemDto) => {
+    setSelectedMeeting(meeting);
+    documentsDialog.onOpen();
+  };
+
   const handleCancel = (meeting: MeetingListItemDto) => {
     setSelectedMeeting(meeting);
     cancelDialog.onOpen();
@@ -303,13 +421,7 @@ const MeetingListPage = () => {
             {t('buttons.viewQueue')}
           </Button>
           {hasAdmin && (
-            <Button size="sm" variant="ghost" onClick={bulkCreateDialog.onOpen}>
-              <Icon name="calendar-days" style="solid" className="size-3.5 mr-1.5" />
-              {t('buttons.bulkCreate')}
-            </Button>
-          )}
-          {hasAdmin && (
-            <Button size="sm" onClick={newMeetingDialog.onOpen}>
+            <Button size="sm" onClick={bulkCreateDialog.onOpen}>
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.newMeeting')}
             </Button>
@@ -342,13 +454,15 @@ const MeetingListPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="shrink-0 flex flex-wrap items-center gap-3 pb-1">
-        <div className="w-72">
+      <div className="shrink-0 flex flex-wrap items-start gap-3 pb-1">
+        <div className="w-96">
           <TextInput
+            leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
             placeholder={t('filters.searchPlaceholder')}
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
           />
+          <p className="mt-1 text-xs text-gray-400">{t('filters.searchHint')}</p>
         </div>
         <div className="w-44">
           <Dropdown
@@ -388,8 +502,16 @@ const MeetingListPage = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.meetingNo')}
+                <th
+                  onClick={() => handleSort('meetingNo')}
+                  className={`text-left font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                    sortField === 'meetingNo' ? 'text-primary' : 'text-gray-600'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    {t('columns.meetingNo')}
+                    <SortIcon field="meetingNo" />
+                  </span>
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5">
                   {t('columns.title')}
@@ -397,17 +519,33 @@ const MeetingListPage = () => {
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5">
                   {t('columns.status')}
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.start')}
-                </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
-                  {t('columns.end')}
+                <th
+                  onClick={() => handleSort('startAt')}
+                  className={`text-left font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                    sortField === 'startAt' ? 'text-primary' : 'text-gray-600'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    {t('columns.start')} - {t('columns.end')}
+                    <SortIcon field="startAt" />
+                  </span>
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
                   {t('columns.cutOff')}
                 </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.items')}
+                <th
+                  onClick={() => handleSort('itemCount')}
+                  className={`text-right font-medium px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                    sortField === 'itemCount' ? 'text-primary' : 'text-gray-600'
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1 justify-end">
+                    {t('columns.items')}
+                    <SortIcon field="itemCount" />
+                  </span>
+                </th>
+                <th className="text-left font-medium text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                  {t('columns.lastUpdated')}
                 </th>
                 <th className="w-10 px-3 py-2.5" />
               </tr>
@@ -449,6 +587,8 @@ const MeetingListPage = () => {
                     onCutOff={handleCutOff}
                     onSendInvitation={handleSendInvitation}
                     onResendInvitation={handleResendInvitation}
+                    onEndMeeting={handleEndMeeting}
+                    onDocuments={handleDocuments}
                     onCancel={handleCancel}
                   />
                 ))
@@ -474,12 +614,6 @@ const MeetingListPage = () => {
       </div>
 
       {/* Dialogs */}
-      <MeetingFormDialog
-        isOpen={newMeetingDialog.isOpen}
-        onClose={newMeetingDialog.onClose}
-        onSuccess={id => navigate(`/meetings/${id}`)}
-      />
-
       <BulkCreateMeetingsDialog
         isOpen={bulkCreateDialog.isOpen}
         onClose={bulkCreateDialog.onClose}
@@ -505,13 +639,33 @@ const MeetingListPage = () => {
             }}
             meetingId={selectedMeeting.id}
             meetingNo={selectedMeeting.meetingNo}
+            startAt={selectedMeeting.startAt}
+            location={selectedMeeting.location}
             isResend={isResend}
+          />
+
+          <EndMeetingDialog
+            isOpen={endDialog.isOpen}
+            onClose={() => {
+              endDialog.onClose();
+              setSelectedMeeting(null);
+            }}
+            meetingId={selectedMeeting.id}
           />
 
           <CancelMeetingDialog
             isOpen={cancelDialog.isOpen}
             onClose={() => {
               cancelDialog.onClose();
+              setSelectedMeeting(null);
+            }}
+            meetingId={selectedMeeting.id}
+          />
+
+          <MeetingDocumentsDialog
+            isOpen={documentsDialog.isOpen}
+            onClose={() => {
+              documentsDialog.onClose();
               setSelectedMeeting(null);
             }}
             meetingId={selectedMeeting.id}

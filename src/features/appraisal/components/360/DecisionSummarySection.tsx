@@ -2,11 +2,11 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import GovernmentPriceTable from '../summary/GovernmentPriceTable';
-import type { GetDecisionSummaryResponse } from '../../api/decisionSummary';
+import type { DecisionSummaryData } from '../../api/decisionSummary';
 import { useTranslation } from 'react-i18next';
 
 interface DecisionSummarySectionProps {
-  decisionSummary: GetDecisionSummaryResponse | undefined;
+  decisionSummary: DecisionSummaryData | undefined;
   isLoading: boolean;
 }
 
@@ -54,6 +54,7 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
           <GovernmentPriceTable
             rows={decisionSummary.governmentPrices}
             totalArea={decisionSummary.governmentPriceTotalArea ?? 0}
+            surveyedArea={decisionSummary.governmentPriceSurveyedArea ?? 0}
             avgPerSqWa={decisionSummary.governmentPriceAvgPerSqWa ?? 0}
           />
         ) : (

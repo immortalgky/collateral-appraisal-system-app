@@ -21,6 +21,8 @@ export interface AppraisalEvaluationHeader {
   reportReceivedDate: string | null;
   appraiserCompanyName: string | null;
   assigneeCompanyId: string | null;
+  internalAppraiserId: string | null;
+  internalAppraiserName: string | null;
   collateralTypes: string | null;
   inspectionDates: string | null;
   departmentOfAppraisal: string | null;

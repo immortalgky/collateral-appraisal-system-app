@@ -33,6 +33,9 @@ export interface AppraisalData {
   /** Whether the request has an appraisal book */
   hasAppraisalBook?: boolean;
 
+  /** Persisted Construction Inspection round number (null/undefined for non-CI appraisals) */
+  inspectionNumber?: number | null;
+
   // Workflow task context (set when opened from task list)
   workflowInstanceId?: string;
   activityId?: string;
@@ -149,6 +152,15 @@ export function useAppraisalHasAppraisalBook(): boolean {
 }
 
 /**
+ * Hook to get the persisted Construction Inspection round number.
+ * Returns undefined for non-CI appraisals or when not yet loaded.
+ */
+export function useAppraisalInspectionNumber(): number | null | undefined {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.inspectionNumber;
+}
+
+/**
  * Hook to get the appraisal status
  * Returns undefined if not in appraisal context or still loading
  */
@@ -168,6 +180,7 @@ const PAGE_NAME_TO_ITEM_KEY: Record<string, string> = {
   Administration: 'appraisal.administration',
   'Appointment & Fee': 'appraisal.appointment',
   'Property Information': 'appraisal.property',
+  'Property Information (PMA)': 'appraisal.property-pma',
   'Document Checklist': 'appraisal.documents',
   'Summary & Decision': 'appraisal.summary',
   '360 Summary': 'appraisal.360',

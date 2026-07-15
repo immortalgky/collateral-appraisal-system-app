@@ -5,6 +5,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Textarea from '@shared/components/inputs/Textarea';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
@@ -123,7 +124,10 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
         setShowDelete(false);
         onDeleted();
       },
-      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.groupDeleteFailed')),
+      onError: (err: any) => {
+        toast.error(err?.apiError?.detail ?? t('toasts.groupDeleteFailed'));
+        setShowDelete(false);
+      },
     });
   };
 
@@ -178,7 +182,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
           {group.description && (
             <div>
               <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
-              <div className="text-sm text-gray-600">{group.description}</div>
+              <div className="text-sm text-gray-600 whitespace-pre-line break-words">
+                {group.description}
+              </div>
             </div>
           )}
         </div>
@@ -317,13 +323,15 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
             options={SCOPE_OPTIONS}
             required
           />
-          <TextInput
+          <Textarea
             label={t('fields.description')}
             value={editForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setEditForm(prev => ({ ...prev, description: value }));
             }}
+            maxLength={500}
+            showCharCount
             placeholder={t('placeholders.briefDescription')}
           />
         </div>

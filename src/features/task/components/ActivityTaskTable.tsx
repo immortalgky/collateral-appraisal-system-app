@@ -7,7 +7,7 @@ import {
   getRowVariantClasses,
 } from '@features/common/monitoring/components/SlaCells';
 import PoolTaskListPage from '../pages/PoolTaskListPage';
-import { useGetTaskCounts, useGetTasks, useGetTasksForKanban } from '../api';
+import { useGetTaskCounts, useGetTasks } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
 import { columnDefs, getActivityColumnConfig, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
@@ -52,11 +52,34 @@ const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
 };
 
 const groupByOptions: { value: GroupByField; label: string }[] = [
-  { value: 'status', label: 'Appraisal Status' },
+  { value: 'status', label: 'Task Status' },
   { value: 'purpose', label: 'Purpose' },
-  { value: 'taskType', label: 'Task Type' },
   { value: 'priority', label: 'Priority' },
 ];
+
+// Pool tab's view/grouping preference — same storage keys PoolTaskListPage falls
+// back to when rendered standalone (uncontrolled), so the two never drift.
+const POOL_VIEW_STORAGE_KEY = 'task-view-pool';
+const POOL_GROUPBY_STORAGE_KEY = 'task-groupby-pool';
+const POOL_GROUP_BY_VALUES: GroupByField[] = ['status', 'purpose', 'priority'];
+
+function readStoredPoolViewMode(): ViewMode {
+  try {
+    const v = localStorage.getItem(POOL_VIEW_STORAGE_KEY);
+    return v === 'grid' || v === 'list' ? v : 'list';
+  } catch {
+    return 'list';
+  }
+}
+
+function readStoredPoolGroupBy(): GroupByField {
+  try {
+    const v = localStorage.getItem(POOL_GROUPBY_STORAGE_KEY);
+    return v && (POOL_GROUP_BY_VALUES as string[]).includes(v) ? (v as GroupByField) : 'status';
+  } catch {
+    return 'status';
+  }
+}
 
 // Solid backgrounds on every sticky cell — prevents scrolling content from bleeding through
 const stickyThBase =
@@ -83,6 +106,26 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     keyof TaskFilterParams,
     string,
   ][];
+
+  const [poolViewMode, setPoolViewModeState] = useState<ViewMode>(readStoredPoolViewMode);
+  const [poolGroupBy, setPoolGroupByState] = useState<GroupByField>(readStoredPoolGroupBy);
+
+  const setPoolViewMode = (mode: ViewMode) => {
+    setPoolViewModeState(mode);
+    try {
+      localStorage.setItem(POOL_VIEW_STORAGE_KEY, mode);
+    } catch {
+      // ignore quota / unavailable-storage errors — in-memory state still updates
+    }
+  };
+  const setPoolGroupBy = (g: GroupByField) => {
+    setPoolGroupByState(g);
+    try {
+      localStorage.setItem(POOL_GROUPBY_STORAGE_KEY, g);
+    } catch {
+      // ignore quota / unavailable-storage errors — in-memory state still updates
+    }
+  };
 
   const columnConfig = useMemo(() => getActivityColumnConfig(activityId), [activityId]);
 
@@ -179,21 +222,17 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     ...filters,
   });
 
-  const { data: kanbanTasks, isLoading: isKanbanLoading } = useGetTasksForKanban({
-    search: debouncedSearch || undefined,
-    activityId,
-  });
-
+  // The board owns its own (per-column) loading state now — this min-loading
+  // smoothing only applies to the list/table view.
   const [minLoadingDone, setMinLoadingDone] = useState(true);
   useEffect(() => {
-    const loading = viewMode === 'list' ? isListLoading : isKanbanLoading;
-    if (loading) {
+    if (isListLoading) {
       setMinLoadingDone(false);
       setTimeout(() => setMinLoadingDone(true), 400);
     }
-  }, [isListLoading, isKanbanLoading, viewMode]);
+  }, [isListLoading]);
 
-  const isLoading = (viewMode === 'list' ? isListLoading : isKanbanLoading) || !minLoadingDone;
+  const isLoading = isListLoading || !minLoadingDone;
 
   const paginatedResult: TaskListResponse | undefined = data;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
@@ -372,16 +411,62 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               )}
             </button>
 
-            {/* Columns */}
-            <div className="mb-2">
-              <ColumnVisibilityDropdown
-                orderedColumns={poolCols.orderedColumns}
-                hidden={poolCols.hidden}
-                alwaysVisible={poolCols.alwaysVisible}
-                onToggle={poolCols.toggleColumn}
-                onReorder={poolCols.reorderColumns}
-                onReset={() => { poolCols.resetToDefault(); poolWidths.resetWidths(); }}
-              />
+            {/* Columns (list only) */}
+            {poolViewMode === 'list' && (
+              <div className="mb-2">
+                <ColumnVisibilityDropdown
+                  orderedColumns={poolCols.orderedColumns}
+                  hidden={poolCols.hidden}
+                  alwaysVisible={poolCols.alwaysVisible}
+                  onToggle={poolCols.toggleColumn}
+                  onReorder={poolCols.reorderColumns}
+                  onReset={() => { poolCols.resetToDefault(); poolWidths.resetWidths(); }}
+                />
+              </div>
+            )}
+
+            {/* Group by (board only) */}
+            {poolViewMode === 'grid' && (
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-xs text-gray-400">Group by</span>
+                <select
+                  value={poolGroupBy}
+                  onChange={e => setPoolGroupBy(e.target.value as GroupByField)}
+                  className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
+                >
+                  {groupByOptions.map(o => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* View toggle */}
+            <div className="mb-2 flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+              <button
+                onClick={() => setPoolViewMode('list')}
+                title="List view"
+                className={`flex items-center justify-center size-8 rounded-md transition-all ${
+                  poolViewMode === 'list'
+                    ? 'bg-white shadow-sm text-primary'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <Icon style="solid" name="list" className="size-3.5" />
+              </button>
+              <button
+                onClick={() => setPoolViewMode('grid')}
+                title="Board view"
+                className={`flex items-center justify-center size-8 rounded-md transition-all ${
+                  poolViewMode === 'grid'
+                    ? 'bg-white shadow-sm text-primary'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+              >
+                <Icon style="solid" name="grid-2" className="size-3.5" />
+              </button>
             </div>
           </>
         )}
@@ -547,6 +632,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             visibleColumns={poolCols.visibleColumns}
             colWidths={poolWidths.widths}
             onColWidthChange={poolWidths.setWidth}
+            viewMode={poolViewMode}
+            groupBy={poolGroupBy}
           />
         </>
       )}
@@ -736,7 +823,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             </div>
           ) : (
             <div className="flex-1 min-h-0">
-              <TaskKanbanBoard tasks={kanbanTasks || []} groupBy={groupBy} isLoading={isLoading} />
+              <TaskKanbanBoard
+                groupBy={groupBy}
+                baseFilters={{ search: debouncedSearch || undefined, activityId, ...filters }}
+              />
             </div>
           )}
 

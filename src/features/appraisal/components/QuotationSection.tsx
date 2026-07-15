@@ -6,6 +6,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
+import NumberInput from '@/shared/components/inputs/NumberInput';
 import { useGetAppraisalQuotations, useGetEligibleCompanies } from '../api/administration';
 import {
   useGetQuotationById,
@@ -29,11 +30,13 @@ import RejectTentativeModal from '@/features/quotation/components/RejectTentativ
 import FinalizeModal from '@/features/quotation/components/FinalizeModal';
 import NegotiationModal from '@/features/quotation/components/NegotiationModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import AppraisalsPopover from '@/features/quotation/components/AppraisalsPopover';
 import InvitedCompaniesPopover from '@/features/quotation/components/InvitedCompaniesPopover';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import type { EmailFormValues } from '@/shared/schemas/email';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useAuthStore } from '@/features/auth/store';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
@@ -251,7 +254,6 @@ const AppraisalDocTab = ({
 
 interface EditDraftFormProps {
   bankingSegment: string | undefined;
-  appraisalCount: number;
   editDueDate: string | null;
   onDueDateChange: (v: string | null) => void;
   editCompanyIds: Set<string>;
@@ -260,11 +262,14 @@ interface EditDraftFormProps {
   onEditCompanyNamesChange: (names: Record<string, string>) => void;
   editSearchQuery: string;
   onEditSearchQueryChange: (q: string) => void;
+  editMaxAppraisalDays: number | null;
+  onEditMaxAppraisalDaysChange: (v: number | null) => void;
+  editSpecialRequirements: string;
+  onEditSpecialRequirementsChange: (v: string) => void;
 }
 
 const EditDraftForm = ({
   bankingSegment,
-  appraisalCount,
   editDueDate,
   onDueDateChange,
   editCompanyIds,
@@ -273,6 +278,10 @@ const EditDraftForm = ({
   onEditCompanyNamesChange,
   editSearchQuery,
   onEditSearchQueryChange,
+  editMaxAppraisalDays,
+  onEditMaxAppraisalDaysChange,
+  editSpecialRequirements,
+  onEditSpecialRequirementsChange,
 }: EditDraftFormProps) => {
   const { t } = useTranslation(['appraisal', 'common']);
   const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
@@ -315,12 +324,19 @@ const EditDraftForm = ({
 
   return (
     <div className="px-4 py-3 flex flex-col gap-4 text-sm text-gray-600">
-      {/* Read-only appraisals count */}
-      <div className="grid grid-cols-1 gap-1">
-        <div className="text-xs text-gray-500">{t('quotation.editDraft.appraisalsLabel')}</div>
-        <div className="font-medium text-gray-400 text-xs italic">
-          {t('quotation.editDraft.appraisalCount', { n: appraisalCount })}
-        </div>
+      {/* Max Appraisal Duration — editable for this appraisal only */}
+      <div>
+        <NumberInput
+          label={t('quotation.maxAppraisalDuration')}
+          helperText={t('quotation.editDraft.maxAppraisalDurationHelper')}
+          placeholder="e.g. 7"
+          value={editMaxAppraisalDays}
+          decimalPlaces={0}
+          thousandSeparator={false}
+          maxIntegerDigits={3}
+          min={1}
+          onChange={e => onEditMaxAppraisalDaysChange(e.target.value)}
+        />
       </div>
 
       {/* Companies Invited — editable multiselect */}
@@ -436,6 +452,21 @@ const EditDraftForm = ({
           disablePastDates
         />
       </div>
+
+      {/* Special Requirements — quotation-level, editable */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-xs font-medium text-gray-700">
+          {t('quotation.specialRequirements')}
+        </label>
+        <textarea
+          value={editSpecialRequirements}
+          onChange={e => onEditSpecialRequirementsChange(e.target.value)}
+          rows={3}
+          maxLength={500}
+          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
+        />
+        <p className="text-xs text-gray-400 text-right">{editSpecialRequirements.length}/500</p>
+      </div>
     </div>
   );
 };
@@ -456,7 +487,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { t, i18n } = useTranslation('appraisal');
   const currentUser = useAuthStore(s => s.user);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
-  const [pendingEmailData, setPendingEmailData] = useState<EmailFormValues | null>(null);
   /** appraisalId → { documentId → { level } }; outer key tracks per-appraisal coverage */
   const [shareSelections, setShareSelections] = useState<ShareSelections>({});
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
@@ -468,6 +498,10 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   /** Company name cache for edit-mode chips: companyId → companyName */
   const [editCompanyNames, setEditCompanyNames] = useState<Record<string, string>>({});
   const [editSearchQuery, setEditSearchQuery] = useState('');
+  /** Max appraisal duration edit for THIS appraisal (null = not set) */
+  const [editMaxAppraisalDays, setEditMaxAppraisalDays] = useState<number | null>(null);
+  /** Quotation-level special requirements edit */
+  const [editSpecialRequirements, setEditSpecialRequirements] = useState('');
   /** Cancel-Quotation confirmation modal — only shown for non-Draft, non-terminal statuses.
       Draft uses the per-appraisal "Remove" button (which auto-cancels on last removal);
       Finalized/Cancelled are terminal so cancel is hidden there. */
@@ -536,9 +570,17 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     activeQuotation?.id ?? '',
   );
 
+  // PropertyType code → locale description (e.g. "LB" → "ที่ดินพร้อมสิ่งปลูกสร้าง").
+  const propertyTypeParams = useParametersByGroup('PropertyType');
+
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotationDetail?.appraisals ?? [];
     const cutOffTime = quotationDetail?.cutOffTime ? new Date(quotationDetail.cutOffTime) : null;
+
+    const propertyTypeDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return propertyTypeParams.find(p => p.code === code)?.description ?? code;
+    };
 
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
@@ -566,7 +608,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const appraisalList = appraisals
       .map(
         (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${a.propertyType ?? ''}`,
+          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${propertyTypeDescription(a.propertyType)}`,
       )
       .join('\n');
 
@@ -584,7 +626,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
       content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
     };
-  }, [quotationDetail, currentUser]);
+  }, [quotationDetail, currentUser, propertyTypeParams]);
 
   /**
    * Statuses where the Cancel Quotation action is offered. Mirrors the branches
@@ -860,7 +902,13 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500">{t('quotation.stats.appraisals')}</div>
+                <div className="text-xs text-gray-500 flex items-center gap-1">
+                  {t('quotation.stats.appraisals')}
+                  <AppraisalsPopover
+                    appraisals={quotationDetail?.appraisals ?? []}
+                    totalAppraisals={activeQuotation.totalAppraisals}
+                  />
+                </div>
                 <div className="font-medium text-gray-900">{activeQuotation.totalAppraisals}</div>
               </div>
             </div>
@@ -975,18 +1023,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
     const draftAppraisals = draftDetail?.appraisals ?? [];
 
-    /** Step 1 (email compose) → Step 2: store email data and open the share-docs step */
-    const handleEmailComposed = (values: EmailFormValues) => {
-      setPendingEmailData(values);
-      setShareSelections({});
-      setSendStep('share-docs');
+    /** Step 1 (share docs) → Step 2 (email). Requires full doc coverage. */
+    const handleShareDocsNext = () => {
+      if (!allAppraisalsCovered) return;
+      setSendStep('confirm');
     };
 
-    /** Cancel the whole send flow — clear both step and stale tick selections */
+    /** Cancel the whole send flow — clear step and stale tick selections */
     const handleCancelSendFlow = () => {
       setSendStep(null);
       setShareSelections({});
-      setPendingEmailData(null);
     };
 
     /**
@@ -1000,9 +1046,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         Object.keys(shareSelections[ap.appraisalId] ?? {}).length >= 1,
     );
 
-    /** Step 2 → final send: PUT shared-docs then POST send */
-    const handleFinalSend = () => {
-      if (!allAppraisalsCovered || !pendingEmailData) return;
+    /** Step 2 (email) submit → final send: PUT shared-docs then POST send */
+    const handleFinalSend = (values: EmailFormValues) => {
+      if (!allAppraisalsCovered) return;
       const selections: SharedDocumentSelectionDto[] = draftAppraisals.flatMap(ap =>
         Object.entries(shareSelections[ap.appraisalId] ?? {}).map(([documentId, { level }]) => ({
           appraisalId: ap.appraisalId,
@@ -1014,18 +1060,18 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         onSuccess: () => {
           sendQuotation(
             {
-              from: pendingEmailData.from,
-              to: pendingEmailData.to,
-              cc: pendingEmailData.cc,
-              bcc: pendingEmailData.bcc,
-              subject: pendingEmailData.subject,
-              content: pendingEmailData.content,
+              from: values.from,
+              to: values.to,
+              cc: values.cc,
+              bcc: values.bcc,
+              subject: values.subject,
+              content: values.content,
             },
             {
               onSuccess: () => {
                 toast.success(t('quotation.toasts.quotationSent'));
                 setSendStep(null);
-                setPendingEmailData(null);
+                setShareSelections({});
               },
               onError: (err: unknown) => {
                 const apiErr = err as { apiError?: { detail?: string } };
@@ -1054,6 +1100,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       setEditCompanyNames(initialNames);
       setEditDueDate(activeQuotation.cutOffTime ?? null);
       setEditSearchQuery('');
+      const thisAppraisal = (draftDetail?.appraisals ?? []).find(
+        ap => ap.appraisalId === appraisalId,
+      );
+      setEditMaxAppraisalDays(thisAppraisal?.maxAppraisalDays ?? null);
+      setEditSpecialRequirements(draftDetail?.specialRequirements ?? '');
       setIsEditing(true);
     };
 
@@ -1064,6 +1115,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       setEditCompanyNames({});
       setEditDueDate(null);
       setEditSearchQuery('');
+      setEditMaxAppraisalDays(null);
+      setEditSpecialRequirements('');
     };
 
     /** Save the edit. */
@@ -1073,7 +1126,13 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         return;
       }
       editDraftQuotation(
-        { cutOffTime: editDueDate, companyIds: Array.from(editCompanyIds) },
+        {
+          cutOffTime: editDueDate,
+          companyIds: Array.from(editCompanyIds),
+          // Only this appraisal's max-days is edited here; backend leaves other items untouched.
+          appraisals: [{ appraisalId, maxAppraisalDays: editMaxAppraisalDays ?? null }],
+          specialRequirements: editSpecialRequirements.trim() || null,
+        },
         {
           onSuccess: () => {
             toast.success(t('quotation.toasts.draftUpdated'));
@@ -1154,7 +1213,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   )}
                   <Button
                     size="sm"
-                    onClick={() => setSendStep('confirm')}
+                    onClick={() => setSendStep('share-docs')}
                     disabled={!canSend || isBusy}
                     title={
                       !canSend
@@ -1183,7 +1242,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           {isEditing ? (
             <EditDraftForm
               bankingSegment={draftDetail?.bankingSegment || undefined}
-              appraisalCount={appraisalCount}
               editDueDate={editDueDate}
               onDueDateChange={setEditDueDate}
               editCompanyIds={editCompanyIds}
@@ -1192,12 +1250,22 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               onEditCompanyNamesChange={setEditCompanyNames}
               editSearchQuery={editSearchQuery}
               onEditSearchQueryChange={setEditSearchQuery}
+              editMaxAppraisalDays={editMaxAppraisalDays}
+              onEditMaxAppraisalDaysChange={setEditMaxAppraisalDays}
+              editSpecialRequirements={editSpecialRequirements}
+              onEditSpecialRequirementsChange={setEditSpecialRequirements}
             />
           ) : (
             <div className="px-4 py-3 text-sm text-gray-600">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <div className="text-xs text-gray-500">{t('quotation.stats.appraisals')}</div>
+                  <div className="text-xs text-gray-500 flex items-center gap-1">
+                    {t('quotation.stats.appraisals')}
+                    <AppraisalsPopover
+                      appraisals={draftAppraisals}
+                      totalAppraisals={appraisalCount}
+                    />
+                  </div>
                   <div
                     className={clsx(
                       'font-medium',
@@ -1238,6 +1306,19 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   </div>
                 </div>
               </div>
+
+              {/* Request Details — Special Requirements (request-wide). Per-appraisal
+                  Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <div>
+                  <div className="text-xs text-gray-500">
+                    {t('quotation.specialRequirements')}
+                  </div>
+                  <div className="font-medium text-gray-900 whitespace-pre-wrap">
+                    {draftDetail?.specialRequirements?.trim() || t('quotation.notSet')}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1270,21 +1351,22 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           isLoading={isRemoving}
         />
 
-        {/* ── Step 1: Email composition ── */}
+        {/* ── Step 2: Email composition (final step — Send performs the actual send) ── */}
         <EmailCompositionModal
           isOpen={sendStep === 'confirm'}
           onClose={handleCancelSendFlow}
           title={t('quotation.emailModal.title')}
           defaultValues={defaultEmailValues}
+          showFrom={false}
           showCc={true}
           showBcc={true}
           showAttachments={false}
           subjectLabel="Subject"
-          isPending={false}
-          onSubmit={handleEmailComposed}
+          isPending={isBusy}
+          onSubmit={handleFinalSend}
         />
 
-        {/* ── Step 2: Share documents ── */}
+        {/* ── Step 1: Share documents ── */}
         {sendStep === 'share-docs' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
             <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
@@ -1321,55 +1403,28 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 </div>
               )}
 
-              <div className="flex gap-3 justify-between mt-5">
+              <div className="flex gap-2 justify-end mt-5">
                 <Button
                   variant="outline"
                   size="sm"
                   type="button"
-                  onClick={() => setSendStep('confirm')}
+                  onClick={handleCancelSendFlow}
                   disabled={isBusy}
                 >
-                  <Icon name="arrow-left" style="solid" className="size-3.5 mr-1.5" />
-                  {t('quotation.back')}
+                  {t('quotation.cancel')}
                 </Button>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    type="button"
-                    onClick={handleCancelSendFlow}
-                    disabled={isBusy}
-                  >
-                    {t('quotation.cancel')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    type="button"
-                    onClick={handleFinalSend}
-                    disabled={isBusy || !allAppraisalsCovered}
-                    title={
-                      !allAppraisalsCovered
-                        ? t('quotation.shareDocuments.coverageTitle')
-                        : undefined
-                    }
-                  >
-                    {isBusy ? (
-                      <>
-                        <Icon
-                          name="spinner"
-                          style="solid"
-                          className="size-3.5 mr-1.5 animate-spin"
-                        />
-                        {t('quotation.sending')}
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-                        {t('quotation.confirmSend')}
-                      </>
-                    )}
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  type="button"
+                  onClick={handleShareDocsNext}
+                  disabled={isBusy || !allAppraisalsCovered}
+                  title={
+                    !allAppraisalsCovered ? t('quotation.shareDocuments.coverageTitle') : undefined
+                  }
+                >
+                  {t('quotation.next')}
+                  <Icon name="arrow-right" style="solid" className="size-3.5 ml-1.5" />
+                </Button>
               </div>
             </div>
           </div>

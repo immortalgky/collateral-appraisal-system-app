@@ -1,6 +1,8 @@
 import type { TFunction } from 'i18next';
 import { isCondo } from '@/features/blockProject/types';
 import type { ProjectType, ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
+import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
+import { useTranslation } from 'react-i18next';
 
 interface UnitRowProps {
   unit: ProjectUnitDetail;
@@ -34,6 +36,7 @@ export const UnitRow = ({
   t,
 }: UnitRowProps) => {
   const { isSold, purchaseBy, loanBankName } = editState;
+  const { i18n } = useTranslation('blockUnitMaintenance');
 
   const handleSoldChange = (checked: boolean) => {
     onChange(unit.id, {
@@ -52,25 +55,39 @@ export const UnitRow = ({
 
   const identityCells = isCondo(projectType) ? (
     <>
-      <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.floor ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
-      <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-1.5 px-3 text-gray-600">{unit.sequenceNumber}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.floor ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
+      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-1.5 px-3 text-right">
+        {(unit.lastAppraisedValue ?? 0) > 0 ? (
+          <span className="text-gray-900">{fmt(unit.lastAppraisedValue)}</span>
+        ) : (
+          <span className="text-gray-300">–</span>
+        )}
+      </td>
     </>
   ) : (
     <>
-      <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
-      <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.landArea)}</td>
-      <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
-      <td className="py-2 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-1.5 px-3 text-gray-600">{unit.sequenceNumber}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800 text-center">{unit.numberOfFloors ?? '-'}</td>
+      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.landArea)}</td>
+      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
+      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-1.5 px-3 text-right">
+        {(unit.lastAppraisedValue ?? 0) > 0 ? (
+          <span className="text-gray-900">{fmt(unit.lastAppraisedValue)}</span>
+        ) : (
+          <span className="text-gray-300">–</span>
+        )}
+      </td>
     </>
   );
 
@@ -85,10 +102,12 @@ export const UnitRow = ({
     <tr
       className={`border-b border-gray-100 hover:bg-gray-50 ${
         isDirty ? 'bg-amber-50/30' : ''
-      } ${isSelected ? 'bg-primary/5' : ''}`}
+      } ${isSelected ? 'bg-primary/5' : ''} ${
+        !isDirty && !isSelected && isSold ? 'bg-violet-50/40' : ''
+      }`}
     >
       {/* Dirty indicator + selection checkbox in one slim column */}
-      <td className="py-2 pl-3 pr-1 relative">
+      <td className="py-1.5 pl-3 pr-1 relative">
         {isDirty && (
           <span
             aria-label={t('detail.dirty')}
@@ -105,7 +124,7 @@ export const UnitRow = ({
       </td>
       {identityCells}
       {/* Sold checkbox */}
-      <td className="py-2 px-3 text-center">
+      <td className="py-1.5 px-3 text-center">
         <input
           type="checkbox"
           checked={isSold}
@@ -115,7 +134,7 @@ export const UnitRow = ({
         />
       </td>
       {/* Purchase by — segmented control */}
-      <td className="py-2 px-3">
+      <td className="py-1.5 px-3">
         <div role="group" aria-label={t('units.col.purchaseBy')} className="inline-flex">
           <button
             type="button"
@@ -140,7 +159,7 @@ export const UnitRow = ({
         </div>
       </td>
       {/* Loan bank name with autocomplete from existing values */}
-      <td className="py-2 px-3 min-w-[160px]">
+      <td className="py-1.5 px-3 min-w-[160px]">
         <input
           type="text"
           list={loanBankListId}
@@ -150,6 +169,14 @@ export const UnitRow = ({
           placeholder={purchaseBy === 'Loan' && isSold ? t('units.bankNamePlaceholder') : ''}
           className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
         />
+      </td>
+      <td className="py-1.5 px-3 text-gray-700 whitespace-nowrap leading-tight">
+        <div>{formatLocaleDateTime(unit.updatedAt, i18n.language)}</div>
+        {unit.updatedBy && (
+          <div className="text-[10px] text-gray-400">
+            {t('units.updatedByLine', { name: unit.updatedBy })}
+          </div>
+        )}
       </td>
     </tr>
   );

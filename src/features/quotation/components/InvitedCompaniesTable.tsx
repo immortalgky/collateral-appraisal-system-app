@@ -61,7 +61,10 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
                     </td>
                     <td className="px-4 py-2 text-center">
                       {cq ? (
-                        <QuotationStatusBadge status={cq.status} />
+                        <QuotationStatusBadge
+                          status={cq.status}
+                          reason={cq.status === 'Declined' ? cq.declineReason : undefined}
+                        />
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                           {t('invitedCompanies.pending')}

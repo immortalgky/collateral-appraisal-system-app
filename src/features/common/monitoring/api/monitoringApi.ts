@@ -104,6 +104,9 @@ export const usePendingQuotations = (filter: PendingQuotationFilter = {}) =>
         params: {
           ...buildBaseParams(filter),
           ...(filter.status?.length && { status: filter.status }),
+          ...(filter.quotationNo && { quotationNo: filter.quotationNo }),
+          ...(filter.appraisalNo && { appraisalNo: filter.appraisalNo }),
+          ...(filter.customerName && { customerName: filter.customerName }),
           ...(filter.cutOffTimeFrom && { cutOffTimeFrom: filter.cutOffTimeFrom }),
           ...(filter.cutOffTimeTo && { cutOffTimeTo: filter.cutOffTimeTo }),
         },

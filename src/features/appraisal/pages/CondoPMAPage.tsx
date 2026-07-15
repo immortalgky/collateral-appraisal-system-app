@@ -12,7 +12,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { mapCondoPMAPropertyResponseToForm } from '../utils/mappers';
 import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { FormProvider } from '@/shared/components/form';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
@@ -22,6 +21,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import {
   useCreateCondoPMAProperty,
   useGetCondoPMAPropertyById,
+  useSaveCondoPMAPropertyDraft,
   useUpdateCondoPMAProperty,
 } from '../api';
 import { useTranslation } from 'react-i18next';
@@ -56,8 +56,10 @@ const CondoPMAPage = () => {
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
   const { mutate: updateCondoPMAProperties, isPending: isCreating } = useUpdateCondoPMAProperty();
+  const { mutate: saveCondoPMAPropertiesDraft, isPending: isSavingDraft } =
+    useSaveCondoPMAPropertyDraft();
   const { mutate: createCondoPMAProperties, isPending: isUpdating } = useCreateCondoPMAProperty();
-  const isPending = isCreating || isUpdating;
+  const isPending = isCreating || isUpdating || isSavingDraft;
 
   const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
 
@@ -101,7 +103,7 @@ const CondoPMAPage = () => {
     setSaveAction('draft');
     const data = getValues();
     if (isEditMode && propertyId) {
-      updateCondoPMAProperties(
+      saveCondoPMAPropertiesDraft(
         { data, appraisalId: appraisalId!, propertyId: propertyId },
         {
           onSuccess: () => {
@@ -155,17 +157,6 @@ const CondoPMAPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: 'PMA', id: 'pma-section', icon: 'file-invoice-dollar' },
-            { label: 'Property', id: 'property-section', icon: 'city' },
-          ]}
-        />
-      </div>
-
       <FormProvider methods={methods} schema={condoPMAFormSchema}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -186,7 +177,11 @@ const CondoPMAPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <CondoPMAForm />
+                    <CondoPMAForm
+                      externalSyncStatus={isEditMode ? propertyData?.externalSyncStatus : undefined}
+                      externalSyncError={isEditMode ? propertyData?.externalSyncError : undefined}
+                      externalSyncedAt={isEditMode ? propertyData?.externalSyncedAt : undefined}
+                    />
                   </Section>
                 </div>
               </ResizableSidebar.Main>
@@ -217,7 +212,7 @@ const CondoPMAPage = () => {
                     type="button"
                     onClick={handleSaveDraft}
                     isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending}
+                    disabled={isPending || !isDirty}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
@@ -225,7 +220,7 @@ const CondoPMAPage = () => {
                   <Button
                     type="submit"
                     isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending}
+                    disabled={isPending || (!isDirty && propertyData?.externalSyncStatus !== 'Failed')}
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
                     Save

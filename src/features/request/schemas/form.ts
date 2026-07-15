@@ -44,6 +44,9 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     prevAppraisalId: z.string().nullable(),
     prevAppraisalValue: z.number().nullable(),
     prevAppraisalDate: z.string().nullable(),
+    // Construction Inspection round number. Stamped from prevAppraisal.nextInspectionNumber
+    // when copying a prior appraisal — display-only, never user-editable.
+    inspectionNumber: z.number().nullish(),
     address: z.object({
       houseNumber: z.string().max(10).min(1, t('validation.houseNumberRequired')),
       projectName: z.string().max(100).nullable(),
@@ -248,6 +251,7 @@ export const createRequestFormDefault: createRequestFormType = {
     prevAppraisalId: null,
     prevAppraisalValue: null,
     prevAppraisalDate: null,
+    inspectionNumber: null,
     address: {
       houseNumber: '',
       projectName: '',

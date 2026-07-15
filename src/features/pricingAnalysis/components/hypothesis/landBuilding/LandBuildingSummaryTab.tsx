@@ -247,6 +247,8 @@ export function LandBuildingSummaryTab({
               />
             }
             rateUnit="Baht/Sq.Wa"
+            qtyValue={s?.publicUtilityAreaForCost}
+            qtyUnit="Sq.Wa"
             total={s?.publicUtilityCost}
             ratioPercent={s?.publicUtilityCostRatio}
           />
@@ -258,6 +260,8 @@ export function LandBuildingSummaryTab({
               <InlineNumberInput control={control} name="summary.landFillingRatePerSqWa" fillSlot />
             }
             rateUnit="Baht/Sq.Wa"
+            qtyValue={s?.landFillingArea}
+            qtyUnit="Sq.Wa"
             total={s?.landFillingCost}
             ratioPercent={s?.landFillingCostRatio}
           />

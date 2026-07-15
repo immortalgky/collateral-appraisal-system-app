@@ -7,7 +7,7 @@ import Pagination from '@/shared/components/Pagination';
 import Button from '@/shared/components/Button';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { Dropdown } from '@/shared/components/inputs';
-import { formatLocaleDate } from '@/shared/utils/dateUtils';
+import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import { useParameterOptions, useParametersByGroup } from '@/shared/utils/parameterUtils';
 import {
   useGetBlockUnitMaintenanceList,
@@ -34,6 +34,7 @@ const SortableTh = ({
   sortDir,
   onSort,
   align = 'left',
+  className = '',
   children,
 }: {
   field: string;
@@ -41,19 +42,19 @@ const SortableTh = ({
   sortDir: 'asc' | 'desc';
   onSort: (f: string) => void;
   align?: 'left' | 'center' | 'right';
+  className?: string;
   children: React.ReactNode;
 }) => {
   const isActive = sortBy === field;
   const alignCls =
     align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
-  const flexAlign =
-    align === 'right' ? 'flex-row-reverse' : align === 'center' ? 'justify-center' : '';
+  const flexAlign = align === 'center' ? 'justify-center' : '';
   const iconName = isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
   return (
     <th
       onClick={() => onSort(field)}
-      className={`font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
-        isActive ? 'text-primary' : 'text-gray-600'
+      className={`px-4 py-2.5 text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
+        isActive ? 'text-primary' : 'text-gray-500'
       }`}
     >
       <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
@@ -70,7 +71,7 @@ const SortableTh = ({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-const TOTAL_COLS = 7; // number of <td/th> columns in the listing table
+const TOTAL_COLS = 6; // number of <td/th> columns in the listing table
 
 const BlockUnitMaintenancePage = () => {
   const navigate = useNavigate();
@@ -155,7 +156,7 @@ const BlockUnitMaintenancePage = () => {
 
       {/* Filter bar */}
       <div className="shrink-0 flex flex-wrap items-end gap-2">
-        <div className="w-72">
+        <div className="w-96">
           <Input
             placeholder={t('list.filter.searchPlaceholder')}
             value={search}
@@ -181,13 +182,13 @@ const BlockUnitMaintenancePage = () => {
         </div>
         <div className="w-56">
           <Input
+            label={t('list.filter.developerLabel')}
             placeholder={t('list.filter.developerPlaceholder')}
             value={developer}
             onChange={e => {
               setDeveloper(e.target.value);
               setPageNumber(0);
             }}
-            leftIcon={<Icon style="solid" name="building" className="size-3.5" />}
           />
         </div>
         {hasActiveFilters && (
@@ -210,15 +211,14 @@ const BlockUnitMaintenancePage = () => {
       {/* Table card */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-sm">
             <colgroup>
               <col className="w-36" />
               <col className="w-48" />
               <col className="w-40" />
               <col className="w-32" />
               <col className="w-64" />
-              <col className="w-32" />
-              <col className="w-28" />
+              <col className="w-44" />
             </colgroup>
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
@@ -235,10 +235,11 @@ const BlockUnitMaintenancePage = () => {
                   sortBy={sortBy}
                   sortDir={sortDir}
                   onSort={toggleSort}
+                  className="w-full"
                 >
                   {t('list.col.projectName')}
                 </SortableTh>
-                <th className="font-medium px-4 py-2.5 text-gray-600 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-left whitespace-nowrap">
                   {t('list.col.projectType')}
                 </th>
                 <SortableTh field="developer" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
@@ -248,10 +249,7 @@ const BlockUnitMaintenancePage = () => {
                   {t('list.col.salesProgress')}
                 </SortableTh>
                 <SortableTh field="updatedOn" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
-                  {t('list.col.updatedOn')}
-                </SortableTh>
-                <SortableTh field="updatedBy" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
-                  {t('list.col.updatedBy')}
+                  {t('list.col.updated')}
                 </SortableTh>
               </tr>
             </thead>
@@ -266,8 +264,7 @@ const BlockUnitMaintenancePage = () => {
                     { width: 'w-32' },
                     { width: 'w-28' },
                     { width: 'w-48' },
-                    { width: 'w-20' },
-                    { width: 'w-20' },
+                    { width: 'w-24' },
                   ]}
                   rows={5}
                 />
@@ -304,15 +301,15 @@ const BlockUnitMaintenancePage = () => {
                       <td className="px-4 py-2.5 text-gray-700 truncate">
                         {item.projectName ?? '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700">
+                      <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">
                         {projectTypeDescMap.get(item.projectType) ?? item.projectType}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600 truncate">
+                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                         {item.developer ?? '—'}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                          <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-violet-400 to-indigo-500 transition-[width]"
                               style={{ width: `${pct}%` }}
@@ -328,11 +325,13 @@ const BlockUnitMaintenancePage = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">
-                        {formatLocaleDate(item.updatedOn, i18n.language)}
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-600 text-xs truncate">
-                        {item.updatedBy ?? '—'}
+                      <td className="px-4 py-2.5 whitespace-nowrap">
+                        <div className="text-xs text-gray-600">
+                          {formatLocaleDateTime(item.updatedOn, i18n.language)}
+                        </div>
+                        <div className="text-[11px] text-gray-400 truncate">
+                          {item.updatedBy ? `${t('list.col.by')} ${item.updatedBy}` : '—'}
+                        </div>
                       </td>
                     </tr>
                   );

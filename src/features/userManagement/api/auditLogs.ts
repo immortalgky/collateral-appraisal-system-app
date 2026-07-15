@@ -13,6 +13,7 @@ export const useGetAuditLogs = (params: GetAuditLogsParams = {}) => {
           entityType: params.entityType || undefined,
           entityId: params.entityId || undefined,
           actorUserId: params.actorUserId || undefined,
+          actorName: params.actorName || undefined,
           from: params.from || undefined,
           to: params.to || undefined,
           action: params.action || undefined,

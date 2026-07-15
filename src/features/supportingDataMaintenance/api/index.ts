@@ -288,6 +288,8 @@ export const useGetSupportingDataMaintenanceList = (
     dateType,
     dateFrom,
     dateTo,
+    website,
+    phoneNo,
   } = params;
 
   const queryKey = supportingDataMaintenanceKeys.list({
@@ -301,6 +303,8 @@ export const useGetSupportingDataMaintenanceList = (
     ...(dateType && { dateType }),
     ...(dateFrom && { dateFrom }),
     ...(dateTo && { dateTo }),
+    ...(website && { website }),
+    ...(phoneNo && { phoneNo }),
   });
 
   return useQuery({
@@ -316,6 +320,8 @@ export const useGetSupportingDataMaintenanceList = (
           ...(status && { Status: status }),
           ...(supportingNumber && { SupportingNumber: supportingNumber }),
           ...toDateQueryParams(dateType, dateFrom, dateTo),
+          ...(website && { Website: website }),
+          ...(phoneNo && { PhoneNo: phoneNo }),
         },
       });
 

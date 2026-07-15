@@ -370,5 +370,8 @@ export interface FieldArrayField extends BaseFormField {
 export interface ParameterSearchField extends BaseFormField {
   type: 'parameter-search';
   label: string;
-  group: string;
+  /** Parameter group to search from (e.g., 'LandOffice'). Optional when `options` is supplied. */
+  group?: string;
+  /** Explicit options — used instead of the parameter group (e.g. dedicated lookup like dealers). */
+  options?: ListBoxItem[];
 }

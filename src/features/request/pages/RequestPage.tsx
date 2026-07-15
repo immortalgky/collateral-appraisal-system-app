@@ -335,11 +335,12 @@ function RequestPage() {
   );
 
   const handleDismissCopyBanner = () => {
-    // Clear only the four prevAppraisal* metadata fields — do NOT wipe copied data
+    // Clear only the prevAppraisal* metadata fields — do NOT wipe copied data
     setValue('detail.prevAppraisalId', null, { shouldDirty: true });
     setValue('detail.prevAppraisalReportNo', null, { shouldDirty: true });
     setValue('detail.prevAppraisalValue', null, { shouldDirty: true });
     setValue('detail.prevAppraisalDate', null, { shouldDirty: true });
+    setValue('detail.inspectionNumber', null, { shouldDirty: true });
     setCopyBannerNumber(null);
     setCopyBannerValue(null);
   };

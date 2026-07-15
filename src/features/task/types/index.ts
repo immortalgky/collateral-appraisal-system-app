@@ -163,8 +163,9 @@ export interface GetPoolTasksParams {
   activityId?: string;
 }
 
-// Grouping options for Kanban view
-export type GroupByField = 'status' | 'purpose' | 'taskType' | 'priority';
+// Grouping options for Kanban view. 'taskType' was removed — it duplicated
+// 'activity' (TaskType == TaskName == activityName in the underlying view).
+export type GroupByField = 'status' | 'purpose' | 'priority' | 'activity' | 'slaStatus';
 
 // Paginated response type
 export interface TaskListResponse {

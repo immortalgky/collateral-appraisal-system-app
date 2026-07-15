@@ -69,6 +69,10 @@ export interface ProjectUnitDetail {
   isSold: boolean;
   purchaseBy: PurchaseMethod | null;
   loanBankName: string | null;
+
+  lastAppraisedValue: number | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
 }
 
 // ─── Update Payload ───────────────────────────────────────────────────────────

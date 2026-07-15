@@ -10,6 +10,10 @@ interface SearchResultsTableProps {
   items: SearchResultItem[];
   isLoading: boolean;
   onAppraisalClick?: (appraisalId: string) => void;
+  /** 0-based current page index, used to compute a continuous running row number */
+  pageNumber?: number;
+  /** Number of rows per page, used to compute a continuous running row number */
+  pageSize?: number;
 }
 
 function SearchResultsTable({
@@ -17,6 +21,8 @@ function SearchResultsTable({
   items,
   isLoading,
   onAppraisalClick,
+  pageNumber = 0,
+  pageSize = 0,
 }: SearchResultsTableProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,7 +97,9 @@ function SearchResultsTable({
                 onClick={() => handleRowClick(item)}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
               >
-                <td className="px-3 py-2.5 text-gray-400 text-sm">{index + 1}</td>
+                <td className="px-3 py-2.5 text-gray-400 text-sm">
+                  {pageNumber * pageSize + index + 1}
+                </td>
                 {columns.map(col => (
                   <td key={col.key} className="px-3 py-2.5 text-gray-600">
                     {col.key === 'status' ? (

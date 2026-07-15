@@ -1,4 +1,8 @@
+import { createElement } from 'react';
 import type { FormField } from '@/shared/components/form';
+
+/** ฿ left-adornment for currency number-inputs (Land + Condo PMA prices). */
+const bahtPrefix = createElement('span', { className: 'text-sm text-gray-400' }, '฿');
 
 /** Prefix all field names for schema building (short → full dotted path). */
 export function prefixFields(fields: FormField[], prefix: string): FormField[] {
@@ -2100,7 +2104,7 @@ export const machineInfoFields: FormField[] = [
     maxIntegerDigits: 6,
   },
   {
-    type: 'dropdown',
+    type: 'parameter-search',
     label: 'Country of Manufacture',
     name: 'manufacturer',
     wrapperClassName: 'col-span-4',
@@ -2495,6 +2499,10 @@ export const landtitlesFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 16,
     decimalPlaces: 2,
+    // Missing-from-survey land has no government price → force to 0 and lock.
+    // governmentPrice (computed = pricePerSqWa × totalSqWa) then follows to 0 automatically.
+    disableWhen: { field: 'isMissingFromSurvey', is: true },
+    disabledValue: 0,
   },
   {
     name: 'governmentPrice',
@@ -2518,6 +2526,7 @@ export const pmaField: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     maxIntegerDigits: 15,
+    leftIcon: bahtPrefix,
   },
   {
     type: 'number-input',
@@ -2526,6 +2535,7 @@ export const pmaField: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     maxIntegerDigits: 15,
+    leftIcon: bahtPrefix,
   },
   {
     type: 'number-input',
@@ -2534,6 +2544,7 @@ export const pmaField: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
     maxIntegerDigits: 15,
+    leftIcon: bahtPrefix,
   },
 ];
 
@@ -2541,12 +2552,14 @@ export const pmaField: FormField[] = [
 // Land and building PMA fields
 // =============================================================================
 
-export const landAndBuildingPMAFields: FormField[] = [
+// 12-col grid (see LandBuildingPMAForm): text rows use col-span-4 (three per row); the land-area
+// row (Rai/Ngan/Sq.Wa/Total) uses col-span-3 so the four fields are equal AND fill the full width.
+export const landPmaTitleFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Title Number',
     name: 'titleNumber',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxLength: 200,
   },
@@ -2554,7 +2567,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'text-input',
     label: 'Book Number',
     name: 'bookNumber',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxLength: 10,
   },
@@ -2562,7 +2575,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'text-input',
     label: 'Page Number',
     name: 'pageNumber',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxLength: 10,
   },
@@ -2570,7 +2583,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'text-input',
     label: 'Rawang',
     name: 'rawang',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxLength: 30,
   },
@@ -2578,7 +2591,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'text-input',
     label: 'Land Number',
     name: 'landNumber',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxLength: 10,
   },
@@ -2586,16 +2599,18 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'text-input',
     label: 'Survey Number',
     name: 'surveyNumber',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxLength: 10,
   },
+];
+
+export const landPmaAreaFields: FormField[] = [
   {
     type: 'number-input',
     label: 'Rai',
     name: 'areaRai',
-    wrapperClassName: 'col-span-1',
-    required: true,
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
@@ -2603,8 +2618,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'number-input',
     label: 'Ngan',
     name: 'areaNgan',
-    wrapperClassName: 'col-span-1',
-    required: true,
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 0,
     maxIntegerDigits: 1,
     max: 3,
@@ -2613,10 +2627,25 @@ export const landAndBuildingPMAFields: FormField[] = [
     type: 'number-input',
     label: 'Sq.Wa',
     name: 'areaSquareWa',
-    wrapperClassName: 'col-span-1',
-    required: true,
+    wrapperClassName: 'col-span-3',
     maxIntegerDigits: 3,
   },
+  {
+    // Read-only computed total (Rai*400 + Ngan*100 + Sq.Wa), kept in sync by a useWatch+useEffect
+    // derive in LandBuildingPMAForm. Rai/Ngan/Sq.Wa are individually optional; the required-area
+    // rule is enforced here via a superRefine (total > 0) in makeLandAndBuildingPMAForm.
+    // 12-col grid: the four area fields each col-span-3 = 12 (equal, full-width row); text rows use
+    // col-span-4, so Sub District/District/Province wrap to their own full-width row below.
+    type: 'number-input',
+    label: 'Total Sq.Wa',
+    name: 'totalSquareWa',
+    wrapperClassName: 'col-span-3',
+    disabled: true,
+    decimalPlaces: 2,
+  },
+];
+
+export const landPmaAddressFields: FormField[] = [
   {
     type: 'location-selector',
     label: 'Sub District',
@@ -2628,7 +2657,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     addressSource: 'title',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
   },
   {
@@ -2637,7 +2666,7 @@ export const landAndBuildingPMAFields: FormField[] = [
     name: 'districtName',
     disabled: true,
     required: true,
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
   },
   {
     type: 'text-input',
@@ -2645,30 +2674,20 @@ export const landAndBuildingPMAFields: FormField[] = [
     name: 'provinceName',
     disabled: true,
     required: true,
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
   },
+];
+
+export const landAndBuildingPMAFields: FormField[] = [
+  ...landPmaTitleFields,
+  ...landPmaAreaFields,
+  ...landPmaAddressFields,
 ];
 
 // =============================================================================
 // Condominium PMA fields
 // =============================================================================
-export const condoPMAFields: FormField[] = [
-  {
-    type: 'text-input',
-    label: 'Construction on Title Deed Number',
-    name: 'builtOnTitleNumber',
-    wrapperClassName: 'col-span-6',
-    required: true,
-    maxLength: 200,
-  },
-  {
-    type: 'text-input',
-    label: 'Condominium Registration Number',
-    name: 'condoRegistrationNumber',
-    wrapperClassName: 'col-span-3',
-    required: true,
-    maxLength: 10,
-  },
+export const condoPmaDetailFields: FormField[] = [
   {
     type: 'text-input',
     label: 'Room Number',
@@ -2695,12 +2714,31 @@ export const condoPMAFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Condominium Name',
+    label: 'Condo Name',
     name: 'condoName',
     wrapperClassName: 'col-span-6',
     required: true,
     maxLength: 100,
   },
+  {
+    type: 'text-input',
+    label: 'Condo Registration Number',
+    name: 'condoRegistrationNumber',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    maxLength: 10,
+  },
+  {
+    type: 'text-input',
+    label: 'Construction on Title Deed Number',
+    name: 'builtOnTitleNumber',
+    wrapperClassName: 'col-span-6',
+    required: true,
+    maxLength: 200,
+  },
+];
+
+export const condoPmaAddressFields: FormField[] = [
   {
     type: 'location-selector',
     label: 'Sub District',
@@ -2732,6 +2770,8 @@ export const condoPMAFields: FormField[] = [
     wrapperClassName: 'col-span-3',
   },
 ];
+
+export const condoPMAFields: FormField[] = [...condoPmaDetailFields, ...condoPmaAddressFields];
 
 export const allCondoPMAFields: FormField[] = [...pmaField, ...condoPMAFields];
 
@@ -2941,4 +2981,164 @@ export const rentalGrowthPeriodField: FormField[] = [
     maxIntegerDigits: 3,
     decimalPlaces: 0,
   },
+];
+
+// =============================================================================
+// Machinery Summary fields (appraisal-level — global for all machines)
+// Backend: MachineryAppraisalSummary (Section 3.1 general + Section 3.3 rights/legal)
+// =============================================================================
+
+/** Section 3.1 — General machinery (counts + condition) */
+export const machinerySummaryGeneralFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'In Industrial Estate',
+    name: 'inIndustrial',
+    wrapperClassName: 'col-span-12',
+    maxLength: 500,
+  },
+  {
+    type: 'number-input',
+    label: 'Surveyed (no. of machines)',
+    name: 'surveyedNumber',
+    wrapperClassName: 'col-span-4',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
+    type: 'number-input',
+    label: 'Appraised (no. of machines)',
+    name: 'appraisalNumber',
+    wrapperClassName: 'col-span-4',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
+    type: 'number-input',
+    label: 'Installed & In Use',
+    name: 'installedAndUseCount',
+    wrapperClassName: 'col-span-4',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
+    type: 'number-input',
+    label: 'Appraised as Scrap',
+    name: 'appraisalScrapCount',
+    wrapperClassName: 'col-span-4',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
+    type: 'number-input',
+    label: 'Appraised by Document',
+    name: 'appraisedByDocumentCount',
+    wrapperClassName: 'col-span-4',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
+    type: 'number-input',
+    label: 'Not Installed',
+    name: 'notInstalledCount',
+    wrapperClassName: 'col-span-4',
+    decimalPlaces: 0,
+    maxIntegerDigits: 6,
+  },
+  {
+    type: 'textarea',
+    label: 'Maintenance',
+    name: 'maintenance',
+    wrapperClassName: 'col-span-12',
+    maxLength: 500,
+  },
+  {
+    type: 'textarea',
+    label: 'Exterior',
+    name: 'exterior',
+    wrapperClassName: 'col-span-12',
+    maxLength: 500,
+  },
+  {
+    type: 'textarea',
+    label: 'Performance',
+    name: 'performance',
+    wrapperClassName: 'col-span-12',
+    maxLength: 500,
+  },
+  {
+    type: 'boolean-toggle',
+    label: 'Market Demand Available',
+    name: 'marketDemandAvailable',
+    options: ['No', 'Yes'],
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'textarea',
+    label: 'Market Demand',
+    name: 'marketDemand',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+];
+
+/** Section 3.3 — Rights & legal */
+export const machinerySummaryLegalFields: FormField[] = [
+  {
+    type: 'text-input',
+    label: 'Proprietor',
+    name: 'proprietor',
+    wrapperClassName: 'col-span-6',
+    maxLength: 500,
+  },
+  {
+    type: 'text-input',
+    label: 'Owner',
+    name: 'owner',
+    wrapperClassName: 'col-span-6',
+    maxLength: 500,
+  },
+  {
+    type: 'textarea',
+    label: 'Machine Address',
+    name: 'machineAddress',
+    wrapperClassName: 'col-span-12',
+    maxLength: 1000,
+  },
+  {
+    type: 'number-input',
+    label: 'Latitude',
+    name: 'latitude',
+    wrapperClassName: 'col-span-6',
+    decimalPlaces: 8,
+    thousandSeparator: false,
+  },
+  {
+    type: 'number-input',
+    label: 'Longitude',
+    name: 'longitude',
+    wrapperClassName: 'col-span-6',
+    decimalPlaces: 8,
+    thousandSeparator: false,
+  },
+  {
+    type: 'textarea',
+    label: 'Obligation',
+    name: 'obligation',
+    wrapperClassName: 'col-span-12',
+    maxLength: 2000,
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'other',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+  },
+];
+
+/** Combined — used to build the zod form schema */
+export const allMachinerySummaryFields: FormField[] = [
+  ...machinerySummaryGeneralFields,
+  ...machinerySummaryLegalFields,
 ];

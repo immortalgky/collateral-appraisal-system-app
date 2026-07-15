@@ -30,7 +30,9 @@
     "importChannel": "Import Channel",
     "dateType": "Date Type",
     "dateFrom": "Date From",
-    "dateTo": "Date To"
+    "dateTo": "Date To",
+    "website": "Website",
+    "phoneNo": "Phone No."
   },
   "actions": {
     "create": "Create",
@@ -62,6 +64,10 @@
     "fromLabel": "From",
     "toLabel": "To",
     "dateRangeError": "\"From\" date cannot be after \"To\" date.",
+    "website": "Website",
+    "websitePlaceholder": "Enter website",
+    "phoneNo": "Phone No.",
+    "phoneNoPlaceholder": "Enter phone no.",
     "statusOptions": {
       "Draft": "Draft",
       "Pending": "Pending",

@@ -264,28 +264,47 @@ export function getAllFieldConstraints(
 }
 
 /**
- * Recursively flatten react-hook-form FieldErrors into an array of error messages.
- * Handles nested objects and array fields.
+ * Turn a react-hook-form field key into a human-readable label.
+ * camelCase / sn_case / kebab-case → Title Case, e.g. `sellingAreaPercent` → `Selling Area Percent`.
+ */
+function humanizeFieldLabel(key: string): string {
+  return key
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/^\w/, (c) => c.toUpperCase())
+    .trim();
+}
+
+/**
+ * Recursively flatten react-hook-form FieldErrors into an array of error messages,
+ * each prefixed with the humanized field label so the error banner names the offending field.
+ * Handles nested objects and array fields (numeric array indices fall back to the array field name).
  *
  * @example
  * // Input: { name: { message: 'Required' }, address: { street: { message: 'Too short' } } }
- * // Output: ['Required', 'Too short']
+ * // Output: ['Name: Required', 'Street: Too short']
  */
 export function flattenFormErrors(errors: Record<string, any>): string[] {
   const messages: string[] = [];
 
-  function traverse(obj: Record<string, any>) {
+  function traverse(obj: Record<string, any>, parentKey?: string) {
     for (const key of Object.keys(obj)) {
       const value = obj[key];
 
       if (!value) continue;
 
+      // Numeric keys are array indices — carry the array field name down as the label source.
+      const isIndex = /^\d+$/.test(key);
+      const labelKey = isIndex ? parentKey : key;
+
       // If this is an error object with a message property, extract it
       if (typeof value.message === 'string' && value.message) {
-        messages.push(value.message);
+        const label = labelKey ? humanizeFieldLabel(labelKey) : '';
+        messages.push(label ? `${label}: ${value.message}` : value.message);
       } else if (typeof value === 'object') {
         // Recurse into nested objects (nested fields or array items)
-        traverse(value);
+        traverse(value, labelKey);
       }
     }
   }

@@ -282,7 +282,7 @@ const MeetingQueuePage = () => {
                   {t('columns.appraisalNo')}
                 </th>
                 <th className="text-right font-medium text-gray-600 px-4 py-2.5">
-                  {t('columns.facilityLimit')}
+                  {t('columns.appraisalValue')}
                 </th>
                 <th className="text-left font-medium text-gray-600 px-4 py-2.5">
                   {t('columns.enqueued')}
@@ -333,7 +333,7 @@ const MeetingQueuePage = () => {
                         </Link>
                       </td>
                       <td className="px-4 py-3 text-gray-700 text-right">
-                        {formatCurrency(item.facilityLimit)}
+                        {formatCurrency(item.appraisalValue)}
                       </td>
                       <td className="px-4 py-3 text-gray-500">
                         {new Date(item.enqueuedAt).toLocaleString('en-GB', {

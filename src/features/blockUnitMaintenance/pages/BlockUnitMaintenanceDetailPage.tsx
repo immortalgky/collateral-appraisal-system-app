@@ -11,20 +11,11 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { useGetProjectUnits, useUpdateUnitSaleStatus } from '../api/blockUnitMaintenance';
 import { UnitRow } from '../components/UnitRow';
-import { SoldDonut } from '../components/SoldDonut';
-import { ModelBreakdown } from '../components/ModelBreakdown';
-import type { ModelStat } from '../components/ModelBreakdown';
 import { isCondo } from '@/features/blockProject/types';
-import type { ProjectType, ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
+import type { ProjectUnitDetail, PurchaseMethod, UnitEditState } from '../types';
+import { NumberInput } from '@/shared/components';
 
 const LOAN_BANK_LIST_ID = 'block-unit-maint-loan-banks';
-
-// ─── Project type pill class by code ──────────────────────────────────────────
-
-function projectTypePillClass(code: ProjectType): string {
-  if (code === 'U') return 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200';
-  return 'bg-amber-50 text-amber-800 ring-1 ring-inset ring-amber-200';
-}
 
 // ─── Helper: filter + group ──────────────────────────────────────────────────
 
@@ -45,20 +36,41 @@ const matchUnit = (unit: ProjectUnitDetail, q: string): boolean => {
   return haystack.includes(needle);
 };
 
-const groupByModel = (
-  units: ProjectUnitDetail[],
-  predicate: (u: ProjectUnitDetail) => boolean,
-): ModelStat[] => {
-  const map = new Map<string, number>();
-  for (const u of units) {
-    if (!predicate(u)) continue;
-    const key = u.modelType?.trim() || '—';
-    map.set(key, (map.get(key) ?? 0) + 1);
-  }
-  return Array.from(map.entries())
-    .map(([modelName, count]) => ({ modelName, count }))
-    .sort((a, b) => b.count - a.count);
-};
+// ─── Compact metrics-bar helpers ──────────────────────────────────────────────
+
+// Colored dot + label + count, used for the Sold / Available tallies.
+const MiniStat = ({ dotClass, label, value }: { dotClass: string; label: string; value: number }) => (
+  <div className="flex items-center gap-1.5 whitespace-nowrap">
+    <span className={`size-2 rounded-full ${dotClass}`} />
+    <span className="text-xs text-gray-500">{label}</span>
+    <span className="text-sm font-semibold text-gray-900 tabular-nums">{value}</span>
+  </div>
+);
+
+// Accent icon chip + label + value, used for the estimate KPIs inline (value right-aligned).
+const MiniMetric = ({
+  icon,
+  iconBg,
+  iconColor,
+  label,
+  value,
+}: {
+  icon: string;
+  iconBg: string;
+  iconColor: string;
+  label: string;
+  value: string;
+}) => (
+  <div className="flex items-center gap-2 whitespace-nowrap">
+    <div className={`size-7 shrink-0 rounded-md flex items-center justify-center ${iconBg}`}>
+      <Icon style="solid" name={icon} className={`size-3.5 ${iconColor}`} />
+    </div>
+    <div className="flex flex-col leading-tight items-end text-right">
+      <span className="text-[10px] text-gray-400">{label}</span>
+      <span className="text-sm font-semibold text-gray-900 tabular-nums">{value}</span>
+    </div>
+  </div>
+);
 
 // ─── Status filter chips ─────────────────────────────────────────────────────
 
@@ -111,6 +123,80 @@ const StatusChips = ({
   );
 };
 
+// ─── Column sorting ───────────────────────────────────────────────────────────
+
+type SortKey =
+  | 'plotNumber'
+  | 'houseNumber'
+  | 'modelType'
+  | 'numberOfFloors'
+  | 'landArea'
+  | 'usableArea'
+  | 'sellingPrice'
+  | 'lastAppraisedValue'
+  | 'updatedAt';
+type SortDir = 'asc' | 'desc';
+
+function sortUnits(
+  units: ProjectUnitDetail[],
+  key: SortKey | null,
+  dir: SortDir,
+): ProjectUnitDetail[] {
+  if (!key) return units;
+  const factor = dir === 'asc' ? 1 : -1;
+  return [...units].sort((a, b) => {
+    const av = a[key];
+    const bv = b[key];
+    // Nulls always sort last, regardless of direction.
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string' && typeof bv === 'string') {
+      return av.localeCompare(bv) * factor;
+    }
+    return (Number(av) - Number(bv)) * factor;
+  });
+}
+
+const SortableTh = ({
+  label,
+  columnKey,
+  activeKey,
+  dir,
+  onSort,
+  align = 'left',
+}: {
+  label: string;
+  columnKey: SortKey;
+  activeKey: SortKey | null;
+  dir: SortDir;
+  onSort: (key: SortKey) => void;
+  align?: 'left' | 'right' | 'center';
+}) => {
+  const active = activeKey === columnKey;
+  const alignClass = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  const justifyClass =
+    align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
+  return (
+    <th className={`py-2 px-3 text-gray-500 font-medium whitespace-nowrap ${alignClass}`}>
+      <button
+        type="button"
+        onClick={() => onSort(columnKey)}
+        className={`inline-flex w-full items-center gap-1 hover:text-gray-700 transition-colors ${justifyClass} ${
+          active ? 'text-gray-700' : ''
+        }`}
+      >
+        <span>{label}</span>
+        <Icon
+          style="solid"
+          name={active ? (dir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
+          className={`size-2.5 ${active ? 'text-primary' : 'text-gray-300'}`}
+        />
+      </button>
+    </th>
+  );
+};
+
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 const BlockUnitMaintenanceDetailPage = () => {
@@ -126,6 +212,8 @@ const BlockUnitMaintenanceDetailPage = () => {
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [minValue, setMinValue] = useState<number | null>(null);
+  const [maxValue, setMaxValue] = useState<number | null>(null);
   const [selected, setSelected] = useState<Set<string>>(() => new Set());
   const [bulkLoanBank, setBulkLoanBank] = useState('');
   const [edits, setEdits] = useState<Map<string, UnitEditState>>(() => new Map());
@@ -278,8 +366,12 @@ const BlockUnitMaintenanceDetailPage = () => {
 
   const totalUnits = liveUnits.length;
   const soldCount = liveUnits.filter(u => u.isSold).length;
-  const soldStats = useMemo(() => groupByModel(liveUnits, u => u.isSold), [liveUnits]);
-  const availableStats = useMemo(() => groupByModel(liveUnits, u => !u.isSold), [liveUnits]);
+  const soldPct = totalUnits > 0 ? (soldCount / totalUnits) * 100 : 0;
+
+  // Estimate KPIs (over the full live list).
+  const valuedUnits = liveUnits.filter(u => (u.lastAppraisedValue ?? 0) > 0);
+  const totalEstimate = valuedUnits.reduce((sum, u) => sum + (u.lastAppraisedValue ?? 0), 0);
+  const avgEstimate = valuedUnits.length ? Math.round(totalEstimate / valuedUnits.length) : 0;
 
   // Distinct loan bank names from the live data — used for autocomplete.
   const loanBankSuggestions = useMemo(() => {
@@ -302,6 +394,14 @@ const BlockUnitMaintenanceDetailPage = () => {
   const filteredUnits = useMemo(() => {
     return liveUnits.filter(u => {
       if (!matchUnit(u, search.trim())) return false;
+
+      if (minValue != null && (u.lastAppraisedValue == null || u.lastAppraisedValue < minValue)) {
+        return false;
+      }
+      if (maxValue != null && (u.lastAppraisedValue == null || u.lastAppraisedValue > maxValue)) {
+        return false;
+      }
+
       switch (statusFilter) {
         case 'sold':
           return u.isSold;
@@ -314,7 +414,28 @@ const BlockUnitMaintenanceDetailPage = () => {
           return true;
       }
     });
-  }, [liveUnits, search, statusFilter]);
+  }, [liveUnits, search, statusFilter, minValue, maxValue]);
+
+  // Sorting (shared across both condo / land layouts)
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const handleSort = (key: SortKey) => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir('asc');
+    } else if (sortDir === 'asc') {
+      setSortDir('desc');
+    } else {
+      // 3rd stage: clear the sort (back to natural order).
+      setSortKey(null);
+      setSortDir('asc');
+    }
+  };
+  const sortedUnits = useMemo(
+    () => sortUnits(filteredUnits, sortKey, sortDir),
+    [filteredUnits, sortKey, sortDir],
+  );
+  const sortProps = { activeKey: sortKey, dir: sortDir, onSort: handleSort };
 
   // Master checkbox state for the currently-filtered list.
   const filteredIds = useMemo(() => filteredUnits.map(u => u.id), [filteredUnits]);
@@ -357,49 +478,94 @@ const BlockUnitMaintenanceDetailPage = () => {
       </datalist>
 
       {/* ─── Hero header (project name + ID + type pill) ───────────────────── */}
-      <div className="shrink-0 flex items-center gap-3 pb-3 border-b border-gray-200">
-        <Button variant="ghost" size="sm" onClick={handleBack}>
-          <Icon style="solid" name="chevron-left" className="size-3.5" />
-        </Button>
-        <Icon style="solid" name="folder-open" className="size-4 text-cyan-500" />
-        <h2 className="text-base font-semibold text-gray-900">{project?.projectName ?? '—'}</h2>
-        {project?.appraisalReportNo && (
-          <span className="px-2 py-0.5 text-[11px] font-medium bg-teal-50 text-teal-700 rounded">
-            ID: {project.appraisalReportNo}
-          </span>
-        )}
-        {project && projectTypeLabel && (
-          <span
-            className={`px-2 py-0.5 text-[11px] font-medium rounded ${projectTypePillClass(project.projectType)}`}
+      <div className="shrink-0 flex items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleBack}
+            className="flex items-center justify-center size-7 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
           >
-            {projectTypeLabel.toUpperCase()}
-          </span>
-        )}
-      </div>
-
-      {/* ─── Page title ───────────────────────────────────────────────────── */}
-      <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">{t('detail.title')}</h3>
-      </div>
-
-      {/* ─── Stats hero ───────────────────────────────────────────────────── */}
-      <div className="shrink-0 grid grid-cols-1 md:grid-cols-3 gap-6 items-center px-2">
-        <ModelBreakdown
-          heading={t('detail.sold')}
-          stats={soldStats}
-          emptyLabel={t('detail.noSold')}
-          unitSuffix={t('detail.unitSuffix')}
-        />
-        <div className="flex justify-center">
-          <SoldDonut sold={soldCount} total={totalUnits} soldLabel={t('detail.donutSoldLabel')} />
+            <Icon style="solid" name="arrow-left" className="size-3.5" />
+          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-sm font-semibold text-gray-900">
+              {project?.projectName ?? '—'}
+            </h2>
+            {project && projectTypeLabel && (
+              <>
+                <span className="text-gray-300">·</span>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
+                    isCondo(project.projectType)
+                      ? 'bg-blue-50 text-blue-700 border border-blue-100'
+                      : 'bg-amber-50 text-amber-700 border border-amber-100'
+                  }`}
+                >
+                  {projectTypeLabel}
+                </span>
+              </>
+            )}
+            {project?.appraisalReportNo && (
+              <>
+                <span className="text-gray-300">·</span>
+                <span className="text-xs text-gray-500">ID: {project.appraisalReportNo}</span>
+              </>
+            )}
+          </div>
         </div>
-        <ModelBreakdown
-          heading={t('detail.available')}
-          stats={availableStats}
-          emptyLabel={t('detail.noAvailable')}
-          unitSuffix={t('detail.unitSuffix')}
-        />
       </div>
+
+      {/* ─── Compact metrics bar ──────────────────────────────────────────── */}
+      <section className="shrink-0 bg-white rounded-lg border border-gray-200">
+        <div className="flex items-center gap-x-6 gap-y-3 px-4 py-2.5 flex-wrap">
+          {/* Sold progress gauge */}
+          <div className="flex items-center gap-3 min-w-[220px]">
+            <div className="flex flex-col leading-tight">
+              <span className="text-[11px] text-gray-400">{t('detail.donutSoldLabel')}</span>
+              <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                {soldPct.toFixed(1)}%
+                <span className="ml-1 text-xs font-normal text-gray-400">
+                  ({soldCount}/{totalUnits})
+                </span>
+              </span>
+            </div>
+            <div className="flex-1 min-w-[64px] h-1.5 rounded-full bg-gray-100 overflow-hidden">
+              <div className="h-full rounded-full bg-violet-500" style={{ width: `${soldPct}%` }} />
+            </div>
+          </div>
+
+          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+
+          {/* Sold / Available tallies */}
+          <div className="flex items-center gap-5">
+            <MiniStat dotClass="bg-violet-500" label={t('detail.sold')} value={chipCounts.sold} />
+            <MiniStat
+              dotClass="bg-green-500"
+              label={t('detail.available')}
+              value={chipCounts.available}
+            />
+          </div>
+
+          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+
+          {/* Estimate KPIs */}
+          <div className="flex items-center gap-6">
+            <MiniMetric
+              icon="money-bill"
+              iconBg="bg-violet-50"
+              iconColor="text-violet-600"
+              label={t('detail.kpi.totalEstimate')}
+              value={totalEstimate > 0 ? totalEstimate.toLocaleString() : '–'}
+            />
+            <MiniMetric
+              icon="chart-line"
+              iconBg="bg-indigo-50"
+              iconColor="text-indigo-600"
+              label={t('detail.kpi.avgEstimate')}
+              value={avgEstimate > 0 ? avgEstimate.toLocaleString() : '–'}
+            />
+          </div>
+        </div>
+      </section>
 
       {/* ─── Search bar + status chips ────────────────────────────────────── */}
       <div className="shrink-0 flex items-center gap-3 flex-wrap">
@@ -411,14 +577,31 @@ const BlockUnitMaintenanceDetailPage = () => {
             leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
           />
         </div>
+        <div className="flex items-center gap-1.5">
+          <NumberInput
+            className="w-28"
+            placeholder={t('detail.filter.appraisalMin')}
+            value={minValue}
+            onChange={e => setMinValue(e.target.value)}
+          />
+          <span className="text-gray-400">–</span>
+          <NumberInput
+            className="w-28"
+            placeholder={t('detail.filter.appraisalMax')}
+            value={maxValue}
+            onChange={e => setMaxValue(e.target.value)}
+          />
+        </div>
         <StatusChips value={statusFilter} onChange={setStatusFilter} counts={chipCounts} t={t} />
-        {(search || statusFilter !== 'all') && (
+        {(search || statusFilter !== 'all' || minValue != null || maxValue != null) && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               setSearch('');
               setStatusFilter('all');
+              setMinValue(null);
+              setMaxValue(null);
             }}
           >
             <Icon style="regular" name="xmark" className="size-3.5 mr-1" />
@@ -470,7 +653,7 @@ const BlockUnitMaintenanceDetailPage = () => {
             <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
               {project && isCondo(project.projectType) ? (
                 <tr>
-                  <th className="py-2.5 pl-3 pr-1 w-8">
+                  <th className="py-2 pl-3 pr-1 w-8">
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
@@ -482,43 +665,58 @@ const BlockUnitMaintenanceDetailPage = () => {
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     #
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
                     {t('detail.cols.floor')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('detail.cols.towerName')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('detail.cols.regNumber')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('detail.cols.roomNo')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.modelType')}
-                  </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.usableAreaSqm')}
-                  </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.sellingPriceBaht')}
-                  </th>
-                  <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <SortableTh label={t('detail.cols.modelType')} columnKey="modelType" {...sortProps} />
+                  <SortableTh
+                    label={t('detail.cols.usableAreaSqm')}
+                    columnKey="usableArea"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.sellingPriceBaht')}
+                    columnKey="sellingPrice"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.appraisalValue')}
+                    columnKey="lastAppraisedValue"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <th className="text-center py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.purchaseBy')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
+                  <SortableTh
+                    label={t('detail.cols.lastUpdated')}
+                    columnKey="updatedAt"
+                    {...sortProps}
+                  />
                 </tr>
               ) : (
                 <tr>
-                  <th className="py-2.5 pl-3 pr-1 w-8">
+                  <th className="py-2 pl-3 pr-1 w-8">
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
@@ -530,57 +728,74 @@ const BlockUnitMaintenanceDetailPage = () => {
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     #
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.plotNo')}
-                  </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.houseNo')}
-                  </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.modelName')}
-                  </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.numFloors')}
-                  </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.landAreaSqWa')}
-                  </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.usableAreaSqm')}
-                  </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                    {t('detail.cols.sellingPriceBaht')}
-                  </th>
-                  <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <SortableTh label={t('detail.cols.plotNo')} columnKey="plotNumber" {...sortProps} />
+                  <SortableTh label={t('detail.cols.houseNo')} columnKey="houseNumber" {...sortProps} />
+                  <SortableTh label={t('detail.cols.modelName')} columnKey="modelType" {...sortProps} />
+                  <SortableTh
+                    label={t('detail.cols.numFloors')}
+                    columnKey="numberOfFloors"
+                    align="center"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.landAreaSqWa')}
+                    columnKey="landArea"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.usableAreaSqm')}
+                    columnKey="usableArea"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.sellingPriceBaht')}
+                    columnKey="sellingPrice"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.appraisalValue')}
+                    columnKey="lastAppraisedValue"
+                    align="right"
+                    {...sortProps}
+                  />
+                  <th className="text-center py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.purchaseBy')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
+                  <SortableTh
+                    label={t('detail.cols.lastUpdated')}
+                    columnKey="updatedAt"
+                    {...sortProps}
+                  />
                 </tr>
               )}
             </thead>
             <tbody>
               {isLoading ? (
                 <TableRowSkeleton
-                  columns={Array.from({ length: 12 }, () => ({ width: 'w-16' }))}
+                  columns={Array.from({ length: 14 }, () => ({ width: 'w-16' }))}
                   rows={8}
                 />
               ) : isError ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-10 text-center text-sm text-red-500">
+                  <td colSpan={14} className="px-4 py-10 text-center text-sm text-red-500">
                     {t('errors.unitLoadFailed')}
                   </td>
                 </tr>
               ) : filteredUnits.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="px-4 py-16">
+                  <td colSpan={14} className="px-4 py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-sm text-gray-500">{t('units.empty')}</p>
@@ -588,7 +803,7 @@ const BlockUnitMaintenanceDetailPage = () => {
                   </td>
                 </tr>
               ) : project ? (
-                filteredUnits.map(unit => {
+                sortedUnits.map(unit => {
                   const editState: UnitEditState = edits.get(unit.id) ?? {
                     isSold: unit.isSold,
                     purchaseBy: unit.purchaseBy as PurchaseMethod | null,

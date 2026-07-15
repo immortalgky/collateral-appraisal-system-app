@@ -48,13 +48,18 @@
     "allStatuses": "All statuses",
     "cutOffFrom": "Cut Off From",
     "cutOffTo": "Cut Off To",
-    "searchPlaceholder": "Quotation number or requester"
+    "searchBy": "Search by",
+    "searchPlaceholder": "Search...",
+    "quotationNoPlaceholder": "Quotation no.",
+    "appraisalNoPlaceholder": "Appraisal no.",
+    "customerNamePlaceholder": "Customer name",
+    "company": "Company"
   },
   "columns": {
-    "quotationNumber": "Quotation #",
+    "quotationNumber": "Quotation Number",
     "status": "Status",
     "cutOffTime": "Cut Off Time",
-    "noOfAppraisal": "No of Appraisal",
+    "noOfAppraisal": "No of Appraisal(s)",
     "response": "Response",
     "createdDate": "Created Date",
     "receivedAt": "Received At",
@@ -168,6 +173,7 @@
   "aria": {
     "rowActions": "Row actions",
     "viewInvitedCompanies": "View invited companies",
+    "viewAppraisals": "查看评估项",
     "closeViewer": "Close viewer",
     "removeFromShortlist": "Remove from shortlist",
     "addToShortlist": "Add to shortlist",
@@ -258,7 +264,7 @@
     "selectWinnerFailed": "Failed to select company as winner",
     "withdrawn": "You have opted out of this quotation",
     "declineFailed": "Invitation declined successfully",
-    "declined": "Invitation declined successfully",
+    "declined": "已拒绝邀请",
     "actionFailed": "Action failed. Please try again.",
     "appraisalRemoved": "Appraisal {{number}} removed from quotation",
     "appraisalRemoveFailed": "Failed to remove appraisal",
@@ -352,7 +358,7 @@
   "decline": {
     "declineTitle": "Decline Invitation",
     "withdrawTitle": "Opt Out of Quotation",
-    "declineBody": "You are declining this invitation. The bank will be notified and you will not be able to participate in this quotation.",
+    "declineBody": "您正在将此公司标记为不参与本次报价。此决定会保存为草稿，只有在提交后才会最终生效——在此之前您仍可以更改。",
     "withdrawBody": "You will no longer participate in this quotation. Any information you submitted will be retracted and will not be considered.",
     "decliningButton": "Declining...",
     "optingOutButton": "Opting out..."
@@ -411,6 +417,12 @@
     "title": "Invited Companies",
     "totalLabel": "{{count}} total",
     "pending": "Pending"
+  },
+  "appraisalsPopover": {
+    "title": "评估项",
+    "totalLabel": "共 {{count}} 项",
+    "maxDays": "最多 {{count}} 天",
+    "notSet": "未设置"
   },
   "email": {
     "draftingTitle": "Drafting email to send to external appraisal company",
@@ -488,7 +500,9 @@
     "teamReview": "review by your team",
     "exceededMaxDuration": "Exceeds the maximum duration set by the requester ({{cap}} days).",
     "priorCompanyExcluded": "1 prior company excluded (appeal flow — most recent appraiser of this collateral).",
-    "searchCompanyName": "Search company name..."
+    "searchCompanyName": "Search company name...",
+    "notParticipatingTitle": "不参与",
+    "notParticipatingNoReason": "未提供原因。"
   },
   "role": {
     "Maker": "Maker",

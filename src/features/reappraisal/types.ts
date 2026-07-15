@@ -95,12 +95,15 @@ export interface ReappraisalCandidateListParams {
   reviewDateTo?: string;   // yyyy-MM-dd
   remainingDayFrom?: number;
   remainingDayTo?: number;
+  /** Whitelisted PascalCase view column, e.g. 'OldAppraisalReportNumber'. */
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
 }
 
-// Filter subset that feeds the filter dialog (subset of params, no pagination)
+// Filter subset that feeds the filter dialog (subset of params, no pagination or sort)
 export type ReappraisalFilterValues = Omit<
   ReappraisalCandidateListParams,
-  'pageNumber' | 'pageSize'
+  'pageNumber' | 'pageSize' | 'sortBy' | 'sortDir'
 >;
 
 // ─── Initiate ─────────────────────────────────────────────────────────────────

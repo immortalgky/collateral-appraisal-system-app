@@ -69,7 +69,10 @@
     "labelAriaInput": "ป้ายกำกับ {{lang}}",
     "submit": "บันทึก",
     "submitting": "กำลังบันทึก...",
-    "viewPermissionRequired": "โปรดระบุสิทธิ์ดูหรือคำนำหน้าสิทธิ์"
+    "viewPermissionRequired": "โปรดระบุสิทธิ์ดูหรือคำนำหน้าสิทธิ์",
+    "labelRequired": "จำเป็นต้องระบุชื่อภาษาอังกฤษ",
+    "itemKeyRequired": "จำเป็นต้องระบุคีย์รายการ",
+    "iconRequired": "จำเป็นต้องเลือกไอคอน"
   },
   "colors": {
     "Blue": "น้ำเงิน",

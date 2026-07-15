@@ -6,6 +6,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Textarea from '@shared/components/inputs/Textarea';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import RoleDetailPanel from '../components/RoleDetailPanel';
@@ -201,7 +202,12 @@ const RoleListPage = () => {
                 >
                   <div className="text-sm font-medium text-gray-800 truncate">{role.name}</div>
                   {role.description && (
-                    <div className="text-xs text-gray-400 truncate mt-0.5">{role.description}</div>
+                    <div
+                      className="text-xs text-gray-400 line-clamp-2 mt-0.5"
+                      title={role.description}
+                    >
+                      {role.description}
+                    </div>
                   )}
                   <div className="mt-0.5 text-xs text-gray-400">
                     {t('counts.members', { count: role.userCount })}
@@ -256,13 +262,15 @@ const RoleListPage = () => {
             options={SCOPE_OPTIONS}
             required
           />
-          <TextInput
+          <Textarea
             label={t('fields.description')}
             value={createForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setCreateForm(prev => ({ ...prev, description: value }));
             }}
+            maxLength={500}
+            showCharCount
             placeholder={t('placeholders.roleDescription')}
           />
         </div>

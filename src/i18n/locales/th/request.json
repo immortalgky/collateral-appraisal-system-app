@@ -76,6 +76,7 @@
     "prevAppraisalReportNo": "เลขที่รายงานการประเมินเดิม",
     "prevAppraisalValue": "มูลค่าการประเมินเดิม",
     "prevAppraisalDate": "วันที่ประเมินเดิม",
+    "inspectionNumber": "ครั้งที่",
     "channel": "ช่องทาง",
     "bankingSegment": "กลุ่มลูกค้า",
     "loanApplicationNo": "เลขที่คำขอสินเชื่อ",

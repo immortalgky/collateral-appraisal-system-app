@@ -1,37 +1,31 @@
 import { useState } from 'react';
-import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useDeclineInvitation } from '../api/quotation';
 
 interface DeclineInvitationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Called after a successful decline/withdraw, before onClose. */
-  onSuccess?: () => void;
-  quotationId: string;
-  companyId: string;
-  /** 'decline' = first-time decline; 'withdraw' = already submitted, now pulling out of the quotation */
-  mode?: 'decline' | 'withdraw';
+  /**
+   * Called with the trimmed reason once the user confirms "not participating". This modal makes
+   * NO API call — "not participate" is just a flag on the normal Draft → Send-to-Checker → Submit
+   * pipeline now. The page sets local `notParticipating`/`declineReason` state from this callback
+   * and persists it through the normal Save Draft / Send to Checker / Submit calls (SaveDraft,
+   * SubmitDraftToChecker, and SubmitQuotation all accept `notParticipating` + `declineReason`;
+   * the Checker's final Submit is authoritative for Declined vs Submitted).
+   */
+  onConfirm: (reason: string) => void;
 }
 
 /**
- * Modal for ExtCompany to decline an invitation or pull out after submitting.
- * Calls POST /quotations/{id}/companies/{companyId}/decline.
+ * Reason-capture modal for marking a company quotation as "not participating". Used by both Maker
+ * and Checker via the same Participating Yes/No toggle on ExtCompanySubmitQuotationPage — the
+ * decision itself is finalized later by whichever role submits (Send to Checker / Submit).
  */
-const DeclineInvitationModal = ({
-  isOpen,
-  onClose,
-  onSuccess,
-  quotationId,
-  companyId,
-  mode = 'decline',
-}: DeclineInvitationModalProps) => {
+const DeclineInvitationModal = ({ isOpen, onClose, onConfirm }: DeclineInvitationModalProps) => {
   const { t } = useTranslation(['quotation', 'common']);
   const [reason, setReason] = useState('');
-  const { mutate: decline, isPending } = useDeclineInvitation(quotationId);
 
   const handleClose = () => {
     setReason('');
@@ -40,46 +34,21 @@ const DeclineInvitationModal = ({
 
   const handleConfirm = () => {
     if (!reason.trim()) return;
-    decline(
-      { companyId, reason: reason.trim() },
-      {
-        onSuccess: () => {
-          toast.success(mode === 'withdraw' ? t('toasts.withdrawn') : t('toasts.declined'));
-          onSuccess?.();
-          handleClose();
-        },
-        onError: (err: unknown) => {
-          const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? t('toasts.actionFailed'));
-        },
-      },
-    );
+    onConfirm(reason.trim());
+    setReason('');
   };
 
-  const isWithdraw = mode === 'withdraw';
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={isWithdraw ? t('decline.withdrawTitle') : t('decline.declineTitle')}
-      size="sm"
-    >
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('decline.declineTitle')} size="sm">
       <div className="flex flex-col gap-4">
         {/* Warning banner */}
-        <div
-          className={`p-3 rounded-lg border flex items-start gap-2 ${
-            isWithdraw ? 'bg-orange-50 border-orange-200' : 'bg-red-50 border-red-200'
-          }`}
-        >
+        <div className="p-3 rounded-lg border flex items-start gap-2 bg-red-50 border-red-200">
           <Icon
             name="triangle-exclamation"
             style="solid"
-            className={`size-4 shrink-0 mt-0.5 ${isWithdraw ? 'text-orange-500' : 'text-red-500'}`}
+            className="size-4 shrink-0 mt-0.5 text-red-500"
           />
-          <p className={`text-sm ${isWithdraw ? 'text-orange-700' : 'text-red-700'}`}>
-            {isWithdraw ? t('decline.withdrawBody') : t('decline.declineBody')}
-          </p>
+          <p className="text-sm text-red-700">{t('decline.declineBody')}</p>
         </div>
 
         {/* Reason */}
@@ -92,9 +61,7 @@ const DeclineInvitationModal = ({
             onChange={e => setReason(e.target.value)}
             rows={3}
             maxLength={500}
-            placeholder={
-              isWithdraw ? t('placeholders.withdrawReason') : t('placeholders.declineReason')
-            }
+            placeholder={t('placeholders.declineReason')}
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none resize-none"
           />
           <p className="text-xs text-gray-400 mt-1 text-right">{reason.length}/500</p>
@@ -102,31 +69,16 @@ const DeclineInvitationModal = ({
 
         {/* Actions */}
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outline" onClick={handleClose} disabled={isPending}>
+          <Button variant="outline" onClick={handleClose}>
             {t('common:actions.cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={isPending || !reason.trim()}
-            className={
-              isWithdraw ? 'bg-orange-600 hover:bg-orange-700' : 'bg-red-600 hover:bg-red-700'
-            }
+            disabled={!reason.trim()}
+            className="bg-red-600 hover:bg-red-700"
           >
-            {isPending ? (
-              <>
-                <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                {isWithdraw ? t('decline.optingOutButton') : t('decline.decliningButton')}
-              </>
-            ) : (
-              <>
-                <Icon
-                  name={isWithdraw ? 'arrow-rotate-left' : 'ban'}
-                  style="solid"
-                  className="size-4 mr-2"
-                />
-                {isWithdraw ? t('buttons.optOut') : t('buttons.declineInvitation')}
-              </>
-            )}
+            <Icon name="ban" style="solid" className="size-4 mr-2" />
+            {t('buttons.declineInvitation')}
           </Button>
         </div>
       </div>

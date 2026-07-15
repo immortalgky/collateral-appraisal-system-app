@@ -22,7 +22,7 @@ const AVATAR_COLORS = [
   'bg-indigo-100 text-indigo-700',
 ];
 
-function avatarColor(name: string): string {
+export function avatarColor(name: string): string {
   let hash = 0;
   for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) & 0xffff;
   return AVATAR_COLORS[hash % AVATAR_COLORS.length];
@@ -343,6 +343,20 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     render: task => <Badge type="priority" value={task.priority} size="sm" />,
   },
 };
+
+/** A sortable column, projected for reuse by non-table views (e.g. the Kanban grid). */
+export type SortableField = { key: ColumnKey; label: string; sortField: string };
+
+/**
+ * Single source of truth for sortable task fields, in column declaration order.
+ * Derived from the same `columnDefs.sortField` set the table headers use, so the
+ * table and grid views can never drift.
+ */
+export const SORTABLE_FIELDS: SortableField[] = (
+  Object.entries(columnDefs) as [ColumnKey, ColumnDef][]
+)
+  .filter(([, def]) => def.sortField)
+  .map(([key, def]) => ({ key, label: def.label, sortField: def.sortField! }));
 
 // ── Activity column config ─────────────────────────────────────────────────
 

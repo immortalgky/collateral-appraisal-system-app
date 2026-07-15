@@ -278,7 +278,16 @@
       "quotationLocked": "Assignment locked — appraisal is in Quotation #{{quotationNumber}} ({{status}}). Cancel the quotation or remove this appraisal from it to change.",
       "quotationNotFinalized": "The quotation must be finalized with a winner before routing externally.",
       "loadingActions": "Loading decision options, please try again in a moment.",
-      "selectAssignee": "Please select the next assignee before submitting."
+      "selectAssignee": "Please select the next assignee before submitting.",
+      "draftSaved": "Draft saved",
+      "draftSaveFailed": "Failed to save draft"
+    },
+    "saveDraft": "Save Draft",
+    "savingDraft": "Saving...",
+    "remark": {
+      "title": "Remark",
+      "subtitle": "Optional note about this assignment decision",
+      "placeholder": "Enter a remark for this assignment..."
     }
   },
   "quotation": {
@@ -300,6 +309,7 @@
     "cancelling": "Cancelling...",
     "goBack": "Go Back",
     "back": "Back",
+    "next": "Next",
     "cancel": "Cancel",
     "confirmSend": "Confirm & Send",
     "removeFromQuotation": "Remove this appraisal from quotation",
@@ -312,6 +322,8 @@
     "cancelReasonPlaceholder": "Why is this quotation being cancelled?",
     "draftHint": "This quotation is still a draft. Add appraisals, invite companies, then click Send Quotation to open bidding.",
     "notSet": "Not set",
+    "maxAppraisalDuration": "Max Appraisal Duration (Days)",
+    "specialRequirements": "Special Requirements",
     "closes": "Closes",
     "hoursRemaining": "{{n}}h remaining",
     "stats": {
@@ -336,7 +348,7 @@
     "maximumNegotiationRounds": "Maximum negotiation rounds reached",
     "shareDocuments": {
       "title": "Share Documents",
-      "step": "Step 2 of 2 — Tick documents to share with invited companies",
+      "step": "Step 1 of 2 — Tick documents to share with invited companies",
       "noAppraisals": "No appraisals to share documents for.",
       "loadingDocuments": "Loading documents...",
       "noRequestLinked": "No request linked to this appraisal. Documents cannot be loaded.",
@@ -354,7 +366,8 @@
       "noCompaniesFound": "No companies found",
       "cutOffTime": "Cut Off Time",
       "appraisalsLabel": "Appraisals",
-      "cutOffTimeRequired": "Cut off time is required"
+      "cutOffTimeRequired": "Cut off time is required",
+      "maxAppraisalDurationHelper": "Maximum duration you allow the appraiser to complete this appraisal."
     },
     "emailModal": {
       "title": "Drafting email to send to external appraisal company"
@@ -390,7 +403,10 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": ["Not Verified", "Verified"],
+      "priceVerificationOptions": [
+        "Not Verified",
+        "Verified"
+      ],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
@@ -491,7 +507,19 @@
       "markets": "Markets",
       "gallery": "Gallery",
       "photos": "Photos",
-      "laws": "Laws & Regulations"
+      "laws": "Laws & Regulations",
+      "machinery": "Machinery Summary"
+    },
+    "machinerySummary": {
+      "title": "Machinery Summary",
+      "subtitle": "General machinery information for the whole appraisal (all machines)",
+      "generalSection": "General Machinery",
+      "generalSubtitle": "Counts and overall condition",
+      "legalSection": "Rights & Legal",
+      "legalSubtitle": "Ownership, location and obligations",
+      "save": "Save",
+      "saved": "Machinery summary saved",
+      "saveFailed": "Failed to save machinery summary"
     }
   },
   "properties": {
@@ -585,6 +613,13 @@
       "channel": "Channel",
       "status": "Status",
       "requestor": "Requestor"
+    },
+    "remarkFooter": {
+      "label": "Comment",
+      "placeholder": "Enter comment...",
+      "save": "Save",
+      "saved": "Comment saved",
+      "saveFailed": "Failed to save comment"
     }
   },
   "activityTracking": {
@@ -705,6 +740,7 @@
   },
   "constructionInspection": {
     "sectionTitle": "Construction Inspection",
+    "inspectionRound": "Inspection #{{n}}",
     "summary": "Construction Summary",
     "columns": {
       "description": "Description",
@@ -1148,7 +1184,8 @@
     },
     "footer": {
       "total": "Total",
-      "avg": "avg"
+      "avg": "avg",
+      "avgBasis": "over {{area}} sq.wa surveyed"
     },
     "missingFromSurvey": "Missing from survey",
     "showLess": "Show less",

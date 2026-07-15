@@ -5,6 +5,7 @@ import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import TextInput from '@shared/components/inputs/TextInput';
+import Textarea from '@shared/components/inputs/Textarea';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import AssignmentTable from './AssignmentTable';
@@ -105,7 +106,10 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
         setShowDelete(false);
         onDeleted();
       },
-      onError: (err: any) => toast.error(err?.apiError?.detail ?? t('toasts.teamDeleteFailed')),
+      onError: (err: any) => {
+        toast.error(err?.apiError?.detail ?? t('toasts.teamDeleteFailed'));
+        setShowDelete(false);
+      },
     });
   };
 
@@ -160,7 +164,9 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
           {team.description && (
             <div>
               <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
-              <div className="text-sm text-gray-700">{team.description}</div>
+              <div className="text-sm text-gray-700 whitespace-pre-line break-words">
+                {team.description}
+              </div>
             </div>
           )}
         </div>
@@ -262,13 +268,15 @@ const TeamDetailPanel = ({ teamId, onDeleted }: TeamDetailPanelProps) => {
               <option value="Company">{t('tabs.company')}</option>
             </select>
           </div>
-          <TextInput
+          <Textarea
             label={t('fields.description')}
             value={editForm.description}
             onChange={e => {
               const value = e.currentTarget.value;
               setEditForm(prev => ({ ...prev, description: value }));
             }}
+            maxLength={500}
+            showCharCount
             placeholder={t('placeholders.teamDescription')}
           />
         </div>

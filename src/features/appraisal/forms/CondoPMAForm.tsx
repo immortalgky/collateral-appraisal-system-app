@@ -1,35 +1,87 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { Badge } from '@/shared/components';
+import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
-import { pmaField, condoPMAFields } from '../configs/fields';
+import { useRelativeTime } from '@/shared/hooks/useFormatters';
+import { pmaField, condoPmaDetailFields, condoPmaAddressFields } from '../configs/fields';
 
-const CondoPMAForm = () => {
+type CondoPMAFormProps = {
+  externalSyncStatus?: string | null;
+  externalSyncError?: string | null;
+  externalSyncedAt?: string | null;
+};
+
+const CondoPMAForm = ({
+  externalSyncStatus,
+  externalSyncError,
+  externalSyncedAt,
+}: CondoPMAFormProps) => {
+  const relTime = useRelativeTime();
+  const synced = externalSyncedAt ? relTime(externalSyncedAt) : null;
+
   return (
     <div className="flex flex-col gap-6">
-      {/* PMA Section */}
-      <div id="pma-section">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-            <Icon name="file-invoice-dollar" style="solid" className="w-5 h-5 text-emerald-600" />
+      {/* Property Section — sync status badge sits on this header line */}
+      <div id="property-section">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Icon name="city" style="solid" className="w-5 h-5 text-blue-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Updating PMA Property</h2>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">PMA</h2>
+          {externalSyncStatus && externalSyncStatus !== 'NotSynced' && (
+            <div
+              className="flex items-center gap-2 shrink-0"
+              title={externalSyncStatus === 'Failed' ? (externalSyncError ?? undefined) : undefined}
+            >
+              {externalSyncStatus === 'Delivered' && (
+                <>
+                  <Badge type="externalSyncStatus" value="Delivered" size="sm">
+                    Synced
+                  </Badge>
+                  {synced && (
+                    <span className="text-xs text-gray-400" title={synced.absolute}>
+                      · {synced.relative}
+                    </span>
+                  )}
+                </>
+              )}
+              {externalSyncStatus === 'Pending' && (
+                <Badge type="externalSyncStatus" value="Pending" size="sm">
+                  Pending sync
+                </Badge>
+              )}
+              {externalSyncStatus === 'Failed' && (
+                <>
+                  <Badge type="externalSyncStatus" value="Failed" size="sm">
+                    Sync failed
+                  </Badge>
+                  <span className="text-xs text-gray-400">· Save to retry</span>
+                </>
+              )}
+            </div>
+          )}
         </div>
         <div className="h-px bg-gray-200 mb-4" />
+        <div className="text-xs font-medium text-primary mb-2">Title Information</div>
         <div className="grid grid-cols-9 gap-4">
-          <FormFields fields={pmaField} />
+          <FormFields fields={condoPmaDetailFields} />
+        </div>
+
+        {/* Address sub-group */}
+        <div className="mt-5">
+          <div className="text-xs font-medium text-primary mb-2">Address</div>
+          <div className="grid grid-cols-9 gap-4">
+            <FormFields fields={condoPmaAddressFields} />
+          </div>
         </div>
       </div>
 
-      {/* Property Section */}
-      <div id="property-section">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Icon name="city" style="solid" className="w-5 h-5 text-blue-600" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900">Property</h2>
-        </div>
-        <div className="h-px bg-gray-200 mb-4" />
+      {/* Value Section (prices) */}
+      <div id="value-section">
+        <div className="text-xs font-medium text-primary mb-2">Value Information</div>
         <div className="grid grid-cols-9 gap-4">
-          <FormFields fields={condoPMAFields} />
+          <FormFields fields={pmaField} />
         </div>
       </div>
     </div>

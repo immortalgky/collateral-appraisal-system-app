@@ -198,12 +198,20 @@ describe('LandBuildingFormSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects percent > 100', () => {
+  it('rejects a user-entered rate percent > 100', () => {
+    const result = LandBuildingFormSchema.safeParse({
+      ...landBuildingFormDefaults,
+      summary: { ...landBuildingFormDefaults.summary, contingencyPercent: 150 },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('accepts computed sellingAreaPercent > 100 (server-computed ratio, not user-editable)', () => {
     const result = LandBuildingFormSchema.safeParse({
       ...landBuildingFormDefaults,
       summary: { ...landBuildingFormDefaults.summary, sellingAreaPercent: 150 },
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 });
 

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -150,7 +150,8 @@ const ExtCompanySubmitQuotationPage = () => {
     queryClient.invalidateQueries({ queryKey: ['my-invitations'] });
     if (taskId) {
       queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['my-tasks-kanban'] });
+      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
+      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       navigate('/tasks');
     } else {
@@ -239,6 +240,14 @@ const ExtCompanySubmitQuotationPage = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [isDeclineModalOpen, setIsDeclineModalOpen] = useState(false);
   const [docViewer, setDocViewer] = useState<DocViewerState | null>(null);
+  // "Not participate" flag driving the Participating toggle — a plain flag on the normal
+  // Draft → Send-to-Checker → Submit pipeline (no separate decline/confirm endpoints). Both Maker
+  // and Checker share this state via the same toggle; the Checker's final Submit is authoritative
+  // for Declined vs Submitted. Populated from mySubmission by the hydrate effect below (mySubmission
+  // isn't available yet at this point in the component, same as the `items`/`quotationNumber` RHF
+  // fields hydrated further down).
+  const [notParticipating, setNotParticipating] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
 
   const appraisals = quotation?.appraisals ?? [];
 
@@ -316,7 +325,8 @@ const ExtCompanySubmitQuotationPage = () => {
       // invalidates the query). Initial hydrate still populates because fields are pristine.
       { keepDirtyValues: true },
     );
-    setIsParticipating(mySubmission?.status !== 'Declined');
+    setNotParticipating(!!mySubmission?.declineReason);
+    setDeclineReason(mySubmission?.declineReason ?? '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appraisals.length, mySubmission?.id]);
 
@@ -343,24 +353,41 @@ const ExtCompanySubmitQuotationPage = () => {
 
   // ─── Action handlers ──────────────────────────────────────────────────────
 
-  /** Build the save-draft payload from current form values. */
-  const buildDraftPayload = () => {
+  /**
+   * Build the save-draft payload from current form values. Accepts optional `notParticipating`/
+   * `declineReason` overrides for callers that need to save immediately after a state update in
+   * the same event-handler tick (React state setters haven't flushed to a re-render yet) — see
+   * `handleDeclineConfirm`. Defaults to the current `notParticipating`/`declineReason` state.
+   * When not participating, pricing is void: `items: []` per the backend contract.
+   */
+  const buildDraftPayload = (overrides?: {
+    notParticipating?: boolean;
+    declineReason?: string | null;
+  }) => {
     const values = getValues();
+    const effectiveNotParticipating = overrides?.notParticipating ?? notParticipating;
+    const effectiveDeclineReason = effectiveNotParticipating
+      ? ((overrides?.declineReason ?? declineReason) || null)
+      : null;
     return {
       quotationRequestId: id ?? '',
       companyId,
       quotationNumber: values.quotationNumber,
-      items: values.items.map((item, idx) => ({
-        quotationRequestItemId: '00000000-0000-0000-0000-000000000000',
-        appraisalId: item.appraisalId,
-        itemNumber: idx + 1,
-        feeAmount: item.feeAmount ?? 0,
-        discount: item.discount ?? 0,
-        negotiatedDiscount: item.negotiatedDiscount ?? null,
-        vatPercent: item.vatPercent ?? 7,
-        estimatedDays: item.estimatedDays ?? 0,
-        itemNotes: item.itemNotes ?? null,
-      })),
+      items: effectiveNotParticipating
+        ? []
+        : values.items.map((item, idx) => ({
+            quotationRequestItemId: '00000000-0000-0000-0000-000000000000',
+            appraisalId: item.appraisalId,
+            itemNumber: idx + 1,
+            feeAmount: item.feeAmount ?? 0,
+            discount: item.discount ?? 0,
+            negotiatedDiscount: item.negotiatedDiscount ?? null,
+            vatPercent: item.vatPercent ?? 7,
+            estimatedDays: item.estimatedDays ?? 0,
+            itemNotes: item.itemNotes ?? null,
+          })),
+      notParticipating: effectiveNotParticipating,
+      declineReason: effectiveDeclineReason,
       validUntil: values.validUntil ?? null,
       remarks: values.remarks ?? null,
       contactName: values.contactName ?? null,
@@ -459,22 +486,13 @@ const ExtCompanySubmitQuotationPage = () => {
     );
   };
 
-  // Maker's Submit-to-Checker must pass the same Zod schema as the Checker's final submit —
-  // wrap it in handleSubmit so mandatory Fee Amount / Estimated Mandays are enforced before the
-  // draft is saved and promoted. (Save Draft stays lenient; only this promotion is gated.)
-  const handleSubmitToChecker = handleSubmit(values => {
-    // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
-
-    const zeroFeeViolations = findZeroFeeViolations(values);
-    if (zeroFeeViolations.length > 0) {
-      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
-      return;
-    }
-
-    // The violation is surfaced in the validation banner + inline field message; just block here.
-    if (findDurationCapViolations(values).length > 0) return;
-    // First save the draft, then promote to PendingCheckerReview
-    saveDraft(buildDraftPayload(), {
+  /**
+   * Saves the draft (already built) then promotes it to PendingCheckerReview and advances the
+   * per-company fan-out task Maker → Checker. Shared by both the participating and
+   * not-participating paths of handleSubmitToChecker below.
+   */
+  const saveThenSubmitToChecker = (payload: ReturnType<typeof buildDraftPayload>) => {
+    saveDraft(payload, {
       onSuccess: () => {
         submitToChecker(
           { quotationRequestId: id ?? '', companyId },
@@ -497,7 +515,35 @@ const ExtCompanySubmitQuotationPage = () => {
         toast.error(e?.apiError?.detail ?? t('toasts.saveBeforeSubmitFailed'));
       },
     });
-  }, surfaceItemErrors);
+  };
+
+  /**
+   * Maker's Send to Checker. When `notParticipating`, the backend skips SubmitDraftToChecker's
+   * pricing/completeness guards, so we skip RHF's Zod-validated `values` path entirely too — the
+   * pricing fields are void and would otherwise fail required-field validation. When participating,
+   * the same Zod schema as the Checker's final submit still gates mandatory Fee Amount / Estimated
+   * Mandays before the draft is saved and promoted. (Save Draft stays lenient either way; only this
+   * promotion is gated.)
+   */
+  const handleSubmitToChecker = () => {
+    if (notParticipating) {
+      saveThenSubmitToChecker(buildDraftPayload());
+      return;
+    }
+
+    handleSubmit(values => {
+      // Submitting to checker promotes the draft — enforce the duration cap here, same as final submit.
+      const zeroFeeViolations = findZeroFeeViolations(values);
+      if (zeroFeeViolations.length > 0) {
+        toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+        return;
+      }
+
+      // The violation is surfaced in the validation banner + inline field message; just block here.
+      if (findDurationCapViolations(values).length > 0) return;
+      saveThenSubmitToChecker(buildDraftPayload());
+    }, surfaceItemErrors)();
+  };
 
   /**
    * Returns a list of appraisal numbers where fee after discount equals 0.
@@ -640,17 +686,57 @@ const ExtCompanySubmitQuotationPage = () => {
     );
   }, surfaceItemErrors);
 
-  const handleSubmitQuotation = handleSubmit(values => {
-    const zeroFeeViolations = findZeroFeeViolations(values);
-    if (zeroFeeViolations.length > 0) {
-      toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+  /**
+   * Fires the actual PUT /submit call and its follow-up (workflow action + toast + navigate).
+   * `notParticipating` is authoritative server-side: true finalizes the company as Declined
+   * (workflow resumes "Decline"); false finalizes as Submitted (workflow resumes "Submit").
+   */
+  const submitFinal = (payload: Parameters<typeof submitQuotation>[0]) => {
+    submitQuotation(payload, {
+      onSuccess: async () => {
+        await advanceWorkflowStage(payload.notParticipating ? 'Decline' : 'Submit');
+        toast.success(payload.notParticipating ? t('toasts.declined') : t('toasts.quotationSubmitted'));
+        navigateAfterSubmit();
+      },
+      onError: (err: unknown) => {
+        const e = err as { apiError?: { detail?: string } };
+        toast.error(e?.apiError?.detail ?? t('toasts.submitFailed'));
+      },
+    });
+  };
+
+  /**
+   * Checker's final Submit. When `notParticipating`, the backend skips the pricing/duration
+   * guards, so — same rationale as handleSubmitToChecker — we bypass RHF's Zod-validated `values`
+   * path entirely and send `items: []`. When participating, the normal validated submit runs.
+   */
+  const handleSubmitQuotation = () => {
+    if (notParticipating) {
+      const values = getValues();
+      submitFinal({
+        quotationNumber: values.quotationNumber,
+        items: [],
+        notParticipating: true,
+        declineReason: declineReason || null,
+        validUntil: null,
+        remarks: values.remarks ?? null,
+        contactName: values.contactName ?? null,
+        contactEmail: values.contactEmail ?? null,
+        contactPhone: values.contactPhone ?? null,
+      });
       return;
     }
 
-    // Duration-cap violation is surfaced in the validation banner + inline message; just block here.
-    if (findDurationCapViolations(values).length > 0) return;
-    submitQuotation(
-      {
+    handleSubmit(values => {
+      const zeroFeeViolations = findZeroFeeViolations(values);
+      if (zeroFeeViolations.length > 0) {
+        toast.error(t('toasts.feeAfterDiscountZero', { list: zeroFeeViolations.join(', ') }));
+        return;
+      }
+
+      // Duration-cap violation is surfaced in the validation banner + inline message; just block here.
+      if (findDurationCapViolations(values).length > 0) return;
+      submitFinal({
         quotationNumber: values.quotationNumber,
         items: values.items.map((item, idx) => ({
           quotationRequestItemId: '00000000-0000-0000-0000-000000000000',
@@ -663,26 +749,16 @@ const ExtCompanySubmitQuotationPage = () => {
           vatPercent: item.vatPercent,
           itemNotes: item.itemNotes ?? null,
         })),
+        notParticipating: false,
+        declineReason: null,
         validUntil: values.validUntil ?? null,
         remarks: values.remarks ?? null,
         contactName: values.contactName ?? null,
         contactEmail: values.contactEmail ?? null,
         contactPhone: values.contactPhone ?? null,
-      },
-      {
-        onSuccess: async () => {
-          // Checker's "Submit" action terminates the per-company fan-out item with `Submitted`.
-          await advanceWorkflowStage('Submit');
-          toast.success(t('toasts.quotationSubmitted'));
-          navigateAfterSubmit();
-        },
-        onError: (err: unknown) => {
-          const e = err as { apiError?: { detail?: string } };
-          toast.error(e?.apiError?.detail ?? t('toasts.submitFailed'));
-        },
-      },
-    );
-  }, surfaceItemErrors);
+      });
+    }, surfaceItemErrors)();
+  };
 
   // ─── Derived flags ────────────────────────────────────────────────────────
   const isDeclined = mySubmission?.status === 'Declined';
@@ -713,16 +789,33 @@ const ExtCompanySubmitQuotationPage = () => {
   const isNegotiatingLock = canEdit && !!openNegotiation;
 
   // ─── Participating toggle ─────────────────────────────────────────────────
-  const [isParticipating, setIsParticipating] = useState(() => mySubmission?.status !== 'Declined');
-  // Tracks whether the decline modal succeeded so onClose doesn't snap back
-  const declineSucceededRef = useRef(false);
-
+  // Drives `notParticipating` state (declared up top). Shared by Maker and Checker — either role
+  // can flip it while they hold the active task; the Checker's final Submit decides Declined vs
+  // Submitted (see handleSubmitQuotation).
   const handleParticipatingToggle = (value: boolean) => {
     if (!value) {
       setIsDeclineModalOpen(true);
     } else {
-      setIsParticipating(true);
+      setNotParticipating(false);
+      setDeclineReason('');
     }
+  };
+
+  /** Called by DeclineInvitationModal once a reason is confirmed. No API call — sets local state
+   * and (best-effort) auto-saves the draft immediately so the decision survives navigation before
+   * an explicit Send to Checker / Submit. Overrides are passed to buildDraftPayload because the
+   * state setters above haven't flushed to a render yet at this point in the same event tick. */
+  const handleDeclineConfirm = (reason: string) => {
+    setNotParticipating(true);
+    setDeclineReason(reason);
+    setIsDeclineModalOpen(false);
+    saveDraft(buildDraftPayload({ notParticipating: true, declineReason: reason }), {
+      onSuccess: () => toast.success(t('toasts.saved')),
+      onError: (err: unknown) => {
+        const e = err as { apiError?: { detail?: string } };
+        toast.error(e?.apiError?.detail ?? t('toasts.saveFailed'));
+      },
+    });
   };
 
   // ─── Selected appraisal ───────────────────────────────────────────────────
@@ -937,7 +1030,7 @@ const ExtCompanySubmitQuotationPage = () => {
           </div>
         )}
 
-        {/* ── Main two-pane form — always rendered; inputs gate on canEdit (read-only when false) ── */}
+        {/* ── Main two-pane form — always rendered; inputs gate on canEdit (read-only when false). ── */}
         {appraisals.length > 0 && (
           <div className="rounded-xl border border-gray-200 overflow-hidden">
             {/* Two-pane layout — desktop uses CSS grid so the row's height is driven by the
@@ -1077,100 +1170,125 @@ const ExtCompanySubmitQuotationPage = () => {
                       </section>
                     )}
 
-                    {/* Section 3: Quotation Information — Fee Breakdown */}
-                    <section aria-label={t('aria.sectionQuotationInfo')}>
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        {t('sections.quotationInformationFee')}
-                      </h2>
-
-                      {/* Hidden appraisalId binding */}
-                      <input type="hidden" {...register(`items.${selectedIndex}.appraisalId`)} />
-
-                      <QuotationFeeBreakdown
-                        control={control}
-                        index={selectedIndex}
-                        readOnly={!canEdit || !!openNegotiation}
-                        isNegotiating={!!openNegotiation}
-                      />
-                    </section>
-
-                    {/* Section 4: Duration / Mandays */}
-                    <section aria-label={t('aria.sectionDuration')}>
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        {t('sections.duration')}
-                      </h2>
-                      <div className="grid grid-cols-2 gap-4">
-                        {/* Admin-set cap — read-only. When set, company's Estimated Mandays must not exceed it. */}
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">
-                            {t('fields.maxAppraisalDuration')}
-                          </label>
-                          <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
-                            {selectedAppraisal?.maxAppraisalDays ?? '—'}
+                    {/* Sections 3–5 (pricing/duration/remark) are void while not participating —
+                        replaced with a single reason notice. Sections 1–2 above (appraisal info,
+                        attached documents) stay visible either way since they're not pricing. */}
+                    {notParticipating ? (
+                      <section aria-label={t('aria.sectionQuotationInfo')}>
+                        <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <Icon
+                              name="ban"
+                              style="solid"
+                              className="size-4 text-orange-500 shrink-0"
+                            />
+                            <span className="text-sm font-semibold text-orange-800">
+                              {t('shared.notParticipatingTitle')}
+                            </span>
                           </div>
+                          <p className="text-sm text-orange-800 whitespace-pre-wrap">
+                            {declineReason || t('shared.notParticipatingNoReason')}
+                          </p>
                         </div>
+                      </section>
+                    ) : (
+                      <>
+                        {/* Section 3: Quotation Information — Fee Breakdown */}
+                        <section aria-label={t('aria.sectionQuotationInfo')}>
+                          <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                            {t('sections.quotationInformationFee')}
+                          </h2>
 
-                        {/* Company's proposed mandays — editable, required. */}
-                        <div>
-                          <label
-                            htmlFor={`est-mandays-${selectedIndex}`}
-                            className="block text-sm text-gray-600 mb-1"
-                          >
-                            {t('fields.estimatedMandays')} <span className="text-danger">*</span>
-                          </label>
+                          {/* Hidden appraisalId binding */}
+                          <input type="hidden" {...register(`items.${selectedIndex}.appraisalId`)} />
+
+                          <QuotationFeeBreakdown
+                            control={control}
+                            index={selectedIndex}
+                            readOnly={!canEdit || !!openNegotiation}
+                            isNegotiating={!!openNegotiation}
+                          />
+                        </section>
+
+                        {/* Section 4: Duration / Mandays */}
+                        <section aria-label={t('aria.sectionDuration')}>
+                          <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                            {t('sections.duration')}
+                          </h2>
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Admin-set cap — read-only. When set, company's Estimated Mandays must not exceed it. */}
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-1">
+                                {t('fields.maxAppraisalDuration')}
+                              </label>
+                              <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
+                                {selectedAppraisal?.maxAppraisalDays ?? '—'}
+                              </div>
+                            </div>
+
+                            {/* Company's proposed mandays — editable, required. */}
+                            <div>
+                              <label
+                                htmlFor={`est-mandays-${selectedIndex}`}
+                                className="block text-sm text-gray-600 mb-1"
+                              >
+                                {t('fields.estimatedMandays')} <span className="text-danger">*</span>
+                              </label>
+                              <Controller
+                                control={control}
+                                name={`items.${selectedIndex}.estimatedDays`}
+                                render={({ field }) => (
+                                  <NumberInput
+                                    {...field}
+                                    id={`est-mandays-${selectedIndex}`}
+                                    aria-label={t('fields.estimatedMandays')}
+                                    disabled={!canEdit || isNegotiatingLock}
+                                    decimalPlaces={0}
+                                    thousandSeparator={false}
+                                    maxIntegerDigits={2}
+                                    min={1}
+                                    error={errors.items?.[selectedIndex]?.estimatedDays?.message}
+                                  />
+                                )}
+                              />
+                              {(() => {
+                                const cap = selectedAppraisal?.maxAppraisalDays;
+                                const entered = watchedItems?.[selectedIndex]?.estimatedDays;
+                                if (cap != null && entered != null && entered > cap) {
+                                  return (
+                                    <p className="mt-1 text-xs text-danger">
+                                      {t('shared.exceededMaxDuration', { cap })}
+                                    </p>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+                          </div>
+                        </section>
+
+                        {/* Section 5: Per-item Remark */}
+                        <section aria-label={t('sections.appraisalRemark')}>
+                          <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                            {t('sections.appraisalRemark')}
+                          </h2>
                           <Controller
                             control={control}
-                            name={`items.${selectedIndex}.estimatedDays`}
+                            name={`items.${selectedIndex}.itemNotes`}
                             render={({ field }) => (
-                              <NumberInput
+                              <Textarea
                                 {...field}
-                                id={`est-mandays-${selectedIndex}`}
-                                aria-label={t('fields.estimatedMandays')}
+                                value={field.value ?? ''}
                                 disabled={!canEdit || isNegotiatingLock}
-                                decimalPlaces={0}
-                                thousandSeparator={false}
-                                maxIntegerDigits={2}
-                                min={1}
-                                error={errors.items?.[selectedIndex]?.estimatedDays?.message}
+                                placeholder={t('placeholders.appraisalRemark')}
+                                maxLength={4000}
+                                showCharCount
                               />
                             )}
                           />
-                          {(() => {
-                            const cap = selectedAppraisal?.maxAppraisalDays;
-                            const entered = watchedItems?.[selectedIndex]?.estimatedDays;
-                            if (cap != null && entered != null && entered > cap) {
-                              return (
-                                <p className="mt-1 text-xs text-danger">
-                                  {t('shared.exceededMaxDuration', { cap })}
-                                </p>
-                              );
-                            }
-                            return null;
-                          })()}
-                        </div>
-                      </div>
-                    </section>
-
-                    {/* Section 5: Per-item Remark */}
-                    <section aria-label={t('sections.appraisalRemark')}>
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
-                        {t('sections.appraisalRemark')}
-                      </h2>
-                      <Controller
-                        control={control}
-                        name={`items.${selectedIndex}.itemNotes`}
-                        render={({ field }) => (
-                          <Textarea
-                            {...field}
-                            value={field.value ?? ''}
-                            disabled={!canEdit || isNegotiatingLock}
-                            placeholder={t('placeholders.appraisalRemark')}
-                            maxLength={4000}
-                            showCharCount
-                          />
-                        )}
-                      />
-                    </section>
+                        </section>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <div className="flex items-center justify-center h-full p-8 text-sm text-gray-400">
@@ -1194,8 +1312,11 @@ const ExtCompanySubmitQuotationPage = () => {
                 </div>
 
                 {/* Participating toggle hidden during negotiation — invitation acceptance
-                    isn't being decided here; the company can only counter or decline
-                    via the action bar below. */}
+                    isn't being decided here; the company can only counter or decline via the
+                    action bar below. Shared by Maker and Checker — "not participate" is just a
+                    flag on the normal Draft → Send-to-Checker → Submit pipeline now, so either
+                    role can flip it while they hold the active task; the Checker's final Submit
+                    is what's authoritative for Declined vs Submitted. */}
                 {!isNegotiatingLock && (
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-gray-700">
@@ -1205,8 +1326,9 @@ const ExtCompanySubmitQuotationPage = () => {
                       <button
                         type="button"
                         onClick={() => handleParticipatingToggle(false)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                          !isParticipating
+                        disabled={!canEdit}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          notParticipating
                             ? 'bg-red-500 text-white border-red-500'
                             : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-500'
                         }`}
@@ -1216,8 +1338,9 @@ const ExtCompanySubmitQuotationPage = () => {
                       <button
                         type="button"
                         onClick={() => handleParticipatingToggle(true)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                          isParticipating
+                        disabled={!canEdit}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          !notParticipating
                             ? 'bg-primary text-white border-primary'
                             : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
                         }`}
@@ -1259,29 +1382,13 @@ const ExtCompanySubmitQuotationPage = () => {
           isLoading={isNegotiationPending}
         />
 
-        {/* Decline / Withdraw modal */}
+        {/* "Not participate" reason modal — captures the reason only, no API call. The page
+            persists notParticipating+declineReason via the normal Save/Send-to-Checker/Submit
+            pipeline (see handleDeclineConfirm, handleSubmitToChecker, handleSubmitQuotation). */}
         <DeclineInvitationModal
           isOpen={isDeclineModalOpen}
-          onClose={() => {
-            setIsDeclineModalOpen(false);
-            if (!declineSucceededRef.current) {
-              // User cancelled without confirming — snap participating back to true
-              setIsParticipating(true);
-            }
-            declineSucceededRef.current = false;
-          }}
-          onSuccess={() => {
-            // Decline confirmed — leave isParticipating false; refetch will confirm via status
-            declineSucceededRef.current = true;
-            setIsParticipating(false);
-            // Terminate the per-company fan-out item with the `Declined` outcome.
-            // Both Maker and Checker stages expose a "Decline" action with that outcome,
-            // so this works regardless of which stage the user is in.
-            void advanceWorkflowStage('Decline');
-          }}
-          quotationId={quotation.id}
-          companyId={companyId}
-          mode={mySubmission && mySubmission.status !== 'Declined' ? 'withdraw' : 'decline'}
+          onClose={() => setIsDeclineModalOpen(false)}
+          onConfirm={handleDeclineConfirm}
         />
 
         {/* Shared document viewer modal */}
@@ -1297,7 +1404,7 @@ const ExtCompanySubmitQuotationPage = () => {
         )}
       </div>
 
-      {/* ── Sticky action bar — always rendered; buttons disable when !canEdit (read-only) ── */}
+      {/* ── Sticky action bar — always rendered; buttons disable when !canEdit (read-only). ── */}
       {appraisals.length > 0 &&
         (openNegotiation ? (
           /* Negotiation round — Decline this round + Submit Proposal. Maker → bank direct. */

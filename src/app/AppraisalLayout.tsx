@@ -9,6 +9,7 @@ import Breadcrumb from '@shared/components/Breadcrumb';
 import ErrorBoundary from '@shared/components/ErrorBoundary';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
+import { useDealersQuery } from '@shared/api/dealers';
 import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
@@ -143,6 +144,15 @@ const tabLabelsByPageSegment: Record<
  */
 function ParameterLoader() {
   useParametersQuery();
+  return null;
+}
+
+/**
+ * Non-rendering component that handles dealer loading.
+ * useDealersQuery fetches once and hydrates the Zustand store inside queryFn.
+ */
+function DealerLoader() {
+  useDealersQuery();
   return null;
 }
 
@@ -311,6 +321,7 @@ function AppraisalLayout() {
             blockProjectType: appraisalData?.blockProjectType ?? undefined,
             facilityLimit: (requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0,
             hasAppraisalBook: (requestData as any)?.detail?.hasAppraisalBook ?? false,
+            inspectionNumber: (appraisalData as any)?.inspectionNumber ?? null,
             basePath: `/appraisals/${appraisalId}`,
           }
         : null,
@@ -375,6 +386,7 @@ function AppraisalLayout() {
   return (
     <AppraisalProvider value={contextValue}>
       <ParameterLoader />
+      <DealerLoader />
       <AddressLoader />
       <div className="h-screen flex flex-col">
         <MobileAppraisalSidebar logo={Logo} />

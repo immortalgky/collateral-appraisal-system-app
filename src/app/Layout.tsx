@@ -8,6 +8,7 @@ import ErrorBoundary from '@shared/components/ErrorBoundary';
 import Icon from '@shared/components/Icon';
 import Logo from '@assets/logo-lh-bank.svg';
 import { useParametersQuery } from '@shared/api/parameters';
+import { useDealersQuery } from '@shared/api/dealers';
 import { useAddressesQuery } from '@shared/api/addresses';
 import { useCompaniesQuery } from '@shared/api/companies';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
@@ -84,6 +85,15 @@ function ParameterLoader() {
 }
 
 /**
+ * Non-rendering component that handles dealer loading.
+ * useDealersQuery fetches once and hydrates the Zustand store inside queryFn.
+ */
+function DealerLoader() {
+  useDealersQuery();
+  return null;
+}
+
+/**
  * Non-rendering component that handles address loading.
  * useAddressesQuery fetches once and hydrates the Zustand store inside queryFn.
  */
@@ -132,6 +142,7 @@ function Layout() {
       onToggle={toggleRightMenu}
     >
       <ParameterLoader />
+      <DealerLoader />
       <AddressLoader />
       <CompanyLoader />
       <ActivityProgressHubBootstrap />

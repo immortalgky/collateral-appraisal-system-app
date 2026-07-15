@@ -4,6 +4,7 @@ import { useFormContext } from 'react-hook-form';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import { Dropdown } from '@/shared/components/inputs';
 import type { UploadDocumentResponse } from '../api';
 import { useGetDocumentTypes } from '../api/documentTypes';
 
@@ -36,7 +37,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
   const { watch } = useFormContext();
   const titles = watch('titles') || [];
   const requestNumber = watch('requestNumber');
-  const { data: documentTypes = [], isLoading: isLoadingTypes } = useGetDocumentTypes();
+  const { data: documentTypes = [], isLoading: isLoadingTypes } = useGetDocumentTypes('SUBMIT_DOC');
 
   const [assignments, setAssignments] = useState<Record<string, Partial<FileAssignment>>>({});
 
@@ -189,14 +190,21 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <select
+                      <Dropdown
+                        showValuePrefix={false}
+                        options={[
+                          { value: 'request', label: requestNumber || 'This request' },
+                          ...titles.map((title: any, index: number) => ({
+                            value: `title-${index}`,
+                            label: title?.titleNumber || `Title ${index + 1}`,
+                          })),
+                        ]}
                         value={
                           assignment?.entityType === 'request'
                             ? 'request'
                             : `title-${assignment?.entityIndex}`
                         }
-                        onChange={e => {
-                          const value = e.target.value;
+                        onChange={value => {
                           if (value === 'request') {
                             updateAssignment(file.documentId, 'entityType', 'request');
                             updateAssignment(file.documentId, 'entityIndex', -1);
@@ -208,35 +216,26 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                           // Reset docType when entity changes
                           updateAssignment(file.documentId, 'docType', '');
                         }}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="request">{requestNumber || 'This request'}</option>
-                        {titles.map((title: any, index: number) => (
-                          <option key={index} value={`title-${index}`}>
-                            {title?.titleNumber || `Title ${index + 1}`}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </td>
                     <td className="px-4 py-3">
-                      <select
-                        value={assignment?.docType || ''}
-                        onChange={e => {
-                          updateAssignment(file.documentId, 'docType', e.target.value);
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">
-                          {isLoadingTypes
+                      <Dropdown
+                        showValuePrefix={false}
+                        disabled={isLoadingTypes}
+                        placeholder={
+                          isLoadingTypes
                             ? t('fileAssignment.loadingTypes')
-                            : t('fileAssignment.selectType')}
-                        </option>
-                        {availableTypes.map(type => (
-                          <option key={type.code} value={type.code}>
-                            {type.name}
-                          </option>
-                        ))}
-                      </select>
+                            : t('fileAssignment.selectType')
+                        }
+                        options={availableTypes.map(type => ({
+                          value: type.code,
+                          label: type.name ?? type.code ?? '',
+                        }))}
+                        value={assignment?.docType || ''}
+                        onChange={value => {
+                          updateAssignment(file.documentId, 'docType', value);
+                        }}
+                      />
                     </td>
                     <td className="px-4 py-3">
                       <input

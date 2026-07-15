@@ -4,8 +4,11 @@ import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import Input from '@shared/components/Input';
-import Autocomplete from '@shared/components/inputs/Autocomplete';
+import Dropdown from '@shared/components/inputs/Dropdown';
 import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
+import { EVALUATION_STATUS_FILTER_OPTIONS } from '@shared/constants/evaluationStatus';
+import { FEE_STATUS_FILTER_OPTIONS } from '@shared/constants/feeStatus';
+import { useParameterOptions } from '@shared/utils/parameterUtils';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { useOperationalReport, useReportExport } from '../api/operationalReportsApi';
 import type { BaseReportFilter, SortDir } from '../api/operationalReportsApi';
@@ -87,16 +90,23 @@ const DATE_FIELDS = new Set<FilterField>([
 ]);
 
 /**
- * Fields that render as a searchable dropdown bound to a fixed option list.
- * `evaluationStatus`/`feeStatus` intentionally stay free text — they use
- * different domains and have no shared option list yet.
+ * Fields that render as a plain (click-to-select, no typing) dropdown bound to a
+ * fixed option list. Each status filter maps to the shared option list for its own domain.
  */
 const OPTION_FIELDS: Partial<Record<FilterField, { value: string; label: string }[]>> = {
   status: APPRAISAL_STATUS_FILTER_OPTIONS,
+  evaluationStatus: EVALUATION_STATUS_FILTER_OPTIONS,
+  feeStatus: FEE_STATUS_FILTER_OPTIONS,
+};
+
+/** Fields that render as a plain (non-searchable) dropdown sourced from a parameter group. */
+const PARAMETER_SELECT_FIELDS: Partial<Record<FilterField, string>> = {
+  channel: 'Channel',
 };
 
 function FilterPanel({ filters, values, onChange, onReset }: FilterPanelProps) {
   const hasAny = filters.some(f => Boolean((values as Record<string, unknown>)[f]));
+  const channelOptions = useParameterOptions(PARAMETER_SELECT_FIELDS.channel ?? 'Channel');
 
   return (
     <div className="shrink-0 mb-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -106,21 +116,26 @@ function FilterPanel({ filters, values, onChange, onReset }: FilterPanelProps) {
           const label = FILTER_LABELS[field];
           const isDate = DATE_FIELDS.has(field);
           const options = OPTION_FIELDS[field];
+          const isParameterSelect = field in PARAMETER_SELECT_FIELDS;
 
           return (
             <div key={field} className="flex flex-col gap-1 min-w-[160px]">
               <label className="text-xs font-medium text-gray-600">{label}</label>
-              {options ? (
-                <Autocomplete
-                  items={options}
+              {isParameterSelect ? (
+                <Dropdown
+                  options={channelOptions}
+                  value={val || null}
+                  onChange={v => onChange({ [field]: v || undefined })}
+                  placeholder={`All ${label}`}
+                  showValuePrefix={false}
+                />
+              ) : options ? (
+                <Dropdown
+                  options={options}
                   value={val}
                   onChange={v => onChange({ [field]: v || undefined })}
-                  displayText={options.find(o => o.value === val)?.label}
                   placeholder={`All ${label}`}
-                  showAllOnFocus
-                  menuClassName="w-full"
-                  filterItems={(item, text) =>
-                    item.label.toLowerCase().includes(text.toLowerCase())}
+                  showValuePrefix={false}
                 />
               ) : isDate ? (
                 <input

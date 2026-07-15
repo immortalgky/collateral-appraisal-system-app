@@ -74,6 +74,12 @@ export const CompanyQuotationSchema = z.object({
   companyName: z.string(),
   quotationNumber: z.string().nullable().optional(),
   status: CompanyQuotationStatusSchema,
+  /**
+   * Maker's "not participate" reason. Set while a decline is PendingCheckerReview (the intent
+   * marker that distinguishes a pending decline from a pending bid) and retained once Declined.
+   * Backend field: CompanyQuotationResult.DeclineReason.
+   */
+  declineReason: z.string().nullish(),
   isShortlisted: z.boolean(),
   totalQuotedPrice: z.number().nullable().optional(),
   originalQuotedPrice: z.number().nullable().optional(),
@@ -455,6 +461,13 @@ export const SaveDraftQuotationSchema = z.object({
   contactName: z.string().nullable().optional(),
   contactEmail: z.string().nullable().optional(),
   contactPhone: z.string().nullable().optional(),
+  /**
+   * "Not participate" flag — reuses the normal Draft → Send-to-Checker → Submit pipeline instead
+   * of a separate decline endpoint. When true, the backend ignores pricing/items and persists
+   * `declineReason`; send `items: []` alongside it.
+   */
+  notParticipating: z.boolean().optional(),
+  declineReason: z.string().nullable().optional(),
 });
 
 export type SaveDraftQuotationInput = z.infer<typeof SaveDraftQuotationSchema>;
@@ -510,4 +523,5 @@ export type EditDraftQuotationBody = {
   cutOffTime: string;
   companyIds: string[];
   appraisals?: EditDraftAppraisalEntry[];
+  specialRequirements?: string | null;
 };

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useParameterStore, useLocaleStore } from '../store';
+import { useParameterStore, useLocaleStore, useDealerStore } from '../store';
 import type { Parameter } from '../types/api';
 import type { ListBoxItem } from '../components/inputs/Dropdown';
 import type { CheckboxOption } from '../components/inputs/CheckboxGroup';
@@ -89,4 +89,14 @@ export function useParameterAsRadioOptions(group: string): RadioOption[] {
   const params = useParametersByGroup(group);
 
   return useMemo(() => params.map(p => ({ value: p.code, label: p.description })), [params]);
+}
+
+/** Reactive — returns ListBoxItem[] for the Dealer dropdown */
+export function useDealerOptions(): ListBoxItem[] {
+  const dealers = useDealerStore(state => state.dealers);
+
+  return useMemo(
+    () => dealers.map(d => ({ value: d.dealerCode, label: d.dealerName, id: d.dealerCode })),
+    [dealers],
+  );
 }

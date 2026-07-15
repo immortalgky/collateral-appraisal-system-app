@@ -45,7 +45,16 @@ const LandTitleModal = ({
     setValue('governmentPrice', price * totalWa);
   }, [pricePerSqWa, rai, ngan, squareWa, setValue]);
 
-  const handleSave = form.handleSubmit(onSave);
+  // Area fields default to 0 when left blank, so they persist as 0 rather than null
+  // (keeps Total Sq.Wa / government price math and the summary totals clean).
+  const handleSave = form.handleSubmit(data =>
+    onSave({
+      ...data,
+      rai: data.rai ?? 0,
+      ngan: data.ngan ?? 0,
+      squareWa: data.squareWa ?? 0,
+    })
+  );
 
   return (
     <FormProvider {...form}>

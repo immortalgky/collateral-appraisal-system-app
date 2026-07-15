@@ -474,12 +474,13 @@ export function LandBuildingTabs({
     try {
       const result = await saveMutation.mutateAsync({ pricingAnalysisId, methodId, request });
       const finalValue = result.landBuildingSummary?.totalAssetValueRounded ?? 0;
-      reset(
-        mapSavedToFormValues({
-          ...savedData,
-          landBuildingSummary: result.landBuildingSummary ?? savedData.landBuildingSummary,
-        }),
-      );
+      // Reset from the values just submitted — NOT from the `savedData` prop, which is
+      // still the pre-save snapshot at this point (the parent's query hasn't refetched
+      // yet). Resetting from stale `savedData` was wiping out Cost of Building rows the
+      // user had just entered. Server-computed summary fields (totals/ratios) live in
+      // `previewSummary`, not the RHF form, so overlay the authoritative save result there.
+      reset(values);
+      if (result.landBuildingSummary) setPreviewSummary(result.landBuildingSummary);
       onSaveSuccess(finalValue);
     } catch {
       toast.error(t('hypothesis.toasts.saveFailed'));

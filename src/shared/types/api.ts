@@ -81,3 +81,8 @@ export interface Parameter {
   isActive: boolean;
   seqNo: number;
 }
+
+export interface Dealer {
+  dealerCode: string;
+  dealerName: string;
+}

@@ -9,5 +9,6 @@ export * from './documentChecklist';
 export * from './photo';
 export * from './gallery';
 export * from './lawAndRegulation';
+export * from './machinerySummary';
 export * from './decisionSummary';
 export * from './workflow';

@@ -153,6 +153,11 @@ interface DecisionSectionProps {
   onAssigneeChange: (userId: string | null) => void;
   selectedReasonCode: string | null;
   onReasonChange: (code: string | null) => void;
+  // On the appraisal route the context has no workflow ids; the page resolves them
+  // from workflow progress and passes them in so the activity timeline still loads.
+  // Fall back to context (task route) when not provided.
+  workflowInstanceId?: string;
+  activityId?: string;
 }
 
 const DecisionSection = ({
@@ -164,12 +169,16 @@ const DecisionSection = ({
   onAssigneeChange,
   selectedReasonCode,
   onReasonChange,
+  workflowInstanceId: workflowInstanceIdProp,
+  activityId: activityIdProp,
 }: DecisionSectionProps) => {
   const { t } = useTranslation('appraisal');
   const isPageReadOnly = usePageReadOnly();
   const isTaskOwner = useIsTaskOwner();
-  const workflowInstanceId = useWorkflowInstanceId();
-  const activityId = useActivityId();
+  const ctxWorkflowInstanceId = useWorkflowInstanceId();
+  const ctxActivityId = useActivityId();
+  const workflowInstanceId = workflowInstanceIdProp ?? ctxWorkflowInstanceId;
+  const activityId = activityIdProp ?? ctxActivityId;
   const { taskId } = useParams<{ taskId: string }>();
   const [raiseFollowupOpen, setRaiseFollowupOpen] = useState(false);
 

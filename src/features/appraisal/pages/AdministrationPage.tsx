@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Textarea from '@/shared/components/inputs/Textarea';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 
@@ -27,6 +28,7 @@ import {
   useGetEligibleCompanies,
   useGetEligibleStaff,
   useGetUserById,
+  useSaveAssignmentDraft,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
 import {
@@ -45,6 +47,8 @@ import QuotationEntryModal from '../components/QuotationEntryModal';
 import { useAuthStore } from '@features/auth/store.ts';
 import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.ts';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 
 const AdministrationPage = () => {
   const { t } = useTranslation('appraisal');
@@ -69,6 +73,7 @@ const AdministrationPage = () => {
     !!currentAssignment && currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
   const isReadOnly = pageReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
+  const { mutate: saveAssignmentDraft, isPending: isSavingDraft } = useSaveAssignmentDraft();
 
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
@@ -90,13 +95,15 @@ const AdministrationPage = () => {
     watch,
     setValue,
     reset,
+    getValues,
     formState: { errors, isDirty },
   } = useForm<AssignmentFormType>({
     defaultValues: assignmentFormDefaults,
     resolver: zodResolver(assignmentSchema),
   });
 
-  //const { blocker } = useUnsavedChangesWarning(isDirty);
+  // Warn (in-app navigation + browser tab close) when leaving with unsaved changes.
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // Watch form values for conditional rendering
   const assignmentType = watch('assignmentType');
@@ -224,12 +231,31 @@ const AdministrationPage = () => {
   useEffect(() => {
     if (currentAssignment) {
       const formValues = mapAssignmentResponseToForm(currentAssignment);
+      // Only re-seed the saved selections when the row holds real data — i.e. a draft has been
+      // saved, or the assignment is no longer Pending (already assigned/read-only). A freshly
+      // created Pending row keeps the blank defaults (External + Request Quotation).
+      const hasSavedSelection =
+        !!currentAssignment.draftSavedAt ||
+        currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
+      // Staff ids stored on the assignment are usernames (from the eligible-assignees pool), but
+      // useGetUserById hits /auth/users/{id:guid}, which can't resolve a username. Resolve the
+      // display object from the already-loaded eligible pool by id, falling back to the fetch
+      // (for guid-based ids not in the pool).
+      const resolvedStaff =
+        assignedStaff ??
+        eligibleStaff?.find(s => s.id === currentAssignment.assigneeUserId) ??
+        null;
+      const resolvedFollowupStaff =
+        followupStaff ??
+        eligibleStaff?.find(s => s.id === currentAssignment.internalAppraiserId) ??
+        null;
       reset({
-        ...formValues,
         ...assignmentFormDefaults,
-        selectedStaff: assignedStaff ?? null,
+        ...(hasSavedSelection ? formValues : {}),
+        selectedStaff: resolvedStaff,
         selectedCompany: assignedCompany ?? null,
-        selectedFollowupStaff: followupStaff ?? null,
+        selectedFollowupStaff: resolvedFollowupStaff,
+        remarks: currentAssignment.remark ?? '',
       });
     }
   }, [
@@ -239,6 +265,7 @@ const AdministrationPage = () => {
     assignedStaff,
     assignedCompany,
     followupStaff,
+    eligibleStaff,
   ]);
 
   // Handle form submission
@@ -307,10 +334,13 @@ const AdministrationPage = () => {
         assignedBy: currentUser?.username ?? null,
         workflowInstanceId,
         decisionTaken,
+        remark: data.remarks,
       },
       {
         onSuccess: () => {
           toast.success(t('administration.toasts.assignmentCreated'));
+          // The form is still dirty after assigning; skip the unsaved-changes guard for this redirect.
+          skipWarning();
           navigate('/tasks');
         },
         onError: (error: any) => {
@@ -320,9 +350,40 @@ const AdministrationPage = () => {
     );
   };
 
-  // Handle cancel
+  // Handle cancel — leave the page. If the form is dirty, the useBlocker-based guard
+  // intercepts this navigation and shows the unsaved-changes dialog first.
   const handleCancel = () => {
-    reset(assignmentFormDefaults);
+    navigate(-1);
+  };
+
+  // Save the in-progress decision (selections + remark) as a draft without assigning.
+  // Deliberately skips the Assign validation guards so incomplete work can be saved.
+  const handleSaveDraft = () => {
+    if (!appraisalId) return;
+    const data = getValues();
+    const isExternal = data.assignmentType === 'external';
+    saveAssignmentDraft(
+      {
+        appraisalId,
+        assignmentType: isExternal ? 'External' : 'Internal',
+        assigneeUserId: isExternal ? null : data.staffId,
+        assigneeCompanyId: isExternal ? data.companyId : null,
+        assignmentMethod: data.assignmentMethod,
+        internalAppraiserId: isExternal ? data.followupStaffId : null,
+        internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
+        remark: data.remarks,
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('administration.toasts.draftSaved'));
+          // Rebase the dirty baseline to the just-saved values so the exit warning + Save Draft
+          // button clear (nothing new to save until the user edits again).
+          reset(getValues());
+        },
+        onError: (error: any) =>
+          toast.error(error.apiError?.detail || t('administration.toasts.draftSaveFailed')),
+      },
+    );
   };
 
   if (isLoadingAssignment) {
@@ -947,6 +1008,28 @@ const AdministrationPage = () => {
                 />
               </div>
             )}
+
+            {/* Remark Card — kept at the bottom of the form */}
+            <FormCard
+              title={t('administration.remark.title')}
+              subtitle={t('administration.remark.subtitle')}
+              icon="note-sticky"
+              iconColor="amber"
+            >
+              <Controller
+                name="remarks"
+                control={control}
+                render={({ field }) => (
+                  <Textarea
+                    {...field}
+                    placeholder={t('administration.remark.placeholder')}
+                    maxLength={4000}
+                    showCharCount
+                    error={errors.remarks?.message}
+                  />
+                )}
+              />
+            </FormCard>
           </div>
         </div>
 
@@ -967,6 +1050,24 @@ const AdministrationPage = () => {
                 )}
               </div>
               <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  disabled={isSavingDraft || isCreating || !isDirty}
+                >
+                  {isSavingDraft ? (
+                    <>
+                      <Icon style="solid" name="spinner" className="size-4 mr-2 animate-spin" />
+                      {t('administration.savingDraft')}
+                    </>
+                  ) : (
+                    <>
+                      <Icon style="solid" name="floppy-disk" className="size-4 mr-2" />
+                      {t('administration.saveDraft')}
+                    </>
+                  )}
+                </Button>
                 <Button
                   type="submit"
                   disabled={isCreating || isLockedByQuotation || !canSubmitAssignment}
@@ -989,7 +1090,7 @@ const AdministrationPage = () => {
         )}
       </form>
 
-      {/*<UnsavedChangesDialog blocker={blocker} />*/}
+      <UnsavedChangesDialog blocker={blocker} />
 
       {/* Modals */}
       {!isReadOnly && (
