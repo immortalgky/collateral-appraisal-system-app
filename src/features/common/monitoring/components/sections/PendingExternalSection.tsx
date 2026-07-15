@@ -98,6 +98,28 @@ function PicCell({
   );
 }
 
+const APPRAISAL_STATUS_DOT: Record<string, string> = {
+  Pending: 'bg-gray-400',
+  Assigned: 'bg-indigo-500',
+  InProgress: 'bg-blue-500',
+  UnderReview: 'bg-amber-500',
+  Submitted: 'bg-sky-500',
+  Completed: 'bg-emerald-500',
+  Cancelled: 'bg-red-500',
+};
+
+function AppraisalStatusBadge({ status }: { status: string | null }) {
+  if (!status) return <span className="text-gray-400 text-xs">—</span>;
+  const dot = APPRAISAL_STATUS_DOT[status] ?? 'bg-gray-400';
+  const label = status.replace(/([a-z])([A-Z])/g, '$1 $2');
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-100 text-gray-700">
+      <span className={`size-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
+}
+
 const COLUMNS: ColumnDef<PendingExternalTask>[] = [
   {
     key: 'appraisalNumber',
@@ -142,14 +164,59 @@ const COLUMNS: ColumnDef<PendingExternalTask>[] = [
     render: row => <PropertyTypeCell code={row.propertyType} />,
   },
   {
+    key: 'appraisalStatus',
+    label: 'Status',
+    sortKey: 'AppraisalStatus',
+    render: row => <AppraisalStatusBadge status={row.appraisalStatus} />,
+  },
+  {
+    key: 'requestedDate',
+    label: 'Requested Date',
+    sortKey: 'RequestedDate',
+    render: row => <DateCell value={row.requestedDate} withTime withAgo />,
+  },
+  {
+    key: 'appointmentDate',
+    label: 'Appointment Date',
+    sortKey: 'AppointmentDate',
+    render: row => <DateCell value={row.appointmentDate} withTime withAgo />,
+  },
+  {
+    key: 'assignedDate',
+    label: 'Assigned Date',
+    sortKey: 'AssignedDate',
+    render: row => <DateCell value={row.assignedDate} withTime withAgo />,
+  },
+  {
+    key: 'openDate',
+    label: 'Open Date',
+    sortKey: 'OpenDate',
+    render: row => <DateCell value={row.openDate} withTime withAgo />,
+  },
+  {
+    key: 'pic',
+    label: 'PIC',
+    sortKey: 'PIC',
+    render: row => (
+      <PicCell pic={row.pic} assignedTo={row.assignedTo} assignedType={row.assignedType} />
+    ),
+  },
+  {
+    key: 'movement',
+    label: 'Movement',
+    sortKey: 'Movement',
+    render: row => <MovementBadge value={row.movement} />,
+  },
+  {
     key: 'slaDue',
-    label: 'SLA Due',
+    label: 'Due Date',
     sortKey: 'AssignedDate',
     render: row => (
       <SlaDueCell
         assignedDate={row.assignedDate}
         targetHours={row.olaTargetHours}
         slaStatus={row.slaStatus}
+        slaDurationHours={row.slaDurationHours}
       />
     ),
   },
@@ -175,35 +242,9 @@ const COLUMNS: ColumnDef<PendingExternalTask>[] = [
   },
   {
     key: 'slaStatus',
-    label: 'SLA Status',
+    label: 'Due Status',
     sortKey: 'SlaStatus',
     render: row => <SlaStatusBadge sla={row.slaStatus} />,
-  },
-  {
-    key: 'assignedDate',
-    label: 'Assigned Date',
-    sortKey: 'AssignedDate',
-    render: row => <DateCell value={row.assignedDate} withTime withAgo />,
-  },
-  {
-    key: 'requestedDate',
-    label: 'Requested Date',
-    sortKey: 'RequestedDate',
-    render: row => <DateCell value={row.requestedDate} withAgo />,
-  },
-  {
-    key: 'pic',
-    label: 'PIC',
-    sortKey: 'PIC',
-    render: row => (
-      <PicCell pic={row.pic} assignedTo={row.assignedTo} assignedType={row.assignedType} />
-    ),
-  },
-  {
-    key: 'movement',
-    label: 'Movement',
-    sortKey: 'Movement',
-    render: row => <MovementBadge value={row.movement} />,
   },
   {
     key: 'priority',
@@ -231,6 +272,8 @@ function PendingExternalSection({ onCountChange }: PendingExternalSectionProps) 
   const [slaBucketFilter, setSlaBucketFilter] = useState<SlaBucket[]>([]);
   const [activityIdFilter, setActivityIdFilter] = useState<string[]>([]);
   const [picFilter, setPicFilter] = useState('');
+  const [picType, setPicType] = useState('');
+  const [picLabel, setPicLabel] = useState('');
   const [purposeFilter, setPurposeFilter] = useState<string[]>([]);
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string[]>([]);
   const [taskTypeFilter, setTaskTypeFilter] = useState<string[]>([]);
@@ -251,6 +294,7 @@ function PendingExternalSection({ onCountChange }: PendingExternalSectionProps) 
     slaBucket: slaBucketFilter.length ? slaBucketFilter : undefined,
     activityId: activityIdFilter.length ? activityIdFilter : undefined,
     pic: picFilter || undefined,
+    picType: picType || undefined,
     purpose: purposeFilter.length ? purposeFilter : undefined,
     propertyType: propertyTypeFilter.length ? propertyTypeFilter : undefined,
     taskType: taskTypeFilter.length ? taskTypeFilter : undefined,
@@ -308,6 +352,8 @@ function PendingExternalSection({ onCountChange }: PendingExternalSectionProps) 
     setSlaBucketFilter([]);
     setActivityIdFilter([]);
     setPicFilter('');
+    setPicType('');
+    setPicLabel('');
     setPurposeFilter([]);
     setPropertyTypeFilter([]);
     setTaskTypeFilter([]);
@@ -329,9 +375,12 @@ function PendingExternalSection({ onCountChange }: PendingExternalSectionProps) 
       <>
         <div className={acWrap}>
           <PicAutocomplete
-            value={picFilter}
-            onChange={v => {
-              setPicFilter(v);
+            pic={picFilter}
+            picType={picType}
+            onChange={(key, type, label) => {
+              setPicFilter(key);
+              setPicType(type);
+              setPicLabel(label);
               setPage(0);
             }}
             placeholder="All PIC"
@@ -419,9 +468,11 @@ function PendingExternalSection({ onCountChange }: PendingExternalSectionProps) 
       ? [
           {
             key: 'pic',
-            label: `PIC: ${picFilter}`,
+            label: `PIC: ${picLabel || picFilter}`,
             onClear: () => {
               setPicFilter('');
+              setPicType('');
+              setPicLabel('');
               setPage(0);
             },
           },

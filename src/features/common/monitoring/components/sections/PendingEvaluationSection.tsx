@@ -8,33 +8,35 @@ import Input from '@shared/components/Input';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
 import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
+import Autocomplete from '@shared/components/inputs/Autocomplete';
 import { useCompanyStore } from '@shared/store';
 import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 import EvaluationStatusBadge from '@features/serviceQualityEvaluation/components/EvaluationStatusBadge';
 import StarRating from '@features/serviceQualityEvaluation/components/StarRating';
 
-import { usePendingEvaluations } from '../../api/monitoringApi';
+import { usePendingEvaluations, useInternalFollowupStaff } from '../../api/monitoringApi';
 import type { PendingEvaluation, PendingEvaluationFilter, SortDir } from '../../api/types';
 import MonitoringDataTable, { type ColumnDef } from '../MonitoringDataTable';
 import ActiveFilterChips, { type ActiveFilterChip } from '../ActiveFilterChips';
 import { DateCell } from '../DateCell';
 
-const APPRAISAL_STATUS_STYLES: Record<string, string> = {
-  InProgress: 'bg-blue-50 text-blue-700 border-blue-200',
-  PendingApproval: 'bg-amber-50 text-amber-700 border-amber-200',
-  Completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Cancelled: 'bg-red-50 text-red-700 border-red-200',
-  Rejected: 'bg-red-50 text-red-700 border-red-200',
+const APPRAISAL_STATUS_DOT: Record<string, string> = {
+  Pending: 'bg-gray-400',
+  Assigned: 'bg-indigo-500',
+  InProgress: 'bg-blue-500',
+  UnderReview: 'bg-amber-500',
+  Submitted: 'bg-sky-500',
+  Completed: 'bg-emerald-500',
+  Cancelled: 'bg-red-500',
 };
 
 function AppraisalStatusBadge({ status }: { status: string | null }) {
   if (!status) return <span className="text-gray-400 text-xs">—</span>;
-  const cls = APPRAISAL_STATUS_STYLES[status] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+  const dot = APPRAISAL_STATUS_DOT[status] ?? 'bg-gray-400';
   const label = status.replace(/([a-z])([A-Z])/g, '$1 $2');
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 text-[11px] font-medium rounded-full border ${cls}`}
-    >
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-100 text-gray-700">
+      <span className={`size-1.5 rounded-full ${dot}`} />
       {label}
     </span>
   );
@@ -129,13 +131,16 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
   const [sortDir, setSortDir] = useState<SortDir | undefined>();
   const [appraisalCompanyFilter, setAppraisalCompanyFilter] = useState('');
   const [appraisalStatusFilter, setAppraisalStatusFilter] = useState<string[]>([]);
+  const [staffFilter, setStaffFilter] = useState('');
 
   const companies = useCompanyStore(s => s.companies);
+  const { data: staffOptions = [] } = useInternalFollowupStaff();
 
   const filter: PendingEvaluationFilter = {
     search: debouncedSearch || undefined,
     appraisalCompanyId: appraisalCompanyFilter || undefined,
     appraisalStatus: appraisalStatusFilter.length ? appraisalStatusFilter : undefined,
+    internalFollowupStaff: staffFilter || undefined,
     page,
     pageSize,
     sortBy,
@@ -148,12 +153,14 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
-  const hasFilters = !!search || !!appraisalCompanyFilter || appraisalStatusFilter.length > 0;
+  const hasFilters =
+    !!search || !!appraisalCompanyFilter || appraisalStatusFilter.length > 0 || !!staffFilter;
 
   const handleClearFilters = () => {
     setSearch('');
     setAppraisalCompanyFilter('');
     setAppraisalStatusFilter([]);
+    setStaffFilter('');
     setPage(0);
   };
 
@@ -195,6 +202,18 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
         setPage(0);
       },
     })),
+    ...(staffFilter
+      ? [
+          {
+            key: 'internalFollowupStaff',
+            label: `Staff: ${staffOptions.find(o => o.value === staffFilter)?.label ?? staffFilter}`,
+            onClear: () => {
+              setStaffFilter('');
+              setPage(0);
+            },
+          },
+        ]
+      : []),
   ];
 
   const handleView = (row: PendingEvaluation) => {
@@ -251,6 +270,23 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
               setPage(0);
             }}
             placeholder="All companies"
+          />
+        </div>
+
+        {/* Internal followup staff */}
+        <div className="w-48">
+          <Autocomplete
+            items={staffOptions}
+            value={staffFilter}
+            onChange={(v: string) => {
+              setStaffFilter(v);
+              setPage(0);
+            }}
+            displayText={staffOptions.find(o => o.value === staffFilter)?.label}
+            placeholder={t('pendingEvaluation.staffFilter')}
+            ariaLabel={t('pendingEvaluation.staffFilter')}
+            showAllOnFocus
+            filterItems={(item, text) => item.label.toLowerCase().includes(text.toLowerCase())}
           />
         </div>
 

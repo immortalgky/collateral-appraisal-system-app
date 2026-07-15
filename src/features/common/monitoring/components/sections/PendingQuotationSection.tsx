@@ -10,6 +10,8 @@ import QuotationStatusBadge from '@features/quotation/components/QuotationStatus
 import SearchByInput from '@features/quotation/components/SearchByInput';
 import { DateInput, MultiSelectDropdown } from '@shared/components/inputs';
 import type { ListBoxItem } from '@shared/components/inputs';
+import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
+import { useCompanyStore } from '@shared/store';
 
 import { usePendingQuotations } from '../../api/monitoringApi';
 import type { PendingQuotation, PendingQuotationFilter, SortDir } from '../../api/types';
@@ -153,6 +155,9 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
   const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
+  const [appraisalCompanyFilter, setAppraisalCompanyFilter] = useState('');
+
+  const companies = useCompanyStore(s => s.companies);
 
   const term = debouncedSearch || undefined;
   const filter: PendingQuotationFilter = {
@@ -166,6 +171,7 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
     sortDir,
     ...(cutOffTimeFrom && { cutOffTimeFrom: toDateOnly(cutOffTimeFrom) }),
     ...(cutOffTimeTo && { cutOffTimeTo: toDateOnly(cutOffTimeTo) }),
+    appraisalCompanyId: appraisalCompanyFilter || undefined,
   };
 
   const { data, isLoading, isError, error } = usePendingQuotations(filter);
@@ -174,13 +180,19 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
-  const hasFilters = !!search || statusFilter.length > 0 || !!cutOffTimeFrom || !!cutOffTimeTo;
+  const hasFilters =
+    !!search ||
+    statusFilter.length > 0 ||
+    !!cutOffTimeFrom ||
+    !!cutOffTimeTo ||
+    !!appraisalCompanyFilter;
 
   const handleClearFilters = () => {
     setSearch('');
     setStatusFilter([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
+    setAppraisalCompanyFilter('');
     setPage(0);
   };
 
@@ -212,6 +224,18 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
             label: `Cut Off To: ${toDateOnly(cutOffTimeTo) ?? ''}`,
             onClear: () => {
               setCutOffTimeTo(null);
+              setPage(0);
+            },
+          },
+        ]
+      : []),
+    ...(appraisalCompanyFilter
+      ? [
+          {
+            key: 'appraisalCompanyId',
+            label: `Company: ${companies.find(c => c.id === appraisalCompanyFilter)?.companyName ?? appraisalCompanyFilter}`,
+            onClear: () => {
+              setAppraisalCompanyFilter('');
               setPage(0);
             },
           },
@@ -292,6 +316,18 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
               setPage(0);
             }}
             placeholder="Cut Off To"
+          />
+        </div>
+
+        {/* Company (invited appraisal company) */}
+        <div className="w-56">
+          <CompanyAutocomplete
+            value={appraisalCompanyFilter}
+            onChange={(v: string) => {
+              setAppraisalCompanyFilter(v);
+              setPage(0);
+            }}
+            placeholder="All companies"
           />
         </div>
 
