@@ -1,9 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
+  CommitteeFollowup,
   GroupByField,
   MeetingFollowup,
   MeetingFollowupFilter,
+  MeetingFollowupView,
   MonitoringGroupedResult,
   MonitoringSummary,
   PaginatedResult,
@@ -33,8 +35,8 @@ export const monitoringKeys = {
     ['monitoring', 'pending-followups', filter] as const,
   pendingEvaluations: (filter: PendingEvaluationFilter) =>
     ['monitoring', 'pending-evaluations', filter] as const,
-  meetingFollowups: (filter: MeetingFollowupFilter) =>
-    ['monitoring', 'meeting-followups', filter] as const,
+  meetingFollowups: (filter: MeetingFollowupFilter, view: MeetingFollowupView = 'appraisal') =>
+    ['monitoring', 'meeting-followups', view, filter] as const,
   // Summary keys (omit paging/sort from filter)
   summaryQuotations: (
     filter: Omit<PendingQuotationFilter, 'page' | 'pageSize' | 'sortBy' | 'sortDir'>,
@@ -211,11 +213,24 @@ export const usePendingEvaluations = (filter: PendingEvaluationFilter = {}) =>
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
   });
-
-export const useMeetingFollowups = (filter: MeetingFollowupFilter = {}) =>
-  useQuery({
-    queryKey: monitoringKeys.meetingFollowups(filter),
-    queryFn: async (): Promise<PaginatedResult<MeetingFollowup>> => {
+export function useMeetingFollowups(
+  filter: MeetingFollowupFilter,
+  view: 'appraisal',
+  enabled?: boolean,
+): UseQueryResult<PaginatedResult<MeetingFollowup>>;
+export function useMeetingFollowups(
+  filter: MeetingFollowupFilter,
+  view: 'committee',
+  enabled?: boolean,
+): UseQueryResult<PaginatedResult<CommitteeFollowup>>;
+export function useMeetingFollowups(
+  filter: MeetingFollowupFilter = {},
+  view: MeetingFollowupView = 'appraisal',
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: monitoringKeys.meetingFollowups(filter, view),
+    queryFn: async () => {
       const { data } = await axios.get('/monitoring/meeting-followups', {
         params: {
           ...buildBaseParams(filter),
@@ -225,15 +240,18 @@ export const useMeetingFollowups = (filter: MeetingFollowupFilter = {}) =>
           ...(filter.meetingNumber && { meetingNumber: filter.meetingNumber }),
           ...(filter.meetingDateFrom && { meetingDateFrom: filter.meetingDateFrom }),
           ...(filter.meetingDateTo && { meetingDateTo: filter.meetingDateTo }),
+          view,
         },
         paramsSerializer: { indexes: null },
       });
       return data.result ?? data;
     },
+    enabled,
     staleTime: 30 * 1000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
   });
+}
 
 // ─── Task types hook ─────────────────────────────────────────────────────────
 

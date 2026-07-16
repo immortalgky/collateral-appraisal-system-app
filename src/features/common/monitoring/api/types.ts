@@ -163,6 +163,8 @@ export interface PendingEvaluationFilter extends BaseMonitoringFilter {
 
 // ─── Meeting Follow-up ────────────────────────────────────────────────────────
 
+export type MeetingFollowupView = 'appraisal' | 'committee';
+
 export interface MeetingFollowup {
   appraisalId: string;
   appraisalNumber: string;
@@ -185,5 +187,23 @@ export interface MeetingFollowupFilter extends BaseMonitoringFilter {
   slaBucket?: SlaBucket[];
   meetingNumber?: string;
   meetingDateFrom?: string; // YYYY-MM-DD
-  meetingDateTo?: string;   // YYYY-MM-DD
+  meetingDateTo?: string; // YYYY-MM-DD
+}
+
+export interface CommitteeFollowupItem {
+  appraisalId: string;
+  appraisalNumber: string;
+  customerName: string | null;
+  approvalTier: number;
+  meetingNumber: string | null;
+  meetingDate: string | null;
+}
+
+export interface CommitteeFollowup {
+  userId: string;
+  userName: string;
+  memberName: string;
+  committeeName: string | null;
+  availableTasks: number;
+  items: CommitteeFollowupItem[];
 }
