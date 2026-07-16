@@ -369,7 +369,6 @@ export function makePropertiesFieldConfig(t: TFunction<'request'>): FieldArrayFi
         name: 'sellingPrice',
         label: t('fields.sellingPrice'),
         maxIntegerDigits: 15,
-        required: true,
       },
     ],
   };
@@ -647,7 +646,7 @@ export function makeTitleBuildingFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: {
         field: 'collateralType',
         operator: 'in',
-        is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
+        is: [...CONDO_TYPES],
       },
       decimalPlaces: 2,
       maxIntegerDigits: 3,
@@ -670,7 +669,6 @@ export function makeTitleBuildingFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.numberOfBuilding'),
       name: 'numberOfBuilding',
       wrapperClassName: 'col-span-3',
-      requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
       decimalPlaces: 0,
       maxIntegerDigits: 5,
     },
@@ -751,7 +749,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: {
         field: 'collateralType',
         operator: 'in',
-        is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
+        is: [...CONDO_TYPES],
       },
       decimalPlaces: 2,
       maxIntegerDigits: 3,
@@ -1945,7 +1943,6 @@ export const propertiesFieldConfig: FieldArrayField = {
       name: 'sellingPrice',
       label: _st('Selling Price'),
       maxIntegerDigits: 15,
-      required: true,
     },
   ],
 };

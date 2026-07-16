@@ -406,6 +406,7 @@
   "validation": {
     "bankingSegmentRequired": "กรุณาระบุกลุ่มลูกค้า",
     "facilityLimitRequired": "วงเงินสินเชื่อต้องมากกว่า 0",
+    "sellingPriceRequired": "ราคาซื้อขายต้องมากกว่า 0",
     "houseNumberRequired": "กรุณาระบุบ้านเลขที่",
     "subDistrictRequired": "กรุณาระบุตำบล/แขวง",
     "districtRequired": "กรุณาระบุอำเภอ/เขต",
