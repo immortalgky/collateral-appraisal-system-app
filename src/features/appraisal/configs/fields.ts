@@ -1765,6 +1765,7 @@ export const expropriationFields: FormField[] = [
     label: 'Royal Decree',
     name: 'royalDecree',
     wrapperClassName: 'col-span-3',
+    maxLength: 20,
   },
   {
     type: 'textarea',
