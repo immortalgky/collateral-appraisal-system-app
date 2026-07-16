@@ -314,7 +314,6 @@ export function DiscountedCashFlowPanel({
   const handleOnReset = () => setIsShowResetDialog(true);
   const handleOnConfirmReset = async () => {
     setIsShowResetDialog(false);
-    // ...
     setIsGenerated(false);
   };
 
