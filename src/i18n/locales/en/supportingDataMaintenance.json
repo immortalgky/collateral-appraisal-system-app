@@ -9,7 +9,7 @@
     "archived": "Archived"
   },
   "columns": {
-    "supportingNumber": "External Running No.",
+    "supportingNumber": "Supporting No.",
     "createdDate": "Creation Date",
     "importChannel": "Import Channel",
     "sourceOfData": "Source of Data",
