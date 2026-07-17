@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
+import { useEffect, useMemo, useState } from 'react';
+import { type SubmitHandler, useForm, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import FormCard from '@shared/components/sections/FormCard';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { FormFields } from '@/shared/components/form';
+import { FormFields, type FormField } from '@/shared/components/form';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
@@ -19,6 +19,54 @@ import {
 } from '../../schemas/form';
 import { machinerySummaryGeneralFields, machinerySummaryLegalFields } from '../../configs/fields';
 import { mapMachinerySummaryResponseToForm } from '../../utils/mappers';
+import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
+
+const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
+  const { watch, setValue } = useFormContext();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const lat = watch('latitude');
+  const lon = watch('longitude');
+  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
+  const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
+
+  const pickerButton = useMemo(
+    () => <MapPickerTriggerIcon onClick={() => setPickerOpen(true)} />,
+    [],
+  );
+
+  const machineryLegalFields = useMemo<FormField[]>(
+    () =>
+      machinerySummaryLegalFields.map(field => {
+        if (
+          !readOnly &&
+          (field.name === 'latitude' || field.name === 'longitude') &&
+          field.type === 'number-input'
+        )
+          return { ...field, rightIcon: pickerButton };
+        return field;
+      }),
+    [pickerButton, readOnly],
+  );
+
+  return (
+    <div className="grid grid-cols-12 gap-4">
+      <FormFields fields={machineryLegalFields} disabled={readOnly} showCharCount />
+      <MapLocationPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(newLat, newLon) => {
+          setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+          setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+        }}
+        initialLat={initialLat}
+        initialLon={initialLon}
+      />
+    </div>
+  );
+};
 
 /**
  * Appraisal-level machinery summary — one record per appraisal, "global for all
@@ -120,9 +168,7 @@ export const MachinerySummaryTab = () => {
           icon="scale-balanced"
           iconColor="amber"
         >
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={machinerySummaryLegalFields} disabled={readOnly} showCharCount />
-          </div>
+          <MachinerySummaryLegalForm readOnly={readOnly} />
         </FormCard>
       </form>
     </FormProvider>
