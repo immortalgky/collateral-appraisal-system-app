@@ -65,6 +65,30 @@ export const useCreateLandProperty = () => {
   });
 };
 
+/**
+ * Delete a property entirely — removes the AppraisalProperty row, its owned
+ * detail tables, machinery pricing references, and any group membership.
+ * DELETE /appraisal/{appraisalId}/{propertyId}
+ * NOTE: singular `/appraisal/` route with NO `/properties/` segment.
+ */
+export const useDeleteProperty = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: { appraisalId: string; propertyId: string }) => {
+      const { data } = await axios.delete(
+        `/appraisal/${params.appraisalId}/${params.propertyId}`,
+      );
+      return data as boolean;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: propertyGroupKeys.all(variables.appraisalId),
+      });
+    },
+  });
+};
+
 export const useCreateBuildingProperty = () => {
   const queryClient = useQueryClient();
 

@@ -3,16 +3,36 @@ import { format as dateFnsFormat, parseISO } from 'date-fns';
 import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
-import Input from '@shared/components/Input';
-import Dropdown from '@shared/components/inputs/Dropdown';
-import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
-import { EVALUATION_STATUS_FILTER_OPTIONS } from '@shared/constants/evaluationStatus';
-import { FEE_STATUS_FILTER_OPTIONS } from '@shared/constants/feeStatus';
-import { useParameterOptions } from '@shared/utils/parameterUtils';
+import SectionHeader from '@shared/components/sections/SectionHeader';
 import { useDebounce } from '@shared/hooks/useDebounce';
+import { useMenuLabel } from '@shared/hooks/useMenuLabel';
 import { useOperationalReport, useReportExport } from '../api/operationalReportsApi';
 import type { BaseReportFilter, SortDir } from '../api/operationalReportsApi';
-import type { ReportConfig, ColumnDef, FilterField } from '../config/reports';
+import type { ReportConfig, ColumnDef } from '../config/reports';
+import ExportMenu from './ExportMenu';
+import ReportFilterBar from './ReportFilterBar';
+
+// ─── Default filter state ─────────────────────────────────────────────────────
+
+/**
+ * FSD: every report's date range "soft defaults" to the current date. Without it the first load
+ * runs unbounded over the full history — worst on the reports that aggregate with STRING_AGG.
+ * Seeded from the report's OWN filter list so a report never gets a date it has no input for
+ * (RCAS008 uses approvedFrom/approvedTo; the rest use createdFrom/createdTo).
+ */
+function defaultFilterValues(
+  filters: ReportConfig['filters'],
+  skipDateDefault?: boolean,
+): BaseReportFilter {
+  if (skipDateDefault) return {};
+  const today = dateFnsFormat(new Date(), 'yyyy-MM-dd'); // wire format, matches toDateOnly()
+  const seeded: BaseReportFilter = {};
+  if (filters.includes('createdFrom')) seeded.createdFrom = today;
+  if (filters.includes('createdTo')) seeded.createdTo = today;
+  if (filters.includes('approvedFrom')) seeded.approvedFrom = today;
+  if (filters.includes('approvedTo')) seeded.approvedTo = today;
+  return seeded;
+}
 
 // ─── Value formatter ──────────────────────────────────────────────────────────
 
@@ -52,164 +72,12 @@ function formatCellValue(value: unknown, type: ColumnDef['type']): string {
   }
 }
 
-// ─── Filter panel ─────────────────────────────────────────────────────────────
-
-interface FilterPanelProps {
-  filters: FilterField[];
-  values: BaseReportFilter;
-  onChange: (patch: Partial<BaseReportFilter>) => void;
-  onReset: () => void;
-}
-
-const FILTER_LABELS: Record<FilterField, string> = {
-  appraisalNumber: 'Appraisal No.',
-  createdFrom: 'Create Date From',
-  createdTo: 'Create Date To',
-  approvedFrom: 'Approved Date From',
-  approvedTo: 'Approved Date To',
-  status: 'Status',
-  bankingSegment: 'Retail/IBG',
-  appraisalCompany: 'Company',
-  internalStaff: 'Internal Staff',
-  channel: 'Channel',
-  reviewType: 'Review Type',
-  stage: 'Stage',
-  customerName: 'Customer',
-  evaluationStatus: 'Eval. Status',
-  payType: 'Pay Type',
-  feeStatus: 'Fee Status',
-  assignType: 'Assign Type',
-};
-
-/** Fields that are date inputs (render as <input type="date">). */
-const DATE_FIELDS = new Set<FilterField>([
-  'createdFrom',
-  'createdTo',
-  'approvedFrom',
-  'approvedTo',
-]);
-
-/**
- * Fields that render as a plain (click-to-select, no typing) dropdown bound to a
- * fixed option list. Each status filter maps to the shared option list for its own domain.
- */
-const OPTION_FIELDS: Partial<Record<FilterField, { value: string; label: string }[]>> = {
-  status: APPRAISAL_STATUS_FILTER_OPTIONS,
-  evaluationStatus: EVALUATION_STATUS_FILTER_OPTIONS,
-  feeStatus: FEE_STATUS_FILTER_OPTIONS,
-};
-
-/** Fields that render as a plain (non-searchable) dropdown sourced from a parameter group. */
-const PARAMETER_SELECT_FIELDS: Partial<Record<FilterField, string>> = {
-  channel: 'Channel',
-};
-
-function FilterPanel({ filters, values, onChange, onReset }: FilterPanelProps) {
-  const hasAny = filters.some(f => Boolean((values as Record<string, unknown>)[f]));
-  const channelOptions = useParameterOptions(PARAMETER_SELECT_FIELDS.channel ?? 'Channel');
-
-  return (
-    <div className="shrink-0 mb-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-      <div className="flex flex-wrap items-end gap-3">
-        {filters.map(field => {
-          const val = ((values as Record<string, unknown>)[field] as string) ?? '';
-          const label = FILTER_LABELS[field];
-          const isDate = DATE_FIELDS.has(field);
-          const options = OPTION_FIELDS[field];
-          const isParameterSelect = field in PARAMETER_SELECT_FIELDS;
-
-          return (
-            <div key={field} className="flex flex-col gap-1 min-w-[160px]">
-              <label className="text-xs font-medium text-gray-600">{label}</label>
-              {isParameterSelect ? (
-                <Dropdown
-                  options={channelOptions}
-                  value={val || null}
-                  onChange={v => onChange({ [field]: v || undefined })}
-                  placeholder={`All ${label}`}
-                  showValuePrefix={false}
-                />
-              ) : options ? (
-                <Dropdown
-                  options={options}
-                  value={val}
-                  onChange={v => onChange({ [field]: v || undefined })}
-                  placeholder={`All ${label}`}
-                  showValuePrefix={false}
-                />
-              ) : isDate ? (
-                <input
-                  type="date"
-                  value={val}
-                  onChange={e => onChange({ [field]: e.target.value || undefined })}
-                  className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary hover:border-gray-300 transition-colors"
-                />
-              ) : (
-                <Input
-                  value={val}
-                  onChange={e => onChange({ [field]: e.target.value || undefined })}
-                  placeholder={`All ${label}`}
-                  fullWidth={false}
-                  className="min-w-[160px]"
-                />
-              )}
-            </div>
-          );
-        })}
-
-        {hasAny && (
-          <button
-            type="button"
-            onClick={onReset}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:border-gray-300 hover:text-gray-700 transition-all self-end"
-          >
-            <Icon style="solid" name="xmark" className="size-3.5" />
-            Clear
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Export buttons ───────────────────────────────────────────────────────────
-
-interface ExportButtonsProps {
-  onExport: (format: 'xlsx' | 'csv' | 'pdf') => void;
-  isExporting: boolean;
-}
-
-function ExportButtons({ onExport, isExporting }: ExportButtonsProps) {
-  const btnClass =
-    'inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed';
-  const iconFor = (name: string, color: string) =>
-    isExporting ? (
-      <Icon style="solid" name="spinner" className="size-3.5 animate-spin text-gray-400" />
-    ) : (
-      <Icon style="solid" name={name} className={`size-3.5 ${color}`} />
-    );
-  return (
-    <div className="flex items-center gap-2">
-      <button type="button" disabled={isExporting} onClick={() => onExport('xlsx')} className={btnClass} title="Export to Excel">
-        {iconFor('file-excel', 'text-green-600')}
-        Excel
-      </button>
-      <button type="button" disabled={isExporting} onClick={() => onExport('csv')} className={btnClass} title="Export to CSV">
-        {iconFor('file-csv', 'text-blue-600')}
-        CSV
-      </button>
-      <button type="button" disabled={isExporting} onClick={() => onExport('pdf')} className={btnClass} title="Export to PDF">
-        {iconFor('file-pdf', 'text-red-600')}
-        PDF
-      </button>
-    </div>
-  );
-}
-
 // ─── Sortable th ──────────────────────────────────────────────────────────────
 
 interface SortableThProps {
   label: string;
+  /** Full wording shown on hover when `label` is an abbreviation. */
+  fullLabel?: string;
   sortKey?: string;
   activeSortKey?: string;
   activeSortDir?: SortDir;
@@ -219,6 +87,7 @@ interface SortableThProps {
 
 function SortableTh({
   label,
+  fullLabel,
   sortKey,
   activeSortKey,
   activeSortDir,
@@ -238,12 +107,13 @@ function SortableTh({
   const baseCls = 'px-4 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
 
   if (!isSortable) {
-    return <th className={`${baseCls} ${className ?? ''}`.trim()}>{label}</th>;
+    return <th className={`${baseCls} ${className ?? ''}`.trim()} title={fullLabel}>{label}</th>;
   }
 
   return (
     <th
       className={`${baseCls} ${className ?? ''}`.trim()}
+      title={fullLabel}
       aria-sort={isActive ? (activeSortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
       <button
@@ -269,12 +139,18 @@ interface OperationalReportPageProps {
 }
 
 function OperationalReportPage({ config }: OperationalReportPageProps) {
-  const { slug, title, columns, filters, defaultPageSize = 20 } = config;
+  const { slug, title, columns, filters, skipDateDefault, defaultPageSize = 20 } = config;
+
+  // Page title follows the sidebar/breadcrumb menu name (locale-resolved), so all three match and
+  // switch together on the language toggle. Falls back to the config title when the report isn't in
+  // the user's menu or the menu hasn't loaded.
+  const menuLabel = useMenuLabel(`/reports/operational/${slug}`);
+  const displayTitle = menuLabel ?? title;
 
   // ── Filter state ─────────────────────────────────────────────────────────────
   // `filterValues` updates on every keystroke so the inputs stay responsive, but the
   // query/export read the debounced copy — typing no longer fires a request per keystroke.
-  const [filterValues, setFilterValues] = useState<BaseReportFilter>({});
+  const [filterValues, setFilterValues] = useState<BaseReportFilter>(() => defaultFilterValues(filters, skipDateDefault));
   const debouncedFilterValues = useDebounce(filterValues, 400);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -294,10 +170,12 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
     setPageNumber(0);
   }, []);
 
+  // Reset restores the seeded default (today), not an empty object — clearing to {} would put the
+  // unbounded full-history query back. Individual date chips can still be cleared to widen the range.
   const handleReset = useCallback(() => {
-    setFilterValues({});
+    setFilterValues(defaultFilterValues(filters, skipDateDefault));
     setPageNumber(0);
-  }, []);
+  }, [filters, skipDateDefault]);
 
   const handleSortChange = useCallback((key: string | undefined, dir: SortDir | undefined) => {
     setSortBy(key);
@@ -316,21 +194,23 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col min-h-0 gap-4">
-      {/* Header row */}
-      <div className="shrink-0 flex items-center justify-between gap-3">
-        <h1 className="text-lg font-semibold text-gray-800">{title}</h1>
-        <ExportButtons onExport={exportReport} isExporting={isExporting} />
-      </div>
+      {/* Header — standard SectionHeader with a live record count + Export menu */}
+      <SectionHeader
+        icon="file-lines"
+        iconColor="primary"
+        title={displayTitle}
+        subtitle={`${totalCount.toLocaleString()} ${totalCount === 1 ? 'record' : 'records'}`}
+        rightIcon={<ExportMenu onExport={exportReport} isExporting={isExporting} />}
+        className="shrink-0 mb-0"
+      />
 
-      {/* Filter panel */}
-      {filters.length > 0 && (
-        <FilterPanel
-          filters={filters}
-          values={filterValues}
-          onChange={handleFilterChange}
-          onReset={handleReset}
-        />
-      )}
+      {/* Filter bar + active-filter chips */}
+      <ReportFilterBar
+        filters={filters}
+        values={filterValues}
+        onChange={handleFilterChange}
+        onReset={handleReset}
+      />
 
       {/* Error state */}
       {isError && (
@@ -354,6 +234,7 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                     <SortableTh
                       key={col.key}
                       label={col.label}
+                      fullLabel={col.fullLabel}
                       sortKey={col.sortKey ?? toPascalCase(col.field)}
                       activeSortKey={sortBy}
                       activeSortDir={sortDir}

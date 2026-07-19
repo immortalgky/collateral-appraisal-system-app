@@ -25,6 +25,7 @@ import {
 import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useAuthStore } from '@features/auth/store';
 import DataErrorState from '@/shared/components/DataErrorState';
 
 const LAYOUT_OPTIONS = [
@@ -226,6 +227,7 @@ export const PhotosTab = () => {
   const { t } = useTranslation('appraisal');
   // Get appraisalId from URL params
   const appraisalId = useAppraisalId();
+  const currentUser = useAuthStore(state => state.user);
 
   // API hooks for topics
   const {
@@ -473,13 +475,19 @@ export const PhotosTab = () => {
               appraisalId,
               documentId: uploadResult.documentId,
               photoType: 'general',
-              uploadedBy: 'current-user',
+              uploadedBy: currentUser?.username ?? '',
+              uploadedByName: currentUser?.name ?? null,
               photoCategory: null,
               caption: null,
               latitude: null,
               longitude: null,
               capturedAt: null,
               photoTopicIds: [selectedTopicId],
+              fileName: uploadResult.fileName,
+              filePath: uploadResult.storageUrl,
+              fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
+              mimeType: file.type || null,
+              fileSizeBytes: uploadResult.fileSize,
             });
 
             toast.success(t('toasts.uploadedFile', { name: file.name }));
@@ -491,7 +499,7 @@ export const PhotosTab = () => {
         toast.error(t('toasts.uploadSessionFailed'));
       }
     },
-    [selectedTopicId, appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto],
+    [selectedTopicId, appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto, currentUser],
   );
 
   const handleUploadFromDevice = (files: FileList) => {

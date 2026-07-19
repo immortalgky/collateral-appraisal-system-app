@@ -257,6 +257,17 @@ export const mapCondoPropertyResponseToForm = (
     roadSurfaceType: response.roadSurfaceType ?? '',
     publicUtilityType: response.publicUtilityType ?? [],
     publicUtilityTypeOther: response.publicUtilityTypeOther ?? '',
+    // Not yet in the generated v1 response schema — cast until it's regenerated
+    // (same pattern as `titles`/`surfaces` above).
+    urbanPlanningType: (response as any).urbanPlanningType ?? '',
+    landFillType: (response as any).landFillType ?? '',
+    landFillTypeOther: (response as any).landFillTypeOther ?? '',
+    landUseType: (response as any).landUseType ?? [],
+    landUseTypeOther: (response as any).landUseTypeOther ?? '',
+    landEntranceExitType: (response as any).landEntranceExitType ?? [],
+    landEntranceExitTypeOther: (response as any).landEntranceExitTypeOther ?? '',
+    governmentPricePerSqm: (response as any).governmentPricePerSqm ?? 0,
+    governmentPrice: (response as any).governmentPrice ?? 0,
 
     decorationType: response.decorationType ?? '',
     decorationTypeOther: response.decorationTypeOther ?? '',
