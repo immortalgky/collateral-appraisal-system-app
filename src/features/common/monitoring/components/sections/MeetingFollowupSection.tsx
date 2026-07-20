@@ -8,12 +8,17 @@ import { useDebounce } from '@shared/hooks/useDebounce';
 import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
 import Input from '@shared/components/Input';
 import DatePickerInput from '@shared/components/inputs/DatePickerInput';
-
-import { useMeetingFollowups } from '../../api/monitoringApi';
-import type { MeetingFollowup, MeetingFollowupFilter, SortDir } from '../../api/types';
+import type {
+  MeetingFollowup,
+  MeetingFollowupFilter,
+  MeetingFollowupView,
+  SortDir,
+} from '../../api/types';
 import MonitoringDataTable, { type ColumnDef } from '../MonitoringDataTable';
 import ActiveFilterChips, { type ActiveFilterChip } from '../ActiveFilterChips';
 import { DateCell } from '../DateCell';
+import CommitteeFollowupTable from '../CommitteeFollowupTable';
+import { useMeetingFollowups } from '../../api/monitoringApi';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -30,9 +35,7 @@ const COLUMNS: ColumnDef<MeetingFollowup>[] = [
     key: 'appraisalNumber',
     label: 'Appraisal No.',
     sortKey: 'AppraisalNumber',
-    render: row => (
-      <span className="text-sm font-medium text-primary">{row.appraisalNumber}</span>
-    ),
+    render: row => <span className="text-sm font-medium text-primary">{row.appraisalNumber}</span>,
   },
   {
     key: 'customerName',
@@ -81,6 +84,12 @@ const COLUMNS: ColumnDef<MeetingFollowup>[] = [
       ),
   },
 ];
+// ─── View tab ──────────────────────────────────────────────────────────────────
+
+const VIEW_TABS: { id: MeetingFollowupView; label: string; icon: string }[] = [
+  { id: 'appraisal', label: 'Appraisal No.', icon: 'file-lines' },
+  { id: 'committee', label: 'Committee', icon: 'users' },
+];
 
 // ─── Section ──────────────────────────────────────────────────────────────────
 
@@ -103,6 +112,7 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
   const debouncedMeetingNumber = useDebounce(meetingNumberFilter, 400);
   const [meetingDateFrom, setMeetingDateFrom] = useState<string | null>(null);
   const [meetingDateTo, setMeetingDateTo] = useState<string | null>(null);
+  const [view, setView] = useState<MeetingFollowupView>('appraisal');
 
   const filter: MeetingFollowupFilter = {
     search: debouncedSearch || undefined,
@@ -115,12 +125,17 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
     sortBy,
     sortDir,
   };
+  const appraisalQuery = useMeetingFollowups(filter, 'appraisal', view === 'appraisal');
+  const committeeQuery = useMeetingFollowups(filter, 'committee', view === 'committee');
 
-  const { data, isLoading, isError, error } = useMeetingFollowups(filter);
-
-  const rows = data?.items ?? [];
-  const totalCount = data?.count ?? 0;
+  const isCommittee = view === 'committee';
+  const activeQuery = isCommittee ? committeeQuery : appraisalQuery;
+  const { isLoading, isError, error } = activeQuery;
+  const totalCount = activeQuery.data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
+
+  const rows = appraisalQuery.data?.items ?? [];
+  const committeeRows = committeeQuery.data?.items ?? [];
 
   const hasFilters =
     !!search ||
@@ -204,13 +219,38 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
   ];
 
   useEffect(() => {
-    if (!isLoading && data != null) {
-      onCountChange?.(totalCount);
-    }
-  }, [isLoading, data, totalCount, onCountChange]);
+    if (!isLoading && activeQuery.data != null) onCountChange?.(totalCount);
+  }, [isLoading, activeQuery.data, totalCount, onCountChange]);
 
   return (
     <div className="flex flex-col min-w-0">
+      <div className="shrink-0 mb-3 flex items-center gap-1.5">
+        {VIEW_TABS.map(tab => {
+          const isActive = view === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setView(tab.id);
+                setPage(0);
+              }}
+              className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border transition-colors ${
+                isActive
+                  ? 'text-primary bg-primary/5 border-primary/30'
+                  : 'text-gray-700 bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <Icon
+                style="solid"
+                name={tab.icon}
+                className={`size-3 ${isActive ? 'text-primary' : 'text-gray-500'}`}
+              />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
       <ActiveFilterChips
         chips={activeChips}
         onClearAll={hasFilters ? handleClearFilters : undefined}
@@ -301,22 +341,31 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
 
       {!isError && (
         <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          <MonitoringDataTable
-            columns={COLUMNS}
-            rows={rows}
-            isLoading={isLoading}
-            onView={handleView}
-            getRowKey={r => r.appraisalId}
-            sortBy={sortBy}
-            sortDir={sortDir}
-            onSortChange={(key, dir) => {
-              setSortBy(key);
-              setSortDir(dir);
-              setPage(0);
-            }}
-            emptyLabel={t('common.noRecords')}
-            emptyDescription={t('common.noRecordsDesc')}
-          />
+          {isCommittee ? (
+            <CommitteeFollowupTable
+              rows={committeeRows}
+              isLoading={isLoading}
+              onOpenAppraisal={id => navigate(`/appraisals/${id}`)}
+            />
+          ) : (
+            <MonitoringDataTable
+              columns={COLUMNS}
+              rows={rows}
+              isLoading={isLoading}
+              onView={handleView}
+              getRowKey={r => r.appraisalId}
+              sortBy={sortBy}
+              sortDir={sortDir}
+              onSortChange={(key, dir) => {
+                setSortBy(key);
+                setSortDir(dir);
+                setPage(0);
+              }}
+              emptyLabel={t('common.noRecords')}
+              emptyDescription={t('common.noRecordsDesc')}
+            />
+          )}
+
           <Pagination
             currentPage={page}
             totalPages={totalPages}
