@@ -34,6 +34,23 @@ const methodCalculators: Partial<Record<MethodType, MethodRuleBuilder>> = {
   '14': buildMethodSpecifiedValueWithGrowthDerivedRules,
 };
 
+export function getMethodPerYearFieldPaths(methodType: MethodType): string[] {
+  const buildRules = methodCalculators[methodType];
+  if (!buildRules) return [];
+
+  const probeName = '__method__';
+  const prefix = `${probeName}.`;
+  const rules = buildRules({ name: probeName, totalNumberOfYears: 1 });
+
+  const paths = new Set<string>();
+  for (const rule of rules) {
+    if (rule.targetPath.startsWith(prefix) && rule.targetPath.endsWith('.0')) {
+      paths.add(rule.targetPath.slice(prefix.length, -2));
+    }
+  }
+  return Array.from(paths);
+}
+
 export function buildMethodCalculationRules(
   sections: DCFSection[] = [],
   totalNumberOfYears: number,
