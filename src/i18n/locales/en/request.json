@@ -425,6 +425,7 @@
   "validation": {
     "bankingSegmentRequired": "Banking segment is required.",
     "facilityLimitRequired": "Facility limit must be greater than 0.",
+    "sellingPriceRequired": "Selling price must be greater than 0.",
     "houseNumberRequired": "House number is required.",
     "subDistrictRequired": "Sub district is required.",
     "districtRequired": "District is required.",
