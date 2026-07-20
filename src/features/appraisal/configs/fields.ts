@@ -49,6 +49,9 @@ export const landInfoField: FormField[] = [
     min: -180,
     max: 180,
   },
+];
+
+export const landAddressFields: FormField[] = [
   // Location selector (sub-district autocomplete that populates district, province, postcode)
   {
     type: 'location-selector',
@@ -64,7 +67,6 @@ export const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
   },
-
   // Display fields (autopopulated by location-selector)
   {
     type: 'text-input',
@@ -80,6 +82,42 @@ export const landInfoField: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-3',
   },
+];
+
+export const landDopaAddressFields: FormField[] = [
+  // Dopa Location selector (sub-district autocomplete that populates dopaDistrict, dopaProvince)
+  {
+    type: 'location-selector',
+    label: 'Dopa Sub District',
+    name: 'dopaSubDistrict',
+    districtField: 'dopaDistrict',
+    districtNameField: 'dopaDistrictName',
+    provinceField: 'dopaProvince',
+    provinceNameField: 'dopaProvinceName',
+    postcodeField: 'dopaPostcode',
+    subDistrictNameField: 'dopaSubDistrictName',
+    addressSource: 'dopa',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  // Display fields (autopopulated by dopa location-selector)
+  {
+    type: 'text-input',
+    label: 'Dopa District',
+    name: 'dopaDistrictName',
+    disabled: true,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Dopa Province',
+    name: 'dopaProvinceName',
+    disabled: true,
+    wrapperClassName: 'col-span-3',
+  },
+];
+
+export const landInfoFieldTail: FormField[] = [
   {
     type: 'parameter-search',
     label: 'Land Office',
@@ -1349,6 +1387,9 @@ export const condoFields: FormField[] = [
     required: true,
     maxIntegerDigits: 5,
   },
+];
+
+export const condoAddressFields: FormField[] = [
   // Location selector (sub-district autocomplete that populates district, province, postcode)
   {
     type: 'location-selector',
@@ -1364,7 +1405,6 @@ export const condoFields: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
   },
-
   // Display fields (autopopulated by location-selector)
   {
     type: 'text-input',
@@ -1380,6 +1420,42 @@ export const condoFields: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-3',
   },
+];
+
+export const condoDopaAddressFields: FormField[] = [
+  // Dopa Location selector (sub-district autocomplete that populates dopaDistrict, dopaProvince)
+  {
+    type: 'location-selector',
+    label: 'Dopa Sub District',
+    name: 'dopaSubDistrict',
+    districtField: 'dopaDistrict',
+    districtNameField: 'dopaDistrictName',
+    provinceField: 'dopaProvince',
+    provinceNameField: 'dopaProvinceName',
+    postcodeField: 'dopaPostcode',
+    subDistrictNameField: 'dopaSubDistrictName',
+    addressSource: 'dopa',
+    wrapperClassName: 'col-span-3',
+    required: true,
+  },
+  // Display fields (autopopulated by dopa location-selector)
+  {
+    type: 'text-input',
+    label: 'Dopa District',
+    name: 'dopaDistrictName',
+    disabled: true,
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: 'Dopa Province',
+    name: 'dopaProvinceName',
+    disabled: true,
+    wrapperClassName: 'col-span-3',
+  },
+];
+
+export const condoFieldsTail: FormField[] = [
   {
     type: 'number-input',
     label: 'Latitude',
@@ -2244,6 +2320,9 @@ export const machineInfoFields: FormField[] = [
 
 export const allLandFields: FormField[] = [
   ...landInfoField,
+  ...landAddressFields,
+  ...landDopaAddressFields,
+  ...landInfoFieldTail,
   ...landLocationField,
   ...plotLocationField,
   ...landFillField,
@@ -2289,6 +2368,9 @@ export const allLandBuildingFields: FormField[] = [...allLandFields, ...allBuild
 
 export const allCondoFields: FormField[] = [
   ...condoFields,
+  ...condoAddressFields,
+  ...condoDopaAddressFields,
+  ...condoFieldsTail,
   ...condoLocationFields,
   ...condoDecorationFields,
   ...ageHeightCondoFields,
