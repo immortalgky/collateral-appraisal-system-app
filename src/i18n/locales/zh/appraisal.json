@@ -1252,6 +1252,32 @@
       "Complete100": "竣工（100%）"
     }
   },
+  "constructionBuildingDetailTable": {
+    "title": "各建筑施工进度",
+    "columns": {
+      "seqNo": "序号",
+      "houseNumber": "门牌号",
+      "titleNumber": "地契号",
+      "modelName": "户型",
+      "previousProgress": "上期进度",
+      "increasedProgress": "增加的建设工程",
+      "currentProgress": "本期进度",
+      "percent": "%",
+      "value": "价值"
+    },
+    "summaryRow": "建筑施工合计"
+  },
+  "constructionCompletedBuildingsTable": {
+    "title": "工程检验前已竣工（100%）建筑",
+    "columns": {
+      "seqNo": "序号",
+      "houseNumber": "门牌号",
+      "titleNumber": "地契号",
+      "modelName": "户型",
+      "appraisalValue": "评估价值"
+    },
+    "totalRow": "合计"
+  },
   "approvalListSection": {
     "title": "委员会审批",
     "notActiveYet": "此评估的委员会审批尚未启动。",
