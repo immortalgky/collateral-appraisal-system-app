@@ -23,6 +23,7 @@ import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import PhotoEditModal from '../gallery/PhotoEditModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useAuthStore } from '@features/auth/store';
 
 type SortOption = 'newest' | 'oldest' | 'name';
 type FilterStatus = 'all' | 'used' | 'unused';
@@ -283,6 +284,7 @@ export const GalleryTab = () => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
+  const currentUser = useAuthStore(state => state.user);
   const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
   const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
@@ -537,7 +539,7 @@ export const GalleryTab = () => {
           appraisalPropertyId: propertyId,
           photoPurpose: 'thumbnail',
           sectionReference: null,
-          linkedBy: 'current-user',
+          linkedBy: currentUser?.username ?? '',
         },
         {
           onSuccess: () => {
@@ -654,7 +656,7 @@ export const GalleryTab = () => {
           appraisalId,
           documentId: uploadResult.documentId,
           photoType: 'general',
-          uploadedBy: 'current-user',
+          uploadedBy: currentUser?.username ?? '',
           photoCategory: null,
           caption: null,
           latitude: null,
@@ -666,7 +668,7 @@ export const GalleryTab = () => {
           fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
           mimeType: file.type || null,
           fileSizeBytes: uploadResult.fileSize,
-          uploadedByName: null,
+          uploadedByName: currentUser?.name ?? null,
         });
 
         setUploadingPhotos(prev => {
@@ -684,7 +686,7 @@ export const GalleryTab = () => {
         toast.error(t('toasts.uploadFileFailed', { name: file.name }));
       }
     },
-    [appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto],
+    [appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto, currentUser],
   );
 
   // Keep the ref in sync so the native drop handler can call uploadSingleFile

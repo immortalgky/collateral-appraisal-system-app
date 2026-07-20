@@ -24,10 +24,10 @@ import {
   useCreatePropertyGroup,
   useDeletePropertyGroup,
   useMovePropertyToGroup,
-  useRemovePropertyFromGroup,
   useReorderPropertiesInGroup,
   useUpdatePropertyGroup,
 } from '../../api/propertyGroup';
+import { useDeleteProperty } from '../../api/property';
 import { GroupContainer } from '../GroupContainer';
 import { PropertiesMapModal } from '../PropertiesMapModal';
 import { MoveToGroupModal } from '../MoveToGroupModal';
@@ -91,7 +91,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   const createGroupMutation = useCreatePropertyGroup();
   const updateGroupMutation = useUpdatePropertyGroup();
   const deleteGroupMutation = useDeletePropertyGroup();
-  const removePropertyMutation = useRemovePropertyFromGroup();
+  const deletePropertyMutation = useDeleteProperty();
   const copyPropertyMutation = useCopyPropertyToGroup();
   const moveMutation = useMovePropertyToGroup();
   const reorderMutation = useReorderPropertiesInGroup();
@@ -205,21 +205,6 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       );
     },
     [appraisalId, deleteGroupMutation],
-  );
-
-  const handleRemoveProperty = useCallback(
-    (groupId: string, propertyId: string) => {
-      if (!appraisalId) return;
-      removePropertyMutation.mutate(
-        { appraisalId, groupId, propertyId },
-        {
-          onError: () => {
-            toast.error(t('properties.toasts.propertyRemoveFailed'));
-          },
-        },
-      );
-    },
-    [appraisalId, removePropertyMutation],
   );
 
   const handleMoveProperty = useCallback(
@@ -421,9 +406,18 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   };
 
   const handleDeleteConfirm = () => {
-    if (deleteModalState.property && deleteModalState.groupId) {
-      handleRemoveProperty(deleteModalState.groupId, deleteModalState.property.id);
-    }
+    if (!appraisalId || !deleteModalState.property) return;
+    deletePropertyMutation.mutate(
+      { appraisalId, propertyId: deleteModalState.property.id },
+      {
+        onSuccess: () => {
+          setDeleteModalState({ isOpen: false, property: null, groupId: null });
+        },
+        onError: () => {
+          toast.error(t('properties.toasts.propertyDeleteFailed'));
+        },
+      },
+    );
   };
 
   const navigateToPricingAnalysis = useCallback(
@@ -656,7 +650,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         isOpen={deleteModalState.isOpen}
         onClose={() => setDeleteModalState({ isOpen: false, property: null, groupId: null })}
         onConfirm={handleDeleteConfirm}
-        isLoading={removePropertyMutation.isPending}
+        isLoading={deletePropertyMutation.isPending}
       />
 
       <PropertiesMapModal

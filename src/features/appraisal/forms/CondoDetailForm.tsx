@@ -1,12 +1,14 @@
 import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
-import { type ReactNode, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import CondoAreaDetailForm from './CondoAreaDetailForm';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import {
   condoFields,
   condoLocationFields,
+  condoLandCharacteristicsFields,
+  condoGovernmentPriceFields,
   condoDecorationFields,
   ageHeightCondoFields,
   buildingFormFields,
@@ -64,6 +66,8 @@ function CondoDetailForm() {
 
   const lat = watch('latitude');
   const lon = watch('longitude');
+  const govPricePerSqm = watch('governmentPricePerSqm');
+  const usableArea = watch('usableArea');
   const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
   const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
   const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
@@ -75,6 +79,14 @@ function CondoDetailForm() {
   );
 
   const fillIcon = useMemo(() => <PropertyNameTriggerIcon propertyType="U" />, []);
+
+  // Government price is computed (pricePerSqm × usableArea) and locked, mirroring the
+  // Rai/Ngan/Sq.Wa × pricePerSqWa calculation on the land title form.
+  useEffect(() => {
+    const price = Number(govPricePerSqm) || 0;
+    const area = Number(usableArea) || 0;
+    setValue('governmentPrice', price * area, { shouldValidate: true });
+  }, [govPricePerSqm, usableArea, setValue]);
 
   const fields = useMemo<FormField[]>(
     () =>
@@ -102,6 +114,11 @@ function CondoDetailForm() {
 
       <SectionRow title="Condominium Location" icon="map-location-dot">
         <FormFields fields={condoLocationFields} />
+        <FormFields fields={condoLandCharacteristicsFields} />
+      </SectionRow>
+
+      <SectionRow title="Government Price" icon="money-bill">
+        <FormFields fields={condoGovernmentPriceFields} />
       </SectionRow>
 
       <MapLocationPicker

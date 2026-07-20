@@ -14,7 +14,13 @@ export type ColumnType = 'money' | 'number' | 'percent' | 'int' | 'date' | 'date
 
 export interface ColumnDef {
   key: string;
+  /** Grid header. Keep it short — headers are nowrap, so a long one widens the column. */
   label: string;
+  /**
+   * Full FSD wording, shown as a hover tooltip when `label` is an abbreviation.
+   * The Excel/PDF export carries the full wording in its own column definitions.
+   */
+  fullLabel?: string;
   /** camelCase field name in the API response */
   field: string;
   type: ColumnType;
@@ -46,7 +52,13 @@ export type FilterField =
   | 'evaluationStatus'
   | 'payType'
   | 'feeStatus'
-  | 'assignType';
+  | 'assignType'
+  | 'purpose'
+  | 'externalStaff'
+  | 'departmentCode'
+  | 'aoCode'
+  | 'appraisalType'
+  | 'feeType';
 
 // ─── Report config ────────────────────────────────────────────────────────────
 
@@ -55,42 +67,91 @@ export interface ReportConfig {
   title: string;
   columns: ColumnDef[];
   filters: FilterField[];
-  /** Default page size. Defaults to 20. rcas010 uses 50. */
+  /**
+   * Opt out of the "date range soft-defaults to today" behaviour. For reports whose date filter
+   * binds a historical column rather than a create timestamp, today's date matches nothing.
+   */
+  skipDateDefault?: boolean;
+  /** Default page size. Defaults to 20. */
   defaultPageSize?: number;
 }
 
-// ─── Shared OLA column set (rcas003/005/006/007/011/012) ──────────────────────
+// The identifying key column is FIRST (sticky) on every row-level report.
+const APPRAISAL_NO: ColumnDef = {
+  key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber',
+};
+const CUSTOMER: ColumnDef = {
+  key: 'customerName', label: 'Customer Name', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate',
+};
 
-const OLA_COLUMNS: ColumnDef[] = [
-  { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
-  { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },
+// ─── OLA column sets (RCAS003/005/006/011) ────────────────────────────────────
+// Appraisal Create Date + Role are the FSD-detail columns; RCAS006's FSD table omits Receive Date
+// and OLA Staff/Verify (internal work has no company→bank handoff).
+
+const OLA_FSD_COLUMNS: ColumnDef[] = [
+  APPRAISAL_NO,
+  CUSTOMER,
   { key: 'purpose', label: 'Purpose', field: 'purpose', type: 'text' },
-  { key: 'applyLimitAmount', label: 'Apply/Limit', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
+  { key: 'applyLimitAmount', label: 'Apply/Limit Amount', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
   { key: 'collateralType', label: 'Collateral Type', field: 'collateralType', type: 'text' },
+  { key: 'appraisalCreateDate', label: 'Created Date', field: 'appraisalCreateDate', type: 'datetime', sortKey: 'AppraisalCreateDate' },
   { key: 'channel', label: 'Channel', field: 'channel', type: 'text' },
   { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
   { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
-  { key: 'appointmentDate', label: 'Appointment', field: 'appointmentDate', type: 'datetime' },
-  { key: 'assignDate', label: 'Assign', field: 'assignDate', type: 'datetime' },
-  { key: 'receiveDate', label: 'Receive', field: 'receiveDate', type: 'datetime' },
+  { key: 'role', label: 'Role', field: 'role', type: 'text' },
+  { key: 'appointmentDate', label: 'Appointment Date', field: 'appointmentDate', type: 'datetime' },
+  { key: 'assignDate', label: 'Assigned Date', field: 'assignDate', type: 'datetime' },
+  { key: 'receiveDate', label: 'Report Received Date', field: 'receiveDate', type: 'datetime' },
   { key: 'olaAppraisal', label: 'OLA Appraisal (hrs)', field: 'olaAppraisal', type: 'number', className: 'text-right' },
-  { key: 'olaInternalStaffVerify', label: 'OLA Staff/Verify', field: 'olaInternalStaffVerify', type: 'number', className: 'text-right' },
-  { key: 'olaInternalChecker', label: 'OLA Checker', field: 'olaInternalChecker', type: 'number', className: 'text-right' },
-  { key: 'olaInternalStaffPlusChecker', label: 'OLA Staff+Checker', field: 'olaInternalStaffPlusChecker', type: 'number', className: 'text-right' },
-  { key: 'olaInternalVerify', label: 'OLA Verify', field: 'olaInternalVerify', type: 'number', className: 'text-right' },
+  { key: 'olaInternalStaffVerify', label: 'OLA Internal Staff (Verify)', field: 'olaInternalStaffVerify', type: 'number', className: 'text-right' },
+  { key: 'olaInternalChecker', label: 'OLA Internal Checker', field: 'olaInternalChecker', type: 'number', className: 'text-right' },
+  { key: 'olaInternalStaffPlusChecker', label: 'OLA (Internal Staff + Internal Checker)', field: 'olaInternalStaffPlusChecker', type: 'number', className: 'text-right' },
+  { key: 'olaInternalVerify', label: 'OLA Internal Verify', field: 'olaInternalVerify', type: 'number', className: 'text-right' },
   { key: 'olaApproval', label: 'OLA Approval', field: 'olaApproval', type: 'number', className: 'text-right' },
   { key: 'appraisalStatus', label: 'Status', field: 'appraisalStatus', type: 'text' },
 ];
 
-// rcas003/005/006/007/011/012 share the same filters
+// RCAS006 omits Receive Date + OLA Staff/Verify.
+const OLA_006_COLUMNS: ColumnDef[] = OLA_FSD_COLUMNS.filter(
+  c => c.key !== 'receiveDate' && c.key !== 'olaInternalStaffVerify',
+);
+
 const OLA_FILTERS: FilterField[] = [
-  'appraisalNumber',
-  'createdFrom',
-  'createdTo',
-  'status',
-  'appraisalCompany',
-  'internalStaff',
-  'channel',
+  'appraisalNumber', 'customerName', 'createdFrom', 'createdTo', 'status', 'purpose', 'appraisalCompany',
+  'internalStaff', 'externalStaff', 'channel',
+];
+
+// RCAS003/011 add filters their FSD criteria call for but RCAS005/006 don't (see per-report usage below).
+// RCAS003's FSD lists an AO code criterion too, but it is deliberately not exposed for now.
+const RCAS011_FILTERS: FilterField[] = [...OLA_FILTERS, 'aoCode', 'departmentCode'];
+
+// ─── SLA column set (RCAS007/012) ─────────────────────────────────────────────
+
+const SLA_COLUMNS: ColumnDef[] = [
+  APPRAISAL_NO,
+  CUSTOMER,
+  { key: 'purpose', label: 'Purpose', field: 'purpose', type: 'text' },
+  { key: 'requestorName', label: 'Requestor', field: 'requestorName', type: 'text' },
+  { key: 'requestorPhone', label: 'Requestor Phone', field: 'requestorPhone', type: 'text' },
+  { key: 'requestorDepartment', label: 'Requestor Dept.', field: 'requestorDepartment', type: 'text' },
+  { key: 'bankingSegment', label: 'Retail/IBG', field: 'bankingSegment', type: 'text' },
+  { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
+  { key: 'externalStaffName', label: 'External Staff', field: 'externalStaffName', type: 'text' },
+  { key: 'appraisalCompanyPhone', label: 'Company Phone', field: 'appraisalCompanyPhone', type: 'text' },
+  { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
+  { key: 'internalAppraisalStaffPhone', label: 'Internal Staff Phone', field: 'internalAppraisalStaffPhone', type: 'text' },
+  { key: 'appraisalFee', label: 'Fee', field: 'appraisalFee', type: 'money', className: 'text-right' },
+  { key: 'appraisalCreateDate', label: 'Created Date', field: 'appraisalCreateDate', type: 'datetime', sortKey: 'AppraisalCreateDate' },
+  { key: 'appointmentDate', label: 'Appointment Date', field: 'appointmentDate', type: 'datetime' },
+  { key: 'sla', label: 'SLA (days)', field: 'sla', type: 'number', className: 'text-right' },
+  { key: 'appraisalValue', label: 'Appraisal Value', field: 'appraisalValue', type: 'money', className: 'text-right' },
+  { key: 'role', label: 'Current Role', field: 'role', type: 'text' },
+  { key: 'appraisalStatus', label: 'Status', field: 'appraisalStatus', type: 'text' },
+];
+
+const SLA_FILTERS: FilterField[] = [
+  'appraisalNumber', 'customerName', 'createdFrom', 'createdTo', 'status', 'purpose', 'appraisalCompany',
+  'internalStaff', 'externalStaff',
 ];
 
 // ─── All 12 report configs ────────────────────────────────────────────────────
@@ -100,13 +161,14 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas001',
     title: 'RCAS001 - Appraisal Books',
-    filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'status', 'bankingSegment'],
+    filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'status', 'bankingSegment', 'departmentCode'],
     columns: [
-      { key: 'appraisalCreateDate', label: 'Create Date', field: 'appraisalCreateDate', type: 'datetime', sortKey: 'AppraisalCreateDate' },
-      { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
-      { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },
+      APPRAISAL_NO,
+      { key: 'runningNo', label: 'Running No.', field: 'runningNo', type: 'int', className: 'text-right' },
+      { key: 'appraisalCreateDate', label: 'Created Date', field: 'appraisalCreateDate', type: 'datetime', sortKey: 'AppraisalCreateDate' },
+      CUSTOMER,
       { key: 'appraisalPurpose', label: 'Purpose', field: 'appraisalPurpose', type: 'text' },
-      { key: 'applyLimitAmount', label: 'Apply/Limit', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
+      { key: 'applyLimitAmount', label: 'Apply/Limit Amount', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
       { key: 'collateralType', label: 'Collateral Type', field: 'collateralType', type: 'text' },
       { key: 'approachMethod', label: 'Approach', field: 'approachMethod', type: 'text' },
       { key: 'appraisalPrice', label: 'Price', field: 'appraisalPrice', type: 'money', className: 'text-right' },
@@ -124,16 +186,19 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
   {
     slug: 'rcas002',
     title: 'RCAS002 - Reappraisal Due',
-    filters: ['appraisalNumber', 'reviewType', 'stage', 'customerName'],
+    filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'reviewType', 'stage', 'customerName'],
+    // The date range binds ValuationDate (see Rcas002Report.Build) — a historical date, typically
+    // years in the past. Defaulting it to today would open this report empty.
+    skipDateDefault: true,
     columns: [
+      APPRAISAL_NO,
       { key: 'reviewType', label: 'Review Type', field: 'reviewType', type: 'text' },
       { key: 'stage', label: 'Stage', field: 'stage', type: 'text' },
-      { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
       { key: 'previousAppraisalNumber', label: 'Previous No.', field: 'previousAppraisalNumber', type: 'text' },
       { key: 'collateralNumber', label: 'Collateral No.', field: 'collateralNumber', type: 'text' },
       { key: 'cifNumber', label: 'CIF', field: 'cifNumber', type: 'text' },
-      { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },
-      { key: 'applyLimitAmount', label: 'Apply/Limit', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
+      CUSTOMER,
+      { key: 'applyLimitAmount', label: 'Apply/Limit Amount', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
       { key: 'collateralType', label: 'Collateral Type', field: 'collateralType', type: 'text' },
       { key: 'titleDeedNumber', label: 'Title Deed', field: 'titleDeedNumber', type: 'text' },
       { key: 'bankingSegment', label: 'Retail/IBG', field: 'bankingSegment', type: 'text' },
@@ -147,13 +212,8 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
     ],
   },
 
-  // ── RCAS003: OLA (channel 1) ───────────────────────────────────────────────
-  {
-    slug: 'rcas003',
-    title: 'RCAS003 - OLA Report',
-    filters: OLA_FILTERS,
-    columns: OLA_COLUMNS,
-  },
+  // ── RCAS003: Monthly workload (OLA) ────────────────────────────────────────
+  { slug: 'rcas003', title: 'RCAS003 - Monthly Workload Summary', filters: OLA_FILTERS, columns: OLA_FSD_COLUMNS },
 
   // ── RCAS004: Inspection <100% ──────────────────────────────────────────────
   {
@@ -161,64 +221,50 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
     title: 'RCAS004 - Inspection Progress (<100%)',
     filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'status'],
     columns: [
-      { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
-      { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },
+      APPRAISAL_NO,
+      CUSTOMER,
       { key: 'purpose', label: 'Purpose', field: 'purpose', type: 'text' },
-      { key: 'applyLimitAmount', label: 'Apply/Limit', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
+      { key: 'applyLimitAmount', label: 'Apply/Limit Amount', field: 'applyLimitAmount', type: 'money', className: 'text-right' },
       { key: 'collateralType', label: 'Collateral Type', field: 'collateralType', type: 'text' },
       { key: 'channel', label: 'Channel', field: 'channel', type: 'text' },
       { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
       { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
       { key: 'appraisalValue', label: 'Value', field: 'appraisalValue', type: 'money', className: 'text-right' },
       { key: 'previousAppraisalNumber', label: 'Previous No.', field: 'previousAppraisalNumber', type: 'text' },
-      { key: 'appointmentDate', label: 'Appointment', field: 'appointmentDate', type: 'datetime' },
+      { key: 'appointmentDate', label: 'Appointment Date', field: 'appointmentDate', type: 'datetime' },
       { key: 'appraisalStatus', label: 'Status', field: 'appraisalStatus', type: 'text' },
       { key: 'progressiveInspectionPct', label: 'Inspection %', field: 'progressiveInspectionPct', type: 'percent', className: 'text-right' },
     ],
   },
 
-  // ── RCAS005: OLA (channel 2) ───────────────────────────────────────────────
-  {
-    slug: 'rcas005',
-    title: 'RCAS005 - OLA Report (Ch.2)',
-    filters: OLA_FILTERS,
-    columns: OLA_COLUMNS,
-  },
+  // ── RCAS005: by External company (OLA) ─────────────────────────────────────
+  { slug: 'rcas005', title: 'RCAS005 - Summary by External Company', filters: OLA_FILTERS, columns: OLA_FSD_COLUMNS },
 
-  // ── RCAS006: OLA (channel 3) ───────────────────────────────────────────────
-  {
-    slug: 'rcas006',
-    title: 'RCAS006 - OLA Report (Ch.3)',
-    filters: OLA_FILTERS,
-    columns: OLA_COLUMNS,
-  },
+  // ── RCAS006: by Internal staff (OLA, trimmed) ──────────────────────────────
+  { slug: 'rcas006', title: 'RCAS006 - Summary by Internal Staff', filters: OLA_FILTERS, columns: OLA_006_COLUMNS },
 
-  // ── RCAS007: OLA (channel 4) ───────────────────────────────────────────────
-  {
-    slug: 'rcas007',
-    title: 'RCAS007 - OLA Report (Ch.4)',
-    filters: OLA_FILTERS,
-    columns: OLA_COLUMNS,
-  },
+  // ── RCAS007: SLA summary ───────────────────────────────────────────────────
+  { slug: 'rcas007', title: 'RCAS007 - SLA Summary', filters: SLA_FILTERS, columns: SLA_COLUMNS },
 
   // ── RCAS008: Service Quality ───────────────────────────────────────────────
   {
     slug: 'rcas008',
     title: 'RCAS008 - Service Quality Evaluation',
-    filters: ['appraisalNumber', 'approvedFrom', 'approvedTo', 'bankingSegment', 'appraisalCompany', 'evaluationStatus'],
+    filters: ['appraisalNumber', 'approvedFrom', 'approvedTo', 'bankingSegment', 'appraisalCompany', 'evaluationStatus', 'purpose', 'appraisalType'],
     columns: [
-      { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
+      APPRAISAL_NO,
       { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
-      { key: 'approvedDate', label: 'Approved', field: 'approvedDate', type: 'date', sortKey: 'ApprovedDate' },
-      { key: 'bankingSegment', label: 'Retail/IBG', field: 'bankingSegment', type: 'text' },
-      { key: 'totalScorePct', label: 'Total %', field: 'totalScorePct', type: 'percent', className: 'text-right' },
-      { key: 'scoreReportQuality', label: 'Report Quality', field: 'scoreReportQuality', type: 'int', className: 'text-right' },
-      { key: 'scoreDeliveryTime', label: 'Delivery', field: 'scoreDeliveryTime', type: 'int', className: 'text-right' },
-      { key: 'scorePersonnel', label: 'Personnel', field: 'scorePersonnel', type: 'int', className: 'text-right' },
-      { key: 'scoreResponseTime', label: 'Response', field: 'scoreResponseTime', type: 'int', className: 'text-right' },
-      { key: 'scoreCoordination', label: 'Coordination', field: 'scoreCoordination', type: 'int', className: 'text-right' },
+      { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
+      { key: 'approvedDate', label: 'Approved Date', field: 'approvedDate', type: 'date', sortKey: 'ApprovedDate' },
+      { key: 'bankingSegment', label: 'Banking Segment', field: 'bankingSegment', type: 'text' },
+      { key: 'totalScorePct', label: 'Total Score %', field: 'totalScorePct', type: 'percent', className: 'text-right' },
+      // Scores are abbreviated on screen; fullLabel carries the FSD wording (items 7–15) as a tooltip.
+      { key: 'scoreReportQuality', label: 'Report Quality', fullLabel: 'Score of Report book quality', field: 'scoreReportQuality', type: 'int', className: 'text-right' },
+      { key: 'scoreDeliveryTime', label: 'Delivery Time (SLA)', fullLabel: 'Score of Delivery time (SLA)', field: 'scoreDeliveryTime', type: 'int', className: 'text-right' },
+      { key: 'scorePersonnel', label: 'Personnel Preparation', fullLabel: "Score of Preparing the company's personnel for accepting bank assessment work", field: 'scorePersonnel', type: 'int', className: 'text-right' },
+      { key: 'scoreResponseTime', label: 'Response Time', fullLabel: 'Score of Response time to problem resolution', field: 'scoreResponseTime', type: 'int', className: 'text-right' },
+      { key: 'scoreCoordination', label: 'Coordination', fullLabel: 'Score of Coordination and responsibility in work', field: 'scoreCoordination', type: 'int', className: 'text-right' },
       { key: 'remark', label: 'Remark', field: 'remark', type: 'text' },
-      { key: 'evaluationStatus', label: 'Eval Status', field: 'evaluationStatus', type: 'text' },
     ],
   },
 
@@ -228,61 +274,55 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
     title: 'RCAS009 - Fee Summary',
     filters: ['appraisalNumber', 'createdFrom', 'createdTo', 'payType', 'appraisalCompany', 'feeStatus'],
     columns: [
-      { key: 'appraisalNumber', label: 'Appraisal No.', field: 'appraisalNumber', type: 'text', sortKey: 'AppraisalNumber' },
-      { key: 'customerName', label: 'Customer', field: 'customerName', type: 'text', sortKey: 'CustomerName', className: 'max-w-[160px] truncate' },
+      APPRAISAL_NO,
+      CUSTOMER,
       { key: 'assignType', label: 'Assign Type', field: 'assignType', type: 'text' },
       { key: 'payType', label: 'Pay Type', field: 'payType', type: 'text' },
       { key: 'purpose', label: 'Purpose', field: 'purpose', type: 'text' },
-      { key: 'appraisalCreateDate', label: 'Create Date', field: 'appraisalCreateDate', type: 'date', sortKey: 'AppraisalCreateDate' },
+      { key: 'appraisalCreateDate', label: 'Created Date', field: 'appraisalCreateDate', type: 'date', sortKey: 'AppraisalCreateDate' },
       { key: 'collateralType', label: 'Collateral Type', field: 'collateralType', type: 'text' },
-      { key: 'appraisalStatus', label: 'Status', field: 'appraisalStatus', type: 'text' },
       { key: 'requestorCode', label: 'Requestor', field: 'requestorCode', type: 'text' },
       { key: 'requestorDepartment', label: 'Requestor Dept.', field: 'requestorDepartment', type: 'text' },
       { key: 'bankingSegment', label: 'Retail/IBG', field: 'bankingSegment', type: 'text' },
       { key: 'appraisalCompany', label: 'Company', field: 'appraisalCompany', type: 'text' },
       { key: 'internalAppraisalStaff', label: 'Internal Staff', field: 'internalAppraisalStaff', type: 'text' },
       { key: 'invoiceNumber', label: 'Invoice No.', field: 'invoiceNumber', type: 'text' },
-      { key: 'costCenter', label: 'Cost Center', field: 'costCenter', type: 'text' },
       { key: 'appraisalFee', label: 'Fee', field: 'appraisalFee', type: 'money', className: 'text-right' },
       { key: 'vat', label: 'VAT', field: 'vat', type: 'money', className: 'text-right' },
       { key: 'includeVat', label: 'Incl. VAT', field: 'includeVat', type: 'money', className: 'text-right' },
-      { key: 'feeStatus', label: 'Fee Status', field: 'feeStatus', type: 'text' },
+      { key: 'costCenter', label: 'Cost Center', field: 'costCenter', type: 'text' },
+      { key: 'appraisalStatus', label: 'Status', field: 'appraisalStatus', type: 'text' },
     ],
   },
 
-  // ── RCAS010: Bank-Absorbed Fees (aggregate) ────────────────────────────────
+  // ── RCAS010: Bank-Absorbed Fees (single summary row) ───────────────────────
   {
     slug: 'rcas010',
     title: 'RCAS010 - Bank-Absorbed Fees',
-    filters: ['createdFrom', 'createdTo', 'channel', 'assignType'],
-    defaultPageSize: 50,
+    filters: ['createdFrom', 'createdTo', 'channel', 'departmentCode', 'aoCode', 'status', 'appraisalCompany', 'feeType'],
     columns: [
-      { key: 'channel', label: 'Channel', field: 'channel', type: 'text' },
-      { key: 'assignType', label: 'Assign Type', field: 'assignType', type: 'text' },
-      { key: 'bookCount', label: 'Book Count', field: 'bookCount', type: 'int', className: 'text-right' },
-      { key: 'totalFee', label: 'Total Fee', field: 'totalFee', type: 'money', className: 'text-right' },
-      { key: 'customerPaidCount', label: 'Cust-Paid Count', field: 'customerPaidCount', type: 'int', className: 'text-right' },
-      { key: 'customerPaidFee', label: 'Cust-Paid Fee', field: 'customerPaidFee', type: 'money', className: 'text-right' },
-      { key: 'bankAbsorbCount', label: 'Bank-Absorb Count', field: 'bankAbsorbCount', type: 'int', className: 'text-right' },
-      { key: 'bankAbsorbFee', label: 'Bank-Absorb Fee', field: 'bankAbsorbFee', type: 'money', className: 'text-right' },
+      { key: 'internalBookCount', label: 'Internal – Books', field: 'internalBookCount', type: 'int', className: 'text-right' },
+      { key: 'internalTotalFee', label: 'Internal – Fee', field: 'internalTotalFee', type: 'money', className: 'text-right' },
+      { key: 'internalCustomerPaidCount', label: 'Internal – Cust-Paid Books', field: 'internalCustomerPaidCount', type: 'int', className: 'text-right' },
+      { key: 'internalCustomerPaidFee', label: 'Internal – Cust-Paid Fee', field: 'internalCustomerPaidFee', type: 'money', className: 'text-right' },
+      { key: 'internalBankAbsorbCount', label: 'Internal – Bank-Absorb Books', field: 'internalBankAbsorbCount', type: 'int', className: 'text-right' },
+      { key: 'internalBankAbsorbFee', label: 'Internal – Bank-Absorb Fee', field: 'internalBankAbsorbFee', type: 'money', className: 'text-right' },
+      { key: 'externalBookCount', label: 'External – Books', field: 'externalBookCount', type: 'int', className: 'text-right' },
+      { key: 'externalTotalFee', label: 'External – Fee', field: 'externalTotalFee', type: 'money', className: 'text-right' },
+      { key: 'externalCustomerPaidCount', label: 'External – Cust-Paid Books', field: 'externalCustomerPaidCount', type: 'int', className: 'text-right' },
+      { key: 'externalCustomerPaidFee', label: 'External – Cust-Paid Fee', field: 'externalCustomerPaidFee', type: 'money', className: 'text-right' },
+      { key: 'externalBankAbsorbCount', label: 'External – Bank-Absorb Books', field: 'externalBankAbsorbCount', type: 'int', className: 'text-right' },
+      { key: 'externalBankAbsorbFee', label: 'External – Bank-Absorb Fee', field: 'externalBankAbsorbFee', type: 'money', className: 'text-right' },
+      { key: 'grandTotalCount', label: 'Grand Total – Books', field: 'grandTotalCount', type: 'int', className: 'text-right' },
+      { key: 'grandTotalFee', label: 'Grand Total – Fee', field: 'grandTotalFee', type: 'money', className: 'text-right' },
     ],
   },
 
-  // ── RCAS011: OLA (channel 5) ───────────────────────────────────────────────
-  {
-    slug: 'rcas011',
-    title: 'RCAS011 - OLA Report (Ch.5)',
-    filters: OLA_FILTERS,
-    columns: OLA_COLUMNS,
-  },
+  // ── RCAS011: Detail by RM (OLA) ────────────────────────────────────────────
+  { slug: 'rcas011', title: 'RCAS011 - Detail by RM', filters: RCAS011_FILTERS, columns: OLA_FSD_COLUMNS },
 
-  // ── RCAS012: OLA (channel 6) ───────────────────────────────────────────────
-  {
-    slug: 'rcas012',
-    title: 'RCAS012 - OLA Report (Ch.6)',
-    filters: OLA_FILTERS,
-    columns: OLA_COLUMNS,
-  },
+  // ── RCAS012: Company Follow-up (SLA) ───────────────────────────────────────
+  { slug: 'rcas012', title: 'RCAS012 - Company Follow-up', filters: SLA_FILTERS, columns: SLA_COLUMNS },
 ];
 
 // ─── Lookup helper ─────────────────────────────────────────────────────────────

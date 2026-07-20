@@ -27,11 +27,13 @@ export interface BaseReportFilter {
   bankingSegment?: string;
   appraisalCompany?: string;
   internalStaff?: string;
+  externalStaff?: string;
   channel?: string;
   // rcas002
   reviewType?: string;
   stage?: string;
   customerName?: string;
+  purpose?: string;
   // rcas008
   evaluationStatus?: string;
   // rcas009
@@ -39,6 +41,10 @@ export interface BaseReportFilter {
   feeStatus?: string;
   // rcas010
   assignType?: string;
+  departmentCode?: string;
+  aoCode?: string;
+  appraisalType?: string;
+  feeType?: string;
 }
 
 // ─── Row types per report ──────────────────────────────────────────────────────

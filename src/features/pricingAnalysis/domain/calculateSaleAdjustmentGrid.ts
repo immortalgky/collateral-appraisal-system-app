@@ -158,6 +158,6 @@ export function detectPriceUnit(calculations: unknown): string | null {
 export function calcFinalValueRoundedValue(finalValue: unknown, calculations: unknown): number {
   const v = Number(finalValue) || 0;
   const detectedUnit = detectPriceUnit(calculations);
-  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02';
+  const isUnitPrice = detectedUnit === 'PerSqWa' || detectedUnit === 'PerSqm';
   return isUnitPrice ? v : roundToThousand(v);
 }

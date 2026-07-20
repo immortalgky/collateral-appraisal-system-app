@@ -562,6 +562,7 @@
       "groupRenameFailed": "ไม่สามารถเปลี่ยนชื่อกลุ่มได้",
       "groupDeleteFailed": "ไม่สามารถลบกลุ่มได้",
       "propertyRemoveFailed": "ไม่สามารถนำทรัพย์สินออกจากกลุ่มได้",
+      "propertyDeleteFailed": "ไม่สามารถลบทรัพย์สินได้",
       "propertyMoveFailed": "ไม่สามารถย้ายทรัพย์สินได้",
       "propertyPasteFailed": "ไม่สามารถวางทรัพย์สินได้",
       "reorderFailed": "ไม่สามารถเรียงลำดับทรัพย์สินได้"
@@ -652,6 +653,66 @@
       "saveFailed": "ไม่สามารถบันทึกรายการตรวจเอกสารได้",
       "saved": "บันทึกรายการตรวจเอกสารแล้ว"
     }
+  },
+  "valuationDocuments": {
+    "sections": {
+      "documentChecklist": "รายการตรวจเอกสาร",
+      "appraisalBookBuilder": "จัดทำเล่มรายงานการประเมิน",
+      "appendix": "ภาคผนวก",
+      "machinerySummary": "สรุปเครื่องจักร",
+      "machineryBookSection1": "วัตถุประสงค์และที่ตั้งเครื่องจักร"
+    },
+    "appendixChooser": {
+      "title": "เลือกประเภทภาคผนวก",
+      "empty": "ไม่พบประเภทภาคผนวก"
+    },
+    "boardTitle": "เอกสารประกอบการประเมินราคา",
+    "typesCount_one": "{{count}} ประเภท",
+    "typesCount_other": "{{count}} ประเภท",
+    "progress": "แนบแล้ว {{uploaded}} / {{total}}",
+    "expandAll": "ขยายทั้งหมด",
+    "collapseAll": "ย่อทั้งหมด",
+    "noFile": "ไม่มีไฟล์",
+    "fileCount_one": "{{count}} ไฟล์",
+    "fileCount_other": "{{count}} ไฟล์",
+    "attach": "แนบไฟล์",
+    "generate": "สร้างรายงาน",
+    "view": "ดู",
+    "remove": "ลบ",
+    "uploadedBy": "อัปโหลดโดย {{name}}",
+    "empty": "ยังไม่มีไฟล์แนบ",
+    "noTypes": "ไม่พบประเภทเอกสาร",
+    "loadFailed": "ไม่สามารถโหลดรายการตรวจเอกสารได้",
+    "deleteDialog": {
+      "title": "ลบเอกสาร",
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์นี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+      "confirm": "ลบ"
+    }
+  },
+  "machineryBookSection1": {
+    "title": "วัตถุประสงค์และที่ตั้งเครื่องจักร",
+    "subtitle": "ข้อมูลสำหรับเล่มรายงานการประเมินเครื่องจักร ส่วนที่ 1",
+    "save": "บันทึก",
+    "saved": "บันทึกข้อมูลส่วนที่ 1 แล้ว",
+    "saveFailed": "ไม่สามารถบันทึกข้อมูลส่วนที่ 1 ได้",
+    "loadFailed": "ไม่สามารถโหลดข้อมูลส่วนที่ 1 ได้",
+    "fields": {
+      "assignment": "การมอบหมาย",
+      "valuationPurpose": "วัตถุประสงค์ในการประเมินมูลค่าทรัพย์สิน",
+      "propertyCharacteristics": "ลักษณะทรัพย์สินที่ประเมินมูลค่า"
+    }
+  },
+  "reportPreview": {
+    "title": "ตัวอย่างเล่มรายงานการประเมิน",
+    "refresh": "รีเฟรชตัวอย่าง",
+    "openInNewTab": "เปิดในแท็บใหม่",
+    "generatePreview": "สร้างตัวอย่าง",
+    "idleHint": "สร้างตัวอย่างรายงานประเมินเพื่อดูที่นี่",
+    "generating": "กำลังสร้างตัวอย่าง…",
+    "fetchFailed": "ไม่สามารถโหลดตัวอย่างรายงานได้",
+    "renderFailed": "ไม่สามารถแสดงตัวอย่างรายงานได้",
+    "renderTimedOut": "การแสดงตัวอย่างใช้เวลานานเกินไป กรุณาลองใหม่อีกครั้ง",
+    "machinerySavedPrompt": "บันทึกสรุปเครื่องจักรแล้ว — คลิก \"รีเฟรชตัวอย่าง\" เพื่ออัปเดตรายงาน"
   },
   "gallery": {
     "sectionTitle": "แกลเลอรี",
@@ -853,6 +914,7 @@
     "fileUploadFailed": "อัปโหลดไฟล์ล้มเหลว",
     "documentLoadFailed": "โหลดเอกสารสำหรับแก้ไขล้มเหลว",
     "onlyImageFilesAllowed": "อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น",
+    "invalidDocumentFileType": "อนุญาตเฉพาะไฟล์รูปภาพ (JPG, JPEG, PNG) หรือ PDF เท่านั้น",
     "galleryFilesAdded": "เพิ่มไฟล์จากแกลเลอรีแล้ว",
     "galleryFilesAddFailed": "เพิ่มไฟล์จากแกลเลอรีล้มเหลว",
     "documentRemoved": "ลบเอกสารแล้ว",
@@ -900,7 +962,9 @@
     "marketComparableUpdated": "อัปเดตข้อมูลตลาดเปรียบเทียบสำเร็จ",
     "marketComparableCreated": "สร้างข้อมูลตลาดเปรียบเทียบสำเร็จ",
     "marketComparableDeleted": "ลบข้อมูลตลาดเปรียบเทียบสำเร็จ",
-    "marketComparableDeleteFailed": "ลบข้อมูลตลาดเปรียบเทียบล้มเหลว"
+    "marketComparableDeleteFailed": "ลบข้อมูลตลาดเปรียบเทียบล้มเหลว",
+    "appraisalReportNotAvailable": "ยังไม่มีเล่มประเมินสมบูรณ์แนบอยู่ในงานประเมินนี้",
+    "appraisalSummaryNotAvailable": "ยังไม่มีรายงานสรุปผลการประเมินราคาทรัพย์สินแนบอยู่ในงานประเมินนี้"
   },
   "common": {
     "unsavedChanges": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก",
@@ -941,7 +1005,7 @@
   },
   "deleteConfirmationModal": {
     "title": "ลบทรัพย์สิน",
-    "message": "คุณแน่ใจหรือไม่ว่าต้องการนำทรัพย์สินนี้ออกจากกลุ่ม? ไม่สามารถย้อนกลับได้",
+    "message": "คุณแน่ใจหรือไม่ว่าต้องการลบทรัพย์สินนี้? การลบจะลบทรัพย์สินและรายละเอียดทั้งหมดอย่างถาวร ไม่สามารถย้อนกลับได้",
     "confirm": "ลบ"
   },
   "editPropertyModal": {

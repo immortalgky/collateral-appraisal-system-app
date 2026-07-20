@@ -1849,6 +1849,99 @@ export const remarkFormFields: FormField[] = [
   },
 ];
 
+// Condo land-characteristic fields — same param groups as the land/land+building
+// equivalents (landEntranceField, landFillField, landUseField at ~L253-436), reused
+// as-is since these are condo-level attributes of the land the building sits on.
+// Unlike landFillField, landFillPercent/soilLevel are omitted here: those two describe
+// physical fill work on bare land, which doesn't apply once a condominium is built.
+export const condoLandCharacteristicsFields: FormField[] = [
+  {
+    type: 'dropdown',
+    label: 'Type of urban plan',
+    name: 'urbanPlanningType',
+    wrapperClassName: 'col-span-12',
+    group: 'TypeOfUrbanPlanning',
+  },
+  {
+    type: 'radio-group',
+    label: 'Land Condition',
+    name: 'landFillType',
+    orientation: 'horizontal',
+    group: 'Landfill',
+    variant: 'button',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'landFillTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landFillType', is: '99' },
+    requiredWhen: { field: 'landFillType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
+  },
+  {
+    type: 'checkbox-group',
+    label: 'Land Use',
+    name: 'landUseType',
+    orientation: 'horizontal',
+    group: 'LandUse',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'landUseTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landUseType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'landUseType', is: '99', operator: 'contains' },
+    maxLength: 100,
+    showCharCount: true,
+  },
+  {
+    type: 'checkbox-group',
+    label: 'Entrance-Exit',
+    name: 'landEntranceExitType',
+    orientation: 'horizontal',
+    group: 'LandEntranceExit',
+    wrapperClassName: 'col-span-12',
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'landEntranceExitTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
+    maxLength: 100,
+    showCharCount: true,
+  },
+];
+
+// Condo government price — per SQUARE METRE (unlike land's per-Sq.Wa), since a condo
+// unit's title doesn't carry a Rai/Ngan/Sq.Wa land area. governmentPrice is computed
+// (pricePerSqm × usableArea) and locked, mirroring landtitlesFields' governmentPrice.
+export const condoGovernmentPriceFields: FormField[] = [
+  {
+    type: 'number-input',
+    label: 'Government Price per Sq.M',
+    name: 'governmentPricePerSqm',
+    wrapperClassName: 'col-span-6',
+    maxIntegerDigits: 16,
+    decimalPlaces: 2,
+  },
+  {
+    type: 'number-input',
+    label: 'Government Price',
+    name: 'governmentPrice',
+    wrapperClassName: 'col-span-6',
+    disabled: true,
+    maxIntegerDigits: 16,
+    decimalPlaces: 2,
+  },
+];
+
 // --- Merged Land sections ---
 export const roadAndSurfaceField: FormField[] = [...roadField, ...roadSurfaceField];
 
@@ -2290,6 +2383,8 @@ export const allLandBuildingFields: FormField[] = [...allLandFields, ...allBuild
 export const allCondoFields: FormField[] = [
   ...condoFields,
   ...condoLocationFields,
+  ...condoLandCharacteristicsFields,
+  ...condoGovernmentPriceFields,
   ...condoDecorationFields,
   ...ageHeightCondoFields,
   ...buildingFormFields,
@@ -2995,7 +3090,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     label: 'In Industrial Estate',
     name: 'inIndustrial',
     wrapperClassName: 'col-span-12',
-    maxLength: 500,
+    maxLength: 100,
   },
   {
     type: 'number-input',
@@ -3003,7 +3098,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'surveyedNumber',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 6,
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
@@ -3011,7 +3106,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'appraisalNumber',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 6,
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
@@ -3019,7 +3114,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'installedAndUseCount',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 6,
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
@@ -3027,7 +3122,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'appraisalScrapCount',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 6,
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
@@ -3035,7 +3130,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'appraisedByDocumentCount',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 6,
+    maxIntegerDigits: 5,
   },
   {
     type: 'number-input',
@@ -3043,28 +3138,28 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'notInstalledCount',
     wrapperClassName: 'col-span-4',
     decimalPlaces: 0,
-    maxIntegerDigits: 6,
+    maxIntegerDigits: 10,
   },
   {
     type: 'textarea',
     label: 'Maintenance',
     name: 'maintenance',
     wrapperClassName: 'col-span-12',
-    maxLength: 500,
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Exterior',
     name: 'exterior',
     wrapperClassName: 'col-span-12',
-    maxLength: 500,
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Performance',
     name: 'performance',
     wrapperClassName: 'col-span-12',
-    maxLength: 500,
+    maxLength: 100,
   },
   {
     type: 'boolean-toggle',
@@ -3074,11 +3169,11 @@ export const machinerySummaryGeneralFields: FormField[] = [
     wrapperClassName: 'col-span-3',
   },
   {
+    // FSD = MAX (no cap) — no `maxLength`, intentionally unbounded.
     type: 'textarea',
     label: 'Market Demand',
     name: 'marketDemand',
     wrapperClassName: 'col-span-12',
-    maxLength: 4000,
   },
 ];
 
@@ -3089,51 +3184,63 @@ export const machinerySummaryLegalFields: FormField[] = [
     label: 'Proprietor',
     name: 'proprietor',
     wrapperClassName: 'col-span-6',
-    maxLength: 500,
+    maxLength: 100,
   },
   {
     type: 'text-input',
     label: 'Owner',
     name: 'owner',
     wrapperClassName: 'col-span-6',
-    maxLength: 500,
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Machine Address',
     name: 'machineAddress',
     wrapperClassName: 'col-span-12',
-    maxLength: 1000,
+    maxLength: 500,
   },
+  // Lat/Lon — matches the pattern used by land (landInfoField) and condo (condoFields) detail
+  // forms: 6 decimal places, 3 integer digits, signed, ±90/±180 range. Left optional (no
+  // `required: true`) since machinery's are supplementary geo fields, unlike land/condo where
+  // lat/lon is the collateral's primary geolocation — see report for this call.
   {
     type: 'number-input',
     label: 'Latitude',
     name: 'latitude',
     wrapperClassName: 'col-span-6',
-    decimalPlaces: 8,
-    thousandSeparator: false,
+    decimalPlaces: 6,
+    maxIntegerDigits: 3,
+    allowNegative: true,
+    allowZero: true,
+    min: -90,
+    max: 90,
   },
   {
     type: 'number-input',
     label: 'Longitude',
     name: 'longitude',
     wrapperClassName: 'col-span-6',
-    decimalPlaces: 8,
-    thousandSeparator: false,
+    decimalPlaces: 6,
+    maxIntegerDigits: 3,
+    allowNegative: true,
+    allowZero: true,
+    min: -180,
+    max: 180,
   },
   {
     type: 'textarea',
     label: 'Obligation',
     name: 'obligation',
     wrapperClassName: 'col-span-12',
-    maxLength: 2000,
+    maxLength: 100,
   },
   {
     type: 'textarea',
     label: 'Other',
     name: 'other',
     wrapperClassName: 'col-span-12',
-    maxLength: 4000,
+    maxLength: 100,
   },
 ];
 
@@ -3141,4 +3248,37 @@ export const machinerySummaryLegalFields: FormField[] = [
 export const allMachinerySummaryFields: FormField[] = [
   ...machinerySummaryGeneralFields,
   ...machinerySummaryLegalFields,
+];
+
+/**
+ * Machinery Book Section 1 (วัตถุประสงค์และที่ตั้งเครื่องจักร) — three free-text intro fields,
+ * distinct from Section 3.1/3.3 above. Labels here are placeholders for schema-building only
+ * (buildFormSchema doesn't use `label` for validation) — MachineryBookSection1Tab.tsx renders
+ * translated labels via `t('machineryBookSection1.fields.<name>')` instead.
+ */
+export const machineryBookSection1Fields: FormField[] = [
+  {
+    type: 'textarea',
+    label: 'Assignment',
+    name: 'assignment',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+    showCharCount: true,
+  },
+  {
+    type: 'textarea',
+    label: 'Valuation Purpose',
+    name: 'valuationPurpose',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+    showCharCount: true,
+  },
+  {
+    type: 'textarea',
+    label: 'Property Characteristics',
+    name: 'propertyCharacteristics',
+    wrapperClassName: 'col-span-12',
+    maxLength: 4000,
+    showCharCount: true,
+  },
 ];
