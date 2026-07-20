@@ -2,10 +2,13 @@ import { Icon } from '@/shared/components';
 import Badge from '@/shared/components/Badge';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Method } from '../../types/selection';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
+import { useDebounce } from '@/shared/hooks/useDebounce';
+
+const MANUAL_VALUE_DEBOUNCE_MS = 1000;
 
 export type ViewLayout = 'grid' | 'list';
 
@@ -20,7 +23,13 @@ interface PricingAnalysisMethodCardProps {
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   isManualMode?: boolean;
-  onManualValueChange?: (arg: { approachType: string; methodType: string; value: number }) => void;
+  onManualValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
+  disabled?: boolean;
 }
 
 type MethodStatusKey = 'calculated' | 'pending' | 'notIncluded';
@@ -40,32 +49,65 @@ export const PricingAnalysisMethodCard = ({
   onSelectCandidateMethod,
   onDeleteMethod,
   isManualMode,
-  onManualValueChange,
+  onManualValueSync,
+  disabled = false,
 }: PricingAnalysisMethodCardProps) => {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
-  const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue || null);
-  const isEscapingRef = useRef(false);
+  const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue ?? null);
+  const debouncedManualInput = useDebounce(manualInput, MANUAL_VALUE_DEBOUNCE_MS);
+
+  // Local-only sync: 1s after the user stops typing, push the value into the reducer
+  // so anything reading state.summarySelected mid-edit (approach totals, the
+  // SUMMARY_SELECT_METHOD "must have value" guard) sees it without waiting for blur.
+  // The equality check against method.appraisalValue is what stops this from looping:
+  // once the dispatch lands, method.appraisalValue catches up and the effect no-ops.
+  useEffect(() => {
+    if (!isManualMode || !onManualValueSync) return;
+    if (debouncedManualInput == null || debouncedManualInput < 0) return;
+    if (debouncedManualInput === method.appraisalValue) return;
+
+    onManualValueSync({
+      approachType,
+      methodType: method.methodType,
+      value: debouncedManualInput,
+      methodId: method.id,
+    });
+  }, [
+    debouncedManualInput,
+    isManualMode,
+    onManualValueSync,
+    approachType,
+    method.methodType,
+    method.id,
+    method.appraisalValue,
+  ]);
 
   const handleManualChange = (e: { target: { name?: string; value: number | null } }) => {
     setManualInput(e.target.value);
   };
 
+  // Immediate flush on blur — no server call, just guarantees the reducer has the
+  // latest typed value even if the user clicks Save before the 1s debounce above
+  // settles (clicking Save already blurs this input, so this costs the user nothing
+  // extra — it's not the "must click away first" friction the debounce was meant to
+  // replace, since it never requires an action the user wasn't already taking).
   const handleManualBlur = () => {
-    if (isEscapingRef.current) {
-      isEscapingRef.current = false;
-      return;
-    }
-    const num = manualInput ?? 0;
-    if (num >= 0 && onManualValueChange) {
-      onManualValueChange({ approachType, methodType: method.methodType, value: num });
-    }
+    if (!isManualMode || !onManualValueSync) return;
+    if (manualInput == null || manualInput < 0) return;
+    if (manualInput === method.appraisalValue) return;
+
+    onManualValueSync({
+      approachType,
+      methodType: method.methodType,
+      value: manualInput,
+      methodId: method.id,
+    });
   };
 
   const handleManualKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      isEscapingRef.current = true;
-      setManualInput(method.appraisalValue || null);
+      setManualInput(method.appraisalValue ?? null);
       (e.target as HTMLInputElement).blur();
     }
   };
@@ -109,6 +151,7 @@ export const PricingAnalysisMethodCard = ({
       ? {}
       : {
           type: 'button' as const,
+          disabled,
           onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
         };
 
@@ -117,7 +160,7 @@ export const PricingAnalysisMethodCard = ({
         {...wrapperProps}
         className={clsx(
           'flex flex-col gap-2 p-4 rounded-xl border transition-all duration-200 text-left w-full',
-          isManualMode ? '' : 'cursor-pointer',
+          isManualMode ? '' : disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
           method.isSelected
             ? 'ring-2 ring-primary bg-primary/5 border-primary'
             : 'border-gray-200 hover:border-gray-300 hover:shadow-sm bg-white',
@@ -155,11 +198,15 @@ export const PricingAnalysisMethodCard = ({
           ) : (
             <button
               type="button"
+              disabled={disabled}
               onClick={e => {
                 e.stopPropagation();
                 onSelectCandidateMethod({ approachType, methodType: method.methodType });
               }}
-              className="cursor-pointer shrink-0"
+              className={clsx(
+                'shrink-0',
+                disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+              )}
             >
               <div
                 className={clsx(
@@ -242,6 +289,7 @@ export const PricingAnalysisMethodCard = ({
     ? {}
     : {
         type: 'button' as const,
+        disabled,
         onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
       };
 
@@ -250,7 +298,7 @@ export const PricingAnalysisMethodCard = ({
       {...listWrapperProps}
       className={clsx(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full',
-        isManualMode ? '' : 'cursor-pointer',
+        isManualMode ? '' : disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
         method.isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : 'hover:bg-gray-50',
       )}
     >
@@ -267,11 +315,15 @@ export const PricingAnalysisMethodCard = ({
       ) : (
         <button
           type="button"
+          disabled={disabled}
           onClick={e => {
             e.stopPropagation();
             onSelectCandidateMethod({ approachType, methodType: method.methodType });
           }}
-          className="cursor-pointer shrink-0"
+          className={clsx(
+            'shrink-0',
+            disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+          )}
         >
           <div
             className={clsx(
@@ -309,6 +361,7 @@ export const PricingAnalysisMethodCard = ({
         ) : (
           <NumberInput
             value={manualInput}
+            disabled={disabled}
             onChange={handleManualChange}
             onBlur={handleManualBlur}
             onKeyDown={handleManualKeyDown}

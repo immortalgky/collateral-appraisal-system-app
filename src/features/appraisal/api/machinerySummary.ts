@@ -30,6 +30,11 @@ export interface MachinerySummaryFields {
   longitude: number | null;
   obligation: string | null;
   other: string | null;
+  // Book Section 1 — purpose & location intro (วัตถุประสงค์และที่ตั้งเครื่องจักร), edited via
+  // MachineryBookSection1Tab.tsx in the Appraisal Book Builder (Documents page), not here.
+  assignment: string | null; // 1.1 การมอบหมาย
+  valuationPurpose: string | null; // 1.2 วัตถุประสงค์ในการประเมินมูลค่าทรัพย์สิน
+  propertyCharacteristics: string | null; // 1.4 ลักษณะทรัพย์สินที่ประเมินมูลค่า
 }
 
 export type SaveMachinerySummaryRequest = Partial<MachinerySummaryFields>;

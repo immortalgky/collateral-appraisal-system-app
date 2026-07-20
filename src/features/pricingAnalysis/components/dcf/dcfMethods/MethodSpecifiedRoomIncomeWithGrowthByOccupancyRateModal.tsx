@@ -1,4 +1,5 @@
 import type { UseFormGetValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModalProps {
@@ -11,10 +12,11 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
   isReadOnly,
   getOuterFormValues,
 }: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Saleable Area</span>
+        <span className={'w-56'}>{t('dcf.common.saleableArea')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.saleableArea`}
@@ -25,7 +27,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
         </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Total Number of Saleable Area</span>
+        <span className={'w-56'}>{t('dcf.common.totalNumberOfSaleableArea')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.totalNumberOfSaleableArea`}
@@ -34,18 +36,9 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 6, allowNegative: false }}
           />
         </div>
-        <span>Remark</span>
-        <div className={'w-56'}>
-          <RHFInputCell
-            fieldName={`${name}.remark`}
-            inputType={'text'}
-            disabled={isReadOnly}
-            text={{ maxLength: 4000 }}
-          />
-        </div>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Room Income</span>
+        <span className={'w-56'}>{t('dcf.common.roomIncome')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.firstYearAmt`}
@@ -54,10 +47,10 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
           />
         </div>
-        <span className={''}>Bath/ Year</span>
+        <span className={''}>{t('dcf.common.bahtPerYear')}</span>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Increase</span>
+        <span className={'w-56'}>{t('dcf.common.increase')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -66,7 +59,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
@@ -75,10 +68,10 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Occupancy Rate - First Year</span>
+        <span className={'w-56'}>{t('dcf.common.occupancyRateFirstYear')}</span>
         <div className={'w-24'}>
           <RHFInputCell
             fieldName={`${name}.occupancyRateFirstYearPct`}
@@ -87,7 +80,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>
-        <span className={''}>% with growth</span>
+        <span className={''}>{t('dcf.common.percentWithGrowth')}</span>
         <div className={'w-24'}>
           <RHFInputCell
             fieldName={`${name}.occupancyRatePct`}
@@ -96,7 +89,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className={'w-24'}>
           <RHFInputCell
             fieldName={`${name}.occupancyRateYrs`}
@@ -105,10 +98,10 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
+        <span className={'w-56'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -122,7 +115,18 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
+      </div>
+      <div className="flex flex-row gap-1.5">
+        <span className={'w-56'}>{t('dcf.common.remark')}</span>
+        <div className={'flex-1'}>
+          <RHFInputCell
+            fieldName={`${name}.remark`}
+            inputType={'text'}
+            disabled={isReadOnly}
+            text={{ maxLength: 4000 }}
+          />
+        </div>
       </div>
     </div>
   );

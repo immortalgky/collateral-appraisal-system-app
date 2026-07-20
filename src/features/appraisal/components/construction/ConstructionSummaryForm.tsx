@@ -298,6 +298,7 @@ export function ConstructionSummaryForm({
         <textarea
           value={remark}
           onChange={e => onSetRemark(e.target.value)}
+          maxLength={4000}
           disabled={readOnly || ciMode}
           rows={3}
           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-xs leading-relaxed focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-500 resize-none transition-colors"

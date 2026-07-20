@@ -323,7 +323,14 @@ const MarketComparableForm = () => {
   ];
 
   const remark: FormField[] = [
-    { type: 'textarea', name: 'notes', label: '', wrapperClassName: 'col-span-12' },
+    {
+      type: 'textarea',
+      name: 'notes',
+      label: '',
+      wrapperClassName: 'col-span-12',
+      maxLength: 4000,
+      showCharCount: true,
+    },
   ];
 
   return (

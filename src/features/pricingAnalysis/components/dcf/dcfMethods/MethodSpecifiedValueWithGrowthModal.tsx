@@ -1,4 +1,5 @@
 import type { UseFormGetValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 export function MethodSpecifiedValueWithGrowthModal({
@@ -10,10 +11,11 @@ export function MethodSpecifiedValueWithGrowthModal({
   isReadOnly?: boolean;
   getOuterFormValues: UseFormGetValues<any>;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>First year amount</span>
+        <span className={'w-56'}>{t('dcf.methods.valueWithGrowth.firstYearAmount')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.firstYearAmt`}
@@ -26,7 +28,10 @@ export function MethodSpecifiedValueWithGrowthModal({
             }}
           />
         </div>
-        <span className={''}>increase</span>
+        <span>{t('dcf.common.bahtPerYear')}</span>
+      </div>
+      <div className="flex flex-row gap-1.5 items-center">
+        <span className={'w-56'}>{t('dcf.common.increase')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -39,7 +44,7 @@ export function MethodSpecifiedValueWithGrowthModal({
             }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
@@ -53,10 +58,10 @@ export function MethodSpecifiedValueWithGrowthModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
+        <span className={'w-56'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -70,7 +75,7 @@ export function MethodSpecifiedValueWithGrowthModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
     </div>
   );

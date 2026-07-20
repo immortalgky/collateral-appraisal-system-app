@@ -1,62 +1,104 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import { useGetUsers } from '@features/userManagement/api/users';
+import { useGetGroups } from '@features/userManagement/api/groups';
 import Autocomplete from '@shared/components/inputs/Autocomplete';
 
 interface PicAutocompleteProps {
   /**
-   * The committed value — a full display name ("First Last") matching what the
-   * PIC column stores (`COALESCE(CONCAT(FirstName, ' ', LastName), AssignedTo)`).
-   * Empty string means nothing selected.
+   * The committed PIC key — a person's usercode or a workflow group's name,
+   * matching the view's stable `AssignedTo` column. Empty string = nothing selected.
    */
-  value: string;
-  onChange: (displayName: string) => void;
+  pic: string;
+  /** Assignee type of the committed value: '1' = person, '2' = group, '' = none. */
+  picType: string;
+  /** Called with the selected (key, type, displayLabel), or ('', '', '') on clear. */
+  onChange: (pic: string, picType: string, label: string) => void;
   placeholder?: string;
   /**
-   * User scope to restrict the lookup.
-   * 'Bank' for internal tasks (default), 'Company' for external appraisal-company tasks.
-   * Omit to search across all users.
+   * Scope for both lookups. 'Bank' for internal tasks (default), 'Company' for
+   * external appraisal-company tasks.
    */
   scope?: 'Bank' | 'Company';
 }
 
 /**
- * Autocomplete for PIC filters.
- *
- * The BE `pic` query param is a LIKE match against the PIC column which stores
- * the user's full display name (FirstName + ' ' + LastName). So we commit the
- * display name as the value, while showing "First Last (username)" as the label
- * so the operator knows exactly who they've picked.
+ * Autocomplete for PIC filters that searches both persons and workflow assignment
+ * groups, split into two sections. Each option's value encodes the assignee type
+ * so the committed key can't collide across the two sources:
+ *   `1|<usercode>` for a person, `2|<groupName>` for a group.
+ * The BE matches this key exactly on `AssignedTo` (+ `AssignedType`).
  */
-function PicAutocomplete({ value, onChange, placeholder = 'All PIC', scope = 'Bank' }: PicAutocompleteProps) {
+function PicAutocomplete({
+  pic,
+  picType,
+  onChange,
+  placeholder = 'All PIC',
+  scope = 'Bank',
+}: PicAutocompleteProps) {
+  const { t } = useTranslation('monitoring');
   const [inputText, setInputText] = useState('');
+  const [selectedLabel, setSelectedLabel] = useState('');
   const debouncedSearch = useDebounce(inputText, 300);
 
-  const { data, isFetching } = useGetUsers({
+  const { data: usersData, isFetching: usersFetching } = useGetUsers({
     scope,
     search: debouncedSearch || undefined,
     pageSize: 20,
   });
 
-  const items = useMemo(
-    () =>
-      (data?.items ?? []).map(u => ({
-        value: `${u.firstName} ${u.lastName}`.trim(),
-        label: `${u.firstName} ${u.lastName} (${u.username})`,
-      })),
-    [data],
-  );
+  const { data: groupsData, isFetching: groupsFetching } = useGetGroups({
+    scope,
+    search: debouncedSearch || undefined,
+    pageSize: 20,
+  });
+
+  const items = useMemo(() => {
+    const persons = (usersData?.items ?? []).map(u => {
+      const fullName = `${u.firstName} ${u.lastName}`.trim();
+      return {
+        value: `1|${u.username}`,
+        // Mirror the grid's PIC cell format: "usercode - display name".
+        label: fullName ? `${u.username} - ${fullName}` : u.username,
+        group: t('common.picPersons'),
+      };
+    });
+    const groups = (groupsData?.items ?? []).map(g => ({
+      value: `2|${g.name}`,
+      // Mirror the grid's PIC cell format: "group name - description".
+      label: g.description ? `${g.name} - ${g.description}` : g.name,
+      group: t('common.picGroups'),
+    }));
+    return [...persons, ...groups];
+  }, [usersData, groupsData, t]);
+
+  const composite = pic ? `${picType}|${pic}` : '';
 
   return (
     <Autocomplete
       items={items}
-      value={value}
-      displayText={value || undefined}
-      onChange={onChange}
+      value={composite}
+      displayText={selectedLabel || undefined}
+      onChange={v => {
+        if (!v) {
+          setSelectedLabel('');
+          onChange('', '', '');
+          return;
+        }
+        const sep = v.indexOf('|');
+        const type = v.slice(0, sep);
+        const key = v.slice(sep + 1);
+        const label = items.find(i => i.value === v)?.label ?? key;
+        setSelectedLabel(label);
+        onChange(key, type, label);
+      }}
       onInputChange={setInputText}
-      isLoading={isFetching}
+      isLoading={usersFetching || groupsFetching}
+      showAllOnFocus
       placeholder={placeholder}
       ariaLabel="Filter by PIC"
+      menuClassName="w-80"
     />
   );
 }

@@ -25,7 +25,7 @@ import { mapMachinerySummaryResponseToForm } from '../../utils/mappers';
  * machines" (not tied to any single machine). Shown as a tab in the Property
  * Information page when the appraisal contains machinery.
  */
-export const MachinerySummaryTab = () => {
+export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
@@ -51,7 +51,10 @@ export const MachinerySummaryTab = () => {
     saveMutation.mutate(
       { appraisalId, ...values },
       {
-        onSuccess: () => toast.success(t('propertyInfo.machinerySummary.saved')),
+        onSuccess: () => {
+          toast.success(t('propertyInfo.machinerySummary.saved'));
+          onSaved?.();
+        },
         onError: () => toast.error(t('propertyInfo.machinerySummary.saveFailed')),
       },
     );

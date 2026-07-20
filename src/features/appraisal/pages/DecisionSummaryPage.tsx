@@ -219,6 +219,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.conditionDetails'),
         placeholder: t('decisionSummary.fields.conditionDetailsPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     remarkFields: [
@@ -235,6 +237,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.remarkDetails'),
         placeholder: t('decisionSummary.fields.remarkPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     appraiserOpinionFields: [
@@ -251,6 +255,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.appraiserOpinion'),
         placeholder: t('decisionSummary.fields.appraiserOpinionPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     committeeOpinionFields: [
@@ -269,6 +275,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         required: true,
         placeholder: t('decisionSummary.fields.committeeOpinionPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     reviewPriceFields: [
@@ -286,6 +294,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         name: 'additionalAssumptions',
         label: t('decisionSummary.fields.additionalAssumptionsDetails'),
         placeholder: t('decisionSummary.fields.additionalAssumptionsPlaceholder'),
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
   };

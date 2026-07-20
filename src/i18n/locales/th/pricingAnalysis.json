@@ -47,7 +47,11 @@
     "manualUploadClick": "คลิกเพื่ออัปโหลด PDF",
     "manualRemark": "หมายเหตุ",
     "manualRemarkPlaceholder": "เพิ่มหมายเหตุหรือบันทึกสำหรับการประเมินด้วยตนเองนี้...",
-    "openPdf": "เปิด PDF"
+    "openPdf": "เปิด PDF",
+    "attachedDocuments": "เอกสารที่แนบ",
+    "untitledDocument": "เอกสารไม่มีชื่อ",
+    "removeDocumentTitle": "ลบเอกสาร",
+    "removeDocumentMessage": "ลบ \"{{fileName}}\" ใช่หรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับได้"
   },
   "methodStatus": {
     "calculated": "คำนวณแล้ว",
@@ -76,14 +80,19 @@
     "calculateFirst": "กรุณาคำนวณมูลค่าประเมินก่อน",
     "methodNotSelected": "ไม่ได้เลือกวิธีการ",
     "methodAdded": "เพิ่มวิธีการแล้ว",
+    "approachNotSelected": "ไม่ได้เลือกแนวทาง",
     "methodDeleted": "ลบวิธีการแล้ว",
+    "documentRemoved": "ลบเอกสารแล้ว",
+    "documentRemoveFailed": "ลบเอกสารไม่สำเร็จ",
+    "documentRequired": "ต้องมีเอกสารอย่างน้อย 1 ฉบับ",
     "saveSelectionFirst": "บันทึกการเลือกก่อนเพื่อสร้าง ID วิธีการและแนวทางก่อนการคำนวณ",
     "uploadXlsxOnly": "รับเฉพาะไฟล์ .xlsx เท่านั้น",
     "uploadMaxSize": "ไฟล์ต้องมีขนาดไม่เกิน 5 MB",
     "uploadFailed": "อัปโหลดไม่สำเร็จ",
     "uploadDeleted": "ลบการอัปโหลดแล้ว",
     "deleteFailed": "ลบไม่สำเร็จ",
-    "uploadSuccess": "อัปโหลด {{n}} แถวสำเร็จ"
+    "uploadSuccess": "อัปโหลด {{n}} แถวสำเร็จ",
+    "someFilesFailed": "บันทึกไม่สำเร็จ: {{files}}"
   },
   "footer": {
     "cancel": "ยกเลิก",
@@ -211,7 +220,119 @@
     "title": "กระแสเงินสดลดราคา",
     "highestBestUsed": "การใช้ประโยชน์สูงสุดและดีที่สุด",
     "assumptions": "สมมติฐาน",
-    "viewSummary": "ดูสรุปสมมติฐาน"
+    "viewSummary": "ดูสรุปสมมติฐาน",
+    "common": {
+      "startIn": "เริ่มในปีที่",
+      "year": "ปี",
+      "every": "ทุก",
+      "percentEvery": "% ทุก",
+      "percentWithGrowth": "% พร้อมการเติบโต",
+      "increaseRate": "อัตราการเพิ่มขึ้น",
+      "increase": "อัตราการเพิ่มขึ้น",
+      "remark": "หมายเหตุ",
+      "roomType": "ประเภทห้อง",
+      "roomIncome": "รายได้ห้อง",
+      "totalRoomIncome": "รายได้ห้องรวม",
+      "saleableArea": "พื้นที่ขายได้",
+      "totalNumberOfSaleableArea": "พื้นที่ขายได้รวม",
+      "occupancyRateFirstYear": "อัตราการเข้าพัก - ปีแรก",
+      "averageRoomRate": "อัตราค่าห้องเฉลี่ย",
+      "delete": "ลบ",
+      "addRoom": "+ เพิ่มห้อง",
+      "total": "รวม",
+      "totals": "ยอดรวม",
+      "bahtPerDay": "บาท/ วัน",
+      "bahtPerYear": "บาท/ ปี",
+      "bahtPerMonth": "บาท/ เดือน",
+      "sqMeter": "ตร.ม.",
+      "baht": "บาท",
+      "proportions": "สัดส่วน",
+      "bahtPerRoomPerDay": "บาท/ ห้อง/ วัน",
+      "projectionPeriod": "ระยะเวลาประมาณการ:",
+      "daysPerYear": "จำนวนวันต่อปี:",
+      "years": "ปี",
+      "days": "วัน",
+      "yearColumn": "ปีที่ {{year}}"
+    },
+    "methods": {
+      "roomIncomePerDay": {
+        "roomIncomeHeader": "รายได้ห้อง",
+        "totalRoomIncomeHeader": "รายได้ห้องรวม"
+      },
+      "roomIncomeBySeasonalRates": {
+        "numberOfSeasons": "จำนวนฤดูกาล",
+        "seasonName": "ชื่อฤดูกาล",
+        "numberOfMonths": "จำนวนเดือน",
+        "seasonDescription": "รายละเอียดฤดูกาล",
+        "roomIncomeHeader": "รายได้ห้อง",
+        "totalPerDay": "รวม/ วัน",
+        "addRoomType": "+ เพิ่มประเภทห้อง",
+        "averageRoomPerDay": "เฉลี่ย/ ห้อง/ วัน",
+        "averageRoomPerSeason": "เฉลี่ย/ ห้อง/ ฤดูกาล"
+      },
+      "rentalIncomePerSquareMeter": {
+        "totalBuildingArea": "พื้นที่อาคารรวม",
+        "areaDescription": "รายละเอียดพื้นที่",
+        "rentalPrice": "ราคาเช่า",
+        "unitPerSqmMonth": "บาท / ตร.ม. / เดือน",
+        "totalSaleableArea": "พื้นที่ขายได้รวม",
+        "sqM": "ตร.ม.",
+        "totalRentalIncome": "รายได้ค่าเช่ารวม",
+        "averageRentalPrice": "ราคาเช่าเฉลี่ย",
+        "unitBahtSqmMonth": "บาท/ ตร.ม./ เดือน"
+      },
+      "proportion": {
+        "percentOf": "% ของ"
+      },
+      "rentalIncomePerMonth": {
+        "unitPerRoomMonth": "บาท / ห้อง / เดือน"
+      },
+      "positionBasedSalary": {
+        "jobPosition": "ตำแหน่งงาน",
+        "salary": "เงินเดือน",
+        "unitPerPersonMonth": "บาท / คน / เดือน",
+        "numberOfEmployees": "จำนวนพนักงาน",
+        "totalSalary": "เงินเดือนรวม",
+        "addJobPosition": "+ เพิ่มตำแหน่งงาน"
+      },
+      "roomCostBasedOnExpenses": {
+        "roomCost": "ต้นทุนห้อง",
+        "unitPerRoomDay": "บาท / ห้อง / วัน",
+        "totalRoomExpenses": "ค่าใช้จ่ายห้องรวม",
+        "unitPerDay": "บาท / วัน"
+      },
+      "tierOfPropertyValue": {
+        "totalGovLandPrice": "ราคาประเมินที่ดินราชการรวม",
+        "totalGovBuildingPrice": "ราคาประเมินอาคารราชการรวม",
+        "govLandPriceIncreaseBy": "ราคาที่ดินราชการเพิ่มขึ้นทุก",
+        "taxRatesTableTitle": "อัตราภาษีที่ดินและสิ่งปลูกสร้าง",
+        "estimatedPrice": "ราคาประเมิน (บาท)",
+        "taxRate": "อัตราภาษี (%)",
+        "taxCeiling": "เพดานภาษี (บาท)",
+        "from": "จาก",
+        "to": "ถึง",
+        "taxTableTitle": "ภาษีที่ดินและสิ่งปลูกสร้าง",
+        "yearLabel": "ปีที่ {{year}}",
+        "row1Label": "(1) ราคาที่ดินราชการ (พร้อมการเพิ่มขึ้นรายปี)",
+        "row2Label": "(2) ราคาประเมินราชการสำหรับอาคาร",
+        "row3Label": "(1+2) ราคาทรัพย์สินราชการรวม",
+        "propertyTaxRow": "ภาษีทรัพย์สินจากราคาประเมินราชการ"
+      },
+      "proportionOfNewReplacementCost": {
+        "percentOfNewReplacementCost": "% ของต้นทุนทดแทนใหม่"
+      },
+      "foodAndBeverageExpenses": {
+        "label": "ค่าใช้จ่ายอาหารและเครื่องดื่ม",
+        "unitPerRoomDay": "บาท/ ห้อง/ วัน"
+      },
+      "valueWithGrowth": {
+        "firstYearAmount": "จำนวนเงินปีแรก"
+      },
+      "energyCostIndex": {
+        "energyCostIndex": "ดัชนีต้นทุนพลังงาน",
+        "energyCostIncreaseRate": "อัตราการเพิ่มขึ้นของต้นทุนพลังงาน"
+      }
+    }
   },
   "profitRent": {
     "title": "การวิเคราะห์กำไรจากค่าเช่า",

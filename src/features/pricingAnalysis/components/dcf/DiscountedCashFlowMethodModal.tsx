@@ -209,11 +209,6 @@ export function DiscountedCashFlowMethodModal({
               <div className="flex flex-row gap-1.5">
                 <span className="w-56">Category</span>
                 <div className="w-80">
-                  {/* <RHFInputCell
-                  fieldName="targetCategoryClientId"
-                  inputType="select"
-                  options={categoryOptions}
-                /> */}
                   <span className="text-sm">
                     {currentSection?.categories?.find(
                       c => c.clientId === getValues('targetCategoryClientId'),
@@ -233,8 +228,13 @@ export function DiscountedCashFlowMethodModal({
                   />
                 </div>
                 {assumptionType === 'M99' ? (
-                  <div className="flex">
-                    <RHFInputCell fieldName="assumptionName" inputType="text" />
+                  <div className="flex items-center gap-1.5">
+                    <span>Description</span>
+                    <RHFInputCell
+                      fieldName="assumptionName"
+                      inputType="text"
+                      text={{ maxLength: 100 }}
+                    />
                   </div>
                 ) : (
                   // Keep assumptionName registered so reset() values survive handleSubmit

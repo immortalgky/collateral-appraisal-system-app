@@ -552,6 +552,7 @@
       "groupRenameFailed": "重命名组失败",
       "groupDeleteFailed": "删除组失败",
       "propertyRemoveFailed": "从组中移除房产失败",
+      "propertyDeleteFailed": "删除房产失败",
       "propertyMoveFailed": "移动房产失败",
       "propertyPasteFailed": "粘贴房产失败",
       "reorderFailed": "重排房产失败"
@@ -642,6 +643,66 @@
       "saveFailed": "保存清单失败",
       "saved": "清单已保存"
     }
+  },
+  "valuationDocuments": {
+    "sections": {
+      "documentChecklist": "文件清单",
+      "appraisalBookBuilder": "估价报告书编制",
+      "appendix": "附录",
+      "machinerySummary": "机械设备摘要",
+      "machineryBookSection1": "机械设备手册 — 目的与位置"
+    },
+    "appendixChooser": {
+      "title": "选择附录类型",
+      "empty": "未找到附录类型"
+    },
+    "boardTitle": "估价文件",
+    "typesCount_one": "{{count}} 种类型",
+    "typesCount_other": "{{count}} 种类型",
+    "progress": "已附加 {{uploaded}} / {{total}}",
+    "expandAll": "全部展开",
+    "collapseAll": "全部收起",
+    "noFile": "无文件",
+    "fileCount_one": "{{count}} 个文件",
+    "fileCount_other": "{{count}} 个文件",
+    "attach": "附加文件",
+    "generate": "生成报告",
+    "view": "查看",
+    "remove": "移除",
+    "uploadedBy": "上传者 {{name}}",
+    "empty": "尚未附加文件",
+    "noTypes": "未找到文件类型",
+    "loadFailed": "加载文件清单失败",
+    "deleteDialog": {
+      "title": "移除文件",
+      "message": "确定要移除此文件吗？此操作无法撤销。",
+      "confirm": "移除"
+    }
+  },
+  "machineryBookSection1": {
+    "title": "机械设备手册 — 目的与位置",
+    "subtitle": "机械设备估价报告书第一部分的填写内容",
+    "save": "保存",
+    "saved": "第一部分内容已保存",
+    "saveFailed": "保存第一部分内容失败",
+    "loadFailed": "加载第一部分内容失败",
+    "fields": {
+      "assignment": "委托事项",
+      "valuationPurpose": "资产评估目的",
+      "propertyCharacteristics": "评估资产的特征"
+    }
+  },
+  "reportPreview": {
+    "title": "估价报告书预览",
+    "refresh": "刷新预览",
+    "openInNewTab": "在新标签页中打开",
+    "generatePreview": "生成预览",
+    "idleHint": "生成鉴定报告预览以在此处查看。",
+    "generating": "正在生成预览…",
+    "fetchFailed": "加载报告预览失败",
+    "renderFailed": "渲染报告预览失败",
+    "renderTimedOut": "预览渲染耗时过长，请重试。",
+    "machinerySavedPrompt": "机械设备摘要已保存 — 点击“刷新预览”以更新报告。"
   },
   "gallery": {
     "sectionTitle": "图库",
@@ -843,6 +904,7 @@
     "fileUploadFailed": "上传文件失败",
     "documentLoadFailed": "加载待编辑文档失败",
     "onlyImageFilesAllowed": "仅允许图片文件",
+    "invalidDocumentFileType": "仅允许图片文件 (JPG、JPEG、PNG) 或 PDF 文件",
     "galleryFilesAdded": "已从图库添加文件",
     "galleryFilesAddFailed": "从图库添加文件失败",
     "documentRemoved": "文档已移除",
@@ -888,7 +950,9 @@
     "leaseAgreementCondoCreated": "公寓租赁协议创建成功",
     "draftSaved": "草稿保存成功",
     "marketComparableUpdated": "市场可比案例更新成功",
-    "marketComparableCreated": "市场可比案例创建成功"
+    "marketComparableCreated": "市场可比案例创建成功",
+    "appraisalReportNotAvailable": "此评估尚未附加完整评估报告。",
+    "appraisalSummaryNotAvailable": "此评估尚未附加评估摘要报告。"
   },
   "common": {
     "unsavedChanges": "有未保存的更改",
@@ -929,7 +993,7 @@
   },
   "deleteConfirmationModal": {
     "title": "删除房产",
-    "message": "确定要从组中移除此房产吗？此操作无法撤销。",
+    "message": "确定要删除此房产吗？这将永久删除该房产及其所有明细。此操作无法撤销。",
     "confirm": "删除"
   },
   "editPropertyModal": {

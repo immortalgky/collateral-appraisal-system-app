@@ -349,7 +349,7 @@ export function buildWQSFinalValueDerivedRules(args: {
         const finalValue = getValues(finalValueFinalValuePath()) ?? 0;
         const calculations = (getValues('WQSCalculations') as any[]) ?? [];
         const detectedUnit = detectPriceUnit(calculations);
-        const isUnitPrice = detectedUnit === '01' || detectedUnit === '02';
+        const isUnitPrice = detectedUnit === 'PerSqWa' || detectedUnit === 'PerSqm';
         return isUnitPrice ? finalValue : roundToThousand(finalValue);
       },
     },

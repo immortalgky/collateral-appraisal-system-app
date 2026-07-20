@@ -12,6 +12,7 @@ import type {
   CollateralMasterDto,
   ConstructionInspectionWorkDetailsDto,
   EditCollateralMasterBody,
+  HostCollateralIdBackfillResponse,
   RestoreBody,
   SoftDeleteBody,
 } from './types';
@@ -263,6 +264,24 @@ export const useReplayBackfill = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: collateralMasterKeys.backfillReports() });
       queryClient.invalidateQueries({ queryKey: collateralMasterKeys.catalogs() });
+    },
+  });
+};
+
+// ─── POST /collateral-masters/admin/backfill-host-collateral-id ──────────────
+
+/**
+ * Fire-and-forget admin trigger that backfills the AS400 HostCollateralId onto
+ * collateral masters. There is no polling/status endpoint — results are
+ * observed server-side (logs), so this mutation just confirms the job started.
+ */
+export const useBackfillHostCollateralId = () => {
+  return useMutation({
+    mutationFn: async (): Promise<HostCollateralIdBackfillResponse> => {
+      const { data } = await axios.post<HostCollateralIdBackfillResponse>(
+        '/collateral-masters/admin/backfill-host-collateral-id',
+      );
+      return data;
     },
   });
 };

@@ -181,11 +181,6 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
   );
   const remarkFields = lbModelInfoFields.filter(f => f.name === 'remark');
 
-  // BV-only: constructionYear has no appraisal counterpart.
-  const constructionYearFields = lbModelBuildingDetailFields.filter(
-    f => f.name === 'constructionYear',
-  );
-
   return (
     <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('modelDetail.title')}</h2>
@@ -224,7 +219,6 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
 
         <SectionRow title={t('modelDetail.sections.isResidential')} icon="house">
           <FormFields fields={isResidentialField} />
-          <FormFields fields={constructionYearFields} />
         </SectionRow>
 
         <SectionRow title={t('modelDetail.sections.generalStructure')} icon="warehouse">

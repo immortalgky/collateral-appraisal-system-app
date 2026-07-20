@@ -283,6 +283,13 @@ export interface BackfillReportPage {
   pageSize: number;
 }
 
+// ─── Host Collateral ID backfill (AS400) ──────────────────────────────────────
+
+export interface HostCollateralIdBackfillResponse {
+  jobId?: string;
+  startedAt?: string;
+}
+
 // ─── Construction inspection work details (Appraisal-side prefill) ────────────
 
 export interface ConstructionWorkDetailDto {

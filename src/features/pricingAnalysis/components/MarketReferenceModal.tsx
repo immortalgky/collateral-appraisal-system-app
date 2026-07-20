@@ -85,7 +85,7 @@ export function MarketReferenceModal({
         <div className="flex min-h-full items-start justify-center p-4 pt-16">
           <DialogPanel
             transition
-            className="w-full max-w-4xl bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 ease-out data-closed:opacity-0 data-closed:scale-95"
+            className="w-full max-w-8xl bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 ease-out data-closed:opacity-0 data-closed:scale-95"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -113,10 +113,7 @@ export function MarketReferenceModal({
             </div>
 
             {/* Body */}
-            <div
-              className="px-6 py-5 overflow-y-auto"
-              style={{ maxHeight: 'calc(90vh - 120px)' }}
-            >
+            <div className="px-6 py-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
               {openedRef ? (
                 <MarketReferenceMethodPanel
                   pricingAnalysisId={openedRef.pricingAnalysisId}
@@ -133,10 +130,14 @@ export function MarketReferenceModal({
                   anchorRefKey={anchorRefKey}
                   hostMethodId={hostMethodId}
                   onOpenReference={ref => setOpenedRef(ref)}
-                  onApplyValue={onApplyValue ? value => {
-                    onApplyValue(value);
-                    handleClose();
-                  } : undefined}
+                  onApplyValue={
+                    onApplyValue
+                      ? value => {
+                          onApplyValue(value);
+                          handleClose();
+                        }
+                      : undefined
+                  }
                   readOnly={readOnly}
                   currentAnchorLabel={currentAnchorLabel}
                 />

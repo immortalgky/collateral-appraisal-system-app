@@ -1,9 +1,15 @@
-import { useState, useRef, useEffect, useId, useMemo } from 'react';
+import { Fragment, useState, useRef, useEffect, useId, useMemo } from 'react';
 import Icon from '@/shared/components/Icon';
 
 export interface AutocompleteItem {
   value: string;
   label: string;
+  /**
+   * Optional section name. When set, a non-selectable section header is rendered
+   * above the first item of each group. Items without `group` render flat.
+   * Callers must keep same-group items contiguous in the `items` array.
+   */
+  group?: string;
 }
 
 interface AutocompleteProps {
@@ -214,21 +220,34 @@ function Autocomplete({
               Searching…
             </li>
           ) : (
-            visibleItems.map((item, i) => (
-              <li key={item.value} role="option" aria-selected={i === highlightIndex}>
-                <button
-                  type="button"
-                  onMouseDown={() => handleSelect(item)}
-                  className={`w-full text-left px-3 py-2 truncate ${
-                    i === highlightIndex
-                      ? 'bg-primary/10 text-primary'
-                      : 'hover:bg-primary/10 hover:text-primary'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              </li>
-            ))
+            visibleItems.map((item, i) => {
+              const showHeader = !!item.group && item.group !== visibleItems[i - 1]?.group;
+              return (
+                <Fragment key={item.value}>
+                  {showHeader && (
+                    <li
+                      role="presentation"
+                      className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400"
+                    >
+                      {item.group}
+                    </li>
+                  )}
+                  <li role="option" aria-selected={i === highlightIndex}>
+                    <button
+                      type="button"
+                      onMouseDown={() => handleSelect(item)}
+                      className={`w-full text-left px-3 py-2 truncate ${
+                        i === highlightIndex
+                          ? 'bg-primary/10 text-primary'
+                          : 'hover:bg-primary/10 hover:text-primary'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  </li>
+                </Fragment>
+              );
+            })
           )}
         </ul>
       )}

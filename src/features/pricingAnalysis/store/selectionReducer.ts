@@ -1,4 +1,5 @@
 import type { Approach, Method } from '../types/selection';
+import type { PricingAnalysisDocumentDtoType } from '../schemas';
 
 /*
 // state to collect approach & method which selected
@@ -27,7 +28,25 @@ export type SelectionState = {
 
   systemCalculationMode: SystemCalculationMode;
 
+  // Track dirty method value change
+  dirtyManualValueKeys: string[];
+  // Track selected method or approach change
+  dirtyMethodApproachTypes: string[];
+  /** True when the final approach selection has changed locally since the last successful
+   *  Save Summary. Populated by SUMMARY_SELECT_APPROACH, consumed by saveSummary to know
+   *  whether a selectApproach call is needed, cleared by SUMMARY_SAVE. */
+  dirtyApproachSelection: boolean;
+
   pricingAnalysisId?: string;
+
+  /** Analysis-level remark ("Notes & Assumptions"), loaded from the server on INIT and
+   *  persisted via UpdateRemark as part of the batched Save Summary click. */
+  remark?: string | null;
+
+  /** Documents already attached to this analysis (loaded from the server on INIT).
+   *  Distinct from the pending-upload queue in PricingAnalysisApproachMethodSelector —
+   *  these are already persisted; removal is immediate (not batched into Save Summary). */
+  documents?: PricingAnalysisDocumentDtoType[];
 
   activeMethod?: {
     pricingAnalysisId?: string;
@@ -45,6 +64,8 @@ export type SelectionAction =
         pricingAnalysisId?: string;
         approaches: Approach[];
         useSystemCalc?: boolean;
+        remark?: string | null;
+        documents?: PricingAnalysisDocumentDtoType[];
       };
     }
   | {
@@ -78,7 +99,15 @@ export type SelectionAction =
   | {
       type: 'CALCULATION_SAVE';
       payload: { approachType: string; methodType: string; appraisalValue: number };
-    }; // TODO: remove this state if api ready
+    } // TODO: remove this state if api ready
+  | {
+      /** Local-only sync fired both immediately on blur and ~1s after the user stops
+       *  typing in a manual-mode value input (see PricingAnalysisMethodCard). Does not
+       *  touch the server — saveSummary (useSelectionActions) persists dirtyManualValueKeys
+       *  as part of the batched Save click. */
+      type: 'SUMMARY_UPDATE_METHOD_VALUE';
+      payload: { approachType: string; methodType: string; value: number; methodId?: string };
+    };
 
 /** filter out approaches and methods that are not selected in editing mode
  * @param approaches - approaches which want to filter out
@@ -139,9 +168,16 @@ export function approachMethodReducer(
         summarySelected: cloneApproaches(visibleApproach),
         systemCalculationMode: action.payload.useSystemCalc === false ? 'FillIn' : 'System',
         pricingAnalysisId: action.payload.pricingAnalysisId,
+        remark: action.payload.remark ?? null,
+        documents: action.payload.documents ?? [],
         // Preserve activeMethod across re-INIT (e.g. detail query refetch after save)
         // so the open calculation panel doesn't unmount mid-edit.
         activeMethod: state.activeMethod,
+        // Preserve across re-INIT too (e.g. a background refetch firing between the user
+        // typing a manual value and clicking Save shouldn't drop the pending dirty flag).
+        dirtyManualValueKeys: state.dirtyManualValueKeys ?? [],
+        dirtyMethodApproachTypes: state.dirtyMethodApproachTypes ?? [],
+        dirtyApproachSelection: state.dirtyApproachSelection ?? false,
       };
     }
 
@@ -270,6 +306,18 @@ export function approachMethodReducer(
       )
         return state;
 
+      // Determine up front whether this actually changes the target approach's selected
+      // method — reselecting the already-selected method is a no-op, and must NOT flag
+      // the approach dirty (nothing to send to the server).
+      const targetApproachForMethod = state.summarySelected.find(
+        appr => appr.approachType === action.payload.approachType,
+      );
+      const currentlySelectedMethod = targetApproachForMethod
+        ? checkMethodIsSelected(targetApproachForMethod.methods)
+        : null;
+      const isRealMethodChange =
+        !!targetApproachForMethod && action.payload.methodType !== currentlySelectedMethod;
+
       // if any method has select, clear that method and enable selected one
       const nextState: SelectionState = {
         ...state,
@@ -290,6 +338,11 @@ export function approachMethodReducer(
             })),
           };
         }),
+        dirtyMethodApproachTypes:
+          isRealMethodChange &&
+          !state.dirtyMethodApproachTypes.includes(action.payload.approachType)
+            ? [...state.dirtyMethodApproachTypes, action.payload.approachType]
+            : state.dirtyMethodApproachTypes,
       };
       return nextState;
     }
@@ -313,12 +366,29 @@ export function approachMethodReducer(
           ...appr,
           isSelected: appr.approachType === action.payload.approachType,
         })),
+        // The guard above already early-returned if this approach was already the final
+        // one, so reaching here always means a real change.
+        dirtyApproachSelection: true,
       };
       return nextState;
     }
 
+    /** Fired by saveSummary once a Save Summary click has fully succeeded server-side.
+     *  Clears all three dirty trackers so the next save only sends new changes. */
     case 'SUMMARY_SAVE': {
-      return state;
+      if (
+        state.dirtyManualValueKeys.length === 0 &&
+        state.dirtyMethodApproachTypes.length === 0 &&
+        !state.dirtyApproachSelection
+      )
+        return state;
+
+      return {
+        ...state,
+        dirtyManualValueKeys: [],
+        dirtyMethodApproachTypes: [],
+        dirtyApproachSelection: false,
+      };
     }
 
     case 'CALCULATION_SELECTED': {
@@ -382,6 +452,38 @@ export function approachMethodReducer(
           };
         }),
       };
+      return nextState;
+    }
+
+    case 'SUMMARY_UPDATE_METHOD_VALUE': {
+      if (state.summarySelected == null) return state;
+      if (action.payload.value == null || action.payload.value < 0) return state;
+
+      const nextState: SelectionState = {
+        ...state,
+        summarySelected: state.summarySelected.map(appr => {
+          if (appr.approachType !== action.payload.approachType) return appr;
+
+          const updatedMethods = appr.methods.map(method => {
+            if (method.methodType !== action.payload.methodType) return method;
+            return { ...method, appraisalValue: action.payload.value };
+          });
+
+          const selectedMethod = updatedMethods.find(m => m.isSelected);
+          return {
+            ...appr,
+            methods: updatedMethods,
+            // Keep the approach's own appraisalValue in sync only when the edited
+            // method is the one currently selected — mirrors CALCULATION_SAVE.
+            appraisalValue: selectedMethod?.appraisalValue ?? appr.appraisalValue,
+          };
+        }),
+        dirtyManualValueKeys:
+          action.payload.methodId && !state.dirtyManualValueKeys.includes(action.payload.methodId)
+            ? [...state.dirtyManualValueKeys, action.payload.methodId]
+            : state.dirtyManualValueKeys,
+      };
+
       return nextState;
     }
 

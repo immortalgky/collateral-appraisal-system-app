@@ -1,4 +1,5 @@
 import type { UseFormGetValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayPropsModalProps {
@@ -11,10 +12,11 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
   isReadOnly,
   getOuterFormValues,
 }: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayPropsModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Food and Beverage Expenses</span>
+        <span className={'w-56'}>{t('dcf.methods.foodAndBeverageExpenses.label')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.firstYearAmt`}
@@ -23,10 +25,10 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
           />
         </div>
-        <span className={''}>Baht/ Room/ Day</span>
+        <span className={''}>{t('dcf.methods.foodAndBeverageExpenses.unitPerRoomDay')}</span>
       </div>
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Increase</span>
+        <span className={'w-56'}>{t('dcf.common.increase')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRatePct`}
@@ -35,7 +37,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
             number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
           />
         </div>
-        <span className={''}>% every</span>
+        <span className={''}>{t('dcf.common.percentEvery')}</span>
         <div className="w-24">
           <RHFInputCell
             fieldName={`${name}.increaseRateYrs`}
@@ -44,10 +46,10 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
             number={{ decimalPlaces: 0, maxIntegerDigits: 3, maxValue: 100, allowNegative: false }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
+        <span className={'w-56'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -61,7 +63,7 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
     </div>
   );

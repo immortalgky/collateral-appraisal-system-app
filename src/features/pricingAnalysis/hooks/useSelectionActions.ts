@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useNavigate } from 'react-router-dom';
@@ -6,7 +6,12 @@ import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import i18n from '@/i18n';
 
-const tp = (key: string) => i18n.t(`pricingAnalysis:${key}`);
+const tp = (key: string, options?: Record<string, unknown>) =>
+  // i18next's overload resolution can't match a dynamic Record<string, unknown> against
+  // its TOptions union when the key is a template-literal string; narrow cast on just the
+  // options argument (not the return value) since no interpolation-safe overload exists.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  i18n.t(`pricingAnalysis:${key}`, options as any);
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
 import type { Approach, Method } from '../types/selection';
@@ -15,9 +20,16 @@ import { pricingAnalysisKeys } from '../api/queryKeys';
 import {
   useAddPricingAnalysisApproach,
   useAddPricingAnalysisMethod,
+  useAttachPricingAnalysisDocument,
   useDeletePricingAnalysisMethod,
+  useRemovePricingAnalysisDocument,
+  useSelectApproach,
   useSelectMethod,
+  useUpdateMethodValue,
+  useUpdateRemark,
 } from '../api';
+import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
+import type { UpdateMethodRequestType, UpdateRemarkRequestType } from '../schemas';
 import {
   isServerId,
   mapToServerApproachType,
@@ -140,6 +152,47 @@ export function useSelectionActions({
   };
 
   const selectMethodMutation = useSelectMethod();
+  const selectApproachMutation = useSelectApproach();
+  const updateMethodMutation = useUpdateMethodValue();
+  const uploadDocumentMutation = useUploadDocument();
+  const updateRemarkMutation = useUpdateRemark();
+  const attachDocumentMutation = useAttachPricingAnalysisDocument();
+  const removeDocumentMutation = useRemovePricingAnalysisDocument();
+  const {
+    isOpen: isRemoveDocumentOpen,
+    onOpen: openRemoveDocument,
+    onClose: closeRemoveDocument,
+  } = useDisclosure();
+  const [pendingRemoveDocument, setPendingRemoveDocument] = useState<{
+    documentEntryId: string;
+    fileName?: string | null;
+  } | null>(null);
+
+  const requestRemoveDocument = (documentEntryId: string, fileName?: string | null) => {
+    setPendingRemoveDocument({ documentEntryId, fileName });
+    openRemoveDocument();
+  };
+
+  const confirmRemoveDocument = async () => {
+    if (!pendingRemoveDocument) return;
+
+    try {
+      await removeDocumentMutation.mutateAsync({
+        pricingAnalysisId,
+        documentEntryId: pendingRemoveDocument.documentEntryId,
+      });
+      toast.success(tp('toasts.documentRemoved'));
+      setPendingRemoveDocument(null);
+      closeRemoveDocument();
+    } catch (err: any) {
+      toast.error(err?.apiError?.detail ?? tp('toasts.documentRemoveFailed'));
+    }
+  };
+
+  const cancelRemoveDocument = () => {
+    setPendingRemoveDocument(null);
+    closeRemoveDocument();
+  };
 
   const selectCandidateMethod = (arg: MethodKey) => {
     const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
@@ -151,18 +204,6 @@ export function useSelectionActions({
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_METHOD', payload: arg });
-
-    // Persist selection to server
-    if (method?.id && isServerId(method.id)) {
-      selectMethodMutation.mutate(
-        { pricingAnalysisId, methodId: method.id },
-        {
-          onError: (err: any) => {
-            toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
-          },
-        },
-      );
-    }
   };
 
   const selectCandidateApproach = (approachType: string) => {
@@ -176,17 +217,192 @@ export function useSelectionActions({
     dispatch({ type: 'SUMMARY_SELECT_APPROACH', payload: { approachType } });
   };
 
-  const saveSummary = async () => {
-    try {
-      dispatch({ type: 'EDIT_SAVE' });
+  const [isSaving, setIsSaving] = useState(false);
 
+  const uploadSessionIdRef = useRef<string | null>(null);
+  const sessionPromiseRef = useRef<Promise<string> | null>(null);
+
+  const getOrCreateSession = useCallback(async (): Promise<string> => {
+    if (uploadSessionIdRef.current) {
+      return uploadSessionIdRef.current;
+    }
+
+    if (sessionPromiseRef.current) {
+      return sessionPromiseRef.current;
+    }
+
+    sessionPromiseRef.current = createUploadSession()
+      .then(response => {
+        uploadSessionIdRef.current = response.sessionId;
+        return response.sessionId;
+      })
+      .catch(error => {
+        sessionPromiseRef.current = null;
+        throw error;
+      });
+
+    return sessionPromiseRef.current;
+  }, []);
+
+  const saveSummary = async (
+    pdfFiles: File[] = [],
+    remark?: string,
+  ): Promise<{ success: boolean; failedFileNames: string[] }> => {
+    const unprocessedIndices = new Set<number>(pdfFiles.map((_, i) => i));
+    const getFailedFileNames = () =>
+      pdfFiles.filter((_, i) => unprocessedIndices.has(i)).map(f => f.name);
+    const isEveryMethodSelected = state.summarySelected.every((a: Approach) =>
+      a.methods.some((m: Method) => m.isSelected),
+    );
+
+    // validate every method under approach must be selected
+    if (!isEveryMethodSelected) {
+      toast.error(tp('toasts.methodNotSelected'));
+      return { success: false, failedFileNames: getFailedFileNames() };
+    }
+
+    // Final approach must be selected
+    const finalApproach = state.summarySelected.find((a: Approach) => a.isSelected);
+    if (!finalApproach) {
+      toast.error(tp('toasts.approachNotSelected'));
+      return { success: false, failedFileNames: getFailedFileNames() };
+    }
+
+    const finalMethod = finalApproach.methods.find((m: Method) => m.isSelected);
+    if (!finalMethod) {
+      toast.error(tp('toasts.methodNotSelected'));
+      return { success: false, failedFileNames: getFailedFileNames() };
+    }
+
+    // Manual mode requires at least one supporting document — existing docs already
+    // attached to the analysis plus any new PDFs picked in this save, combined.
+    const isManualMode = state.systemCalculationMode !== 'System';
+    if (isManualMode) {
+      const totalDocuments = (state.documents?.length ?? 0) + pdfFiles.length;
+      if (totalDocuments === 0) {
+        toast.error(tp('toasts.documentRequired'));
+        return { success: false, failedFileNames: getFailedFileNames() };
+      }
+    }
+
+    setIsSaving(true);
+    try {
+      // ── Step 0: Documents ───────────────────────────────────────────────────
+      // Evidence must land before the selection below "locks in" a final value —
+      // selectApproach propagates ApproachValue → FinalAppraisedValue on the server,
+      // i.e. it's the actual finalization step. If we selected method/approach first
+      // and a PDF upload then failed, we'd be left with a finalized analysis missing
+      // the supporting documents that manual mode required in the first place.
+
+      // Manual-mode PDF uploads: each raw File still needs to go through the Document
+      // module's two-step flow (create session → multipart upload) before it has a
+      // documentId we can attach to the pricing analysis. One upload session is created
+      // for the whole batch (not per file), and each file's upload+attach is isolated in
+      // its own try/catch so one bad file doesn't stop the others in the same batch —
+      // but if *any* file fails, we stop before touching method/approach/remark below,
+      // so the analysis is never finalized against an incomplete document set.
+      if (pdfFiles.length > 0) {
+        const sessionId = await getOrCreateSession();
+        for (let i = 0; i < pdfFiles.length; i++) {
+          const file = pdfFiles[i];
+          try {
+            const uploaded = await uploadDocumentMutation.mutateAsync({
+              uploadSessionId: sessionId,
+              file,
+              documentType: 'PA_MANUAL',
+              documentCategory: 'support',
+            });
+            await attachDocumentMutation.mutateAsync({
+              pricingAnalysisId,
+              documentId: uploaded.documentId,
+              fileName: file.name,
+            });
+            unprocessedIndices.delete(i);
+          } catch {
+            // leave this index in unprocessedIndices so it's reported as failed/retryable
+          }
+        }
+
+        if (unprocessedIndices.size > 0) {
+          const failedFileNames = getFailedFileNames();
+          toast.error(tp('toasts.someFilesFailed', { files: failedFileNames.join(', ') }));
+          return { success: false, failedFileNames };
+        }
+      }
+
+      // ── Step 1: Persist dirty manual-mode values ────────────────────────────
+      // Must land before Step 2 (selectMethod) — the server's SelectMethod only
+      // propagates ApproachValue/FinalAppraisedValue `if (targetMethod.MethodValue.HasValue)`;
+      // it doesn't error if the value is missing, it just silently skips propagation.
+      // No per-item try/catch here (unlike the PDF loop below) — a failed value save
+      // must block the rest of the save, since selecting a method with a stale/missing
+      // value would silently fail to propagate on the server.
+      if (state.dirtyManualValueKeys.length > 0) {
+        const dirtyMethods = state.summarySelected
+          .flatMap(appr => appr.methods)
+          .filter(m => m.id && state.dirtyManualValueKeys.includes(m.id));
+
+        for (const method of dirtyMethods) {
+          if (!method.id || !isServerId(method.id)) continue;
+          await updateMethodMutation.mutateAsync({
+            id: pricingAnalysisId,
+            methodId: method.id,
+            request: { methodValue: method.appraisalValue } as UpdateMethodRequestType,
+          });
+        }
+      }
+
+      // ── Step 2: Select the currently-selected method, but only for approaches ──
+      // where that selection actually changed since the last successful save.
+      // Must still happen before selectApproach below — the server's SelectApproach
+      // guards on "approach already has a selected method", which for untouched
+      // approaches is already satisfied from a prior save (or from server data on load).
+      for (const approachType of state.dirtyMethodApproachTypes) {
+        const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
+        const selectedMethod = appr?.methods.find((m: Method) => m.isSelected);
+        if (selectedMethod?.id && isServerId(selectedMethod.id)) {
+          await selectMethodMutation.mutateAsync({
+            pricingAnalysisId,
+            methodId: selectedMethod.id,
+          });
+        }
+      }
+
+      // ── Step 3: Select which approach is final — only if that choice changed ───
+      if (state.dirtyApproachSelection && finalApproach.id && isServerId(finalApproach.id)) {
+        await selectApproachMutation.mutateAsync({
+          pricingAnalysisId,
+          approachId: finalApproach.id,
+        });
+      }
+
+      // ── Step 4: Remark — persisted on the final selected method last, once ──
+      // everything it documents/justifies has already been committed. Compared
+      // against the last-known server value (not just truthiness) so clearing the
+      // box back to empty and saving actually propagates the clear.
+      const nextRemark = remark ?? '';
+      if (nextRemark !== (state.remark ?? '')) {
+        await updateRemarkMutation.mutateAsync({
+          pricingAnalysisId: pricingAnalysisId,
+          request: { remark: nextRemark } as UpdateRemarkRequestType,
+        });
+      }
+
+      dispatch({ type: 'EDIT_SAVE' });
+      // Clears dirtyManualValueKeys/dirtyMethodApproachTypes/dirtyApproachSelection now
+      // that everything dirty has landed server-side.
+      dispatch({ type: 'SUMMARY_SAVE' });
       await qc.invalidateQueries({
         queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
       });
 
       toast.success(tp('toasts.selectionSaved'));
+      return { success: true, failedFileNames: [] };
     } catch (err: any) {
       toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      return { success: false, failedFileNames: getFailedFileNames() };
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -286,10 +502,12 @@ export function useSelectionActions({
     selectCandidateMethod,
     selectCandidateApproach,
     saveSummary,
+    isSavingSummary: isSaving,
     cancelPricingAccordion,
     changeSystemCalculation,
     addMethod,
     requestDeleteMethod,
+    requestRemoveDocument,
 
     confirm: {
       isOpen: isConfirmOpen,
@@ -305,6 +523,14 @@ export function useSelectionActions({
       confirmDelete,
       cancelDelete,
       isDeleting: deleteMethodMutation.isPending,
+    },
+
+    removeDocumentConfirm: {
+      isOpen: isRemoveDocumentOpen,
+      pending: pendingRemoveDocument,
+      confirmRemove: confirmRemoveDocument,
+      cancelRemove: cancelRemoveDocument,
+      isRemoving: removeDocumentMutation.isPending,
     },
   };
 }

@@ -32,7 +32,13 @@ interface PricingAnalysisAccordionProps {
   onEnterEdit: () => void;
   onEditModeSave: () => void;
   onCancelEditMode: () => void;
-  onSummaryModeSave: () => void;
+  onSummaryModeSave: (
+    pdfFiles: File[],
+    remark: string,
+  ) =>
+    | { success: boolean; failedFileNames: string[] }
+    | Promise<{ success: boolean; failedFileNames: string[] }>;
+  isSummarySaving?: boolean;
   onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
 
@@ -61,7 +67,20 @@ interface PricingAnalysisAccordionProps {
     confirmDelete: () => void;
     cancelDelete: () => void;
   };
-  onManualValueChange?: (arg: { approachType: string; methodType: string; value: number }) => void;
+  onManualValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
+  onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
+  removeDocumentConfirm?: {
+    isOpen: boolean;
+    pending: { documentEntryId: string; fileName?: string | null } | null;
+    confirmRemove: () => void;
+    cancelRemove: () => void;
+    isRemoving: boolean;
+  };
 }
 
 export const PricingAnalysisAccordion = ({
@@ -75,6 +94,7 @@ export const PricingAnalysisAccordion = ({
   onEnterEdit,
   onEditModeSave,
   onSummaryModeSave,
+  isSummarySaving,
   onToggleMethod,
 
   isConfirmDeselectedMethodOpen,
@@ -94,7 +114,9 @@ export const PricingAnalysisAccordion = ({
   pricingContext,
   modelThumbnailSrc,
   deleteConfirm,
-  onManualValueChange,
+  onManualValueSync,
+  onRequestRemoveDocument,
+  removeDocumentConfirm,
 }: PricingAnalysisAccordionProps) => {
   const { t } = useTranslation('pricingAnalysis');
   const serverData = useContext(ServerDataCtx);
@@ -266,6 +288,7 @@ export const PricingAnalysisAccordion = ({
                 onEnterEdit={onEnterEdit}
                 onEditModeSave={onEditModeSave}
                 onSummaryModeSave={onSummaryModeSave}
+                isSummarySaving={isSummarySaving}
                 onToggleMethod={onToggleMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
                 onCancelEditMode={onCancelEditMode}
@@ -275,7 +298,9 @@ export const PricingAnalysisAccordion = ({
                 onDeleteMethod={onDeleteMethod}
                 pricingConfiguration={pricingConfiguration}
                 deleteConfirm={deleteConfirm}
-                onManualValueChange={onManualValueChange}
+                onManualValueSync={onManualValueSync}
+                onRequestRemoveDocument={onRequestRemoveDocument}
+                removeDocumentConfirm={removeDocumentConfirm}
               />
             </div>
           </div>

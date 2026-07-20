@@ -50,13 +50,14 @@ export const TaskKanbanColumn = ({
   renderCard,
 }: TaskKanbanColumnProps) => {
   const [collapsed, setCollapsed] = useState(false);
-  // null field → omit sortBy/sortDir so the backend falls back to default ordering.
+  // null field → omit sortBy but always send sortDir, so the backend falls back
+  // to AssignedDate in the chosen direction (defaults to 'asc', matching the list view).
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  const sortParams = sortField ? { sortBy: sortField, sortDir } : {};
+  const sortParams = sortField ? { sortBy: sortField, sortDir } : { sortDir };
   const query = useKanbanColumnTasks(
     { ...columnFilters, ...sortParams } as unknown as KanbanColumnParams,
     { enabled: !collapsed, scope },

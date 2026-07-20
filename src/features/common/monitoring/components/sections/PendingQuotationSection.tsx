@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { formatDistanceToNowStrict, parseISO } from 'date-fns';
 
 import Pagination from '@shared/components/Pagination';
 import Icon from '@shared/components/Icon';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import QuotationStatusBadge from '@features/quotation/components/QuotationStatusBadge';
+import SearchByInput from '@features/quotation/components/SearchByInput';
 import { DateInput, MultiSelectDropdown } from '@shared/components/inputs';
 import type { ListBoxItem } from '@shared/components/inputs';
-import Input from '@shared/components/Input';
+import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
+import { useCompanyStore } from '@shared/store';
 
 import { usePendingQuotations } from '../../api/monitoringApi';
 import type { PendingQuotation, PendingQuotationFilter, SortDir } from '../../api/types';
@@ -30,6 +33,24 @@ const QUOTATION_STATUS_OPTIONS: ListBoxItem[] = [
 /** Slice a DateInput ISO value down to the yyyy-MM-dd slug the backend's DateOnly? binder expects. */
 const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : undefined);
 
+/** Relative "N ago" label for an ISO value; null when absent/unparseable. */
+const relativeAgo = (value: string | null): string | null => {
+  if (!value) return null;
+  try {
+    return formatDistanceToNowStrict(parseISO(value), { addSuffix: true });
+  } catch {
+    return null;
+  }
+};
+
+// Combined search box + a "search by" selector: only the chosen field is sent to the backend.
+type SearchField = 'quotationNo' | 'appraisalNo' | 'customerName';
+const SEARCH_FIELD_OPTIONS = [
+  { value: 'quotationNo', label: 'Quotation No.', icon: 'file-invoice' },
+  { value: 'appraisalNo', label: 'Appraisal No.', icon: 'building' },
+  { value: 'customerName', label: 'Customer Name', icon: 'user' },
+];
+
 const COLUMNS: ColumnDef<PendingQuotation>[] = [
   {
     key: 'quotationNumber',
@@ -37,6 +58,21 @@ const COLUMNS: ColumnDef<PendingQuotation>[] = [
     sortKey: 'QuotationNumber',
     render: row => (
       <span className="text-sm font-medium text-primary">{row.quotationNumber ?? '—'}</span>
+    ),
+  },
+  {
+    key: 'customerName',
+    label: 'Customer Name',
+    sortKey: 'CustomerName',
+    render: row => (
+      <div className="max-w-[180px]" title={row.customerNames ?? undefined}>
+        <span className="inline-block max-w-full truncate align-bottom text-xs text-gray-700">
+          {row.customerName ?? '—'}
+        </span>
+        {row.customerCount > 1 && (
+          <span className="ml-1 text-[10px] text-gray-400">+{row.customerCount - 1}</span>
+        )}
+      </div>
     ),
   },
   {
@@ -58,7 +94,7 @@ const COLUMNS: ColumnDef<PendingQuotation>[] = [
   },
   {
     key: 'totalAppraisals',
-    label: 'No of Appraisal',
+    label: 'No of Appraisal(s)',
     sortKey: 'TotalAppraisals',
     className: '!text-center',
     render: row => <span className="text-xs tabular-nums">{row.totalAppraisals}</span>,
@@ -78,21 +114,26 @@ const COLUMNS: ColumnDef<PendingQuotation>[] = [
     key: 'rmUsername',
     label: 'RM',
     sortKey: 'RmUsername',
-    className: '!text-center',
-    render: row => <span className="text-xs text-gray-700">{row.rmUsername ?? '—'}</span>,
-  },
-  {
-    key: 'requestedBy',
-    label: 'Created By',
-    sortKey: 'RequestedBy',
-    className: '!text-center max-w-[180px] truncate',
-    render: row => <span className="text-xs text-gray-700">{row.requestedBy ?? '—'}</span>,
+    render: row => (
+      <div className="leading-tight">
+        <div className="text-xs text-gray-700">{row.rmUsername ?? '—'}</div>
+        {row.rmFullName && <div className="text-[10px] text-gray-400">{row.rmFullName}</div>}
+      </div>
+    ),
   },
   {
     key: 'requestDate',
     label: 'Created At',
     sortKey: 'RequestDate',
-    render: row => <DateCell value={row.requestDate} withTime withAgo />,
+    render: row => {
+      const sub = [row.requestedBy, relativeAgo(row.requestDate)].filter(Boolean).join(' · ');
+      return (
+        <div className="flex flex-col gap-0.5">
+          <DateCell value={row.requestDate} withTime />
+          {sub && <span className="text-[10px] text-gray-400">{sub}</span>}
+        </div>
+      );
+    },
   },
 ];
 
@@ -104,6 +145,7 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
   const { t } = useTranslation('monitoring');
   const navigate = useNavigate();
 
+  const [searchField, setSearchField] = useState<SearchField>('quotationNo');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 400);
   const [page, setPage] = useState(0);
@@ -113,9 +155,15 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
   const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
+  const [appraisalCompanyFilter, setAppraisalCompanyFilter] = useState('');
 
+  const companies = useCompanyStore(s => s.companies);
+
+  const term = debouncedSearch || undefined;
   const filter: PendingQuotationFilter = {
-    search: debouncedSearch || undefined,
+    quotationNo: searchField === 'quotationNo' ? term : undefined,
+    appraisalNo: searchField === 'appraisalNo' ? term : undefined,
+    customerName: searchField === 'customerName' ? term : undefined,
     status: statusFilter.length ? statusFilter : undefined,
     page,
     pageSize,
@@ -123,6 +171,7 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
     sortDir,
     ...(cutOffTimeFrom && { cutOffTimeFrom: toDateOnly(cutOffTimeFrom) }),
     ...(cutOffTimeTo && { cutOffTimeTo: toDateOnly(cutOffTimeTo) }),
+    appraisalCompanyId: appraisalCompanyFilter || undefined,
   };
 
   const { data, isLoading, isError, error } = usePendingQuotations(filter);
@@ -131,29 +180,23 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
-  const hasFilters = !!search || statusFilter.length > 0 || !!cutOffTimeFrom || !!cutOffTimeTo;
+  const hasFilters =
+    !!search ||
+    statusFilter.length > 0 ||
+    !!cutOffTimeFrom ||
+    !!cutOffTimeTo ||
+    !!appraisalCompanyFilter;
 
   const handleClearFilters = () => {
     setSearch('');
     setStatusFilter([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
+    setAppraisalCompanyFilter('');
     setPage(0);
   };
 
   const activeChips: ActiveFilterChip[] = [
-    ...(search
-      ? [
-          {
-            key: 'search',
-            label: `Search: ${search}`,
-            onClear: () => {
-              setSearch('');
-              setPage(0);
-            },
-          },
-        ]
-      : []),
     ...statusFilter.map(v => ({
       key: `status-${v}`,
       label: `Status: ${QUOTATION_STATUS_OPTIONS.find(o => o.value === v)?.label ?? v.replace(/([a-z])([A-Z])/g, '$1 $2')}`,
@@ -186,6 +229,18 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
           },
         ]
       : []),
+    ...(appraisalCompanyFilter
+      ? [
+          {
+            key: 'appraisalCompanyId',
+            label: `Company: ${companies.find(c => c.id === appraisalCompanyFilter)?.companyName ?? appraisalCompanyFilter}`,
+            onClear: () => {
+              setAppraisalCompanyFilter('');
+              setPage(0);
+            },
+          },
+        ]
+      : []),
   ];
 
   const handleView = (row: PendingQuotation) => {
@@ -207,16 +262,22 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
 
       {/* Inline filter bar */}
       <div className="shrink-0 mb-3 flex flex-wrap items-end gap-2">
-        {/* Search */}
-        <div className="flex-1 max-w-xs">
-          <Input
-            value={search}
-            onChange={e => {
-              setSearch(e.target.value);
+        {/* Search — one bar: "search by" selector + input */}
+        <div className="w-[24rem]">
+          <SearchByInput
+            options={SEARCH_FIELD_OPTIONS}
+            field={searchField}
+            onFieldChange={v => {
+              setSearchField(v as SearchField);
               setPage(0);
             }}
-            placeholder={t('pendingQuotation.search')}
-            leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
+            value={search}
+            onChange={v => {
+              setSearch(v);
+              setPage(0);
+            }}
+            placeholder="Search..."
+            className="w-full"
           />
         </div>
 
@@ -255,6 +316,18 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
               setPage(0);
             }}
             placeholder="Cut Off To"
+          />
+        </div>
+
+        {/* Company (invited appraisal company) */}
+        <div className="w-56">
+          <CompanyAutocomplete
+            value={appraisalCompanyFilter}
+            onChange={(v: string) => {
+              setAppraisalCompanyFilter(v);
+              setPage(0);
+            }}
+            placeholder="All companies"
           />
         </div>
 

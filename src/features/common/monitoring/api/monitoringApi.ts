@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
+  CommitteeFollowup,
   GroupByField,
+  InternalFollowupStaffOption,
   MeetingFollowup,
   MeetingFollowupFilter,
+  MeetingFollowupView,
   MonitoringGroupedResult,
   MonitoringSummary,
   PaginatedResult,
@@ -24,6 +27,7 @@ import type {
 export const monitoringKeys = {
   all: ['monitoring'] as const,
   taskTypes: ['monitoring', 'task-types'] as const,
+  evaluationStaff: ['monitoring', 'pending-evaluations', 'staff'] as const,
   quotations: (filter: PendingQuotationFilter) => ['monitoring', 'quotations', filter] as const,
   pendingInternal: (filter: PendingInternalFilter) =>
     ['monitoring', 'pending-internal', filter] as const,
@@ -33,8 +37,8 @@ export const monitoringKeys = {
     ['monitoring', 'pending-followups', filter] as const,
   pendingEvaluations: (filter: PendingEvaluationFilter) =>
     ['monitoring', 'pending-evaluations', filter] as const,
-  meetingFollowups: (filter: MeetingFollowupFilter) =>
-    ['monitoring', 'meeting-followups', filter] as const,
+  meetingFollowups: (filter: MeetingFollowupFilter, view: MeetingFollowupView = 'appraisal') =>
+    ['monitoring', 'meeting-followups', view, filter] as const,
   // Summary keys (omit paging/sort from filter)
   summaryQuotations: (
     filter: Omit<PendingQuotationFilter, 'page' | 'pageSize' | 'sortBy' | 'sortDir'>,
@@ -104,8 +108,12 @@ export const usePendingQuotations = (filter: PendingQuotationFilter = {}) =>
         params: {
           ...buildBaseParams(filter),
           ...(filter.status?.length && { status: filter.status }),
+          ...(filter.quotationNo && { quotationNo: filter.quotationNo }),
+          ...(filter.appraisalNo && { appraisalNo: filter.appraisalNo }),
+          ...(filter.customerName && { customerName: filter.customerName }),
           ...(filter.cutOffTimeFrom && { cutOffTimeFrom: filter.cutOffTimeFrom }),
           ...(filter.cutOffTimeTo && { cutOffTimeTo: filter.cutOffTimeTo }),
+          ...(filter.appraisalCompanyId && { appraisalCompanyId: filter.appraisalCompanyId }),
         },
         paramsSerializer: { indexes: null },
       });
@@ -127,6 +135,7 @@ export const usePendingInternal = (filter: PendingInternalFilter = {}) =>
           ...(filter.slaBucket?.length && { slaBucket: filter.slaBucket }),
           ...(filter.activityId?.length && { activityId: filter.activityId }),
           ...(filter.pic && { pic: filter.pic }),
+          ...(filter.picType && { picType: filter.picType }),
           ...(filter.purpose?.length && { purpose: filter.purpose }),
           ...(filter.propertyType?.length && { propertyType: filter.propertyType }),
           ...(filter.taskType?.length && { taskType: filter.taskType }),
@@ -151,6 +160,7 @@ export const usePendingExternal = (filter: PendingExternalFilter = {}) =>
           ...(filter.slaBucket?.length && { slaBucket: filter.slaBucket }),
           ...(filter.activityId?.length && { activityId: filter.activityId }),
           ...(filter.pic && { pic: filter.pic }),
+          ...(filter.picType && { picType: filter.picType }),
           ...(filter.purpose?.length && { purpose: filter.purpose }),
           ...(filter.propertyType?.length && { propertyType: filter.propertyType }),
           ...(filter.taskType?.length && { taskType: filter.taskType }),
@@ -176,9 +186,11 @@ export const usePendingFollowups = (filter: PendingFollowupFilter = {}) =>
           ...(filter.slaBucket?.length && { slaBucket: filter.slaBucket }),
           ...(filter.activityId?.length && { activityId: filter.activityId }),
           ...(filter.pic && { pic: filter.pic }),
+          ...(filter.picType && { picType: filter.picType }),
           ...(filter.purpose?.length && { purpose: filter.purpose }),
           ...(filter.propertyType?.length && { propertyType: filter.propertyType }),
           ...(filter.taskType?.length && { taskType: filter.taskType }),
+          ...(filter.appraisalCompanyId && { appraisalCompanyId: filter.appraisalCompanyId }),
         },
         paramsSerializer: { indexes: null },
       });
@@ -199,6 +211,7 @@ export const usePendingEvaluations = (filter: PendingEvaluationFilter = {}) =>
           ...(filter.evaluationStatus?.length && { evaluationStatus: filter.evaluationStatus }),
           ...(filter.appraisalCompanyId && { appraisalCompanyId: filter.appraisalCompanyId }),
           ...(filter.appraisalStatus?.length && { appraisalStatus: filter.appraisalStatus }),
+          ...(filter.internalFollowupStaff && { internalFollowupStaff: filter.internalFollowupStaff }),
         },
         paramsSerializer: { indexes: null },
       });
@@ -208,11 +221,24 @@ export const usePendingEvaluations = (filter: PendingEvaluationFilter = {}) =>
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
   });
-
-export const useMeetingFollowups = (filter: MeetingFollowupFilter = {}) =>
-  useQuery({
-    queryKey: monitoringKeys.meetingFollowups(filter),
-    queryFn: async (): Promise<PaginatedResult<MeetingFollowup>> => {
+export function useMeetingFollowups(
+  filter: MeetingFollowupFilter,
+  view: 'appraisal',
+  enabled?: boolean,
+): UseQueryResult<PaginatedResult<MeetingFollowup>>;
+export function useMeetingFollowups(
+  filter: MeetingFollowupFilter,
+  view: 'committee',
+  enabled?: boolean,
+): UseQueryResult<PaginatedResult<CommitteeFollowup>>;
+export function useMeetingFollowups(
+  filter: MeetingFollowupFilter = {},
+  view: MeetingFollowupView = 'appraisal',
+  enabled = true,
+) {
+  return useQuery({
+    queryKey: monitoringKeys.meetingFollowups(filter, view),
+    queryFn: async () => {
       const { data } = await axios.get('/monitoring/meeting-followups', {
         params: {
           ...buildBaseParams(filter),
@@ -222,15 +248,18 @@ export const useMeetingFollowups = (filter: MeetingFollowupFilter = {}) =>
           ...(filter.meetingNumber && { meetingNumber: filter.meetingNumber }),
           ...(filter.meetingDateFrom && { meetingDateFrom: filter.meetingDateFrom }),
           ...(filter.meetingDateTo && { meetingDateTo: filter.meetingDateTo }),
+          view,
         },
         paramsSerializer: { indexes: null },
       });
       return data.result ?? data;
     },
+    enabled,
     staleTime: 30 * 1000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: false,
   });
+}
 
 // ─── Task types hook ─────────────────────────────────────────────────────────
 
@@ -244,6 +273,21 @@ export const useTaskTypes = () =>
     queryKey: monitoringKeys.taskTypes,
     queryFn: async (): Promise<TaskTypeOption[]> => {
       const { data } = await axios.get('/monitoring/task-types');
+      return data.result ?? data;
+    },
+    staleTime: 5 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+
+/**
+ * Distinct internal followup staff present on the Pending Evaluation surface.
+ * Populates the internal-followup-staff filter autocomplete.
+ */
+export const useInternalFollowupStaff = () =>
+  useQuery({
+    queryKey: monitoringKeys.evaluationStaff,
+    queryFn: async (): Promise<InternalFollowupStaffOption[]> => {
+      const { data } = await axios.get('/monitoring/pending-evaluations/staff');
       return data.result ?? data;
     },
     staleTime: 5 * 60_000,

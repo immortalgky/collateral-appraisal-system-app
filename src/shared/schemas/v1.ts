@@ -1235,6 +1235,17 @@ const ApproachDto = z
     methods: z.array(MethodDto),
   })
   .passthrough();
+const PricingAnalysisDocumentDto = z
+  .object({
+    id: z.string().uuid(),
+    documentId: z.string().uuid().nullable(),
+    fileName: z.string().nullable(),
+    filePath: z.string().nullable(),
+    uploadedBy: z.string().nullable(),
+    uploadedByName: z.string().nullable(),
+    uploadedAt: z.string().datetime({ offset: true }).nullable(),
+  })
+  .passthrough();
 const GetPricingAnalysisResponse = z
   .object({
     id: z.string().uuid(),
@@ -1246,6 +1257,8 @@ const GetPricingAnalysisResponse = z
     valuationDate: z.string().datetime({ offset: true }).nullable(),
     useSystemCalc: z.boolean(),
     approaches: z.array(ApproachDto),
+    documents: z.array(PricingAnalysisDocumentDto),
+    remark: z.string().nullable(),
   })
   .passthrough();
 const UpdateMethodRequest = z
@@ -1418,6 +1431,17 @@ const SetFinalValueResponse = z
     buildingValue: z.number().nullable(),
     appraisalPriceWithBuilding: z.number().nullable(),
     appraisalPriceWithBuildingRounded: z.number().nullable(),
+  })
+  .passthrough();
+const UpdateRemarkRequest = z
+  .object({
+    remark: z.string(),
+  })
+  .passthrough();
+const UpdateRemarkResponse = z
+  .object({
+    id: z.string().uuid(),
+    remark: z.string(),
   })
   .passthrough();
 const SelectMethodResponse = z
@@ -4789,6 +4813,7 @@ export const schemas = {
   UpdatePricingAnalysisResponse,
   MethodDto,
   ApproachDto,
+  PricingAnalysisDocumentDto,
   GetPricingAnalysisResponse,
   UpdateMethodRequest,
   UpdateMethodResponse,
@@ -4806,6 +4831,8 @@ export const schemas = {
   StartPricingAnalysisResponse,
   SetFinalValueRequest,
   SetFinalValueResponse,
+  UpdateRemarkRequest,
+  UpdateRemarkResponse,
   SelectMethodResponse,
   ComparativeFactorInput,
   FactorScoreInput,

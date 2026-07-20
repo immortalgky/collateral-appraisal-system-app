@@ -428,6 +428,7 @@ export interface GetAuditLogsParams {
   entityType?: AuditEntityType | '';
   entityId?: string;
   actorUserId?: string;
+  actorName?: string;
   from?: string;
   to?: string;
   action?: AuditAction | '';

@@ -56,9 +56,9 @@ export const AdjustFinalValueSection = ({
     return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
   }, [calculations]);
 
-  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02'; // per Sq.Wa or per Sq.M
-  const unitAreaPath = detectedUnit === '02' ? usableAreaPath() : landAreaPath();
-  const unitAreaLabel = detectedUnit === '02' ? 'Sq.M' : 'Sq.Wa';
+  const isUnitPrice = detectedUnit === 'PerSqWa' || detectedUnit === 'PerSqm'; // per Sq.Wa or per Sq.M
+  const unitAreaPath = detectedUnit === 'PerSqm' ? usableAreaPath() : landAreaPath();
+  const unitAreaLabel = detectedUnit === 'PerSqm' ? 'Sq.M' : 'Sq.Wa';
 
   // The "Include Area" toggle is auto-derived from the comparables' measure unit
   // (01/02 → land area applies; 03 → total price, no area). Keeps the form field
@@ -356,7 +356,7 @@ export const AdjustFinalValueSection = ({
 
       {/* ── MARKET APPROACH ──
           Include-area is auto-derived from the comparables' measure unit
-          (isUnitPrice = unit 01 or 02). Same gating as cost approach. */}
+          (isUnitPrice = PerSqWa or PerSqm). Same gating as cost approach. */}
       {!isCostApproach && isUnitPrice && (
         <>
           <div className="flex items-center gap-4">

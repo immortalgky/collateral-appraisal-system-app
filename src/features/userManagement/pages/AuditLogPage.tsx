@@ -88,7 +88,7 @@ const AuditLogPage = () => {
   const [filters, setFilters] = useState<Omit<GetAuditLogsParams, 'pageNumber' | 'pageSize'>>({
     entityType: '',
     action: '',
-    actorUserId: '',
+    actorName: '',
     from: '',
     to: '',
   });
@@ -176,8 +176,8 @@ const AuditLogPage = () => {
               />
               <input
                 type="text"
-                value={filters.actorUserId}
-                onChange={e => handleFilterChange('actorUserId', e.target.value)}
+                value={filters.actorName}
+                onChange={e => handleFilterChange('actorName', e.target.value)}
                 placeholder={t('placeholders.searchActor')}
                 className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />

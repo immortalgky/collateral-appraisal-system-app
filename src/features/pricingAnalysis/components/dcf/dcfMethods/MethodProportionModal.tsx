@@ -2,6 +2,7 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
 import type { DCFSection } from '../../../types/dcf';
 import type { UseFormGetValues } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 export function MethodProportionModal({
   name,
@@ -12,6 +13,7 @@ export function MethodProportionModal({
   getOuterFormValues: UseFormGetValues<any>;
   isReadOnly?: boolean;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   const sections = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
   );
@@ -42,9 +44,9 @@ export function MethodProportionModal({
   ];
 
   return (
-    <div className="flex flex-col gap2">
+    <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-1.5 items-center">
-        <span className={'w-56'}>Proportions</span>
+        <span className={'w-56'}>{t('dcf.common.proportions')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.proportionPct`}
@@ -53,7 +55,7 @@ export function MethodProportionModal({
           />
         </div>
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={''}>% of</span>
+          <span className={''}>{t('dcf.methods.proportion.percentOf')}</span>
           <div className="w-64">
             <RHFInputCell
               fieldName={`${name}.refTarget.clientId`}
@@ -65,7 +67,7 @@ export function MethodProportionModal({
         </div>
       </div>
       <div className="flex flex-row gap-1.5">
-        <span className={'w-56'}>Start In</span>
+        <span className={'w-56'}>{t('dcf.common.startIn')}</span>
         <div className={'w-44'}>
           <RHFInputCell
             fieldName={`${name}.startIn`}
@@ -79,7 +81,7 @@ export function MethodProportionModal({
             }}
           />
         </div>
-        <span className={''}>year(s)</span>
+        <span className={''}>{t('dcf.common.year')}</span>
       </div>
     </div>
   );

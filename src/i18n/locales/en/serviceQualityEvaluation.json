@@ -43,6 +43,7 @@
       "customerName": "Customer Name",
       "appraiserCompany": "Appraiser Company",
       "appraisalDepartment": "Appraisal Department",
+      "internalAppraiser": "Internal Appraiser",
       "propertyType": "Property Type",
       "appraisalDate": "Appraisal Date",
       "reportReceivedDate": "Report Received Date"
@@ -50,7 +51,7 @@
     "comments": {
       "additionalLabel": "Additional Comments from the Evaluators",
       "additionalPlaceholder": "Enter additional comments...",
-      "notesLabel": "Notes",
+      "notesLabel": "Note",
       "notesPlaceholder": "Enter notes..."
     },
     "actions": {

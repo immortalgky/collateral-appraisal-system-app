@@ -30,14 +30,20 @@ function buildParams(filter: BaseReportFilter): Record<string, string | number |
   if (filter.bankingSegment) params.bankingSegment = filter.bankingSegment;
   if (filter.appraisalCompany) params.appraisalCompany = filter.appraisalCompany;
   if (filter.internalStaff) params.internalStaff = filter.internalStaff;
+  if (filter.externalStaff) params.externalStaff = filter.externalStaff;
   if (filter.channel) params.channel = filter.channel;
   if (filter.reviewType) params.reviewType = filter.reviewType;
   if (filter.stage) params.stage = filter.stage;
   if (filter.customerName) params.customerName = filter.customerName;
+  if (filter.purpose) params.purpose = filter.purpose;
   if (filter.evaluationStatus) params.evaluationStatus = filter.evaluationStatus;
   if (filter.payType) params.payType = filter.payType;
   if (filter.feeStatus) params.feeStatus = filter.feeStatus;
   if (filter.assignType) params.assignType = filter.assignType;
+  if (filter.departmentCode) params.departmentCode = filter.departmentCode;
+  if (filter.aoCode) params.aoCode = filter.aoCode;
+  if (filter.appraisalType) params.appraisalType = filter.appraisalType;
+  if (filter.feeType) params.feeType = filter.feeType;
 
   return params;
 }
@@ -102,14 +108,20 @@ export function useReportExport(slug: string, filter: BaseReportFilter = {}): Us
         if (filter.bankingSegment) exportParams.bankingSegment = filter.bankingSegment;
         if (filter.appraisalCompany) exportParams.appraisalCompany = filter.appraisalCompany;
         if (filter.internalStaff) exportParams.internalStaff = filter.internalStaff;
+        if (filter.externalStaff) exportParams.externalStaff = filter.externalStaff;
         if (filter.channel) exportParams.channel = filter.channel;
         if (filter.reviewType) exportParams.reviewType = filter.reviewType;
         if (filter.stage) exportParams.stage = filter.stage;
         if (filter.customerName) exportParams.customerName = filter.customerName;
+        if (filter.purpose) exportParams.purpose = filter.purpose;
         if (filter.evaluationStatus) exportParams.evaluationStatus = filter.evaluationStatus;
         if (filter.payType) exportParams.payType = filter.payType;
         if (filter.feeStatus) exportParams.feeStatus = filter.feeStatus;
         if (filter.assignType) exportParams.assignType = filter.assignType;
+        if (filter.departmentCode) exportParams.departmentCode = filter.departmentCode;
+        if (filter.aoCode) exportParams.aoCode = filter.aoCode;
+        if (filter.appraisalType) exportParams.appraisalType = filter.appraisalType;
+        if (filter.feeType) exportParams.feeType = filter.feeType;
         const params = exportParams;
 
         const response = await axios.get(`/reports/operational/${slug}/export`, {

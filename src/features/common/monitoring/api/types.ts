@@ -55,12 +55,20 @@ export interface PendingQuotation {
   totalCompaniesInvited: number;
   totalQuotationsReceived: number;
   rmUsername: string | null;
+  rmFullName?: string | null;
+  customerName?: string | null;
+  customerCount: number;
+  customerNames?: string | null;
 }
 
 export interface PendingQuotationFilter extends BaseMonitoringFilter {
   status?: string[];
+  quotationNo?: string;
+  appraisalNo?: string;
+  customerName?: string;
   cutOffTimeFrom?: string;
   cutOffTimeTo?: string;
+  appraisalCompanyId?: string;
 }
 
 // ─── Pending Internal / External (shared DTO) ─────────────────────────────────
@@ -74,15 +82,19 @@ export interface PendingTask {
   taskDescription: string | null;
   purpose: string | null;
   propertyType: string | null;
+  appraisalStatus: string | null;
   slaStatus: string | null;
   priority: string | null;
   requestedDate: string | null;
   assignedDate: string | null;
+  openDate: string | null;
+  appointmentDate: string | null;
   pic: string | null;
   movement: string | null;
   olaTargetHours: number | null;
   olaActualHours: number | null;
   olaVarianceHours: number | null;
+  slaDurationHours: number | null;
   activityId: string | null;
   appraisalCompanyName: string | null;
   monitoringType: string;
@@ -95,6 +107,7 @@ export interface PendingInternalFilter extends BaseMonitoringFilter {
   slaBucket?: SlaBucket[];
   activityId?: string[];
   pic?: string;
+  picType?: string;
   purpose?: string[];
   propertyType?: string[];
   taskType?: string[];
@@ -110,6 +123,7 @@ export interface PendingExternalFilter extends BaseMonitoringFilter {
   slaBucket?: SlaBucket[];
   activityId?: string[];
   pic?: string;
+  picType?: string;
   purpose?: string[];
   propertyType?: string[];
   taskType?: string[];
@@ -126,9 +140,11 @@ export interface PendingFollowupFilter extends BaseMonitoringFilter {
   slaBucket?: SlaBucket[];
   activityId?: string[];
   pic?: string;
+  picType?: string;
   purpose?: string[];
   propertyType?: string[];
   taskType?: string[];
+  appraisalCompanyId?: string;
 }
 
 // ─── Pending Evaluation ───────────────────────────────────────────────────────
@@ -146,15 +162,27 @@ export interface PendingEvaluation {
   evaluationId: string | null;
   evaluationStatus: string | null;
   totalScore: number | null;
+  internalFollowupStaffId: string | null;
+  internalFollowupStaffName: string | null;
 }
 
 export interface PendingEvaluationFilter extends BaseMonitoringFilter {
   evaluationStatus?: string[];
   appraisalCompanyId?: string;
   appraisalStatus?: string[];
+  /** Internal followup staff username (exact match). */
+  internalFollowupStaff?: string;
+}
+
+/** Autocomplete option for the internal-followup-staff filter. */
+export interface InternalFollowupStaffOption {
+  value: string;
+  label: string;
 }
 
 // ─── Meeting Follow-up ────────────────────────────────────────────────────────
+
+export type MeetingFollowupView = 'appraisal' | 'committee';
 
 export interface MeetingFollowup {
   appraisalId: string;
@@ -178,5 +206,23 @@ export interface MeetingFollowupFilter extends BaseMonitoringFilter {
   slaBucket?: SlaBucket[];
   meetingNumber?: string;
   meetingDateFrom?: string; // YYYY-MM-DD
-  meetingDateTo?: string;   // YYYY-MM-DD
+  meetingDateTo?: string; // YYYY-MM-DD
+}
+
+export interface CommitteeFollowupItem {
+  appraisalId: string;
+  appraisalNumber: string;
+  customerName: string | null;
+  approvalTier: number;
+  meetingNumber: string | null;
+  meetingDate: string | null;
+}
+
+export interface CommitteeFollowup {
+  userId: string;
+  userName: string;
+  memberName: string;
+  committeeName: string | null;
+  availableTasks: number;
+  items: CommitteeFollowupItem[];
 }

@@ -19,6 +19,7 @@ import { toGalleryImage } from '../types/gallery';
 import type { GalleryImage } from '../types/gallery';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useAuthStore } from '@features/auth/store';
 
 export interface EntityPhotoSectionRef {
   linkImagesToEntity: (entityId: string) => Promise<void>;
@@ -92,6 +93,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
   ) => {
     const readOnly = usePageReadOnly();
     const { t } = useTranslation('appraisal');
+    const currentUser = useAuthStore(state => state.user);
     const isCreateMode = !entityId;
     const hasThumbnailSupport = Boolean(useSetThumbnail && useUnsetThumbnail);
 
@@ -236,7 +238,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             documentId,
             photoType: 'property',
             caption: file.name,
-            uploadedBy: 'current-user',
+            uploadedBy: currentUser?.username ?? '',
             latitude: null,
             longitude: null,
             capturedAt: null,
@@ -247,7 +249,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
             mimeType: file.type || null,
             fileSizeBytes: uploadResult.fileSize,
-            uploadedByName: null,
+            uploadedByName: currentUser?.name ?? null,
           });
 
           const galleryPhotoId = galleryResult.id;
@@ -278,6 +280,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
         uploadDocumentMutation,
         addGalleryPhotoMutation,
         addImageMutation,
+        currentUser,
       ],
     );
 

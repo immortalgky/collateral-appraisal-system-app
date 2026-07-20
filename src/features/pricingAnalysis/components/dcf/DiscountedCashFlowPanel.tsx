@@ -24,7 +24,10 @@ import {
   useSaveIncomeAnalysis,
   useGetIncomeAnalysis,
   usePreviewIncomeAnalysis,
+  useResetMethod,
 } from '../../api';
+import { useQueryClient } from '@tanstack/react-query';
+import { pricingAnalysisKeys } from '../../api/queryKeys';
 import { mapDCFFormToSaveRequest } from '../../mappers/formToSaveRequest';
 import { mapIncomeAnalysisToDCFForm } from '../../mappers/analysisToForm';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -102,6 +105,8 @@ export function DiscountedCashFlowPanel({
 
   const saveMutation = useSaveIncomeAnalysis();
   const previewMutation = usePreviewIncomeAnalysis();
+  const resetMutation = useResetMethod();
+  const queryClient = useQueryClient();
 
   // Watch the full section tree + scalar rate fields to trigger preview on any edit.
   const watchedSections = useWatch({ control: methods.control, name: 'sections' });
@@ -309,12 +314,35 @@ export function DiscountedCashFlowPanel({
   // While fetching, suppress the picker so it never flashes before restore.
   const isLoading = !isGenerated && !incomeAnalysisQuery.isSuccess;
 
-  // reset handler
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
   const handleOnReset = () => setIsShowResetDialog(true);
   const handleOnConfirmReset = async () => {
     setIsShowResetDialog(false);
-    setIsGenerated(false);
+    if (!activeMethod?.pricingAnalysisId || !activeMethod?.methodId) return;
+    try {
+      await resetMutation.mutateAsync(
+        {
+          pricingAnalysisId: activeMethod.pricingAnalysisId,
+          methodId: activeMethod.methodId,
+        },
+        {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: pricingAnalysisKeys.incomeAnalysis(
+                activeMethod.pricingAnalysisId!,
+                activeMethod.methodId!,
+              ),
+            });
+          },
+        },
+      );
+      setIsGenerated(false);
+      setSelectedTemplateCode('');
+      reset();
+      toast.success(t('toasts.resetSuccess'));
+    } catch {
+      toast.error(t('toasts.failedReset'));
+    }
   };
 
   const handleOnSubmit = handleSubmit(async (values: DCFFormType) => {
@@ -490,7 +518,7 @@ export function DiscountedCashFlowPanel({
             <MethodFooterActions
               onCancel={onCancelCalculationMethod}
               onReset={handleOnReset}
-              showReset={isShowResetDialog}
+              showReset={!!incomeAnalysisQuery.data}
               isSubmitting={formState.isSubmitting || saveMutation.isPending}
             />
           </div>
@@ -500,7 +528,7 @@ export function DiscountedCashFlowPanel({
           isOpen={isShowResetDialog}
           onClose={() => setIsShowResetDialog(false)}
           onConfirm={handleOnConfirmReset}
-          message="Are you sure you want to reset this method? All calculation data will be cleared."
+          message={t('confirm.resetMethod')}
         />
       </form>
     </FormProvider>
