@@ -59,6 +59,8 @@ import {
 } from '../components/summary/ApprovalListSection';
 import DecisionSection from '../components/summary/DecisionSection';
 import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
+import ConstructionBuildingDetailTable from '../components/summary/ConstructionBuildingDetailTable';
+import ConstructionCompletedBuildingsTable from '../components/summary/ConstructionCompletedBuildingsTable';
 import { AssetSummaryDrawer } from '@/features/common/assetSummary/AssetSummaryDrawer';
 import { useGetAssetSummary } from '@/features/appraisal/api/assetSummary';
 
@@ -1011,10 +1013,26 @@ const DecisionSummaryPage = () => {
                   iconColor="yellow"
                   title={t('decisionSummaryPageExtra.constructionSummaryTitle')}
                 >
-                  <ConstructionSummaryTable
-                    village={data.constructionSummary.village}
-                    rows={data.constructionSummary.rows}
-                  />
+                  <InlineSubSection>
+                    <ConstructionSummaryTable
+                      village={data.constructionSummary.village}
+                      rows={data.constructionSummary.rows}
+                    />
+                  </InlineSubSection>
+                  {(data.constructionSummary.buildings ?? []).length > 0 && (
+                    <InlineSubSection title={t('constructionBuildingDetailTable.title')}>
+                      <ConstructionBuildingDetailTable
+                        rows={data.constructionSummary.buildings ?? []}
+                      />
+                    </InlineSubSection>
+                  )}
+                  {(data.constructionSummary.completedBuildings ?? []).length > 0 && (
+                    <InlineSubSection title={t('constructionCompletedBuildingsTable.title')}>
+                      <ConstructionCompletedBuildingsTable
+                        rows={data.constructionSummary.completedBuildings ?? []}
+                      />
+                    </InlineSubSection>
+                  )}
                 </GroupCard>
               )}
 

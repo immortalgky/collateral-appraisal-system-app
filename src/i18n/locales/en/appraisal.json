@@ -1273,6 +1273,32 @@
       "Complete100": "Complete ( 100% )"
     }
   },
+  "constructionBuildingDetailTable": {
+    "title": "Building Construction Progress",
+    "columns": {
+      "seqNo": "Seq. No.",
+      "houseNumber": "House No.",
+      "titleNumber": "Title Deed No.",
+      "modelName": "Model Name",
+      "previousProgress": "Previous Progress",
+      "increasedProgress": "Construction Work Increased",
+      "currentProgress": "Current Progress",
+      "percent": "%",
+      "value": "Value"
+    },
+    "summaryRow": "Total Building Construction"
+  },
+  "constructionCompletedBuildingsTable": {
+    "title": "Buildings Completed 100% Before Construction Inspection",
+    "columns": {
+      "seqNo": "Seq. No.",
+      "houseNumber": "House No.",
+      "titleNumber": "Title Deed No.",
+      "modelName": "Model Name",
+      "appraisalValue": "Appraisal Value"
+    },
+    "totalRow": "Total"
+  },
   "approvalListSection": {
     "title": "Committee Approval",
     "notActiveYet": "Committee approval is not active for this appraisal yet.",

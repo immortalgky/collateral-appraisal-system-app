@@ -1267,6 +1267,32 @@
       "Complete100": "สมบูรณ์ (100%)"
     }
   },
+  "constructionBuildingDetailTable": {
+    "title": "ความคืบหน้าการก่อสร้างรายอาคาร",
+    "columns": {
+      "seqNo": "ลำดับ",
+      "houseNumber": "บ้านเลขที่",
+      "titleNumber": "เลขที่โฉนด",
+      "modelName": "แบบบ้าน",
+      "previousProgress": "ความคืบหน้าเดิม",
+      "increasedProgress": "งานก่อสร้างที่เพิ่มขึ้น",
+      "currentProgress": "ความคืบหน้าปัจจุบัน",
+      "percent": "%",
+      "value": "มูลค่า"
+    },
+    "summaryRow": "รวมงานก่อสร้างอาคาร"
+  },
+  "constructionCompletedBuildingsTable": {
+    "title": "อาคารที่สร้างเสร็จ 100% ก่อนการตรวจงวดงาน",
+    "columns": {
+      "seqNo": "ลำดับ",
+      "houseNumber": "บ้านเลขที่",
+      "titleNumber": "เลขที่โฉนด",
+      "modelName": "แบบบ้าน",
+      "appraisalValue": "มูลค่าประเมิน"
+    },
+    "totalRow": "รวม"
+  },
   "approvalListSection": {
     "title": "การอนุมัติของคณะกรรมการ",
     "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",

@@ -103,29 +103,29 @@ const ConstructionSummaryTable = ({ rows, village }: Props) => {
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-56">
+              <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-600 w-56">
                 {t('constructionSummaryTable.columns.milestone')}
               </th>
               <th
-                className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-40 leading-tight"
+                className="px-3 py-2.5 text-right text-xs font-semibold text-gray-600 w-40 leading-tight"
                 title="Land Value + under-construction value at this milestone + completed buildings"
               >
                 {t('constructionSummaryTable.columns.totalAppraisalValue')}
               </th>
-              <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-36 leading-tight">
+              <th className="px-3 py-2.5 text-right text-xs font-semibold text-gray-600 w-36 leading-tight">
                 {t('constructionSummaryTable.columns.landValue')}
               </th>
-              <th className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-32 leading-tight">
+              <th className="px-3 py-2.5 text-right text-xs font-semibold text-gray-600 w-32 leading-tight">
                 {t('constructionSummaryTable.columns.constructionProgress')}
               </th>
               <th
-                className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-36 leading-tight"
+                className="px-3 py-2.5 text-right text-xs font-semibold text-gray-600 w-36 leading-tight"
                 title="Current under-construction structure value at this milestone (CI only)"
               >
                 {t('constructionSummaryTable.columns.buildingValue')}
               </th>
               <th
-                className="px-3 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wider text-gray-500 w-44 leading-tight"
+                className="px-3 py-2.5 text-right text-xs font-semibold text-gray-600 w-44 leading-tight"
                 title="Completed buildings registered before the construction inspection (non-CI)"
               >
                 {t('constructionSummaryTable.columns.buildingValuePreInspection')}
@@ -139,20 +139,16 @@ const ConstructionSummaryTable = ({ rows, village }: Props) => {
               const isLast = idx === rows.length - 1;
               const rowBg = isCurrent ? 'bg-teal-50/60' : 'bg-white';
               const borderClass = isLast ? '' : 'border-b border-gray-100';
-              const numericClass = `px-3 py-4 text-right tabular-nums ${isCurrent ? 'text-teal-800 font-bold text-base' : 'text-gray-800 font-medium'}`;
+              const numericClass = `px-3 py-2.5 text-right tabular-nums ${isCurrent ? 'text-teal-800 font-bold' : 'text-gray-800 font-medium'}`;
               const preInspection = row.totalBuildingValue - row.buildingValueConstructing;
               return (
                 <tr key={row.label} className={`${rowBg} ${borderClass}`}>
-                  <td className={`px-4 py-4 ${cfg.labelClass}`}>
-                    <span className="inline-flex items-center gap-2.5">
+                  <td className={`px-4 py-2.5 ${cfg.labelClass}`}>
+                    <span className="inline-flex items-center gap-2">
                       <span
-                        className={`inline-flex size-7 items-center justify-center rounded-full ${cfg.iconClass.replace('text-', 'bg-').replace('-500', '-100').replace('-600', '-100')}`}
+                        className={`inline-flex size-6 items-center justify-center rounded-full ${cfg.iconClass.replace('text-', 'bg-').replace('-500', '-100').replace('-600', '-100')}`}
                       >
-                        <Icon
-                          name={cfg.iconName}
-                          style="solid"
-                          className={`size-3.5 ${cfg.iconClass}`}
-                        />
+                        <Icon name={cfg.iconName} style="solid" className={`size-3 ${cfg.iconClass}`} />
                       </span>
                       {row.label}
                     </span>

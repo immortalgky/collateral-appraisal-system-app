@@ -39,7 +39,7 @@ export function ConstructionTimelineBar({
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-gray-600 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-gray-600">
           {title}
         </span>
         <span className="text-xs text-gray-500">

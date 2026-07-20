@@ -49,9 +49,31 @@ export interface ConstructionSummaryRow {
   buildingValueConstructing: number;
 }
 
+export interface ConstructionBuildingRow {
+  appraisalPropertyId: string;
+  houseNumber: string | null;
+  titleNumber: string | null;
+  modelName: string | null;
+  totalValue: number; // CI value at 100%
+  previousValue: number;
+  currentValue: number;
+  previousProgressPct: number;
+  currentProgressPct: number;
+}
+
+export interface ConstructionCompletedBuildingRow {
+  appraisalPropertyId: string;
+  houseNumber: string | null;
+  titleNumber: string | null;
+  modelName: string | null;
+  appraisalValue: number;
+}
+
 export interface ConstructionSummary {
   village: string | null;
   rows: ConstructionSummaryRow[];
+  buildings: ConstructionBuildingRow[];
+  completedBuildings: ConstructionCompletedBuildingRow[];
 }
 
 /**
