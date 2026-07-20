@@ -284,6 +284,10 @@ const CONDO_SECTIONS: SectionDef[] = [
       { key: 'rightOfWay', label: 'Right of Way' },
       { key: 'roadSurfaceType', label: 'Road Surface', parameterGroup: 'Condo_RoadSurface' },
       { key: 'publicUtilityType', label: 'Public Utility', parameterGroup: 'Condo_PublicUtility' },
+      { key: 'urbanPlanningType', label: 'Urban Planning', parameterGroup: 'TypeOfUrbanPlanning' },
+      { key: 'landFillType', label: 'Land Condition', parameterGroup: 'Landfill' },
+      { key: 'landUseType', label: 'Land Use', parameterGroup: 'LandUse' },
+      { key: 'landEntranceExitType', label: 'Entrance/Exit', parameterGroup: 'LandEntranceExit' },
     ],
   },
   {
@@ -345,6 +349,13 @@ const CONDO_SECTIONS: SectionDef[] = [
       { key: 'buildingInsurancePrice', label: 'Insurance Price', isNumber: true, decimalPlaces: 2 },
       { key: 'sellingPrice', label: 'Selling Price', isNumber: true, decimalPlaces: 2 },
       { key: 'forceSellingPrice', label: 'Forced Sale Price', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'governmentPricePerSqm',
+        label: 'Government Price per Sq.M',
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'governmentPrice', label: 'Government Price', isNumber: true, decimalPlaces: 2 },
     ],
   },
   {

@@ -5,14 +5,30 @@ import type { z } from 'zod';
 // ==================== V1 Schema Types ====================
 
 // Request Documents
-export type DocumentItemDto = z.infer<typeof schemas.DocumentItemDto>;
+// `fileSizeBytes`/`mimeType` are hand-extended here — the backend now returns them but the
+// generated `@shared/schemas/v1` bundle hasn't been regenerated yet. Both are optional so this
+// compiles pre-regen; fold into the generated schema once it's refreshed. Values are structurally
+// present on the actual nested `DocumentSectionDto.documents` items too (same runtime shape),
+// so an explicit `DocumentItemDto` annotation at each `.documents.map(...)` call site is needed
+// to pick up these fields (the nested type is inferred independently by z.infer and won't
+// otherwise see this extension).
+export type DocumentItemDto = z.infer<typeof schemas.DocumentItemDto> & {
+  fileSizeBytes?: number | null;
+  mimeType?: string | null;
+};
 export type DocumentSectionDto = z.infer<typeof schemas.DocumentSectionDto>;
 export type GetRequestDocumentsByRequestIdResponse = z.infer<
   typeof schemas.GetRequestDocumentsByRequestIdResponse
 >;
 
 // Appendix Documents
-export type AppendixDocumentDto = z.infer<typeof schemas.AppendixDocumentResponse>;
+// `uploadedAt`/`uploadedBy`/`uploadedByName` are hand-extended for the same pre-regen reason —
+// see the DocumentItemDto note above. Same caveat applies to `AppraisalAppendixDto.documents`.
+export type AppendixDocumentDto = z.infer<typeof schemas.AppendixDocumentResponse> & {
+  uploadedAt?: string | null;
+  uploadedBy?: string | null;
+  uploadedByName?: string | null;
+};
 export type AppraisalAppendixDto = z.infer<typeof schemas.AppraisalAppendixResponse>;
 export type GetAppraisalAppendicesResponse = z.infer<typeof schemas.GetAppraisalAppendicesResponse>;
 

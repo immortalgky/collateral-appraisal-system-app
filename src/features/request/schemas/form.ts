@@ -187,7 +187,20 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
     comments: z.array(makeRequestCommentDto(t)),
   });
 
-  return buildFormSchema(allRequestFields, createRequestFormBase);
+  return buildFormSchema(allRequestFields, createRequestFormBase).superRefine((data, ctx) => {
+    const needSellingPrice = ['RETAIL'].includes(data.detail.loanDetail.bankingSegment);
+    if (!needSellingPrice) return;
+
+    data.properties?.forEach((p: any, i: any) => {
+      if (p.sellingPrice == null || p.sellingPrice === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['properties', i, 'sellingPrice'],
+          message: t('validation.sellingPriceRequired'),
+        });
+      }
+    });
+  });
 }
 
 // Hook: resolve the form schema per render (re-built when language changes).
@@ -305,9 +318,13 @@ export const requestTitleDefault: RequestTitleDtoType = {
   areaSquareWa: null,
   ownerName: '',
   vehicleType: '',
-  vehicleAppointmentLocation: '',
+  vehicleLocation: '',
   vin: '',
   licensePlateNumber: '',
+  vesselType: '',
+  vesselLocation: '',
+  hin: '',
+  vesselRegistrationNumber: '',
   registrationStatus: false,
   registrationNumber: '',
   machineType: '',

@@ -998,13 +998,6 @@ export const lbModelBuildingDetailFields: FormField[] = [
   },
   {
     type: 'number-input',
-    label: 'Construction Year',
-    name: 'constructionYear',
-    decimalPlaces: 0,
-    wrapperClassName: 'col-span-4',
-  },
-  {
-    type: 'number-input',
     label: 'Building Age',
     name: 'buildingAge',
     maxIntegerDigits: 3,

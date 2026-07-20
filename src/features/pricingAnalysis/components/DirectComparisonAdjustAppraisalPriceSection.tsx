@@ -60,9 +60,9 @@ export function DirectComparisonAdjustAppraisalPriceSection({
     return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
   }, [calculations]);
 
-  const isUnitPrice = detectedUnit === '01' || detectedUnit === '02';
-  const unitAreaPath = detectedUnit === '02' ? usableAreaPath() : landAreaPath();
-  const unitAreaLabel = detectedUnit === '02' ? 'Sq.M' : 'Sq.Wa';
+  const isUnitPrice = detectedUnit === 'PerSqWa' || detectedUnit === 'PerSqm';
+  const unitAreaPath = detectedUnit === 'PerSqm' ? usableAreaPath() : landAreaPath();
+  const unitAreaLabel = detectedUnit === 'PerSqm' ? 'Sq.M' : 'Sq.Wa';
 
   // Auto-derive includeLandArea from the comparables' measure unit.
   useEffect(() => {
