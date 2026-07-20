@@ -655,6 +655,7 @@ export const createCondoFormDefault: createCondoFormType = {
   landEntranceExitTypeOther: '',
   governmentPricePerSqm: 0,
   governmentPrice: 0,
+  fireInsuranceCondition: '',
   decorationType: '',
   decorationTypeOther: '',
   buildingAge: 0,

@@ -15,25 +15,8 @@ export const LOCATION_METHOD_OPTIONS = [
 // Condo-specific options (no matching parameter group)
 // =============================================================================
 
-// TODO: parameterize — values must stay in sync with backend
-// GetProjectPricingAssumptionsQueryHandler.CoverageByCondition lookup.
-export const CONDO_FIRE_INSURANCE_CONDITION_OPTIONS: ListBoxItem[] = [
-  { id: 'LessThan8Floors', value: 'LessThan8Floors', label: 'Condo height < 8 floors' },
-  { id: 'GreaterThan8Floors', value: 'GreaterThan8Floors', label: 'Condo height > 8 floors' },
-  {
-    id: 'LessThan8FloorsWithMezzanine',
-    value: 'LessThan8FloorsWithMezzanine',
-    label: 'Condo height < 8 floors and with mezzanine floor',
-  },
-  {
-    id: 'GreaterThan8FloorsWithMezzanine',
-    value: 'GreaterThan8FloorsWithMezzanine',
-    label: 'Condo height > 8 floors and with mezzanine floor',
-  },
-];
-
-export const CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE: Record<string, string> =
-  Object.fromEntries(CONDO_FIRE_INSURANCE_CONDITION_OPTIONS.map(o => [o.value, o.label]));
+// Fire-insurance condition options are sourced from the API — see
+// useFireInsuranceOptions in @/shared/api/pricingParameters.
 
 /**
  * "Project Type" dropdown on the Condo project info form.
@@ -85,40 +68,8 @@ export const LB_FLOOR_STRUCTURE_TYPE_OPTIONS = [
   { value: 'Other', label: 'Other' },
 ];
 
-export const LB_FIRE_INSURANCE_OPTIONS: ListBoxItem[] = [
-  { id: 'OneTwoStoreyTownhouse', value: 'OneTwoStoreyTownhouse', label: '1-2 Storey Townhouse' },
-  { id: 'ThreeStoreyTownhouse', value: 'ThreeStoreyTownhouse', label: '3 Storey Townhouse' },
-  { id: 'SemiDetachedHouse', value: 'SemiDetachedHouse', label: 'Semi-detached house' },
-  {
-    id: 'SingleHouseAreaLessThan150',
-    value: 'SingleHouseAreaLessThan150',
-    label: 'Single house, Area < 150 Sq.m',
-  },
-  {
-    id: 'SingleHouseArea150To200',
-    value: 'SingleHouseArea150To200',
-    label: 'Single house, Area ≥ 150 < 200 Sq.m',
-  },
-  {
-    id: 'SingleHouseArea200To400',
-    value: 'SingleHouseArea200To400',
-    label: 'Single house, Area ≥ 200 < 400 Sq.m',
-  },
-  {
-    id: 'SingleHouseArea400To500',
-    value: 'SingleHouseArea400To500',
-    label: 'Single house, Area ≥ 400 < 500 Sq.m',
-  },
-  {
-    id: 'SingleHouseAreaGreaterThan500',
-    value: 'SingleHouseAreaGreaterThan500',
-    label: 'Single house, Area > 500 Sq.m',
-  },
-];
-
-export const LB_FIRE_INSURANCE_LABEL_BY_VALUE: Record<string, string> = Object.fromEntries(
-  LB_FIRE_INSURANCE_OPTIONS.map(o => [o.value, o.label]),
-);
+// Fire-insurance condition options are sourced from the API — see
+// useFireInsuranceOptions in @/shared/api/pricingParameters.
 
 export const LB_DEPRECIATION_METHOD_OPTIONS = [
   { value: 'Period', label: 'Period' },

@@ -398,7 +398,7 @@
     "fields": {
       "totalAppraisalPrice": "Total Appraisal Price",
       "forceSellingPrice": "Force Selling Price",
-      "forceSellingPriceHint": "70% of appraisal price",
+      "forceSellingPriceHint": "of appraisal price",
       "buildingInsurance": "Building Insurance",
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
@@ -474,7 +474,9 @@
       "saveFailed": "Failed to save decision summary. Please try again.",
       "submitted": "Decision submitted successfully",
       "submitFailed": "Failed to submit decision",
-      "validationErrors": "Validation errors occurred"
+      "validationErrors": "Validation errors occurred",
+      "forceSaleRateSaved": "Force selling rate saved",
+      "forceSaleRateFailed": "Failed to save force selling rate. Please try again."
     }
   },
   "decision": {
@@ -621,6 +623,14 @@
       "save": "Save",
       "saved": "Comment saved",
       "saveFailed": "Failed to save comment"
+    },
+    "previousAppraisals": {
+      "trigger": "Previous Appraisals",
+      "fields": {
+        "date": "Date",
+        "value": "Value",
+        "status": "Status"
+      }
     }
   },
   "activityTracking": {
@@ -832,7 +842,10 @@
     "condo": {
       "sectionTitle": "Condo Details",
       "areaDetail": "Area Detail",
-      "pma": "PMA Information"
+      "pma": "PMA Information",
+      "buildingInsuranceSectionTitle": "Building Insurance",
+      "fireInsuranceCondition": "Fire Insurance Condition",
+      "buildingInsurancePrice": "Building Insurance Coverage"
     },
     "machinery": {
       "sectionTitle": "Machinery Details"
@@ -918,8 +931,8 @@
     "annotationSaveFailed": "Failed to save annotated image",
     "fileUploadFailed": "Failed to upload file",
     "documentLoadFailed": "Failed to load document for editing",
-    "onlyImageFilesAllowed": "Only image files are allowed",
     "invalidDocumentFileType": "Only image (JPG, JPEG, PNG) or PDF files are allowed",
+    "fileTooLarge": "File size exceeds the 50 MB limit",
     "galleryFilesAdded": "Files added from gallery",
     "galleryFilesAddFailed": "Failed to add files from gallery",
     "documentRemoved": "Document removed",
@@ -1240,11 +1253,20 @@
     }
   },
   "governmentPriceTable": {
+    "landSectionTitle": "Land",
+    "condoSectionTitle": "Condominium",
     "columns": {
       "titleDeedNo": "Title Deed No.",
       "sqWa": "Sq.Wa",
       "bahtPerSqWa": "Baht / Sq.Wa",
       "landPrice": "Land Price"
+    },
+    "condoColumns": {
+      "titleDeedNo": "Title Deed No.",
+      "room": "Room",
+      "sqm": "Sq.M.",
+      "bahtPerSqm": "Baht / Sq.M.",
+      "price": "Price"
     },
     "footer": {
       "total": "Total",
@@ -1253,7 +1275,8 @@
     },
     "missingFromSurvey": "Missing from survey",
     "showLess": "Show less",
-    "showMore": "Show more ({{remaining}}) deeds"
+    "showMore": "Show more ({{remaining}}) deeds",
+    "condoShowMore": "Show more ({{remaining}}) rooms"
   },
   "constructionSummaryTable": {
     "villageLabel": "Village / Project",

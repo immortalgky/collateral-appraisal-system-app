@@ -6,7 +6,7 @@ import { useAppraisalId, useIsTaskOwner } from '@/features/appraisal/context/App
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
-import { useGetAppraisalById } from '../api/appraisal';
+import { useGetAppraisalById, useGetPreviousAppraisalChain } from '../api/appraisal';
 import { useGetAppraisalDocuments } from '../api/appraisalDocuments';
 import { useViewDocument } from '@features/request/api/documents';
 import { useGetDecisionSummary } from '../api/decisionSummary';
@@ -22,6 +22,7 @@ import type {
 } from '@/features/common/historySearch/types';
 
 import StickyHeaderCard from '../components/360/StickyHeaderCard';
+import PreviousAppraisalsMenu from '../components/360/PreviousAppraisalsMenu';
 import StickyRemarkFooter from '../components/360/StickyRemarkFooter';
 import RequestInfoSection from '../components/360/RequestInfoSection';
 import PropertyGroupsSection from '../components/360/PropertyGroupsSection';
@@ -91,6 +92,8 @@ const Appraisal360Page = () => {
   // documentId must already be in hand. Shares its query key with the Documents page.
   const { data: appraisalDocuments } = useGetAppraisalDocuments(appraisalId);
   const viewDocument = useViewDocument();
+  // Reappraisal / construction-inspection lineage — powers the "Previous Appraisals" header menu.
+  const { data: previousChain } = useGetPreviousAppraisalChain(appraisalId);
 
   // View-only: opens the newest file attached to a report type, or explains that there is none.
   // These reports are never auto-attached — they land here only once someone generates and
@@ -221,6 +224,7 @@ const Appraisal360Page = () => {
         compact={scrolled}
         actions={
           <>
+            <PreviousAppraisalsMenu items={previousChain ?? []} />
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"

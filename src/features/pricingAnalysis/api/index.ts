@@ -68,53 +68,17 @@ export function useGetComparativeFactors(id: string | undefined, methodId: strin
 }
 
 /**
- * Fetch pricing parameters catalog (assumption types, method matrix, room types, etc.)
+ * Fetch pricing parameters catalog (assumption types, method matrix, fire-insurance
+ * rates, etc.) — moved to shared/api since blockProject and appraisal property forms
+ * now consume it too. Re-exported here so existing local imports keep working.
  * GET /pricing-parameters
  */
-export interface PricingAssumptionType {
-  code: string;
-  name: string;
-  sectionType: 'income' | 'expenses' | 'any';
-  displaySeq: number;
-}
-
-export interface PricingAssumptionMethodMatrix {
-  assumptionType: string;
-  allowedMethodCodes: string[];
-}
-
-export interface PricingParametersResponse {
-  assumptionTypes: PricingAssumptionType[];
-  assumptionMethodMatrix: PricingAssumptionMethodMatrix[];
-}
-
-interface PricingParametersRaw {
-  assumptionTypes: { code: string; name: string; category: string; displaySeq: number }[];
-  assumptionMethodMatrix: { assumptionType: string; allowedMethodCodes: string[] }[];
-}
-
-export function useGetPricingParameters() {
-  return useQuery({
-    queryKey: pricingAnalysisKeys.pricingParameters(),
-    queryFn: async (): Promise<PricingParametersResponse> => {
-      const { data } = await axios.get<PricingParametersRaw>('/pricing-parameters');
-      // Backend Category uses 'income' | 'expenses' | 'other'; the form's
-      // sectionType filter expects 'any' for cross-section types (e.g. M99).
-      return {
-        assumptionTypes: (data.assumptionTypes ?? []).map(a => ({
-          code: a.code,
-          name: a.name,
-          sectionType: a.category === 'income' || a.category === 'expenses' ? a.category : 'any',
-          displaySeq: a.displaySeq,
-        })),
-        assumptionMethodMatrix: data.assumptionMethodMatrix ?? [],
-      };
-    },
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    staleTime: Infinity,
-  });
-}
+export {
+  useGetPricingParameters,
+  type PricingAssumptionType,
+  type PricingAssumptionMethodMatrix,
+  type PricingParametersResponse,
+} from '@/shared/api/pricingParameters';
 
 /**
  * Create a new pricing analysis for a property group

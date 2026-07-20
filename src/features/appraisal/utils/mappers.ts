@@ -268,6 +268,9 @@ export const mapCondoPropertyResponseToForm = (
     landEntranceExitTypeOther: (response as any).landEntranceExitTypeOther ?? '',
     governmentPricePerSqm: (response as any).governmentPricePerSqm ?? 0,
     governmentPrice: (response as any).governmentPrice ?? 0,
+    // Not yet in the generated v1 response schema — cast until it's regenerated
+    // (same pattern as the government-price fields above).
+    fireInsuranceCondition: (response as any).fireInsuranceCondition ?? '',
 
     decorationType: response.decorationType ?? '',
     decorationTypeOther: response.decorationTypeOther ?? '',

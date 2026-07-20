@@ -394,7 +394,7 @@
     "fields": {
       "totalAppraisalPrice": "估价总价",
       "forceSellingPrice": "强制出售价格",
-      "forceSellingPriceHint": "估价价格的 70%",
+      "forceSellingPriceHint": "的估价价格",
       "buildingInsurance": "建筑保险",
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
@@ -466,7 +466,9 @@
       "saveFailed": "保存决策摘要失败，请重试。",
       "submitted": "决策提交成功",
       "submitFailed": "提交决策失败",
-      "validationErrors": "发生验证错误"
+      "validationErrors": "发生验证错误",
+      "forceSaleRateSaved": "强制出售价格比例已保存",
+      "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。"
     }
   },
   "decision": {
@@ -611,6 +613,14 @@
       "save": "保存",
       "saved": "评论已保存",
       "saveFailed": "保存评论失败"
+    },
+    "previousAppraisals": {
+      "trigger": "以往评估",
+      "fields": {
+        "date": "日期",
+        "value": "价值",
+        "status": "状态"
+      }
     }
   },
   "activityTracking": {
@@ -819,7 +829,10 @@
     "condo": {
       "sectionTitle": "公寓详情",
       "areaDetail": "面积详情",
-      "pma": "PMA 信息"
+      "pma": "PMA 信息",
+      "buildingInsuranceSectionTitle": "建筑保险",
+      "fireInsuranceCondition": "火灾保险条件",
+      "buildingInsurancePrice": "公寓单位保险保额"
     },
     "machinery": {
       "sectionTitle": "机械详情"
@@ -903,8 +916,8 @@
     "annotationSaveFailed": "保存批注图片失败",
     "fileUploadFailed": "上传文件失败",
     "documentLoadFailed": "加载待编辑文档失败",
-    "onlyImageFilesAllowed": "仅允许图片文件",
     "invalidDocumentFileType": "仅允许图片文件 (JPG、JPEG、PNG) 或 PDF 文件",
+    "fileTooLarge": "文件大小超过 50 MB 限制",
     "galleryFilesAdded": "已从图库添加文件",
     "galleryFilesAddFailed": "从图库添加文件失败",
     "documentRemoved": "文档已移除",
@@ -1220,11 +1233,20 @@
     }
   },
   "governmentPriceTable": {
+    "landSectionTitle": "土地",
+    "condoSectionTitle": "公寓",
     "columns": {
       "titleDeedNo": "地契编号",
       "sqWa": "平方哇",
       "bahtPerSqWa": "泰铢/平方哇",
       "landPrice": "土地价格"
+    },
+    "condoColumns": {
+      "titleDeedNo": "地契编号",
+      "room": "房间号",
+      "sqm": "平方米",
+      "bahtPerSqm": "泰铢/平方米",
+      "price": "公寓价格"
     },
     "footer": {
       "total": "合计",
@@ -1232,7 +1254,8 @@
     },
     "missingFromSurvey": "勘测中缺失",
     "showLess": "收起",
-    "showMore": "显示更多（还有 {{remaining}} 份）"
+    "showMore": "显示更多（还有 {{remaining}} 份）",
+    "condoShowMore": "显示更多（还有 {{remaining}} 间）"
   },
   "constructionSummaryTable": {
     "villageLabel": "楼盘 / 项目",

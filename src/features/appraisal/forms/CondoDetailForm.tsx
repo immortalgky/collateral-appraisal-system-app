@@ -2,13 +2,16 @@ import { FormFields, type FormField } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import CondoAreaDetailForm from './CondoAreaDetailForm';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
+import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import {
   condoFields,
   condoLocationFields,
   condoLandCharacteristicsFields,
   condoGovernmentPriceFields,
+  condoBuildingInsuranceFields,
   condoDecorationFields,
   ageHeightCondoFields,
   buildingFormFields,
@@ -61,6 +64,7 @@ const Card = ({ children }: { children: ReactNode }) => (
 );
 
 function CondoDetailForm() {
+  const { t } = useTranslation('appraisal');
   const { setValue, watch } = useFormContext();
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -102,6 +106,31 @@ function CondoDetailForm() {
     [pickerButton, fillIcon],
   );
 
+  // Building Insurance: buildingInsurancePrice is SERVER-DERIVED (rate × usableArea) —
+  // unlike Government Price above, there is no client-side computation here. The field
+  // is disabled/display-only, populated from whatever the GET response returns; the
+  // save mutation invalidates the condo property query so the freshly-derived value
+  // comes back after save.
+  const fireInsuranceOptions = useFireInsuranceOptions('Condo');
+  const buildingInsuranceFields = useMemo<FormField[]>(
+    () =>
+      condoBuildingInsuranceFields.map(field => {
+        // Narrow on `type` as well as `name`: spreading into a bare FormField union
+        // widens `options` across every variant (boolean-toggle requires exactly
+        // [string, string]), which breaks the discriminated union.
+        if (field.type === 'dropdown' && field.name === 'fireInsuranceCondition')
+          return {
+            ...field,
+            label: t('forms.condo.fireInsuranceCondition'),
+            options: fireInsuranceOptions,
+          };
+        if (field.name === 'buildingInsurancePrice')
+          return { ...field, label: t('forms.condo.buildingInsurancePrice') };
+        return field;
+      }),
+    [fireInsuranceOptions, t],
+  );
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
       <SectionRow title="Condominium Information" icon="building">
@@ -119,6 +148,10 @@ function CondoDetailForm() {
 
       <SectionRow title="Government Price" icon="money-bill">
         <FormFields fields={condoGovernmentPriceFields} />
+      </SectionRow>
+
+      <SectionRow title={t('forms.condo.buildingInsuranceSectionTitle')} icon="shield-halved">
+        <FormFields fields={buildingInsuranceFields} />
       </SectionRow>
 
       <MapLocationPicker
