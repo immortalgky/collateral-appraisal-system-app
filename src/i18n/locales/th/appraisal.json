@@ -398,7 +398,7 @@
     "fields": {
       "totalAppraisalPrice": "ราคาประเมินรวม",
       "forceSellingPrice": "ราคาขายบังคับ",
-      "forceSellingPriceHint": "70% ของราคาประเมิน",
+      "forceSellingPriceHint": "ของราคาประเมิน",
       "buildingInsurance": "ประกันสิ่งปลูกสร้าง",
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
@@ -474,7 +474,9 @@
       "saveFailed": "ไม่สามารถบันทึกสรุปการตัดสินใจได้ กรุณาลองใหม่",
       "submitted": "ส่งการตัดสินใจสำเร็จ",
       "submitFailed": "ไม่สามารถส่งการตัดสินใจได้",
-      "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ"
+      "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ",
+      "forceSaleRateSaved": "บันทึกอัตราราคาขายบังคับสำเร็จ",
+      "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่"
     }
   },
   "decision": {
@@ -621,6 +623,14 @@
       "save": "บันทึก",
       "saved": "บันทึกความคิดเห็นแล้ว",
       "saveFailed": "บันทึกความคิดเห็นไม่สำเร็จ"
+    },
+    "previousAppraisals": {
+      "trigger": "การประเมินก่อนหน้า",
+      "fields": {
+        "date": "วันที่",
+        "value": "มูลค่า",
+        "status": "สถานะ"
+      }
     }
   },
   "activityTracking": {
@@ -829,7 +839,10 @@
     "condo": {
       "sectionTitle": "รายละเอียดคอนโด",
       "areaDetail": "รายละเอียดพื้นที่",
-      "pma": "ข้อมูล PMA"
+      "pma": "ข้อมูล PMA",
+      "buildingInsuranceSectionTitle": "ประกันภัยอาคาร",
+      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "buildingInsurancePrice": "ทุนประกันภัยห้องชุด"
     },
     "machinery": {
       "sectionTitle": "รายละเอียดเครื่องจักร"
@@ -913,8 +926,8 @@
     "annotationSaveFailed": "บันทึกรูปภาพที่มีคำอธิบายล้มเหลว",
     "fileUploadFailed": "อัปโหลดไฟล์ล้มเหลว",
     "documentLoadFailed": "โหลดเอกสารสำหรับแก้ไขล้มเหลว",
-    "onlyImageFilesAllowed": "อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น",
     "invalidDocumentFileType": "อนุญาตเฉพาะไฟล์รูปภาพ (JPG, JPEG, PNG) หรือ PDF เท่านั้น",
+    "fileTooLarge": "ขนาดไฟล์เกิน 50 MB",
     "galleryFilesAdded": "เพิ่มไฟล์จากแกลเลอรีแล้ว",
     "galleryFilesAddFailed": "เพิ่มไฟล์จากแกลเลอรีล้มเหลว",
     "documentRemoved": "ลบเอกสารแล้ว",
@@ -1235,11 +1248,20 @@
     }
   },
   "governmentPriceTable": {
+    "landSectionTitle": "ที่ดิน",
+    "condoSectionTitle": "ห้องชุด",
     "columns": {
       "titleDeedNo": "เลขที่โฉนด",
       "sqWa": "ตร.วา",
       "bahtPerSqWa": "บาท / ตร.วา",
       "landPrice": "ราคาที่ดิน"
+    },
+    "condoColumns": {
+      "titleDeedNo": "เลขที่โฉนด",
+      "room": "ห้อง",
+      "sqm": "ตร.ม.",
+      "bahtPerSqm": "บาท / ตร.ม.",
+      "price": "ราคาห้องชุด"
     },
     "footer": {
       "total": "รวม",
@@ -1247,7 +1269,8 @@
     },
     "missingFromSurvey": "ไม่พบในรังวัด",
     "showLess": "แสดงน้อยลง",
-    "showMore": "แสดงเพิ่มเติม ({{remaining}} ฉบับ)"
+    "showMore": "แสดงเพิ่มเติม ({{remaining}} ฉบับ)",
+    "condoShowMore": "แสดงเพิ่มเติม ({{remaining}} ห้อง)"
   },
   "constructionSummaryTable": {
     "villageLabel": "ชื่ออาคาร / โครงการ",

@@ -9,7 +9,13 @@ import { useTranslation } from 'react-i18next';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import AppendixChooserModal from '../AppendixChooserModal';
-import { ActionDropdown, DocumentFileRow, EmptyUploadState, openDocumentViewer } from '../documentShared';
+import {
+  ActionDropdown,
+  DocumentFileRow,
+  EmptyUploadState,
+  isImageDocument,
+  openDocumentViewer,
+} from '../documentShared';
 import type { GalleryImage } from '../../types/gallery';
 import { toGalleryImage } from '../../types/gallery';
 import { useAppraisalContext } from '../../context/AppraisalContext';
@@ -37,6 +43,14 @@ const ImageAnnotationEditor = lazyWithRetry(
 );
 
 const isImageFile = (file: File) => /\.(jpg|jpeg|png)$/i.test(file.name);
+// Mirrors ValuationDocumentChecklist.tsx's isAllowedChecklistFile — same page, same accepted types.
+const isAcceptedAppendixFile = (file: File) => /\.(jpe?g|png|pdf)$/i.test(file.name);
+
+// Mirrors the server cap (FileStorageConfiguration.MaxFileSizeBytes / appsettings 52428800).
+// The appendix path had no client-side size check at all — the server rejected oversize uploads
+// only after the full transfer, which is slow and opaque for the larger PDFs now allowed.
+const MAX_APPENDIX_FILE_SIZE = 50 * 1024 * 1024;
+const isWithinSizeLimit = (file: File) => file.size <= MAX_APPENDIX_FILE_SIZE;
 
 export const AppendixTab = () => {
   const readOnly = usePageReadOnly();
@@ -243,6 +257,60 @@ export const AppendixTab = () => {
     ],
   );
 
+  // Upload a PDF straight through — no annotation editor, no gallery. Mirrors the shape of
+  // uploadSingleFile's 3-step flow but stops after the document upload and links via `documentId`
+  // instead of `galleryPhotoId`.
+  const uploadPdfFile = useCallback(
+    async (file: File, appendixId: string, displaySequence: number) => {
+      if (!appraisalId) return;
+
+      const sessionId = await getOrCreateSession();
+
+      const uploadResult = await uploadDocument({
+        uploadSessionId: sessionId,
+        file,
+        documentType: 'APPENDIX',
+        documentCategory: 'appendix',
+      });
+
+      await addAppendixDocument.mutateAsync({
+        appraisalId,
+        appendixId,
+        body: {
+          documentId: uploadResult.documentId,
+          displaySequence,
+        },
+      });
+    },
+    [appraisalId, getOrCreateSession, uploadDocument, addAppendixDocument],
+  );
+
+  const handlePdfFiles = useCallback(
+    // `sequenceOffset` reserves room for images uploaded in the SAME batch: they run
+    // concurrently through the annotation editor and derive their own sequence from the same
+    // (unrefreshed) `appendices` closure, so without the offset the first PDF and the first
+    // image both claim documents.length + 1.
+    async (pdfFiles: File[], appendixId: string, sequenceOffset = 0) => {
+      // Compute the base sequence ONCE and increment per file. `appendices` is a react-query
+      // result that cannot refresh mid-loop, so reading it inside the loop would hand every
+      // file the same DisplaySequence — and the report orders by it (ORDER BY SortOrder,
+      // DisplaySequence), making tied pages render in arbitrary order.
+      const appendix = appendices.find(a => a.id === appendixId);
+      const baseSequence = (appendix?.documents.length ?? 0) + sequenceOffset;
+
+      try {
+        for (const [index, file] of pdfFiles.entries()) {
+          await uploadPdfFile(file, appendixId, baseSequence + index + 1);
+        }
+        toast.success(t('toasts.filesUploaded'));
+      } catch (error) {
+        console.error('PDF upload failed:', error);
+        toast.error(t('toasts.fileUploadFailed'));
+      }
+    },
+    [appendices, uploadPdfFile, t],
+  );
+
   // Upload File[] (non-FileList variant)
   // Annotation editor handlers
   const handleAnnotationSave = useCallback(
@@ -369,11 +437,24 @@ export const AppendixTab = () => {
     if (!appendixId) return;
 
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(isImageFile);
-    const nonImageFiles = fileArray.filter(f => !isImageFile(f));
+    // Buckets stay mutually exclusive and exhaustive: wrong type → rejected; right type but
+    // over the cap → oversize; the remainder splits into images and PDFs.
+    const rejectedFiles = fileArray.filter(f => !isAcceptedAppendixFile(f));
+    const oversizeFiles = fileArray.filter(f => isAcceptedAppendixFile(f) && !isWithinSizeLimit(f));
+    const sizedFiles = fileArray.filter(f => isAcceptedAppendixFile(f) && isWithinSizeLimit(f));
+    const imageFiles = sizedFiles.filter(isImageFile);
+    const pdfFiles = sizedFiles.filter(f => !isImageFile(f));
 
-    if (nonImageFiles.length > 0) {
-      toast.error(t('toasts.onlyImageFilesAllowed'));
+    if (rejectedFiles.length > 0) {
+      toast.error(t('toasts.invalidDocumentFileType'));
+    }
+
+    if (oversizeFiles.length > 0) {
+      toast.error(t('toasts.fileTooLarge'));
+    }
+
+    if (pdfFiles.length > 0) {
+      void handlePdfFiles(pdfFiles, appendixId, imageFiles.length);
     }
 
     // Open editor for image files — save appendixId into editor state
@@ -458,11 +539,24 @@ export const AppendixTab = () => {
     if (files.length === 0) return;
 
     const fileArray = Array.from(files);
-    const imageFiles = fileArray.filter(isImageFile);
-    const nonImageFiles = fileArray.filter(f => !isImageFile(f));
+    // Buckets stay mutually exclusive and exhaustive: wrong type → rejected; right type but
+    // over the cap → oversize; the remainder splits into images and PDFs.
+    const rejectedFiles = fileArray.filter(f => !isAcceptedAppendixFile(f));
+    const oversizeFiles = fileArray.filter(f => isAcceptedAppendixFile(f) && !isWithinSizeLimit(f));
+    const sizedFiles = fileArray.filter(f => isAcceptedAppendixFile(f) && isWithinSizeLimit(f));
+    const imageFiles = sizedFiles.filter(isImageFile);
+    const pdfFiles = sizedFiles.filter(f => !isImageFile(f));
 
-    if (nonImageFiles.length > 0) {
-      toast.error(t('toasts.onlyImageFilesAllowed'));
+    if (rejectedFiles.length > 0) {
+      toast.error(t('toasts.invalidDocumentFileType'));
+    }
+
+    if (oversizeFiles.length > 0) {
+      toast.error(t('toasts.fileTooLarge'));
+    }
+
+    if (pdfFiles.length > 0) {
+      void handlePdfFiles(pdfFiles, appendixId, imageFiles.length);
     }
 
     if (imageFiles.length > 0) {
@@ -638,7 +732,13 @@ export const AppendixTab = () => {
                                 actions={
                                   <ActionDropdown
                                     onView={() => openDocumentViewer(doc)}
-                                    onEdit={() => void handleEditDocument(appendix.id, doc)}
+                                    // PDFs have no annotation-editor path — Edit downloads the blob
+                                    // into the image canvas, which is meaningless for a PDF.
+                                    onEdit={
+                                      isImageDocument(doc.fileName, doc.mimeType)
+                                        ? () => void handleEditDocument(appendix.id, doc)
+                                        : undefined
+                                    }
                                     onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
                                     isEditable={!readOnly}
                                   />
@@ -676,7 +776,7 @@ export const AppendixTab = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png"
+        accept=".jpg,.jpeg,.png,.pdf"
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';
@@ -715,7 +815,7 @@ export const AppendixTab = () => {
         onUploadFromDevice={handleUploadFromDevice}
         onChooseFromGallery={handleChooseFromGallery}
         title={activeAppendix ? `Add ${activeAppendix.appendixTypeName}` : 'Add Files'}
-        accept=".jpg,.jpeg,.png"
+        accept=".jpg,.jpeg,.png,.pdf"
       />
 
       {/* Gallery Selection Modal */}

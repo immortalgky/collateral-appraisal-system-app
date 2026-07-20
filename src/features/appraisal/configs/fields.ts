@@ -1943,6 +1943,30 @@ export const condoGovernmentPriceFields: FormField[] = [
   },
 ];
 
+// Condo building insurance — unlike Government Price, this is NOT computed client-side.
+// buildingInsurancePrice (rate × usableArea) is derived and locked server-side from the
+// selected fireInsuranceCondition; the client only posts fireInsuranceCondition and
+// displays whatever buildingInsurancePrice the GET response returns. See CondoDetailForm.
+export const condoBuildingInsuranceFields: FormField[] = [
+  {
+    type: 'dropdown',
+    label: 'Fire Insurance Condition',
+    name: 'fireInsuranceCondition',
+    // Populated at render time from useFireInsuranceOptions('Condo') — see CondoDetailForm.
+    options: [],
+    wrapperClassName: 'col-span-6',
+  },
+  {
+    type: 'number-input',
+    label: 'Building Insurance Price',
+    name: 'buildingInsurancePrice',
+    wrapperClassName: 'col-span-6',
+    disabled: true,
+    maxIntegerDigits: 16,
+    decimalPlaces: 2,
+  },
+];
+
 // --- Merged Land sections ---
 export const roadAndSurfaceField: FormField[] = [...roadField, ...roadSurfaceField];
 
@@ -2386,6 +2410,7 @@ export const allCondoFields: FormField[] = [
   ...condoLocationFields,
   ...condoLandCharacteristicsFields,
   ...condoGovernmentPriceFields,
+  ...condoBuildingInsuranceFields,
   ...condoDecorationFields,
   ...ageHeightCondoFields,
   ...buildingFormFields,

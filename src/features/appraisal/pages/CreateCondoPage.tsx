@@ -81,12 +81,15 @@ const CreateCondoPage = () => {
 
   const onSubmit: SubmitHandler<createCondoFormType> = data => {
     setSaveAction('submit');
+    // buildingInsurancePrice is server-derived (rate × usableArea) — display only,
+    // never sent back on create/update.
+    const { buildingInsurancePrice: _buildingInsurancePrice, ...payload } = data;
     if (isEditMode && propertyId) {
       updateCondoProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data,
+          data: payload,
         },
         {
           onSuccess: () => {
@@ -105,7 +108,7 @@ const CreateCondoPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data,
+          data: payload,
         },
         {
           onSuccess: async (response: any) => {
@@ -128,14 +131,15 @@ const CreateCondoPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
+    // buildingInsurancePrice is server-derived — never sent back on save.
+    const { buildingInsurancePrice: _buildingInsurancePrice, ...payload } = getValues();
 
     if (isEditMode && propertyId) {
       updateCondoProperties(
         {
           appraisalId: appraisalId!,
           propertyId,
-          data,
+          data: payload,
         },
         {
           onSuccess: () => {
@@ -154,7 +158,7 @@ const CreateCondoPage = () => {
         {
           appraisalId: appraisalId!,
           groupId,
-          data,
+          data: payload,
         },
         {
           onSuccess: async (response: any) => {

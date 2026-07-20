@@ -25,7 +25,9 @@ export const pricingAnalysisKeys = {
   pricingTemplateByCode: (code: string) => ['pricing-templates', code] as const,
   incomeAnalysis: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'income-analysis', methodId] as const,
-  pricingParameters: () => ['pricing-parameters'] as const,
+  // pricing parameters query key moved to shared/api/pricingParameters.ts
+  // (PRICING_PARAMETERS_QUERY_KEY) — kept out of this factory since the hook is
+  // now shared across features.
   hypothesisAnalysis: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'hypothesis-analysis', methodId] as const,
   pricingMethod: (methodId: string) => ['pricing-method', methodId] as const,

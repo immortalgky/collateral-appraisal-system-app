@@ -1,9 +1,5 @@
 import type { FormField } from '@/shared/components/form';
-import {
-  CONDO_FIRE_INSURANCE_CONDITION_OPTIONS,
-  LB_FIRE_INSURANCE_OPTIONS,
-  LOCATION_METHOD_OPTIONS,
-} from '../data/options';
+import { LOCATION_METHOD_OPTIONS } from '../data/options';
 
 // =============================================================================
 // Shared Project Info fields
@@ -456,7 +452,8 @@ export const condoModelInfoFields: FormField[] = [
     type: 'dropdown',
     label: 'Fire Insurance Condition',
     name: 'fireInsuranceCondition',
-    options: CONDO_FIRE_INSURANCE_CONDITION_OPTIONS,
+    // Populated at render time from useFireInsuranceOptions('Condo') — see ModelDetailForm.
+    options: [],
     wrapperClassName: 'col-span-12',
   },
   {
@@ -917,7 +914,8 @@ export const lbModelInfoFields: FormField[] = [
     type: 'dropdown',
     label: 'Fire Insurance Condition',
     name: 'fireInsuranceCondition',
-    options: LB_FIRE_INSURANCE_OPTIONS,
+    // Populated at render time from useFireInsuranceOptions('LandAndBuilding') — see ModelDetailForm.
+    options: [],
     wrapperClassName: 'col-span-6',
   },
   {

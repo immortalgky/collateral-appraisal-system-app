@@ -2,6 +2,7 @@ import Icon from '@/shared/components/Icon';
 import FormCard from '@/shared/components/sections/FormCard';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import GovernmentPriceTable from '../summary/GovernmentPriceTable';
+import CondoGovernmentPriceTable from '../summary/CondoGovernmentPriceTable';
 import type { DecisionSummaryData } from '../../api/decisionSummary';
 import { useTranslation } from 'react-i18next';
 
@@ -51,13 +52,41 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
       {/* Government Appraisal Price */}
       <FormCard title={t('view360.decisionSummarySection.governmentAppraisalPrice')} icon="landmark" iconColor="teal">
         {decisionSummary?.governmentPrices && decisionSummary.governmentPrices.length > 0 ? (
-          <GovernmentPriceTable
-            rows={decisionSummary.governmentPrices}
-            totalArea={decisionSummary.governmentPriceTotalArea ?? 0}
-            surveyedArea={decisionSummary.governmentPriceSurveyedArea ?? 0}
-            avgPerSqWa={decisionSummary.governmentPriceAvgPerSqWa ?? 0}
-          />
-        ) : (
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <h4 className="text-xs font-medium text-gray-500">
+                {t('governmentPriceTable.landSectionTitle')}
+              </h4>
+              <span className="text-[11px] text-gray-400">
+                ({decisionSummary.governmentPrices.length})
+              </span>
+            </div>
+            <GovernmentPriceTable
+              rows={decisionSummary.governmentPrices}
+              totalArea={decisionSummary.governmentPriceTotalArea ?? 0}
+              surveyedArea={decisionSummary.governmentPriceSurveyedArea ?? 0}
+              avgPerSqWa={decisionSummary.governmentPriceAvgPerSqWa ?? 0}
+            />
+          </div>
+        ) : null}
+        {decisionSummary?.condoGovernmentPrices && decisionSummary.condoGovernmentPrices.length > 0 ? (
+          <div className={decisionSummary?.governmentPrices?.length ? 'mt-4' : ''}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <h4 className="text-xs font-medium text-gray-500">
+                {t('governmentPriceTable.condoSectionTitle')}
+              </h4>
+              <span className="text-[11px] text-gray-400">
+                ({decisionSummary.condoGovernmentPrices.length})
+              </span>
+            </div>
+            <CondoGovernmentPriceTable
+              rows={decisionSummary.condoGovernmentPrices}
+              totalArea={decisionSummary.condoGovernmentPriceTotalArea ?? 0}
+              avgPerSqm={decisionSummary.condoGovernmentPriceAvgPerSqm ?? 0}
+            />
+          </div>
+        ) : null}
+        {!decisionSummary?.governmentPrices?.length && !decisionSummary?.condoGovernmentPrices?.length && (
           <p className="text-sm text-gray-500">{t('view360.decisionSummarySection.noGovernmentPrice')}</p>
         )}
       </FormCard>

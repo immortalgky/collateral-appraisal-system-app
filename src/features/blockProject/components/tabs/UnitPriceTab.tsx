@@ -39,10 +39,7 @@ import {
   type LbPricingAssumptionFormType,
 } from '../../schemas/form';
 import PricingAssumptionForm from '../../forms/PricingAssumptionForm';
-import {
-  CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE,
-  LB_FIRE_INSURANCE_LABEL_BY_VALUE,
-} from '../../data/options';
+import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import { recomputeUnitPrice, type AssumptionInputs } from '../../utils/recomputeUnitPrice';
 
 type AppError = AxiosError & { apiError?: ApiError };
@@ -69,6 +66,13 @@ interface ModelAssumptionsTableProps {
 
 function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTableProps) {
   const { t } = useTranslation('blockProject');
+  const condoFireInsuranceOptions = useFireInsuranceOptions('Condo');
+  const lbFireInsuranceOptions = useFireInsuranceOptions('LandAndBuilding');
+  const fireInsuranceLabelByCondition = useMemo(() => {
+    const options = isCondo(projectType) ? condoFireInsuranceOptions : lbFireInsuranceOptions;
+    return new Map(options.map(o => [o.value, o.label]));
+  }, [projectType, condoFireInsuranceOptions, lbFireInsuranceOptions]);
+
   if (assumptions.length === 0) {
     return (
       <p className="text-xs text-gray-400 text-center py-6">{t('unitPrice.noModelAssumptions')}</p>
@@ -132,9 +136,7 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
               </td>
               <td className="py-2 px-3 text-gray-600">
                 {m.fireInsuranceCondition
-                  ? ((isCondo(projectType)
-                      ? CONDO_FIRE_INSURANCE_CONDITION_LABEL_BY_VALUE[m.fireInsuranceCondition]
-                      : LB_FIRE_INSURANCE_LABEL_BY_VALUE[m.fireInsuranceCondition]) ??
+                  ? (fireInsuranceLabelByCondition.get(m.fireInsuranceCondition) ??
                     m.fireInsuranceCondition)
                   : '-'}
               </td>

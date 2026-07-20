@@ -8,8 +8,21 @@ interface PhotoSourceModalProps {
   /** Optional — when omitted the "Choose from Gallery" button is hidden. */
   onChooseFromGallery?: () => void;
   title?: string;
+  /**
+   * Comma-separated extension list for the file picker. Defaults to images only —
+   * callers that also accept PDFs (e.g. AppendixTab) must opt in explicitly, otherwise
+   * every photo-only surface would start offering documents it cannot handle.
+   */
   accept?: string;
 }
+
+/** Renders the footer hint from `accept` so the two can never drift apart. */
+const describeAccept = (accept: string) =>
+  accept
+    .split(',')
+    .map(ext => ext.trim().replace(/^\./, '').toUpperCase())
+    .filter(Boolean)
+    .join(', ');
 
 export const PhotoSourceModal = ({
   isOpen,
@@ -125,7 +138,7 @@ export const PhotoSourceModal = ({
         {/* Footer Note */}
         <div className="px-4 pb-4">
           <p className="text-xs text-gray-400 text-center">
-            Supports: JPG, JPEG, PNG (Max 10MB per file)
+            Supports: {describeAccept(accept)} (Max 50MB per file)
           </p>
         </div>
       </div>

@@ -33,7 +33,15 @@ export type AppraisalAppendixDto = z.infer<typeof schemas.AppraisalAppendixRespo
 export type GetAppraisalAppendicesResponse = z.infer<typeof schemas.GetAppraisalAppendicesResponse>;
 
 // Appendix Mutations
-export type AddAppendixDocumentRequest = z.infer<typeof schemas.AddAppendixDocumentRequest>;
+// Hand-defined rather than `z.infer<typeof schemas.AddAppendixDocumentRequest>` — the backend now
+// accepts EITHER `{ galleryPhotoId, displaySequence }` (images, existing gallery path) OR
+// `{ documentId, displaySequence }` (PDFs, new direct-document path bypassing the gallery), but the
+// generated `v1.ts` bundle still models the old gallery-only shape (see the pre-regen note on
+// `DocumentItemDto` above). A union — not an intersection — is needed here since exactly one of the
+// two ids is valid; fold back into the generated schema once `v1.ts` is refreshed.
+export type AddAppendixDocumentRequest =
+  | { galleryPhotoId: string; displaySequence: number }
+  | { documentId: string; displaySequence: number };
 export type AddAppendixDocumentResult = z.infer<typeof schemas.AddAppendixDocumentResponse>;
 export type RemoveAppendixDocumentResult = z.infer<typeof schemas.RemoveAppendixDocumentResponse>;
 export type UpdateAppendixLayoutResult = z.infer<typeof schemas.UpdateAppendixLayoutResponse>;
