@@ -3202,14 +3202,16 @@ export const machinerySummaryLegalFields: FormField[] = [
     maxLength: 500,
   },
   // Lat/Lon — matches the pattern used by land (landInfoField) and condo (condoFields) detail
-  // forms: 6 decimal places, 3 integer digits, signed, ±90/±180 range. Left optional (no
-  // `required: true`) since machinery's are supplementary geo fields, unlike land/condo where
-  // lat/lon is the collateral's primary geolocation — see report for this call.
+  // forms: 6 decimal places, 3 integer digits, signed, ±90/±180 range. Required per
+  // CA-527/528. Note this is a client-side requirement only: the backend declares
+  // Latitude/Longitude as `decimal?` with no range validation, so records created through
+  // other paths may still carry null coordinates.
   {
     type: 'number-input',
     label: 'Latitude',
     name: 'latitude',
     wrapperClassName: 'col-span-6',
+    required: true,
     decimalPlaces: 6,
     maxIntegerDigits: 3,
     allowNegative: true,
@@ -3222,6 +3224,7 @@ export const machinerySummaryLegalFields: FormField[] = [
     label: 'Longitude',
     name: 'longitude',
     wrapperClassName: 'col-span-6',
+    required: true,
     decimalPlaces: 6,
     maxIntegerDigits: 3,
     allowNegative: true,
