@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
@@ -21,9 +20,6 @@ import {
 } from '@/features/appraisal/api/workflow';
 import { useGetEligibleStaff } from '@/features/appraisal/api/administration';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
-import { RaiseFollowupDialog } from '@/features/document-followup/components/RaiseFollowupDialog';
-import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
-
 import ActivityTrackingTimeline, { type ActivityStep } from './ActivityTrackingTimeline';
 
 // ==================== Decision-card visual mapping ====================
@@ -179,8 +175,6 @@ const DecisionSection = ({
   const ctxActivityId = useActivityId();
   const workflowInstanceId = workflowInstanceIdProp ?? ctxWorkflowInstanceId;
   const activityId = activityIdProp ?? ctxActivityId;
-  const { taskId } = useParams<{ taskId: string }>();
-  const [raiseFollowupOpen, setRaiseFollowupOpen] = useState(false);
 
   // Fetch available actions from workflow
   const { data: actionsData, isLoading: isActionsLoading } = useGetActivityActions(
@@ -236,14 +230,8 @@ const DecisionSection = ({
   // Read-only if page is read-only OR user is not the task owner
   const isReadOnly = isPageReadOnly || !isTaskOwner;
 
-  // Whether this task can raise a followup (comes from backend workflow definition)
-  const canRaiseFollowup = !isReadOnly && (actionsData?.canRaiseFollowup ?? false);
-
   return (
     <>
-      {/* Open followup banner — shown when there is an active document request */}
-      {taskId && <OpenFollowupBanner raisingTaskId={taskId} />}
-
       <GroupCard title={t('decision.sectionTitle')} icon="gavel" iconColor="rose">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-0 lg:gap-6">
           {/* Left: Activity Tracking */}
@@ -410,20 +398,6 @@ const DecisionSection = ({
                         </div>
                       );
                     })()}
-
-                    {/* Request Additional Documents button — only when workflow opts in */}
-                    {canRaiseFollowup && (
-                      <div className="pt-2 border-t border-gray-100">
-                        <button
-                          type="button"
-                          onClick={() => setRaiseFollowupOpen(true)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition-colors"
-                        >
-                          <Icon name="file-circle-plus" style="solid" className="size-4" />
-                          {t('decision.requestDocuments')}
-                        </button>
-                      </div>
-                    )}
                   </>
                 )}
               </div>
@@ -431,16 +405,6 @@ const DecisionSection = ({
           </InlineSubSection>
         </div>
       </GroupCard>
-
-      {/* Raise followup dialog */}
-      {canRaiseFollowup && workflowInstanceId && taskId && (
-        <RaiseFollowupDialog
-          isOpen={raiseFollowupOpen}
-          onClose={() => setRaiseFollowupOpen(false)}
-          workflowInstanceId={workflowInstanceId}
-          taskId={taskId}
-        />
-      )}
     </>
   );
 };
