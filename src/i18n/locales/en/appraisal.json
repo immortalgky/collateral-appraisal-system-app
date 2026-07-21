@@ -398,7 +398,7 @@
     "fields": {
       "totalAppraisalPrice": "Total Appraisal Price",
       "forceSellingPrice": "Force Selling Price",
-      "forceSellingPriceHint": "70% of appraisal price",
+      "forceSellingPriceHint": "of appraisal price",
       "buildingInsurance": "Building Insurance",
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
@@ -474,7 +474,9 @@
       "saveFailed": "Failed to save decision summary. Please try again.",
       "submitted": "Decision submitted successfully",
       "submitFailed": "Failed to submit decision",
-      "validationErrors": "Validation errors occurred"
+      "validationErrors": "Validation errors occurred",
+      "forceSaleRateSaved": "Force selling rate saved",
+      "forceSaleRateFailed": "Failed to save force selling rate. Please try again."
     }
   },
   "decision": {
@@ -562,6 +564,7 @@
       "groupRenameFailed": "Failed to rename group",
       "groupDeleteFailed": "Failed to delete group",
       "propertyRemoveFailed": "Failed to remove property from group",
+      "propertyDeleteFailed": "Failed to delete property",
       "propertyMoveFailed": "Failed to move property",
       "propertyPasteFailed": "Failed to paste property",
       "reorderFailed": "Failed to reorder properties"
@@ -620,6 +623,14 @@
       "save": "Save",
       "saved": "Comment saved",
       "saveFailed": "Failed to save comment"
+    },
+    "previousAppraisals": {
+      "trigger": "Previous Appraisals",
+      "fields": {
+        "date": "Date",
+        "value": "Value",
+        "status": "Status"
+      }
     }
   },
   "activityTracking": {
@@ -652,6 +663,66 @@
       "saveFailed": "Failed to save checklist",
       "saved": "Checklist saved"
     }
+  },
+  "valuationDocuments": {
+    "sections": {
+      "documentChecklist": "Document Checklist",
+      "appraisalBookBuilder": "Appraisal Book Builder",
+      "appendix": "Appendix",
+      "machinerySummary": "Machinery Summary",
+      "machineryBookSection1": "Machinery Book — Purpose & Location"
+    },
+    "appendixChooser": {
+      "title": "Select Appendix Type",
+      "empty": "No appendix types found"
+    },
+    "boardTitle": "Valuation Documents",
+    "typesCount_one": "{{count}} type",
+    "typesCount_other": "{{count}} types",
+    "progress": "{{uploaded}} / {{total}} attached",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "noFile": "No file",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} files",
+    "attach": "Attach",
+    "generate": "Generate",
+    "view": "View",
+    "remove": "Remove",
+    "uploadedBy": "Uploaded by {{name}}",
+    "empty": "No files attached",
+    "noTypes": "No document types found",
+    "loadFailed": "Failed to load document checklist",
+    "deleteDialog": {
+      "title": "Remove Document",
+      "message": "Are you sure you want to remove this file? This action cannot be undone.",
+      "confirm": "Remove"
+    }
+  },
+  "machineryBookSection1": {
+    "title": "Machinery Book — Purpose & Location",
+    "subtitle": "Report-only fields for Section 1 of the machinery appraisal book",
+    "save": "Save",
+    "saved": "Machinery book section saved",
+    "saveFailed": "Failed to save machinery book section",
+    "loadFailed": "Failed to load machinery book section",
+    "fields": {
+      "assignment": "Assignment",
+      "valuationPurpose": "Purpose of Valuation",
+      "propertyCharacteristics": "Property Characteristics"
+    }
+  },
+  "reportPreview": {
+    "title": "Appraisal Book Preview",
+    "refresh": "Refresh preview",
+    "openInNewTab": "Open in new tab",
+    "generatePreview": "Generate preview",
+    "idleHint": "Generate a preview of the appraisal book to view it here.",
+    "generating": "Generating preview…",
+    "fetchFailed": "Failed to load the report preview",
+    "renderFailed": "Failed to render the report preview",
+    "renderTimedOut": "Rendering the preview took too long. Please try again.",
+    "machinerySavedPrompt": "Machinery summary saved — click Refresh preview to update the report."
   },
   "gallery": {
     "sectionTitle": "Gallery",
@@ -771,7 +842,10 @@
     "condo": {
       "sectionTitle": "Condo Details",
       "areaDetail": "Area Detail",
-      "pma": "PMA Information"
+      "pma": "PMA Information",
+      "buildingInsuranceSectionTitle": "Building Insurance",
+      "fireInsuranceCondition": "Fire Insurance Condition",
+      "buildingInsurancePrice": "Building Insurance Coverage"
     },
     "machinery": {
       "sectionTitle": "Machinery Details"
@@ -857,7 +931,8 @@
     "annotationSaveFailed": "Failed to save annotated image",
     "fileUploadFailed": "Failed to upload file",
     "documentLoadFailed": "Failed to load document for editing",
-    "onlyImageFilesAllowed": "Only image files are allowed",
+    "invalidDocumentFileType": "Only image (JPG, JPEG, PNG) or PDF files are allowed",
+    "fileTooLarge": "File size exceeds the 50 MB limit",
     "galleryFilesAdded": "Files added from gallery",
     "galleryFilesAddFailed": "Failed to add files from gallery",
     "documentRemoved": "Document removed",
@@ -905,7 +980,9 @@
     "marketComparableUpdated": "Market comparable updated successfully",
     "marketComparableCreated": "Market comparable created successfully",
     "marketComparableDeleted": "Market comparable deleted successfully",
-    "marketComparableDeleteFailed": "Failed to delete market comparable"
+    "marketComparableDeleteFailed": "Failed to delete market comparable",
+    "appraisalReportNotAvailable": "No appraisal report is attached to this appraisal yet.",
+    "appraisalSummaryNotAvailable": "No appraisal summary is attached to this appraisal yet."
   },
   "common": {
     "unsavedChanges": "Unsaved changes",
@@ -946,7 +1023,7 @@
   },
   "deleteConfirmationModal": {
     "title": "Delete Property",
-    "message": "Are you sure you want to remove this property from the group? This action cannot be undone.",
+    "message": "Are you sure you want to delete this property? This permanently removes the property and its details. This action cannot be undone.",
     "confirm": "Delete"
   },
   "editPropertyModal": {
@@ -1176,11 +1253,20 @@
     }
   },
   "governmentPriceTable": {
+    "landSectionTitle": "Land",
+    "condoSectionTitle": "Condominium",
     "columns": {
       "titleDeedNo": "Title Deed No.",
       "sqWa": "Sq.Wa",
       "bahtPerSqWa": "Baht / Sq.Wa",
       "landPrice": "Land Price"
+    },
+    "condoColumns": {
+      "titleDeedNo": "Title Deed No.",
+      "room": "Room",
+      "sqm": "Sq.M.",
+      "bahtPerSqm": "Baht / Sq.M.",
+      "price": "Price"
     },
     "footer": {
       "total": "Total",
@@ -1189,7 +1275,8 @@
     },
     "missingFromSurvey": "Missing from survey",
     "showLess": "Show less",
-    "showMore": "Show more ({{remaining}}) deeds"
+    "showMore": "Show more ({{remaining}}) deeds",
+    "condoShowMore": "Show more ({{remaining}}) rooms"
   },
   "constructionSummaryTable": {
     "villageLabel": "Village / Project",
@@ -1208,6 +1295,32 @@
       "RemainingConstruction": "Remaining construction",
       "Complete100": "Complete ( 100% )"
     }
+  },
+  "constructionBuildingDetailTable": {
+    "title": "Building Construction Progress",
+    "columns": {
+      "seqNo": "Seq. No.",
+      "houseNumber": "House No.",
+      "titleNumber": "Title Deed No.",
+      "modelName": "Model Name",
+      "previousProgress": "Previous Progress",
+      "increasedProgress": "Construction Work Increased",
+      "currentProgress": "Current Progress",
+      "percent": "%",
+      "value": "Value"
+    },
+    "summaryRow": "Total Building Construction"
+  },
+  "constructionCompletedBuildingsTable": {
+    "title": "Buildings Completed 100% Before Construction Inspection",
+    "columns": {
+      "seqNo": "Seq. No.",
+      "houseNumber": "House No.",
+      "titleNumber": "Title Deed No.",
+      "modelName": "Model Name",
+      "appraisalValue": "Appraisal Value"
+    },
+    "totalRow": "Total"
   },
   "approvalListSection": {
     "title": "Committee Approval",

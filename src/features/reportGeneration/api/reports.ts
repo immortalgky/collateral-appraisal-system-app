@@ -141,3 +141,25 @@ export const downloadReportJobPdf = async (jobId: string): Promise<Blob> => {
   });
   return data;
 };
+
+// ──────────────────────────────────────────────────────────────────────────────
+// HTML preview API
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Fetches a self-contained HTML preview of a report — images already rewritten to
+ * `/documents/{id}/download`, fonts and the logo inlined as data URIs. No Puppeteer step
+ * (unlike the PDF job APIs above), so this is fast enough to call on every preview
+ * open/refresh. `entityId` is always a Guid for report types that support this (e.g.
+ * appraisal-book), so raw interpolation is safe with no slash-encoding concern.
+ * GET /reports/{reportTypeKey}/html/{entityId}
+ */
+export const fetchReportHtml = async (
+  reportTypeKey: string,
+  entityId: string,
+): Promise<string> => {
+  const { data } = await axios.get<string>(`/reports/${reportTypeKey}/html/${entityId}`, {
+    responseType: 'text',
+  });
+  return data;
+};

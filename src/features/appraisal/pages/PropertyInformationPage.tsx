@@ -5,18 +5,18 @@ import { useTranslation } from 'react-i18next';
 // and the layout breadcrumb can append the active tab as a structural crumb.
 import clsx from 'clsx';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { useIsCiAppraisal, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
-import { useEnrichedPropertyGroups } from '@/features/appraisal/hooks/useEnrichedPropertyGroups';
+import { useAppraisalId, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 import { usePropertyBasePath } from '@/features/appraisal/hooks/usePropertyBasePath';
+import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import Icon from '@shared/components/Icon';
 import {
   GalleryTab,
   LawsRegulationTab,
-  MachinerySummaryTab,
   MarketsTab,
   PhotosTab,
   PropertiesTab,
 } from '../components/tabs';
+import { MachinerySummaryTab } from '../components/tabs/MachinerySummaryTab';
 
 type TabId = 'properties' | 'markets' | 'gallery' | 'photos' | 'laws' | 'machinery';
 type ViewMode = 'grid' | 'list';
@@ -34,13 +34,10 @@ export default function PropertyInformationPage() {
   const isReadOnly = usePageReadOnly();
   const isPma = usePropertyBasePath() === 'property-pma';
 
-  // The Machinery Summary tab is appraisal-level (one record per appraisal) and
-  // only relevant when the appraisal actually contains machinery.
+  // The Machinery Summary tab is appraisal-level (one record per appraisal) and only relevant
+  // when the appraisal actually contains machinery.
   const appraisalId = useAppraisalId();
   const { groups } = useEnrichedPropertyGroups(appraisalId);
-  // PropertyItem.type carries the raw backend property-type code at runtime
-  // (e.g. 'MAC' for machinery); its declared union is display-oriented, so
-  // compare as a string.
   const hasMachinery = groups.some(g => g.items.some(i => (i.type as string) === 'MAC'));
 
   const TABS: Tab[] = [
@@ -59,8 +56,8 @@ export default function PropertyInformationPage() {
   const isTabAvailable = (id: TabId | null): id is TabId =>
     !!id &&
     VALID_TABS.includes(id) &&
-    (id !== 'machinery' || hasMachinery) &&
-    (!isPma || id === 'properties');
+    (!isPma || id === 'properties') &&
+    (id !== 'machinery' || hasMachinery);
   const activeTab: TabId = isTabAvailable(tabParam) ? tabParam : 'properties';
 
   // Seed `?tab=properties` on first arrival so the URL is the source of truth
@@ -70,7 +67,7 @@ export default function PropertyInformationPage() {
       setSearchParams({ tab: 'properties' }, { replace: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabParam, hasMachinery, isPma, setSearchParams]);
+  }, [tabParam, isPma, setSearchParams]);
 
   const handleTabChange = (tabId: TabId) => {
     setSearchParams({ tab: tabId }, { replace: true });

@@ -31,10 +31,15 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
 import { FormReadOnlyContext } from '@/shared/components/form/context';
+import NumberInput from '@/shared/components/inputs/NumberInput';
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useConnectionStatus } from '@/features/notification/hooks/useConnectionStatus';
-import { useGetDecisionSummary, useSaveDecisionSummary } from '../api/decisionSummary';
+import {
+  useGetDecisionSummary,
+  useSaveDecisionSummary,
+  useUpdateForceSaleRate,
+} from '../api/decisionSummary';
 import {
   useCompleteActivity,
   useGetActivityActions,
@@ -53,12 +58,16 @@ import ApproachMatrixTable from '../components/summary/ApproachMatrixTable';
 import BlockApproachMatrixTable from '../components/summary/BlockApproachMatrixTable';
 import BlockPriceSummaryTable from '../components/summary/BlockPriceSummaryTable';
 import GovernmentPriceTable from '../components/summary/GovernmentPriceTable';
+import CondoGovernmentPriceTable from '../components/summary/CondoGovernmentPriceTable';
 import {
   LiveApprovalListSection,
   ApprovalHistorySection,
 } from '../components/summary/ApprovalListSection';
 import DecisionSection from '../components/summary/DecisionSection';
+import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
+import ConstructionBuildingDetailTable from '../components/summary/ConstructionBuildingDetailTable';
+import ConstructionCompletedBuildingsTable from '../components/summary/ConstructionCompletedBuildingsTable';
 import { AssetSummaryDrawer } from '@/features/common/assetSummary/AssetSummaryDrawer';
 import { useGetAssetSummary } from '@/features/appraisal/api/assetSummary';
 
@@ -219,6 +228,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.conditionDetails'),
         placeholder: t('decisionSummary.fields.conditionDetailsPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     remarkFields: [
@@ -235,6 +246,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.remarkDetails'),
         placeholder: t('decisionSummary.fields.remarkPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     appraiserOpinionFields: [
@@ -251,6 +264,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.appraiserOpinion'),
         placeholder: t('decisionSummary.fields.appraiserOpinionPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     committeeOpinionFields: [
@@ -269,6 +284,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         required: true,
         placeholder: t('decisionSummary.fields.committeeOpinionPlaceholder'),
         wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
     reviewPriceFields: [
@@ -286,6 +303,8 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         name: 'additionalAssumptions',
         label: t('decisionSummary.fields.additionalAssumptionsDetails'),
         placeholder: t('decisionSummary.fields.additionalAssumptionsPlaceholder'),
+        maxLength: 4000,
+        showCharCount: true,
       },
     ],
   };
@@ -516,6 +535,7 @@ const DecisionSummaryPage = () => {
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
   const { mutate: saveSummary, isPending: isSaving } = useSaveDecisionSummary();
+  const updateForceSaleRate = useUpdateForceSaleRate();
   const completeActivity = useCompleteActivity();
   // SignalR hub status — when not connected, live step progress won't arrive, so the
   // submitting fallback message is adjusted instead of waiting on step animations.
@@ -636,10 +656,47 @@ const DecisionSummaryPage = () => {
     }
   }, [notVerifiedLock, setValue]);
 
-  // Force Selling Price (Review) is derived = 70% of Total Appraisal Price (Review).
+  // Force Selling Price rate override — NOT part of the RHF form. It persists immediately on
+  // blur via a dedicated endpoint (not the whole-form save), so the stored ForcedSaleValue
+  // that feeds reports/AS400 never drifts from what the screen shows. Local draft + resync
+  // from the server value, mirroring the Construction Inspection Fee pattern in
+  // FeeInformationSection.tsx.
+  const [forceSaleRateDraft, setForceSaleRateDraft] = useState<number | null>(
+    data?.forceSellingRateOverride ?? null,
+  );
+  useEffect(() => {
+    setForceSaleRateDraft(data?.forceSellingRateOverride ?? null);
+  }, [data?.forceSellingRateOverride]);
+
+  const handleForceSaleRateBlur = async () => {
+    if (!appraisalId) return;
+    if (forceSaleRateDraft === (data?.forceSellingRateOverride ?? null)) return;
+    try {
+      await updateForceSaleRate.mutateAsync({
+        appraisalId,
+        forceSellingRateOverride: forceSaleRateDraft,
+      });
+      toast.success(t('decisionSummary.toasts.forceSaleRateSaved'));
+    } catch (error: any) {
+      toast.error(error?.apiError?.detail || t('decisionSummary.toasts.forceSaleRateFailed'));
+      setForceSaleRateDraft(data?.forceSellingRateOverride ?? null); // rollback
+    }
+  };
+
+  // Effective rate: the in-progress draft, or the server-resolved rate while inheriting (no
+  // override set). Never hardcode a fallback percentage here.
+  const effectiveForceSellingRate = forceSaleRateDraft ?? data?.forceSellingRate ?? null;
+
+  // Force Selling Price (Review) is derived = effective rate % of Total Appraisal Price (Review).
   const totalAppraisalPriceReviewNow = watch('totalAppraisalPriceReview');
   const forceSellingPriceReviewDerived =
-    totalAppraisalPriceReviewNow != null ? totalAppraisalPriceReviewNow * 0.7 : null;
+    totalAppraisalPriceReviewNow != null && effectiveForceSellingRate != null
+      ? (totalAppraisalPriceReviewNow * effectiveForceSellingRate) / 100
+      : null;
+
+  // The rate now round-trips through the server on blur, so the displayed FSP amount can
+  // come straight from the server-resolved value — no client-side preview needed.
+  const forceSellingPriceDisplay = data?.forceSellingPrice ?? null;
 
   // Building Insurance (Review) display value:
   // - Not verified (false/null): 0 — matches what backend will persist.
@@ -868,6 +925,9 @@ const DecisionSummaryPage = () => {
         <form onSubmit={handleSubmit(onSave)} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">
+              {/* Open followup banner — compact info at the top; full/interactive lives on the Document Checklist page */}
+              {taskId && <OpenFollowupBanner raisingTaskId={taskId} compact />}
+
               {/* Group A — Valuation */}
               {anyVisible('decisionApproach', 'priceSummary', 'governmentPrice') && (
                 <GroupCard
@@ -933,13 +993,43 @@ const DecisionSummaryPage = () => {
                               {t('decisionSummary.fields.forceSellingPrice')}
                             </p>
                             <p className="text-xl font-semibold tabular-nums text-amber-700 mt-1">
-                              {data?.forceSellingPrice != null
-                                ? formatNumber(data.forceSellingPrice, 2)
+                              {forceSellingPriceDisplay != null
+                                ? formatNumber(forceSellingPriceDisplay, 2)
                                 : '-'}
                             </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {t('decisionSummary.fields.forceSellingPriceHint')}
-                            </p>
+                            <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceSummary')}>
+                              <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                                {/* Not an RHF field — persists immediately on blur via a
+                                    dedicated endpoint (see handleForceSaleRateBlur), so
+                                    FormFields/schema validation don't apply here.
+                                    Empty when no override — placeholder shows the resolved
+                                    (inherited) rate greyed out, so blank visibly means "using
+                                    the system default", not "zero". */}
+                                <NumberInput
+                                  name="forceSellingRateOverride"
+                                  fullWidth={false}
+                                  className="w-20"
+                                  decimalPlaces={2}
+                                  thousandSeparator={false}
+                                  maxIntegerDigits={3}
+                                  min={0.01}
+                                  max={100}
+                                  suffix="%"
+                                  value={forceSaleRateDraft}
+                                  onChange={e => setForceSaleRateDraft(e.target.value)}
+                                  onBlur={handleForceSaleRateBlur}
+                                  disabled={updateForceSaleRate.isPending}
+                                  placeholder={
+                                    data?.forceSellingRate != null
+                                      ? data.forceSellingRate.toFixed(2)
+                                      : undefined
+                                  }
+                                />
+                                <span className="text-xs text-gray-400">
+                                  {t('decisionSummary.fields.forceSellingPriceHint')}
+                                </span>
+                              </div>
+                            </SectionReadOnlyWrap>
                           </div>
                           <div className="text-right">
                             <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
@@ -973,20 +1063,35 @@ const DecisionSummaryPage = () => {
                     </InlineSubSection>
                   )}
                   {showSection('governmentPrice') && (
-                    <InlineSubSection
-                      title={t('decisionSummaryPageExtra.governmentAppraisalPrice')}
-                      rightSlot={
-                        data?.governmentPrices ? `(${data.governmentPrices.length})` : undefined
-                      }
-                    >
+                    <InlineSubSection title={t('decisionSummaryPageExtra.governmentAppraisalPrice')}>
                       {data?.governmentPrices?.length ? (
-                        <GovernmentPriceTable
-                          rows={data.governmentPrices}
-                          totalArea={data.governmentPriceTotalArea ?? 0}
-                          surveyedArea={data.governmentPriceSurveyedArea ?? 0}
-                          avgPerSqWa={data.governmentPriceAvgPerSqWa ?? 0}
-                        />
-                      ) : (
+                        <InlineSubSection
+                          compact
+                          title={t('governmentPriceTable.landSectionTitle')}
+                          rightSlot={`(${data.governmentPrices.length})`}
+                        >
+                          <GovernmentPriceTable
+                            rows={data.governmentPrices}
+                            totalArea={data.governmentPriceTotalArea ?? 0}
+                            surveyedArea={data.governmentPriceSurveyedArea ?? 0}
+                            avgPerSqWa={data.governmentPriceAvgPerSqWa ?? 0}
+                          />
+                        </InlineSubSection>
+                      ) : null}
+                      {data?.condoGovernmentPrices?.length ? (
+                        <InlineSubSection
+                          compact
+                          title={t('governmentPriceTable.condoSectionTitle')}
+                          rightSlot={`(${data.condoGovernmentPrices.length})`}
+                        >
+                          <CondoGovernmentPriceTable
+                            rows={data.condoGovernmentPrices}
+                            totalArea={data.condoGovernmentPriceTotalArea ?? 0}
+                            avgPerSqm={data.condoGovernmentPriceAvgPerSqm ?? 0}
+                          />
+                        </InlineSubSection>
+                      ) : null}
+                      {!data?.governmentPrices?.length && !data?.condoGovernmentPrices?.length && (
                         <EmptyLine text={t('decisionSummary.empty.noGovernmentPrice')} />
                       )}
                     </InlineSubSection>
@@ -1001,10 +1106,26 @@ const DecisionSummaryPage = () => {
                   iconColor="yellow"
                   title={t('decisionSummaryPageExtra.constructionSummaryTitle')}
                 >
-                  <ConstructionSummaryTable
-                    village={data.constructionSummary.village}
-                    rows={data.constructionSummary.rows}
-                  />
+                  <InlineSubSection>
+                    <ConstructionSummaryTable
+                      village={data.constructionSummary.village}
+                      rows={data.constructionSummary.rows}
+                    />
+                  </InlineSubSection>
+                  {(data.constructionSummary.buildings ?? []).length > 0 && (
+                    <InlineSubSection title={t('constructionBuildingDetailTable.title')}>
+                      <ConstructionBuildingDetailTable
+                        rows={data.constructionSummary.buildings ?? []}
+                      />
+                    </InlineSubSection>
+                  )}
+                  {(data.constructionSummary.completedBuildings ?? []).length > 0 && (
+                    <InlineSubSection title={t('constructionCompletedBuildingsTable.title')}>
+                      <ConstructionCompletedBuildingsTable
+                        rows={data.constructionSummary.completedBuildings ?? []}
+                      />
+                    </InlineSubSection>
+                  )}
                 </GroupCard>
               )}
 

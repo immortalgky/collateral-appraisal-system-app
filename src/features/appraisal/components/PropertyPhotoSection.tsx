@@ -22,6 +22,7 @@ import { createUploadSession, useUploadDocument } from '@features/request/api/do
 import { toGalleryImage } from '../types/gallery';
 import type { GalleryImage } from '../types/gallery';
 import type { GalleryPhotoDtoType } from '@shared/schemas/v1';
+import { useAuthStore } from '@features/auth/store';
 
 export interface PropertyPhotoSectionRef {
   linkPhotosToProperty: (propertyId: string) => Promise<void>;
@@ -41,6 +42,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
   ({ appraisalId, propertyId }, ref) => {
     const readOnly = usePageReadOnly();
     const { t } = useTranslation('appraisal');
+    const currentUser = useAuthStore(state => state.user);
     const isCreateMode = !propertyId;
 
     // Pending photo IDs for create mode (linked after property creation)
@@ -220,7 +222,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
             documentId,
             photoType: 'property',
             caption: file.name,
-            uploadedBy: 'current-user',
+            uploadedBy: currentUser?.username ?? '',
             latitude: null,
             longitude: null,
             capturedAt: null,
@@ -231,7 +233,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
             fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
             mimeType: file.type || null,
             fileSizeBytes: uploadResult.fileSize,
-            uploadedByName: null,
+            uploadedByName: currentUser?.name ?? null,
           });
 
           const galleryPhotoId = galleryResult.id;
@@ -245,7 +247,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
               appraisalPropertyId: propertyId,
               photoPurpose: 'property',
               sectionReference: null,
-              linkedBy: 'current-user',
+              linkedBy: currentUser?.username ?? '',
             });
           }
 
@@ -265,6 +267,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
         uploadDocumentMutation,
         addGalleryPhotoMutation,
         linkPhotoMutation,
+        currentUser,
       ],
     );
 
@@ -293,7 +296,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
                 appraisalPropertyId: propertyId,
                 photoPurpose: 'property',
                 sectionReference: null,
-                linkedBy: 'current-user',
+                linkedBy: currentUser?.username ?? '',
               });
             } catch {
               toast.error(t('toasts.photoLinkFailed'));
@@ -308,7 +311,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
           );
         }
       },
-      [appraisalId, propertyId, isCreateMode, linkPhotoMutation, t],
+      [appraisalId, propertyId, isCreateMode, linkPhotoMutation, t, currentUser],
     );
 
     // Delete: open confirmation modal
@@ -459,7 +462,7 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
               appraisalPropertyId: newPropertyId,
               photoPurpose: isThumbnail ? 'thumbnail' : 'property',
               sectionReference: null,
-              linkedBy: 'current-user',
+              linkedBy: currentUser?.username ?? '',
             });
           } catch {
             toast.error(t('toasts.photoLinkIndexFailed', { index: i + 1 }));

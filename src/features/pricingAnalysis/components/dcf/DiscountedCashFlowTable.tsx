@@ -4,9 +4,12 @@ import { RHFInputCell } from '../table/RHFInputCell';
 import { DiscountedCashFlowSectionRenderer } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowSectionRenderer';
 import type { DCFSection } from '../../types/dcf';
 import { StickyLabelTable } from '../layout/StickyLabelTable';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useDerivedFields } from '../../adapters/useDerivedFieldArray';
-import { buildMethodCalculationRules } from '../../domain/dcf/useCalculations';
+import {
+  buildMethodCalculationRules,
+  getMethodPerYearFieldPaths,
+} from '../../domain/dcf/useCalculations';
 import { useTranslation } from 'react-i18next';
 
 export interface SectionColor {
@@ -100,12 +103,56 @@ export function DiscountedCashFlowTable({
   ensureIncomeAnalysisId,
 }: DiscountedCashFlowTableProps) {
   const { t } = useTranslation('pricingAnalysis');
-  const { control } = useFormContext();
+  const { control, getValues, setValue } = useFormContext();
   const watchSections = useWatch({ control, name: 'sections' });
 
   const sections = useMemo(() => {
     return watchSections ?? [];
   }, [watchSections]);
+
+  const prevTotalNumberOfYearsRef = useRef(totalNumberOfYears);
+  useEffect(() => {
+    // Guard BEFORE touching the ref: the projection-period input yields null while the
+    // user is clearing it, and slice(0, null) would empty every per-year array. Bailing
+    // out first keeps the ref on the last valid value, so re-typing a smaller number
+    // still truncates correctly.
+    if (!Number.isFinite(totalNumberOfYears) || totalNumberOfYears < 0) return;
+
+    const prevTotalNumberOfYears = prevTotalNumberOfYearsRef.current;
+    prevTotalNumberOfYearsRef.current = totalNumberOfYears;
+    if (totalNumberOfYears >= prevTotalNumberOfYears) return;
+
+    const truncate = (path: string) => {
+      const current = getValues(path);
+      if (Array.isArray(current) && current.length > totalNumberOfYears) {
+        setValue(path, current.slice(0, totalNumberOfYears), { shouldDirty: true });
+      }
+    };
+
+    const currentSections = (getValues('sections') as DCFSection[]) ?? [];
+    currentSections.forEach((section, sectionIdx) => {
+      const sectionPath = `sections.${sectionIdx}`;
+      truncate(`${sectionPath}.totalSectionValues`);
+
+      (section.categories ?? []).forEach((category, categoryIdx) => {
+        const categoryPath = `${sectionPath}.categories.${categoryIdx}`;
+        truncate(`${categoryPath}.totalCategoryValues`);
+
+        (category.assumptions ?? []).forEach((assumption, assumptionIdx) => {
+          const assumptionPath = `${categoryPath}.assumptions.${assumptionIdx}`;
+          truncate(`${assumptionPath}.totalAssumptionValues`);
+
+          const methodType = assumption.method?.methodType;
+          if (!methodType) return;
+
+          const methodPath = `${assumptionPath}.method`;
+          getMethodPerYearFieldPaths(methodType).forEach(fieldPath => {
+            truncate(`${methodPath}.${fieldPath}`);
+          });
+        });
+      });
+    });
+  }, [totalNumberOfYears, getValues, setValue]);
 
   const methodCalculationRules = useMemo(() => {
     return buildMethodCalculationRules(sections, totalNumberOfYears);

@@ -37,6 +37,7 @@ import {
 } from '../schemas/lawAndRegulation';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import { useAuthStore } from '@features/auth/store';
 
 const LAW_HEADER_GROUP = 'Header';
 
@@ -79,6 +80,7 @@ const CreateLawAndRegulationPage = () => {
   const basePath = useBasePath();
   const location = useLocation();
   const appraisalId = useAppraisalId();
+  const currentUser = useAuthStore(state => state.user);
   const { itemId } = useParams<{ itemId?: string }>();
   const isEditMode = Boolean(itemId);
 
@@ -271,7 +273,7 @@ const CreateLawAndRegulationPage = () => {
           appraisalId,
           documentId: uploadResult.documentId,
           photoType: 'law_regulation',
-          uploadedBy: 'current-user',
+          uploadedBy: currentUser?.username ?? '',
           photoCategory: null,
           caption: null,
           latitude: null,
@@ -283,7 +285,7 @@ const CreateLawAndRegulationPage = () => {
           fileExtension: file.name.includes('.') ? (file.name.split('.').pop() ?? null) : null,
           mimeType: file.type || null,
           fileSizeBytes: uploadResult.fileSize,
-          uploadedByName: null,
+          uploadedByName: currentUser?.name ?? null,
         });
 
         setImages(prev => [
@@ -301,7 +303,7 @@ const CreateLawAndRegulationPage = () => {
         toast.error(t('toasts.lawImageUploadFailed'));
       }
     },
-    [appraisalId, getOrCreateSession, uploadMutation, addGalleryPhoto],
+    [appraisalId, getOrCreateSession, uploadMutation, addGalleryPhoto, currentUser],
   );
 
   // "Upload from Device" handler (via PhotoSourceModal)

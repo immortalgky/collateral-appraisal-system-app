@@ -12,6 +12,7 @@ import {
   allLeaseAgreementFields,
   allMachineryFields,
   allMachinerySummaryFields,
+  machineryBookSection1Fields,
   rentalScheduleField,
 } from '../configs/fields';
 
@@ -654,6 +655,16 @@ export const createCondoFormDefault: createCondoFormType = {
   roadSurfaceType: '',
   publicUtilityType: [],
   publicUtilityTypeOther: '',
+  urbanPlanningType: '',
+  landFillType: '',
+  landFillTypeOther: '',
+  landUseType: [],
+  landUseTypeOther: '',
+  landEntranceExitType: [],
+  landEntranceExitTypeOther: '',
+  governmentPricePerSqm: 0,
+  governmentPrice: 0,
+  fireInsuranceCondition: '',
   decorationType: '',
   decorationTypeOther: '',
   buildingAge: 0,
@@ -1106,4 +1117,20 @@ export const machinerySummaryFormDefault: machinerySummaryFormType = {
   longitude: null,
   obligation: null,
   other: null,
+};
+
+// =============================================================================
+// Machinery Book Section 1 (วัตถุประสงค์และที่ตั้งเครื่องจักร) — same appraisal-level record as
+// the machinery summary above, but a distinct, report-only form shown in the Appraisal Book
+// Builder. Saves only these 3 fields (see MachineryBookSection1Tab.tsx) so Section 3.1/3.3
+// (edited on Property Information) are never clobbered.
+// =============================================================================
+
+export const machineryBookSection1Form = buildFormSchema(machineryBookSection1Fields);
+export type machineryBookSection1FormType = z.infer<typeof machineryBookSection1Form>;
+
+export const machineryBookSection1FormDefault: machineryBookSection1FormType = {
+  assignment: null,
+  valuationPurpose: null,
+  propertyCharacteristics: null,
 };

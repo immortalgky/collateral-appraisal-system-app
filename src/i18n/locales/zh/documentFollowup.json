@@ -121,6 +121,7 @@
   "validation": {
     "documentTypeRequired": "文件类型为必填项",
     "notesRequired": "备注为必填项",
+    "notesMaxLength": "备注不得超过 4000 个字符",
     "reasonRequired": "原因为必填项",
     "atLeastOneItem": "至少需要一个文件请求"
   },

@@ -394,7 +394,7 @@
     "fields": {
       "totalAppraisalPrice": "估价总价",
       "forceSellingPrice": "强制出售价格",
-      "forceSellingPriceHint": "估价价格的 70%",
+      "forceSellingPriceHint": "的估价价格",
       "buildingInsurance": "建筑保险",
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
@@ -466,7 +466,9 @@
       "saveFailed": "保存决策摘要失败，请重试。",
       "submitted": "决策提交成功",
       "submitFailed": "提交决策失败",
-      "validationErrors": "发生验证错误"
+      "validationErrors": "发生验证错误",
+      "forceSaleRateSaved": "强制出售价格比例已保存",
+      "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。"
     }
   },
   "decision": {
@@ -552,6 +554,7 @@
       "groupRenameFailed": "重命名组失败",
       "groupDeleteFailed": "删除组失败",
       "propertyRemoveFailed": "从组中移除房产失败",
+      "propertyDeleteFailed": "删除房产失败",
       "propertyMoveFailed": "移动房产失败",
       "propertyPasteFailed": "粘贴房产失败",
       "reorderFailed": "重排房产失败"
@@ -610,6 +613,14 @@
       "save": "保存",
       "saved": "评论已保存",
       "saveFailed": "保存评论失败"
+    },
+    "previousAppraisals": {
+      "trigger": "以往评估",
+      "fields": {
+        "date": "日期",
+        "value": "价值",
+        "status": "状态"
+      }
     }
   },
   "activityTracking": {
@@ -642,6 +653,66 @@
       "saveFailed": "保存清单失败",
       "saved": "清单已保存"
     }
+  },
+  "valuationDocuments": {
+    "sections": {
+      "documentChecklist": "文件清单",
+      "appraisalBookBuilder": "估价报告书编制",
+      "appendix": "附录",
+      "machinerySummary": "机械设备摘要",
+      "machineryBookSection1": "机械设备手册 — 目的与位置"
+    },
+    "appendixChooser": {
+      "title": "选择附录类型",
+      "empty": "未找到附录类型"
+    },
+    "boardTitle": "估价文件",
+    "typesCount_one": "{{count}} 种类型",
+    "typesCount_other": "{{count}} 种类型",
+    "progress": "已附加 {{uploaded}} / {{total}}",
+    "expandAll": "全部展开",
+    "collapseAll": "全部收起",
+    "noFile": "无文件",
+    "fileCount_one": "{{count}} 个文件",
+    "fileCount_other": "{{count}} 个文件",
+    "attach": "附加文件",
+    "generate": "生成报告",
+    "view": "查看",
+    "remove": "移除",
+    "uploadedBy": "上传者 {{name}}",
+    "empty": "尚未附加文件",
+    "noTypes": "未找到文件类型",
+    "loadFailed": "加载文件清单失败",
+    "deleteDialog": {
+      "title": "移除文件",
+      "message": "确定要移除此文件吗？此操作无法撤销。",
+      "confirm": "移除"
+    }
+  },
+  "machineryBookSection1": {
+    "title": "机械设备手册 — 目的与位置",
+    "subtitle": "机械设备估价报告书第一部分的填写内容",
+    "save": "保存",
+    "saved": "第一部分内容已保存",
+    "saveFailed": "保存第一部分内容失败",
+    "loadFailed": "加载第一部分内容失败",
+    "fields": {
+      "assignment": "委托事项",
+      "valuationPurpose": "资产评估目的",
+      "propertyCharacteristics": "评估资产的特征"
+    }
+  },
+  "reportPreview": {
+    "title": "估价报告书预览",
+    "refresh": "刷新预览",
+    "openInNewTab": "在新标签页中打开",
+    "generatePreview": "生成预览",
+    "idleHint": "生成鉴定报告预览以在此处查看。",
+    "generating": "正在生成预览…",
+    "fetchFailed": "加载报告预览失败",
+    "renderFailed": "渲染报告预览失败",
+    "renderTimedOut": "预览渲染耗时过长，请重试。",
+    "machinerySavedPrompt": "机械设备摘要已保存 — 点击“刷新预览”以更新报告。"
   },
   "gallery": {
     "sectionTitle": "图库",
@@ -758,7 +829,10 @@
     "condo": {
       "sectionTitle": "公寓详情",
       "areaDetail": "面积详情",
-      "pma": "PMA 信息"
+      "pma": "PMA 信息",
+      "buildingInsuranceSectionTitle": "建筑保险",
+      "fireInsuranceCondition": "火灾保险条件",
+      "buildingInsurancePrice": "公寓单位保险保额"
     },
     "machinery": {
       "sectionTitle": "机械详情"
@@ -842,7 +916,8 @@
     "annotationSaveFailed": "保存批注图片失败",
     "fileUploadFailed": "上传文件失败",
     "documentLoadFailed": "加载待编辑文档失败",
-    "onlyImageFilesAllowed": "仅允许图片文件",
+    "invalidDocumentFileType": "仅允许图片文件 (JPG、JPEG、PNG) 或 PDF 文件",
+    "fileTooLarge": "文件大小超过 50 MB 限制",
     "galleryFilesAdded": "已从图库添加文件",
     "galleryFilesAddFailed": "从图库添加文件失败",
     "documentRemoved": "文档已移除",
@@ -888,7 +963,9 @@
     "leaseAgreementCondoCreated": "公寓租赁协议创建成功",
     "draftSaved": "草稿保存成功",
     "marketComparableUpdated": "市场可比案例更新成功",
-    "marketComparableCreated": "市场可比案例创建成功"
+    "marketComparableCreated": "市场可比案例创建成功",
+    "appraisalReportNotAvailable": "此评估尚未附加完整评估报告。",
+    "appraisalSummaryNotAvailable": "此评估尚未附加评估摘要报告。"
   },
   "common": {
     "unsavedChanges": "有未保存的更改",
@@ -929,7 +1006,7 @@
   },
   "deleteConfirmationModal": {
     "title": "删除房产",
-    "message": "确定要从组中移除此房产吗？此操作无法撤销。",
+    "message": "确定要删除此房产吗？这将永久删除该房产及其所有明细。此操作无法撤销。",
     "confirm": "删除"
   },
   "editPropertyModal": {
@@ -1156,11 +1233,20 @@
     }
   },
   "governmentPriceTable": {
+    "landSectionTitle": "土地",
+    "condoSectionTitle": "公寓",
     "columns": {
       "titleDeedNo": "地契编号",
       "sqWa": "平方哇",
       "bahtPerSqWa": "泰铢/平方哇",
       "landPrice": "土地价格"
+    },
+    "condoColumns": {
+      "titleDeedNo": "地契编号",
+      "room": "房间号",
+      "sqm": "平方米",
+      "bahtPerSqm": "泰铢/平方米",
+      "price": "公寓价格"
     },
     "footer": {
       "total": "合计",
@@ -1168,7 +1254,8 @@
     },
     "missingFromSurvey": "勘测中缺失",
     "showLess": "收起",
-    "showMore": "显示更多（还有 {{remaining}} 份）"
+    "showMore": "显示更多（还有 {{remaining}} 份）",
+    "condoShowMore": "显示更多（还有 {{remaining}} 间）"
   },
   "constructionSummaryTable": {
     "villageLabel": "楼盘 / 项目",
@@ -1187,6 +1274,32 @@
       "RemainingConstruction": "剩余建设",
       "Complete100": "竣工（100%）"
     }
+  },
+  "constructionBuildingDetailTable": {
+    "title": "各建筑施工进度",
+    "columns": {
+      "seqNo": "序号",
+      "houseNumber": "门牌号",
+      "titleNumber": "地契号",
+      "modelName": "户型",
+      "previousProgress": "上期进度",
+      "increasedProgress": "增加的建设工程",
+      "currentProgress": "本期进度",
+      "percent": "%",
+      "value": "价值"
+    },
+    "summaryRow": "建筑施工合计"
+  },
+  "constructionCompletedBuildingsTable": {
+    "title": "工程检验前已竣工（100%）建筑",
+    "columns": {
+      "seqNo": "序号",
+      "houseNumber": "门牌号",
+      "titleNumber": "地契号",
+      "modelName": "户型",
+      "appraisalValue": "评估价值"
+    },
+    "totalRow": "合计"
   },
   "approvalListSection": {
     "title": "委员会审批",

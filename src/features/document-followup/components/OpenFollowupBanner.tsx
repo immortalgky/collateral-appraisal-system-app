@@ -18,6 +18,12 @@ import { makeCancelWithReasonSchema, type CancelWithReasonFormValues } from '../
 interface OpenFollowupBannerProps {
   /** The taskId of the raising task (checker's task) */
   raisingTaskId: string;
+  /**
+   * Info-only variant: renders just the summary header (title + pending count), no expandable
+   * details table and no cancel controls. Used on the Decision screen; the Document Checklist
+   * page renders the full interactive banner.
+   */
+  compact?: boolean;
 }
 
 function CancelReasonModal({
@@ -270,7 +276,7 @@ function FollowupDetail({
  * Reads from useOpenFollowupsForTask and expands to show line item details.
  * Cancel controls inside the expanded view are only shown to the raising user.
  */
-export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
+export function OpenFollowupBanner({ raisingTaskId, compact = false }: OpenFollowupBannerProps) {
   const { t } = useTranslation('documentFollowup');
   const { data: followups = [], isLoading } = useOpenFollowupsForTask(raisingTaskId);
   const [expanded, setExpanded] = useState(true);
@@ -285,8 +291,25 @@ export function OpenFollowupBanner({ raisingTaskId }: OpenFollowupBannerProps) {
 
   const totalPending = openFollowups.reduce((sum, f) => sum + (f.pendingCount ?? 0), 0);
 
+  // Compact info-only variant: static summary header, no expand/table/cancel controls.
+  if (compact) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 flex items-center gap-3 px-4 py-3">
+        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+          <Icon name="file-circle-exclamation" style="solid" className="size-4 text-amber-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-amber-800">{t('banner.title')}</p>
+          <p className="text-xs text-amber-600 mt-0.5">
+            {t('banner.pendingItems', { n: totalPending })}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
+    <div className="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
       {/* Banner header */}
       <button
         type="button"

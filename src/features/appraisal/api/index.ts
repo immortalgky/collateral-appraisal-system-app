@@ -6,6 +6,7 @@ export * from './administration';
 export * from './appointment';
 export * from './fee';
 export * from './documentChecklist';
+export * from './appraisalDocuments';
 export * from './photo';
 export * from './gallery';
 export * from './lawAndRegulation';

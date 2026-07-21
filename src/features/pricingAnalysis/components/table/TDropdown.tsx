@@ -69,7 +69,6 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     const paramOptions = useParameterOptions(queryParameters);
     let dropdownOptions = useMemo<ListBoxItem[]>(() => {
       if (options !== undefined) return options;
-      console.log(paramOptions);
       return paramOptions;
     }, [options, paramOptions]);
 

@@ -121,6 +121,7 @@
   "validation": {
     "documentTypeRequired": "กรุณาระบุประเภทเอกสาร",
     "notesRequired": "กรุณาระบุหมายเหตุ",
+    "notesMaxLength": "หมายเหตุต้องไม่เกิน 4000 ตัวอักษร",
     "reasonRequired": "กรุณาระบุเหตุผล",
     "atLeastOneItem": "ต้องมีคำขอเอกสารอย่างน้อยหนึ่งรายการ"
   },

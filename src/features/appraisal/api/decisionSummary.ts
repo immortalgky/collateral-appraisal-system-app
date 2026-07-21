@@ -13,6 +13,21 @@ export type ApproachItem = z.infer<typeof schemas.ApproachItem>;
 export type GovernmentPriceRow = z.infer<typeof schemas.GovernmentPriceRow>;
 
 /**
+ * Condo government appraisal price row, priced per Sq.M. (land rows are priced
+ * per Sq.Wa — the two are separate lists with separate totals, never merged).
+ *
+ * Hand-typed here alongside `governmentPriceSurveyedArea` below until
+ * `@shared/schemas/v1.ts` is regenerated to include it.
+ */
+export interface CondoGovernmentPriceRow {
+  titleNumber: string | null;
+  roomNumber: string | null;
+  usableArea: number | null;
+  governmentPricePerSqm: number | null;
+  governmentPrice: number | null;
+}
+
+/**
  * Block appraisal types.
  *
  * `isBlock`, `blockApproachMatrix`, and `blockModelPrices` are new fields on
@@ -49,9 +64,31 @@ export interface ConstructionSummaryRow {
   buildingValueConstructing: number;
 }
 
+export interface ConstructionBuildingRow {
+  appraisalPropertyId: string;
+  houseNumber: string | null;
+  titleNumber: string | null;
+  modelName: string | null;
+  totalValue: number; // CI value at 100%
+  previousValue: number;
+  currentValue: number;
+  previousProgressPct: number;
+  currentProgressPct: number;
+}
+
+export interface ConstructionCompletedBuildingRow {
+  appraisalPropertyId: string;
+  houseNumber: string | null;
+  titleNumber: string | null;
+  modelName: string | null;
+  appraisalValue: number;
+}
+
 export interface ConstructionSummary {
   village: string | null;
   rows: ConstructionSummaryRow[];
+  buildings: ConstructionBuildingRow[];
+  completedBuildings: ConstructionCompletedBuildingRow[];
 }
 
 /**
@@ -64,8 +101,25 @@ export type DecisionSummaryData = GetDecisionSummaryResponse & {
   blockModelPrices: BlockModelPriceRow[] | null;
   constructionSummary: ConstructionSummary | null;
   appraisalDate: string | null;
+  /**
+   * Percent (e.g. 70, not 0.7) used to derive `forceSellingPrice` — RESOLVED (override if set,
+   * else the system-wide default). Always present, never null. Display only — do NOT bind a
+   * form field to this; bind to `forceSellingRateOverride` instead.
+   */
+  forceSellingRate: number;
+  /**
+   * The raw per-appraisal override, or null when the appraisal has no override and is
+   * inheriting `forceSellingRate` from the system-wide default. This is the field the
+   * decision-summary form edits; POSTing null clears the override.
+   */
+  forceSellingRateOverride: number | null;
   /** Non-missing land area the AVG Baht/Sq.Wa is computed over (govTotalArea includes missing). */
   governmentPriceSurveyedArea: number;
+  /** Condo government appraisal prices (Sq.M.) — separate from the land list above. */
+  condoGovernmentPrices: CondoGovernmentPriceRow[];
+  condoGovernmentPriceTotalArea: number;
+  /** Server-computed area-weighted average (totalPrice / totalArea) — do not recompute client-side. */
+  condoGovernmentPriceAvgPerSqm: number;
 };
 
 /**
@@ -164,6 +218,38 @@ export const useSaveDecisionSummary = () => {
     }): Promise<SaveDecisionSummaryResponse> => {
       const { data } = await axios.post(`/appraisals/${appraisalId}/decision-summary`, body);
       return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: decisionSummaryKeys.detail(variables.appraisalId),
+      });
+    },
+  });
+};
+
+/**
+ * Update the Force Selling Price rate override.
+ * PUT /appraisals/{appraisalId}/decision-summary/force-sale-rate
+ *
+ * Dedicated single-writer endpoint — the whole-form `useSaveDecisionSummary` no longer
+ * sends `forceSellingRateOverride`. Persisted on blur (see DecisionSummaryPage) so the
+ * stored ForcedSaleValue that feeds reports/AS400 never drifts from what the screen shows.
+ * `null` clears the override back to the system-wide default.
+ */
+export const useUpdateForceSaleRate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      forceSellingRateOverride,
+    }: {
+      appraisalId: string;
+      forceSellingRateOverride: number | null;
+    }): Promise<void> => {
+      await axios.put(`/appraisals/${appraisalId}/decision-summary/force-sale-rate`, {
+        forceSellingRateOverride,
+      });
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

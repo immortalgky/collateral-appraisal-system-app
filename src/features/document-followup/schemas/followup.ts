@@ -6,7 +6,10 @@ import type { TFunction } from 'i18next';
 export const makeLineItemInputSchema = (t: TFunction<'documentFollowup'>) =>
   z.object({
     documentType: z.string().min(1, t('validation.documentTypeRequired')),
-    notes: z.string().min(1, t('validation.notesRequired')),
+    notes: z
+      .string()
+      .min(1, t('validation.notesRequired'))
+      .max(4000, t('validation.notesMaxLength')),
   });
 
 export const makeRaiseFollowupSchema = (t: TFunction<'documentFollowup'>) =>

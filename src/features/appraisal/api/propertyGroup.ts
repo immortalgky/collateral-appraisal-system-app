@@ -207,31 +207,6 @@ export const useCopyPropertyToGroup = () => {
   });
 };
 
-/**
- * Remove a property from a group
- * DELETE /appraisals/{appraisalId}/property-groups/{groupId}/properties/{propertyId}
- */
-export const useRemovePropertyFromGroup = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: { appraisalId: string; groupId: string; propertyId: string }) => {
-      const { data } = await axios.delete(
-        `/appraisals/${params.appraisalId}/property-groups/${params.groupId}/properties/${params.propertyId}`,
-      );
-      return data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: propertyGroupKeys.all(variables.appraisalId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: propertyGroupKeys.detail(variables.appraisalId, variables.groupId),
-      });
-    },
-  });
-};
-
 // ==================== Reorder & Move ====================
 
 /**

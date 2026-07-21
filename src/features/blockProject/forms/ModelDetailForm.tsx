@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { FormFields } from '@/shared/components/form';
+import { FormFields, type FormField } from '@/shared/components/form';
 import Dropdown, { type ListBoxItem } from '@/shared/components/inputs/Dropdown';
+import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import { isCondo } from '../types';
 import type { ProjectTower, ProjectType } from '../types';
 import SectionRow from '../components/SectionRow';
@@ -96,6 +97,17 @@ const Card = ({ children }: { children: React.ReactNode }) => (
 
 // ── Main component ────────────────────────────────────────────────────────────
 
+/** Injects API-sourced fire-insurance condition options into the dropdown field
+ *  config, which ships with an empty `options: []` placeholder. */
+function withFireInsuranceOptions(fields: FormField[], options: ListBoxItem[]): FormField[] {
+  // Narrow on `type` as well as `name`: spreading into a bare FormField union widens
+  // `options` across every variant (boolean-toggle requires exactly [string, string]),
+  // which breaks the discriminated union.
+  return fields.map(f =>
+    f.type === 'dropdown' && f.name === 'fireInsuranceCondition' ? { ...f, options } : f,
+  );
+}
+
 /**
  * Merged model-detail form for both Condo and LandAndBuilding.
  *
@@ -108,12 +120,20 @@ const Card = ({ children }: { children: React.ReactNode }) => (
  */
 const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => {
   const { t } = useTranslation('blockProject');
+  // Called unconditionally (both project types) to satisfy rules-of-hooks — only
+  // the relevant one is used below depending on isCondo(projectType).
+  const condoFireInsuranceOptions = useFireInsuranceOptions('Condo');
+  const lbFireInsuranceOptions = useFireInsuranceOptions('LandAndBuilding');
+
   if (isCondo(projectType)) {
     // BV-specific fields (not part of property condo screen) stay together in
     // Model Information. Room Layout + Floor sections reuse the parameter-store
     // driven configs from the appraisal CondoDetailForm.
-    const condoModelIdentityFields = condoModelInfoFields.filter(
-      f => !['roomLayoutType', 'roomLayoutTypeOther', 'remark'].includes(f.name),
+    const condoModelIdentityFields = withFireInsuranceOptions(
+      condoModelInfoFields.filter(
+        f => !['roomLayoutType', 'roomLayoutTypeOther', 'remark'].includes(f.name),
+      ),
+      condoFireInsuranceOptions,
     );
     const [modelNameField, ...condoModelRestFields] = condoModelIdentityFields;
     const condoRemarkFields = condoModelInfoFields.filter(f => f.name === 'remark');
@@ -163,28 +183,26 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
   // Construction Year, Area Detail, Depreciation) sit alongside.
 
   // Split lbModelInfoFields by intent so each section reads cleanly.
-  const modelIdentityFields = lbModelInfoFields.filter(f =>
-    [
-      'modelName',
-      'modelDescription',
-      'numberOfHouse',
-      'startingPriceMin',
-      'startingPriceMax',
-      'fireInsuranceCondition',
-      'usableAreaMin',
-      'usableAreaMax',
-      'standardUsableArea',
-    ].includes(f.name),
+  const modelIdentityFields = withFireInsuranceOptions(
+    lbModelInfoFields.filter(f =>
+      [
+        'modelName',
+        'modelDescription',
+        'numberOfHouse',
+        'startingPriceMin',
+        'startingPriceMax',
+        'fireInsuranceCondition',
+        'usableAreaMin',
+        'usableAreaMax',
+        'standardUsableArea',
+      ].includes(f.name),
+    ),
+    lbFireInsuranceOptions,
   );
   const landAreaFields = lbModelInfoFields.filter(f =>
     ['landAreaMin', 'landAreaMax', 'standardLandArea'].includes(f.name),
   );
   const remarkFields = lbModelInfoFields.filter(f => f.name === 'remark');
-
-  // BV-only: constructionYear has no appraisal counterpart.
-  const constructionYearFields = lbModelBuildingDetailFields.filter(
-    f => f.name === 'constructionYear',
-  );
 
   return (
     <div className="w-full max-w-full overflow-hidden">
@@ -224,7 +242,6 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
 
         <SectionRow title={t('modelDetail.sections.isResidential')} icon="house">
           <FormFields fields={isResidentialField} />
-          <FormFields fields={constructionYearFields} />
         </SectionRow>
 
         <SectionRow title={t('modelDetail.sections.generalStructure')} icon="warehouse">

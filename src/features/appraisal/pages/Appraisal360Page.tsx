@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAppraisalId, useIsTaskOwner } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
-import { useGetAppraisalById } from '../api/appraisal';
+import { useGetAppraisalById, useGetPreviousAppraisalChain } from '../api/appraisal';
+import { useGetAppraisalDocuments } from '../api/appraisalDocuments';
+import { useViewDocument } from '@features/request/api/documents';
 import { useGetDecisionSummary } from '../api/decisionSummary';
 import { useGetTaskById } from '../api/workflow';
 import { useGetRequestById } from '@features/request/api/requests';
@@ -18,6 +22,7 @@ import type {
 } from '@/features/common/historySearch/types';
 
 import StickyHeaderCard from '../components/360/StickyHeaderCard';
+import PreviousAppraisalsMenu from '../components/360/PreviousAppraisalsMenu';
 import StickyRemarkFooter from '../components/360/StickyRemarkFooter';
 import RequestInfoSection from '../components/360/RequestInfoSection';
 import PropertyGroupsSection from '../components/360/PropertyGroupsSection';
@@ -34,9 +39,16 @@ type SlideOverState =
   | { type: 'property'; propertyId: string; propertyType: PropertyType; groupName: string }
   | { type: 'pricing'; groupId: string; pricingAnalysisId: string; groupName: string };
 
+// ==================== Report Documents ====================
+
+// Valuation report types openable from the header (parameter.DocumentTypes, category VAL_REPORT).
+const APPRAISAL_REPORT_CODE = 'D001'; // Complete Valuation Report / เล่มประเมินสมบูรณ์
+const APPRAISAL_SUMMARY_CODE = 'D043'; // Property Valuation Summary Report
+
 // ==================== Page Component ====================
 
 const Appraisal360Page = () => {
+  const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
   const { taskId } = useParams<{ taskId: string }>();
   const isTaskOwner = useIsTaskOwner();
@@ -74,6 +86,39 @@ const Appraisal360Page = () => {
 
   // Map-pins data — fetched lazily when the user opens the map
   const { data: mapPinsData } = useGetAppraisalMapPins(mapOpen ? appraisalId : undefined);
+
+  // Valuation document checklist — fetched on mount rather than on click: useViewDocument has
+  // to open the tab synchronously inside the click gesture (Safari popup blocker), so the
+  // documentId must already be in hand. Shares its query key with the Documents page.
+  const { data: appraisalDocuments } = useGetAppraisalDocuments(appraisalId);
+  const viewDocument = useViewDocument();
+  // Reappraisal / construction-inspection lineage — powers the "Previous Appraisals" header menu.
+  const { data: previousChain } = useGetPreviousAppraisalChain(appraisalId);
+
+  // View-only: opens the newest file attached to a report type, or explains that there is none.
+  // These reports are never auto-attached — they land here only once someone generates and
+  // attaches them from the Documents page.
+  const openLatestReportDocument = useCallback(
+    (code: string, missingMessage: string) => {
+      const files = (
+        appraisalDocuments?.types.find(type => type.code === code)?.files ?? []
+      ).filter((file): file is typeof file & { documentId: string } => !!file.documentId);
+
+      if (files.length === 0) {
+        toast.error(missingMessage);
+        return;
+      }
+
+      // Newest first; sortOrder breaks ties when uploadedAt is missing or identical.
+      const latest = [...files].sort(
+        (a, b) =>
+          (b.uploadedAt ?? '').localeCompare(a.uploadedAt ?? '') || b.sortOrder - a.sortOrder,
+      )[0];
+
+      viewDocument(latest.documentId);
+    },
+    [appraisalDocuments, viewDocument],
+  );
 
   // Map the API shapes to the history-search DTOs (pad missing fields with null).
   // appraisalId is set to the current page's appraisalId so PinDetailDrawer can
@@ -179,12 +224,16 @@ const Appraisal360Page = () => {
         compact={scrolled}
         actions={
           <>
+            <PreviousAppraisalsMenu items={previousChain ?? []} />
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
-              onClick={() => {
-                /* TODO: download appraisal report */
-              }}
+              onClick={() =>
+                openLatestReportDocument(
+                  APPRAISAL_REPORT_CODE,
+                  t('toasts.appraisalReportNotAvailable'),
+                )
+              }
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-teal-600" />
               Appraisal Report
@@ -192,9 +241,12 @@ const Appraisal360Page = () => {
             <button
               type="button"
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
-              onClick={() => {
-                /* TODO: download summary document */
-              }}
+              onClick={() =>
+                openLatestReportDocument(
+                  APPRAISAL_SUMMARY_CODE,
+                  t('toasts.appraisalSummaryNotAvailable'),
+                )
+              }
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-purple-600" />
               Appraisal Summary

@@ -369,7 +369,6 @@ export function makePropertiesFieldConfig(t: TFunction<'request'>): FieldArrayFi
         name: 'sellingPrice',
         label: t('fields.sellingPrice'),
         maxIntegerDigits: 15,
-        required: true,
       },
     ],
   };
@@ -647,7 +646,7 @@ export function makeTitleBuildingFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: {
         field: 'collateralType',
         operator: 'in',
-        is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
+        is: [...CONDO_TYPES],
       },
       decimalPlaces: 2,
       maxIntegerDigits: 3,
@@ -670,7 +669,6 @@ export function makeTitleBuildingFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.numberOfBuilding'),
       name: 'numberOfBuilding',
       wrapperClassName: 'col-span-3',
-      requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
       decimalPlaces: 0,
       maxIntegerDigits: 5,
     },
@@ -751,7 +749,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: {
         field: 'collateralType',
         operator: 'in',
-        is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
+        is: [...CONDO_TYPES],
       },
       decimalPlaces: 2,
       maxIntegerDigits: 3,
@@ -792,6 +790,15 @@ export function makeTitleVehicleFields(t: TFunction<'request'>): FormField[] {
     },
     {
       type: 'text-input',
+      label: t('fields.chassisNumber'),
+      name: 'vin',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '10' },
+      maxLength: 50,
+    },
+    {
+      type: 'text-input',
       label: t('fields.licensePlateNumber'),
       name: 'licensePlateNumber',
       wrapperClassName: 'col-span-3',
@@ -802,7 +809,42 @@ export function makeTitleVehicleFields(t: TFunction<'request'>): FormField[] {
     {
       type: 'textarea',
       label: t('fields.appointmentLocationVehicle'),
-      name: 'vehicleAppointmentLocation',
+      name: 'vehicleLocation',
+      wrapperClassName: 'col-span-6',
+      maxLength: 200,
+    },
+  ];
+}
+
+export function makeTitleVesselFields(t: TFunction<'request'>): FormField[] {
+  return [
+    {
+      type: 'dropdown',
+      label: t('fields.vesselType'),
+      name: 'vesselType',
+      group: 'VesselType',
+      wrapperClassName: 'col-span-3',
+    },
+    {
+      type: 'text-input',
+      label: t('fields.hullNumber'),
+      name: 'hin',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '12' },
+      maxLength: 50,
+    },
+    {
+      type: 'text-input',
+      label: t('fields.vesselRegistrationNumber'),
+      name: 'vesselRegistrationNumber',
+      wrapperClassName: 'col-span-3',
+      maxLength: 50,
+    },
+    {
+      type: 'textarea',
+      label: t('fields.appointmentLocationVessel'),
+      name: 'vesselLocation',
       wrapperClassName: 'col-span-6',
       maxLength: 200,
     },
@@ -1359,6 +1401,15 @@ export const titleVehicleFields: FormField[] = [
   },
   {
     type: 'text-input',
+    label: _st('Chassis Number'),
+    name: 'vin',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    requiredWhen: { field: 'collateralType', is: '10' },
+    maxLength: 50,
+  },
+  {
+    type: 'text-input',
     label: _st('License Plate Number'),
     name: 'licensePlateNumber',
     wrapperClassName: 'col-span-3',
@@ -1369,7 +1420,40 @@ export const titleVehicleFields: FormField[] = [
   {
     type: 'textarea',
     label: _st('Appointment Location'),
-    name: 'vehicleAppointmentLocation',
+    name: 'vehicleLocation',
+    wrapperClassName: 'col-span-6',
+    maxLength: 200,
+  },
+];
+
+export const titleVesselFields: FormField[] = [
+  {
+    type: 'dropdown',
+    label: _st('Vessel Type'),
+    name: 'vesselType',
+    group: 'VesselType',
+    wrapperClassName: 'col-span-3',
+  },
+  {
+    type: 'text-input',
+    label: _st('Hull Number'),
+    name: 'hin',
+    wrapperClassName: 'col-span-3',
+    required: true,
+    requiredWhen: { field: 'collateralType', is: '12' },
+    maxLength: 50,
+  },
+  {
+    type: 'text-input',
+    label: _st('Vessel Registration Number'),
+    name: 'vesselRegistrationNumber',
+    wrapperClassName: 'col-span-3',
+    maxLength: 50,
+  },
+  {
+    type: 'textarea',
+    label: _st('Appointment Location'),
+    name: 'vesselLocation',
     wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
@@ -1625,6 +1709,7 @@ export const titlesFieldConfig: FieldArrayField = {
     ...titleBuildingFields,
     ...titleCondoFields,
     ...titleVehicleFields,
+    ...titleVesselFields,
     ...titleMachineFields,
     ...titleAddressFields,
     ...dopaAddressFields,
@@ -1632,7 +1717,6 @@ export const titlesFieldConfig: FieldArrayField = {
     { type: 'text-input', name: 'titleDetail', label: 'Title Detail' },
     { type: 'text-input', name: 'aerialMapName', label: 'Aerial Map Name' },
     { type: 'text-input', name: 'aerialMapNumber', label: 'Aerial Map Number' },
-    { type: 'text-input', name: 'vin', label: 'VIN' },
   ]),
 };
 
@@ -1945,7 +2029,6 @@ export const propertiesFieldConfig: FieldArrayField = {
       name: 'sellingPrice',
       label: _st('Selling Price'),
       maxIntegerDigits: 15,
-      required: true,
     },
   ],
 };

@@ -7,6 +7,7 @@ import TitleLandForm from './TitleLandForm';
 import TitleBuildingForm from './TitleBuildingForm';
 import TitleCondoForm from './TitleCondoForm';
 import TitleVehicleForm from './TitleVehicleForm';
+import TitleVesselForm from './TitleVesselForm';
 import TitleMachineForm from './TitleMachineForm';
 import FormCard from '@/shared/components/sections/FormCard';
 import Icon from '@/shared/components/Icon';
@@ -787,6 +788,7 @@ const TitleForm = ({ index, currentFormType }: TitleFormProps) => {
   if (CONDO_FORM_CODES.includes(currentFormType)) return <TitleCondoForm index={index} />;
   if (currentFormType === '10') return <TitleVehicleForm index={index} />;
   if (currentFormType === '11') return <TitleMachineForm index={index} />;
+  if (currentFormType === '12') return <TitleVesselForm index={index} />;
   return (
     <div className="col-span-6 text-center py-8 text-gray-500">
       <Icon style="regular" name="hand-pointer" className="size-8 mx-auto mb-2 text-gray-400" />
