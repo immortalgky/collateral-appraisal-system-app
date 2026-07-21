@@ -206,6 +206,16 @@ export const landLocationField: FormField[] = [
     group: 'LandShape',
   },
   {
+    type: 'textarea',
+    label: 'Other',
+    name: 'landShapeTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'landShapeType', is: '99' },
+    requiredWhen: { field: 'landShapeType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
+  },
+  {
     type: 'dropdown',
     label: 'Type of urban plan',
     name: 'urbanPlanningType',
@@ -1003,6 +1013,16 @@ export const buildingStyleField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'buildingStyleTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'buildingStyleType', is: '99' },
+    requiredWhen: { field: 'buildingStyleType', is: '99' },
+    maxLength: 100,
+    showCharCount: true,
+  },
 ];
 
 export const isResidentialField: FormField[] = [
@@ -1664,6 +1684,16 @@ export const locationViewFormFields: FormField[] = [
     orientation: 'horizontal',
     group: 'LocationView',
   },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'locationViewTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'locationViewType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'locationViewType', is: '99', operator: 'contains' },
+    maxLength: 100,
+    showCharCount: true,
+  },
 ];
 
 export const floorFormFields: FormField[] = [
@@ -1817,6 +1847,16 @@ export const environmentFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     orientation: 'horizontal',
     group: 'Environment',
+  },
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'environmentTypeOther',
+    wrapperClassName: 'col-span-12',
+    showWhen: { field: 'environmentType', is: '99', operator: 'contains' },
+    requiredWhen: { field: 'environmentType', is: '99', operator: 'contains' },
+    maxLength: 100,
+    showCharCount: true,
   },
 ];
 
