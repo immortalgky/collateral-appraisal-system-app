@@ -143,6 +143,7 @@ export function RaiseFollowupDialog({
                   <textarea
                     {...register(`lineItems.${index}.notes`)}
                     rows={3}
+                    maxLength={4000}
                     placeholder={t('raiseDialog.notesPlaceholder')}
                     className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
                   />

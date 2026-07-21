@@ -121,6 +121,7 @@
   "validation": {
     "documentTypeRequired": "Document type is required",
     "notesRequired": "Notes are required",
+    "notesMaxLength": "Notes must not exceed 4000 characters",
     "reasonRequired": "Reason is required",
     "atLeastOneItem": "At least one document request is required"
   },

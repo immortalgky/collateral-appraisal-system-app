@@ -64,6 +64,7 @@ import {
   ApprovalHistorySection,
 } from '../components/summary/ApprovalListSection';
 import DecisionSection from '../components/summary/DecisionSection';
+import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
 import ConstructionBuildingDetailTable from '../components/summary/ConstructionBuildingDetailTable';
 import ConstructionCompletedBuildingsTable from '../components/summary/ConstructionCompletedBuildingsTable';
@@ -924,6 +925,9 @@ const DecisionSummaryPage = () => {
         <form onSubmit={handleSubmit(onSave)} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">
+              {/* Open followup banner — compact info at the top; full/interactive lives on the Document Checklist page */}
+              {taskId && <OpenFollowupBanner raisingTaskId={taskId} compact />}
+
               {/* Group A — Valuation */}
               {anyVisible('decisionApproach', 'priceSummary', 'governmentPrice') && (
                 <GroupCard
