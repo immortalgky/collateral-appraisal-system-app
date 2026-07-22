@@ -435,7 +435,10 @@
       "internalAppraiserOpinionPlaceholder": "Enter internal appraiser opinion...",
       "additionalAssumptions": "Additional / Special Assumptions",
       "additionalAssumptionsDetails": "Details",
-      "additionalAssumptionsPlaceholder": "Enter additional or special assumptions..."
+      "additionalAssumptionsPlaceholder": "Enter additional or special assumptions...",
+      "constructionLicenseDoc": "Construction License Copy",
+      "constructionProgressTableDoc": "Construction Progress Table",
+      "constructionPhotoDoc": "Construction Photos"
     },
     "options": {
       "conditionType": {
@@ -1266,7 +1269,6 @@
       "landPrice": "Land Price"
     },
     "condoColumns": {
-      "titleDeedNo": "Title Deed No.",
       "room": "Room",
       "sqm": "Sq.M.",
       "bahtPerSqm": "Baht / Sq.M.",
@@ -1371,6 +1373,8 @@
   "decisionSummaryPageExtra": {
     "governmentAppraisalPrice": "Government Appraisal Price",
     "constructionSummaryTitle": "Construction Summary",
+    "constructionDocumentsTitle": "Supporting Documents",
+    "constructionDocumentsHint": "Supporting documents shown in the appraisal report. Tick manually when an external company's appraisal book bundles them into a single document.",
     "cancelButton": "Cancel",
     "saveButton": "Save",
     "submitButton": "Submit"

@@ -18,6 +18,9 @@ export const decisionSummaryFormSchema = z.object({
   internalAppraiserOpinion: z.string().nullable(),
   totalAppraisalPriceReview: z.number().nullable(),
   additionalAssumptions: z.string().nullable(),
+  hasConstructionLicenseDoc: z.boolean().nullable(),
+  hasConstructionProgressTableDoc: z.boolean().nullable(),
+  hasConstructionPhotoDoc: z.boolean().nullable(),
 });
 
 export type DecisionSummaryFormType = z.infer<typeof decisionSummaryFormSchema>;
@@ -36,4 +39,7 @@ export const decisionSummaryFormDefaults: DecisionSummaryFormType = {
   internalAppraiserOpinion: null,
   totalAppraisalPriceReview: null,
   additionalAssumptions: null,
+  hasConstructionLicenseDoc: null,
+  hasConstructionProgressTableDoc: null,
+  hasConstructionPhotoDoc: null,
 };
