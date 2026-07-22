@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import SlideOverPanel from '@shared/components/SlideOverPanel';
 import Icon from '@shared/components/Icon';
-import { formatLocaleDateTime, formatLocaleDate } from '@shared/utils/dateUtils';
+import { formatLocaleDateTime } from '@shared/utils/dateUtils';
 import { useGetAppointmentHistory, type AppointmentHistoryEvent } from '../api/appointmentHistory';
 
 interface AppointmentHistoryDrawerProps {
@@ -116,7 +116,7 @@ function TimelineItem({ event, isLast }: { event: AppointmentHistoryEvent; isLas
             <div className="flex items-center gap-2 flex-wrap">
               {event.oldDate && (
                 <span className="text-sm font-medium text-gray-400 line-through decoration-red-400">
-                  {formatLocaleDate(event.oldDate, i18n.language)}
+                  {formatLocaleDateTime(event.oldDate, i18n.language)}
                 </span>
               )}
               {event.oldDate && event.newDate && (
@@ -124,7 +124,7 @@ function TimelineItem({ event, isLast }: { event: AppointmentHistoryEvent; isLas
               )}
               {event.newDate && (
                 <span className="text-sm font-semibold text-gray-800">
-                  {formatLocaleDate(event.newDate, i18n.language)}
+                  {formatLocaleDateTime(event.newDate, i18n.language)}
                 </span>
               )}
             </div>
