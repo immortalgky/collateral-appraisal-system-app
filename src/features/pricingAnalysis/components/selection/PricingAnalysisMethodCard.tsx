@@ -389,31 +389,22 @@ export const PricingAnalysisMethodCard = ({
         <button
           type="button"
           disabled={disabled}
+          aria-pressed={isManualMode}
           title={t('calculationMode.manual')}
           onClick={e => {
             e.stopPropagation();
             onToggleMethodCalcMode({ approachType, methodType: method.methodType });
           }}
           className={clsx(
-            'shrink-0 flex items-center gap-1',
-            disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+            'shrink-0 inline-flex items-center h-6 px-1.5 text-[9px] rounded-full border-2 font-medium transition-all duration-200',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:ring-offset-1',
+            isManualMode
+              ? 'border-orange-600 bg-orange-600 text-white'
+              : 'border-gray-300 bg-white text-gray-600 hover:border-orange-600/50 hover:bg-orange-600/50 hover:text-white',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           )}
         >
-          <div
-            className={clsx(
-              'size-4 rounded border-2 flex items-center justify-center transition-all',
-              isManualMode
-                ? 'bg-amber-500 border-amber-500'
-                : 'border-gray-300 hover:border-gray-400',
-            )}
-          >
-            {isManualMode && (
-              <Icon name="pen-field" style="solid" className="size-2.5 text-white" />
-            )}
-          </div>
-          <span className={clsx('text-xs', isManualMode ? 'text-amber-600' : 'text-gray-400')}>
-            {t('calculationMode.manualToggle')}
-          </span>
+          <span>m</span>
         </button>
       )}
       {isManualMode ? (
