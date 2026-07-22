@@ -830,7 +830,7 @@ export const buildingInfoField: FormField[] = [
     name: 'builtOnTitleNumber',
     wrapperClassName: 'col-span-5',
     required: true,
-    maxLength: 200,
+    maxLength: 500,
   },
   {
     type: 'radio-group',
@@ -1351,7 +1351,7 @@ export const condoFields: FormField[] = [
     name: 'builtOnTitleNumber',
     wrapperClassName: 'col-span-4',
     required: true,
-    maxLength: 200,
+    maxLength: 500,
   },
   {
     type: 'text-input',
@@ -2895,7 +2895,7 @@ export const condoPmaDetailFields: FormField[] = [
     name: 'builtOnTitleNumber',
     wrapperClassName: 'col-span-6',
     required: true,
-    maxLength: 200,
+    maxLength: 500,
   },
 ];
 
