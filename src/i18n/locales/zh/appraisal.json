@@ -431,7 +431,10 @@
       "internalAppraiserOpinionPlaceholder": "输入内部评估师意见...",
       "additionalAssumptions": "附加/特殊假设",
       "additionalAssumptionsDetails": "详情",
-      "additionalAssumptionsPlaceholder": "输入附加或特殊假设..."
+      "additionalAssumptionsPlaceholder": "输入附加或特殊假设...",
+      "constructionLicenseDoc": "施工许可证副本",
+      "constructionProgressTableDoc": "施工进度表",
+      "constructionPhotoDoc": "施工照片"
     },
     "options": {
       "conditionType": {
@@ -1350,6 +1353,8 @@
   "decisionSummaryPageExtra": {
     "governmentAppraisalPrice": "政府评估价格",
     "constructionSummaryTitle": "建设汇总",
+    "constructionDocumentsTitle": "证明文件",
+    "constructionDocumentsHint": "评估报告中显示的证明文件。当外部公司的评估手册将这些文件合并为单一文件时，请手动勾选。",
     "cancelButton": "取消",
     "saveButton": "保存",
     "submitButton": "提交"

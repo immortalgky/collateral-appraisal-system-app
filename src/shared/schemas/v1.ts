@@ -2086,6 +2086,9 @@ const SaveDecisionSummaryRequest = z
     internalAppraiserOpinion: z.string().nullable().default(null),
     totalAppraisalPriceReview: z.number().nullable().default(null),
     additionalAssumptions: z.string().nullable().default(null),
+    hasConstructionLicenseDoc: z.boolean().nullable().default(null),
+    hasConstructionProgressTableDoc: z.boolean().nullable().default(null),
+    hasConstructionPhotoDoc: z.boolean().nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -2106,6 +2109,9 @@ const SaveDecisionSummaryResponse = z
     internalAppraiserOpinion: z.string().nullable(),
     totalAppraisalPriceReview: z.number().nullable(),
     additionalAssumptions: z.string().nullable(),
+    hasConstructionLicenseDoc: z.boolean().nullable(),
+    hasConstructionProgressTableDoc: z.boolean().nullable(),
+    hasConstructionPhotoDoc: z.boolean().nullable(),
   })
   .passthrough();
 const ApproachItem = z
@@ -2172,6 +2178,12 @@ const GetDecisionSummaryResponse = z
     internalAppraiserOpinionType: z.string().nullable(),
     internalAppraiserOpinion: z.string().nullable(),
     additionalAssumptions: z.string().nullable(),
+    hasConstructionLicenseDoc: z.boolean().nullable(),
+    hasConstructionProgressTableDoc: z.boolean().nullable(),
+    hasConstructionPhotoDoc: z.boolean().nullable(),
+    constructionLicenseDocAttached: z.boolean(),
+    constructionProgressTableDocAttached: z.boolean(),
+    constructionPhotoDocAttached: z.boolean(),
   })
   .passthrough();
 const UpdateComparativeAnalysisTemplateRequest = z

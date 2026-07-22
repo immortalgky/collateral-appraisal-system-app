@@ -325,6 +325,23 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         showCharCount: true,
       },
     ],
+    constructionDocumentsFields: [
+      {
+        type: 'checkbox' as const,
+        name: 'hasConstructionLicenseDoc',
+        label: t('decisionSummary.fields.constructionLicenseDoc'),
+      },
+      {
+        type: 'checkbox' as const,
+        name: 'hasConstructionProgressTableDoc',
+        label: t('decisionSummary.fields.constructionProgressTableDoc'),
+      },
+      {
+        type: 'checkbox' as const,
+        name: 'hasConstructionPhotoDoc',
+        label: t('decisionSummary.fields.constructionPhotoDoc'),
+      },
+    ],
   };
 };
 
@@ -334,6 +351,7 @@ type SectionKey =
   | 'decisionApproach'
   | 'priceSummary'
   | 'constructionSummary'
+  | 'constructionDocuments'
   | 'priceVerification'
   | 'governmentPrice'
   | 'condition'
@@ -363,6 +381,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
       'externalAppraiserOpinion',
       'additionalAssumptions',
@@ -373,6 +392,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
       'externalAppraiserOpinion',
       'additionalAssumptions',
@@ -384,6 +404,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
       'externalAppraiserOpinion',
       'additionalAssumptions',
@@ -395,6 +416,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'priceVerification',
       'governmentPrice',
       'condition',
@@ -407,6 +429,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
     ],
     readOnly: true,
     editableSections: [
+      'constructionDocuments',
       'priceVerification',
       'condition',
       'remark',
@@ -420,6 +443,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
       'condition',
       'remark',
@@ -433,6 +457,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'priceVerification',
       'governmentPrice',
       'condition',
@@ -450,6 +475,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'priceVerification',
       'governmentPrice',
       'condition',
@@ -635,6 +661,12 @@ const DecisionSummaryPage = () => {
       internalAppraiserOpinion: data.internalAppraiserOpinion ?? null,
       totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
       additionalAssumptions: data.additionalAssumptions ?? null,
+      hasConstructionLicenseDoc:
+        data.hasConstructionLicenseDoc ?? data.constructionLicenseDocAttached ?? false,
+      hasConstructionProgressTableDoc:
+        data.hasConstructionProgressTableDoc ?? data.constructionProgressTableDocAttached ?? false,
+      hasConstructionPhotoDoc:
+        data.hasConstructionPhotoDoc ?? data.constructionPhotoDocAttached ?? false,
     };
   }, [data]);
 
@@ -1190,6 +1222,33 @@ const DecisionSummaryPage = () => {
                         rows={data.constructionSummary.completedBuildings ?? []}
                       />
                     </InlineSubSection>
+                  )}
+
+                  {/* Supporting Documents (เอกสารประกอบ) — lives inside the Construction Summary card.
+                      Each checkbox's initial value is the EFFECTIVE value (manual override ?? auto-
+                      detected document presence) computed in mapDataToForm; ticking here always saves
+                      as an explicit override via the whole-form save.
+                      Editable ONLY where an activity whitelists 'constructionDocuments' in
+                      editableSections (today: appraisal-book-verification). Elsewhere it renders
+                      read-only — including the execution activities that lack a `readOnly` flag, which
+                      shouldForceReadOnly alone would leave editable. On the appraisal-search route
+                      (activityId undefined) the page-level read-only mode applies, as for other sections. */}
+                  {showSection('constructionDocuments') && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={
+                        !!activityId &&
+                        !sectionConfig?.editableSections?.includes('constructionDocuments')
+                      }
+                    >
+                      <InlineSubSection
+                        title={t('decisionSummaryPageExtra.constructionDocumentsTitle')}
+                        description={t('decisionSummaryPageExtra.constructionDocumentsHint')}
+                      >
+                        <div className="grid grid-cols-1 gap-2">
+                          <FormFields fields={fields.constructionDocumentsFields} />
+                        </div>
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
                   )}
                 </GroupCard>
               )}

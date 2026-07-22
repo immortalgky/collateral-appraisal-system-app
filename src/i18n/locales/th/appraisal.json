@@ -435,7 +435,10 @@
       "internalAppraiserOpinionPlaceholder": "ระบุความเห็นผู้ประเมินภายใน...",
       "additionalAssumptions": "ข้อสมมติฐานเพิ่มเติม / พิเศษ",
       "additionalAssumptionsDetails": "รายละเอียด",
-      "additionalAssumptionsPlaceholder": "ระบุข้อสมมติฐานเพิ่มเติมหรือพิเศษ..."
+      "additionalAssumptionsPlaceholder": "ระบุข้อสมมติฐานเพิ่มเติมหรือพิเศษ...",
+      "constructionLicenseDoc": "สำเนาใบอนุญาตปลูกสร้าง",
+      "constructionProgressTableDoc": "ตารางแสดงผลงานการก่อสร้าง",
+      "constructionPhotoDoc": "ภาพถ่ายการก่อสร้าง"
     },
     "options": {
       "conditionType": {
@@ -1261,7 +1264,6 @@
       "landPrice": "ราคาที่ดิน"
     },
     "condoColumns": {
-      "titleDeedNo": "เลขที่โฉนด",
       "room": "ห้อง",
       "sqm": "ตร.ม.",
       "bahtPerSqm": "บาท / ตร.ม.",
@@ -1365,6 +1367,8 @@
   "decisionSummaryPageExtra": {
     "governmentAppraisalPrice": "ราคาประเมินของทางราชการ",
     "constructionSummaryTitle": "สรุปการก่อสร้าง",
+    "constructionDocumentsTitle": "เอกสารประกอบ",
+    "constructionDocumentsHint": "เอกสารประกอบที่แสดงในรายงานประเมิน กรุณาติ๊กด้วยตนเองเมื่อเล่มรายงานของบริษัทภายนอกรวมเอกสารเหล่านี้ไว้ในเอกสารเดียว",
     "cancelButton": "ยกเลิก",
     "saveButton": "บันทึก",
     "submitButton": "ส่ง"
