@@ -250,19 +250,37 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         showCharCount: true,
       },
     ],
-    appraiserOpinionFields: [
+    externalAppraiserOpinionFields: [
       {
         type: 'dropdown' as const,
-        name: 'appraiserOpinionType',
+        name: 'externalAppraiserOpinionType',
         label: t('decisionSummary.fields.opinionType'),
         options: opinionTypeOptions,
         placeholder: t('decisionSummary.fields.opinionTypePlaceholder'),
       },
       {
         type: 'textarea' as const,
-        name: 'appraiserOpinion',
-        label: t('decisionSummary.fields.appraiserOpinion'),
-        placeholder: t('decisionSummary.fields.appraiserOpinionPlaceholder'),
+        name: 'externalAppraiserOpinion',
+        label: t('decisionSummary.fields.externalAppraiserOpinion'),
+        placeholder: t('decisionSummary.fields.externalAppraiserOpinionPlaceholder'),
+        wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
+      },
+    ],
+    internalAppraiserOpinionFields: [
+      {
+        type: 'dropdown' as const,
+        name: 'internalAppraiserOpinionType',
+        label: t('decisionSummary.fields.opinionType'),
+        options: opinionTypeOptions,
+        placeholder: t('decisionSummary.fields.opinionTypePlaceholder'),
+      },
+      {
+        type: 'textarea' as const,
+        name: 'internalAppraiserOpinion',
+        label: t('decisionSummary.fields.internalAppraiserOpinion'),
+        placeholder: t('decisionSummary.fields.internalAppraiserOpinionPlaceholder'),
         wrapperClassName: 'mt-3',
         maxLength: 4000,
         showCharCount: true,
@@ -320,8 +338,9 @@ type SectionKey =
   | 'governmentPrice'
   | 'condition'
   | 'remark'
-  | 'appraiserOpinion'
+  | 'externalAppraiserOpinion'
   | 'committeeOpinion'
+  | 'internalAppraiserOpinion'
   | 'reviewPrices'
   | 'additionalAssumptions'
   | 'committeeApproval';
@@ -330,6 +349,7 @@ interface ActivitySectionConfig {
   sections: SectionKey[];
   readOnly?: boolean;
   editableSections?: SectionKey[];
+  readOnlySections?: SectionKey[];
 }
 
 const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
@@ -344,7 +364,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'priceSummary',
       'constructionSummary',
       'governmentPrice',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'additionalAssumptions',
     ],
   },
@@ -354,7 +374,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'priceSummary',
       'constructionSummary',
       'governmentPrice',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'additionalAssumptions',
     ],
     readOnly: true,
@@ -365,7 +385,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'priceSummary',
       'constructionSummary',
       'governmentPrice',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'additionalAssumptions',
     ],
     readOnly: true,
@@ -379,8 +399,9 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
       'additionalAssumptions',
     ],
@@ -389,10 +410,9 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'priceVerification',
       'condition',
       'remark',
-      'appraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
-      'additionalAssumptions',
     ],
   },
   'int-appraisal-execution': {
@@ -403,7 +423,7 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'internalAppraiserOpinion',
       'committeeOpinion',
       'additionalAssumptions',
     ],
@@ -417,8 +437,9 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
       'additionalAssumptions',
     ],
@@ -433,14 +454,32 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
       'additionalAssumptions',
     ],
     readOnly: true,
   },
-  'pending-approval': { sections: ['committeeApproval'] },
+  'pending-approval': {
+    sections: [
+      'decisionApproach',
+      'priceSummary',
+      'constructionSummary',
+      'priceVerification',
+      'governmentPrice',
+      'condition',
+      'remark',
+      'externalAppraiserOpinion',
+      'internalAppraiserOpinion',
+      'committeeOpinion',
+      'reviewPrices',
+      'additionalAssumptions',
+      'committeeApproval',
+    ],
+    readOnly: true,
+  },
 };
 
 /** Wraps children with FormReadOnlyContext override when forceReadOnly is true */
@@ -501,7 +540,8 @@ const DecisionSummaryPage = () => {
     sectionConfig === null || sectionConfig.sections.includes(key);
   const isActivityReadOnly = sectionConfig?.readOnly ?? false;
   const shouldForceReadOnly = (key: SectionKey) =>
-    !isReadOnly && isActivityReadOnly && !sectionConfig?.editableSections?.includes(key);
+    (!isReadOnly && isActivityReadOnly && !sectionConfig?.editableSections?.includes(key)) ||
+    (sectionConfig?.readOnlySections?.includes(key) ?? false);
   const hasEditableSections =
     sectionConfig === null
       ? false
@@ -587,10 +627,12 @@ const DecisionSummaryPage = () => {
       condition: data.condition ?? null,
       remarkType: data.remarkType ?? null,
       remark: data.remark ?? null,
-      appraiserOpinionType: data.appraiserOpinionType ?? null,
-      appraiserOpinion: data.appraiserOpinion ?? null,
+      externalAppraiserOpinionType: data.externalAppraiserOpinionType ?? null,
+      externalAppraiserOpinion: data.externalAppraiserOpinion ?? null,
       committeeOpinionType: data.committeeOpinionType ?? null,
       committeeOpinion: data.committeeOpinion ?? null,
+      internalAppraiserOpinionType: data.internalAppraiserOpinionType ?? null,
+      internalAppraiserOpinion: data.internalAppraiserOpinion ?? null,
       totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
       additionalAssumptions: data.additionalAssumptions ?? null,
     };
@@ -621,6 +663,27 @@ const DecisionSummaryPage = () => {
   const notVerifiedLock =
     (sectionConfig === null || sectionConfig.sections.includes('priceVerification')) &&
     isPriceVerifiedNow !== true;
+
+  // External Appraiser Opinion card. The opinion sub-section shows when editable here or when it
+  // has a saved value (hidden on the pure internal path where it's null). "Editable here" means
+  // the activity isn't read-only (e.g. ext-appraisal-execution, where the external appraiser
+  // authors it and it must show even while empty) OR the read-only activity whitelists it.
+  const externalOpinionEditableHere =
+    !isActivityReadOnly ||
+    (sectionConfig?.editableSections?.includes('externalAppraiserOpinion') ?? false);
+  const externalOpinionVisible =
+    showSection('externalAppraiserOpinion') &&
+    (externalOpinionEditableHere || !!watch('externalAppraiserOpinion'));
+  // Additional/Special Assumptions are the *appraiser's* input, so they follow the path: on the
+  // external path they belong with the external appraiser (rendered inside this External card,
+  // editable only at ext-appraisal-execution and read-only reference everywhere else on that path
+  // — including book verification); on the internal path they belong with the internal appraiser
+  // (rendered in Group B). "External path" here = an external opinion is in play (visible) OR the
+  // activity has no internal opinion at all (the pure ext-* screens). Guarded independently from
+  // the opinion sub-section so they still render when the external opinion happens to be empty.
+  const assumptionsInExternalCard =
+    showSection('additionalAssumptions') &&
+    (externalOpinionVisible || !showSection('internalAppraiserOpinion'));
 
   // Track whether the user has toggled isPriceVerified after the data loaded.
   // This lets us distinguish "loaded as verified → show stored review values"
@@ -899,10 +962,12 @@ const DecisionSummaryPage = () => {
         condition: data.condition ?? null,
         remarkType: data.remarkType ?? null,
         remark: data.remark ?? null,
-        appraiserOpinionType: data.appraiserOpinionType ?? null,
-        appraiserOpinion: data.appraiserOpinion ?? null,
+        externalAppraiserOpinionType: data.externalAppraiserOpinionType ?? null,
+        externalAppraiserOpinion: data.externalAppraiserOpinion ?? null,
         committeeOpinionType: data.committeeOpinionType ?? null,
         committeeOpinion: data.committeeOpinion ?? null,
+        internalAppraiserOpinionType: data.internalAppraiserOpinionType ?? null,
+        internalAppraiserOpinion: data.internalAppraiserOpinion ?? null,
         totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
         additionalAssumptions: data.additionalAssumptions ?? null,
       });
@@ -1129,20 +1194,61 @@ const DecisionSummaryPage = () => {
                 </GroupCard>
               )}
 
+              {/* External Appraiser Opinion — standalone card, above Group B. Shared activities
+                  (int-appraisal-check / int-appraisal-verification) run on both the external and
+                  internal paths — on a pure internal path this field is null and not editable
+                  there, so it must stay hidden rather than show an empty card. */}
+              {(externalOpinionVisible || assumptionsInExternalCard) && (
+                <GroupCard
+                  icon="user-tie"
+                  iconColor="blue"
+                  title={t('decisionSummary.fields.externalAppraiserOpinions')}
+                >
+                  {externalOpinionVisible && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={
+                        shouldForceReadOnly('externalAppraiserOpinion') || priceVerifiedLock
+                      }
+                    >
+                      <InlineSubSection>
+                        <FormFields fields={fields.externalAppraiserOpinionFields} />
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
+                  )}
+                  {/* Additional / Special Assumptions live here on the external-only screens
+                      (no internal opinion present) — the external appraiser's input. On internal /
+                      book-verification screens they render in Group B with the internal opinion. */}
+                  {assumptionsInExternalCard && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={
+                        shouldForceReadOnly('additionalAssumptions') || priceVerifiedLock
+                      }
+                    >
+                      <InlineSubSection title={t('decisionSummary.fields.additionalAssumptions')}>
+                        <FormFields fields={fields.additionalAssumptionsFields} />
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
+                  )}
+                </GroupCard>
+              )}
+
               {/* Group B — Review & Opinions */}
               {anyVisible(
                 'priceVerification',
                 'reviewPrices',
                 'condition',
                 'remark',
-                'appraiserOpinion',
+                'internalAppraiserOpinion',
                 'committeeOpinion',
-                'additionalAssumptions',
               ) && (
                 <GroupCard
                   icon="users"
                   iconColor="cyan"
-                  title={t('decisionSummary.sections.reviewOpinions')}
+                  title={
+                    anyVisible('priceVerification', 'reviewPrices')
+                      ? t('decisionSummary.sections.reviewOpinions')
+                      : t('decisionSummary.sections.opinions')
+                  }
                 >
                   {showSection('priceVerification') && (
                     <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceVerification')}>
@@ -1184,12 +1290,12 @@ const DecisionSummaryPage = () => {
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
-                  {showSection('appraiserOpinion') && (
+                  {showSection('internalAppraiserOpinion') && (
                     <SectionReadOnlyWrap
-                      forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}
+                      forceReadOnly={shouldForceReadOnly('internalAppraiserOpinion')}
                     >
-                      <InlineSubSection title={t('decisionSummary.fields.appraiserOpinions')}>
-                        <FormFields fields={fields.appraiserOpinionFields} />
+                      <InlineSubSection title={t('decisionSummary.fields.internalAppraiserOpinions')}>
+                        <FormFields fields={fields.internalAppraiserOpinionFields} />
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
@@ -1200,17 +1306,20 @@ const DecisionSummaryPage = () => {
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
-                  {showSection('additionalAssumptions') && (
-                    <SectionReadOnlyWrap
-                      forceReadOnly={
-                        shouldForceReadOnly('additionalAssumptions') || priceVerifiedLock
-                      }
-                    >
-                      <InlineSubSection title={t('decisionSummary.fields.additionalAssumptions')}>
-                        <FormFields fields={fields.additionalAssumptionsFields} />
-                      </InlineSubSection>
-                    </SectionReadOnlyWrap>
-                  )}
+                  {/* Additional / Special Assumptions — shown here only on the internal path
+                      (the internal appraiser's input). On the external path they render inside the
+                      External Appraiser Opinion card instead (see assumptionsInExternalCard). */}
+                  {showSection('additionalAssumptions') && !assumptionsInExternalCard && (
+                      <SectionReadOnlyWrap
+                        forceReadOnly={
+                          shouldForceReadOnly('additionalAssumptions') || priceVerifiedLock
+                        }
+                      >
+                        <InlineSubSection title={t('decisionSummary.fields.additionalAssumptions')}>
+                          <FormFields fields={fields.additionalAssumptionsFields} />
+                        </InlineSubSection>
+                      </SectionReadOnlyWrap>
+                    )}
                 </GroupCard>
               )}
 
