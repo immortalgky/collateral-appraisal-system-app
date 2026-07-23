@@ -182,7 +182,7 @@ const MarketComparableForm = () => {
       label: '',
       wrapperClassName: 'col-span-12',
       required: true,
-      maxLength: 200,
+      maxLength: 100,
     },
     {
       type: 'datetime-input',

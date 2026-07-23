@@ -2619,6 +2619,7 @@ export const landtitlesFields: FormField[] = [
     type: 'number-input',
     wrapperClassName: 'col-span-2',
     disabled: true,
+    decimalPlaces: 2,
   },
   {
     name: 'boundaryMarkerType',
