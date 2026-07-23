@@ -10,7 +10,7 @@ const DuplicateButton = (props: ButtonHTMLAttributes<HTMLButtonElement>) => {
       leftIcon={<Icon style="regular" name="copy" />}
       {...props}
     >
-      Copy
+      Duplicate
     </Button>
   );
 };
