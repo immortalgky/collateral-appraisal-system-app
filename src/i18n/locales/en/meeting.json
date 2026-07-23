@@ -34,9 +34,9 @@
     "appraisalNumber": "Appraisal Number",
     "customerName": "Customer Name",
     "appraisalStaff": "Appraisal Staff",
-    "appraisalValue": "Appraisal Value",
     "decision": "Decision",
-    "no": "No"
+    "no": "No",
+    "votes": "Votes"
   },
   "filters": {
     "searchPlaceholder": "Search meeting no. or customer name",
@@ -66,6 +66,8 @@
     "release": "Release",
     "routeBack": "Route Back",
     "remove": "Remove",
+    "recall": "Recall",
+    "forceRecall": "Force Recall",
     "saveAgenda": "Save Agenda",
     "saveChanges": "Save Changes",
     "createMeeting": "Create Meeting",
@@ -113,7 +115,8 @@
     "New": "New Appraisals",
     "ReAppraisal": "Re-Appraisals",
     "Progressive": "Progressive Appraisals",
-    "PreAppraisal": "Pre-Appraisals"
+    "PreAppraisal": "Pre-Appraisals",
+    "other": "Other"
   },
   "ackGroups": {
     "urgent": "Acknowledge for Urgent Approval (Group 2)",
@@ -126,7 +129,8 @@
     "queuedItemsToInclude": "Queued Items to be Included",
     "schedule": "Meeting Schedule",
     "committeeMembers": "Committee Members",
-    "agenda": "Agenda"
+    "agenda": "Agenda",
+    "lifecycle": "Schedule & Lifecycle"
   },
   "fields": {
     "title": "Title",
@@ -141,6 +145,7 @@
     "reasonRequired": "Reason",
     "cancelReasonPlaceholder": "Why is this meeting being cancelled?",
     "routeBackReasonPlaceholder": "Describe why this appraisal is being routed back...",
+    "recallReasonPlaceholder": "Describe why this release is being recalled...",
     "user": "User",
     "agendaCertifyMinutes": "Certify the Minutes of the Previous Meeting",
     "agendaCertifyMinutesWithNo": "Certify the Minutes of the Meeting No. {{no}}",
@@ -160,6 +165,7 @@
     "releaseAppraisal": "Release Appraisal",
     "removeAppraisal": "Remove Appraisal",
     "routeBackAppraisal": "Route Back Appraisal",
+    "recallAppraisal": "Recall Appraisal",
     "addAppraisalsFromQueue": "Add Appraisals from Queue",
     "addMember": "Add Member",
     "addToExistingMeeting": "Add to Existing Meeting",
@@ -228,6 +234,13 @@
     "description": "Route {{label}} back to the appraisal team for revision. A reason is required.",
     "routingBack": "Routing Back..."
   },
+  "recallDialog": {
+    "description": "Recall {{label}} back to Pending on this meeting so it can be released or routed back again. A reason is required.",
+    "confirm": "This pulls {{label}} back from committee approval. Any in-progress approval round is closed.",
+    "recalling": "Recalling...",
+    "forceWarning": "One or more committee members have already voted on {{label}}. Proceeding will permanently discard those votes — they cannot be recovered. Only force this recall if you're certain.",
+    "forceRecalling": "Force recalling..."
+  },
   "bulkCreateDialog": {
     "description": "Select one or more dates. A New meeting will be created for each selected date. Members can be added to each meeting afterwards.",
     "datesSelected": "{{n}} date selected",
@@ -284,6 +297,12 @@
     "itemReleaseFailed": "Failed to release appraisal",
     "itemRoutedBack": "Appraisal routed back to appraisal team",
     "itemRouteBackFailed": "Failed to route back appraisal",
+    "itemRecalled": "Appraisal recalled back to Pending",
+    "itemRecallFailed": "Failed to recall appraisal",
+    "itemRecallAlreadyResolved": "Cannot recall — the approval has already been resolved and moved on",
+    "itemRecallNotReleased": "Cannot recall — this appraisal is no longer in a recallable state (it may already have been recalled or routed back)",
+    "itemRecallBusy": "Cannot recall right now — the approval is being processed. Please try again in a moment.",
+    "itemForceRecalled": "Appraisal force-recalled — existing votes discarded",
     "itemRemoved": "Appraisal {{label}} returned to the queue",
     "itemRemoveFailed": "Failed to remove appraisal",
     "memberAdded": "Member added",
@@ -351,5 +370,69 @@
     "pickerSelected": "{{count}} selected",
     "pickerConfirm": "Confirm",
     "generateInvitation": "Generate invitation"
+  },
+  "pulse": {
+    "title": "Meeting Pulse",
+    "released": "Released",
+    "decisionTotal": "Decision items",
+    "valueDistribution": "Value by appraisal type",
+    "kpiDecision": "Decision Items",
+    "kpiAck": "Acknowledgements",
+    "kpiAppraised": "Total Value",
+    "unknownValues": "{{n}} item has no recorded appraised value",
+    "unknownValuesPlural": "{{n}} items have no recorded appraised value"
+  },
+  "timeline": {
+    "title": "Lifecycle",
+    "created": "Created",
+    "cutOff": "Cut-off",
+    "invitationSent": "Invitation sent",
+    "scheduledStart": "Scheduled start",
+    "started": "Started",
+    "ended": "Ended",
+    "cancelled": "Cancelled",
+    "pending": "Pending",
+    "by": "by {{name}}",
+    "lastUpdated": "Last updated"
+  },
+  "votes": {
+    "title": "Approver votes",
+    "awaiting": "Awaiting approvers",
+    "lastVoted": "Last vote {{time}}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "route_back": "Route back",
+    "notVoted": "Not yet voted"
+  },
+  "session": {
+    "live": "Live",
+    "updatedAgo": "Updated {{time}}",
+    "justNow": "just now",
+    "nowDeciding": "Now deciding",
+    "startsIn": "Starts in {{time}}",
+    "running": "Running for {{time}}",
+    "remaining": "{{n}} item left to decide",
+    "remainingPlural": "{{n}} items left to decide",
+    "allReleased": "All decision items have been released."
+  },
+  "items": {
+    "subtotal": "Subtotal",
+    "decisionRecord": "Decision record",
+    "decidedBy": "Decided by",
+    "decidedAt": "Decided at",
+    "reason": "Reason",
+    "toggleDetail": "Show decision detail for {{label}}",
+    "noMatches": "No items match the current filter.",
+    "searchPlaceholder": "Filter by appraisal no., customer or staff",
+    "allDecisions": "All decisions",
+    "showing": "Showing {{shown}} of {{total}}",
+    "noItems": "No appraisals have been added to this meeting yet.",
+    "action": "Action",
+    "actionReleased": "Released",
+    "actionRoutedBack": "Routed back",
+    "actionRecalled": "Recalled"
+  },
+  "roster": {
+    "removeTitle": "Remove Member"
   }
 }

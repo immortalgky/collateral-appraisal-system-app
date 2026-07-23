@@ -1,7 +1,15 @@
 import type { ButtonHTMLAttributes } from 'react';
 import clsx from 'clsx';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'success' | 'ghost';
+type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'danger'
+  | 'success'
+  | 'warning'
+  | 'info'
+  | 'ghost';
 type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -32,6 +40,8 @@ const Button = ({
     outline: 'border border-gray-300 hover:bg-gray-50 text-gray-700',
     danger: 'bg-danger hover:bg-danger/80 text-white',
     success: 'bg-success hover:bg-success/80 text-white',
+    warning: 'bg-warning hover:bg-warning/80 text-white shadow-sm',
+    info: 'bg-info hover:bg-info/80 text-white shadow-sm',
     ghost: 'hover:bg-gray-100 text-gray-700',
   };
 

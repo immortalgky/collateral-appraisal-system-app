@@ -27,6 +27,7 @@ import type {
   MeetingListItemDto,
   MeetingQueueItemDto,
   PaginatedResult,
+  RecallItemRequest,
   RouteBackItemRequest,
   SendInvitationResponse,
   UpdateMeetingAgendaRequest,
@@ -100,8 +101,23 @@ export const useGetMeetings = (params: GetMeetingsParams = {}) => {
   });
 };
 
-/** GET /meetings/{id} */
-export const useGetMeetingDetail = (id: string | undefined) => {
+/**
+ * GET /meetings/{id}
+ *
+ * `shouldPoll` powers the detail page's live session mode. It is evaluated against the latest
+ * response rather than being a fixed flag, because the effective `InProgress` status is derived
+ * server-side (InvitationSent + StartAt passed) and so isn't known until data arrives — and it
+ * can flip mid-session when the meeting ends.
+ */
+export const useGetMeetingDetail = (
+  id: string | undefined,
+  options?: {
+    shouldPoll?: (meeting: MeetingDetailDto) => boolean;
+    intervalMs?: number;
+  },
+) => {
+  const { shouldPoll, intervalMs = 15_000 } = options ?? {};
+
   return useQuery({
     queryKey: meetingKeys.detail(id ?? ''),
     queryFn: async (): Promise<MeetingDetailDto> => {
@@ -109,6 +125,11 @@ export const useGetMeetingDetail = (id: string | undefined) => {
       return data;
     },
     enabled: !!id,
+    refetchInterval: query => {
+      if (!shouldPoll) return false;
+      const meeting = query.state.data;
+      return meeting && shouldPoll(meeting) ? intervalMs : false;
+    },
   });
 };
 
@@ -337,6 +358,31 @@ export const useRouteBackMeetingItem = () => {
   });
 };
 
+/** POST /meetings/{id}/items/{appraisalId}/recall */
+export const useRecallMeetingItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      meetingId,
+      appraisalId,
+      body,
+    }: {
+      meetingId: string;
+      appraisalId: string;
+      body: RecallItemRequest;
+    }) => {
+      await axios.post(`/meetings/${meetingId}/items/${appraisalId}/recall`, body);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: meetingKeys.detail(variables.meetingId) });
+      queryClient.invalidateQueries({ queryKey: meetingKeys.all });
+      // Recall moves a MeetingQueueItem row (Released -> Assigned) — invalidate the queue too.
+      queryClient.invalidateQueries({ queryKey: meetingKeys.queueAll });
+    },
+  });
+};
+
 /** POST /meetings/{id}/members */
 export const useAddMeetingMember = () => {
   const queryClient = useQueryClient();
@@ -492,13 +538,7 @@ export const useRemoveMeetingDocument = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      meetingId,
-      documentId,
-    }: {
-      meetingId: string;
-      documentId: string;
-    }) => {
+    mutationFn: async ({ meetingId, documentId }: { meetingId: string; documentId: string }) => {
       await axios.delete(`/meetings/${meetingId}/documents/${documentId}`);
     },
     onSuccess: (_data, variables) => {

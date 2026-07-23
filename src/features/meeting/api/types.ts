@@ -77,6 +77,23 @@ export interface MeetingListItemDto {
   updatedBy: string | null;
 }
 
+/**
+ * One approver's vote on an appraisal.
+ *
+ * `member` is the username and matches `MeetingMemberDto.userId`, so the UI can resolve it to a
+ * display name and work out which members have yet to vote.
+ *
+ * `vote` comes from the workflow definition's `voteOptions` (currently `approve`, `reject`,
+ * `route_back`) — config-driven, NOT a fixed enum. Translate the keys you know and fall back to
+ * the raw string, so a newly configured option renders instead of disappearing.
+ */
+export interface ItemVoteDto {
+  member: string;
+  memberRole?: string | null;
+  vote: string;
+  votedAt: string;
+}
+
 /** A single appraisal that has been added to a meeting. */
 export interface MeetingItemDto {
   id: string;
@@ -95,7 +112,15 @@ export interface MeetingItemDto {
   addedAt: string;
   customerName: string;
   appraisalStaff: string;
+  /**
+   * From `appraisal.ValuationAnalyses`. May legitimately be `null` (never valued) OR `0`
+   * (zeroed by an unverified decision-summary save) — these mean different things, so never
+   * coerce null to 0 for display.
+   */
   appraisedValue: number | null;
+  /** Approver votes recorded after release. Absent/empty until the item is released and voted on. */
+  votes?: ItemVoteDto[] | null;
+  lastVotedAt?: string | null;
 }
 
 /** Groups items by AppraisalType (Decision) or AcknowledgementGroup (Acknowledgement). */
@@ -127,6 +152,11 @@ export interface MeetingDetailDto {
   cancelReason: string | null;
   endedAt: string | null;
   cancelledAt: string | null;
+  // Audit fields — the API omits null properties, so these must be optional.
+  createdAt?: string | null;
+  createdBy?: string | null;
+  updatedAt?: string | null;
+  updatedBy?: string | null;
   members: MeetingMemberDto[];
   /** Matches backend `MeetingItemsGroupedDto` — nested under `items`. */
   items: {
@@ -191,6 +221,12 @@ export interface ReleaseItemRequest {}
 
 export interface RouteBackItemRequest {
   reason: string;
+}
+
+export interface RecallItemRequest {
+  reason: string;
+  /** Re-post with true to force past a 409 caused by existing approver votes. Any MeetingSecretary may force (no extra permission); a reason is still required. */
+  force?: boolean;
 }
 
 export interface AddMeetingMemberRequest {
