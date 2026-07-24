@@ -37,6 +37,12 @@ export type SelectionState = {
    *  whether a selectApproach call is needed, cleared by SUMMARY_SAVE. */
   dirtyApproachSelection: boolean;
 
+  /** Set by PREPARE_SELECTION_RESET right before a quick Add Method / Delete Method
+   *  mutation is fired. Consumed by the next INIT (triggered by that mutation's query
+   *  invalidation) to blank out every approach/method's isSelected instead of trusting
+   *  the server's stale selection flags — the backend doesn't clear them on add/delete. */
+  pendingSelectionReset?: boolean;
+
   pricingAnalysisId?: string;
 
   /** Analysis-level remark ("Notes & Assumptions"), loaded from the server on INIT and
@@ -73,6 +79,7 @@ export type SelectionAction =
       payload: { systemCalculationMethodType: SystemCalculationMode };
     }
   | { type: 'EDIT_ENTER' }
+  | { type: 'PREPARE_SELECTION_RESET' }
   | { type: 'EDIT_TOGGLE_METHOD'; payload: { approachType: string; methodType: string } }
   | { type: 'EDIT_CANCEL' }
   | { type: 'EDIT_SAVE' }
@@ -158,8 +165,19 @@ export function approachMethodReducer(
      * - initial approach and method which are loaded from configuration and database
      */
     case 'INIT': {
-      const approaches = action.payload.approaches;
-      const visibleApproach = getVisibleApproach(action.payload.approaches);
+      const resetSelection = !!state.pendingSelectionReset;
+
+      // A quick Add Method / Delete Method mutation just landed — the server doesn't
+      // clear prior selections on its own, so blank them out here rather than trusting
+      // the (stale) isSelected flags in the freshly-fetched approaches.
+      const approaches = resetSelection
+        ? action.payload.approaches.map(appr => ({
+            ...appr,
+            isSelected: false,
+            methods: appr.methods.map(method => ({ ...method, isSelected: false })),
+          }))
+        : action.payload.approaches;
+      const visibleApproach = getVisibleApproach(approaches);
 
       return {
         viewMode: 'summary',
@@ -176,8 +194,19 @@ export function approachMethodReducer(
         // Preserve across re-INIT too (e.g. a background refetch firing between the user
         // typing a manual value and clicking Save shouldn't drop the pending dirty flag).
         dirtyManualValueKeys: state.dirtyManualValueKeys ?? [],
-        dirtyMethodApproachTypes: state.dirtyMethodApproachTypes ?? [],
-        dirtyApproachSelection: state.dirtyApproachSelection ?? false,
+        // A reset baseline has nothing dirty against it yet.
+        dirtyMethodApproachTypes: resetSelection ? [] : (state.dirtyMethodApproachTypes ?? []),
+        dirtyApproachSelection: resetSelection ? false : (state.dirtyApproachSelection ?? false),
+        pendingSelectionReset: false,
+      };
+    }
+
+    /** Marks that the next INIT (triggered by the in-flight Add/Delete Method mutation's
+     *  query invalidation) must blank out every approach/method selection. */
+    case 'PREPARE_SELECTION_RESET': {
+      return {
+        ...state,
+        pendingSelectionReset: true,
       };
     }
 
