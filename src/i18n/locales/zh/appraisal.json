@@ -26,6 +26,9 @@
       "sla": "SLA",
       "province": "省份",
       "assignment": "分配",
+      "bankingSegment": "板块",
+      "purpose": "评估目的",
+      "propertyType": "抵押物类型",
       "company": "公司",
       "appointment": "预约",
       "created": "创建时间"
@@ -46,7 +49,13 @@
       "createdFrom": "创建开始",
       "createdTo": "创建结束",
       "slaDueFrom": "SLA 截止开始",
-      "slaDueTo": "SLA 截止结束"
+      "slaDueTo": "SLA 截止结束",
+      "bankingSegmentLabel": "业务板块",
+      "bankingSegmentPlaceholder": "所有板块",
+      "purposeLabel": "评估目的",
+      "purposePlaceholder": "所有目的",
+      "propertyTypeLabel": "抵押物类型",
+      "propertyTypePlaceholder": "所有类型"
     },
     "status": {
       "Pending": "待处理",
@@ -73,7 +82,9 @@
     },
     "appraisalType": {
       "New": "新建",
-      "Revaluation": "重新评估"
+      "ReAppraisal": "重新估价",
+      "Progressive": "分阶段",
+      "PreAppraisal": "预估价"
     }
   },
   "appointment": {

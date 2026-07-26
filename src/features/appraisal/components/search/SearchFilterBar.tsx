@@ -2,6 +2,17 @@ import type { FilterField } from './tabConfigs';
 import Icon from '@/shared/components/Icon';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
 import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete';
+import { Dropdown, DateInput, TextInput } from '@/shared/components/inputs';
+
+/**
+ * DateInput emits a full ISO timestamp with a timezone offset (e.g.
+ * "2020-04-03T00:00:00+07:00"). Keep only the calendar date (yyyy-MM-dd) so the backend's
+ * date comparison can't shift by a day across timezones.
+ */
+const toDateOnly = (v: string | null): string => (v ? v.slice(0, 10) : '');
+
+/** Fixed width per control so the wrapping flex row stays aligned (shared inputs render w-full). */
+const FIELD_WIDTH = 'w-44';
 
 interface SearchFilterBarProps {
   filters: FilterField[];
@@ -16,63 +27,80 @@ function SearchFilterBar({ filters, values, onChange, onClear }: SearchFilterBar
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {filters.map(filter => {
+        const value = values[filter.key] || '';
+        const placeholder = filter.placeholder || filter.label;
+
         switch (filter.type) {
+          // Static option list (domain enums such as status / appraisalType).
           case 'select':
             return (
-              <select
-                key={filter.key}
-                value={values[filter.key] || ''}
-                onChange={e => onChange(filter.key, e.target.value)}
-                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
-              >
-                <option value="">{filter.placeholder || filter.label}</option>
-                {filter.options?.map(opt => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+              <div key={filter.key} className={FIELD_WIDTH}>
+                <Dropdown
+                  options={filter.options ?? []}
+                  value={value}
+                  onChange={v => onChange(filter.key, v ?? '')}
+                  placeholder={placeholder}
+                  // Values are internal enums — showing "New - New" would be noise
+                  showValuePrefix={false}
+                />
+              </div>
+            );
+          // Options come from a master-data parameter group; Dropdown resolves the group itself.
+          case 'parameter-select':
+            return (
+              <div key={filter.key} className={FIELD_WIDTH}>
+                <Dropdown
+                  group={filter.parameterGroup ?? ''}
+                  value={value}
+                  onChange={v => onChange(filter.key, v ?? '')}
+                  placeholder={placeholder}
+                  // Retired codes stay filterable via the URL but aren't offered here
+                  filterOptions={{ type: 'isActive', values: true }}
+                  showValuePrefix={false}
+                />
+              </div>
             );
           case 'date':
             return (
-              <div key={filter.key} className="flex items-center gap-1.5">
-                <label className="text-xs text-gray-500">{filter.label}</label>
-                <input
-                  type="date"
-                  value={values[filter.key] || ''}
-                  onChange={e => onChange(filter.key, e.target.value)}
-                  className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
+              <div key={filter.key} className={FIELD_WIDTH}>
+                {/* No label — the placeholder already reads "Created From", and a label above
+                    would duplicate it and push this control out of line with the dropdowns. */}
+                <DateInput
+                  placeholder={placeholder}
+                  value={value || null}
+                  onChange={v => onChange(filter.key, toDateOnly(v))}
                 />
               </div>
             );
           case 'text':
             return (
-              <input
-                key={filter.key}
-                type="text"
-                value={values[filter.key] || ''}
-                onChange={e => onChange(filter.key, e.target.value)}
-                placeholder={filter.placeholder || filter.label}
-                className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white max-w-[200px]"
-              />
+              <div key={filter.key} className={FIELD_WIDTH}>
+                <TextInput
+                  value={value}
+                  onChange={e => onChange(filter.key, e.target.value)}
+                  placeholder={placeholder}
+                />
+              </div>
             );
           case 'province-autocomplete':
             return (
-              <ProvinceAutocomplete
-                key={filter.key}
-                value={values[filter.key] || ''}
-                onChange={v => onChange(filter.key, v)}
-                placeholder={filter.placeholder}
-              />
+              <div key={filter.key} className={FIELD_WIDTH}>
+                <ProvinceAutocomplete
+                  value={value}
+                  onChange={v => onChange(filter.key, v)}
+                  placeholder={filter.placeholder}
+                />
+              </div>
             );
           case 'company-autocomplete':
             return (
-              <CompanyAutocomplete
-                key={filter.key}
-                value={values[filter.key] || ''}
-                onChange={v => onChange(filter.key, v)}
-                placeholder={filter.placeholder}
-              />
+              <div key={filter.key} className={FIELD_WIDTH}>
+                <CompanyAutocomplete
+                  value={value}
+                  onChange={v => onChange(filter.key, v)}
+                  placeholder={filter.placeholder}
+                />
+              </div>
             );
           default:
             return null;

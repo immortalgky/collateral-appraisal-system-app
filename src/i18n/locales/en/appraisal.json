@@ -26,6 +26,9 @@
       "sla": "SLA",
       "province": "Province",
       "assignment": "Assignment",
+      "bankingSegment": "Segment",
+      "purpose": "Purpose",
+      "propertyType": "Property Type",
       "company": "Company",
       "appointment": "Appointment",
       "created": "Created"
@@ -46,7 +49,13 @@
       "createdFrom": "Created From",
       "createdTo": "Created To",
       "slaDueFrom": "SLA Due From",
-      "slaDueTo": "SLA Due To"
+      "slaDueTo": "SLA Due To",
+      "bankingSegmentLabel": "Banking Segment",
+      "bankingSegmentPlaceholder": "All segments",
+      "purposeLabel": "Purpose",
+      "purposePlaceholder": "All purposes",
+      "propertyTypeLabel": "Property Type",
+      "propertyTypePlaceholder": "All property types"
     },
     "status": {
       "Pending": "Pending",
@@ -73,7 +82,9 @@
     },
     "appraisalType": {
       "New": "New",
-      "Revaluation": "Revaluation"
+      "ReAppraisal": "Re-Appraisal",
+      "Progressive": "Progressive",
+      "PreAppraisal": "Pre-Appraisal"
     }
   },
   "appointment": {
