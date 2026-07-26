@@ -35,7 +35,7 @@ const RequestInfoSection = ({ appraisal, request }: RequestInfoSectionProps) => 
           </p>
         </div>
         <InfoField label={t('view360.requestInfoSection.status')} value={appraisal?.status} />
-        <InfoField label={t('view360.requestInfoSection.requestor')} value={request?.requestor?.username} />
+        <InfoField label={t('view360.requestInfoSection.requestor')} value={request?.requestor?.name || request?.requestor?.employeeId} />
       </div>
     </FormCard>
   );

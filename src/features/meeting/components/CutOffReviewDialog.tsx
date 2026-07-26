@@ -69,7 +69,7 @@ const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffRev
                       {t('columns.appraisalNo')}
                     </th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
-                      {t('columns.facilityLimit')}
+                      {t('columns.appraisalValue')}
                     </th>
                   </tr>
                 </thead>
@@ -81,7 +81,7 @@ const CutOffReviewDialog = ({ isOpen, onClose, meetingId, onSuccess }: CutOffRev
                       </td>
                       <td className="px-3 py-2 text-sm text-gray-700 text-right">
                         {new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(
-                          item.facilityLimit,
+                          item.appraisalValue,
                         )}
                       </td>
                     </tr>
