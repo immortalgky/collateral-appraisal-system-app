@@ -528,7 +528,28 @@
       "legalSubtitle": "กรรมสิทธิ์ ที่ตั้ง และภาระผูกพัน",
       "save": "บันทึก",
       "saved": "บันทึกสรุปเครื่องจักรแล้ว",
-      "saveFailed": "บันทึกสรุปเครื่องจักรไม่สำเร็จ"
+      "saveFailed": "บันทึกสรุปเครื่องจักรไม่สำเร็จ",
+      "fields": {
+        "inIndustrial": "อยู่ในนิคมอุตสาหกรรม",
+        "surveyedNumber": "จำนวนที่สำรวจ (เครื่อง)",
+        "appraisalNumber": "จำนวนที่ประเมิน (เครื่อง)",
+        "installedAndUseCount": "ติดตั้งและใช้งานแล้ว",
+        "appraisalScrapCount": "ประเมินเป็นซาก",
+        "appraisedByDocumentCount": "ประเมินตามเอกสาร",
+        "notInstalledCount": "ยังไม่ได้ติดตั้ง",
+        "maintenance": "การบำรุงรักษา",
+        "exterior": "สภาพภายนอก",
+        "performance": "ประสิทธิภาพการใช้งาน",
+        "marketDemandAvailable": "มีความต้องการของตลาด",
+        "marketDemand": "ความต้องการของตลาด",
+        "proprietor": "ผู้ถือกรรมสิทธิ์",
+        "owner": "ผู้ครอบครองเครื่องจักร",
+        "machineAddress": "ที่ตั้งเครื่องจักร",
+        "latitude": "ละติจูด",
+        "longitude": "ลองจิจูด",
+        "obligation": "ภาระผูกพัน",
+        "other": "อื่นๆ"
+      }
     }
   },
   "properties": {

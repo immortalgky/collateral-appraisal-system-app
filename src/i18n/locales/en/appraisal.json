@@ -528,7 +528,28 @@
       "legalSubtitle": "Ownership, location and obligations",
       "save": "Save",
       "saved": "Machinery summary saved",
-      "saveFailed": "Failed to save machinery summary"
+      "saveFailed": "Failed to save machinery summary",
+      "fields": {
+        "inIndustrial": "In Industrial Estate",
+        "surveyedNumber": "Surveyed (no. of machines)",
+        "appraisalNumber": "Appraised (no. of machines)",
+        "installedAndUseCount": "Installed & In Use",
+        "appraisalScrapCount": "Appraised as Scrap",
+        "appraisedByDocumentCount": "Appraised by Document",
+        "notInstalledCount": "Not Installed",
+        "maintenance": "Maintenance",
+        "exterior": "Exterior",
+        "performance": "Performance",
+        "marketDemandAvailable": "Market Demand Available",
+        "marketDemand": "Market Demand",
+        "proprietor": "Proprietor",
+        "owner": "Owner",
+        "machineAddress": "Machine Address",
+        "latitude": "Latitude",
+        "longitude": "Longitude",
+        "obligation": "Obligation",
+        "other": "Other"
+      }
     }
   },
   "properties": {

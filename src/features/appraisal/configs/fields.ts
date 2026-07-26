@@ -3241,6 +3241,11 @@ export const machinerySummaryGeneralFields: FormField[] = [
     label: 'Market Demand',
     name: 'marketDemand',
     wrapperClassName: 'col-span-12',
+    // Editable only when there IS market demand (toggle = Yes). Disabled when the
+    // toggle is No or unset (default null); the value is cleared while disabled
+    // (empty string keeps the textarea controlled so the display clears too).
+    disableWhen: { field: 'marketDemandAvailable', is: true, operator: 'notEquals' },
+    disabledValue: '',
   },
 ];
 
