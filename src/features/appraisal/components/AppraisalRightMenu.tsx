@@ -378,8 +378,11 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
                       ? `Requested · ${formatDateTime(requestData.requestedAt)}`
                       : 'Requested'
                   }
-                  name={requestData?.requestor?.username || 'Not set'}
+                  name={
+                    requestData?.requestor?.name || requestData?.requestor?.employeeId || 'Not set'
+                  }
                   avatar={null}
+                  isMe={requestData?.requestor?.employeeId === currentUser?.username}
                 />
               </div>
             </div>

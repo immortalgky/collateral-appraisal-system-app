@@ -518,7 +518,28 @@
       "legalSubtitle": "所有权、位置及义务",
       "save": "保存",
       "saved": "机器汇总已保存",
-      "saveFailed": "保存机器汇总失败"
+      "saveFailed": "保存机器汇总失败",
+      "fields": {
+        "inIndustrial": "位于工业园区",
+        "surveyedNumber": "已勘查（台数）",
+        "appraisalNumber": "已评估（台数）",
+        "installedAndUseCount": "已安装并使用",
+        "appraisalScrapCount": "按报废评估",
+        "appraisedByDocumentCount": "按文件评估",
+        "notInstalledCount": "未安装",
+        "maintenance": "维护保养",
+        "exterior": "外部状况",
+        "performance": "使用性能",
+        "marketDemandAvailable": "存在市场需求",
+        "marketDemand": "市场需求",
+        "proprietor": "所有权人",
+        "owner": "机器占有人",
+        "machineAddress": "机器地址",
+        "latitude": "纬度",
+        "longitude": "经度",
+        "obligation": "义务负担",
+        "other": "其他"
+      }
     }
   },
   "properties": {

@@ -15,7 +15,7 @@ interface CondoGovernmentPriceTableProps {
  * Column widths shared across the header/body/footer sub-tables so columns align.
  * Must be kept in sync with the number of <th>/<td> elements below.
  */
-const COL_WIDTHS = ['30%', '15%', '18%', '18%', '19%'];
+const COL_WIDTHS = ['28%', '24%', '24%', '24%'];
 
 /**
  * Read-only table for condo government appraisal prices (Sq.M.), rendered via
@@ -36,9 +36,6 @@ const CondoGovernmentPriceTable = ({ rows, totalArea, avgPerSqm }: CondoGovernme
       headerCells={
         <>
           <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">
-            {t('governmentPriceTable.condoColumns.titleDeedNo')}
-          </th>
-          <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
             {t('governmentPriceTable.condoColumns.room')}
           </th>
           <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
@@ -54,8 +51,7 @@ const CondoGovernmentPriceTable = ({ rows, totalArea, avgPerSqm }: CondoGovernme
       }
       renderRow={(row, idx) => (
         <tr key={idx} className="hover:bg-gray-50">
-          <td className="px-3 py-2 text-gray-900">{row.titleNumber ?? '-'}</td>
-          <td className="px-3 py-2 text-right text-gray-700 tabular-nums">{row.roomNumber ?? '-'}</td>
+          <td className="px-3 py-2 text-left text-gray-700 tabular-nums">{row.roomNumber ?? '-'}</td>
           <td className="px-3 py-2 text-right text-gray-700 tabular-nums">
             {row.usableArea != null ? formatNumber(row.usableArea, 2) : '-'}
           </td>
@@ -69,10 +65,7 @@ const CondoGovernmentPriceTable = ({ rows, totalArea, avgPerSqm }: CondoGovernme
       )}
       footerCells={
         <>
-          <td
-            className="px-3 py-3 text-gray-700 font-bold uppercase tracking-wider text-xs"
-            colSpan={2}
-          >
+          <td className="px-3 py-3 text-gray-700 font-bold uppercase tracking-wider text-xs">
             {t('governmentPriceTable.footer.total')}
           </td>
           <td className="px-3 py-3 text-right font-bold text-gray-900 tabular-nums">
