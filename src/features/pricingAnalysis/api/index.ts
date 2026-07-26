@@ -362,6 +362,50 @@ export function useSelectApproach() {
   });
 }
 
+// ==================== Apply Selection Hook ====================
+
+/**
+ * Apply the whole summary selection — the primary method for each changed approach AND the
+ * final approach — in a single request.
+ * POST /pricing-analysis/{id}/selection
+ *
+ * Supersedes calling useSelectMethod per approach followed by useSelectApproach. Those run as
+ * N+1 separate transactions, so a failure partway left the method selections committed with the
+ * old approach selection still in place; they also fired the ValuationAnalyses recompute up to
+ * twice per save. Server-side this is one transaction raising the final-value event once.
+ * useSelectMethod/useSelectApproach are kept for compatibility but are no longer called here.
+ *
+ * TODO: swap ApplySelectionResponseType for the generated schema type once the API client is
+ * regenerated from the updated OpenAPI spec (endpoint just added server-side).
+ */
+type ApplySelectionResponseType = {
+  finalApproachId: string;
+  finalApproachType: string;
+  finalAppraisedValue: number | null;
+};
+
+// Not invalidated here — saveSummary (useSelectionActions) does one consolidated invalidate
+// after documents/values/selection/remark have all landed.
+export function useApplyPricingSelection() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      selections,
+      finalApproachId,
+    }: {
+      pricingAnalysisId: string;
+      selections: { approachId: string; methodId: string }[];
+      finalApproachId: string;
+    }): Promise<ApplySelectionResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/selection`,
+        { selections, finalApproachId },
+      );
+      return response;
+    },
+  });
+}
+
 // ==================== Pricing Analysis Document Hooks ====================
 
 /**

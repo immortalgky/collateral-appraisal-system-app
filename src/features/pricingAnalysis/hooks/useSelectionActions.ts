@@ -23,8 +23,7 @@ import {
   useAttachPricingAnalysisDocument,
   useDeletePricingAnalysisMethod,
   useRemovePricingAnalysisDocument,
-  useSelectApproach,
-  useSelectMethod,
+  useApplyPricingSelection,
   useUpdateMethodValue,
   useUpdateRemark,
 } from '../api';
@@ -151,8 +150,7 @@ export function useSelectionActions({
     }
   };
 
-  const selectMethodMutation = useSelectMethod();
-  const selectApproachMutation = useSelectApproach();
+  const applySelectionMutation = useApplyPricingSelection();
   const updateMethodMutation = useUpdateMethodValue();
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
@@ -288,11 +286,11 @@ export function useSelectionActions({
     setIsSaving(true);
     try {
       // ── Step 0: Documents ───────────────────────────────────────────────────
-      // Evidence must land before the selection below "locks in" a final value —
-      // selectApproach propagates ApproachValue → FinalAppraisedValue on the server,
-      // i.e. it's the actual finalization step. If we selected method/approach first
-      // and a PDF upload then failed, we'd be left with a finalized analysis missing
-      // the supporting documents that manual mode required in the first place.
+      // Evidence must land before the selection below "locks in" a final value — the
+      // selection call propagates ApproachValue → FinalAppraisedValue on the server,
+      // i.e. it's the actual finalization step. If we applied the selection first and a
+      // PDF upload then failed, we'd be left with a finalized analysis missing the
+      // supporting documents that manual mode required in the first place.
 
       // Manual-mode PDF uploads: each raw File still needs to go through the Document
       // module's two-step flow (create session → multipart upload) before it has a
@@ -331,12 +329,11 @@ export function useSelectionActions({
       }
 
       // ── Step 1: Persist dirty manual-mode values ────────────────────────────
-      // Must land before Step 2 (selectMethod) — the server's SelectMethod only
-      // propagates ApproachValue/FinalAppraisedValue `if (targetMethod.MethodValue.HasValue)`;
-      // it doesn't error if the value is missing, it just silently skips propagation.
+      // Must land before Step 2 — selecting a method now adopts that method's value
+      // VERBATIM on the server, null included, so selecting one whose value hasn't been
+      // saved yet actively CLEARS the approach value rather than leaving the old number.
       // No per-item try/catch here (unlike the PDF loop below) — a failed value save
-      // must block the rest of the save, since selecting a method with a stale/missing
-      // value would silently fail to propagate on the server.
+      // must block the rest of the save.
       if (state.dirtyManualValueKeys.length > 0) {
         const dirtyMethods = state.summarySelected
           .flatMap(appr => appr.methods)
@@ -352,31 +349,39 @@ export function useSelectionActions({
         }
       }
 
-      // ── Step 2: Select the currently-selected method, but only for approaches ──
-      // where that selection actually changed since the last successful save.
-      // Must still happen before selectApproach below — the server's SelectApproach
-      // guards on "approach already has a selected method", which for untouched
-      // approaches is already satisfied from a prior save (or from server data on load).
-      for (const approachType of state.dirtyMethodApproachTypes) {
-        const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
-        const selectedMethod = appr?.methods.find((m: Method) => m.isSelected);
-        if (selectedMethod?.id && isServerId(selectedMethod.id)) {
-          await selectMethodMutation.mutateAsync({
-            pricingAnalysisId,
-            methodId: selectedMethod.id,
-          });
-        }
-      }
+      // ── Step 2: Selection — changed methods AND the final approach, ONE request ──
+      // Previously this was a loop of selectMethod calls followed by a separate
+      // selectApproach, i.e. N+1 transactions: if selectApproach failed after the method
+      // calls had committed, the analysis was left with the new methods but the old final
+      // approach. The server now applies both atomically and raises the valuation-summary
+      // event once instead of up to twice.
+      //
+      // Only approaches whose method choice actually changed are sent (unchanged ones keep
+      // the selection from a previous save), but finalApproachId is always sent — it is what
+      // the server propagates to FinalAppraisedValue.
+      const changedSelections = state.dirtyMethodApproachTypes
+        .map((approachType: string) => {
+          const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
+          const selectedMethod = appr?.methods.find((m: Method) => m.isSelected);
+          return appr?.id &&
+            isServerId(appr.id) &&
+            selectedMethod?.id &&
+            isServerId(selectedMethod.id)
+            ? { approachId: appr.id, methodId: selectedMethod.id }
+            : null;
+        })
+        .filter((s): s is { approachId: string; methodId: string } => s !== null);
 
-      // ── Step 3: Select which approach is final — only if that choice changed ───
-      if (state.dirtyApproachSelection && finalApproach.id && isServerId(finalApproach.id)) {
-        await selectApproachMutation.mutateAsync({
+      const hasSelectionChange = changedSelections.length > 0 || state.dirtyApproachSelection;
+      if (hasSelectionChange && finalApproach.id && isServerId(finalApproach.id)) {
+        await applySelectionMutation.mutateAsync({
           pricingAnalysisId,
-          approachId: finalApproach.id,
+          selections: changedSelections,
+          finalApproachId: finalApproach.id,
         });
       }
 
-      // ── Step 4: Remark — persisted on the final selected method last, once ──
+      // ── Step 3: Remark — persisted on the final selected method last, once ──
       // everything it documents/justifies has already been committed. Compared
       // against the last-known server value (not just truthiness) so clearing the
       // box back to empty and saving actually propagates the clear.
