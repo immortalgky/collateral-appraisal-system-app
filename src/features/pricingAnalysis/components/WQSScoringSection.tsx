@@ -395,9 +395,7 @@ export function WQSScoringSection({
                                   number={{
                                     decimalPlaces: 0,
                                     maxIntegerDigits: 2,
-                                    maxValue: getValues(
-                                      scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                                    ),
+                                    maxValue: 10,
                                     allowNegative: false,
                                   }}
                                 />
@@ -429,9 +427,7 @@ export function WQSScoringSection({
                             number={{
                               decimalPlaces: 0,
                               maxIntegerDigits: 2,
-                              maxValue: getValues(
-                                scoringFactorIntensityPath({ row: rowIndex }) ?? 0,
-                              ),
+                              maxValue: 10,
                               allowNegative: false,
                             }}
                           />

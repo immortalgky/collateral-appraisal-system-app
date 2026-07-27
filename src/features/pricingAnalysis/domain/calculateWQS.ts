@@ -50,6 +50,20 @@ export function calcWeightedScore(weight: unknown, score: unknown) {
   return round2(w * s);
 }
 
+export function calcWeightedScoreByProportion(
+  score: unknown,
+  weightedIntensity: unknown,
+  maxScore: unknown,
+) {
+  const s = Number(score) || 0;
+  const ms = Number(maxScore) || 1; // max score must more than 1, to avoid devided by zero
+  const wt = Number(weightedIntensity) || 0;
+
+  if (ms == 0) return 0;
+
+  return round2((wt * s) / ms);
+}
+
 export function calcSum(values: unknown): number {
   const nums = (Array.isArray(values) ? values : []).map(v => Number(v) || 0);
   return round2(nums.reduce((acc, n) => acc + n, 0));

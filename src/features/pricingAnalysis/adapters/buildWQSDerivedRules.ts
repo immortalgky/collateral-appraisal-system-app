@@ -4,6 +4,7 @@ import {
   calcAdjustedValueFromSellingPrice,
   calcSum,
   calcWeightedScore,
+  calcWeightedScoreByProportion,
   detectPriceUnit,
   roundToThousand,
   round2,
@@ -58,12 +59,13 @@ export function buildWQSScoringSurveyDerivedRules(args: {
               scoringFactorSurveySurveyScorePath({ row: rowIndex, column: columnIndex }),
             ],
             compute: ({ getValues }) => {
-              const weight = getValues(scoringFactorWeightPath({ row: rowIndex })) ?? 0;
               const score =
                 getValues(
                   scoringFactorSurveySurveyScorePath({ row: rowIndex, column: columnIndex }),
                 ) ?? 0;
-              return calcWeightedScore(weight, score);
+              const weightedIntensity =
+                getValues(scoringFactorWeightedIntensityPath({ row: rowIndex })) ?? 0;
+              return calcWeightedScoreByProportion(score, weightedIntensity, 10);
             },
           };
         }),
@@ -74,9 +76,10 @@ export function buildWQSScoringSurveyDerivedRules(args: {
             scoringFactorCollateralScorePath({ row: rowIndex }),
           ],
           compute: ({ getValues }) => {
-            const weight = getValues(scoringFactorWeightPath({ row: rowIndex })) ?? 0;
             const score = getValues(scoringFactorCollateralScorePath({ row: rowIndex }));
-            return calcWeightedScore(weight, score);
+            const weightedIntensity =
+              getValues(scoringFactorWeightedIntensityPath({ row: rowIndex })) ?? 0;
+            return calcWeightedScoreByProportion(score, weightedIntensity, 10);
           },
         },
       ];
