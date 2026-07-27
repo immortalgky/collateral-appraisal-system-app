@@ -257,6 +257,7 @@ export const mapCondoPropertyResponseToForm = (
     accessRoadWidth: response.accessRoadWidth ?? 0,
     rightOfWay: response.rightOfWay ?? 0,
     roadSurfaceType: response.roadSurfaceType ?? '',
+    roadSurfaceTypeOther: response.roadSurfaceTypeOther ?? '',
     publicUtilityType: response.publicUtilityType ?? [],
     publicUtilityTypeOther: response.publicUtilityTypeOther ?? '',
     // Not yet in the generated v1 response schema — cast until it's regenerated
