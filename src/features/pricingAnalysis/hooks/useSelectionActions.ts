@@ -446,6 +446,10 @@ export function useSelectionActions({
         request: { methodType: mapToServerMethodType(arg.methodType), status: null },
       });
 
+      // Adding a method invalidates every existing approach/method selection —
+      // consumed by the INIT that follows the query invalidation above.
+      dispatch({ type: 'PREPARE_SELECTION_RESET' });
+
       toast.success(tp('toasts.methodAdded'));
     } catch (err: any) {
       toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
@@ -486,6 +490,11 @@ export function useSelectionActions({
         approachId: appr.id,
         methodId: pendingDelete.methodId,
       });
+
+      // Removing a method invalidates every existing approach/method selection —
+      // consumed by the INIT that follows the query invalidation above.
+      dispatch({ type: 'PREPARE_SELECTION_RESET' });
+
       toast.success(tp('toasts.methodDeleted'));
       setPendingDelete(null);
       closeDelete();
