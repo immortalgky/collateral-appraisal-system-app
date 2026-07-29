@@ -310,7 +310,7 @@ function PendingInternalSection({ onCountChange }: PendingInternalSectionProps) 
     baseFilter,
   );
 
-  const { data: taskTypesData } = useTaskTypes();
+  const { data: taskTypesData } = useTaskTypes('Internal');
 
   const purposeOptions = useParameterOptions('AppraisalPurpose');
   const propertyTypeOptions = useParameterOptions('PropertyType');

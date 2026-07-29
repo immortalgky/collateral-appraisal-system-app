@@ -24,12 +24,19 @@ import type { FeeStructureDto } from '../types';
 // (value = code, label = description), so they stay in sync with parameter maintenance.
 const FEE_TYPE_PARAM_GROUP = 'TypeOfFee';
 
+// Domain AppraisalType strings (Appraisal.Domain.Appraisals.AppraisalTypes). NOT the numeric
+// `AppraisalType` parameter group (01–04) — that is a separate representation with no join to these.
+// Same list the SLA config screen uses.
+const APPRAISAL_TYPES = ['New', 'ReAppraisal', 'Progressive', 'PreAppraisal'] as const;
+
 // ---- Schema ----
 
 // feeName is not a form field — it is derived from the selected TypeOfFee parameter's description.
 const feeSchema = z
   .object({
     feeCode: z.string().min(1, 'Fee type is required').max(20),
+    // Blank means "applies to any appraisal type" → null (the select's setValueAs maps '' → null).
+    appraisalType: z.string().nullable(),
     baseAmount: z.coerce.number().min(0, 'Base amount must be >= 0'),
     minSellingPrice: z.coerce.number().min(0, 'Min selling price must be >= 0'),
     // Blank means "no upper limit" → null (the input's setValueAs maps '' → null).
@@ -45,6 +52,7 @@ const feeSchema = z
 
 type FeeFormValues = {
   feeCode: string;
+  appraisalType: string | null;
   baseAmount: number;
   minSellingPrice: number;
   maxSellingPrice: number | null;
@@ -79,6 +87,7 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
     defaultValues: editing
       ? {
           feeCode: editing.feeCode,
+          appraisalType: editing.appraisalType ?? null,
           baseAmount: editing.baseAmount,
           minSellingPrice: editing.minSellingPrice,
           maxSellingPrice: editing.maxSellingPrice ?? null,
@@ -86,6 +95,7 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
         }
       : {
           feeCode: '',
+          appraisalType: null,
           baseAmount: 0,
           minSellingPrice: 0,
           maxSellingPrice: null,
@@ -108,9 +118,10 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
     const maxSellingPrice = values.maxSellingPrice ?? null;
 
     if (editing) {
-      // feeCode is immutable on update — omit it from the payload.
-      const { feeCode: _feeCode, ...rest } = values;
+      // feeCode and appraisalType are immutable on update — omit them from the payload.
+      const { feeCode: _feeCode, appraisalType: _appraisalType, ...rest } = values;
       void _feeCode;
+      void _appraisalType;
       updateFee.mutate(
         { id: editing.id, ...rest, maxSellingPrice },
         {
@@ -185,6 +196,51 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
               {errors.feeCode && (
                 <p className="mt-1 text-xs text-red-600">{errors.feeCode.message}</p>
               )}
+            </>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('feeStructureMaintenance:fields.appraisalType')}
+          </label>
+          {editing ? (
+            // Immutable on update — it identifies which ladder the tier belongs to.
+            <>
+              <input
+                className={inputClass}
+                disabled
+                value={
+                  editing.appraisalType
+                    ? t(`feeStructureMaintenance:appraisalTypes.${editing.appraisalType}`, {
+                        defaultValue: editing.appraisalType,
+                      })
+                    : t('feeStructureMaintenance:fields.appraisalTypeAll')
+                }
+                readOnly
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                {t('feeStructureMaintenance:hints.appraisalTypeImmutable')}
+              </p>
+            </>
+          ) : (
+            <>
+              <select
+                {...register('appraisalType', {
+                  setValueAs: v => (v === '' || v === null || v === undefined ? null : String(v)),
+                })}
+                className={inputClass}
+              >
+                <option value="">{t('feeStructureMaintenance:fields.appraisalTypeAll')}</option>
+                {APPRAISAL_TYPES.map(type => (
+                  <option key={type} value={type}>
+                    {t(`feeStructureMaintenance:appraisalTypes.${type}`, { defaultValue: type })}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-400">
+                {t('feeStructureMaintenance:hints.appraisalType')}
+              </p>
             </>
           )}
         </div>
@@ -333,6 +389,9 @@ const FeeStructurePage = () => {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
                   {t('feeStructureMaintenance:columns.feeName')}
                 </th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                  {t('feeStructureMaintenance:columns.appraisalType')}
+                </th>
                 <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">
                   {t('feeStructureMaintenance:columns.baseAmount')}
                 </th>
@@ -350,6 +409,17 @@ const FeeStructurePage = () => {
                 <tr key={fee.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 text-gray-600 font-mono text-xs">{fee.feeCode}</td>
                   <td className="px-4 py-3 text-gray-900 font-medium">{feeName(fee.feeCode)}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {fee.appraisalType ? (
+                      t(`feeStructureMaintenance:appraisalTypes.${fee.appraisalType}`, {
+                        defaultValue: fee.appraisalType,
+                      })
+                    ) : (
+                      <span className="text-gray-400 italic">
+                        {t('feeStructureMaintenance:fields.appraisalTypeAll')}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-600 text-right">
                     {fee.baseAmount.toLocaleString()}
                   </td>

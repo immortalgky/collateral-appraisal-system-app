@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Fee Structure",
-    "subtitle": "Maintain the master fee table. Fee code 01 (Appraisal Fee) uses selling-price tiers; 02/03 are flat fees.",
+    "subtitle": "Maintain the master fee table. Fee code 01 (Appraisal Fee) uses selling-price tiers; 02/03 are flat fees. A tier scoped to an appraisal type replaces the general ladder for that type.",
     "addFee": "Add Fee",
     "noFees": "No fee structures configured. Add one to enable fee calculation."
   },
@@ -16,18 +16,29 @@
     "feeTypePlaceholder": "Select a fee type",
     "feeCode": "Fee Code",
     "feeName": "Fee Name",
+    "appraisalType": "Appraisal Type",
+    "appraisalTypeAll": "All appraisal types",
     "baseAmount": "Base Amount",
     "minSellingPrice": "Min Selling Price",
     "maxSellingPrice": "Max Selling Price",
     "isActive": "Active"
   },
+  "appraisalTypes": {
+    "New": "New",
+    "ReAppraisal": "Re-Appraisal",
+    "Progressive": "Progressive",
+    "PreAppraisal": "Pre-Appraisal (Block)"
+  },
   "hints": {
     "feeCodeImmutable": "Fee code cannot be changed after creation.",
+    "appraisalTypeImmutable": "Appraisal type cannot be changed after creation.",
+    "appraisalType": "Leave as \"All appraisal types\" for the general ladder.",
     "maxSellingPrice": "Leave blank for no upper limit."
   },
   "columns": {
     "feeCode": "Code",
     "feeName": "Name",
+    "appraisalType": "Appraisal Type",
     "baseAmount": "Base Amount",
     "range": "Selling-Price Range",
     "status": "Status"
