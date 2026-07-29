@@ -32,6 +32,26 @@ export const typeToRouteSegment: Record<string, string> = {
   LSU: 'lease-condo',
 };
 
+/**
+ * Maps property type code to its icon sprite id (`/icons/solid.svg#<name>`).
+ * Must stay keyed by the same codes as `typeToDetailEndpoint` — a missing code
+ * silently falls back to the generic building glyph, which is how MAC/VEH/VES
+ * and the four lease codes went unnoticed. `propertyTypeIcon.test.ts` guards this.
+ */
+export const typeToIconName: Record<string, string> = {
+  L: 'earth-asia',
+  B: 'house',
+  U: 'building',
+  LB: 'house-chimney',
+  MAC: 'gears',
+  VEH: 'car',
+  VES: 'ship',
+  LSL: 'scroll',
+  LSB: 'file-contract',
+  LS: 'file-signature',
+  LSU: 'file-signature',
+};
+
 /** Set of property type codes that have building details */
 export const BUILDING_TYPE_CODES = new Set(['B', 'LB', 'LSB', 'LS']);
 
@@ -63,6 +83,12 @@ export function resolveTypeCode(typeNameOrCode: string): string | undefined {
 export function getDetailEndpoint(typeNameOrCode: string): string | undefined {
   const code = displayNameToCode[typeNameOrCode] ?? typeNameOrCode;
   return typeToDetailEndpoint[code];
+}
+
+/** Get the icon sprite id for a property type (accepts display name or code) */
+export function getTypeIconName(typeNameOrCode: string): string {
+  const code = displayNameToCode[typeNameOrCode] ?? typeNameOrCode;
+  return typeToIconName[code] ?? 'building';
 }
 
 /** Get the frontend route segment for a property type (accepts display name or code) */

@@ -27,6 +27,7 @@ const CARD_FIELD_CONFIG: Record<string, CardFieldKey[]> = {
   'int-appraisal-execution': ['appointment', 'appraiser', 'propertyType'],
   'fee-appointment-approval': ['appointment', 'appraiser', 'propertyType'],
   'ext-appraisal-check': ['appraiser', 'reportReceived', 'propertyType'],
+  'int-offline-book-keyin': ['appointment', 'appraiser', 'propertyType'],
   'int-appraisal-check': ['appraiser', 'reportReceived', 'propertyType'],
   'appraisal-book-verification': ['appraiser', 'reportReceived', 'propertyType'],
   'ext-appraisal-verification': ['appraiser', 'reportReceived'],

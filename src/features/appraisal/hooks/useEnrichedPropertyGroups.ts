@@ -1,5 +1,5 @@
-import { useMemo, useRef } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useCallback, useMemo, useRef } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { schemas } from '@shared/schemas/v1';
 import type { z } from 'zod';
@@ -147,11 +147,23 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
 
   const isFetching = isFetchingGroups || isFetchingDetails;
 
+  // Retry both waves at once. propertyGroupKeys.all is a strict prefix of
+  // propertyGroupKeys.detail and invalidateQueries matches by prefix, so this
+  // refetches the group list AND every group detail — including ones currently
+  // in an error state. Collecting refetch off each useQueries result instead
+  // would give an unstable callback: that array's identity changes every render.
+  const queryClient = useQueryClient();
+  const refetch = useCallback(() => {
+    if (!appraisalId) return;
+    void queryClient.invalidateQueries({ queryKey: propertyGroupKeys.all(appraisalId) });
+  }, [queryClient, appraisalId]);
+
   return {
     groups,
     isLoading,
     isFetching,
     error,
+    refetch,
     isLoadingGroups,
     isLoadingGroupDetails: isLoadingDetails,
   };

@@ -174,10 +174,20 @@ export const useGetEligibleStaff = (
 };
 
 /**
- * Get eligible external companies for assignment by loan type / banking segment
+ * Get eligible external companies for assignment by loan type / banking segment.
  * GET /companies/eligible?loanType={bankingSegment}
+ *
+ * @param bankingSegment Scope filter. Pass undefined WITH `requireSegment: false` to fetch every
+ *   eligible company — used by the off-system engagement card, where the bank already engaged a
+ *   company outside the system and the keyer must be able to record whichever one it actually was.
+ * @param requireSegment Defaults true, so a caller that is still waiting for the segment to load
+ *   does not fire an unfiltered request and briefly show companies from other segments.
  */
-export const useGetEligibleCompanies = (bankingSegment: string | undefined, enabled = true) => {
+export const useGetEligibleCompanies = (
+  bankingSegment: string | undefined,
+  enabled = true,
+  requireSegment = true,
+) => {
   return useQuery({
     queryKey: ['eligible-companies', bankingSegment],
     queryFn: async (): Promise<ExternalCompany[]> => {
@@ -208,7 +218,7 @@ export const useGetEligibleCompanies = (bankingSegment: string | undefined, enab
         }),
       );
     },
-    enabled: enabled && !!bankingSegment,
+    enabled: enabled && (!requireSegment || !!bankingSegment),
   });
 };
 
@@ -252,6 +262,64 @@ export const useCreateQuotation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+    },
+  });
+};
+
+/**
+ * Request body for recording an off-system external engagement.
+ * Mirrors the backend SetOfflineExternalEngagementRequest
+ * (PUT /appraisals/{id}/assignments/offline-external-engagement).
+ */
+export interface SetOfflineExternalEngagementBody {
+  companyId: string;
+  /** Appraisal date printed on the external company's book, as a date-only `yyyy-MM-dd` string. */
+  bookDate: string;
+  /**
+   * The individual appraiser who signed the book, NOT the firm — it lands in
+   * AppraisalAssignment.ExternalAppraiserName, which the report prints in the appraiser block.
+   * The company is identified by companyId; sending the company name here would print a firm
+   * where a person's name belongs.
+   */
+  externalAppraiserName?: string | null;
+  assignedBy?: string | null;
+}
+
+/**
+ * Record the external company that appraised the collateral outside the system, plus the
+ * appraisal date from its book. The backend also promotes the assignment to
+ * External / AssignmentMethod=Offline and materialises the assignment fee — this is the
+ * offline equivalent of what CompanySelectionActivity does for the in-system external path.
+ *
+ * Used from the int-offline-book-keyin task.
+ */
+export const useSetOfflineExternalEngagement = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      request: SetOfflineExternalEngagementBody & { appraisalId: string },
+    ): Promise<{ assignmentId: string }> => {
+      const { appraisalId, ...body } = request;
+      const { data } = await axios.put(
+        `/appraisals/${appraisalId}/assignments/offline-external-engagement`,
+        body,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'assignments'],
+      });
+      // The fee is materialised and ValuationDate written by the same call, so both are stale.
+      // Keys must match the ones the queries register: useGetFees uses
+      // ['appraisal', id, 'fees'] (api/fee.ts) and decisionSummaryKeys.detail returns
+      // ['appraisal', id, 'decision-summary'] (api/decisionSummary.ts) — a non-matching key
+      // invalidates nothing and the tabs keep showing stale data until a hard reload.
+      queryClient.invalidateQueries({ queryKey: ['appraisal', variables.appraisalId, 'fees'] });
+      queryClient.invalidateQueries({
+        queryKey: ['appraisal', variables.appraisalId, 'decision-summary'],
+      });
     },
   });
 };

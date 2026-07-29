@@ -35,7 +35,11 @@ export const externalCompanySchema = z.object({
 export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
   z
     .object({
-      assignmentType: z.enum(['internal', 'external'], {
+      // 'external-offline' = the bank engaged a company OUTSIDE the system; an internal
+      // appraiser keys that company's book in afterwards. The admin picks nothing here —
+      // the company and the book's appraisal date are recorded later by the keyer, who has
+      // the paper book in hand.
+      assignmentType: z.enum(['internal', 'external', 'external-offline'], {
         required_error: t('validation.assignmentTypeRequired'),
       }),
       assignmentMethod: z.enum(['manual', 'roundrobin', 'quotation'], {
@@ -52,13 +56,15 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
     })
     .refine(
       data => {
-        // For manual selection, require either staffId or companyId based on type
+        // For manual selection, require either staffId or companyId based on type.
+        // Off-system external picks no COMPANY here (the keyer records it later from the book),
+        // but it does pick the internal appraiser who keys it in — so it requires staffId, exactly
+        // like the internal path.
         if (data.assignmentMethod === 'manual') {
-          if (data.assignmentType === 'internal') {
+          if (data.assignmentType === 'internal' || data.assignmentType === 'external-offline') {
             return data.staffId !== null && data.staffId.length > 0;
-          } else {
-            return data.companyId !== null && data.companyId.length > 0;
           }
+          return data.companyId !== null && data.companyId.length > 0;
         }
         // Round-robin and quotation don't require upfront selection
         return true;
