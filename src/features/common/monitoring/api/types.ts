@@ -2,6 +2,9 @@
 
 export type SortDir = 'asc' | 'desc';
 
+/** Discriminator on common.vw_MonitoringPendingTasks — selects the Pending Internal/External set. */
+export type MonitoringType = 'Internal' | 'External';
+
 // ─── SLA / KPI types ─────────────────────────────────────────────────────────
 
 export type SlaBucket = 'breached' | 'atRisk' | 'healthy';
