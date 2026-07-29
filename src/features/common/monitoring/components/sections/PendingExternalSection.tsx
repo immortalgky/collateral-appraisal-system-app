@@ -320,7 +320,7 @@ function PendingExternalSection({ onCountChange }: PendingExternalSectionProps) 
     baseFilter,
   );
 
-  const { data: taskTypesData } = useTaskTypes();
+  const { data: taskTypesData } = useTaskTypes('External');
 
   const purposeOptions = useParameterOptions('AppraisalPurpose');
   const propertyTypeOptions = useParameterOptions('PropertyType');

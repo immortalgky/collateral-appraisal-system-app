@@ -194,7 +194,8 @@ export function makeAddressFields(t: TFunction<'request'>): FormField[] {
       provinceNameField: 'detail.address.provinceName',
       postcodeField: 'detail.address.postcode',
       subDistrictNameField: 'detail.address.subDistrictName',
-      addressSource: 'title',
+      // Administrative address -> DOPA master (กรมการปกครอง), not the Title (deed) master.
+      addressSource: 'dopa',
       wrapperClassName: 'col-span-3',
       required: true,
     },
@@ -1768,7 +1769,8 @@ export const addressFields: FormField[] = [
     provinceNameField: 'detail.address.provinceName',
     postcodeField: 'detail.address.postcode',
     subDistrictNameField: 'detail.address.subDistrictName',
-    addressSource: 'title',
+    // Administrative address -> DOPA master (กรมการปกครอง), not the Title (deed) master.
+    addressSource: 'dopa',
     wrapperClassName: 'col-span-3',
     required: true,
   },

@@ -9,6 +9,7 @@ import type {
   MeetingFollowupView,
   MonitoringGroupedResult,
   MonitoringSummary,
+  MonitoringType,
   PaginatedResult,
   PendingEvaluation,
   PendingEvaluationFilter,
@@ -26,7 +27,8 @@ import type {
 
 export const monitoringKeys = {
   all: ['monitoring'] as const,
-  taskTypes: ['monitoring', 'task-types'] as const,
+  taskTypes: (monitoringType: MonitoringType) =>
+    ['monitoring', 'task-types', monitoringType] as const,
   evaluationStaff: ['monitoring', 'pending-evaluations', 'staff'] as const,
   quotations: (filter: PendingQuotationFilter) => ['monitoring', 'quotations', filter] as const,
   pendingInternal: (filter: PendingInternalFilter) =>
@@ -268,11 +270,20 @@ export interface TaskTypeOption {
   label: string;
 }
 
-export const useTaskTypes = () =>
+/**
+ * Task-type filter options for one monitoring screen.
+ *
+ * Backend derives these from the pending-task view, so the list only ever contains task types
+ * the caller can actually see on that screen — Internal and External return different sets and
+ * must therefore be cached under different keys.
+ */
+export const useTaskTypes = (monitoringType: MonitoringType) =>
   useQuery({
-    queryKey: monitoringKeys.taskTypes,
+    queryKey: monitoringKeys.taskTypes(monitoringType),
     queryFn: async (): Promise<TaskTypeOption[]> => {
-      const { data } = await axios.get('/monitoring/task-types');
+      const { data } = await axios.get('/monitoring/task-types', {
+        params: { monitoringType },
+      });
       return data.result ?? data;
     },
     staleTime: 5 * 60_000,
