@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
+import { getTypeIconName } from '../../utils/propertyTypeConfig';
 import type { PropertyGroup, PropertyType } from '../../types';
 import PhotoPreviewModal, { type PreviewablePhoto } from '../PhotoPreviewModal';
 
@@ -12,6 +14,7 @@ interface PropertyGroupCardProps {
 }
 
 const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) => {
+  const { t } = useTranslation('appraisal');
   const [previewPhoto, setPreviewPhoto] = useState<PreviewablePhoto | null>(null);
 
   // Collect all photos from all properties in the group
@@ -36,12 +39,12 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
         </div>
         <div>
           <h3 className="text-sm font-semibold text-gray-900">
-            {group.name || `Group ${group.groupNumber ?? ''}`}
+            {group.name || t('view360.groupCard.groupFallback', { n: group.groupNumber ?? '' })}
           </h3>
           {group.description && <p className="text-xs text-gray-500">{group.description}</p>}
         </div>
         <span className="ml-auto text-xs font-medium text-gray-400">
-          {group.items.length} {group.items.length === 1 ? 'property' : 'properties'}
+          {t('view360.groupCard.propertyCount', { count: group.items.length })}
         </span>
       </div>
 
@@ -58,7 +61,7 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
             >
               <img
                 src={`${API_BASE_URL}/documents/${heroPhoto.id}/download?download=false&size=large`}
-                alt={heroPhoto.caption || 'Property photo'}
+                alt={heroPhoto.caption || t('view360.groupCard.photoAlt')}
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
@@ -78,7 +81,7 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
                     >
                       <img
                         src={`${API_BASE_URL}/documents/${photo.id}/download?download=false&size=large`}
-                        alt={photo.caption || 'Property photo'}
+                        alt={photo.caption || t('view360.groupCard.photoAlt')}
                         className="w-full h-full object-cover"
                         loading="lazy"
                       />
@@ -108,16 +111,16 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
                       #
                     </th>
                     <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[22%]">
-                      Type
+                      {t('view360.groupCard.columns.type')}
                     </th>
                     <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[25%]">
-                      Property Name
+                      {t('view360.groupCard.columns.propertyName')}
                     </th>
                     <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase w-[18%]">
-                      Area
+                      {t('view360.groupCard.columns.area')}
                     </th>
                     <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">
-                      Location
+                      {t('view360.groupCard.columns.location')}
                     </th>
                     <th className="px-6 py-2.5 w-12" />
                   </tr>
@@ -143,8 +146,29 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
                       <td className="px-4 py-3 text-gray-700 truncate">{item.address}</td>
                       <td className="px-4 py-3 text-gray-700 truncate">{item.area}</td>
                       <td className="px-4 py-3 text-gray-500 truncate">{item.location}</td>
-                      <td className="px-6 py-3 text-gray-400">
-                        <Icon name="chevron-right" style="solid" className="w-3 h-3" />
+                      {/* The real control: a <tr onClick> alone is unreachable by keyboard,
+                          and role="button" on a <tr> would break row/column semantics. */}
+                      <td className="px-6 py-3">
+                        <button
+                          type="button"
+                          onClick={e => {
+                            // Without this the click also bubbles to the row handler and
+                            // the slide-over opens twice.
+                            e.stopPropagation();
+                            onPropertyClick(item.id, item.type, group.name);
+                          }}
+                          aria-label={t('view360.groupCard.viewPropertyDetail', {
+                            name: item.address,
+                          })}
+                          className="flex items-center justify-center rounded text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        >
+                          <Icon
+                            name="chevron-right"
+                            style="solid"
+                            className="w-3 h-3"
+                            aria-hidden="true"
+                          />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -153,7 +177,7 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
             </div>
           ) : (
             <div className="p-5 text-center text-sm text-gray-400">
-              No properties in this group.
+              {t('view360.groupCard.empty')}
             </div>
           )}
         </div>
@@ -173,23 +197,8 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
   );
 };
 
-const PropertyTypeIcon = ({ type }: { type: string }) => {
-  const iconMap: Record<string, string> = {
-    Lands: 'earth-asia',
-    L: 'earth-asia',
-    Building: 'house',
-    B: 'house',
-    Condominium: 'building',
-    U: 'building',
-    'Land and building': 'house-chimney',
-    LB: 'house-chimney',
-    Machine: 'gear',
-    M: 'gear',
-    Vehicle: 'car',
-    Vessel: 'ship',
-  };
-  const icon = iconMap[type] || 'building';
-  return <Icon name={icon} style="solid" className="w-3 h-3 text-gray-400" />;
-};
+const PropertyTypeIcon = ({ type }: { type: string }) => (
+  <Icon name={getTypeIconName(type)} style="solid" className="w-3 h-3 text-gray-400" />
+);
 
 export default PropertyGroupCard;

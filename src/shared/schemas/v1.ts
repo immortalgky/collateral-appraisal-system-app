@@ -2378,7 +2378,9 @@ const AssignAppraisalRequest = z
     internalFollowupAssignmentMethod: z.string().nullish().default(null),
     assignedBy: z.string().nullish().default(null),
     workflowInstanceId: z.string().uuid(),
-    decisionTaken: z.enum(['EXT', 'INT']),
+    // EXTO = external company engaged outside the system; routes to int-offline-book-keyin
+    // so an internal appraiser can key that company's book in.
+    decisionTaken: z.enum(['EXT', 'INT', 'EXTO']),
   })
   .passthrough();
 const AssignAppraisalResponse = z.object({ assignmentId: z.string().uuid() }).passthrough();

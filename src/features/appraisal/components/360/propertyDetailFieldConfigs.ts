@@ -1,3 +1,18 @@
+import type { TFunction } from 'i18next';
+
+/**
+ * Field/section labels are resolved through i18n at render time, so each list is a
+ * factory taking `t` rather than a module constant. The same shape is used by
+ * `makeLandDetailFormSchema` in ../../types/landDetail.ts.
+ *
+ * Key naming: lowerCamelCase of the ENGLISH label with parentheticals and punctuation
+ * dropped — "Access Road Width (m)" -> `accessRoadWidth`, "Landfill %" -> `landfillPercent`.
+ * Key off the LABEL, never `field.key`: `landFillType` is "Landfill Type" on land but
+ * "Land Condition" on condo, and `buildingConditionType` is "Building Condition" vs
+ * "Condition" — keying off the data key would silently mistranslate condo.
+ */
+type T = TFunction<'appraisal'>;
+
 export interface FieldDef {
   key: string;
   label: string;
@@ -13,426 +28,654 @@ export interface SectionDef {
   fields: FieldDef[];
 }
 
-const LAND_SECTIONS: SectionDef[] = [
+const landSections = (t: T): SectionDef[] => [
   {
-    title: 'Land Information',
+    title: t('view360.sections.landInformation'),
     fields: [
-      { key: 'propertyName', label: 'Property Name' },
-      { key: 'latitude', label: 'Latitude', isNumber: true, decimalPlaces: 6 },
-      { key: 'longitude', label: 'Longitude', isNumber: true, decimalPlaces: 6 },
-      { key: 'subDistrictName', label: 'Sub-district' },
-      { key: 'districtName', label: 'District' },
-      { key: 'provinceName', label: 'Province' },
-      { key: 'landOffice', label: 'Land Office', parameterGroup: 'LandOffice' },
-      { key: 'landDescription', label: 'Land Description' },
-      { key: 'isOwnerVerified', label: 'Owner Verified', isBoolean: true },
-      { key: 'ownerName', label: 'Owner Name' },
-      { key: 'hasObligation', label: 'Has Obligation', isBoolean: true },
-      { key: 'obligationDetails', label: 'Obligation Details' },
+      { key: 'propertyName', label: t('view360.fields.propertyName') },
+      { key: 'latitude', label: t('view360.fields.latitude'), isNumber: true, decimalPlaces: 6 },
+      { key: 'longitude', label: t('view360.fields.longitude'), isNumber: true, decimalPlaces: 6 },
+      { key: 'subDistrictName', label: t('view360.fields.subDistrict') },
+      { key: 'districtName', label: t('view360.fields.district') },
+      { key: 'provinceName', label: t('view360.fields.province') },
+      { key: 'landOffice', label: t('view360.fields.landOffice'), parameterGroup: 'LandOffice' },
+      { key: 'landDescription', label: t('view360.fields.landDescription') },
+      { key: 'isOwnerVerified', label: t('view360.fields.ownerVerified'), isBoolean: true },
+      { key: 'ownerName', label: t('view360.fields.ownerName') },
+      { key: 'hasObligation', label: t('view360.fields.hasObligation'), isBoolean: true },
+      { key: 'obligationDetails', label: t('view360.fields.obligationDetails') },
     ],
   },
   {
-    title: 'Land Location',
+    title: t('view360.sections.landLocation'),
     fields: [
-      { key: 'isLandLocationVerified', label: 'Location Verified', isBoolean: true },
-      { key: 'landCheckMethodType', label: 'Check Method', parameterGroup: 'CheckBy' },
-      { key: 'street', label: 'Street' },
-      { key: 'soi', label: 'Soi' },
-      { key: 'distanceFromMainRoad', label: 'Distance from Main Road', isNumber: true },
-      { key: 'village', label: 'Village' },
-      { key: 'addressLocation', label: 'Address Location' },
-      { key: 'landShapeType', label: 'Land Shape', parameterGroup: 'LandShape' },
-      { key: 'urbanPlanningType', label: 'Urban Planning', parameterGroup: 'TypeOfUrbanPlanning' },
-      { key: 'landZoneType', label: 'Land Zone', parameterGroup: 'Location' },
+      {
+        key: 'isLandLocationVerified',
+        label: t('view360.fields.locationVerified'),
+        isBoolean: true,
+      },
+      {
+        key: 'landCheckMethodType',
+        label: t('view360.fields.checkMethod'),
+        parameterGroup: 'CheckBy',
+      },
+      { key: 'street', label: t('view360.fields.street') },
+      { key: 'soi', label: t('view360.fields.soi') },
+      {
+        key: 'distanceFromMainRoad',
+        label: t('view360.fields.distanceFromMainRoad'),
+        isNumber: true,
+      },
+      { key: 'village', label: t('view360.fields.village') },
+      { key: 'addressLocation', label: t('view360.fields.addressLocation') },
+      { key: 'landShapeType', label: t('view360.fields.landShape'), parameterGroup: 'LandShape' },
+      {
+        key: 'urbanPlanningType',
+        label: t('view360.fields.urbanPlanning'),
+        parameterGroup: 'TypeOfUrbanPlanning',
+      },
+      { key: 'landZoneType', label: t('view360.fields.landZone'), parameterGroup: 'Location' },
     ],
   },
   {
-    title: 'Plot & Landfill',
+    title: t('view360.sections.plot&Landfill'),
     fields: [
-      { key: 'plotLocationType', label: 'Plot Location', parameterGroup: 'PlotLocation' },
-      { key: 'landFillType', label: 'Landfill Type', parameterGroup: 'Landfill' },
-      { key: 'landFillPercent', label: 'Landfill %', isNumber: true },
-      { key: 'soilLevel', label: 'Soil Level' },
+      {
+        key: 'plotLocationType',
+        label: t('view360.fields.plotLocation'),
+        parameterGroup: 'PlotLocation',
+      },
+      { key: 'landFillType', label: t('view360.fields.landfillType'), parameterGroup: 'Landfill' },
+      { key: 'landFillPercent', label: t('view360.fields.landfillPercent'), isNumber: true },
+      { key: 'soilLevel', label: t('view360.fields.soilLevel') },
     ],
   },
   {
-    title: 'Road & Access',
+    title: t('view360.sections.road&Access'),
     fields: [
-      { key: 'accessRoadWidth', label: 'Access Road Width (m)', isNumber: true, decimalPlaces: 2 },
-      { key: 'rightOfWay', label: 'Right of Way' },
-      { key: 'roadFrontage', label: 'Road Frontage (m)', isNumber: true, decimalPlaces: 2 },
-      { key: 'numberOfSidesFacingRoad', label: 'Sides Facing Road', isNumber: true },
-      { key: 'roadPassInFrontOfLand', label: 'Road Pass in Front' },
-      { key: 'landAccessibilityType', label: 'Accessibility', parameterGroup: 'LandAccessibility' },
-      { key: 'roadSurfaceType', label: 'Road Surface', parameterGroup: 'RoadSurface' },
+      {
+        key: 'accessRoadWidth',
+        label: t('view360.fields.accessRoadWidth'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'rightOfWay', label: t('view360.fields.rightOfWay') },
+      {
+        key: 'roadFrontage',
+        label: t('view360.fields.roadFrontage'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'numberOfSidesFacingRoad',
+        label: t('view360.fields.sidesFacingRoad'),
+        isNumber: true,
+      },
+      { key: 'roadPassInFrontOfLand', label: t('view360.fields.roadPassInFront') },
+      {
+        key: 'landAccessibilityType',
+        label: t('view360.fields.accessibility'),
+        parameterGroup: 'LandAccessibility',
+      },
+      {
+        key: 'roadSurfaceType',
+        label: t('view360.fields.roadSurface'),
+        parameterGroup: 'RoadSurface',
+      },
     ],
   },
   {
-    title: 'Infrastructure',
+    title: t('view360.sections.infrastructure'),
     fields: [
-      { key: 'publicUtilityType', label: 'Public Utility', parameterGroup: 'PublicUtility' },
-      { key: 'landUseType', label: 'Land Use', parameterGroup: 'LandUse' },
-      { key: 'landEntranceExitType', label: 'Entrance/Exit', parameterGroup: 'LandEntranceExit' },
+      {
+        key: 'publicUtilityType',
+        label: t('view360.fields.publicUtility'),
+        parameterGroup: 'PublicUtility',
+      },
+      { key: 'landUseType', label: t('view360.fields.landUse'), parameterGroup: 'LandUse' },
+      {
+        key: 'landEntranceExitType',
+        label: t('view360.fields.entrancePerExit'),
+        parameterGroup: 'LandEntranceExit',
+      },
       {
         key: 'transportationAccessType',
-        label: 'Transportation',
+        label: t('view360.fields.transportation'),
         parameterGroup: 'Transportation',
       },
-      { key: 'hasElectricity', label: 'Has Electricity', isBoolean: true },
-      { key: 'electricityDistance', label: 'Electricity Distance', isNumber: true },
+      { key: 'hasElectricity', label: t('view360.fields.hasElectricity'), isBoolean: true },
+      {
+        key: 'electricityDistance',
+        label: t('view360.fields.electricityDistance'),
+        isNumber: true,
+      },
     ],
   },
   {
-    title: 'Legal & Limitation',
+    title: t('view360.sections.legal&Limitation'),
     fields: [
-      { key: 'isExpropriated', label: 'Expropriated', isBoolean: true },
-      { key: 'isInExpropriationLine', label: 'In Expropriation Line', isBoolean: true },
-      { key: 'royalDecree', label: 'Royal Decree' },
-      { key: 'expropriationRemark', label: 'Expropriation Remark' },
-      { key: 'isEncroached', label: 'Encroached', isBoolean: true },
-      { key: 'encroachmentArea', label: 'Encroachment Area', isNumber: true },
-      { key: 'encroachmentRemark', label: 'Encroachment Remark' },
-      { key: 'isLandlocked', label: 'Landlocked', isBoolean: true },
-      { key: 'landlockedRemark', label: 'Landlocked Remark' },
-      { key: 'isForestBoundary', label: 'Forest Boundary', isBoolean: true },
-      { key: 'forestBoundaryRemark', label: 'Forest Boundary Remark' },
-      { key: 'otherLegalLimitations', label: 'Other Legal Limitations' },
+      { key: 'isExpropriated', label: t('view360.fields.expropriated'), isBoolean: true },
+      {
+        key: 'isInExpropriationLine',
+        label: t('view360.fields.inExpropriationLine'),
+        isBoolean: true,
+      },
+      { key: 'royalDecree', label: t('view360.fields.royalDecree') },
+      { key: 'expropriationRemark', label: t('view360.fields.expropriationRemark') },
+      { key: 'isEncroached', label: t('view360.fields.encroached'), isBoolean: true },
+      { key: 'encroachmentArea', label: t('view360.fields.encroachmentArea'), isNumber: true },
+      { key: 'encroachmentRemark', label: t('view360.fields.encroachmentRemark') },
+      { key: 'isLandlocked', label: t('view360.fields.landlocked'), isBoolean: true },
+      { key: 'landlockedRemark', label: t('view360.fields.landlockedRemark') },
+      { key: 'isForestBoundary', label: t('view360.fields.forestBoundary'), isBoolean: true },
+      { key: 'forestBoundaryRemark', label: t('view360.fields.forestBoundaryRemark') },
+      { key: 'otherLegalLimitations', label: t('view360.fields.otherLegalLimitations') },
     ],
   },
   {
-    title: 'Assessment',
+    title: t('view360.sections.assessment'),
     fields: [
       {
         key: 'propertyAnticipationType',
-        label: 'Anticipation of Prosperity',
+        label: t('view360.fields.anticipationOfProsperity'),
         parameterGroup: 'AnticipationOfProsperity',
       },
-      { key: 'evictionType', label: 'Eviction', parameterGroup: 'Eviction' },
-      { key: 'allocationType', label: 'Allocation', parameterGroup: 'Allocation' },
+      { key: 'evictionType', label: t('view360.fields.eviction'), parameterGroup: 'Eviction' },
+      {
+        key: 'allocationType',
+        label: t('view360.fields.allocation'),
+        parameterGroup: 'Allocation',
+      },
     ],
   },
   {
-    title: 'Size & Boundary',
+    title: t('view360.sections.size&Boundary'),
     fields: [
-      { key: 'totalLandAreaInSqWa', label: 'Total Area (Sq.Wa)', isNumber: true, decimalPlaces: 2 },
-      { key: 'northAdjacentArea', label: 'North Adjacent' },
+      {
+        key: 'totalLandAreaInSqWa',
+        label: t('view360.fields.totalArea'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'northAdjacentArea', label: t('view360.fields.northAdjacent') },
       {
         key: 'northBoundaryLength',
-        label: 'North Boundary Length',
+        label: t('view360.fields.northBoundaryLength'),
         isNumber: true,
         decimalPlaces: 2,
       },
-      { key: 'southAdjacentArea', label: 'South Adjacent' },
+      { key: 'southAdjacentArea', label: t('view360.fields.southAdjacent') },
       {
         key: 'southBoundaryLength',
-        label: 'South Boundary Length',
+        label: t('view360.fields.southBoundaryLength'),
         isNumber: true,
         decimalPlaces: 2,
       },
-      { key: 'eastAdjacentArea', label: 'East Adjacent' },
+      { key: 'eastAdjacentArea', label: t('view360.fields.eastAdjacent') },
       {
         key: 'eastBoundaryLength',
-        label: 'East Boundary Length',
+        label: t('view360.fields.eastBoundaryLength'),
         isNumber: true,
         decimalPlaces: 2,
       },
-      { key: 'westAdjacentArea', label: 'West Adjacent' },
+      { key: 'westAdjacentArea', label: t('view360.fields.westAdjacent') },
       {
         key: 'westBoundaryLength',
-        label: 'West Boundary Length',
+        label: t('view360.fields.westBoundaryLength'),
         isNumber: true,
         decimalPlaces: 2,
       },
     ],
   },
   {
-    title: 'Other',
+    title: t('view360.sections.other'),
     fields: [
-      { key: 'pondArea', label: 'Pond Area', isNumber: true },
-      { key: 'pondDepth', label: 'Pond Depth', isNumber: true },
-      { key: 'hasBuilding', label: 'Has Building', isBoolean: true },
-      { key: 'remark', label: 'Remark' },
+      { key: 'pondArea', label: t('view360.fields.pondArea'), isNumber: true },
+      { key: 'pondDepth', label: t('view360.fields.pondDepth'), isNumber: true },
+      { key: 'hasBuilding', label: t('view360.fields.hasBuilding'), isBoolean: true },
+      { key: 'remark', label: t('view360.fields.remark') },
     ],
   },
 ];
 
-const BUILDING_SECTIONS: SectionDef[] = [
+const buildingSections = (t: T): SectionDef[] => [
   {
-    title: 'Building Information',
+    title: t('view360.sections.buildingInformation'),
     fields: [
-      { key: 'propertyName', label: 'Property Name' },
-      { key: 'buildingNumber', label: 'Building No.' },
-      { key: 'houseNumber', label: 'House No.' },
-      { key: 'modelName', label: 'Model Name' },
-      { key: 'builtOnTitleNumber', label: 'Built on Title No.' },
-      { key: 'isOwnerVerified', label: 'Owner Verified', isBoolean: true },
-      { key: 'ownerName', label: 'Owner Name' },
-      { key: 'hasObligation', label: 'Has Obligation', isBoolean: true },
-      { key: 'obligationDetails', label: 'Obligation Details' },
+      { key: 'propertyName', label: t('view360.fields.propertyName') },
+      { key: 'buildingNumber', label: t('view360.fields.buildingNo') },
+      { key: 'houseNumber', label: t('view360.fields.houseNo') },
+      { key: 'modelName', label: t('view360.fields.modelName') },
+      { key: 'builtOnTitleNumber', label: t('view360.fields.builtOnTitleNo') },
+      { key: 'isOwnerVerified', label: t('view360.fields.ownerVerified'), isBoolean: true },
+      { key: 'ownerName', label: t('view360.fields.ownerName') },
+      { key: 'hasObligation', label: t('view360.fields.hasObligation'), isBoolean: true },
+      { key: 'obligationDetails', label: t('view360.fields.obligationDetails') },
       {
         key: 'buildingConditionType',
-        label: 'Building Condition',
+        label: t('view360.fields.buildingCondition'),
         parameterGroup: 'BuildingCondition',
       },
-      { key: 'isUnderConstruction', label: 'Under Construction', isBoolean: true },
-      { key: 'constructionCompletionPercent', label: 'Construction Completion %', isNumber: true },
-      { key: 'isAppraisable', label: 'Appraisable', isBoolean: true },
+      { key: 'isUnderConstruction', label: t('view360.fields.underConstruction'), isBoolean: true },
+      {
+        key: 'constructionCompletionPercent',
+        label: t('view360.fields.constructionCompletionPercent'),
+        isNumber: true,
+      },
+      { key: 'isAppraisable', label: t('view360.fields.appraisable'), isBoolean: true },
     ],
   },
   {
-    title: 'Building Type & Decoration',
+    title: t('view360.sections.buildingType&Decoration'),
     fields: [
-      { key: 'buildingType', label: 'Building Type', parameterGroup: 'BuildingType' },
-      { key: 'numberOfFloors', label: 'Floors', isNumber: true },
-      { key: 'buildingAge', label: 'Building Age (yrs)', isNumber: true },
-      { key: 'decorationType', label: 'Decoration', parameterGroup: 'Decoration' },
+      {
+        key: 'buildingType',
+        label: t('view360.fields.buildingType'),
+        parameterGroup: 'BuildingType',
+      },
+      { key: 'numberOfFloors', label: t('view360.fields.floors'), isNumber: true },
+      { key: 'buildingAge', label: t('view360.fields.buildingAge'), isNumber: true },
+      {
+        key: 'decorationType',
+        label: t('view360.fields.decoration'),
+        parameterGroup: 'Decoration',
+      },
     ],
   },
   {
-    title: 'Material & Structure',
+    title: t('view360.sections.material&Structure'),
     fields: [
       {
         key: 'buildingMaterialType',
-        label: 'Building Material',
+        label: t('view360.fields.buildingMaterial'),
         parameterGroup: 'BuildingMaterial',
       },
-      { key: 'buildingStyleType', label: 'Building Style', parameterGroup: 'BuildingStyle' },
+      {
+        key: 'buildingStyleType',
+        label: t('view360.fields.buildingStyle'),
+        parameterGroup: 'BuildingStyle',
+      },
       {
         key: 'constructionStyleType',
-        label: 'Construction Style',
+        label: t('view360.fields.constructionStyle'),
         parameterGroup: 'ConstructionStyle',
       },
-      { key: 'structureType', label: 'Structure', parameterGroup: 'GeneralStructure' },
-      { key: 'roofFrameType', label: 'Roof Frame', parameterGroup: 'RoofFrame' },
-      { key: 'roofType', label: 'Roof', parameterGroup: 'Roof' },
-      { key: 'ceilingType', label: 'Ceiling', parameterGroup: 'Ceiling' },
-      { key: 'interiorWallType', label: 'Interior Wall', parameterGroup: 'Interior' },
-      { key: 'exteriorWallType', label: 'Exterior Wall', parameterGroup: 'Exterior' },
-      { key: 'fenceType', label: 'Fence', parameterGroup: 'Fence' },
-      { key: 'constructionType', label: 'Construction Type', parameterGroup: 'ConstructionType' },
+      {
+        key: 'structureType',
+        label: t('view360.fields.structure'),
+        parameterGroup: 'GeneralStructure',
+      },
+      { key: 'roofFrameType', label: t('view360.fields.roofFrame'), parameterGroup: 'RoofFrame' },
+      { key: 'roofType', label: t('view360.fields.roof'), parameterGroup: 'Roof' },
+      { key: 'ceilingType', label: t('view360.fields.ceiling'), parameterGroup: 'Ceiling' },
+      {
+        key: 'interiorWallType',
+        label: t('view360.fields.interiorWall'),
+        parameterGroup: 'Interior',
+      },
+      {
+        key: 'exteriorWallType',
+        label: t('view360.fields.exteriorWall'),
+        parameterGroup: 'Exterior',
+      },
+      { key: 'fenceType', label: t('view360.fields.fence'), parameterGroup: 'Fence' },
+      {
+        key: 'constructionType',
+        label: t('view360.fields.constructionType'),
+        parameterGroup: 'ConstructionType',
+      },
     ],
   },
   {
-    title: 'Usage',
+    title: t('view360.sections.usage'),
     fields: [
-      { key: 'isResidential', label: 'Residential', isBoolean: true },
-      { key: 'utilizationType', label: 'Utilization', parameterGroup: 'Utilization' },
-      { key: 'totalBuildingArea', label: 'Total Building Area', isNumber: true, decimalPlaces: 2 },
+      { key: 'isResidential', label: t('view360.fields.residential'), isBoolean: true },
+      {
+        key: 'utilizationType',
+        label: t('view360.fields.utilization'),
+        parameterGroup: 'Utilization',
+      },
+      {
+        key: 'totalBuildingArea',
+        label: t('view360.fields.totalBuildingArea'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
     ],
   },
   {
-    title: 'Encroachment',
+    title: t('view360.sections.encroachment'),
     fields: [
-      { key: 'isEncroachingOthers', label: 'Encroaching Others', isBoolean: true },
-      { key: 'encroachingOthersArea', label: 'Encroaching Area', isNumber: true },
-      { key: 'encroachingOthersRemark', label: 'Encroaching Remark' },
+      { key: 'isEncroachingOthers', label: t('view360.fields.encroachingOthers'), isBoolean: true },
+      { key: 'encroachingOthersArea', label: t('view360.fields.encroachingArea'), isNumber: true },
+      { key: 'encroachingOthersRemark', label: t('view360.fields.encroachingRemark') },
     ],
   },
   {
-    title: 'Pricing',
+    title: t('view360.sections.pricing'),
     fields: [
-      { key: 'buildingInsurancePrice', label: 'Insurance Price', isNumber: true, decimalPlaces: 2 },
-      { key: 'sellingPrice', label: 'Selling Price', isNumber: true, decimalPlaces: 2 },
-      { key: 'forcedSalePrice', label: 'Forced Sale Price', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'buildingInsurancePrice',
+        label: t('view360.fields.insurancePrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'sellingPrice',
+        label: t('view360.fields.sellingPrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'forcedSalePrice',
+        label: t('view360.fields.forcedSalePrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
     ],
   },
   {
-    title: 'Remark',
-    fields: [{ key: 'remark', label: 'Remark' }],
+    title: t('view360.sections.remark'),
+    fields: [{ key: 'remark', label: t('view360.fields.remark') }],
   },
 ];
 
-const CONDO_SECTIONS: SectionDef[] = [
+const condoSections = (t: T): SectionDef[] => [
   {
-    title: 'Condominium Information',
+    title: t('view360.sections.condominiumInformation'),
     fields: [
-      { key: 'propertyName', label: 'Property Name' },
-      { key: 'condoName', label: 'Condo Name' },
-      { key: 'roomNumber', label: 'Room No.' },
-      { key: 'floorNumber', label: 'Floor' },
-      { key: 'buildingNumber', label: 'Building No.' },
-      { key: 'modelName', label: 'Model Name' },
-      { key: 'builtOnTitleNumber', label: 'Built on Title No.' },
-      { key: 'condoRegistrationNumber', label: 'Condo Registration No.' },
-      { key: 'usableArea', label: 'Usable Area (sq.m.)', isNumber: true, decimalPlaces: 2 },
-      { key: 'latitude', label: 'Latitude', isNumber: true, decimalPlaces: 6 },
-      { key: 'longitude', label: 'Longitude', isNumber: true, decimalPlaces: 6 },
-      { key: 'subDistrictName', label: 'Sub-district' },
-      { key: 'districtName', label: 'District' },
-      { key: 'provinceName', label: 'Province' },
-      { key: 'landOffice', label: 'Land Office', parameterGroup: 'LandOffice' },
-      { key: 'isOwnerVerified', label: 'Owner Verified', isBoolean: true },
-      { key: 'ownerName', label: 'Owner Name' },
-      { key: 'buildingConditionType', label: 'Condition', parameterGroup: 'CondoCondition' },
-      { key: 'hasObligation', label: 'Has Obligation', isBoolean: true },
-      { key: 'obligationDetails', label: 'Obligation Details' },
+      { key: 'propertyName', label: t('view360.fields.propertyName') },
+      { key: 'condoName', label: t('view360.fields.condoName') },
+      { key: 'roomNumber', label: t('view360.fields.roomNo') },
+      { key: 'floorNumber', label: t('view360.fields.floor') },
+      { key: 'buildingNumber', label: t('view360.fields.buildingNo') },
+      { key: 'modelName', label: t('view360.fields.modelName') },
+      { key: 'builtOnTitleNumber', label: t('view360.fields.builtOnTitleNo') },
+      { key: 'condoRegistrationNumber', label: t('view360.fields.condoRegistrationNo') },
+      {
+        key: 'usableArea',
+        label: t('view360.fields.usableArea'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'latitude', label: t('view360.fields.latitude'), isNumber: true, decimalPlaces: 6 },
+      { key: 'longitude', label: t('view360.fields.longitude'), isNumber: true, decimalPlaces: 6 },
+      { key: 'subDistrictName', label: t('view360.fields.subDistrict') },
+      { key: 'districtName', label: t('view360.fields.district') },
+      { key: 'provinceName', label: t('view360.fields.province') },
+      { key: 'landOffice', label: t('view360.fields.landOffice'), parameterGroup: 'LandOffice' },
+      { key: 'isOwnerVerified', label: t('view360.fields.ownerVerified'), isBoolean: true },
+      { key: 'ownerName', label: t('view360.fields.ownerName') },
+      {
+        key: 'buildingConditionType',
+        label: t('view360.fields.condition'),
+        parameterGroup: 'CondoCondition',
+      },
+      { key: 'hasObligation', label: t('view360.fields.hasObligation'), isBoolean: true },
+      { key: 'obligationDetails', label: t('view360.fields.obligationDetails') },
       {
         key: 'documentValidationResultType',
-        label: 'Document Validation',
+        label: t('view360.fields.documentValidation'),
         parameterGroup: 'DocumentValidation',
       },
     ],
   },
   {
-    title: 'Location',
+    title: t('view360.sections.location'),
     fields: [
-      { key: 'locationType', label: 'Location Type', parameterGroup: 'CondoLocation' },
-      { key: 'street', label: 'Street' },
-      { key: 'soi', label: 'Soi' },
-      { key: 'distanceFromMainRoad', label: 'Distance from Main Road', isNumber: true },
-      { key: 'accessRoadWidth', label: 'Access Road Width (m)', isNumber: true, decimalPlaces: 2 },
-      { key: 'rightOfWay', label: 'Right of Way' },
-      { key: 'roadSurfaceType', label: 'Road Surface', parameterGroup: 'Condo_RoadSurface' },
-      { key: 'publicUtilityType', label: 'Public Utility', parameterGroup: 'Condo_PublicUtility' },
-      { key: 'urbanPlanningType', label: 'Urban Planning', parameterGroup: 'TypeOfUrbanPlanning' },
-      { key: 'landFillType', label: 'Land Condition', parameterGroup: 'Landfill' },
-      { key: 'landUseType', label: 'Land Use', parameterGroup: 'LandUse' },
-      { key: 'landEntranceExitType', label: 'Entrance/Exit', parameterGroup: 'LandEntranceExit' },
+      {
+        key: 'locationType',
+        label: t('view360.fields.locationType'),
+        parameterGroup: 'CondoLocation',
+      },
+      { key: 'street', label: t('view360.fields.street') },
+      { key: 'soi', label: t('view360.fields.soi') },
+      {
+        key: 'distanceFromMainRoad',
+        label: t('view360.fields.distanceFromMainRoad'),
+        isNumber: true,
+      },
+      {
+        key: 'accessRoadWidth',
+        label: t('view360.fields.accessRoadWidth'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'rightOfWay', label: t('view360.fields.rightOfWay') },
+      {
+        key: 'roadSurfaceType',
+        label: t('view360.fields.roadSurface'),
+        parameterGroup: 'Condo_RoadSurface',
+      },
+      {
+        key: 'publicUtilityType',
+        label: t('view360.fields.publicUtility'),
+        parameterGroup: 'Condo_PublicUtility',
+      },
+      {
+        key: 'urbanPlanningType',
+        label: t('view360.fields.urbanPlanning'),
+        parameterGroup: 'TypeOfUrbanPlanning',
+      },
+      { key: 'landFillType', label: t('view360.fields.landCondition'), parameterGroup: 'Landfill' },
+      { key: 'landUseType', label: t('view360.fields.landUse'), parameterGroup: 'LandUse' },
+      {
+        key: 'landEntranceExitType',
+        label: t('view360.fields.entrancePerExit'),
+        parameterGroup: 'LandEntranceExit',
+      },
     ],
   },
   {
-    title: 'Building & Decoration',
+    title: t('view360.sections.building&Decoration'),
     fields: [
-      { key: 'buildingAge', label: 'Building Age (yrs)', isNumber: true },
-      { key: 'numberOfFloors', label: 'Floors', isNumber: true },
-      { key: 'buildingFormType', label: 'Building Form', parameterGroup: 'BuildingForm' },
+      { key: 'buildingAge', label: t('view360.fields.buildingAge'), isNumber: true },
+      { key: 'numberOfFloors', label: t('view360.fields.floors'), isNumber: true },
+      {
+        key: 'buildingFormType',
+        label: t('view360.fields.buildingForm'),
+        parameterGroup: 'BuildingForm',
+      },
       {
         key: 'constructionMaterialType',
-        label: 'Construction Material',
+        label: t('view360.fields.constructionMaterial'),
         parameterGroup: 'ConstructionMaterials',
       },
-      { key: 'decorationType', label: 'Decoration', parameterGroup: 'Decoration' },
+      {
+        key: 'decorationType',
+        label: t('view360.fields.decoration'),
+        parameterGroup: 'Decoration',
+      },
     ],
   },
   {
-    title: 'Room & Floor',
+    title: t('view360.sections.room&Floor'),
     fields: [
-      { key: 'roomLayoutType', label: 'Room Layout', parameterGroup: 'RoomLayout' },
-      { key: 'locationViewType', label: 'Location View', parameterGroup: 'LocationView' },
+      {
+        key: 'roomLayoutType',
+        label: t('view360.fields.roomLayout'),
+        parameterGroup: 'RoomLayout',
+      },
+      {
+        key: 'locationViewType',
+        label: t('view360.fields.locationView'),
+        parameterGroup: 'LocationView',
+      },
       {
         key: 'groundFloorMaterialType',
-        label: 'Ground Floor Material',
+        label: t('view360.fields.groundFloorMaterial'),
         parameterGroup: 'GroundFlooringMaterials',
       },
       {
         key: 'upperFloorMaterialType',
-        label: 'Upper Floor Material',
+        label: t('view360.fields.upperFloorMaterial'),
         parameterGroup: 'UpperFlooringMaterials',
       },
       {
         key: 'bathroomFloorMaterialType',
-        label: 'Bathroom Floor Material',
+        label: t('view360.fields.bathroomFloorMaterial'),
         parameterGroup: 'BathroomFlooringMaterials',
       },
-      { key: 'roofType', label: 'Roof', parameterGroup: 'Condo_Roof' },
+      { key: 'roofType', label: t('view360.fields.roof'), parameterGroup: 'Condo_Roof' },
     ],
   },
   {
-    title: 'Legal',
+    title: t('view360.sections.legal'),
     fields: [
-      { key: 'isExpropriated', label: 'Expropriated', isBoolean: true },
-      { key: 'isInExpropriationLine', label: 'In Expropriation Line', isBoolean: true },
-      { key: 'isForestBoundary', label: 'Forest Boundary', isBoolean: true },
-      { key: 'forestBoundaryRemark', label: 'Forest Boundary Remark' },
-    ],
-  },
-  {
-    title: 'Facilities & Environment',
-    fields: [
-      { key: 'facilityType', label: 'Facilities', parameterGroup: 'Facilities' },
-      { key: 'environmentType', label: 'Environment', parameterGroup: 'Environment' },
-    ],
-  },
-  {
-    title: 'Pricing',
-    fields: [
-      { key: 'buildingInsurancePrice', label: 'Insurance Price', isNumber: true, decimalPlaces: 2 },
-      { key: 'sellingPrice', label: 'Selling Price', isNumber: true, decimalPlaces: 2 },
-      { key: 'forceSellingPrice', label: 'Forced Sale Price', isNumber: true, decimalPlaces: 2 },
+      { key: 'isExpropriated', label: t('view360.fields.expropriated'), isBoolean: true },
       {
-        key: 'governmentPricePerSqm',
-        label: 'Government Price per Sq.M',
+        key: 'isInExpropriationLine',
+        label: t('view360.fields.inExpropriationLine'),
+        isBoolean: true,
+      },
+      { key: 'isForestBoundary', label: t('view360.fields.forestBoundary'), isBoolean: true },
+      { key: 'forestBoundaryRemark', label: t('view360.fields.forestBoundaryRemark') },
+    ],
+  },
+  {
+    title: t('view360.sections.facilities&Environment'),
+    fields: [
+      { key: 'facilityType', label: t('view360.fields.facilities'), parameterGroup: 'Facilities' },
+      {
+        key: 'environmentType',
+        label: t('view360.fields.environment'),
+        parameterGroup: 'Environment',
+      },
+    ],
+  },
+  {
+    title: t('view360.sections.pricing'),
+    fields: [
+      {
+        key: 'buildingInsurancePrice',
+        label: t('view360.fields.insurancePrice'),
         isNumber: true,
         decimalPlaces: 2,
       },
-      { key: 'governmentPrice', label: 'Government Price', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'sellingPrice',
+        label: t('view360.fields.sellingPrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'forceSellingPrice',
+        label: t('view360.fields.forcedSalePrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'governmentPricePerSqm',
+        label: t('view360.fields.governmentPricePerSqM'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'governmentPrice',
+        label: t('view360.fields.governmentPrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
     ],
   },
   {
-    title: 'Remark',
-    fields: [{ key: 'remark', label: 'Remark' }],
+    title: t('view360.sections.remark'),
+    fields: [{ key: 'remark', label: t('view360.fields.remark') }],
   },
 ];
 
-const MACHINERY_SECTIONS: SectionDef[] = [
+const machinerySections = (t: T): SectionDef[] => [
   {
-    title: 'Machinery Information',
+    title: t('view360.sections.machineryInformation'),
     fields: [
-      { key: 'propertyName', label: 'Property Name' },
-      { key: 'isOwnerVerified', label: 'Owner Verified', isBoolean: true },
-      { key: 'ownerName', label: 'Owner Name' },
-      { key: 'conditionUse', label: 'Condition of Use', parameterGroup: 'ConditionUse' },
-      { key: 'isOperational', label: 'Operational', isBoolean: true },
+      { key: 'propertyName', label: t('view360.fields.propertyName') },
+      { key: 'isOwnerVerified', label: t('view360.fields.ownerVerified'), isBoolean: true },
+      { key: 'ownerName', label: t('view360.fields.ownerName') },
+      {
+        key: 'conditionUse',
+        label: t('view360.fields.conditionOfUse'),
+        parameterGroup: 'ConditionUse',
+      },
+      { key: 'isOperational', label: t('view360.fields.operational'), isBoolean: true },
     ],
   },
   {
-    title: 'Identification',
+    title: t('view360.sections.identification'),
     fields: [
-      { key: 'machineName', label: 'Machine Name' },
-      { key: 'brand', label: 'Brand' },
-      { key: 'model', label: 'Model' },
-      { key: 'series', label: 'Series' },
-      { key: 'yearOfManufacture', label: 'Year of Manufacture', isNumber: true },
-      { key: 'countryOfManufacture', label: 'Country', parameterGroup: 'Country' },
-      { key: 'engineNo', label: 'Engine No.' },
-      { key: 'chassisNo', label: 'Chassis No.' },
-      { key: 'registrationNumber', label: 'Registration No.' },
+      { key: 'machineName', label: t('view360.fields.machineName') },
+      { key: 'brand', label: t('view360.fields.brand') },
+      { key: 'model', label: t('view360.fields.model') },
+      { key: 'series', label: t('view360.fields.series') },
+      { key: 'yearOfManufacture', label: t('view360.fields.yearOfManufacture'), isNumber: true },
+      {
+        key: 'countryOfManufacture',
+        label: t('view360.fields.country'),
+        parameterGroup: 'Country',
+      },
+      { key: 'engineNo', label: t('view360.fields.engineNo') },
+      { key: 'chassisNo', label: t('view360.fields.chassisNo') },
+      { key: 'registrationNumber', label: t('view360.fields.registrationNo') },
     ],
   },
   {
-    title: 'Specifications',
+    title: t('view360.sections.specifications'),
     fields: [
-      { key: 'capacity', label: 'Capacity' },
-      { key: 'quantity', label: 'Quantity', isNumber: true },
-      { key: 'width', label: 'Width', isNumber: true, decimalPlaces: 2 },
-      { key: 'length', label: 'Length', isNumber: true, decimalPlaces: 2 },
-      { key: 'height', label: 'Height', isNumber: true, decimalPlaces: 2 },
-      { key: 'machineDimensions', label: 'Dimensions' },
-      { key: 'energyUse', label: 'Energy Use' },
+      { key: 'capacity', label: t('view360.fields.capacity') },
+      { key: 'quantity', label: t('view360.fields.quantity'), isNumber: true },
+      { key: 'width', label: t('view360.fields.width'), isNumber: true, decimalPlaces: 2 },
+      { key: 'length', label: t('view360.fields.length'), isNumber: true, decimalPlaces: 2 },
+      { key: 'height', label: t('view360.fields.height'), isNumber: true, decimalPlaces: 2 },
+      { key: 'machineDimensions', label: t('view360.fields.dimensions') },
+      { key: 'energyUse', label: t('view360.fields.energyUse') },
     ],
   },
   {
-    title: 'Purchase',
+    title: t('view360.sections.purchase'),
     fields: [
-      { key: 'purchaseDate', label: 'Purchase Date', isDate: true },
-      { key: 'purchasePrice', label: 'Purchase Price', isNumber: true, decimalPlaces: 2 },
-      { key: 'location', label: 'Location' },
+      { key: 'purchaseDate', label: t('view360.fields.purchaseDate'), isDate: true },
+      {
+        key: 'purchasePrice',
+        label: t('view360.fields.purchasePrice'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      { key: 'location', label: t('view360.fields.location') },
     ],
   },
   {
-    title: 'Condition & Usage',
+    title: t('view360.sections.condition&Usage'),
     fields: [
-      { key: 'machineCondition', label: 'Condition' },
-      { key: 'machineAge', label: 'Machine Age', isNumber: true },
-      { key: 'machineEfficiency', label: 'Efficiency' },
-      { key: 'machineTechnology', label: 'Technology' },
-      { key: 'usagePurpose', label: 'Usage Purpose' },
-      { key: 'machineParts', label: 'Machine Parts' },
+      { key: 'machineCondition', label: t('view360.fields.condition') },
+      { key: 'machineAge', label: t('view360.fields.machineAge'), isNumber: true },
+      { key: 'machineEfficiency', label: t('view360.fields.efficiency') },
+      { key: 'machineTechnology', label: t('view360.fields.technology') },
+      { key: 'usagePurpose', label: t('view360.fields.usagePurpose') },
+      { key: 'machineParts', label: t('view360.fields.machineParts') },
     ],
   },
   {
-    title: 'Valuation',
+    title: t('view360.sections.valuation'),
     fields: [
-      { key: 'replacementValue', label: 'Replacement Value', isNumber: true, decimalPlaces: 2 },
-      { key: 'conditionValue', label: 'Condition Value', isNumber: true, decimalPlaces: 2 },
+      {
+        key: 'replacementValue',
+        label: t('view360.fields.replacementValue'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
+      {
+        key: 'conditionValue',
+        label: t('view360.fields.conditionValue'),
+        isNumber: true,
+        decimalPlaces: 2,
+      },
     ],
   },
   {
-    title: 'Other',
+    title: t('view360.sections.other'),
     fields: [
-      { key: 'appraiserOpinion', label: 'Appraiser Opinion' },
-      { key: 'other', label: 'Other' },
-      { key: 'remark', label: 'Remark' },
+      { key: 'appraiserOpinion', label: t('view360.fields.appraiserOpinion') },
+      { key: 'other', label: t('view360.fields.other') },
+      { key: 'remark', label: t('view360.fields.remark') },
     ],
   },
 ];
@@ -464,23 +707,30 @@ const PROPERTY_TYPE_TO_QUERY_KEY: Record<string, string> = {
   LSU: 'condo',
 };
 
-export function getSectionsForType(propertyType: string): SectionDef[] {
+export function getSectionsForType(propertyType: string, t: T): SectionDef[] {
   const key = PROPERTY_TYPE_TO_QUERY_KEY[propertyType] ?? 'land';
 
   switch (key) {
     case 'building':
-      return BUILDING_SECTIONS;
+      return buildingSections(t);
     case 'condo':
-      return CONDO_SECTIONS;
+      return condoSections(t);
     case 'land-building':
+      // Prefixes interpolate an already-resolved title, so they translate too.
       return [
-        ...LAND_SECTIONS.map(s => ({ ...s, title: `Land: ${s.title}` })),
-        ...BUILDING_SECTIONS.map(s => ({ ...s, title: `Building: ${s.title}` })),
+        ...landSections(t).map(s => ({
+          ...s,
+          title: t('view360.sections.landPrefix', { title: s.title }),
+        })),
+        ...buildingSections(t).map(s => ({
+          ...s,
+          title: t('view360.sections.buildingPrefix', { title: s.title }),
+        })),
       ];
     case 'machinery':
-      return MACHINERY_SECTIONS;
+      return machinerySections(t);
     case 'land':
     default:
-      return LAND_SECTIONS;
+      return landSections(t);
   }
 }

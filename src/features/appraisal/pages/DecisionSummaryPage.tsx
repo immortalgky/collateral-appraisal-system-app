@@ -41,6 +41,8 @@ import {
   useUpdateForceSaleRate,
 } from '../api/decisionSummary';
 import { useGetAssignment } from '../api/administration';
+import ValuationEngagementChips from '../components/ValuationEngagementChips';
+import { useAuthStore } from '@features/auth/store.ts';
 import {
   useCompleteActivity,
   useGetActivityActions,
@@ -458,6 +460,27 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
     // may tick the boxes; every other section here is already editable and is unaffected.
     editableSections: ['constructionDocuments'],
   },
+  'int-offline-book-keyin': {
+    // Mirrors int-appraisal-execution (fully editable — the keyer reproduces the whole book),
+    // plus externalAppraiserOpinion: the case is External, so the report prints the EXTERNAL
+    // opinion column of AppraisalDecisions and the keyer must be able to transcribe the company's
+    // opinion from the paper book into it. The company + book date are not a section — they live in
+    // the Valuation header (ValuationEngagementChips) alongside the appraisal date.
+    sections: [
+      'decisionApproach',
+      'priceSummary',
+      'constructionSummary',
+      'constructionDocuments',
+      'governmentPrice',
+      'condition',
+      'remark',
+      'externalAppraiserOpinion',
+      'internalAppraiserOpinion',
+      'committeeOpinion',
+      'additionalAssumptions',
+    ],
+    editableSections: ['constructionDocuments'],
+  },
   'int-appraisal-check': {
     sections: [
       'decisionApproach',
@@ -555,6 +578,15 @@ const DecisionSummaryPage = () => {
   const workflowInstanceId = useWorkflowInstanceId();
   const activityId = useActivityId();
   const isTaskOwner = useIsTaskOwner();
+  const currentUser = useAuthStore(state => state.user);
+
+  // The offline-engagement card posts to its own endpoint, so it cannot live in this page's RHF
+  // form. It hands back a save handle instead, which the action-bar Save calls alongside the
+  // decision save — one Save button for the user, two writes underneath.
+  const engagementSaveRef = useRef<(() => Promise<boolean>) | null>(null);
+
+  const [engagementDirty, setEngagementDirty] = useState(false);
+  const [engagementComplete, setEngagementComplete] = useState(true);
 
   // On the appraisal route (no taskId) the context has no workflow ids, so the live
   // approval / activity-tracking / meeting sections would render empty. Resolve them
@@ -569,6 +601,16 @@ const DecisionSummaryPage = () => {
   // live assignment" rule the report loader and the opinion-split migration backfill use.
   const { data: assignments } = useGetAssignment(appraisalId ?? '');
   const isExternalPath = assignments?.[0]?.assignmentType?.toLowerCase() === 'external';
+  // Mirror of the backend guard in SetOfflineExternalEngagementCommandHandler: only the owner of
+  // the live off-system key-in task may change the engagement, and only before the book has been
+  // handed on for review. Everyone else — including every normal external case — sees it read-only.
+  const engagementAssignment = assignments?.[0] ?? null;
+  const engagementStatus = engagementAssignment?.assignmentStatus?.toLowerCase();
+  const canEditOfflineEngagement =
+    activityId === 'int-offline-book-keyin' &&
+    isTaskOwner &&
+    !isReadOnly &&
+    (!engagementStatus || ['pending', 'assigned', 'inprogress'].includes(engagementStatus));
 
   // Section visibility by activity — intentionally keyed off the *context* activityId
   // (undefined on the appraisal route) so Appraisal Search still shows all sections.
@@ -1013,8 +1055,26 @@ const DecisionSummaryPage = () => {
   };
 
   // Save button (and Enter key) → persist only. Submit → complete (via ConfirmDialog).
-  const onSave = (formData: DecisionSummaryFormType) => persistDecision(formData, false);
-  const onSubmit = (formData: DecisionSummaryFormType) => persistDecision(formData, true);
+  const onSave = async (formData: DecisionSummaryFormType) => {
+    // Abort if the engagement has pending edits that fail validation — persisting the decision
+    // while silently dropping the company or book date would be worse than saving nothing.
+    if (engagementSaveRef.current && !(await engagementSaveRef.current())) return;
+    return persistDecision(formData, false);
+  };
+  const onSubmit = async (formData: DecisionSummaryFormType) => {
+    // Submit means "hand the book on", so persist any staged engagement first.
+    if (engagementSaveRef.current && !(await engagementSaveRef.current())) return;
+
+    // Then refuse to complete an External assignment with no company recorded. The completion
+    // pipeline enforces the same rule via the existing ValidateAppraisalFields step
+    // (externalCompanyRecorded, from vw_AppraisalValidationContext); failing here just gives a
+    // plain message instead of a pipeline error.
+    if (canEditOfflineEngagement && !engagementComplete) {
+      toast.error(t('offlineEngagement.blockedOnSubmit'));
+      return;
+    }
+    return persistDecision(formData, true);
+  };
 
   const handleCancel = () => {
     if (data) {
@@ -1077,6 +1137,20 @@ const DecisionSummaryPage = () => {
                           </button>
                           <div className="h-6 w-px bg-gray-200" />
                         </>
+                      )}
+                      {/* Who appraised it — shown for any case that has an external company, so a
+                          normal external assignment is as legible here as an off-system one. Also
+                          the edit affordance for an off-system engagement. */}
+                      {appraisalId && (
+                        <ValuationEngagementChips
+                          appraisalId={appraisalId}
+                          assignment={assignments?.[0] ?? null}
+                          canEdit={canEditOfflineEngagement}
+                          currentUsername={currentUser?.username ?? null}
+                          saveHandleRef={engagementSaveRef}
+                          onDirtyChange={setEngagementDirty}
+                          onCompletenessChange={setEngagementComplete}
+                        />
                       )}
                       {data?.appraisalDate ? (
                         <div className="flex items-center gap-1.5 text-xs text-gray-500">
@@ -1488,7 +1562,7 @@ const DecisionSummaryPage = () => {
                       type="submit"
                       disabled={
                         (!appraisalId && !(isTaskOwner && !!taskId)) ||
-                        (!isDirty && !draftDirty) ||
+                        (!isDirty && !draftDirty && !engagementDirty) ||
                         isSaving
                       }
                     >

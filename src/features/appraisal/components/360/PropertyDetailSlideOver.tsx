@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { isAxiosError } from 'axios';
 import axios from '@shared/api/axiosInstance';
 import Icon from '@/shared/components/Icon';
+import DataErrorState from '@/shared/components/DataErrorState';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import type { PropertyType } from '../../types';
-import { getSectionsForType, type FieldDef } from './propertyDetailFieldConfigs';
+import { getSectionsForType } from './propertyDetailFieldConfigs';
 import { getDetailEndpoint } from '../../utils/propertyTypeConfig';
 
 interface PropertyDetailSlideOverProps {
@@ -43,10 +45,11 @@ const PropertyDetailSlideOver = ({
   propertyId,
   propertyType,
 }: PropertyDetailSlideOverProps) => {
+  const { t } = useTranslation('appraisal');
   const config = getConfig(propertyType);
 
   // Use the same query key pattern as existing hooks in api/property.ts
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['appraisals', appraisalId, config.queryKey, propertyId],
     queryFn: async () => {
       const { data } = await axios.get(
@@ -61,6 +64,10 @@ const PropertyDetailSlideOver = ({
     },
   });
 
+  // Above the early returns so the hook order stays stable. `t` is referentially
+  // stable per language, so this only recomputes on a language switch.
+  const sections = useMemo(() => getSectionsForType(propertyType, t), [propertyType, t]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -71,15 +78,17 @@ const PropertyDetailSlideOver = ({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 gap-2">
-        <Icon name="circle-exclamation" style="solid" className="w-6 h-6 text-red-400" />
-        <p className="text-sm text-red-600">Failed to load property details.</p>
-      </div>
+      <DataErrorState
+        variant="inline"
+        title={t('view360.errors.propertyDetail')}
+        message={(error as Error)?.message}
+        onRetry={refetch}
+      />
     );
   }
 
   if (!data) {
-    return <p className="text-sm text-gray-500 py-4">No detail data available.</p>;
+    return <p className="text-sm text-gray-500 py-4">{t('view360.propertyDetail.noData')}</p>;
   }
 
   // Photos from the property detail response
@@ -93,14 +102,14 @@ const PropertyDetailSlideOver = ({
   // Title deeds (land types have a `titles` array)
   const titles: any[] = data.titles ?? [];
 
-  const sections = getSectionsForType(propertyType);
-
   return (
     <div className="space-y-6">
       {/* Photos */}
       {photoUrls.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">Photos</h4>
+          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
+            {t('view360.propertyDetail.photos')}
+          </h4>
           <div className="grid grid-cols-2 gap-2">
             {photoUrls.slice(0, 4).map((url: string, idx: number) => (
               <div
@@ -112,7 +121,9 @@ const PropertyDetailSlideOver = ({
             ))}
           </div>
           {photoUrls.length > 4 && (
-            <p className="text-xs text-gray-400 mt-1">+{photoUrls.length - 4} more photos</p>
+            <p className="text-xs text-gray-400 mt-1">
+              {t('view360.propertyDetail.morePhotos', { n: photoUrls.length - 4 })}
+            </p>
           )}
         </div>
       )}
@@ -121,7 +132,7 @@ const PropertyDetailSlideOver = ({
       {titles.length > 0 && (
         <div>
           <h4 className="text-xs font-semibold text-gray-500 uppercase mb-2">
-            Title Deeds ({titles.length})
+            {t('view360.propertyDetail.titleDeeds', { n: titles.length })}
           </h4>
           <div className="space-y-3">
             {titles.map((title: any, idx: number) => (
@@ -172,7 +183,11 @@ const PropertyDetailSlideOver = ({
                 if (field.isBoolean) {
                   if (value == null) return null;
                   return (
-                    <DetailRow key={field.key} label={field.label} value={value ? 'Yes' : 'No'} />
+                    <DetailRow
+                      key={field.key}
+                      label={field.label}
+                      value={t(value ? 'view360.common.yes' : 'view360.common.no')}
+                    />
                   );
                 }
 
@@ -211,8 +226,9 @@ const PropertyDetailSlideOver = ({
 };
 
 const TitleDeedCard = ({ title, idx }: { title: any; idx: number }) => {
+  const { t } = useTranslation('appraisal');
   const [isOpen, setIsOpen] = useState(false);
-  const titleName = title.titleNumber || `Title ${idx + 1}`;
+  const titleName = title.titleNumber || t('view360.propertyDetail.titleFallback', { n: idx + 1 });
 
   // Build area string: e.g. "1-2-50.00" (Rai-Ngan-Sq.Wa)
   const areaParts: string[] = [];
@@ -251,49 +267,61 @@ const TitleDeedCard = ({ title, idx }: { title: any; idx: number }) => {
         <div className="px-4 py-2.5 space-y-0 text-xs">
           {title.bookNumber && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Book No.</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.bookNumber')}
+              </span>
               <span className="text-gray-900">{title.bookNumber}</span>
             </div>
           )}
           {title.pageNumber && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Page No.</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.pageNumber')}
+              </span>
               <span className="text-gray-900">{title.pageNumber}</span>
             </div>
           )}
           {title.rawang && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Rawang</span>
+              <span className="text-gray-500">{t('view360.propertyDetail.titleDeed.rawang')}</span>
               <span className="text-gray-900">{title.rawang}</span>
             </div>
           )}
           {title.landNumber && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Land No.</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.landNumber')}
+              </span>
               <span className="text-gray-900">{title.landNumber}</span>
             </div>
           )}
           {title.surveyNumber && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Survey No.</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.surveyNumber')}
+              </span>
               <span className="text-gray-900">{title.surveyNumber}</span>
             </div>
           )}
           {title.sheetNumber && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Sheet No.</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.sheetNumber')}
+              </span>
               <span className="text-gray-900">{title.sheetNumber}</span>
             </div>
           )}
           {areaStr && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Area (Rai-Ngan-Sq.Wa)</span>
+              <span className="text-gray-500">{t('view360.propertyDetail.titleDeed.area')}</span>
               <span className="text-gray-900 font-medium">{areaStr}</span>
             </div>
           )}
           {title.governmentPricePerSqWa != null && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Gov. Price / Sq.Wa</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.govPricePerSqWa')}
+              </span>
               <span className="text-gray-900">
                 {Number(title.governmentPricePerSqWa).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -304,7 +332,9 @@ const TitleDeedCard = ({ title, idx }: { title: any; idx: number }) => {
           )}
           {title.governmentPrice != null && (
             <div className="flex justify-between py-1 border-b border-gray-50">
-              <span className="text-gray-500">Gov. Price</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.govPrice')}
+              </span>
               <span className="text-gray-900 font-medium">
                 {Number(title.governmentPrice).toLocaleString(undefined, {
                   minimumFractionDigits: 2,
@@ -315,13 +345,15 @@ const TitleDeedCard = ({ title, idx }: { title: any; idx: number }) => {
           )}
           {title.isMissingFromSurvey != null && (
             <div className="flex justify-between py-1">
-              <span className="text-gray-500">Missed on Survey</span>
+              <span className="text-gray-500">
+                {t('view360.propertyDetail.titleDeed.missedOnSurvey')}
+              </span>
               <span
                 className={
                   title.isMissingFromSurvey ? 'text-amber-600 font-medium' : 'text-gray-900'
                 }
               >
-                {title.isMissingFromSurvey ? 'Yes' : 'No'}
+                {t(title.isMissingFromSurvey ? 'view360.common.yes' : 'view360.common.no')}
               </span>
             </div>
           )}

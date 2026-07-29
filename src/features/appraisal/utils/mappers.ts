@@ -646,12 +646,25 @@ export const mapLandAndBuildingFormDataToApiPayload = (
 };
 
 export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
+  // The backend stores only Internal/External on AssignmentType — the off-system variant is
+  // distinguished by AssignmentMethod = 'Offline'. Re-derive the third radio value here, or
+  // reopening an offline draft would show plain "External Company" and the admin's choice
+  // (and its EXTO routing) would be silently lost on the next Assign.
+  const isOffline = response.assignmentMethod?.toLowerCase() === 'offline';
+
   return {
-    assignmentType: response.assignmentType.toLowerCase() as 'internal' | 'external',
-    assignmentMethod: response.assignmentMethod.toLowerCase() as
-      | 'manual'
-      | 'roundrobin'
-      | 'quotation',
+    assignmentType: (isOffline ? 'external-offline' : response.assignmentType.toLowerCase()) as
+      | 'internal'
+      | 'external'
+      | 'external-offline',
+    // An offline row stores 'Offline' in AssignmentMethod as the TYPE marker, so the admin's
+    // manual-vs-roundrobin choice has to be recovered another way. It is implied by the data:
+    // manual means a specific keyer was named, round-robin means the activity picks one.
+    assignmentMethod: (isOffline
+      ? response.assigneeUserId
+        ? 'manual'
+        : 'roundrobin'
+      : response.assignmentMethod.toLowerCase()) as 'manual' | 'roundrobin' | 'quotation',
     staffId: response.assigneeUserId ?? null,
     companyId: response.assigneeCompanyId ?? null,
     followupStaffId: response.internalAppraiserId ?? null,
