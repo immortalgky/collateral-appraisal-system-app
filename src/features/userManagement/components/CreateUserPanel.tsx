@@ -35,6 +35,7 @@ interface FormState {
   position: string;
   department: string;
   aoCode: string;
+  employeeId: string;
   companyId: string;
   roles: string[];
   groups: string[];
@@ -53,6 +54,7 @@ const EMPTY_FORM: FormState = {
   position: '',
   department: '',
   aoCode: '',
+  employeeId: '',
   companyId: '',
   roles: [],
   groups: [],
@@ -125,6 +127,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
       companyId: scope === 'Bank' ? '' : prev.companyId,
       department: scope === 'Company' ? '' : prev.department,
       aoCode: scope === 'Company' ? '' : prev.aoCode,
+      employeeId: scope === 'Company' ? '' : prev.employeeId,
     }));
     setAccessTab('roles');
   };
@@ -204,6 +207,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
         position: form.position.trim() || null,
         department: isCompany ? null : form.department.trim() || null,
         aoCode: isCompany ? null : form.aoCode.trim() || null,
+        employeeId: isCompany ? null : form.employeeId.trim() || null,
         companyId: isCompany ? form.companyId : null,
         roles: form.roles,
         groupIds: form.groups,
@@ -420,6 +424,13 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   value={form.aoCode}
                   onChange={e => setField('aoCode', e.currentTarget.value)}
                   placeholder={t('placeholders.aoCode')}
+                />
+                <TextInput
+                  label={t('fields.employeeId')}
+                  value={form.employeeId}
+                  onChange={e => setField('employeeId', e.currentTarget.value)}
+                  placeholder={t('placeholders.employeeId')}
+                  maxLength={50}
                 />
               </>
             )}

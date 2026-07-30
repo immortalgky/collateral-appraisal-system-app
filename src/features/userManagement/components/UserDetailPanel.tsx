@@ -82,6 +82,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     department: '',
     companyId: null,
     aoCode: '',
+    employeeId: '',
   });
   const [editScope, setEditScope] = useState<'Bank' | 'Company'>('Bank');
   const [editAuthSource, setEditAuthSource] = useState<'Local' | 'LDAP'>('Local');
@@ -121,6 +122,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       companyId: scope === 'Bank' ? null : prev.companyId,
       department: scope === 'Company' ? '' : prev.department,
       aoCode: scope === 'Company' ? '' : prev.aoCode,
+      employeeId: scope === 'Company' ? '' : prev.employeeId,
     }));
   };
 
@@ -134,6 +136,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       department: user.department ?? '',
       companyId: user.companyId,
       aoCode: user.aoCode ?? '',
+      employeeId: user.employeeId ?? '',
     });
     setEditScope(user.companyId ? 'Company' : 'Bank');
     setEditAuthSource(user.authSource === 'LDAP' ? 'LDAP' : 'Local');
@@ -168,6 +171,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         department: isCompany ? null : editForm.department || null,
         companyId: isCompany ? editForm.companyId || null : null,
         aoCode: isCompany ? null : editForm.aoCode || null,
+        employeeId: isCompany ? null : editForm.employeeId || null,
         authSource: editAuthSource,
       },
       {
@@ -390,6 +394,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 ? [
                     { label: t('fields.department'), value: user.department },
                     { label: t('fields.aoCode'), value: user.aoCode },
+                    { label: t('fields.employeeId'), value: user.employeeId },
                   ]
                 : []),
               ...(user.companyName
@@ -762,6 +767,16 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                       setEditForm(prev => ({ ...prev, aoCode: value }));
                     }}
                     placeholder={t('placeholders.aoCode')}
+                  />
+                  <TextInput
+                    label={t('fields.employeeId')}
+                    value={editForm.employeeId ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, employeeId: value }));
+                    }}
+                    placeholder={t('placeholders.employeeId')}
+                    maxLength={50}
                   />
                 </>
               )}

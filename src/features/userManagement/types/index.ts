@@ -260,6 +260,7 @@ export interface AdminUserDetail extends AdminUserListItem {
   avatarUrl: string | null;
   authSource: 'Local' | 'LDAP';
   aoCode: string | null;
+  employeeId: string | null;
   companyName: string | null;
   groups: UserGroup[];
   teams: UserTeam[];
@@ -295,6 +296,8 @@ export interface AdminUpdateUserRequest {
   authSource?: 'Local' | 'LDAP';
   // Bank-internal officer code; only sent for bank users (no companyId).
   aoCode?: string | null;
+  // Bank staff employee id; only sent for bank users (no companyId).
+  employeeId?: string | null;
 }
 
 export interface UpdateUserRolesRequest {
@@ -328,6 +331,8 @@ export interface CreateUserRequest {
   authSource?: 'Local' | 'LDAP';
   // Bank-internal officer code; only sent for bank users (no companyId).
   aoCode?: string | null;
+  // Bank staff employee id; only sent for bank users (no companyId).
+  employeeId?: string | null;
 }
 
 export interface CreateUserResponse {
