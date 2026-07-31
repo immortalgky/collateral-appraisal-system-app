@@ -1274,7 +1274,7 @@ export const titleBuildingFields: FormField[] = [
     requiredWhen: {
       field: 'collateralType',
       operator: 'in',
-      is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
+      is: [...CONDO_TYPES],
     },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
@@ -1293,7 +1293,6 @@ export const titleBuildingFields: FormField[] = [
     label: _st('Number of Building'),
     name: 'numberOfBuilding',
     wrapperClassName: 'col-span-3',
-    requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
