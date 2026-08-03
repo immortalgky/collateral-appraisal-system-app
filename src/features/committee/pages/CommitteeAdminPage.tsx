@@ -18,9 +18,17 @@ import {
   useGetCommitteeDetail,
   useGetCommittees,
   useRemoveCommitteeMember,
+  useUpdateCommittee,
   useUpdateCommitteeMember,
 } from '../api/committees';
-import type { CommitteeMemberAttendance, CommitteeMemberDto } from '../api/types';
+import type {
+  CommitteeDetailDto,
+  CommitteeMemberAttendance,
+  CommitteeMemberDto,
+  MajorityType,
+  QuorumType,
+  VotingMode,
+} from '../api/types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -33,6 +41,19 @@ const ATTENDANCE_KEY: Record<CommitteeMemberAttendance, 'always' | 'odd' | 'even
   Always: 'always',
   Odd: 'odd',
   Even: 'even',
+};
+
+// Enum code → i18n key. The API sends PascalCase; keys are camelCase.
+const MAJORITY_KEY: Record<MajorityType, 'simple' | 'twoThirds' | 'unanimous' | 'fixedCount'> = {
+  Simple: 'simple',
+  TwoThirds: 'twoThirds',
+  Unanimous: 'unanimous',
+  FixedCount: 'fixedCount',
+};
+
+const VOTING_MODE_KEY: Record<VotingMode, 'waitForAll' | 'quorum'> = {
+  WaitForAll: 'waitForAll',
+  Quorum: 'quorum',
 };
 
 // ── Schemas ───────────────────────────────────────────────────────────────────
@@ -69,8 +90,44 @@ const updateMemberSchema = z.object({
   isActive: z.boolean(),
 });
 
+// Committee-level settings (everything except members). Code is immutable and omitted.
+// `activeMemberCount` mirrors the backend's reachability check so a threshold nobody could ever
+// reach is rejected here with a readable message rather than as a 500 from Committee.Update.
+const makeCommitteeSettingsSchema = (t: TFunction<'committee'>, activeMemberCount: number) =>
+  z
+    .object({
+      name: z.string().min(1, t('validation.nameRequired')),
+      description: z.string(),
+      quorumType: z.enum(['Fixed', 'Percentage'] as const),
+      // A number input yields a string; coerce before the range checks.
+      quorumValue: z.coerce.number().int().min(1, t('validation.quorumMin')),
+      majorityType: z.enum(['Simple', 'TwoThirds', 'Unanimous', 'FixedCount'] as const),
+      majorityValue: z.coerce.number().int().min(0),
+      votingMode: z.enum(['WaitForAll', 'Quorum'] as const),
+      isActive: z.boolean(),
+    })
+    .refine(v => v.quorumType !== 'Percentage' || v.quorumValue <= 100, {
+      message: t('validation.quorumPercentMax'),
+      path: ['quorumValue'],
+    })
+    .refine(v => v.majorityType !== 'FixedCount' || v.majorityValue > 0, {
+      message: t('validation.majorityValueRequired'),
+      path: ['majorityValue'],
+    })
+    .refine(
+      v =>
+        v.majorityType !== 'FixedCount' ||
+        activeMemberCount === 0 ||
+        v.majorityValue <= activeMemberCount,
+      {
+        message: t('validation.majorityValueExceedsMembers', { max: activeMemberCount }),
+        path: ['majorityValue'],
+      },
+    );
+
 type AddMemberFormValues = z.infer<ReturnType<typeof makeAddMemberSchema>>;
 type UpdateMemberFormValues = z.infer<typeof updateMemberSchema>;
+type CommitteeSettingsFormValues = z.infer<ReturnType<typeof makeCommitteeSettingsSchema>>;
 
 // ── Shared input class ────────────────────────────────────────────────────────
 
@@ -130,11 +187,14 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
       setValue('memberName', '', { shouldValidate: true });
       return;
     }
-    const user = committeeUsers.find(u => u.userName === userName);
+    // The API serialises UserListItemDto.Username as "username" — reading user.userName
+    // here yielded undefined, so this lookup never matched and no member could be added.
+    const user = committeeUsers.find(u => u.username === userName);
     if (!user) return;
-    setValue('userId', user.userName, { shouldValidate: true });
+    // CommitteeMember.UserId holds the bank username, not a Guid.
+    setValue('userId', user.username, { shouldValidate: true });
     const displayName =
-      user.firstName || user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.userName;
+      user.firstName || user.lastName ? `${user.firstName} ${user.lastName}`.trim() : user.username;
     setValue('memberName', displayName, { shouldValidate: true });
   };
 
@@ -184,10 +244,10 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
                   : t('addDialog.selectUser')}
             </option>
             {committeeUsers.map(user => (
-              <option key={user.id} value={user.userName}>
+              <option key={user.id} value={user.username}>
                 {user.firstName || user.lastName
                   ? `${user.firstName} ${user.lastName}`.trim()
-                  : user.userName}
+                  : user.username}
               </option>
             ))}
           </select>
@@ -355,6 +415,226 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
   );
 };
 
+// ── Committee settings dialog ─────────────────────────────────────────────────
+// Everything on a committee other than its members. Code is intentionally absent:
+// it is the stable lookup key and the update endpoint does not accept it.
+
+interface CommitteeSettingsDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  committee: CommitteeDetailDto;
+}
+
+const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettingsDialogProps) => {
+  const { t } = useTranslation(['committee', 'common']);
+  const updateCommittee = useUpdateCommittee();
+
+  const activeMemberCount = (committee.members ?? []).filter(m => m.isActive).length;
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<CommitteeSettingsFormValues>({
+    resolver: zodResolver(makeCommitteeSettingsSchema(t, activeMemberCount)),
+    defaultValues: {
+      name: committee.name,
+      description: committee.description ?? '',
+      quorumType: (committee.quorumType as QuorumType) ?? 'Fixed',
+      quorumValue: committee.quorumValue,
+      majorityType: (committee.majorityType as MajorityType) ?? 'Simple',
+      majorityValue: committee.majorityValue ?? 0,
+      votingMode: committee.votingMode ?? 'WaitForAll',
+      isActive: committee.isActive,
+    },
+  });
+
+  const quorumType = watch('quorumType');
+  const votingMode = watch('votingMode');
+  const majorityType = watch('majorityType');
+
+  const handleClose = () => {
+    if (!updateCommittee.isPending) onClose();
+  };
+
+  const onSubmit = (values: CommitteeSettingsFormValues) => {
+    updateCommittee.mutate(
+      {
+        id: committee.id,
+        body: {
+          ...values,
+          description: values.description.trim() || null,
+          // Normalise away any stale threshold when the rule is not FixedCount.
+          majorityValue: values.majorityType === 'FixedCount' ? values.majorityValue : 0,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('toasts.settingsUpdated'));
+          onClose();
+        },
+        onError: (error: unknown) => {
+          const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
+          toast.error(detail || t('toasts.settingsUpdateFailed'));
+        },
+      },
+    );
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('settingsDialog.title')} size="md">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label htmlFor="cs-name" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.name')}
+          </label>
+          <input id="cs-name" type="text" {...register('name')} className={inputClass} />
+          {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="cs-description" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.description')}
+          </label>
+          <textarea
+            id="cs-description"
+            rows={2}
+            {...register('description')}
+            className={inputClass}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="cs-quorumType" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('fields.quorumType')}
+            </label>
+            <select id="cs-quorumType" {...register('quorumType')} className={inputClass}>
+              <option value="Fixed">{t('quorumType.fixed')}</option>
+              <option value="Percentage">{t('quorumType.percentage')}</option>
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="cs-quorumValue"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {quorumType === 'Percentage'
+                ? t('fields.quorumValuePercent')
+                : t('fields.quorumValueCount')}
+            </label>
+            <input
+              id="cs-quorumValue"
+              type="number"
+              min={1}
+              max={quorumType === 'Percentage' ? 100 : undefined}
+              {...register('quorumValue')}
+              className={inputClass}
+            />
+            {errors.quorumValue && (
+              <p className="mt-1 text-xs text-red-600">{errors.quorumValue.message}</p>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="cs-majorityType" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.majorityType')}
+          </label>
+          <select id="cs-majorityType" {...register('majorityType')} className={inputClass}>
+            <option value="Simple">{t('majorityType.simple')}</option>
+            <option value="TwoThirds">{t('majorityType.twoThirds')}</option>
+            <option value="Unanimous">{t('majorityType.unanimous')}</option>
+            <option value="FixedCount">{t('majorityType.fixedCount')}</option>
+          </select>
+          {/* The proportional rules are evaluated against the whole committee, not votes cast. */}
+          <p className="mt-1 text-xs text-gray-400">
+            {majorityType === 'FixedCount' ? t('help.majorityFixedCount') : t('help.majority')}
+          </p>
+        </div>
+
+        {/* Only FixedCount reads majorityValue; the proportional types ignore it and it is
+            submitted as 0 so the stored value cannot linger. */}
+        {majorityType === 'FixedCount' && (
+          <div>
+            <label
+              htmlFor="cs-majorityValue"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {t('fields.majorityValue')}
+            </label>
+            <input
+              id="cs-majorityValue"
+              type="number"
+              min={1}
+              max={activeMemberCount || undefined}
+              {...register('majorityValue')}
+              className={inputClass}
+            />
+            {errors.majorityValue ? (
+              <p className="mt-1 text-xs text-red-600">{errors.majorityValue.message}</p>
+            ) : (
+              <p className="mt-1 text-xs text-gray-400">
+                {t('help.majorityValue', { max: activeMemberCount })}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="cs-votingMode" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.votingMode')}
+          </label>
+          <select id="cs-votingMode" {...register('votingMode')} className={inputClass}>
+            <option value="WaitForAll">{t('votingMode.waitForAll')}</option>
+            <option value="Quorum">{t('votingMode.quorum')}</option>
+          </select>
+          <p className="mt-1 text-xs text-gray-400">
+            {votingMode === 'Quorum' ? t('help.votingQuorum') : t('help.votingWaitForAll')}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            id="cs-isActive"
+            type="checkbox"
+            {...register('isActive')}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="cs-isActive" className="text-sm font-medium text-gray-700">
+            {t('fields.active')}
+          </label>
+        </div>
+        <p className="text-xs text-gray-400">{t('help.committeeActive')}</p>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={handleClose}
+            disabled={updateCommittee.isPending}
+          >
+            {t('common:actions.cancel')}
+          </Button>
+          <Button type="submit" disabled={updateCommittee.isPending}>
+            {updateCommittee.isPending ? t('common:status.saving') : t('common:actions.save')}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
+// ── Committee settings summary card ───────────────────────────────────────────
+
+const SettingItem = ({ label, value }: { label: string; value: string }) => (
+  <div>
+    <p className="text-xs text-gray-500">{label}</p>
+    <p className="text-sm text-gray-900">{value}</p>
+  </div>
+);
+
 // ── Committee detail panel ────────────────────────────────────────────────────
 
 interface CommitteeDetailPanelProps {
@@ -366,6 +646,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
   const { data: committee, isLoading } = useGetCommitteeDetail(committeeId);
   const removeMember = useRemoveCommitteeMember();
   const addMemberDialog = useDisclosure();
+  const settingsDialog = useDisclosure();
   const [editingMember, setEditingMember] = useState<CommitteeMemberDto | null>(null);
 
   if (isLoading) {
@@ -394,8 +675,49 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
 
   const members = committee.members ?? [];
 
+  const quorumLabel =
+    committee.quorumType === 'Percentage'
+      ? t('summary.quorumPercent', { value: committee.quorumValue })
+      : t('summary.quorumFixed', { value: committee.quorumValue });
+
+  // FixedCount is meaningless without its threshold, so show the number inline.
+  const majorityLabel =
+    committee.majorityType === 'FixedCount'
+      ? t('summary.majorityFixedCount', { value: committee.majorityValue })
+      : t(`majorityType.${MAJORITY_KEY[committee.majorityType as MajorityType]}`);
+
   return (
     <div className="space-y-4">
+      {/* Committee-level configuration — quorum, majority and voting mode drive how the
+          approval step resolves, so they belong on this screen next to the members. */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mb-3 flex items-start justify-between">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700">{t('summary.title')}</h3>
+            {committee.description && (
+              <p className="mt-0.5 text-xs text-gray-500">{committee.description}</p>
+            )}
+          </div>
+          <Button size="sm" variant="ghost" type="button" onClick={settingsDialog.onOpen}>
+            <Icon name="pen" style="solid" className="size-3.5 mr-1.5" />
+            {t('summary.edit')}
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <SettingItem label={t('fields.quorumType')} value={quorumLabel} />
+          <SettingItem label={t('fields.majorityType')} value={majorityLabel} />
+          <SettingItem
+            label={t('fields.votingMode')}
+            value={t(`votingMode.${VOTING_MODE_KEY[committee.votingMode] ?? 'waitForAll'}`)}
+          />
+          <SettingItem
+            label={t('fields.active')}
+            value={committee.isActive ? t('common:status.active') : t('common:status.inactive')}
+          />
+        </div>
+      </div>
+
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-700">
           {t('panel.membersActive', { count: members.filter(m => m.isActive).length })}
@@ -479,6 +801,15 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
         onClose={addMemberDialog.onClose}
         committeeId={committeeId}
       />
+
+      {/* Remount per open so the form re-seeds from the latest server values. */}
+      {settingsDialog.isOpen && (
+        <CommitteeSettingsDialog
+          isOpen={true}
+          onClose={settingsDialog.onClose}
+          committee={committee}
+        />
+      )}
 
       {editingMember && (
         <EditMemberDialog
