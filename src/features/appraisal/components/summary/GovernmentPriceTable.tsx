@@ -55,14 +55,14 @@ const GovernmentPriceTable = ({ rows, totalArea, surveyedArea, avgPerSqWa }: Gov
           className={row.isMissingFromSurvey ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'}
         >
           <td className="px-3 py-2 text-gray-900">
-            <span className="inline-flex items-center gap-2">
-              {row.titleNumber ?? '-'}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="min-w-0 break-words">{row.titleNumber ?? '-'}</span>
               {row.isMissingFromSurvey && (
                 <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
                   {t('governmentPriceTable.missingFromSurvey')}
                 </span>
               )}
-            </span>
+            </div>
           </td>
           <td className="px-3 py-2 text-right text-gray-700 tabular-nums">
             {row.areaSquareWa != null ? formatNumber(row.areaSquareWa, 2) : '-'}
