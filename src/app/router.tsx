@@ -239,6 +239,16 @@ const TaskAssignmentConfigPage = lazy(
 const CompanyRoundRobinConfigPage = lazy(
   () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
 );
+const AutoAssignmentRulesPage = lazy(
+  () => import('@features/autoAssignmentRules/pages/AutoAssignmentRulesPage')
+);
+const SystemConfigurationPage = lazy(
+  () => import('@features/systemConfiguration/pages/SystemConfigurationPage')
+);
+const JobSchedulesPage = lazy(() => import('@features/jobSchedules/pages/JobSchedulesPage'));
+const AddressMasterPage = lazy(
+  () => import('@features/addressMaster/pages/AddressMasterPage')
+);
 const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
 const OperationalReportRoute = lazy(
   () => import('@features/common/operationalReports/pages/OperationalReportRoute')
@@ -472,10 +482,30 @@ export const router = createBrowserRouter([
       {
         path: 'admin',
         children: [
-          { path: 'permissions', element: <PermissionListPage /> },
-          { path: 'roles', element: <RoleListPage /> },
-          { path: 'groups', element: <GroupListPage /> },
-          { path: 'users', element: <UserProfilePage /> },
+          // Gates mirror the menu nodes in MenuSeedData.cs (main.user-management.*),
+          // which until now were the only thing hiding these screens.
+          {
+            path: 'permissions',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="PERMISSION_MANAGE" />
+            ),
+            children: [{ index: true, element: <PermissionListPage /> }],
+          },
+          {
+            path: 'roles',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="ROLE_MANAGE" />,
+            children: [{ index: true, element: <RoleListPage /> }],
+          },
+          {
+            path: 'groups',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="GROUP_MANAGE" />,
+            children: [{ index: true, element: <GroupListPage /> }],
+          },
+          {
+            path: 'users',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="USER_MANAGE" />,
+            children: [{ index: true, element: <UserProfilePage /> }],
+          },
           {
             path: 'teams',
             element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="TEAM_MANAGE" />,
@@ -503,12 +533,46 @@ export const router = createBrowserRouter([
             element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="AUTH_AUDIT_VIEW" />,
             children: [{ index: true, element: <AccessReportPage /> }],
           },
-          { path: 'committees', element: <CommitteeAdminPage /> },
+          // These six previously relied on the backend menu not surfacing them, which
+          // does not stop direct URL entry. Gates mirror the menu nodes in MenuSeedData.cs.
+          {
+            path: 'committees',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="MEETING_ADMIN" />,
+            children: [{ index: true, element: <CommitteeAdminPage /> }],
+          },
           { path: 'reports/test', element: <ReportTestPage /> },
-          { path: 'fee-approval-tiers', element: <FeeApprovalTierPage /> },
-          { path: 'appointment-approval-rule', element: <AppointmentApprovalRulePage /> },
-          { path: 'fee-structures', element: <FeeStructurePage /> },
-          { path: 'evaluation-config', element: <EvaluationConfigPage /> },
+          {
+            path: 'fee-approval-tiers',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="FEE_APPROVAL_CONFIG" />
+            ),
+            children: [{ index: true, element: <FeeApprovalTierPage /> }],
+          },
+          {
+            path: 'appointment-approval-rule',
+            element: (
+              <RoleProtectedRoute
+                allowedRoles={[]}
+                requiredPermission="APPOINTMENT_APPROVAL_CONFIG"
+              />
+            ),
+            children: [{ index: true, element: <AppointmentApprovalRulePage /> }],
+          },
+          {
+            path: 'fee-structures',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="PARAMETER_MANAGE" />,
+            children: [{ index: true, element: <FeeStructurePage /> }],
+          },
+          {
+            path: 'evaluation-config',
+            element: (
+              <RoleProtectedRoute
+                allowedRoles={[]}
+                requiredPermission="EVALUATION_CONFIG_MANAGE"
+              />
+            ),
+            children: [{ index: true, element: <EvaluationConfigPage /> }],
+          },
           {
             path: 'sla-config',
             element: (
@@ -516,8 +580,18 @@ export const router = createBrowserRouter([
             ),
             children: [{ index: true, element: <SlaConfigPage /> }],
           },
-          { path: 'document-requirements', element: <DocumentRequirementsPage /> },
-          { path: 'webhook-deliveries', element: <WebhookDeliveryListPage /> },
+          {
+            path: 'document-requirements',
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="PARAMETER_MANAGE" />,
+            children: [{ index: true, element: <DocumentRequirementsPage /> }],
+          },
+          {
+            path: 'webhook-deliveries',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WEBHOOK_DELIVERIES_VIEW" />
+            ),
+            children: [{ index: true, element: <WebhookDeliveryListPage /> }],
+          },
           {
             path: 'webhook-subscriptions',
             element: (
@@ -586,6 +660,38 @@ export const router = createBrowserRouter([
               <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
             ),
             children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
+          },
+          // Initial-routing rules — same WORKFLOW_ADMIN gate as the backend endpoints
+          {
+            path: 'auto-assignment-rules',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <AutoAssignmentRulesPage /> }],
+          },
+          // Global runtime settings — PARAMETER_MANAGE, alongside the other parameter screens
+          {
+            path: 'system-configurations',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="PARAMETER_MANAGE" />
+            ),
+            children: [{ index: true, element: <SystemConfigurationPage /> }],
+          },
+          // Title (Land Dept) and DOPA geocode hierarchies
+          {
+            path: 'address-masters',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="ADDRESS_MASTER_MANAGE" />
+            ),
+            children: [{ index: true, element: <AddressMasterPage /> }],
+          },
+          // Hangfire recurring-job schedules across every module
+          {
+            path: 'job-schedules',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="JOB_SCHEDULE_MANAGE" />
+            ),
+            children: [{ index: true, element: <JobSchedulesPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {

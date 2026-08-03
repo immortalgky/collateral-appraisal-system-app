@@ -1,0 +1,66 @@
+{
+  "page": {
+    "title": "Auto Assignment Rules",
+    "subtitle": "Decide where a new appraisal is routed at initial-routing. Rules are evaluated by ascending priority and the first match wins.",
+    "noActiveRules": "No rule is active. Routing falls back to the conditions declared in the workflow definition.",
+    "empty": "No rules configured yet."
+  },
+  "actions": {
+    "addRule": "Add rule",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "sections": {
+    "matchConditions": "Match conditions"
+  },
+  "table": {
+    "priority": "Priority",
+    "rule": "Rule",
+    "conditions": "Conditions",
+    "routesTo": "Routes to",
+    "status": "Status",
+    "matchesEverything": "Matches everything"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "fields": {
+    "ruleName": "Rule name",
+    "priority": "Priority",
+    "routingDecision": "Routing decision",
+    "channels": "Channels",
+    "entrySources": "Entry sources",
+    "loanTypes": "Loan types",
+    "priorities": "Priorities",
+    "facility": "Facility",
+    "minFacilityLimit": "Min facility limit",
+    "maxFacilityLimit": "Max facility limit",
+    "conditionExpression": "Condition expression",
+    "isActive": "Active"
+  },
+  "hints": {
+    "priority": "Lower runs first.",
+    "csv": "Comma-separated. Leave blank to match any value.",
+    "conditionExpression": "Optional expression, compile-checked when you save. Leave blank for no extra condition."
+  },
+  "modal": {
+    "addTitle": "Add auto assignment rule",
+    "editTitle": "Edit auto assignment rule"
+  },
+  "validation": {
+    "nameRequired": "Rule name is required.",
+    "minAboveMax": "Minimum facility limit cannot be greater than the maximum."
+  },
+  "confirm": {
+    "deleteTitle": "Delete rule",
+    "deleteMessage": "Delete \"{{name}}\"? New appraisals will no longer be routed by this rule."
+  },
+  "toasts": {
+    "created": "Rule created",
+    "updated": "Rule updated",
+    "deleted": "Rule deleted",
+    "saveFailed": "Could not save the rule",
+    "deleteFailed": "Could not delete the rule"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "System Configuration",
+    "subtitle": "Global settings read by the application at runtime. Keys are defined in code — this screen changes their values, not the set of keys.",
+    "searchPlaceholder": "Search key or description…",
+    "uncategorised": "Uncategorised",
+    "empty": "No system configuration entries.",
+    "noMatches": "No entries match your search."
+  },
+  "actions": {
+    "edit": "Edit"
+  },
+  "status": {
+    "inactive": "Inactive"
+  },
+  "fields": {
+    "key": "Key",
+    "value": "Value",
+    "description": "Description",
+    "isActive": "Active"
+  },
+  "hints": {
+    "isActive": "When inactive, readers fall back to the default built into the code."
+  },
+  "modal": {
+    "title": "Edit system configuration"
+  },
+  "validation": {
+    "valueRequired": "Value is required.",
+    "notANumber": "Value must be a valid {{valueType}}.",
+    "notAnInteger": "Value must be a whole number."
+  },
+  "toasts": {
+    "updated": "Configuration updated",
+    "saveFailed": "Could not save the configuration"
+  }
+}

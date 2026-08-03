@@ -104,6 +104,10 @@ function ConfigModal({
   const [specificAssignee, setSpecificAssignee] = useState('');
   const [adminPoolId, setAdminPoolId] = useState('');
   const [escalateToAdminPool, setEscalateToAdminPool] = useState(true);
+  // '' = inherit the workflow definition JSON; 'on'/'off' force the flag.
+  const [teamConstrained, setTeamConstrained] = useState<'' | 'on' | 'off'>('');
+  // null = inherit the workflow definition JSON; an array (possibly empty) overrides it.
+  const [excludeAssigneesFrom, setExcludeAssigneesFrom] = useState<string[] | null>(null);
   const [isActive, setIsActive] = useState(true);
 
   // Reset whenever the target row changes (same modal reused for create + each edit).
@@ -116,6 +120,10 @@ function ConfigModal({
     setSpecificAssignee(editing?.specificAssignee ?? '');
     setAdminPoolId(editing?.adminPoolId ?? '');
     setEscalateToAdminPool(editing?.escalateToAdminPool ?? true);
+    setTeamConstrained(
+      editing?.teamConstrained == null ? '' : editing.teamConstrained ? 'on' : 'off',
+    );
+    setExcludeAssigneesFrom(editing?.excludeAssigneesFrom ?? null);
     setIsActive(editing?.isActive ?? true);
   }, [editing, isOpen]);
 
@@ -139,6 +147,8 @@ function ConfigModal({
         specificAssignee: specificAssignee.trim() || null,
         adminPoolId: adminPoolId.trim() || null,
         escalateToAdminPool,
+        teamConstrained: teamConstrained === '' ? null : teamConstrained === 'on',
+        excludeAssigneesFrom,
         isActive,
       },
       editing?.id,
@@ -254,6 +264,75 @@ function ConfigModal({
           onChange={setRouteBackStrategies}
           baseline={baseline?.revisitAssignmentStrategies}
         />
+
+        {/* Team constraint (tri-state) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.teamConstrained')}{' '}
+            <span className="text-xs font-normal text-gray-400">{t('fields.teamConstrainedHint')}</span>
+          </label>
+          <select
+            value={teamConstrained}
+            onChange={e => setTeamConstrained(e.target.value as '' | 'on' | 'off')}
+            className={inputClass}
+          >
+            <option value="">{t('fields.teamConstrainedInherit')}</option>
+            <option value="on">{t('fields.teamConstrainedOn')}</option>
+            <option value="off">{t('fields.teamConstrainedOff')}</option>
+          </select>
+        </div>
+
+        {/* Exclude assignees who completed an earlier activity */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.excludeAssigneesFrom')}{' '}
+            <span className="text-xs font-normal text-gray-400">{t('fields.excludeAssigneesFromHint')}</span>
+          </label>
+          {excludeAssigneesFrom === null ? (
+            <button
+              type="button"
+              onClick={() => setExcludeAssigneesFrom([])}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              {t('fields.excludeAssigneesFromInherit')}
+            </button>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-gray-200 p-2 max-h-40 overflow-y-auto">
+                {activities.length === 0 ? (
+                  <p className="col-span-2 text-xs text-gray-400">{t('fields.excludeAssigneesFromNoActivities')}</p>
+                ) : (
+                  activities
+                    .filter(a => a.id !== activityId)
+                    .map(a => (
+                      <label key={a.id} className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={excludeAssigneesFrom.includes(a.id)}
+                          onChange={() =>
+                            setExcludeAssigneesFrom(prev =>
+                              (prev ?? []).includes(a.id)
+                                ? (prev ?? []).filter(x => x !== a.id)
+                                : [...(prev ?? []), a.id],
+                            )
+                          }
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                        />
+                        <span className="font-mono text-gray-700">{a.id}</span>
+                      </label>
+                    ))
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setExcludeAssigneesFrom(null)}
+                className="mt-1 text-xs text-gray-500 hover:underline"
+              >
+                {t('fields.excludeAssigneesFromReset')}
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Specific assignee */}
         <div>

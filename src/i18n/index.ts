@@ -39,6 +39,10 @@ import enWorkflowBuilder from './locales/en/workflowBuilder.json';
 import enBlockReappraisal from './locales/en/blockReappraisal.json';
 import enWorkflowAssignmentConfig from './locales/en/workflowAssignmentConfig.json';
 import enCompanyRoundRobinConfig from './locales/en/companyRoundRobinConfig.json';
+import enAutoAssignmentRules from './locales/en/autoAssignmentRules.json';
+import enSystemConfiguration from './locales/en/systemConfiguration.json';
+import enJobSchedules from './locales/en/jobSchedules.json';
+import enAddressMaster from './locales/en/addressMaster.json';
 
 export const defaultNS = 'common' as const;
 
@@ -79,6 +83,10 @@ export const resources = {
     blockReappraisal: enBlockReappraisal,
     workflowAssignmentConfig: enWorkflowAssignmentConfig,
     companyRoundRobinConfig: enCompanyRoundRobinConfig,
+    autoAssignmentRules: enAutoAssignmentRules,
+    systemConfiguration: enSystemConfiguration,
+    jobSchedules: enJobSchedules,
+    addressMaster: enAddressMaster,
   },
 } as const;
 
@@ -149,6 +157,10 @@ i18n.addResourceBundle('zh', 'historySearch', enHistorySearch, true, false);
 i18n.addResourceBundle('zh', 'blockUnitMaintenance', enBlockUnitMaintenance, true, false);
 i18n.addResourceBundle('zh', 'workflowAssignmentConfig', enWorkflowAssignmentConfig, true, false);
 i18n.addResourceBundle('zh', 'companyRoundRobinConfig', enCompanyRoundRobinConfig, true, false);
+i18n.addResourceBundle('zh', 'autoAssignmentRules', enAutoAssignmentRules, true, false);
+i18n.addResourceBundle('zh', 'systemConfiguration', enSystemConfiguration, true, false);
+i18n.addResourceBundle('zh', 'jobSchedules', enJobSchedules, true, false);
+i18n.addResourceBundle('zh', 'addressMaster', enAddressMaster, true, false);
 
 // Also sync immediately in case init completed synchronously before the listener was ready
 syncLocale(i18n.language);

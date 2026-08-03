@@ -6,7 +6,14 @@ import type {
   CommitteeListItemDto,
   GetCommitteesResponse,
   UpdateCommitteeMemberRequest,
+  UpdateCommitteeRequest,
 } from './types';
+
+// Committee endpoints are mapped under /api/workflows/committees (see
+// Modules/Workflow/.../Features/Committees/*Endpoint.cs). Note this differs from the
+// module's other feature routes — document-followups and fee-appointment-approvals are
+// mapped at /workflows/... with no /api segment — so do not "normalise" this prefix.
+const BASE = '/api/workflows/committees';
 
 export const committeeKeys = {
   all: ['committees'] as const,
@@ -18,7 +25,7 @@ export const useGetCommittees = () => {
   return useQuery({
     queryKey: committeeKeys.list(),
     queryFn: async (): Promise<CommitteeListItemDto[]> => {
-      const { data } = await axios.get<GetCommitteesResponse>('/workflows/committees');
+      const { data } = await axios.get<GetCommitteesResponse>(BASE);
       return data.committees;
     },
   });
@@ -28,10 +35,24 @@ export const useGetCommitteeDetail = (id: string | undefined) => {
   return useQuery({
     queryKey: committeeKeys.detail(id ?? ''),
     queryFn: async (): Promise<CommitteeDetailDto> => {
-      const { data } = await axios.get(`/workflows/committees/${id}`);
+      const { data } = await axios.get(`${BASE}/${id}`);
       return data;
     },
     enabled: !!id,
+  });
+};
+
+export const useUpdateCommittee = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, body }: { id: string; body: UpdateCommitteeRequest }) => {
+      await axios.put(`${BASE}/${id}`, body);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: committeeKeys.detail(variables.id) });
+      // Name / status / quorum also show in the left-hand list, so refresh it too.
+      queryClient.invalidateQueries({ queryKey: committeeKeys.list() });
+    },
   });
 };
 
@@ -45,7 +66,7 @@ export const useAddCommitteeMember = () => {
       committeeId: string;
       body: AddCommitteeMemberRequest;
     }) => {
-      await axios.post(`/workflows/committees/${committeeId}/members`, body);
+      await axios.post(`${BASE}/${committeeId}/members`, body);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: committeeKeys.detail(variables.committeeId) });
@@ -65,7 +86,7 @@ export const useUpdateCommitteeMember = () => {
       memberId: string;
       body: UpdateCommitteeMemberRequest;
     }) => {
-      await axios.patch(`/workflows/committees/${committeeId}/members/${memberId}`, body);
+      await axios.patch(`${BASE}/${committeeId}/members/${memberId}`, body);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: committeeKeys.detail(variables.committeeId) });
@@ -83,7 +104,7 @@ export const useRemoveCommitteeMember = () => {
       committeeId: string;
       memberId: string;
     }) => {
-      await axios.delete(`/workflows/committees/${committeeId}/members/${memberId}`);
+      await axios.delete(`${BASE}/${committeeId}/members/${memberId}`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: committeeKeys.detail(variables.committeeId) });

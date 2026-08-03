@@ -1,0 +1,45 @@
+{
+  "page": {
+    "title": "Scheduled Jobs",
+    "subtitle": "Cron schedule, timezone and on/off state for every recurring background job. Changes take effect immediately — no restart needed.",
+    "empty": "No recurring jobs are registered."
+  },
+  "actions": {
+    "edit": "Edit"
+  },
+  "table": {
+    "job": "Job",
+    "schedule": "Schedule",
+    "timeZone": "Time zone",
+    "status": "Status",
+    "overridden": "overridden",
+    "appDefault": "app default"
+  },
+  "status": {
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "fields": {
+    "jobId": "Job id",
+    "cronExpression": "Cron expression",
+    "timeZoneId": "Time zone",
+    "timeZonePlaceholder": "Application default ({{timeZone}})",
+    "isEnabled": "Enabled"
+  },
+  "hints": {
+    "default": "Code default:",
+    "timeZone": "Leave blank to use the application timezone.",
+    "isEnabled": "When disabled, the job is removed from the scheduler and will not run."
+  },
+  "modal": {
+    "title": "Edit job schedule"
+  },
+  "validation": {
+    "cronRequired": "Cron expression is required.",
+    "cronShape": "A cron expression has 5 fields (or 6 with seconds)."
+  },
+  "toasts": {
+    "updated": "Schedule updated",
+    "saveFailed": "Could not update the schedule"
+  }
+}
