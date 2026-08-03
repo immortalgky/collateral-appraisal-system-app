@@ -239,6 +239,12 @@ const TaskAssignmentConfigPage = lazy(
 const CompanyRoundRobinConfigPage = lazy(
   () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
 );
+const AutoAssignmentRulesPage = lazy(
+  () => import('@features/autoAssignmentRules/pages/AutoAssignmentRulesPage')
+);
+const SystemConfigurationPage = lazy(
+  () => import('@features/systemConfiguration/pages/SystemConfigurationPage')
+);
 const JobSchedulesPage = lazy(() => import('@features/jobSchedules/pages/JobSchedulesPage'));
 const AddressMasterPage = lazy(
   () => import('@features/addressMaster/pages/AddressMasterPage')
@@ -590,6 +596,22 @@ export const router = createBrowserRouter([
               <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
             ),
             children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
+          },
+          // Initial-routing rules — same WORKFLOW_ADMIN gate as the backend endpoints
+          {
+            path: 'auto-assignment-rules',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
+            ),
+            children: [{ index: true, element: <AutoAssignmentRulesPage /> }],
+          },
+          // Global runtime settings — PARAMETER_MANAGE, alongside the other parameter screens
+          {
+            path: 'system-configurations',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="PARAMETER_MANAGE" />
+            ),
+            children: [{ index: true, element: <SystemConfigurationPage /> }],
           },
           // Title (Land Dept) and DOPA geocode hierarchies
           {
