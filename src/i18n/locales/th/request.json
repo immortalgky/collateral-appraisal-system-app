@@ -109,6 +109,7 @@
     "prevAppraisalCasStatus": "เลขที่รายงาน/สถานะ CAS",
     "titleType": "ประเภทโฉนด",
     "titleNumber": "เลขที่โฉนด",
+    "builtOnTitleNumber": "เลขที่โฉนด",
     "bookNumber": "เล่มที่",
     "pageNumber": "หน้าที่",
     "rawang": "ระวาง",

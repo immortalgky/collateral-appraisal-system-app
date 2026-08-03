@@ -120,6 +120,7 @@
     "prevAppraisalCasStatus": "Previous Appraisal Report No / CAS Status",
     "titleType": "Title Type",
     "titleNumber": "Title Number",
+    "builtOnTitleNumber": "Title Number",
     "bookNumber": "Book Number",
     "pageNumber": "Page Number",
     "rawang": "Rawang",
