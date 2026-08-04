@@ -7,6 +7,8 @@ import type {
   GetCommitteesResponse,
   UpdateCommitteeMemberRequest,
   UpdateCommitteeRequest,
+  AddCommitteeConditionRequest,
+  UpdateCommitteeConditionRequest,
 } from './types';
 
 // Committee endpoints are mapped under /api/workflows/committees (see
@@ -97,17 +99,68 @@ export const useUpdateCommitteeMember = () => {
 export const useRemoveCommitteeMember = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({
-      committeeId,
-      memberId,
-    }: {
-      committeeId: string;
-      memberId: string;
-    }) => {
+    mutationFn: async ({ committeeId, memberId }: { committeeId: string; memberId: string }) => {
       await axios.delete(`${BASE}/${committeeId}/members/${memberId}`);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: committeeKeys.detail(variables.committeeId) });
     },
+  });
+};
+
+// ── Approval conditions ───────────────────────────────────────────────────────
+// Every mutation invalidates the committee detail: conditions are returned as part of it, and the
+// list card renders straight off that payload.
+
+const invalidateDetail = (queryClient: ReturnType<typeof useQueryClient>, committeeId: string) =>
+  queryClient.invalidateQueries({ queryKey: committeeKeys.detail(committeeId) });
+
+export const useAddCommitteeCondition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      committeeId,
+      body,
+    }: {
+      committeeId: string;
+      body: AddCommitteeConditionRequest;
+    }) => {
+      await axios.post(`${BASE}/${committeeId}/conditions`, body);
+    },
+    onSuccess: (_data, variables) => invalidateDetail(queryClient, variables.committeeId),
+  });
+};
+
+export const useUpdateCommitteeCondition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      committeeId,
+      conditionId,
+      body,
+    }: {
+      committeeId: string;
+      conditionId: string;
+      body: UpdateCommitteeConditionRequest;
+    }) => {
+      await axios.patch(`${BASE}/${committeeId}/conditions/${conditionId}`, body);
+    },
+    onSuccess: (_data, variables) => invalidateDetail(queryClient, variables.committeeId),
+  });
+};
+
+export const useRemoveCommitteeCondition = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      committeeId,
+      conditionId,
+    }: {
+      committeeId: string;
+      conditionId: string;
+    }) => {
+      await axios.delete(`${BASE}/${committeeId}/conditions/${conditionId}`);
+    },
+    onSuccess: (_data, variables) => invalidateDetail(queryClient, variables.committeeId),
   });
 };

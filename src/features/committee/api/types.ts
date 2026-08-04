@@ -1,4 +1,7 @@
-import type { CommitteeMemberAttendance, CommitteeMemberPosition } from '@/features/meeting/api/types';
+import type {
+  CommitteeMemberAttendance,
+  CommitteeMemberPosition,
+} from '@/features/meeting/api/types';
 
 export type { CommitteeMemberAttendance, CommitteeMemberPosition };
 
@@ -28,9 +31,40 @@ export interface CommitteeThresholdDto {
   [key: string]: unknown;
 }
 
+/**
+ * Extra rules an approval round must satisfy on top of quorum and the majority rule.
+ * `ApprovalActivity.CheckApprovalConditions` requires EVERY active condition to pass, so an
+ * unsatisfiable one silently stalls the round.
+ *
+ * RoleRequired — a member holding `roleRequired` must have cast the target vote.
+ * MinVotes     — at least `minVotesRequired` members must have cast it.
+ */
+export type ConditionType = 'RoleRequired' | 'MinVotes';
+
 export interface CommitteeConditionDto {
   id: string;
-  [key: string]: unknown;
+  committeeId?: string;
+  conditionType: ConditionType;
+  /** Set only for RoleRequired; a CommitteeMemberPosition. */
+  roleRequired: string | null;
+  /** Set only for MinVotes. */
+  minVotesRequired: number | null;
+  priority: number;
+  isActive: boolean;
+  description: string | null;
+}
+
+export interface AddCommitteeConditionRequest {
+  conditionType: ConditionType;
+  roleRequired?: string | null;
+  minVotesRequired?: number | null;
+  priority: number;
+  description?: string | null;
+}
+
+/** PATCH sends the full representation — omitted fields are cleared, not preserved. */
+export interface UpdateCommitteeConditionRequest extends AddCommitteeConditionRequest {
+  isActive: boolean;
 }
 
 /** Fixed = QuorumValue is a headcount; Percentage = QuorumValue is a % of active members. */

@@ -104,5 +104,51 @@
   "votingMode": {
     "waitForAll": "Wait for all votes",
     "quorum": "Resolve at quorum"
+  },
+  "conditions": {
+    "title": "Approval Conditions ({{count}} active)",
+    "add": "Add condition",
+    "edit": "Edit condition",
+    "remove": "Remove condition",
+    "empty": "No conditions — a round passes on quorum and the approval rule alone.",
+    "priorityShort": "P{{value}}",
+    "noMemberHolds": "no active member",
+    "summary": {
+      "role": "A {{role}} must vote to approve",
+      "minVotes": "At least {{value}} approve vote(s)"
+    },
+    "type": {
+      "roleRequired": "A specific role must approve",
+      "minVotes": "A minimum number of approvals"
+    },
+    "fields": {
+      "type": "Condition",
+      "role": "Required role",
+      "minVotes": "Approvals required",
+      "priority": "Priority",
+      "description": "Description",
+      "active": "Active"
+    },
+    "help": {
+      "role": "Evaluated against the roles of members who voted. A role no active member holds would block every round, so it is rejected.",
+      "snapshot": "Conditions are captured when an approval round starts, so changes apply to new rounds only — approvals already in progress keep the rules they began with."
+    },
+    "validation": {
+      "minVotes": "Must be at least 1"
+    },
+    "dialog": {
+      "addTitle": "Add Approval Condition",
+      "editTitle": "Edit Approval Condition"
+    },
+    "confirm": {
+      "remove": "Remove this condition?\n\n{{rule}}\n\nNew rounds will no longer require it."
+    },
+    "toasts": {
+      "added": "Condition added",
+      "updated": "Condition updated",
+      "removed": "Condition removed",
+      "saveFailed": "Failed to save the condition",
+      "removeFailed": "Failed to remove the condition"
+    }
   }
 }

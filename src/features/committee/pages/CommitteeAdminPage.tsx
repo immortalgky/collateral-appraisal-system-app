@@ -14,14 +14,18 @@ import { useGetUsers } from '@/features/userManagement/api/users';
 import { POSITION_OPTIONS } from '@/features/meeting/constants';
 
 import {
+  useAddCommitteeCondition,
   useAddCommitteeMember,
   useGetCommitteeDetail,
   useGetCommittees,
+  useRemoveCommitteeCondition,
   useRemoveCommitteeMember,
   useUpdateCommittee,
+  useUpdateCommitteeCondition,
   useUpdateCommitteeMember,
 } from '../api/committees';
 import type {
+  CommitteeConditionDto,
   CommitteeDetailDto,
   CommitteeMemberAttendance,
   CommitteeMemberDto,
@@ -128,6 +132,20 @@ const makeCommitteeSettingsSchema = (t: TFunction<'committee'>, activeMemberCoun
 type AddMemberFormValues = z.infer<ReturnType<typeof makeAddMemberSchema>>;
 type UpdateMemberFormValues = z.infer<typeof updateMemberSchema>;
 type CommitteeSettingsFormValues = z.infer<ReturnType<typeof makeCommitteeSettingsSchema>>;
+
+// Client-side mirror of the domain guards so the common mistakes are caught before a round-trip;
+// the backend remains authoritative (it also checks the role is actually held by an active member).
+const makeConditionSchema = (t: TFunction<'committee'>) =>
+  z.object({
+    conditionType: z.enum(['RoleRequired', 'MinVotes'] as const),
+    roleRequired: z.string(),
+    minVotesRequired: z.coerce.number().int().min(1, t('conditions.validation.minVotes')),
+    priority: z.coerce.number().int().min(1),
+    description: z.string(),
+    isActive: z.boolean(),
+  });
+
+type ConditionFormValues = z.infer<ReturnType<typeof makeConditionSchema>>;
 
 // ── Shared input class ────────────────────────────────────────────────────────
 
@@ -635,6 +653,188 @@ const SettingItem = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+// ── Approval condition dialog ─────────────────────────────────────────────────
+// Conditions are extra rules a round must satisfy on top of quorum and the approval rule. The
+// role is a dropdown, never free text: CheckApprovalConditions matches it against the voter's
+// role, so a typo would silently block every round.
+
+interface ConditionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  committeeId: string;
+  /** null = adding */
+  condition: CommitteeConditionDto | null;
+  activeRoles: string[];
+}
+
+const ConditionDialog = ({
+  isOpen,
+  onClose,
+  committeeId,
+  condition,
+  activeRoles,
+}: ConditionDialogProps) => {
+  const { t } = useTranslation(['committee', 'common']);
+  const addCondition = useAddCommitteeCondition();
+  const updateCondition = useUpdateCommitteeCondition();
+  const isEditing = condition !== null;
+  const busy = addCondition.isPending || updateCondition.isPending;
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<ConditionFormValues>({
+    resolver: zodResolver(makeConditionSchema(t)),
+    defaultValues: {
+      conditionType: condition?.conditionType ?? 'RoleRequired',
+      roleRequired: condition?.roleRequired ?? activeRoles[0] ?? '',
+      minVotesRequired: condition?.minVotesRequired ?? 1,
+      priority: condition?.priority ?? 1,
+      description: condition?.description ?? '',
+      isActive: condition?.isActive ?? true,
+    },
+  });
+
+  const conditionType = watch('conditionType');
+
+  const handleClose = () => {
+    if (!busy) onClose();
+  };
+
+  const onSubmit = (values: ConditionFormValues) => {
+    // Send only the field this type uses; the backend clears the other one anyway.
+    const body = {
+      conditionType: values.conditionType,
+      roleRequired: values.conditionType === 'RoleRequired' ? values.roleRequired : null,
+      minVotesRequired: values.conditionType === 'MinVotes' ? values.minVotesRequired : null,
+      priority: values.priority,
+      description: values.description.trim() || null,
+    };
+
+    const onSuccess = () => {
+      toast.success(isEditing ? t('conditions.toasts.updated') : t('conditions.toasts.added'));
+      onClose();
+    };
+    // The domain rejects a condition no member could satisfy — surface that message verbatim.
+    const onError = (error: unknown) => {
+      const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
+      toast.error(detail || t('conditions.toasts.saveFailed'));
+    };
+
+    if (isEditing) {
+      updateCondition.mutate(
+        { committeeId, conditionId: condition.id, body: { ...body, isActive: values.isActive } },
+        { onSuccess, onError },
+      );
+    } else {
+      addCondition.mutate({ committeeId, body }, { onSuccess, onError });
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={isEditing ? t('conditions.dialog.editTitle') : t('conditions.dialog.addTitle')}
+      size="sm"
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label htmlFor="cond-type" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('conditions.fields.type')}
+          </label>
+          <select id="cond-type" {...register('conditionType')} className={inputClass}>
+            <option value="RoleRequired">{t('conditions.type.roleRequired')}</option>
+            <option value="MinVotes">{t('conditions.type.minVotes')}</option>
+          </select>
+        </div>
+
+        {conditionType === 'RoleRequired' ? (
+          <div>
+            <label htmlFor="cond-role" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('conditions.fields.role')}
+            </label>
+            <select id="cond-role" {...register('roleRequired')} className={inputClass}>
+              {POSITION_OPTIONS.map(pos => (
+                <option key={pos} value={pos}>
+                  {pos}
+                  {activeRoles.includes(pos) ? '' : ` — ${t('conditions.noMemberHolds')}`}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-400">{t('conditions.help.role')}</p>
+          </div>
+        ) : (
+          <div>
+            <label htmlFor="cond-min" className="block text-sm font-medium text-gray-700 mb-1">
+              {t('conditions.fields.minVotes')}
+            </label>
+            <input
+              id="cond-min"
+              type="number"
+              min={1}
+              {...register('minVotesRequired')}
+              className={inputClass}
+            />
+            {errors.minVotesRequired && (
+              <p className="mt-1 text-xs text-red-600">{errors.minVotesRequired.message}</p>
+            )}
+          </div>
+        )}
+
+        <div>
+          <label htmlFor="cond-priority" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('conditions.fields.priority')}
+          </label>
+          <input
+            id="cond-priority"
+            type="number"
+            min={1}
+            {...register('priority')}
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="cond-desc" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('conditions.fields.description')}
+          </label>
+          <textarea id="cond-desc" rows={2} {...register('description')} className={inputClass} />
+        </div>
+
+        {isEditing && (
+          <div className="flex items-center gap-2">
+            <input
+              id="cond-active"
+              type="checkbox"
+              {...register('isActive')}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="cond-active" className="text-sm font-medium text-gray-700">
+              {t('conditions.fields.active')}
+            </label>
+          </div>
+        )}
+
+        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+          {t('conditions.help.snapshot')}
+        </p>
+
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="ghost" type="button" onClick={handleClose} disabled={busy}>
+            {t('common:actions.cancel')}
+          </Button>
+          <Button type="submit" disabled={busy}>
+            {busy ? t('common:status.saving') : t('common:actions.save')}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+};
+
 // ── Committee detail panel ────────────────────────────────────────────────────
 
 interface CommitteeDetailPanelProps {
@@ -645,9 +845,12 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
   const { t } = useTranslation(['committee', 'common']);
   const { data: committee, isLoading } = useGetCommitteeDetail(committeeId);
   const removeMember = useRemoveCommitteeMember();
+  const removeCondition = useRemoveCommitteeCondition();
   const addMemberDialog = useDisclosure();
   const settingsDialog = useDisclosure();
+  const conditionDialog = useDisclosure();
   const [editingMember, setEditingMember] = useState<CommitteeMemberDto | null>(null);
+  const [editingCondition, setEditingCondition] = useState<CommitteeConditionDto | null>(null);
 
   if (isLoading) {
     return (
@@ -674,6 +877,27 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
   };
 
   const members = committee.members ?? [];
+  const conditions = committee.conditions ?? [];
+  const activeRoles = [...new Set(members.filter(m => m.isActive).map(m => m.role))];
+
+  const describeCondition = (c: CommitteeConditionDto) =>
+    c.conditionType === 'RoleRequired'
+      ? t('conditions.summary.role', { role: c.roleRequired ?? '—' })
+      : t('conditions.summary.minVotes', { count: c.minVotesRequired ?? 0 });
+
+  const handleRemoveCondition = (c: CommitteeConditionDto) => {
+    if (!confirm(t('conditions.confirm.remove', { rule: describeCondition(c) }))) return;
+    removeCondition.mutate(
+      { committeeId, conditionId: c.id },
+      {
+        onSuccess: () => toast.success(t('conditions.toasts.removed')),
+        onError: (error: unknown) => {
+          const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
+          toast.error(detail || t('conditions.toasts.removeFailed'));
+        },
+      },
+    );
+  };
 
   const quorumLabel =
     committee.quorumType === 'Percentage'
@@ -716,6 +940,74 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
             value={committee.isActive ? t('common:status.active') : t('common:status.inactive')}
           />
         </div>
+      </div>
+
+      {/* Approval conditions — extra rules on top of quorum and the approval rule. Placed above
+          Members because they are evaluated against member roles. */}
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-gray-700">
+            {t('conditions.title', { count: conditions.filter(c => c.isActive).length })}
+          </h3>
+          <Button
+            size="sm"
+            variant="ghost"
+            type="button"
+            onClick={() => {
+              setEditingCondition(null);
+              conditionDialog.onOpen();
+            }}
+          >
+            <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
+            {t('conditions.add')}
+          </Button>
+        </div>
+
+        {conditions.length === 0 ? (
+          <p className="text-xs text-gray-400 italic py-2">{t('conditions.empty')}</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {conditions.map(c => (
+              <li key={c.id} className="flex items-center gap-3 py-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm text-gray-900">
+                    {describeCondition(c)}
+                    {!c.isActive && (
+                      <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                        {t('common:status.inactive')}
+                      </span>
+                    )}
+                  </p>
+                  {c.description && (
+                    <p className="truncate text-xs text-gray-400">{c.description}</p>
+                  )}
+                </div>
+                <span className="text-xs text-gray-400">
+                  {t('conditions.priorityShort', { value: c.priority })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCondition(c);
+                    conditionDialog.onOpen();
+                  }}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                  aria-label={t('conditions.edit')}
+                >
+                  <Icon name="pen" style="solid" className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveCondition(c)}
+                  className="p-1 text-gray-400 hover:text-red-600"
+                  aria-label={t('conditions.remove')}
+                >
+                  <Icon name="trash" style="solid" className="size-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="flex items-center justify-between">
@@ -803,6 +1095,16 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
       />
 
       {/* Remount per open so the form re-seeds from the latest server values. */}
+      {conditionDialog.isOpen && (
+        <ConditionDialog
+          isOpen
+          onClose={conditionDialog.onClose}
+          committeeId={committeeId}
+          condition={editingCondition}
+          activeRoles={activeRoles}
+        />
+      )}
+
       {settingsDialog.isOpen && (
         <CommitteeSettingsDialog
           isOpen={true}
