@@ -42,7 +42,7 @@ const LandTitleModal = ({
     const price = Number(pricePerSqWa) || 0;
     const totalWa = (Number(rai) || 0) * 400 + (Number(ngan) || 0) * 100 + (Number(squareWa) || 0);
     setValue('totalSquareWa', totalWa);
-    setValue('governmentPrice', price * totalWa);
+    setValue('governmentPrice', Math.round(price * totalWa * 100) / 100);
   }, [pricePerSqWa, rai, ngan, squareWa, setValue]);
 
   // Area fields default to 0 when left blank, so they persist as 0 rather than null
