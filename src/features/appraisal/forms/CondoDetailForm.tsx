@@ -89,7 +89,7 @@ function CondoDetailForm() {
   useEffect(() => {
     const price = Number(govPricePerSqm) || 0;
     const area = Number(usableArea) || 0;
-    setValue('governmentPrice', price * area, { shouldValidate: true });
+    setValue('governmentPrice', Math.round(price * area * 100) / 100, { shouldValidate: true });
   }, [govPricePerSqm, usableArea, setValue]);
 
   const fields = useMemo<FormField[]>(
