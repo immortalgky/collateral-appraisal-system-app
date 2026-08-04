@@ -239,6 +239,10 @@ const TaskAssignmentConfigPage = lazy(
 const CompanyRoundRobinConfigPage = lazy(
   () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
 );
+const JobSchedulesPage = lazy(() => import('@features/jobSchedules/pages/JobSchedulesPage'));
+const AddressMasterPage = lazy(
+  () => import('@features/addressMaster/pages/AddressMasterPage')
+);
 const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
 const OperationalReportRoute = lazy(
   () => import('@features/common/operationalReports/pages/OperationalReportRoute')
@@ -586,6 +590,22 @@ export const router = createBrowserRouter([
               <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
             ),
             children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
+          },
+          // Title (Land Dept) and DOPA geocode hierarchies
+          {
+            path: 'address-masters',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="ADDRESS_MASTER_MANAGE" />
+            ),
+            children: [{ index: true, element: <AddressMasterPage /> }],
+          },
+          // Hangfire recurring-job schedules across every module
+          {
+            path: 'job-schedules',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="JOB_SCHEDULE_MANAGE" />
+            ),
+            children: [{ index: true, element: <JobSchedulesPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {

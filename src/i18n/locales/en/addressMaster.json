@@ -1,0 +1,77 @@
+{
+  "page": {
+    "title": "Address Masters",
+    "subtitle": "Thai province / district / sub-district geocodes. Pick a province to see its districts, and a district to see its sub-districts."
+  },
+  "dataset": {
+    "title": "Title (Land Dept)",
+    "dopa": "DOPA",
+    "titleHint": "Used for title-deed addresses. Includes historical and merged provinces, non-numeric codes, and may leave postcodes blank.",
+    "dopaHint": "Used for property location addresses (civil registration). Separate dataset — editing it does not change the Title master."
+  },
+  "columns": {
+    "provinces": "Provinces",
+    "districts": "Districts",
+    "subDistricts": "Sub-districts"
+  },
+  "meta": {
+    "districts": "{{count}} district(s)",
+    "subDistricts": "{{count}} sub-district(s)",
+    "noPostcode": "no postcode"
+  },
+  "disabled": {
+    "districts": "Select a province.",
+    "subDistricts": "Select a district."
+  },
+  "empty": {
+    "provinces": "No provinces.",
+    "districts": "No districts in this province.",
+    "subDistricts": "No sub-districts in this district."
+  },
+  "search": "Search code or name…",
+  "noMatches": "No matches.",
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "fields": {
+    "code": "Code",
+    "nameTh": "Name (Thai)",
+    "nameEn": "Name (English)",
+    "postcode": "Postcode"
+  },
+  "hints": {
+    "code": "Up to {{max}} characters. Not necessarily numeric.",
+    "codeImmutable": "The code is the key other records point at and cannot be changed.",
+    "postcode": "Optional — leave blank when the dataset has none."
+  },
+  "dialog": {
+    "add": {
+      "province": "Add province",
+      "district": "Add district",
+      "subDistrict": "Add sub-district"
+    },
+    "edit": {
+      "province": "Edit province",
+      "district": "Edit district",
+      "subDistrict": "Edit sub-district"
+    }
+  },
+  "validation": {
+    "codeRequired": "Code is required.",
+    "codeTooLong": "Code cannot exceed {{max}} characters.",
+    "namesRequired": "Both the Thai and English names are required."
+  },
+  "confirm": {
+    "title": "Delete address entry",
+    "parent": "Delete {{code}}? This is blocked while it still has child entries.",
+    "subDistrict": "Delete {{code}}? Existing properties store this geocode — if any reference it, their address will be left orphaned."
+  },
+  "toasts": {
+    "created": "Entry created",
+    "updated": "Entry updated",
+    "deleted": "Entry deleted",
+    "saveFailed": "Could not save the entry",
+    "deleteFailed": "Could not delete the entry"
+  }
+}
