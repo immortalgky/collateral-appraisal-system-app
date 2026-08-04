@@ -588,6 +588,7 @@ export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, ena
       return (data.companies ?? []) as Array<{
         id: string;
         name: string;
+        nameLocal?: string | null;
         taxId?: string;
         contactPerson?: string;
         phone?: string;

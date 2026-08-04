@@ -262,6 +262,7 @@ export interface AdminUserDetail extends AdminUserListItem {
   aoCode: string | null;
   employeeId: string | null;
   companyName: string | null;
+  companyNameLocal?: string | null;
   groups: UserGroup[];
   teams: UserTeam[];
   lastLoginAt: string | null;
@@ -465,6 +466,7 @@ export interface Company {
 export interface CompanyListItem {
   id: string;
   name: string;
+  nameLocal?: string | null;
   taxId: string | null;
   phone: string | null;
   email: string | null;
@@ -522,6 +524,7 @@ export interface UpdateCompanyRequest {
 export interface EligibleCompany {
   id: string;
   name: string;
+  nameLocal?: string | null;
 }
 
 // ─── Access Report ───────────────────────────────────────────────────────────

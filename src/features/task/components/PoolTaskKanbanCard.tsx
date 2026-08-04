@@ -17,6 +17,7 @@ import {
 } from '@features/common/monitoring/components/SlaCells';
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface PoolTaskKanbanCardProps {
   task: PoolTask;
@@ -47,6 +48,20 @@ function remainingLabel(hours: number | null): string | null {
   return hours < 0 ? `${Math.abs(hours)}h late` : `${hours}h left`;
 }
 
+/**
+ * `task.appraiser` covers both internal staff and external companies.
+ * `appraiserCompanyNameLocal` is only ever populated on external-assignment rows, so
+ * internal rows (null local) fall through to `appraiser` unchanged.
+ */
+function AppraiserSpan({ task }: { task: PoolTask }) {
+  const localizeCompanyName = useLocalizedCompanyName();
+  return (
+    <span className="truncate">
+      {task.appraiser ? localizeCompanyName(task.appraiser, task.appraiserCompanyNameLocal) : '-'}
+    </span>
+  );
+}
+
 // Detail-grid field renderers — same field set/behavior as TaskKanbanCard's FIELD_META.
 const FIELD_META: Record<
   CardFieldKey,
@@ -67,7 +82,7 @@ const FIELD_META: Record<
   appraiser: {
     icon: 'user-tie',
     label: 'Appraiser',
-    render: task => <span className="truncate">{task.appraiser ?? '-'}</span>,
+    render: task => <AppraiserSpan task={task} />,
   },
   appointment: {
     icon: 'clock',
@@ -150,6 +165,7 @@ export const PoolTaskKanbanCard = ({ task, onClick }: PoolTaskKanbanCardProps) =
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const currentUsername = useAuthStore(s => s.user?.username);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -223,7 +239,9 @@ export const PoolTaskKanbanCard = ({ task, onClick }: PoolTaskKanbanCardProps) =
     100,
   );
   const remaining = remainingLabel(task.remainingHours);
-  const assigneeName = task.appraiser ?? task.requestedByName;
+  const assigneeName = task.appraiser
+    ? localizeCompanyName(task.appraiser, task.appraiserCompanyNameLocal)
+    : task.requestedByName;
   const fields = getKanbanCardConfig(task.activityId);
 
   return (

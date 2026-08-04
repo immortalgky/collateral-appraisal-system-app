@@ -10,6 +10,7 @@ import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
 import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
 import Autocomplete from '@shared/components/inputs/Autocomplete';
 import { useCompanyStore } from '@shared/store';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 import EvaluationStatusBadge from '@features/serviceQualityEvaluation/components/EvaluationStatusBadge';
 import StarRating from '@features/serviceQualityEvaluation/components/StarRating';
@@ -42,6 +43,21 @@ function AppraisalStatusBadge({ status }: { status: string | null }) {
   );
 }
 
+function AppraiserCompanyCell({
+  companyName,
+  companyNameLocal,
+}: {
+  companyName: string | null;
+  companyNameLocal?: string | null;
+}) {
+  const localizeCompanyName = useLocalizedCompanyName();
+  return (
+    <span className="text-xs text-gray-700">
+      {companyName ? localizeCompanyName(companyName, companyNameLocal) : '—'}
+    </span>
+  );
+}
+
 const COLUMNS: ColumnDef<PendingEvaluation>[] = [
   {
     key: 'appraisalNumber',
@@ -62,7 +78,12 @@ const COLUMNS: ColumnDef<PendingEvaluation>[] = [
     key: 'appraiserCompanyName',
     label: 'Appraisal Company',
     sortKey: 'AppraiserCompanyName',
-    render: row => <span className="text-xs text-gray-700">{row.appraiserCompanyName ?? '—'}</span>,
+    render: row => (
+      <AppraiserCompanyCell
+        companyName={row.appraiserCompanyName}
+        companyNameLocal={row.appraiserCompanyNameLocal}
+      />
+    ),
   },
   {
     key: 'appraisalStatus',
@@ -134,6 +155,7 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
   const [staffFilter, setStaffFilter] = useState('');
 
   const companies = useCompanyStore(s => s.companies);
+  const localizeCompanyName = useLocalizedCompanyName();
   const { data: staffOptions = [] } = useInternalFollowupStaff();
 
   const filter: PendingEvaluationFilter = {
@@ -186,7 +208,14 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
       ? [
           {
             key: 'appraisalCompanyId',
-            label: `Company: ${companies.find(c => c.id === appraisalCompanyFilter)?.companyName ?? appraisalCompanyFilter}`,
+            label: `Company: ${
+              (() => {
+                const match = companies.find(c => c.id === appraisalCompanyFilter);
+                return match
+                  ? localizeCompanyName(match.companyName, match.companyNameLocal)
+                  : appraisalCompanyFilter;
+              })()
+            }`,
             onClear: () => {
               setAppraisalCompanyFilter('');
               setPage(0);

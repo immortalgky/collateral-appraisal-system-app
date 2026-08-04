@@ -7,6 +7,7 @@ import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import {
   usePickTentativeWinner,
   useShortlistQuotation,
@@ -39,6 +40,7 @@ const AdminShortlistPanel = ({
   appraisals,
 }: AdminShortlistPanelProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const { mutate: shortlist, isPending: isShortlisting } = useShortlistQuotation(quotationId);
   const { mutate: unshortlist, isPending: isUnshortlisting } = useUnshortlistQuotation(quotationId);
   const { mutate: pickWinner, isPending: isPickingWinner } = usePickTentativeWinner(quotationId);
@@ -105,7 +107,12 @@ const AdminShortlistPanel = ({
     );
   };
 
-  const selectWinnerTargetName = shortlistedQuotations[0]?.companyName?.trim() || 'this company';
+  const selectWinnerTargetName = shortlistedQuotations[0]
+    ? localizeCompanyName(
+        shortlistedQuotations[0].companyName,
+        shortlistedQuotations[0].companyNameLocal,
+      ).trim() || 'this company'
+    : 'this company';
 
   return (
     <>
@@ -247,7 +254,7 @@ const AdminShortlistPanel = ({
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm font-medium text-gray-900">
-                          {cq.companyName?.trim() || '—'}
+                          {localizeCompanyName(cq.companyName, cq.companyNameLocal)?.trim() || '—'}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -292,7 +299,9 @@ const AdminShortlistPanel = ({
                           ].includes(cq.status) && (
                             <button
                               type="button"
-                              aria-label={t('aria.viewDetail', { company: cq.companyName })}
+                              aria-label={t('aria.viewDetail', {
+                                company: localizeCompanyName(cq.companyName, cq.companyNameLocal),
+                              })}
                               onClick={() => setDrawerCompanyQuotationId(cq.id)}
                               className="p-1 rounded hover:bg-gray-100 transition-colors"
                             >
@@ -349,7 +358,11 @@ const AdminShortlistPanel = ({
         isOpen={!!drawerCompanyQuotationId}
         onClose={() => setDrawerCompanyQuotationId(null)}
         title={t('page.extQuotationTitle')}
-        subtitle={drawerCompany?.companyName ?? undefined}
+        subtitle={
+          drawerCompany
+            ? localizeCompanyName(drawerCompany.companyName, drawerCompany.companyNameLocal)
+            : undefined
+        }
         width="2xl"
       >
         {drawerCompanyQuotationId && (

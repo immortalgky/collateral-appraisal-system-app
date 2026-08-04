@@ -9,6 +9,7 @@ import { deriveFeeTotals } from '../components/QuotationFeeBreakdown';
 import AppraisalLeftRail from '../components/AppraisalLeftRail';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import SharedDocumentViewer from '../components/SharedDocumentViewer';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { CompanyQuotationItemDto } from '../schemas/quotation';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -188,6 +189,7 @@ export const AdminCompanyQuotationDetailContent = ({
   onClose,
 }: AdminCompanyQuotationDetailContentProps) => {
   const { t } = useTranslation(['quotation', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const handleBack = onClose;
 
   const { data: quotation, isLoading, isError } = useGetQuotationById(quotationRequestId);
@@ -341,7 +343,9 @@ export const AdminCompanyQuotationDetailContent = ({
                 {fmtDate(quotation.cutOffTime)}
               </span>
               <span>·</span>
-              <span className="font-medium text-gray-700">{companyQuotation.companyName}</span>
+              <span className="font-medium text-gray-700">
+            {localizeCompanyName(companyQuotation.companyName, companyQuotation.companyNameLocal)}
+          </span>
               <QuotationStatusBadge status={companyQuotation.status} />
             </div>
           </div>
@@ -362,7 +366,9 @@ export const AdminCompanyQuotationDetailContent = ({
             {fmtDate(quotation.cutOffTime)}
           </span>
           <span>·</span>
-          <span className="font-medium text-gray-700">{companyQuotation.companyName}</span>
+          <span className="font-medium text-gray-700">
+            {localizeCompanyName(companyQuotation.companyName, companyQuotation.companyNameLocal)}
+          </span>
           <QuotationStatusBadge status={companyQuotation.status} />
         </div>
       )}

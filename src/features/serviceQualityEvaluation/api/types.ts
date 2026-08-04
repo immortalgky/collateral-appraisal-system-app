@@ -7,6 +7,7 @@ export interface AppraisalEvaluationListItem {
   externalAppraiserName: string;
   assigneeCompanyId: string;
   appraiserCompanyName: string | null;
+  appraiserCompanyNameLocal?: string | null;
   appraisalValue: number | null;
   evaluationId: string | null;
   evaluationStatus: string; // "Pending" | "Completed"
@@ -20,6 +21,7 @@ export interface AppraisalEvaluationHeader {
   customerName: string | null;
   reportReceivedDate: string | null;
   appraiserCompanyName: string | null;
+  appraiserCompanyNameLocal?: string | null;
   assigneeCompanyId: string | null;
   internalAppraiserId: string | null;
   internalAppraiserName: string | null;

@@ -63,6 +63,7 @@ export interface AppraisalDto {
   assignmentStatus: string | null;
   assignedDate: string | null;
   companyName: string | null;
+  companyNameLocal?: string | null;
   customerName: string | null;
   province: string | null;
   district: string | null;

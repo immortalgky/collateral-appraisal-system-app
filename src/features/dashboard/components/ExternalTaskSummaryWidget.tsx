@@ -22,6 +22,7 @@ import PeriodSelect from './PeriodSelect';
 import WidgetError from './WidgetError';
 import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { useCompanyAppraisalSummary } from '../api';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import { useDashboardStore } from '../store';
 import {
   getPresetRange,
@@ -122,6 +123,7 @@ function SummaryTooltip({ active, payload }: SummaryTooltipProps) {
 
 function ExternalTaskSummaryWidget() {
   const { t } = useTranslation('dashboard');
+  const localizeCompanyName = useLocalizedCompanyName();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const settings = useDashboardStore(
@@ -172,7 +174,7 @@ function ExternalTaskSummaryWidget() {
       .filter(item => item.companyName && item.companyName !== PENDING)
       .map(item => ({
         companyId: item.companyId,
-        name: item.companyName,
+        name: localizeCompanyName(item.companyName, item.companyNameLocal),
         // buckets are mutually exclusive and sum to assigned (server-computed live)
         assigned: item.assignedCount,
         overdue: item.overdueCount,
@@ -180,7 +182,7 @@ function ExternalTaskSummaryWidget() {
         completed: item.completedCount,
       }))
       .sort((a, b) => b.assigned - a.assigned);
-  }, [data]);
+  }, [data, localizeCompanyName]);
 
   // One de-emphasized aggregate row (companyId '' = sentinel: non-clickable, greyed).
   const allRows: Row[] = useMemo(() => {

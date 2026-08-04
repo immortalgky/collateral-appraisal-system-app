@@ -13,6 +13,7 @@ import InvoiceRowActionsMenu from '../components/InvoiceRowActionsMenu';
 import InvoiceListTabs from '../components/InvoiceListTabs';
 import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete';
 import { useGetInvoices } from '../api/invoice';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface InvoiceFilterValues {
   search?: string;
@@ -101,6 +102,7 @@ const countActiveFilters = (f: InvoiceFilterValues): number =>
 const IntInvoiceListPage = () => {
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('invoice');
+  const localizeCompanyName = useLocalizedCompanyName();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const tab = (searchParams.get('tab') as Tab | null) ?? 'unpaid';
@@ -305,10 +307,11 @@ const IntInvoiceListPage = () => {
     });
   };
 
-  const lockedCompanyName =
-    lockedCompanyId !== null
-      ? items.find(i => i.companyId === lockedCompanyId)?.companyName ?? null
-      : null;
+  const lockedCompanyName = (() => {
+    if (lockedCompanyId === null) return null;
+    const match = items.find(i => i.companyId === lockedCompanyId);
+    return match?.companyName ? localizeCompanyName(match.companyName, match.companyNameLocal) : null;
+  })();
 
   // Status options depend on active tab
   const statusOptions =
@@ -600,7 +603,9 @@ const IntInvoiceListPage = () => {
                               name="building"
                               className="size-3 text-gray-400 mr-1.5 inline"
                             />
-                            {item.companyName ?? '—'}
+                            {item.companyName
+                              ? localizeCompanyName(item.companyName, item.companyNameLocal)
+                              : '—'}
                           </td>
                         </tr>
                       )}
@@ -635,7 +640,9 @@ const IntInvoiceListPage = () => {
                         </td>
                         {!groupByCompany && (
                           <td className="px-4 py-2.5 text-gray-700">
-                            {item.companyName ?? '—'}
+                            {item.companyName
+                              ? localizeCompanyName(item.companyName, item.companyNameLocal)
+                              : '—'}
                           </td>
                         )}
                         <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">

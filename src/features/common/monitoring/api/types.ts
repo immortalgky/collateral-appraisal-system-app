@@ -19,7 +19,10 @@ export interface MonitoringSummary {
 
 export interface MonitoringGroupRow {
   key: string;
+  /** Deliberately English — grouping identity and drill-in stay language-independent. */
   label: string;
+  /** Localized display only. Null for groupBy=pic/activity, and for companies with no Thai name. */
+  labelLocal?: string | null;
   count: number;
   breached: number;
   atRisk: number;
@@ -100,6 +103,7 @@ export interface PendingTask {
   slaDurationHours: number | null;
   activityId: string | null;
   appraisalCompanyName: string | null;
+  appraisalCompanyNameLocal?: string | null;
   monitoringType: string;
   assignedTo: string | null;
   assignedType: string | null;
@@ -161,6 +165,7 @@ export interface PendingEvaluation {
   externalAppraiserName: string | null;
   assigneeCompanyId: string | null;
   appraiserCompanyName: string | null;
+  appraiserCompanyNameLocal?: string | null;
   appraisalValue: number | null;
   evaluationId: string | null;
   evaluationStatus: string | null;

@@ -8,6 +8,7 @@ import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { useAddressStore } from '@/shared/store';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface AppraisalResultsTableProps {
   columns: AppraisalColumnDef[];
@@ -37,6 +38,7 @@ function AppraisalResultsTable({
   pageSize = 0,
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
+  const localizeCompanyName = useLocalizedCompanyName();
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
 
@@ -96,6 +98,9 @@ function AppraisalResultsTable({
         .filter(Boolean)
         .map(code => propertyTypeCodeToLabel.get(code) ?? code)
         .join(', ');
+    }
+    if (key === 'companyName') {
+      return localizeCompanyName(val as string, item.companyNameLocal);
     }
     return String(val);
   };

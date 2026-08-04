@@ -8,6 +8,7 @@ import Icon from '@/shared/components/Icon';
 import { SlaStatusBadge, bucketForSlaStatus } from '@features/common/monitoring/components/SlaCells';
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import { DateCell } from '@features/common/monitoring/components/DateCell';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,31 @@ function PersonCell({ name }: { name: string | null | undefined }) {
   );
 }
 
+
+/**
+ * `task.appraiser` is a plain display string covering BOTH internal staff and external
+ * companies. `appraiserCompanyNameLocal` is only ever populated on external-assignment
+ * rows, so it's safe to feed straight into the resolver: internal rows (null local)
+ * fall through to `appraiser` unchanged.
+ */
+function AppraiserCell({
+  appraiser,
+  companyNameLocal,
+}: {
+  appraiser: string | null;
+  companyNameLocal: string | null;
+}) {
+  const localizeCompanyName = useLocalizedCompanyName();
+  if (!appraiser) return <>-</>;
+  return (
+    <div className="flex items-center gap-2 min-w-0">
+      <Icon style="regular" name="building" className="size-3.5 text-gray-400 flex-shrink-0" />
+      <span className="truncate text-sm text-gray-700">
+        {localizeCompanyName(appraiser, companyNameLocal)}
+      </span>
+    </div>
+  );
+}
 
 function DueDateCell({
   dateString,
@@ -282,15 +308,9 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   appraiser: {
     label: 'Appraiser',
     width: 160,
-    render: task =>
-      task.appraiser ? (
-        <div className="flex items-center gap-2 min-w-0">
-          <Icon style="regular" name="building" className="size-3.5 text-gray-400 flex-shrink-0" />
-          <span className="truncate text-sm text-gray-700">{task.appraiser}</span>
-        </div>
-      ) : (
-        '-'
-      ),
+    render: task => (
+      <AppraiserCell appraiser={task.appraiser} companyNameLocal={task.appraiserCompanyNameLocal} />
+    ),
   },
   assignedDate: {
     label: 'Assigned Date',

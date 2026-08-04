@@ -14,6 +14,7 @@ import { useGetRoles } from '../api/roles';
 import { useGetGroups } from '../api/groups';
 import { useGetTeams } from '../api/teams';
 import { useGetAdminCompanies } from '../api/companies';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 interface CreateUserPanelProps {
   onCreated?: (userId: string) => void;
@@ -89,6 +90,7 @@ const SectionLabel = ({
 
 const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [accessTab, setAccessTab] = useState<AccessTab>('roles');
   const createUser = useCreateUser();
@@ -397,7 +399,10 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   required
                   value={form.companyId}
                   onChange={val => setField('companyId', (val as string) ?? '')}
-                  options={companies.map(c => ({ value: c.id, label: c.name }))}
+                  options={companies.map(c => ({
+                    value: c.id,
+                    label: localizeCompanyName(c.name, c.nameLocal),
+                  }))}
                   placeholder={t('placeholders.selectCompany')}
                   showValuePrefix={false}
                 />

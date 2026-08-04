@@ -8,6 +8,7 @@ import Icon from '@/shared/components/Icon';
 import Modal from '@/shared/components/Modal';
 import DatePickerInput from '@/shared/components/inputs/DatePickerInput';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 import {
   useGetCompanyById,
@@ -66,6 +67,7 @@ const ValuationEngagementChips = ({
   saveHandleRef,
 }: ValuationEngagementChipsProps) => {
   const { t } = useTranslation('appraisal');
+  const localizeCompanyName = useLocalizedCompanyName();
   const editDialog = useDisclosure();
   const companyModal = useDisclosure();
 
@@ -211,7 +213,9 @@ const ValuationEngagementChips = ({
               component renders a different weight and colour and looked out of place next to it. */}
           <span className="text-sm leading-none">🏢</span>
           <span>{t('offlineEngagement.companyLabel')}</span>
-          <span className="font-semibold text-gray-700">{companyName}</span>
+          <span className="font-semibold text-gray-700">
+            {localizeCompanyName(companyName ?? '', selectedCompany?.companyNameLocal)}
+          </span>
           {canEdit && (
             <button
               type="button"

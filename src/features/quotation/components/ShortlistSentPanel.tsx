@@ -6,6 +6,7 @@ import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useRecallShortlist } from '../api/quotation';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { QuotationRequestDetailDto } from '../schemas/quotation';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import { AdminCompanyQuotationDetailContent } from '../pages/AdminCompanyQuotationDetailPage';
@@ -25,6 +26,7 @@ const fmtDateTime = (iso: string | null | undefined): string => {
 
 const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const { mutate: recall, isPending } = useRecallShortlist(quotation.id);
   const hasTentativeWinner = !!quotation.tentativeWinnerQuotationId;
   const [drawerCompanyQuotationId, setDrawerCompanyQuotationId] = useState<string | null>(null);
@@ -169,7 +171,9 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">{cq.companyName}</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {localizeCompanyName(cq.companyName, cq.companyNameLocal)}
+                        </span>
                         {quotation.tentativeWinnerQuotationId === cq.id && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">
                             <Icon name="crown" style="solid" className="size-3" />
@@ -217,7 +221,9 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                         ].includes(cq.status) && (
                           <button
                             type="button"
-                            aria-label={t('aria.viewDetail', { company: cq.companyName })}
+                            aria-label={t('aria.viewDetail', {
+                              company: localizeCompanyName(cq.companyName, cq.companyNameLocal),
+                            })}
                             onClick={() => setDrawerCompanyQuotationId(cq.id)}
                             className="p-1 rounded hover:bg-gray-100 transition-colors"
                           >
@@ -248,7 +254,11 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
         isOpen={!!drawerCompanyQuotationId}
         onClose={() => setDrawerCompanyQuotationId(null)}
         title={t('page.extQuotationTitle')}
-        subtitle={drawerCompany?.companyName ?? undefined}
+        subtitle={
+          drawerCompany
+            ? localizeCompanyName(drawerCompany.companyName, drawerCompany.companyNameLocal)
+            : undefined
+        }
         width="2xl"
       >
         {drawerCompanyQuotationId && (

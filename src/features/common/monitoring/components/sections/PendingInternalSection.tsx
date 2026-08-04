@@ -9,6 +9,7 @@ import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
 import Input from '@shared/components/Input';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useParameterDescription, useParameterOptions } from '@shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import {
   usePendingInternal,
   useMonitoringInternalSummary,
@@ -252,6 +253,7 @@ interface PendingInternalSectionProps {
 
 function PendingInternalSection({ onCountChange }: PendingInternalSectionProps) {
   const { t } = useTranslation('monitoring');
+  const localizeCompanyName = useLocalizedCompanyName();
   const navigate = useNavigate();
 
   const [search, setSearch] = useState('');
@@ -490,7 +492,11 @@ function PendingInternalSection({ onCountChange }: PendingInternalSectionProps) 
     if (group == null || groupBy == null) {
       setDrill(null);
     } else {
-      setDrill({ field: groupBy, key: group.key, label: group.label || group.key });
+      setDrill({
+        field: groupBy,
+        key: group.key,
+        label: localizeCompanyName(group.label || group.key, group.labelLocal),
+      });
     }
     setPage(0);
   };

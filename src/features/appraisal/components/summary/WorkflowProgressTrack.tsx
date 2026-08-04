@@ -13,6 +13,7 @@ import { useState } from 'react';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import type { ActivityLogItemDto, PhaseStepDto } from '@/features/appraisal/api/workflow';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface WorkflowProgressTrackProps {
   steps: PhaseStepDto[];
@@ -75,6 +76,7 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
   const isCancelled = step.status === 'Cancelled';
 
   const [open, setOpen] = useState(false);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const { refs, floatingStyles, context } = useFloating({
     open,
@@ -139,7 +141,9 @@ const StepCircle = ({ step, items }: StepCircleProps) => {
                   {item.assignedToDisplayName ?? item.assignedTo ?? '—'}
                 </div>
                 {item.companyName && (
-                  <div className="text-gray-400 mt-0.5 truncate">{item.companyName}</div>
+                  <div className="text-gray-400 mt-0.5 truncate">
+                    {localizeCompanyName(item.companyName, item.companyNameLocal)}
+                  </div>
                 )}
                 <div className="text-gray-400 mt-0.5">{formatDateTime(item.startDate)}</div>
                 {item.actionTaken && (

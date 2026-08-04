@@ -12,12 +12,14 @@ import { useGetRoles } from '../api/roles';
 import { useGetGroups } from '../api/groups';
 import { useGetTeams } from '../api/teams';
 import { useGetAdminCompanies } from '../api/companies';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 type ScopeTab = 'Bank' | 'Company';
 type StatusFilter = 'all' | 'active' | 'inactive';
 
 const UserProfilePage = () => {
   const { t } = useTranslation('userManagement');
+  const localizeCompanyName = useLocalizedCompanyName();
   const [activeTab, setActiveTab] = useState<ScopeTab>('Bank');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -250,7 +252,10 @@ const UserProfilePage = () => {
                 onChange={(val: string | null) => setCompanyFilter(val ?? '')}
                 placeholder={t('filters.allCompanies')}
                 showValuePrefix={false}
-                options={companyOptions.map(c => ({ value: c.id, label: c.name }))}
+                options={companyOptions.map(c => ({
+                  value: c.id,
+                  label: localizeCompanyName(c.name, c.nameLocal),
+                }))}
               />
             )}
           </div>

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import { formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import InvoiceStatusBadge from '../components/InvoiceStatusBadge';
 import InvoiceItemsTable from '../components/InvoiceItemsTable';
 import { useGetInvoiceById } from '../api/invoice';
@@ -13,6 +14,7 @@ const ExtInvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('invoice');
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const { data: invoice, isLoading, isError, error } = useGetInvoiceById(id);
 
@@ -54,7 +56,9 @@ const ExtInvoiceDetailPage = () => {
               <InvoiceStatusBadge status={invoice.status} viewContext="external" />
             </div>
             {invoice.companyName && (
-              <p className="text-xs text-gray-500 mt-0.5">{invoice.companyName}</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {localizeCompanyName(invoice.companyName, invoice.companyNameLocal)}
+              </p>
             )}
           </div>
         </div>

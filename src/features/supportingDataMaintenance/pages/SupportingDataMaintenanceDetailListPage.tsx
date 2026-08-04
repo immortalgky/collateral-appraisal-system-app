@@ -39,6 +39,7 @@ import { SUPPORTING_STATUS } from '../constants/parameters';
 import { useTranslation } from 'react-i18next';
 import useBreadcrumb from '@/shared/hooks/useBreadcrumb';
 import { useCompanyStore } from '@/shared/store';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 function SupportingDataMaintenanceDetailListPageSkeleton() {
   return (
@@ -162,9 +163,10 @@ export function SupportingDataMaintenanceDetailListPage() {
 
   // Enrich company factors, new map avoid option showing id as value in form.
   const companies = useCompanyStore(s => s.companies);
+  const localizeCompanyName = useLocalizedCompanyName();
   const companyOptions = useMemo(
-    () => companies.map(c => ({ value: c.id, label: c.companyName })),
-    [companies],
+    () => companies.map(c => ({ value: c.id, label: localizeCompanyName(c.companyName, c.companyNameLocal) })),
+    [companies, localizeCompanyName],
   );
 
   /**

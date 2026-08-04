@@ -134,9 +134,16 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
 
   // appraisalCompany binds a company NAME (backend LIKE match), not a Guid — resolve it to an
   // id here so externalStaff's UserAutocomplete can scope its search to the selected company.
+  // Match against both the English and Thai names — company-name display sites are locale-aware,
+  // so a value typed/pasted from one of them may be either.
   const companies = useCompanyStore(s => s.companies);
   const selectedCompanyId = useMemo(
-    () => companies.find(c => c.companyName === values.appraisalCompany)?.id,
+    () =>
+      companies.find(
+        c =>
+          c.companyName === values.appraisalCompany ||
+          c.companyNameLocal === values.appraisalCompany,
+      )?.id,
     [companies, values.appraisalCompany],
   );
 
