@@ -9,6 +9,7 @@ import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatLocaleDateTime } from '@shared/utils/dateUtils';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import {
   useGetUserById,
   useAdminUpdateUser,
@@ -88,8 +89,12 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   const [editAuthSource, setEditAuthSource] = useState<'Local' | 'LDAP'>('Local');
   const ldapLookup = useLdapLookup();
 
+  const localizeCompanyName = useLocalizedCompanyName();
   const { data: eligibleCompanies } = useGetEligibleCompanies();
-  const companyChoices = (eligibleCompanies ?? []).map(c => ({ value: c.id, label: c.name }));
+  const companyChoices = (eligibleCompanies ?? []).map(c => ({
+    value: c.id,
+    label: localizeCompanyName(c.name, c.nameLocal),
+  }));
 
   // Re-sync first/last name, email, position and department from AD for an LDAP user.
   const handleEditLdapResync = () => {
@@ -398,7 +403,12 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                   ]
                 : []),
               ...(user.companyName
-                ? [{ label: t('fields.company'), value: user.companyName }]
+                ? [
+                    {
+                      label: t('fields.company'),
+                      value: localizeCompanyName(user.companyName, user.companyNameLocal),
+                    },
+                  ]
                 : []),
               { label: t('fields.authSource'), value: user.authSource },
               ...(user.lastLoginAt
@@ -534,7 +544,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           {userScope === 'Company' ? (
             <p className="text-sm text-gray-500">
               {t('hints.teamNotApplicableCompany', {
-                company: user.companyName ?? user.companyId ?? '',
+                company: user.companyName
+                  ? localizeCompanyName(user.companyName, user.companyNameLocal)
+                  : (user.companyId ?? ''),
               })}
             </p>
           ) : !user.teams || user.teams.length === 0 ? (

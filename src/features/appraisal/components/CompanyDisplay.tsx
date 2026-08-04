@@ -1,4 +1,5 @@
 import Icon from '@/shared/components/Icon';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { ExternalCompany } from '../types/administration';
 
 interface CompanyDisplayProps {
@@ -7,6 +8,7 @@ interface CompanyDisplayProps {
 }
 
 const CompanyDisplay = ({ company, onClear }: CompanyDisplayProps) => {
+  const localizeCompanyName = useLocalizedCompanyName();
   const renderStars = (rating: number) => {
     const fullStars = Math.floor(rating);
     const hasHalfStar = rating % 1 >= 0.5;
@@ -38,7 +40,9 @@ const CompanyDisplay = ({ company, onClear }: CompanyDisplayProps) => {
       {/* Company Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <span className="text-sm font-medium text-gray-900">{company.companyName}</span>
+          <span className="text-sm font-medium text-gray-900">
+            {localizeCompanyName(company.companyName, company.companyNameLocal)}
+          </span>
           <span className="text-xs text-gray-500">({company.registrationNo})</span>
         </div>
         <div className="flex items-center gap-2 mb-1">{renderStars(company.rating)}</div>

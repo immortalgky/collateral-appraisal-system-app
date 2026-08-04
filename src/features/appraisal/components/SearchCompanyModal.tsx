@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { ExternalCompany } from '../types/administration';
 
 interface SearchCompanyModalProps {
@@ -20,6 +21,7 @@ const SearchCompanyModal = ({
 }: SearchCompanyModalProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<ExternalCompany | null>(null);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const isLoading = eligibleCompanies === undefined;
 
@@ -30,6 +32,7 @@ const SearchCompanyModal = ({
     return eligibleCompanies.filter(
       company =>
         company.companyName.toLowerCase().includes(query) ||
+        company.companyNameLocal?.toLowerCase().includes(query) ||
         company.registrationNo.toLowerCase().includes(query) ||
         company.contactPerson.toLowerCase().includes(query),
     );
@@ -127,7 +130,7 @@ const SearchCompanyModal = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-sm font-medium text-gray-900 truncate">
-                            {company.companyName}
+                            {localizeCompanyName(company.companyName, company.companyNameLocal)}
                           </span>
                           <span className="text-xs text-gray-400">({company.registrationNo})</span>
                           {notAssignable && (

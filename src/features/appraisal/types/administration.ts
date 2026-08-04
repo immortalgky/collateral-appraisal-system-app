@@ -41,6 +41,7 @@ export interface InternalStaff {
 export interface ExternalCompany {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
   registrationNo: string;
   contactPerson: string;
   contactPhone: string;

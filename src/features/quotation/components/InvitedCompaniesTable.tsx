@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import QuotationStatusBadge from './QuotationStatusBadge';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { CompanyQuotationDto, InvitedCompanyDto } from '../schemas/quotation';
 
 interface InvitedCompaniesTableProps {
@@ -10,6 +11,7 @@ interface InvitedCompaniesTableProps {
 
 const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompaniesTableProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
 
   return (
     <div className="rounded-xl border border-gray-200 overflow-hidden">
@@ -54,7 +56,9 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
                       <span className="text-sm text-gray-400 tabular-nums">{idx + 1}</span>
                     </td>
                     <td className="px-4 py-2">
-                      <span className="text-sm font-medium text-gray-900">{inv.companyName}</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
+                      </span>
                     </td>
                     <td className="px-4 py-2">
                       <span className="text-sm text-gray-500">{inv.email ?? '—'}</span>

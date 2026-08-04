@@ -21,6 +21,7 @@ export const internalStaffSchema = z.object({
 export const externalCompanySchema = z.object({
   id: z.string(),
   companyName: z.string(),
+  companyNameLocal: z.string().nullish(),
   registrationNo: z.string(),
   contactPerson: z.string(),
   contactPhone: z.string(),

@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import type { MonitoringGroupRow, GroupByField } from '../api/types';
 
 interface MonitoringGroupSidebarProps {
@@ -24,6 +25,7 @@ function MonitoringGroupSidebar({
   onSelect,
 }: MonitoringGroupSidebarProps) {
   const { t } = useTranslation('monitoring');
+  const localizeCompanyName = useLocalizedCompanyName();
 
   return (
     <aside className="shrink-0 w-60 border-r border-gray-200 bg-gray-50 flex flex-col min-h-0">
@@ -66,7 +68,7 @@ function MonitoringGroupSidebar({
                     }`}
                   >
                     <span className="text-xs font-medium truncate flex-1 min-w-0">
-                      {group.label || group.key}
+                      {localizeCompanyName(group.label || group.key, group.labelLocal)}
                     </span>
                     <span className="shrink-0 flex items-center gap-1.5">
                       {group.breached > 0 && (

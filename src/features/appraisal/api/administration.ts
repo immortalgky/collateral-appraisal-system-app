@@ -45,6 +45,7 @@ export const useGetCompanyById = (companyId: string | null) => {
       return {
         id: company.id,
         companyName: company.name,
+        companyNameLocal: company.nameLocal ?? null,
         registrationNo: company.taxId ?? '',
         contactPerson: company.contactPerson ?? '',
         contactPhone: company.phone ?? '',
@@ -198,6 +199,7 @@ export const useGetEligibleCompanies = (
         (c: {
           id: string;
           name: string;
+          nameLocal?: string | null;
           taxId?: string;
           contactPerson?: string;
           phone?: string;
@@ -208,6 +210,7 @@ export const useGetEligibleCompanies = (
         }) => ({
           id: c.id,
           companyName: c.name,
+          companyNameLocal: c.nameLocal ?? null,
           registrationNo: c.taxId ?? '',
           contactPerson: c.contactPerson ?? '',
           contactPhone: c.phone ?? '',

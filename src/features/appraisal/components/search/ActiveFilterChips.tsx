@@ -3,6 +3,7 @@ import Icon from '@/shared/components/Icon';
 import { useGetCompanyById } from '../../api/administration';
 import { useAddressStore, useCompanyStore } from '@/shared/store';
 import { useParameterDescription } from '@/shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface ActiveFilterChipsProps {
   filters: Record<string, string>;
@@ -32,14 +33,17 @@ interface CompanyChipProps {
 function CompanyChip({ label, companyId, onRemove }: CompanyChipProps) {
   const companies = useCompanyStore(s => s.companies);
   const isLoaded = useCompanyStore(s => s.isLoaded);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   // Prefer store lookup; fall back to API only if store hasn't loaded
   const { data: apiCompany } = useGetCompanyById(!isLoaded ? companyId : null);
 
   const displayValue = useMemo(() => {
-    const fromStore = companies.find(c => c.id === companyId)?.companyName;
-    return fromStore ?? apiCompany?.companyName ?? companyId;
-  }, [companies, companyId, apiCompany]);
+    const fromStore = companies.find(c => c.id === companyId);
+    if (fromStore) return localizeCompanyName(fromStore.companyName, fromStore.companyNameLocal);
+    if (apiCompany) return localizeCompanyName(apiCompany.companyName, apiCompany.companyNameLocal);
+    return companyId;
+  }, [companies, companyId, apiCompany, localizeCompanyName]);
 
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">

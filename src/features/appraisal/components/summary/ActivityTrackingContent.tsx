@@ -11,6 +11,7 @@ import {
 } from '@/shared/data/thaiAddresses';
 import WorkflowProgressTrack from './WorkflowProgressTrack';
 import ActivityLogTable from './ActivityLogTable';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -47,6 +48,7 @@ interface ActivityTrackingContentProps {
 
 const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) => {
   const { t } = useTranslation(['appraisal', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const location = useLocation();
   const { data, isLoading, isError } = useGetWorkflowProgress(appraisalId);
   const { data: appraisal } = useGetAppraisalById(appraisalId);
@@ -106,8 +108,15 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
 
   // Appraiser is resolved server-side: external → company + internal follow-up staff;
   // internal → the internal assignee. companyName is null for internal assignments.
+  // `companyNameLocal` isn't declared on the generated GetAppraisalByIdResponseType yet
+  // (v1.ts regenerates from the backend OpenAPI spec) — read it defensively so this
+  // localizes as soon as the backend ships it, without waiting on a client regen.
+  const companyNameLocal = (appraisal as { companyNameLocal?: string | null } | undefined)
+    ?.companyNameLocal;
   const appraiserDisplay = appraisal?.companyName
-    ? [appraisal.companyName, appraisal.appraiserName].filter(Boolean).join(' — ')
+    ? [localizeCompanyName(appraisal.companyName, companyNameLocal), appraisal.appraiserName]
+        .filter(Boolean)
+        .join(' — ')
     : (appraisal?.appraiserName ?? null);
 
   const flowType = data.routeType;

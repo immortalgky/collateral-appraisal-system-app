@@ -86,6 +86,7 @@ export type LocaleStore = {
 export type CompanyItem = {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
 };
 
 export type CompanyStore = {

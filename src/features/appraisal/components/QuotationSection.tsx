@@ -37,6 +37,7 @@ import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
@@ -284,22 +285,38 @@ const EditDraftForm = ({
   onEditSpecialRequirementsChange,
 }: EditDraftFormProps) => {
   const { t } = useTranslation(['appraisal', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
     bankingSegment,
     true,
   );
 
   const allCompanies = useMemo(
-    () => (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.companyName })),
+    () =>
+      (rawCompanies ?? []).map(c => ({
+        id: c.id,
+        companyName: c.companyName,
+        companyNameLocal: c.companyNameLocal,
+      })),
     [rawCompanies],
   );
 
   const filteredCompanies = useMemo(() => {
     const q = editSearchQuery.toLowerCase().trim();
-    return q ? allCompanies.filter(c => c.companyName.toLowerCase().includes(q)) : allCompanies;
+    return q
+      ? allCompanies.filter(
+          c =>
+            c.companyName.toLowerCase().includes(q) ||
+            c.companyNameLocal?.toLowerCase().includes(q),
+        )
+      : allCompanies;
   }, [allCompanies, editSearchQuery]);
 
-  const handleToggleCompany = (company: { id: string; companyName: string }) => {
+  const handleToggleCompany = (company: {
+    id: string;
+    companyName: string;
+    companyNameLocal?: string | null;
+  }) => {
     const next = new Set(editCompanyIds);
     if (next.has(company.id)) {
       next.delete(company.id);
@@ -308,7 +325,10 @@ const EditDraftForm = ({
       onEditCompanyNamesChange(nextNames);
     } else {
       next.add(company.id);
-      onEditCompanyNamesChange({ ...editCompanyNames, [company.id]: company.companyName });
+      onEditCompanyNamesChange({
+        ...editCompanyNames,
+        [company.id]: localizeCompanyName(company.companyName, company.companyNameLocal),
+      });
     }
     onEditCompanyIdsChange(next);
   };
@@ -431,7 +451,9 @@ const EditDraftForm = ({
                       <div className="size-6 rounded bg-purple-100 flex items-center justify-center shrink-0">
                         <Icon name="building" style="solid" className="size-3 text-purple-600" />
                       </div>
-                      <span className="flex-1 truncate text-gray-900">{company.companyName}</span>
+                      <span className="flex-1 truncate text-gray-900">
+                        {localizeCompanyName(company.companyName, company.companyNameLocal)}
+                      </span>
                     </button>
                   );
                 })}
@@ -485,6 +507,7 @@ type SendStep = 'confirm' | 'share-docs';
 const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
   const { t, i18n } = useTranslation('appraisal');
+  const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
   /** appraisalId → { documentId → { level } }; outer key tracks per-appraisal coverage */
@@ -963,7 +986,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">{inv.companyName}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="text-sm text-gray-700 tabular-nums">
@@ -1094,7 +1119,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       const initialIds = new Set((draftDetail?.invitedCompanies ?? []).map(c => c.companyId));
       const initialNames: Record<string, string> = {};
       (draftDetail?.invitedCompanies ?? []).forEach(c => {
-        initialNames[c.companyId] = c.companyName;
+        initialNames[c.companyId] = localizeCompanyName(c.companyName, c.companyNameLocal);
       });
       setEditCompanyIds(initialIds);
       setEditCompanyNames(initialNames);
@@ -1537,14 +1562,14 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               isOpen={isRejectOpen}
               onClose={closeReject}
               quotationId={quotationDetail.id}
-              companyName={winner.companyName}
+              companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
             />
             <FinalizeModal
               isOpen={isFinalizeOpen}
               onClose={closeFinalize}
               quotationId={quotationDetail.id}
               companyQuotationId={winner.id}
-              companyName={winner.companyName}
+              companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
               winnerItems={winner.items ?? []}
               appraisals={quotationDetail.appraisals ?? []}
             />
@@ -1553,7 +1578,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               onClose={closeNegotiate}
               quotationId={quotationDetail.id}
               companyQuotationId={winner.id}
-              companyName={winner.companyName}
+              companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
               currentRounds={winner.negotiationRounds ?? 0}
             />
           </>
@@ -1616,7 +1641,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-600">
-          <p>{t('quotation.finalizedWith', { company: winner?.companyName ?? '—' })}</p>
+          <p>
+            {t('quotation.finalizedWith', {
+              company: winner ? localizeCompanyName(winner.companyName, winner.companyNameLocal) : '—',
+            })}
+          </p>
           {finalPrice != null && (
             <p className="mt-1">
               {t('quotation.finalPrice')}{' '}

@@ -12,6 +12,7 @@ import { Textarea } from '@shared/components/inputs';
 import toast from 'react-hot-toast';
 import { formatLocaleDate } from '@shared/utils/dateUtils';
 import { useBreadcrumbExtrasStore } from '@shared/store';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import { useGetAppraisalById } from '@/features/appraisal/api/appraisal';
 import {
   useGetEvaluationByAppraisal,
@@ -113,6 +114,7 @@ function EvaluationTotalRow({ values, totalLabel, configs }: EvaluationTotalRowP
 function ServiceQualityEvaluationDetailPage() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const { i18n, t } = useTranslation('serviceQualityEvaluation');
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const { data: appraisal, isLoading: appraisalLoading, isError: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
   const { data: header, isLoading: headerLoading, isError: headerError, refetch: refetchHeader } = useGetEvaluationHeader(appraisalId ?? '');
@@ -320,7 +322,11 @@ function ServiceQualityEvaluationDetailPage() {
             <InfoRow label={t('detail.info.customerName')} value={header?.customerName ?? '—'} />
             <InfoRow
               label={t('detail.info.appraiserCompany')}
-              value={header?.appraiserCompanyName ?? '—'}
+              value={
+                header?.appraiserCompanyName
+                  ? localizeCompanyName(header.appraiserCompanyName, header.appraiserCompanyNameLocal)
+                  : '—'
+              }
             />
             <InfoRow
               label={t('detail.info.internalAppraiser')}

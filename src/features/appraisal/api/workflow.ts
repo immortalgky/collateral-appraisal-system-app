@@ -24,6 +24,7 @@ export interface ActivityLogItemDto {
   group: string | null;
   activityId: string | null;
   companyName: string | null;
+  companyNameLocal?: string | null;
   movement: string | null;
 }
 

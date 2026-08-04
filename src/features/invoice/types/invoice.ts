@@ -12,6 +12,7 @@ export interface InvoiceListItem {
   itemCount: number;
   companyId: string;
   companyName: string | null;
+  companyNameLocal?: string | null;
   sentDate: string | null;
   paidDate: string | null;
   paymentOrderNo: string | null;
@@ -52,6 +53,7 @@ export interface InvoiceDetail {
   status: InvoiceStatus;
   totalAmount: number;
   companyName: string | null;
+  companyNameLocal?: string | null;
   companyId: string;
   bankAccountNo: string | null;
   bankAccountName: string | null;

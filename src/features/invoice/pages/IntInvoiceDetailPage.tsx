@@ -7,6 +7,7 @@ import InvoiceStatusBadge from '../components/InvoiceStatusBadge';
 import InvoiceItemsTable from '../components/InvoiceItemsTable';
 import MarkPaidLayout from '../components/MarkPaidLayout';
 import { useGetInvoiceById, useMarkInvoicePaid } from '../api/invoice';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import toast from 'react-hot-toast';
 
 const formatCurrency = (amount: number) =>
@@ -16,6 +17,7 @@ const IntInvoiceDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('invoice');
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const { data: invoice, isLoading, isError, error } = useGetInvoiceById(id);
   const { mutate: markPaid, isPending: isMarking } = useMarkInvoicePaid();
@@ -87,7 +89,9 @@ const IntInvoiceDetailPage = () => {
           <div className="flex flex-col items-end gap-1.5">
             <InvoiceStatusBadge status={invoice.status} viewContext="internal" />
             {invoice.companyName && (
-              <p className="text-xs text-gray-500">{invoice.companyName}</p>
+              <p className="text-xs text-gray-500">
+                {localizeCompanyName(invoice.companyName, invoice.companyNameLocal)}
+              </p>
             )}
           </div>
         </div>

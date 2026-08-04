@@ -14,6 +14,7 @@ import { useGetRoles } from '../api/roles';
 import { useGetGroups } from '../api/groups';
 import { useGetTeams } from '../api/teams';
 import { useGetAdminCompanies } from '../api/companies';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -70,6 +71,7 @@ const SectionLabel = ({ icon, children }: { icon: string; children: React.ReactN
 
 const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [accessTab, setAccessTab] = useState<AccessTab>('roles');
   const createUser = useCreateUser();
@@ -368,7 +370,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
                   <option value="">{t('placeholders.selectCompany')}</option>
                   {companies.map(c => (
                     <option key={c.id} value={c.id}>
-                      {c.name}
+                      {localizeCompanyName(c.name, c.nameLocal)}
                     </option>
                   ))}
                 </select>

@@ -6,6 +6,7 @@ import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useCancelQuotation } from '../api/quotation';
 import type { QuotationRequestDetailDto } from '../schemas/quotation';
 import QuotationStatusBadge from './QuotationStatusBadge';
@@ -60,6 +61,7 @@ interface QuotationStatusViewProps {
  */
 const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const status = quotation.status;
 
   // ─── Cancel quotation state ───────────────────────────────────────────────
@@ -282,7 +284,9 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">{inv.companyName}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="text-sm text-gray-700 tabular-nums">
@@ -390,7 +394,9 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
           <p
             dangerouslySetInnerHTML={{
               __html: t('shared.quotationAwarded', {
-                company: `<strong class="text-gray-900">${winner?.companyName ?? '—'}</strong>`,
+                company: `<strong class="text-gray-900">${
+                  winner ? localizeCompanyName(winner.companyName, winner.companyNameLocal) : '—'
+                }</strong>`,
               }),
             }}
           />
@@ -454,6 +460,7 @@ interface WinnerTentativeViewProps {
 
 const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativeViewProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const { isOpen: isRejectOpen, onOpen: openReject, onClose: closeReject } = useDisclosure();
   const { isOpen: isFinalizeOpen, onOpen: openFinalize, onClose: closeFinalize } = useDisclosure();
   const {
@@ -511,14 +518,14 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
             isOpen={isRejectOpen}
             onClose={closeReject}
             quotationId={quotation.id}
-            companyName={winner.companyName}
+            companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
           />
           <FinalizeModal
             isOpen={isFinalizeOpen}
             onClose={closeFinalize}
             quotationId={quotation.id}
             companyQuotationId={winner.id}
-            companyName={winner.companyName}
+            companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
             winnerItems={winner.items ?? []}
             appraisals={quotation.appraisals ?? []}
           />
@@ -527,7 +534,7 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
             onClose={closeNegotiate}
             quotationId={quotation.id}
             companyQuotationId={winner.id}
-            companyName={winner.companyName}
+            companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
             currentRounds={winner.negotiationRounds ?? 0}
           />
         </>
