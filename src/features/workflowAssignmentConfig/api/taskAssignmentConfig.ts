@@ -35,6 +35,10 @@ export interface TaskAssignmentConfigDto {
   specificAssignee: string | null;
   adminPoolId: string | null;
   escalateToAdminPool: boolean;
+  /** null = inherit assignmentRules.teamConstrained from the workflow definition JSON. */
+  teamConstrained: boolean | null;
+  /** null = inherit assignmentRules.excludeAssigneesFrom from the workflow definition JSON. */
+  excludeAssigneesFrom: string[] | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -61,6 +65,10 @@ export interface SaveTaskAssignmentConfigBody {
   specificAssignee?: string | null;
   adminPoolId?: string | null;
   escalateToAdminPool: boolean;
+  /** null = inherit assignmentRules.teamConstrained from the workflow definition JSON. */
+  teamConstrained?: boolean | null;
+  /** null = inherit assignmentRules.excludeAssigneesFrom from the workflow definition JSON. */
+  excludeAssigneesFrom?: string[] | null;
   isActive: boolean;
 }
 
