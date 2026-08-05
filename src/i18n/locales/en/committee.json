@@ -69,7 +69,8 @@
     "quorumMin": "Quorum must be at least 1",
     "quorumPercentMax": "Percentage quorum cannot exceed 100",
     "majorityValueRequired": "Enter the number of approvals required",
-    "majorityValueExceedsMembers": "Cannot exceed the {{max}} active member(s) — the round could never resolve"
+    "majorityValueExceedsMembers": "Cannot exceed the {{max}} active member(s) — the round could never resolve",
+    "roleRetired": "This role is retired — choose one of the current roles"
   },
   "toasts": {
     "added": "Member added",
@@ -134,7 +135,8 @@
       "snapshot": "Conditions are captured when an approval round starts, so changes apply to new rounds only — approvals already in progress keep the rules they began with."
     },
     "validation": {
-      "minVotes": "Must be at least 1"
+      "minVotes": "Must be at least 1",
+      "roleRequired": "Select a role that casts a vote"
     },
     "dialog": {
       "addTitle": "Add Approval Condition",

@@ -12,7 +12,13 @@ export const MEETING_PERMISSIONS = {
 } as const;
 
 /**
- * Ordered list of committee member positions.
+ * Every position the backend enum can return, in display order.
+ *
+ * Risk / Appraisal / Credit / Member are RETIRED — they can no longer be assigned, but they remain
+ * on the backend enum because Position is persisted as the enum name and existing rosters and
+ * historical votes still hold them. Keep them here so those values still typecheck and render.
+ * For what a user may CHOOSE, use `useSelectablePositions()`.
+ *
  * `as const` preserves the tuple type so `CommitteeMemberPosition` stays derivable.
  */
 export const POSITION_OPTIONS = [
@@ -25,6 +31,42 @@ export const POSITION_OPTIONS = [
   'Credit',
   'Member',
 ] as const;
+
+/**
+ * Positions a user may assign today. Mirrors `CommitteeMemberPositions.Selectable` on the backend
+ * and the `MeetingPosition` general-parameter group.
+ *
+ * Used as the fallback when that parameter group has not been seeded yet, so the dropdown is never
+ * empty; the group itself is the source of truth at runtime.
+ */
+export const SELECTABLE_POSITIONS = [
+  'Chairman',
+  'Director',
+  'Secretary',
+  'UW',
+] as const;
+
+/** The general-parameter group backing the position dropdowns. */
+export const MEETING_POSITION_PARAMETER_GROUP = 'MeetingPosition';
+
+/**
+ * Preselected position when adding a member. Not `Member` — that position is retired, so the
+ * backend would reject the default on save.
+ */
+export const DEFAULT_MEMBER_POSITION = 'Director';
+
+/**
+ * Positions that are on the roster but never cast an approval vote.
+ *
+ * Mirrors `CommitteeMemberPositions.CanVote` on the backend: the Secretary convenes the meeting and
+ * releases its items, so `Meeting.ReleaseItem` leaves them out of the approver roster handed to the
+ * approval round. They stay on the roster — the invitation and minutes still list them.
+ */
+export const NON_VOTING_POSITIONS: readonly string[] = ['Secretary'];
+
+/** Whether a roster member with this position is one of the item's approvers. */
+export const canVote = (position: string | null | undefined): boolean =>
+  !!position && !NON_VOTING_POSITIONS.includes(position);
 
 /** All 6 effective statuses in display order. */
 export const MEETING_STATUS_OPTIONS: MeetingStatus[] = [

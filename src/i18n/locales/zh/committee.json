@@ -50,7 +50,8 @@
   },
   "validation": {
     "selectUser": "请选择用户",
-    "memberNameRequired": "成员姓名为必填项"
+    "memberNameRequired": "成员姓名为必填项",
+    "roleRetired": "该职位已停用，请选择当前可用的职位"
   },
   "toasts": {
     "added": "已添加成员",
@@ -59,5 +60,10 @@
     "updateFailed": "更新成员失败",
     "removed": "已移除成员",
     "removeFailed": "移除成员失败"
+  },
+  "conditions": {
+    "validation": {
+      "roleRequired": "请选择一个具有投票权的职位"
+    }
   }
 }
