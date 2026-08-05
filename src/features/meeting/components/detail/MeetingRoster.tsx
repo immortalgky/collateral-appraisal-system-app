@@ -104,11 +104,10 @@ const MeetingRoster = ({ meetingId, members, editable }: MeetingRosterProps) => 
 
   const dialogs = (
     <>
-      <AddMemberDialog
-        isOpen={addMemberDialog.isOpen}
-        onClose={addMemberDialog.onClose}
-        meetingId={meetingId}
-      />
+      {/* Remount per open so the form re-seeds from the current position list. */}
+      {addMemberDialog.isOpen && (
+        <AddMemberDialog isOpen onClose={addMemberDialog.onClose} meetingId={meetingId} />
+      )}
       <ConfirmDialog
         isOpen={pendingRemoval !== null}
         onClose={() => setPendingRemoval(null)}
