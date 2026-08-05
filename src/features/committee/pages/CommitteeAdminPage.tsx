@@ -11,7 +11,16 @@ import Icon from '@/shared/components/Icon';
 import Modal from '@/shared/components/Modal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useGetUsers } from '@/features/userManagement/api/users';
-import { POSITION_OPTIONS } from '@/features/meeting/constants';
+import {
+  canVote,
+  DEFAULT_MEMBER_POSITION,
+  SELECTABLE_POSITIONS,
+} from '@/features/meeting/constants';
+import type { CommitteeMemberPosition } from '@/features/meeting/api/types';
+import {
+  useSelectablePositions,
+  usePositionLabel,
+} from '@/features/meeting/hooks/usePositions';
 
 import {
   useAddCommitteeCondition,
@@ -66,33 +75,31 @@ const makeAddMemberSchema = (t: TFunction<'committee'>) =>
   z.object({
     userId: z.string().min(1, t('validation.selectUser')),
     memberName: z.string().min(1, t('validation.memberNameRequired')),
-    role: z.enum([
-      'Chairman',
-      'Director',
-      'Secretary',
-      'UW',
-      'Risk',
-      'Appraisal',
-      'Credit',
-      'Member',
-    ] as const),
+    // Only currently-selectable roles: the API rejects the retired ones (Risk / Appraisal /
+    // Credit / Member) on save, even though existing members may still hold them.
+    role: z.enum(SELECTABLE_POSITIONS),
     attendance: z.enum(['Always', 'Odd', 'Even'] as const),
   });
 
-const updateMemberSchema = z.object({
-  role: z.enum([
-    'Chairman',
-    'Director',
-    'Secretary',
-    'UW',
-    'Risk',
-    'Appraisal',
-    'Credit',
-    'Member',
-  ] as const),
-  attendance: z.enum(['Always', 'Odd', 'Even'] as const),
-  isActive: z.boolean(),
-});
+/**
+ * Editing an existing member. The role must be a currently-selectable one OR the member's own
+ * stored value — 7 committee members still hold a retired position, and an admin deactivating or
+ * re-scheduling one of them sends that role back untouched. A plain `z.enum` would fail such a save
+ * with "Invalid enum value ... received Risk" on a field they never edited. Assigning a retired
+ * role is still impossible: it is not offered as a choosable option, and the backend applies the
+ * same only-on-change rule.
+ */
+const makeUpdateMemberSchema = (t: TFunction<'committee'>, currentRole: string) =>
+  z.object({
+    role: z
+      .string()
+      .refine(
+        v => (SELECTABLE_POSITIONS as readonly string[]).includes(v) || v === currentRole,
+        t('validation.roleRetired'),
+      ),
+    attendance: z.enum(['Always', 'Odd', 'Even'] as const),
+    isActive: z.boolean(),
+  });
 
 // Committee-level settings (everything except members). Code is immutable and omitted.
 // `activeMemberCount` mirrors the backend's reachability check so a threshold nobody could ever
@@ -130,20 +137,34 @@ const makeCommitteeSettingsSchema = (t: TFunction<'committee'>, activeMemberCoun
     );
 
 type AddMemberFormValues = z.infer<ReturnType<typeof makeAddMemberSchema>>;
-type UpdateMemberFormValues = z.infer<typeof updateMemberSchema>;
+type UpdateMemberFormValues = z.infer<ReturnType<typeof makeUpdateMemberSchema>>;
 type CommitteeSettingsFormValues = z.infer<ReturnType<typeof makeCommitteeSettingsSchema>>;
 
 // Client-side mirror of the domain guards so the common mistakes are caught before a round-trip;
 // the backend remains authoritative (it also checks the role is actually held by an active member).
-const makeConditionSchema = (t: TFunction<'committee'>) =>
-  z.object({
-    conditionType: z.enum(['RoleRequired', 'MinVotes'] as const),
-    roleRequired: z.string(),
-    minVotesRequired: z.coerce.number().int().min(1, t('conditions.validation.minVotes')),
-    priority: z.coerce.number().int().min(1),
-    description: z.string(),
-    isActive: z.boolean(),
-  });
+const makeConditionSchema = (t: TFunction<'committee'>, requirableRoles: readonly string[]) =>
+  z
+    .object({
+      conditionType: z.enum(['RoleRequired', 'MinVotes'] as const),
+      roleRequired: z.string(),
+      minVotesRequired: z.coerce.number().int().min(1, t('conditions.validation.minVotes')),
+      priority: z.coerce.number().int().min(1),
+      description: z.string(),
+      isActive: z.boolean(),
+    })
+    // Strict, unlike the member schema: a retired role is never valid for a condition and no
+    // existing condition holds one, so there is nothing to preserve. Was a bare `z.string()`,
+    // which accepted '' from an empty committee and any stale seed value.
+    .superRefine((values, ctx) => {
+      if (values.conditionType !== 'RoleRequired') return;
+      if (requirableRoles.includes(values.roleRequired)) return;
+
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['roleRequired'],
+        message: t('conditions.validation.roleRequired'),
+      });
+    });
 
 type ConditionFormValues = z.infer<ReturnType<typeof makeConditionSchema>>;
 
@@ -173,6 +194,8 @@ interface AddMemberDialogProps {
 
 const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps) => {
   const { t } = useTranslation(['committee', 'common']);
+  const selectablePositions = useSelectablePositions();
+  const positionLabel = usePositionLabel();
   const addMember = useAddCommitteeMember();
   const { data: usersData, isLoading: isLoadingUsers } = useGetUsers({
     role: COMMITTEE_ROLE,
@@ -188,7 +211,15 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
     formState: { errors },
   } = useForm<AddMemberFormValues>({
     resolver: zodResolver(makeAddMemberSchema(t)),
-    defaultValues: { userId: '', memberName: '', role: 'Member', attendance: 'Always' },
+    defaultValues: {
+      userId: '',
+      memberName: '',
+      // From the offered list, so a parameter group that no longer carries the default cannot seed
+      // a value with no matching option. The list is already narrowed to the selectable set by
+      // useSelectablePositions; the cast just re-states that for the wider display union.
+      role: (selectablePositions[0] ?? DEFAULT_MEMBER_POSITION) as AddMemberFormValues['role'],
+      attendance: 'Always',
+    },
   });
 
   const handleClose = () => {
@@ -279,9 +310,9 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
             {t('fields.role')} <span className="text-red-500">*</span>
           </label>
           <select id="cm-role" {...register('role')} className={inputClass}>
-            {POSITION_OPTIONS.map(pos => (
+            {selectablePositions.map(pos => (
               <option key={pos} value={pos}>
-                {pos}
+                {positionLabel(pos)}
               </option>
             ))}
           </select>
@@ -333,14 +364,21 @@ interface EditMemberDialogProps {
 
 const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDialogProps) => {
   const { t } = useTranslation(['committee', 'common']);
+  const selectablePositions = useSelectablePositions();
+  const positionLabel = usePositionLabel();
   const updateMember = useUpdateCommitteeMember();
+
+  // A member added before Risk/Appraisal/Credit/Member were retired still holds one. Tested against
+  // the SAME dynamic list that builds the options, so guard and options can never disagree — the
+  // static constant would miss a position the parameter group has since deactivated.
+  const isRetiredRole = !(selectablePositions as readonly string[]).includes(member.role);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<UpdateMemberFormValues>({
-    resolver: zodResolver(updateMemberSchema),
+    resolver: zodResolver(makeUpdateMemberSchema(t, member.role)),
     defaultValues: {
       role: member.role,
       attendance: member.attendance,
@@ -354,7 +392,13 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
 
   const onSubmit = (values: UpdateMemberFormValues) => {
     updateMember.mutate(
-      { committeeId, memberId: member.id, body: values },
+      {
+        committeeId,
+        memberId: member.id,
+        // `role` is a refined string, not an enum: it also admits the member's own stored value,
+        // which may be a retired position the request type no longer lists.
+        body: { ...values, role: values.role as CommitteeMemberPosition },
+      },
       {
         onSuccess: () => {
           toast.success(t('toasts.updated'));
@@ -378,9 +422,14 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
             {t('fields.role')}
           </label>
           <select id="edit-role" {...register('role')} className={inputClass}>
-            {POSITION_OPTIONS.map(pos => (
+            {isRetiredRole && (
+              <option value={member.role} disabled>
+                {positionLabel(member.role)}
+              </option>
+            )}
+            {selectablePositions.map(pos => (
               <option key={pos} value={pos}>
-                {pos}
+                {positionLabel(pos)}
               </option>
             ))}
           </select>
@@ -675,10 +724,22 @@ const ConditionDialog = ({
   activeRoles,
 }: ConditionDialogProps) => {
   const { t } = useTranslation(['committee', 'common']);
+  const positionLabel = usePositionLabel();
+  const selectablePositions = useSelectablePositions();
+  // The Secretary is excluded from the approver roster at release, so a condition requiring their
+  // vote could never be satisfied — the backend rejects it too. Uses the shared `canVote` rule
+  // rather than a second literal 'Secretary'.
+  const votingPositions = selectablePositions.filter(canVote);
   const addCondition = useAddCommitteeCondition();
   const updateCondition = useUpdateCommitteeCondition();
   const isEditing = condition !== null;
   const busy = addCondition.isPending || updateCondition.isPending;
+
+  // Seeded from the list that actually builds the options. It used to fall back to `activeRoles[0]`
+  // — the roles held by active members, unfiltered — which really can be `Risk` today, giving the
+  // select a value matching none of its options.
+  const seededRole = condition?.roleRequired ?? votingPositions[0] ?? '';
+  const isUnlistedRole = !!seededRole && !(votingPositions as readonly string[]).includes(seededRole);
 
   const {
     register,
@@ -686,10 +747,10 @@ const ConditionDialog = ({
     watch,
     formState: { errors },
   } = useForm<ConditionFormValues>({
-    resolver: zodResolver(makeConditionSchema(t)),
+    resolver: zodResolver(makeConditionSchema(t, votingPositions)),
     defaultValues: {
       conditionType: condition?.conditionType ?? 'RoleRequired',
-      roleRequired: condition?.roleRequired ?? activeRoles[0] ?? '',
+      roleRequired: seededRole,
       minVotesRequired: condition?.minVotesRequired ?? 1,
       priority: condition?.priority ?? 1,
       description: condition?.description ?? '',
@@ -757,13 +818,27 @@ const ConditionDialog = ({
               {t('conditions.fields.role')}
             </label>
             <select id="cond-role" {...register('roleRequired')} className={inputClass}>
-              {POSITION_OPTIONS.map(pos => (
+              {/*
+                An existing condition on a role that is no longer offered (retired, or since
+                deactivated in the MeetingPosition group) would otherwise leave the select showing
+                the first option while the form still held the old value. Show it, disabled, so the
+                admin sees what the rule currently is and must pick a valid role to save.
+              */}
+              {isUnlistedRole && (
+                <option value={seededRole} disabled>
+                  {positionLabel(seededRole)}
+                </option>
+              )}
+              {votingPositions.map(pos => (
                 <option key={pos} value={pos}>
-                  {pos}
+                  {positionLabel(pos)}
                   {activeRoles.includes(pos) ? '' : ` — ${t('conditions.noMemberHolds')}`}
                 </option>
               ))}
             </select>
+            {errors.roleRequired && (
+              <p className="mt-1 text-xs text-red-600">{errors.roleRequired.message}</p>
+            )}
             <p className="mt-1 text-xs text-gray-400">{t('conditions.help.role')}</p>
           </div>
         ) : (

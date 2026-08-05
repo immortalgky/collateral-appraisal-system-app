@@ -17,7 +17,7 @@ import Icon from '@/shared/components/Icon';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useRemoveMeetingMember, useUpdateMeetingMemberPosition } from '../../api/meetings';
 import type { CommitteeMemberPosition, MeetingMemberDto } from '../../api/types';
-import { POSITION_OPTIONS } from '../../constants';
+import { useSelectablePositions, usePositionLabel } from '../../hooks/usePositions';
 import AddMemberDialog from '../AddMemberDialog';
 
 /** Display order — leadership first, then the rest in the configured order. */
@@ -42,6 +42,8 @@ interface MeetingRosterProps {
 
 const MeetingRoster = ({ meetingId, members, editable }: MeetingRosterProps) => {
   const { t } = useTranslation('meeting');
+  const selectablePositions = useSelectablePositions();
+  const positionLabel = usePositionLabel();
   const removeMember = useRemoveMeetingMember();
   const updatePosition = useUpdateMeetingMemberPosition();
   const addMemberDialog = useDisclosure();
@@ -189,9 +191,20 @@ const MeetingRoster = ({ meetingId, members, editable }: MeetingRosterProps) => 
                         aria-label={t('columns.position')}
                         className="rounded border border-gray-300 px-1.5 py-0.5 text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                       >
-                        {POSITION_OPTIONS.map(pos => (
+                        {/*
+                          A member snapshotted before Risk/Appraisal/Credit/Member were retired still
+                          holds one. A <select> whose value matches no <option> renders blank and
+                          would submit whatever sits first, silently rewriting their position — so
+                          carry the current value as a disabled option instead.
+                        */}
+                        {!selectablePositions.includes(member.position) && (
+                          <option value={member.position} disabled>
+                            {positionLabel(member.position)}
+                          </option>
+                        )}
+                        {selectablePositions.map(pos => (
                           <option key={pos} value={pos}>
-                            {t(`position.${pos}` as `position.${CommitteeMemberPosition}`)}
+                            {positionLabel(pos)}
                           </option>
                         ))}
                       </select>
@@ -204,7 +217,7 @@ const MeetingRoster = ({ meetingId, members, editable }: MeetingRosterProps) => 
                           isLead ? 'font-medium text-primary' : 'text-gray-500',
                         )}
                       >
-                        {t(`position.${member.position}` as `position.${CommitteeMemberPosition}`)}
+                        {positionLabel(member.position)}
                       </span>
                     )}
                   </td>

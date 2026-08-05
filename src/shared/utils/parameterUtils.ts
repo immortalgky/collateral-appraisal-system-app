@@ -9,12 +9,30 @@ import type { RadioOption } from '../components/inputs/RadioGroup';
 // Sync utilities (read from Zustand store directly, for use outside React)
 // =============================================================================
 
-/** Returns Parameter[] filtered by group + current locale */
+/**
+ * Resolves a group for a locale, falling back to the EN rows when the requested language has none.
+ * parameter.Parameters only carries EN and TH rows, so without this every parameter-driven dropdown
+ * renders empty for a user on any other locale (e.g. ZH).
+ */
+function resolveGroup(
+  parameters: Record<string, Parameter[]>,
+  group: string,
+  country: string,
+  language: string,
+): Parameter[] {
+  const key = `${group}.${country}.${language}`.toLowerCase();
+  const rows = parameters[key];
+  if (rows?.length) return rows;
+
+  const fallbackKey = `${group}.${country}.en`.toLowerCase();
+  return parameters[fallbackKey] ?? [];
+}
+
+/** Returns Parameter[] filtered by group + current locale (falls back to EN) */
 export function getParametersByGroup(group: string): Parameter[] {
   const { parameters } = useParameterStore.getState();
   const { country, language } = useLocaleStore.getState();
-  const key = `${group}.${country}.${language}`.toLowerCase();
-  return parameters[key] ?? [];
+  return resolveGroup(parameters, group, country, language);
 }
 
 /** Returns description for a group+code, falls back to code */
@@ -38,16 +56,16 @@ export function getParameterOptions(group: string): ListBoxItem[] {
 // React hooks (subscribe to store/locale changes)
 // =============================================================================
 
-/** Reactive version of getParametersByGroup */
+/** Reactive version of getParametersByGroup (falls back to EN) */
 export function useParametersByGroup(group: string): Parameter[] {
   const parameters = useParameterStore(state => state.parameters);
   const country = useLocaleStore(state => state.country);
   const language = useLocaleStore(state => state.language);
 
-  return useMemo(() => {
-    const key = `${group}.${country}.${language}`.toLowerCase();
-    return parameters[key] ?? [];
-  }, [parameters, group, country, language]);
+  return useMemo(
+    () => resolveGroup(parameters, group, country, language),
+    [parameters, group, country, language],
+  );
 }
 
 /** Reactive version of getParameterDescription */

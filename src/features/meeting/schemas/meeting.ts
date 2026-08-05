@@ -10,18 +10,16 @@
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 
+import { SELECTABLE_POSITIONS } from '../constants';
+
 // ==================== Shared sub-schemas ====================
 
-const POSITION_VALUES = [
-  'Chairman',
-  'Director',
-  'Secretary',
-  'UW',
-  'Risk',
-  'Appraisal',
-  'Credit',
-  'Member',
-] as const;
+/**
+ * Positions accepted when WRITING a member. Only the currently-selectable ones — Risk / Appraisal /
+ * Credit / Member are retired and the API rejects them on save, even though they still appear on
+ * existing rosters (see POSITION_OPTIONS in ../constants for the full read-side union).
+ */
+const POSITION_VALUES = SELECTABLE_POSITIONS;
 
 // ==================== Schema factories ====================
 
@@ -183,30 +181,12 @@ export type RecallFormValues = z.infer<typeof recallSchema>;
 export const memberFormSchema = z.object({
   userId: z.string().min(1).max(100),
   memberName: z.string().min(1).max(200),
-  position: z.enum([
-    'Chairman',
-    'Director',
-    'Secretary',
-    'UW',
-    'Risk',
-    'Appraisal',
-    'Credit',
-    'Member',
-  ] as const),
+  position: z.enum(POSITION_VALUES),
 });
 export type MemberFormValues = z.infer<typeof memberFormSchema>;
 
 export const updateMemberPositionSchema = z.object({
-  position: z.enum([
-    'Chairman',
-    'Director',
-    'Secretary',
-    'UW',
-    'Risk',
-    'Appraisal',
-    'Credit',
-    'Member',
-  ] as const),
+  position: z.enum(POSITION_VALUES),
 });
 export type UpdateMemberPositionFormValues = z.infer<typeof updateMemberPositionSchema>;
 

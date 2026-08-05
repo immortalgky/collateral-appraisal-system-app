@@ -36,6 +36,7 @@ import type {
   MeetingItemDto,
   MeetingMemberDto,
 } from '../../api/types';
+import { canVote } from '../../constants';
 import { useMeetingFormat } from '../../utils/useMeetingFormat';
 
 const KNOWN_VOTES = new Set(['approve', 'reject', 'route_back']);
@@ -122,7 +123,12 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
   // different paths — match case-insensitively rather than trusting them to agree exactly.
   const voteByMember = new Map(votes.map(v => [v.member.toLowerCase(), v]));
 
-  const slots: VoteSlot[] = members.map(member => ({
+  // Only the members who actually vote get a slot. Release hands the approval round the roster
+  // minus the secretary, so counting the whole roster showed a secretary owing a vote they can
+  // never cast and inflated the denominator (an "0/5" that could only ever reach 4/5).
+  const votingMembers = members.filter(member => canVote(member.position));
+
+  const slots: VoteSlot[] = votingMembers.map(member => ({
     key: member.id,
     name: member.memberName,
     // Roster positions are a known enum with translations; the orphan path below uses the
@@ -134,8 +140,11 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
   }));
 
   // A member removed from the meeting after voting has no roster row left, but their vote still
-  // counts toward the round — append them rather than silently dropping the icon.
-  const rosterUserIds = new Set(members.filter(m => m.userId).map(m => m.userId.toLowerCase()));
+  // counts toward the round — append them rather than silently dropping the icon. Built from the
+  // VOTING members so an item released before the secretary was excluded still shows their vote.
+  const rosterUserIds = new Set(
+    votingMembers.filter(m => m.userId).map(m => m.userId.toLowerCase()),
+  );
   for (const vote of votes) {
     if (rosterUserIds.has(vote.member.toLowerCase())) continue;
     slots.push({
