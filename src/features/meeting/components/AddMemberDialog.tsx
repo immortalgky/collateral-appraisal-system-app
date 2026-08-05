@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -51,20 +50,18 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
     u => !existingMemberUserIds.has(u.username),
   );
 
+  // No reset-on-open effect: MeetingRoster mounts this dialog only while it is open, so every open
+  // builds the form fresh. The effect it replaces listed `defaultPosition` in its deps, so a change
+  // to the position list while the dialog was open wiped whatever the user had typed.
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
   } = useForm<MemberFormValues>({
     resolver: zodResolver(schema),
     defaultValues: { userId: '', memberName: '', position: defaultPosition },
   });
-
-  useEffect(() => {
-    if (isOpen) reset({ userId: '', memberName: '', position: defaultPosition });
-  }, [isOpen, reset, defaultPosition]);
 
   const handleClose = () => {
     if (!addMember.isPending) onClose();

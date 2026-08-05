@@ -206,7 +206,6 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
   } = useForm<AddMemberFormValues>({
@@ -222,11 +221,11 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
     },
   });
 
+  // No reset() needed — the parent unmounts this dialog on close, so the next open rebuilds the
+  // form from scratch. A bare reset() would restore the values captured at first mount, which is
+  // exactly the staleness that unmounting removes.
   const handleClose = () => {
-    if (!addMember.isPending) {
-      reset();
-      onClose();
-    }
+    if (!addMember.isPending) onClose();
   };
 
   const handleUserSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -1163,11 +1162,14 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
         </div>
       )}
 
-      <AddMemberDialog
-        isOpen={addMemberDialog.isOpen}
-        onClose={addMemberDialog.onClose}
-        committeeId={committeeId}
-      />
+      {/* Remount per open so the form re-seeds from the latest server values. */}
+      {addMemberDialog.isOpen && (
+        <AddMemberDialog
+          isOpen
+          onClose={addMemberDialog.onClose}
+          committeeId={committeeId}
+        />
+      )}
 
       {/* Remount per open so the form re-seeds from the latest server values. */}
       {conditionDialog.isOpen && (
