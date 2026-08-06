@@ -190,6 +190,7 @@ export const landLocationField: FormField[] = [
     name: 'village',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    required: true,
   },
   {
     type: 'text-input',
