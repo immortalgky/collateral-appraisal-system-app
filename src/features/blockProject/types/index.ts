@@ -109,6 +109,7 @@ export interface ProjectTower {
 
 export interface ProjectModelAreaDetail {
   id?: string;
+  sequence?: number;
   areaDescription?: string;
   areaSize?: number;
 }
