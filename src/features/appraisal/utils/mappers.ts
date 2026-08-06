@@ -25,7 +25,10 @@ export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyResponseType,
 ): createLandFormType => {
   const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
+    ? findAddressBySubDistrictCode(response.subDistrict, 'title')
+    : undefined;
+  const dopaAddressLookup = response.dopaSubDistrict
+    ? findAddressBySubDistrictCode(response.dopaSubDistrict, 'dopa')
     : undefined;
   return {
     titles: (response as any).titles ?? [],
@@ -39,6 +42,12 @@ export const mapLandPropertyResponseToForm = (
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
+    dopaSubDistrict: response.dopaSubDistrict ?? '',
+    dopaSubDistrictName: dopaAddressLookup?.subDistrictName ?? '',
+    dopaDistrict: response.dopaDistrict ?? '',
+    dopaDistrictName: dopaAddressLookup?.districtName ?? '',
+    dopaProvince: response.dopaProvince ?? '',
+    dopaProvinceName: dopaAddressLookup?.provinceName ?? '',
     landDescription: response.landDescription ?? '',
     isOwnerVerified: response.isOwnerVerified ?? false,
     ownerName: response.ownerName ?? '',
@@ -217,7 +226,10 @@ export const mapCondoPropertyResponseToForm = (
   response: GetCondoPropertyResponseType,
 ): createCondoFormType => {
   const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
+    ? findAddressBySubDistrictCode(response.subDistrict, 'title')
+    : undefined;
+  const dopaAddressLookup = response.dopaSubDistrict
+    ? findAddressBySubDistrictCode(response.dopaSubDistrict, 'dopa')
     : undefined;
   return {
     ownerName: response.ownerName ?? '',
@@ -242,6 +254,12 @@ export const mapCondoPropertyResponseToForm = (
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
+    dopaSubDistrict: response.dopaSubDistrict ?? '',
+    dopaSubDistrictName: dopaAddressLookup?.subDistrictName ?? '',
+    dopaDistrict: response.dopaDistrict ?? '',
+    dopaDistrictName: dopaAddressLookup?.districtName ?? '',
+    dopaProvince: response.dopaProvince ?? '',
+    dopaProvinceName: dopaAddressLookup?.provinceName ?? '',
 
     isOwnerVerified: response.isOwnerVerified ?? false,
     buildingConditionType: response.buildingConditionType ?? '',
@@ -323,7 +341,10 @@ export const mapLandAndBuildingPropertyResponseToForm = (
   response: GetLandAndBuildingPropertyResponseType,
 ): createLandAndBuildingFormType => {
   const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
+    ? findAddressBySubDistrictCode(response.subDistrict, 'title')
+    : undefined;
+  const dopaAddressLookup = response.dopaSubDistrict
+    ? findAddressBySubDistrictCode(response.dopaSubDistrict, 'dopa')
     : undefined;
   return {
     titles: (response as any).titles ?? [],
@@ -337,6 +358,12 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
+    dopaSubDistrict: response.dopaSubDistrict ?? '',
+    dopaSubDistrictName: dopaAddressLookup?.subDistrictName ?? '',
+    dopaDistrict: response.dopaDistrict ?? '',
+    dopaDistrictName: dopaAddressLookup?.districtName ?? '',
+    dopaProvince: response.dopaProvince ?? '',
+    dopaProvinceName: dopaAddressLookup?.provinceName ?? '',
     landDescription: response.landDescription ?? '',
     isOwnerVerified: response.isOwnerVerified ?? false,
     ownerName: response.ownerName ?? '',

@@ -2716,6 +2716,9 @@ const UpdateLandPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     hasObligation: z.boolean().nullable().default(null),
@@ -2813,6 +2816,9 @@ const GetLandPropertyResponse = z
     subDistrict: z.string().nullable(),
     district: z.string().nullable(),
     province: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
     isLandLocationVerified: z.boolean().nullable(),
@@ -2962,6 +2968,9 @@ const UpdateLandAndBuildingPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     hasObligation: z.boolean().nullable().default(null),
@@ -3182,6 +3191,9 @@ const GetLandAndBuildingPropertyResponse = z
     district: z.string().nullable(),
     province: z.string().nullable(),
     landOffice: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
     ownerName: z.string().nullable(),
     isOwnerVerified: z.boolean().nullable(),
     hasObligation: z.boolean().nullable(),
@@ -3344,6 +3356,9 @@ const UpdateCondoPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     buildingConditionType: z.string().nullable().default(null),
@@ -3421,6 +3436,9 @@ const GetCondoPropertyResponse = z
     district: z.string().nullable(),
     province: z.string().nullable(),
     landOffice: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
     ownerName: z.string().nullable(),
     isOwnerVerified: z.boolean().nullable(),
     buildingConditionType: z.string().nullable(),
@@ -4136,6 +4154,9 @@ const CreateLandPropertyRequest = z
     district: z.string().nullish().default(null),
     province: z.string().nullish().default(null),
     landOffice: z.string().nullish().default(null),
+    dopaSubDistrict: z.string().nullish().default(null),
+    dopaDistrict: z.string().nullish().default(null),
+    dopaProvince: z.string().nullish().default(null),
     isOwnerVerified: z.boolean().nullish().default(null),
     hasObligation: z.boolean().nullish().default(null),
     obligationDetails: z.string().nullish().default(null),
@@ -4221,6 +4242,9 @@ const CreateLandAndBuildingPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     hasObligation: z.boolean().nullable().default(null),
@@ -4377,6 +4401,9 @@ const CreateCondoPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     buildingConditionType: z.string().nullable().default(null),
@@ -4677,6 +4704,104 @@ const SimulateTransitionCompletedRequest = z
   .partial()
   .passthrough();
 
+// =============================================================================
+// PMA Property schemas
+// =============================================================================
+const GetLandPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  appraisalId: z.string().uuid(),
+  sellingPrice: z.number().nullable(),
+  forcedSalePrice: z.number().nullable(),
+  buildingInsurancePrice: z.number().nullable(),
+  externalSyncStatus: z.string(),
+  externalSyncError: z.string().nullable(),
+  externalSyncedAt: z.string().nullable(),
+  subDistrict: z.string().nullable(),
+  district: z.string().nullable(),
+  province: z.string().nullable(),
+  titles: z.array(LandTitleItemData).nullable(),
+});
+
+const GetCondoPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  appraisalId: z.string().uuid(),
+  buildingInsurancePrice: z.number().nullable(),
+  sellingPrice: z.number().nullable(),
+  forcedSalePrice: z.number().nullable(),
+  externalSyncStatus: z.string(),
+  externalSyncError: z.string().nullable(),
+  externalSyncedAt: z.string().nullable(),
+  condoName: z.string().nullable(),
+  buildingNumber: z.string().nullable(),
+  builtOnTitleNumber: z.string().nullable(),
+  condoRegistrationNumber: z.string().nullable(),
+  roomNumber: z.string().nullable(),
+  floorNumber: z.string().nullable(),
+  subDistrict: z.string().nullable(),
+  district: z.string().nullable(),
+  province: z.string().nullable(),
+});
+
+const CreateLandPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  titles: z.array(LandTitleItemData).nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+const CreateLandPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  landDetailId: z.string().uuid(),
+});
+
+const CreateCondoPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  condoName: z.string().nullable().optional(),
+  builtOnTitleNumber: z.string().nullable().optional(),
+  condoRegistrationNumber: z.string().nullable().optional(),
+  roomNumber: z.string().nullable().optional(),
+  floorNumber: z.string().nullable().optional(),
+  buildingNumber: z.string().nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+const CreateCondoPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  detailId: z.string().uuid(),
+});
+
+const UpdateLandPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  titles: z.array(LandTitleItemData).nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+const UpdateCondoPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  condoName: z.string().nullable().optional(),
+  builtOnTitleNumber: z.string().nullable().optional(),
+  condoRegistrationNumber: z.string().nullable().optional(),
+  roomNumber: z.string().nullable().optional(),
+  floorNumber: z.string().nullable().optional(),
+  buildingNumber: z.string().nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
 export const schemas = {
   SearchResultItem,
   GlobalSearchResults,
@@ -4967,6 +5092,14 @@ export const schemas = {
   UpdateVesselPropertyRequest,
   GetVesselPropertyResponse,
   UpdateVehiclePropertyRequest,
+  GetLandPMAPropertyResponse,
+  GetCondoPMAPropertyResponse,
+  CreateLandPMAPropertyRequest,
+  CreateLandPMAPropertyResponse,
+  CreateCondoPMAPropertyRequest,
+  CreateCondoPMAPropertyResponse,
+  UpdateLandPMAPropertyRequest,
+  UpdateCondoPMAPropertyRequest,
   GetVehiclePropertyResponse,
   UpdatePropertyGroupRequest,
   UpdatePropertyGroupResponse,
@@ -5127,6 +5260,16 @@ export type GetLandAndBuildingPropertyResponseType = z.infer<
   typeof GetLandAndBuildingPropertyResponse
 >;
 export type GetMachineryPropertyResponseType = z.infer<typeof GetMachineryPropertyResponse>;
+// PMA Property types
+export type GetLandPMAPropertyResponseType = z.infer<typeof GetLandPMAPropertyResponse>;
+export type GetCondoPMAPropertyResponseType = z.infer<typeof GetCondoPMAPropertyResponse>;
+export type CreateLandPMAPropertyRequestType = z.infer<typeof CreateLandPMAPropertyRequest>;
+export type CreateLandPMAPropertyResponseType = z.infer<typeof CreateLandPMAPropertyResponse>;
+export type CreateCondoPMAPropertyRequestType = z.infer<typeof CreateCondoPMAPropertyRequest>;
+export type CreateCondoPMAPropertyResponseType = z.infer<typeof CreateCondoPMAPropertyResponse>;
+export type UpdateLandPMAPropertyRequestType = z.infer<typeof UpdateLandPMAPropertyRequest>;
+export type UpdateCondoPMAPropertyRequestType = z.infer<typeof UpdateCondoPMAPropertyRequest>;
+
 
 // Property Update response types
 // export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;

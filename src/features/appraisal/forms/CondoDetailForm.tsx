@@ -7,7 +7,10 @@ import CondoAreaDetailForm from './CondoAreaDetailForm';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import {
+  condoAddressFields,
+  condoDopaAddressFields,
   condoFields,
+  condoFieldsTail,
   condoLocationFields,
   condoLandCharacteristicsFields,
   condoGovernmentPriceFields,
@@ -29,6 +32,7 @@ import {
   remarkFormFields,
 } from '../configs/fields';
 import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
+import FieldGroupLabel from './FieldGroupLabel';
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -96,6 +100,14 @@ function CondoDetailForm() {
     () =>
       condoFields.map(field => {
         if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
+        return field;
+      }),
+    [fillIcon],
+  );
+
+  const tailFields = useMemo<FormField[]>(
+    () =>
+      condoFieldsTail.map(field => {
         if (
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
@@ -103,7 +115,7 @@ function CondoDetailForm() {
           return { ...field, rightIcon: pickerButton };
         return field;
       }),
-    [pickerButton, fillIcon],
+    [pickerButton],
   );
 
   // Building Insurance: buildingInsurancePrice is SERVER-DERIVED (rate × usableArea) —
@@ -139,6 +151,11 @@ function CondoDetailForm() {
             against the section's 12-col grid. The Latitude field's rightIcon
             opens the MapLocationPicker — no separate button needed. */}
         <FormFields fields={fields} />
+        <FieldGroupLabel label="Address" />
+        <FormFields fields={condoAddressFields} />
+        <FieldGroupLabel label="Dopa Address" />
+        <FormFields fields={condoDopaAddressFields} />
+        <FormFields fields={tailFields} />
       </SectionRow>
 
       <SectionRow title="Condominium Location" icon="map-location-dot">

@@ -13,10 +13,13 @@ import {
   encroachedField,
   evictionField,
   expropriateField,
+  landAddressFields,
   landBoundaryField,
+  landDopaAddressFields,
   landEntranceField,
   landFillField,
   landInfoField,
+  landInfoFieldTail,
   landLocationField,
   landUseField,
   otherInformationField,
@@ -27,6 +30,7 @@ import {
   roadSurfaceField,
   transpotationField,
 } from '../configs/fields';
+import FieldGroupLabel from './FieldGroupLabel';
 import { PropertyNameTriggerIcon, type PropertyType } from '../components/PropertyNameTriggerIcon';
 
 /** Section row component for form layout */
@@ -110,6 +114,11 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
         <SectionRow title={t('forms.land.sectionTitleInfo')} icon="info-circle">
           <FormFields fields={landFields} />
+          <FieldGroupLabel label="Address" />
+          <FormFields fields={landAddressFields} />
+          <FieldGroupLabel label="Dopa Address" />
+          <FormFields fields={landDopaAddressFields} />
+          <FormFields fields={landInfoFieldTail} />
         </SectionRow>
 
         <SectionRow title={t('forms.land.sectionTitleLocation')} icon="map-location-dot">
