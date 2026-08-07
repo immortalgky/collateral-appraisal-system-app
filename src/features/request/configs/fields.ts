@@ -1006,6 +1006,7 @@ export function makeTitleAddressFields(t: TFunction<'request'>): FormField[] {
       name: 'titleAddress.postcode',
       disabled: true,
       wrapperClassName: 'col-span-2',
+      hide: true,
     },
   ];
 }
@@ -1607,6 +1608,7 @@ export const titleAddressFields: FormField[] = [
     name: 'titleAddress.postcode',
     disabled: true,
     wrapperClassName: 'col-span-2',
+    hide: true,
   },
 ];
 
