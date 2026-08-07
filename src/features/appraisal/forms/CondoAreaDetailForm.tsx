@@ -6,7 +6,12 @@ interface CondoAreaDetailFormProps {
 function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   return (
     <div className="col-span-12 border-2 rounded-2xl border-gray-100">
-      <FormTable columns={condoAreaColumns} name={name} sumColumns={['areaSize']} />
+      <FormTable
+        columns={condoAreaColumns}
+        name={name}
+        sumColumns={['areaSize']}
+        sequenceField="sequence"
+      />
     </div>
   );
 }
