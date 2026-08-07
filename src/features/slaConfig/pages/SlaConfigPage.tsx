@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
@@ -6,10 +6,16 @@ import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { useParameterOptions } from '@shared/utils/parameterUtils';
 import {
   OVERRIDE_PRIORITY,
+  useCreateHoliday,
   useCreateSlaPolicy,
+  useDeleteHoliday,
   useDeleteSlaPolicy,
+  useGetBusinessHours,
+  useGetHolidays,
   useGetSlaMatrix,
   useUpdateSlaPolicy,
+  useUpsertBusinessHours,
+  type HolidayDto,
   type SlaMatrixActivity,
   type SlaMatrixGroup,
   type SlaMatrixResponse,
@@ -568,9 +574,9 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Targets tab ──────────────────────────────────────────────────────────────
 
-function SlaConfigPage() {
+function TargetsTab() {
   const segmentOptions = useParameterOptions('BankingSegment');
   const loanTypeOptions = useMemo(
     () => segmentOptions.map(o => ({ value: String(o.value), label: o.label })),
@@ -587,13 +593,10 @@ function SlaConfigPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900">OLA / SLA Targets</h3>
-        <p className="mt-0.5 text-xs text-gray-500">
-          Define the end-to-end SLA umbrella and the per-activity / group OLA targets for each loan
-          type and appraisal type. Targets apply to new appraisals.
-        </p>
-      </div>
+      <p className="text-xs text-gray-500">
+        Define the end-to-end SLA umbrella and the per-activity / group OLA targets for each loan
+        type and appraisal type. Targets apply to new appraisals.
+      </p>
 
       {/* Selectors */}
       <div className="flex flex-col gap-3">
@@ -625,6 +628,364 @@ function SlaConfigPage() {
           appraisalType={appraisalType}
         />
       )}
+    </div>
+  );
+}
+
+// ─── Holidays tab ─────────────────────────────────────────────────────────────
+// Non-working days for the business-day SLA clock. The API has no update verb,
+// so correcting an entry means delete + re-add.
+
+function HolidaysTab() {
+  const [year, setYear] = useState<string>('');
+  const [date, setDate] = useState('');
+  const [description, setDescription] = useState('');
+  const [toDelete, setToDelete] = useState<HolidayDto | null>(null);
+
+  const yearFilter = year ? Number(year) : undefined;
+  const { data: holidays = [], isLoading } = useGetHolidays(yearFilter);
+  const create = useCreateHoliday();
+  const remove = useDeleteHoliday();
+
+  // Year pills come from what is actually stored, so the list never offers an empty year.
+  const { data: allHolidays = [] } = useGetHolidays();
+  const yearOptions = useMemo(() => {
+    const years = [...new Set(allHolidays.map(h => h.year))].sort((a, b) => b - a);
+    return [
+      { value: '', label: 'All years' },
+      ...years.map(y => ({ value: String(y), label: String(y) })),
+    ];
+  }, [allHolidays]);
+
+  const add = () => {
+    if (!date) {
+      toast.error('Pick a date.');
+      return;
+    }
+    if (!description.trim()) {
+      toast.error('Enter a description.');
+      return;
+    }
+    if (holidays.some(h => h.date === date)) {
+      toast.error('That date is already a holiday.');
+      return;
+    }
+    create.mutate(
+      { date, description: description.trim() },
+      {
+        onSuccess: () => {
+          toast.success('Holiday added');
+          setDate('');
+          setDescription('');
+        },
+        onError: () => toast.error('Could not add the holiday'),
+      },
+    );
+  };
+
+  const confirmDelete = () => {
+    if (!toDelete) return;
+    remove.mutate(toDelete.id, {
+      onSuccess: () => {
+        toast.success('Holiday removed');
+        setToDelete(null);
+      },
+      onError: () => toast.error('Could not remove the holiday'),
+    });
+  };
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-xs text-gray-500">
+        Dates the business-day SLA clock skips. Applies to every loan type and appraisal type.
+      </p>
+
+      {/* Add row */}
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-gray-200 bg-white p-4">
+        <div>
+          <p className="mb-1 text-xs font-medium text-gray-600">Date</p>
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className={selectClass}
+          />
+        </div>
+        <div className="flex-1 min-w-48">
+          <p className="mb-1 text-xs font-medium text-gray-600">Description</p>
+          <input
+            type="text"
+            value={description}
+            onChange={e => setDescription(e.target.value)}
+            placeholder="e.g. Songkran Festival"
+            className={selectClass + ' w-full'}
+          />
+        </div>
+        <Button size="sm" type="button" onClick={add} isLoading={create.isPending}>
+          <Icon name="plus" style="solid" className="mr-1.5 size-3.5" />
+          Add holiday
+        </Button>
+      </div>
+
+      {/* Year filter */}
+      {yearOptions.length > 1 && (
+        <div>
+          <p className="mb-1 text-xs font-medium text-gray-600">Year</p>
+          <Pills options={yearOptions} value={year} onChange={setYear} />
+        </div>
+      )}
+
+      {/* List */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-8">
+          <Icon name="spinner" style="solid" className="h-5 w-5 animate-spin text-gray-400" />
+        </div>
+      ) : holidays.length === 0 ? (
+        <p className="py-6 text-center text-sm text-gray-400">
+          No holidays configured{year ? ` for ${year}` : ''}. The SLA clock treats every weekday as
+          a working day.
+        </p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                {['Date', 'Description', ''].map((h, i) => (
+                  <th
+                    key={i}
+                    className="px-4 py-2.5 text-left text-xs font-medium uppercase text-gray-500 last:w-16"
+                  >
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {holidays.map(h => (
+                <tr key={h.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-2.5 font-medium text-gray-900">{h.date}</td>
+                  <td className="px-4 py-2.5 text-gray-700">{h.description}</td>
+                  <td className="px-4 py-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setToDelete(h)}
+                      className="p-1 text-gray-400 hover:text-red-600"
+                      aria-label={`Remove ${h.description}`}
+                    >
+                      <Icon name="trash" style="solid" className="size-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <ConfirmDialog
+        isOpen={!!toDelete}
+        onClose={() => setToDelete(null)}
+        onConfirm={confirmDelete}
+        isLoading={remove.isPending}
+        variant="danger"
+        title="Remove holiday"
+        confirmText="Remove"
+        message={
+          toDelete
+            ? `Remove ${toDelete.date} (${toDelete.description})? The SLA clock will count it as a working day.`
+            : ''
+        }
+      />
+    </div>
+  );
+}
+
+// ─── Business hours tab ───────────────────────────────────────────────────────
+// One active window shared by every workflow, plus an optional lunch break that
+// is subtracted from the elapsed time.
+
+// <input type="time"> exchanges "HH:mm"; the API exchanges TimeOnly ("HH:mm:ss").
+const toApiTime = (v: string) => (v.length === 5 ? `${v}:00` : v);
+const toInputTime = (v: string | null | undefined) => (v ? v.slice(0, 5) : '');
+
+function BusinessHoursTab() {
+  const { data, isLoading } = useGetBusinessHours();
+  const upsert = useUpsertBusinessHours();
+
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [lunchStartTime, setLunchStartTime] = useState('');
+  const [lunchEndTime, setLunchEndTime] = useState('');
+  const [timeZone, setTimeZone] = useState('');
+
+  // Re-seed the draft whenever the server copy arrives or changes.
+  useEffect(() => {
+    setStartTime(toInputTime(data?.startTime) || '08:30');
+    setEndTime(toInputTime(data?.endTime) || '17:30');
+    setLunchStartTime(toInputTime(data?.lunchStartTime));
+    setLunchEndTime(toInputTime(data?.lunchEndTime));
+    setTimeZone(data?.timeZone || 'SE Asia Standard Time');
+  }, [data]);
+
+  const save = () => {
+    if (!startTime || !endTime) {
+      toast.error('Start and end time are required.');
+      return;
+    }
+    if (startTime >= endTime) {
+      toast.error('End time must be after the start time.');
+      return;
+    }
+    // Lunch is all-or-nothing; the backend rejects a half-configured break.
+    if (!!lunchStartTime !== !!lunchEndTime) {
+      toast.error('Set both lunch start and lunch end, or neither.');
+      return;
+    }
+    if (lunchStartTime && lunchEndTime) {
+      if (lunchStartTime >= lunchEndTime) {
+        toast.error('Lunch end must be after lunch start.');
+        return;
+      }
+      if (lunchStartTime < startTime || lunchEndTime > endTime) {
+        toast.error('The lunch break must fall inside the working window.');
+        return;
+      }
+    }
+    if (!timeZone.trim()) {
+      toast.error('Time zone is required.');
+      return;
+    }
+
+    upsert.mutate(
+      {
+        startTime: toApiTime(startTime),
+        endTime: toApiTime(endTime),
+        timeZone: timeZone.trim(),
+        lunchStartTime: lunchStartTime ? toApiTime(lunchStartTime) : null,
+        lunchEndTime: lunchEndTime ? toApiTime(lunchEndTime) : null,
+      },
+      {
+        onSuccess: () => toast.success('Business hours saved'),
+        onError: (err: unknown) => {
+          const detail = (err as { apiError?: { detail?: string } })?.apiError?.detail;
+          toast.error(detail || 'Could not save the business hours');
+        },
+      },
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Icon name="spinner" style="solid" className="h-5 w-5 animate-spin text-gray-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex max-w-2xl flex-col gap-4">
+      <p className="text-xs text-gray-500">
+        The working window the business-hours SLA clock counts. Time outside this window, weekends,
+        and any configured holiday are not counted.
+      </p>
+
+      {!data && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+          No business hours are configured yet — the values below are defaults and are not in effect
+          until you save.
+        </p>
+      )}
+
+      <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="mb-1 text-xs font-medium text-gray-600">Start time</p>
+            <input
+              type="time"
+              value={startTime}
+              onChange={e => setStartTime(e.target.value)}
+              className={selectClass}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-gray-600">End time</p>
+            <input
+              type="time"
+              value={endTime}
+              onChange={e => setEndTime(e.target.value)}
+              className={selectClass}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-gray-600">Lunch start (optional)</p>
+            <input
+              type="time"
+              value={lunchStartTime}
+              onChange={e => setLunchStartTime(e.target.value)}
+              className={selectClass}
+            />
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-gray-600">Lunch end (optional)</p>
+            <input
+              type="time"
+              value={lunchEndTime}
+              onChange={e => setLunchEndTime(e.target.value)}
+              className={selectClass}
+            />
+          </div>
+          <div className="col-span-2">
+            <p className="mb-1 text-xs font-medium text-gray-600">Time zone</p>
+            <input
+              type="text"
+              value={timeZone}
+              onChange={e => setTimeZone(e.target.value)}
+              className={selectClass + ' w-full'}
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Windows time-zone id as recognised by the server, e.g.{' '}
+              <span className="font-mono">SE Asia Standard Time</span>.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end">
+          <Button size="sm" type="button" onClick={save} isLoading={upsert.isPending}>
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { value: 'targets', label: 'OLA / SLA Targets' },
+  { value: 'holidays', label: 'Holidays' },
+  { value: 'business-hours', label: 'Business Hours' },
+] as const;
+
+type TabValue = (typeof TABS)[number]['value'];
+
+function SlaConfigPage() {
+  const [tab, setTab] = useState<TabValue>('targets');
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">SLA Configuration</h3>
+        <p className="mt-0.5 text-xs text-gray-500">
+          Targets, non-working days, and the working window that together drive the SLA clock.
+        </p>
+      </div>
+
+      <Pills options={TABS.map(t => ({ ...t }))} value={tab} onChange={setTab} />
+
+      {tab === 'targets' && <TargetsTab />}
+      {tab === 'holidays' && <HolidaysTab />}
+      {tab === 'business-hours' && <BusinessHoursTab />}
     </div>
   );
 }
