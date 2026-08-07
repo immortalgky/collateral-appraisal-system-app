@@ -88,6 +88,9 @@ const RadioGroup = ({
                 key={option.value}
                 value={option.value}
                 disabled={option.disabled || disabled}
+                onClick={() => {
+                  if (isChecked) onChange?.('');
+                }}
                 className={clsx(
                   'group relative inline-flex items-center justify-center h-8 px-4 text-sm font-medium rounded-full border-0',
                   'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
@@ -134,6 +137,9 @@ const RadioGroup = ({
               key={option.value}
               value={option.value}
               disabled={option.disabled || disabled}
+              onClick={() => {
+                if (value === option.value) onChange?.('');
+              }}
               className={clsx(
                 'group relative flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-200',
                 'cursor-pointer data-disabled:cursor-not-allowed',
@@ -208,6 +214,9 @@ const RadioGroup = ({
             key={option.value}
             value={option.value}
             disabled={option.disabled || disabled}
+            onClick={() => {
+              if (value === option.value) onChange?.('');
+            }}
             className="group flex items-center gap-2.5 cursor-pointer data-disabled:cursor-not-allowed focus:outline-none"
           >
             <span
