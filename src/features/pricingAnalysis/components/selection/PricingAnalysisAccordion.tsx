@@ -50,7 +50,7 @@ interface PricingAnalysisAccordionProps {
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
-
+  onToggleMethodCalcMode?: (arg: { approachType: string; methodType: string }) => void;
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   pricingConfiguration?: PricingAnalysisConfigType[];
@@ -105,7 +105,7 @@ export const PricingAnalysisAccordion = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
-
+  onToggleMethodCalcMode,
   onAddMethod,
   onDeleteMethod,
   pricingConfiguration,
@@ -294,6 +294,7 @@ export const PricingAnalysisAccordion = ({
                 onCancelEditMode={onCancelEditMode}
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCandidateApproach={onSelectCandidateApproach}
+                onToggleMethodCalcMode={onToggleMethodCalcMode}
                 onAddMethod={onAddMethod}
                 onDeleteMethod={onDeleteMethod}
                 pricingConfiguration={pricingConfiguration}

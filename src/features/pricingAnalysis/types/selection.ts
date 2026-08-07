@@ -35,6 +35,7 @@ export interface Method {
   appraisalValue: number;
   isIncluded: boolean;
   isSelected: boolean;
+  useSystemCalc: boolean;
 }
 
 export interface Approach {
