@@ -35,8 +35,18 @@ const LandBuildingPMAForm = ({
   useEffect(() => {
     const total =
       (Number(areaRai) || 0) * 400 + (Number(areaNgan) || 0) * 100 + (Number(areaSquareWa) || 0);
-    setValue('totalSquareWa', total, { shouldDirty: false, shouldValidate: false });
+    setValue('totalSquareWa', Math.round(total * 100) / 100, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
   }, [areaRai, areaNgan, areaSquareWa, setValue]);
+
+  const sellingPrice = useWatch({ name: 'sellingPrice' });
+
+  useEffect(() => {
+    const forceSalePrice = (sellingPrice * 70) / 100;
+    setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
+  }, [sellingPrice, setValue]);
 
   return (
     <div className="flex flex-col gap-6">
