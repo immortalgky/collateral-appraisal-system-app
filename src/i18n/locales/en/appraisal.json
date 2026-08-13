@@ -1110,6 +1110,9 @@
     "propertyName": {
       "autoFillLabel": "Auto-fill property name"
     },
+    "owner": {
+      "autoFillLabel": "Copy owner from land"
+    },
     "land": {
       "pageTitle": "Land Detail",
       "sectionTitleInfo": "Land Information",
