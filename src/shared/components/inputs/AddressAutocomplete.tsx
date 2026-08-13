@@ -7,6 +7,13 @@ import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 import type { AddressSource } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
 
+/**
+ * The address master has thousands of rows ("หนอง" alone matches ~600 sub-districts), so the list is
+ * capped. searchBySubDistrict returns everything ranked, and the surplus is reported in the footer
+ * below rather than being dropped silently.
+ */
+const MAX_VISIBLE_RESULTS = 50;
+
 interface AddressAutocompleteProps {
   value: ThaiAddress | null;
   onChange: (address: ThaiAddress | null) => void;
@@ -22,7 +29,7 @@ const AddressAutocomplete = ({
   value,
   onChange,
   label,
-  placeholder = 'พิมพ์ชื่อตำบล/แขวง...',
+  placeholder = 'พิมพ์ชื่อตำบล/แขวง (เว้นวรรคเพื่อระบุอำเภอ/จังหวัด)',
   disabled = false,
   required = false,
   error,
@@ -32,10 +39,25 @@ const AddressAutocomplete = ({
   const isDisabled = disabled || isReadOnly;
   const [query, setQuery] = useState('');
   const searchBySubDistrict = useAddressStore(state => state.searchBySubDistrict);
+  const titleAddresses = useAddressStore(state => state.titleAddresses);
+  const dopaAddresses = useAddressStore(state => state.dopaAddresses);
 
-  const filteredAddresses = useMemo(() => {
-    if (query.length < 1) return [];
-    return searchBySubDistrict(query, addressSource).slice(0, 10); // Limit to 10 results
+  // An empty store means the address master never loaded (API down) rather than "nothing matched",
+  // so the empty state can tell the two apart instead of blaming the user's query.
+  const hasAddressData =
+    addressSource === 'title'
+      ? titleAddresses.length > 0
+      : addressSource === 'dopa'
+        ? dopaAddresses.length > 0
+        : titleAddresses.length > 0 || dopaAddresses.length > 0;
+
+  const { filteredAddresses, totalMatches } = useMemo(() => {
+    if (query.length < 1) return { filteredAddresses: [], totalMatches: 0 };
+    const matches = searchBySubDistrict(query, addressSource);
+    return {
+      filteredAddresses: matches.slice(0, MAX_VISIBLE_RESULTS),
+      totalMatches: matches.length,
+    };
   }, [query, searchBySubDistrict, addressSource]);
 
   const formatDisplayValue = (address: ThaiAddress | null): string => {
@@ -98,7 +120,7 @@ const AddressAutocomplete = ({
 
           <ComboboxOptions
             className={clsx(
-              'absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1',
+              'absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg bg-white py-1',
               'shadow-lg ring-1 ring-black/5 focus:outline-none',
               'transition-opacity duration-100',
               'empty:hidden',
@@ -106,7 +128,9 @@ const AddressAutocomplete = ({
           >
             {query.length > 0 && filteredAddresses.length === 0 && (
               <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                ไม่พบข้อมูลที่ตรงกับ "{query}"
+                {hasAddressData
+                  ? `ไม่พบข้อมูลที่ตรงกับ "${query}"`
+                  : 'ไม่สามารถโหลดข้อมูลที่อยู่ได้ กรุณาลองใหม่อีกครั้ง'}
               </div>
             )}
 
@@ -134,6 +158,13 @@ const AddressAutocomplete = ({
                 )}
               </ComboboxOption>
             ))}
+
+            {totalMatches > filteredAddresses.length && (
+              <div className="border-t border-gray-100 mt-1 px-4 py-2 text-xs text-gray-500 text-center">
+                แสดง {filteredAddresses.length} จาก {totalMatches} รายการ —
+                เว้นวรรคแล้วพิมพ์ชื่ออำเภอหรือจังหวัดเพื่อค้นหาให้แคบลง
+              </div>
+            )}
           </ComboboxOptions>
         </div>
       </Combobox>
