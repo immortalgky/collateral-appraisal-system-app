@@ -74,7 +74,12 @@ const OwnerFromLandTriggerIcon = () => {
 
   const handleClick = () => {
     const landOwner = (getValues('ownerNameLand') ?? '').toString().trim();
+    const isOwnerVerified = getValues('isOwnerVerifiedLand') ?? true;
     if (landOwner) {
+      setValue('isOwnerVerifiedBuilding', isOwnerVerified, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
       setValue('ownerNameBuilding', landOwner, { shouldDirty: true, shouldValidate: true });
     }
   };
