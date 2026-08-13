@@ -663,6 +663,7 @@ export const createCondoFormDefault: createCondoFormType = {
   landUseTypeOther: '',
   landEntranceExitType: [],
   landEntranceExitTypeOther: '',
+  isMissingFromSurvey: false,
   governmentPricePerSqm: 0,
   governmentPrice: 0,
   fireInsuranceCondition: '',

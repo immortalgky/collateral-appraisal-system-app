@@ -287,6 +287,7 @@ export const mapCondoPropertyResponseToForm = (
     landUseTypeOther: (response as any).landUseTypeOther ?? '',
     landEntranceExitType: (response as any).landEntranceExitType ?? [],
     landEntranceExitTypeOther: (response as any).landEntranceExitTypeOther ?? '',
+    isMissingFromSurvey: response.isMissingFromSurvey ?? false,
     governmentPricePerSqm: (response as any).governmentPricePerSqm ?? 0,
     governmentPrice: (response as any).governmentPrice ?? 0,
     // Not yet in the generated v1 response schema — cast until it's regenerated

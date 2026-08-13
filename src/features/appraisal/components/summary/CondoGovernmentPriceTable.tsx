@@ -50,8 +50,20 @@ const CondoGovernmentPriceTable = ({ rows, totalArea, avgPerSqm }: CondoGovernme
         </>
       }
       renderRow={(row, idx) => (
-        <tr key={idx} className="hover:bg-gray-50">
-          <td className="px-3 py-2 text-left text-gray-700 tabular-nums">{row.roomNumber ?? '-'}</td>
+        <tr
+          key={idx}
+          className={row.isMissingFromSurvey ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'}
+        >
+          <td className="px-3 py-2 text-left text-gray-700 tabular-nums">
+            <span className="inline-flex items-center gap-2">
+              {row.roomNumber ?? '-'}
+              {row.isMissingFromSurvey && (
+                <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
+                  {t('governmentPriceTable.missingFromSurvey')}
+                </span>
+              )}
+            </span>
+          </td>
           <td className="px-3 py-2 text-right text-gray-700 tabular-nums">
             {row.usableArea != null ? formatNumber(row.usableArea, 2) : '-'}
           </td>
