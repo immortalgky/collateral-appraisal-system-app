@@ -188,6 +188,7 @@ export function projectInfoForm(projectType: ProjectType, t?: TFunction<'blockPr
 
 const condoModelAreaDetailItem = z.object({
   id: z.string().nullable().optional(),
+  sequence: z.coerce.number(),
   areaDescription: z.string().nullable().optional(),
   areaSize: z.coerce.number().nullable().optional(),
 });

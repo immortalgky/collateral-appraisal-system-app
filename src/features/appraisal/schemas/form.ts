@@ -203,6 +203,7 @@ export const createBuildingForm = buildFormSchema(
 const AreaDetailDto = z
   .object({
     id: z.string().uuid().nullable().optional(),
+    sequence: z.coerce.number(),
     areaDescription: z.string().nullable(),
     areaSize: z.coerce.number().nullable(),
   })
