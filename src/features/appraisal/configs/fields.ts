@@ -2043,12 +2043,21 @@ export const condoLandCharacteristicsFields: FormField[] = [
 // (pricePerSqm × usableArea) and locked, mirroring landtitlesFields' governmentPrice.
 export const condoGovernmentPriceFields: FormField[] = [
   {
+    name: 'isMissingFromSurvey',
+    label: 'Missed out on the survey',
+    type: 'boolean-toggle',
+    options: ['No', 'Yes'],
+    wrapperClassName: 'col-span-12',
+  },
+  {
     type: 'number-input',
     label: 'Government Price per Sq.M',
     name: 'governmentPricePerSqm',
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 16,
     decimalPlaces: 2,
+    disableWhen: { field: 'isMissingFromSurvey', is: true },
+    disabledValue: 0,
   },
   {
     type: 'number-input',
