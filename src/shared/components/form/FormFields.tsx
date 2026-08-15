@@ -558,6 +558,7 @@ function FieldRenderer({
             addressSource={passedField.addressSource}
             error={error?.message}
             className={passedField.className}
+            valueFormat={passedField.valueFormat}
             {...locationProps}
           />
         );

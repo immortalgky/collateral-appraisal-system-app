@@ -18,19 +18,19 @@ const DopaAddressForm = ({ index, isReadOnly }: DopaAdressFormProps) => {
   const prefix = `titles.${index}.dopaAddress`;
 
   const handleCopy = () => {
-    const titleAddress = getValues(`titles.${index}.titleAddress`);
-    setValue(`${prefix}.subDistrict`, titleAddress.subDistrict);
-    setValue(`${prefix}.subDistrictName`, titleAddress.subDistrictName);
-    setValue(`${prefix}.district`, titleAddress.district);
-    setValue(`${prefix}.districtName`, titleAddress.districtName);
-    setValue(`${prefix}.province`, titleAddress.province);
-    setValue(`${prefix}.provinceName`, titleAddress.provinceName);
-    setValue(`${prefix}.postcode`, titleAddress.postcode);
-    setValue(`${prefix}.houseNumber`, titleAddress.houseNumber);
-    setValue(`${prefix}.projectName`, titleAddress.projectName);
-    setValue(`${prefix}.moo`, titleAddress.moo);
-    setValue(`${prefix}.soi`, titleAddress.soi);
-    setValue(`${prefix}.road`, titleAddress.road);
+    const mainAddress = getValues('detail.address');
+    setValue(`${prefix}.subDistrict`, mainAddress?.subDistrict ?? '');
+    setValue(`${prefix}.subDistrictName`, mainAddress?.subDistrictName ?? '');
+    setValue(`${prefix}.district`, mainAddress?.district ?? '');
+    setValue(`${prefix}.districtName`, mainAddress?.districtName ?? '');
+    setValue(`${prefix}.province`, mainAddress?.province ?? '');
+    setValue(`${prefix}.provinceName`, mainAddress?.provinceName ?? '');
+    setValue(`${prefix}.postcode`, mainAddress?.postcode ?? '');
+    setValue(`${prefix}.houseNumber`, mainAddress?.houseNumber);
+    setValue(`${prefix}.projectName`, mainAddress?.projectName);
+    setValue(`${prefix}.moo`, mainAddress?.moo);
+    setValue(`${prefix}.soi`, mainAddress?.soi);
+    setValue(`${prefix}.road`, mainAddress?.road);
   };
 
   return (

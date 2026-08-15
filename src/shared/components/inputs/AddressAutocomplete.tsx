@@ -1,5 +1,11 @@
 import { useState, useMemo } from 'react';
-import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+} from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '../Icon';
 import { useAddressStore } from '@/shared/store';
@@ -10,10 +16,15 @@ import { useFormReadOnly } from '../form/context';
 interface AddressAutocompleteProps {
   value: ThaiAddress | null;
   onChange: (address: ThaiAddress | null) => void;
+  /** Fired per keystroke when `editable`, mirroring the raw typed text. */
+  onFreeTextChange?: (text: string) => void;
+  /** Fired on blur when `editable`, to run validation once instead of per keystroke. */
+  onFreeTextBlur?: () => void;
   label?: string;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  editable?: boolean;
   error?: string;
   addressSource?: AddressSource;
 }
@@ -21,10 +32,13 @@ interface AddressAutocompleteProps {
 const AddressAutocomplete = ({
   value,
   onChange,
+  onFreeTextChange,
+  onFreeTextBlur,
   label,
   placeholder = 'พิมพ์ชื่อตำบล/แขวง...',
   disabled = false,
   required = false,
+  editable = false,
   error,
   addressSource,
 }: AddressAutocompleteProps) => {
@@ -71,7 +85,19 @@ const AddressAutocomplete = ({
                 : 'bg-white hover:border-gray-300',
             )}
             displayValue={formatDisplayValue}
-            onChange={e => setQuery(e.target.value)}
+            onChange={e => {
+              const text = e.target.value;
+              setQuery(text);
+              // Always mirror the raw typed text — search is substring-based, so almost any
+              // partial input matches something in the dataset; gating on "no match" would mean
+              // this rarely fires and the field falls out of sync with what's on screen.
+              if (editable) {
+                onFreeTextChange?.(text);
+              }
+            }}
+            onBlur={() => {
+              if (editable) onFreeTextBlur?.();
+            }}
             placeholder={placeholder}
           />
 
@@ -89,11 +115,7 @@ const AddressAutocomplete = ({
 
           {/* Dropdown button */}
           <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
-            <Icon
-              name="chevron-down"
-              style="solid"
-              className="w-4 h-4 text-gray-400"
-            />
+            <Icon name="chevron-down" style="solid" className="w-4 h-4 text-gray-400" />
           </ComboboxButton>
 
           <ComboboxOptions
@@ -138,9 +160,7 @@ const AddressAutocomplete = ({
         </div>
       </Combobox>
 
-      {error && (
-        <p className="mt-1 text-xs text-danger">{error}</p>
-      )}
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   );
 };

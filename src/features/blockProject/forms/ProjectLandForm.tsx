@@ -22,7 +22,6 @@ import Icon from '@/shared/components/Icon';
 import TitleDeedForm from '@/features/appraisal/forms/TitleDeedForm';
 import BlockLandDetailForm from './BlockLandDetailForm';
 import {
-  createLandForm,
   createLandFormDefault,
   createProjectLandForm,
   type createLandFormType,
@@ -131,7 +130,7 @@ export default function ProjectLandForm() {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandForm}>
+      <FormProvider methods={methods} schema={createProjectLandForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div

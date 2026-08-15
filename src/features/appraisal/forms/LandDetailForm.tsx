@@ -114,7 +114,7 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
         <SectionRow title={t('forms.land.sectionTitleInfo')} icon="info-circle">
           <FormFields fields={landFields} />
-          <FieldGroupLabel label="Address" />
+          <FieldGroupLabel label="Title Document Address" />
           <FormFields fields={landAddressFields} />
           <FieldGroupLabel label="Dopa Address" />
           <FormFields fields={landDopaAddressFields} />

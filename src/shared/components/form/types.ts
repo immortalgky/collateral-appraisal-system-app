@@ -346,6 +346,12 @@ export interface LocationSelectorField extends BaseFormField {
   subDistrictNameField?: string;
   /** Which address dataset to search: 'title' | 'dopa'. Defaults to searching both. */
   addressSource?: AddressSource;
+  /**
+   * 'description' (title-address mode): user may type free text outside the list;
+   * stores descriptions (names) in name/districtField/provinceField.
+   * 'code' (default, dopa mode): user must select from list; stores codes.
+   */
+  valueFormat?: 'code' | 'description';
 }
 
 // =============================================================================
