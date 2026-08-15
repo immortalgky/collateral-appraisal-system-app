@@ -1160,6 +1160,7 @@
     "districtRequired": "กรุณาระบุอำเภอ",
     "provinceRequired": "กรุณาระบุจังหวัด",
     "builtOnTitleNumberRequired": "กรุณาระบุเลขที่โฉนดที่ดิน",
+    "titleNumberRequired": "กรุณาระบุเลขที่โฉนดที่ดิน",
     "condoRegistrationNumberRequired": "กรุณาระบุเลขทะเบียนคอนโด",
     "roomNumberRequired": "กรุณาระบุหมายเลขห้อง",
     "buildingNumberRequired": "กรุณาระบุหมายเลขตึก",

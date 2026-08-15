@@ -1168,6 +1168,7 @@
     "districtRequired": "District is required.",
     "provinceRequired": "Province is required.",
     "builtOnTitleNumberRequired": "Built on title number is required.",
+    "titleNumberRequired": "Title number is required.",
     "condoRegistrationNumberRequired": "Condo registration number is required.",
     "roomNumberRequired": "Room number is required.",
     "buildingNumberRequired": "Building number is required.",

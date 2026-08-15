@@ -531,10 +531,10 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleNumber'),
       name: 'titleNumber',
       wrapperClassName: 'col-span-2',
-      maxLength: 200,
+      maxLength: 500,
       requiredWhen: {
         field: 'collateralType',
-        is: [...TITLE_NUMBER_TYPES],
+        is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
         operator: 'in',
       },
     },
@@ -699,13 +699,13 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
     },
     {
       type: 'text-input',
-      label: t('fields.builtOnTitleNumber'),
-      name: 'builtOnTitleNumber',
+      label: t('fields.titleNumber'),
+      name: 'titleNumber',
       wrapperClassName: 'col-span-4',
       maxLength: 500,
       requiredWhen: {
         field: 'collateralType',
-        is: [...CONDO_TYPES],
+        is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
         operator: 'in',
       },
     },
@@ -1169,7 +1169,7 @@ export const titleLandFields: FormField[] = [
     maxLength: 200,
     requiredWhen: {
       field: 'collateralType',
-      is: [...TITLE_NUMBER_TYPES],
+      is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
       operator: 'in',
     },
   },
@@ -1317,12 +1317,12 @@ export const titleCondoFields: FormField[] = [
   {
     type: 'text-input',
     label: _st('Title Number'),
-    name: 'builtOnTitleNumber',
+    name: 'titleNumber',
     wrapperClassName: 'col-span-4',
     maxLength: 500,
     requiredWhen: {
       field: 'collateralType',
-      is: [...CONDO_TYPES],
+      is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
       operator: 'in',
     },
   },
