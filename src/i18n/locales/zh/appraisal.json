@@ -1100,6 +1100,8 @@
     "land": {
       "pageTitle": "Land Detail",
       "sectionTitleInfo": "土地信息",
+      "sectionTitleDocumentAddress": "产权文件地址",
+      "sectionDopaAddress": "DOPA 地址",
       "sectionTitleLocation": "土地位置",
       "sectionTitleBoundary": "尺寸与边界",
       "sectionTitleCharacteristics": "土地特征",
@@ -1114,6 +1116,8 @@
     },
     "condo": {
       "sectionTitle": "公寓详情",
+      "sectionTitleDocumentAddress": "产权文件地址",
+      "sectionDopaAddress": "DOPA 地址",
       "areaDetail": "面积详情",
       "pma": "PMA 信息",
       "buildingInsuranceSectionTitle": "建筑保险",

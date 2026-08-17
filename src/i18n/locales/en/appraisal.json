@@ -1113,6 +1113,8 @@
     "land": {
       "pageTitle": "Land Detail",
       "sectionTitleInfo": "Land Information",
+      "sectionTitleDocumentAddress": "Title Document Address",
+      "sectionDopaAddress": "DOPA Address",
       "sectionTitleLocation": "Land Location",
       "sectionTitleBoundary": "Size and Boundary",
       "sectionTitleCharacteristics": "Land Characteristics",
@@ -1127,6 +1129,8 @@
     },
     "condo": {
       "sectionTitle": "Condo Details",
+      "sectionTitleDocumentAddress": "Title Document Address",
+      "sectionDopaAddress": "DOPA Address",
       "areaDetail": "Area Detail",
       "pma": "PMA Information",
       "buildingInsuranceSectionTitle": "Building Insurance",
