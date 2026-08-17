@@ -337,6 +337,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   numberOfBuilding: null,
   condoName: '',
   buildingNumber: '',
+  condoRegistrationNumber: '',
   roomNumber: '',
   floorNumber: '',
   titleAddress: {

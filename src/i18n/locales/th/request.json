@@ -125,6 +125,7 @@
     "roomNumber": "หมายเลขห้อง",
     "floorNumber": "ชั้นที่",
     "buildingNumber": "หมายเลขอาคาร",
+    "condoRegistrationNumber": "หมายเลขทะเบียนคอนโด",
     "condoName": "ชื่อคอนโด",
     "usageAreaSqM": "พื้นที่ใช้สอย (ตร.ม.)",
     "vehicleType": "ประเภทยานพาหนะ",
