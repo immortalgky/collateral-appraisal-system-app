@@ -846,7 +846,7 @@ const DecisionSummaryPage = () => {
   const totalAppraisalPriceReviewNow = watch('totalAppraisalPriceReview');
   const forceSellingPriceReviewDerived =
     totalAppraisalPriceReviewNow != null && effectiveForceSellingRate != null
-      ? (totalAppraisalPriceReviewNow * effectiveForceSellingRate) / 100
+      ? Math.round((totalAppraisalPriceReviewNow * effectiveForceSellingRate) / 100 / 1000) * 1000
       : null;
 
   // The rate now round-trips through the server on blur, so the displayed FSP amount can
