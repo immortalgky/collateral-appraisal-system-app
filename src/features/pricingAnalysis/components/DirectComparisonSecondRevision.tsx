@@ -42,7 +42,7 @@ export function DirectComparisonSecondRevision({
         })}
         <td className={clsx('bg-gray-100', collateralColumnBody)}></td>
       </tr>
-      {collateralType === 'LB' && (
+      {(collateralType === 'LB' || collateralType === 'LS') && (
         <>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
@@ -128,7 +128,10 @@ export function DirectComparisonSecondRevision({
           </tr>
         </>
       )}
-      {(collateralType === 'LB' || collateralType === 'U') && (
+      {(collateralType === 'LB' ||
+        collateralType === 'LS' ||
+        collateralType === 'U' ||
+        collateralType === 'LSU') && (
         <>
           <tr>
             <td className={clsx('bg-white', leftColumnBody, bgGradient)}>

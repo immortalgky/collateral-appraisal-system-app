@@ -1,4 +1,3 @@
-import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants';
 import { type SubmitErrorHandler, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -94,9 +93,10 @@ export function SaleAdjustmentGridPanel({
   const isCostApproach = methodType === 'SAG_COST';
 
   const property: Record<string, unknown> | undefined = isCostApproach
-    ? properties?.find(p => p.propertyType === 'L')
+    ? (properties?.find(p => p.propertyType === 'L' || p.propertyType === 'LSL') ?? properties?.[0])
     : properties?.[0];
-  const buildingCost = properties?.filter(p => p.propertyType === 'B') ?? [];
+  const buildingCost =
+    properties?.filter(p => p.propertyType === 'B' || p.propertyType === 'LSB') ?? [];
 
   const methods = useForm<SaleAdjustmentGridType>({
     mode: 'onSubmit',
