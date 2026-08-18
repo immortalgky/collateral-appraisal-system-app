@@ -1387,7 +1387,7 @@ export const condoFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Title Deed No',
+    label: 'Construction on Title Deed No',
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
     required: true,
@@ -2985,7 +2985,7 @@ export const condoPmaDetailFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Title Deed Number',
+    label: 'Construction on Title Deed Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-6',
     required: true,
