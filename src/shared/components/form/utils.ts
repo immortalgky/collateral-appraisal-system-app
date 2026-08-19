@@ -350,7 +350,13 @@ export function scrollToField(path: string): void {
 
   if (!el) return;
 
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // Honour prefers-reduced-motion. A `behavior` passed here overrides the global
+  // `scroll-behavior: smooth` in index.css, so the check has to happen in JS, not CSS.
+  // scrollToField is a plain function, so matchMedia is read directly rather than through
+  // the useMediaQuery hook that wraps it.
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+  el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
   // preventScroll so focusing does not fight the smooth scroll already in flight.
   el.querySelector<HTMLElement>('input,select,textarea,button')?.focus({ preventScroll: true });
 }
@@ -372,8 +378,11 @@ export function useScrollToFirstError<T extends FieldValues>(methods: UseFormRet
     const [first] = flattenFormErrors(methods.formState.errors);
     if (!first) return;
     // Next frame: the error banner is inserted above the form on this same commit, and scrolling
-    // before that reflow lands on a stale offset.
-    requestAnimationFrame(() => scrollToField(first.path));
+    // before that reflow lands on a stale offset. Cancelled on unmount — a form that closes
+    // between submit and the next frame would otherwise scroll to whatever `data-field` the
+    // replacement screen happens to expose.
+    const frame = requestAnimationFrame(() => scrollToField(first.path));
+    return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitCount]);
 }
