@@ -1,5 +1,11 @@
 import { createElement } from 'react';
 import type { FormField } from '@/shared/components/form';
+import {
+  AERIAL_TITLE_TYPES,
+  LAND_PARCEL_TITLE_TYPES,
+  RAWANG_TITLE_TYPES,
+  SURVEY_TITLE_TYPES,
+} from '@/shared/constants/titleTypes';
 
 /** ฿ left-adornment for currency number-inputs (Land + Condo PMA prices). */
 const bahtPrefix = createElement('span', { className: 'text-sm text-gray-400' }, '฿');
@@ -2635,6 +2641,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 30,
+    showWhen: { field: 'titleType', is: RAWANG_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'DEED' },
   },
   {
@@ -2643,6 +2650,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
     requiredWhen: {
       conditions: [
         { field: 'titleType', is: 'DEED' },
@@ -2657,6 +2665,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'DEED' },
   },
   {
@@ -2665,6 +2674,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
@@ -2673,6 +2683,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 100,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
@@ -2681,6 +2692,7 @@ export const landtitlesFields: FormField[] = [
     type: 'text-input',
     wrapperClassName: 'col-span-3',
     maxLength: 50,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
   {
