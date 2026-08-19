@@ -36,5 +36,11 @@
   "themeToggle": {
     "toDark": "切换到深色模式",
     "toLight": "切换到浅色模式"
+  },
+  "density": {
+    "label": "显示密度",
+    "compact": "紧凑",
+    "normal": "标准",
+    "comfortable": "宽松"
   }
 }

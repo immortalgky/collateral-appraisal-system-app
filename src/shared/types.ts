@@ -3,6 +3,9 @@ import type { ThaiAddress } from './data/thaiAddresses';
 
 export type Theme = 'light' | 'dark';
 
+/** UI scale preference. Applied as a root font-size multiplier. */
+export type Density = 'compact' | 'normal' | 'comfortable';
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -16,6 +19,8 @@ export type UIStore = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  density: Density;
+  setDensity: (density: Density) => void;
 };
 
 export type ParameterStore = {

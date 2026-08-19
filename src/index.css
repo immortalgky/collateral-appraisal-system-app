@@ -40,21 +40,37 @@
 }
 
 /* Additional global styles */
-html {
-    scroll-behavior: smooth;
-    font-size: 13px;
+
+/*
+ * Root sizing = viewport step x user density.
+ *
+ * --cas-root-step is the automatic, viewport-driven baseline; --cas-density is the
+ * user's UI Density preference (see densityConstants.ts, applied by ThemeProvider).
+ * Everything rem-based — fonts, Tailwind spacing, the right details panel — follows.
+ *
+ * Media queries stay in px on purpose: an em/rem query would resolve against the
+ * initial 16px font, not this one, so px keeps the steps honest and loop-free.
+ */
+:root {
+    --cas-root-step: 13px;
+    --cas-density: 1;
 }
 
 @media (min-width: 1600px) {
-    html {
-        font-size: 14px;
+    :root {
+        --cas-root-step: 14px;
     }
 }
 
 @media (min-width: 1920px) {
-    html {
-        font-size: 16px;
+    :root {
+        --cas-root-step: 16px;
     }
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: calc(var(--cas-root-step) * var(--cas-density));
 }
 
 body {
