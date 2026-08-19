@@ -9,6 +9,7 @@ import type {
   CompanyItem,
   CompanyStore,
   DealerStore,
+  Density,
   LoadingStore,
   LocaleStore,
   ParameterStore,
@@ -21,6 +22,7 @@ import {
   SIDEBAR_MAX_WIDTH,
   SIDEBAR_DEFAULT_WIDTH,
 } from './components/sidebarConstants';
+import { DEFAULT_DENSITY, isDensity } from './components/densityConstants';
 import type { Dealer, Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
@@ -40,6 +42,8 @@ export const useUIStore = create<UIStore>()(
       theme: 'light',
       setTheme: (theme: Theme) => set({ theme }),
       toggleTheme: () => set(state => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
+      density: DEFAULT_DENSITY,
+      setDensity: (density: Density) => set({ density }),
     }),
     {
       name: 'cas-ui-store',
@@ -47,12 +51,14 @@ export const useUIStore = create<UIStore>()(
         sidebarCollapsed: state.sidebarCollapsed,
         sidebarWidth: state.sidebarWidth,
         theme: state.theme,
+        density: state.density,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<{
           sidebarWidth: unknown;
           sidebarCollapsed: unknown;
           theme: unknown;
+          density: unknown;
         }>;
         const rawW = p.sidebarWidth;
         const w =
@@ -61,7 +67,8 @@ export const useUIStore = create<UIStore>()(
             : SIDEBAR_DEFAULT_WIDTH;
         const collapsed = typeof p.sidebarCollapsed === 'boolean' ? p.sidebarCollapsed : false;
         const theme: Theme = p.theme === 'light' || p.theme === 'dark' ? p.theme : 'light';
-        return { ...current, sidebarWidth: w, sidebarCollapsed: collapsed, theme };
+        const density: Density = isDensity(p.density) ? p.density : DEFAULT_DENSITY;
+        return { ...current, sidebarWidth: w, sidebarCollapsed: collapsed, theme, density };
       },
     },
   ),

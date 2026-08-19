@@ -36,5 +36,11 @@
   "themeToggle": {
     "toDark": "เปลี่ยนเป็นโหมดมืด",
     "toLight": "เปลี่ยนเป็นโหมดสว่าง"
+  },
+  "density": {
+    "label": "ขนาดการแสดงผล",
+    "compact": "กะทัดรัด",
+    "normal": "ปกติ",
+    "comfortable": "สบายตา"
   }
 }

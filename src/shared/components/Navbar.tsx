@@ -9,6 +9,7 @@ import { queryClient } from '@app/queryClient';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
 // import ThemeToggle from '@shared/components/ThemeToggle'; // hidden for now
+import DensityPicker from '@shared/components/DensityPicker';
 import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
@@ -303,7 +304,7 @@ export default function Navbar({
               </MenuButton>
               <MenuItems
                 transition
-                className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl bg-white dark:bg-base-200 py-2 shadow-lg ring-1 ring-gray-100 dark:ring-base-300 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+                className="absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-xl bg-white dark:bg-base-200 py-2 shadow-lg ring-1 ring-gray-100 dark:ring-base-300 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
               >
                 {/* User info header */}
                 <div className="px-4 py-3 border-b border-gray-100 dark:border-base-300">
@@ -316,6 +317,11 @@ export default function Navbar({
                 {/* Realtime connection status + control */}
                 <div className="border-b border-gray-100 dark:border-base-300">
                   <ConnectionStatusIndicator />
+                </div>
+
+                {/* UI density — scales the whole app for smaller screens */}
+                <div className="border-b border-gray-100 dark:border-base-300">
+                  <DensityPicker />
                 </div>
 
                 {userNavigation.map(item =>
