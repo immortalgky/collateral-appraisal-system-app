@@ -18,9 +18,11 @@ import {
   useParameterStore,
   useLoadingStore,
   useBreadcrumbStore,
+  useAddressStore,
   showLoading,
   hideLoading,
 } from './store';
+import type { ThaiAddress } from './data/thaiAddresses';
 
 // ============================================
 // useUIStore Tests
@@ -393,5 +395,125 @@ describe('useParameterStore', () => {
 
     const { parameters } = useParameterStore.getState();
     expect(parameters).toEqual({});
+  });
+});
+
+// ============================================
+// useAddressStore Tests
+// ============================================
+//
+// searchBySubDistrict powers every location-selector in the app. It tokenises the query, matches
+// each token against sub-district / district / province / postcode, ranks the hits and drops the
+// dopa copy of a sub-district the title dataset already supplied.
+
+const addr = (
+  subDistrictCode: string,
+  subDistrictName: string,
+  districtName: string,
+  provinceName: string,
+  postcode: string,
+): ThaiAddress => ({
+  provinceCode: subDistrictCode.slice(0, 2),
+  provinceName,
+  districtCode: subDistrictCode.slice(0, 4),
+  districtName,
+  subDistrictCode,
+  subDistrictName,
+  postcode,
+});
+
+// Four rows chosen so a single "หนองบัว" query lands one row in each relevance tier.
+const TITLE_FIXTURES: ThaiAddress[] = [
+  addr('400101', 'หนองบัว', 'เมืองขอนแก่น', 'ขอนแก่น', '40000'), // tier 0 — exact
+  addr('300101', 'หนองบัวศาลา', 'เมืองนครราชสีมา', 'นครราชสีมา', '30000'), // tier 1 — starts with
+  addr('500101', 'บ้านหนองบัว', 'เมืองเชียงใหม่', 'เชียงใหม่', '50000'), // tier 2 — contains
+  addr('390101', 'โพธิ์ชัย', 'เมืองหนองบัวลำภู', 'หนองบัวลำภู', '39000'), // tier 3 — district/province only
+  addr('120501', 'บ้านใหม่ บางพัง', 'ปากเกร็ด', 'นนทบุรี', '11120'), // name with an internal space
+];
+
+// Same subDistrictCode as the title row above but a different district spelling, so a dedupe test
+// can prove which of the two survived.
+const DOPA_FIXTURES: ThaiAddress[] = [
+  addr('400101', 'หนองบัว', 'เมือง', 'ขอนแก่น', '40000'),
+  addr('400102', 'ศิลา', 'เมือง', 'ขอนแก่น', '40000'),
+];
+
+describe('useAddressStore.searchBySubDistrict', () => {
+  beforeEach(() => {
+    act(() => {
+      // Going through the setters (rather than setState) also rebuilds the search index.
+      useAddressStore.getState().setTitleAddresses(TITLE_FIXTURES);
+      useAddressStore.getState().setDopaAddresses(DOPA_FIXTURES);
+    });
+  });
+
+  const search = (query: string, source?: 'title' | 'dopa') =>
+    useAddressStore.getState().searchBySubDistrict(query, source);
+
+  // ------------------------------------------
+  // Scenario 1: An empty or whitespace-only query returns nothing
+  // ------------------------------------------
+  it('should return nothing for a blank query', () => {
+    expect(search('')).toEqual([]);
+    expect(search('   ')).toEqual([]);
+  });
+
+  // ------------------------------------------
+  // Scenario 2: A single token matches beyond the sub-district name
+  // ------------------------------------------
+  it('should match on district, province and postcode, not just sub-district', () => {
+    expect(search('เชียงใหม่', 'title').map(a => a.subDistrictCode)).toEqual(['500101']);
+    expect(search('ปากเกร็ด', 'title').map(a => a.subDistrictCode)).toEqual(['120501']);
+    expect(search('30000', 'title').map(a => a.subDistrictCode)).toEqual(['300101']);
+  });
+
+  // ------------------------------------------
+  // Scenario 3: Ranking — exact, then prefix, then substring, then other-field-only
+  // ------------------------------------------
+  it('should rank sub-district name matches above district/province matches', () => {
+    expect(search('หนองบัว', 'title').map(a => a.subDistrictCode)).toEqual([
+      '400101', // exact
+      '300101', // starts with
+      '500101', // contains
+      '390101', // matched only via district / province
+    ]);
+  });
+
+  // ------------------------------------------
+  // Scenario 4: Extra tokens narrow the result set (AND, not OR)
+  // ------------------------------------------
+  it('should require every token to match', () => {
+    expect(search('หนองบัว ขอนแก่น', 'title').map(a => a.subDistrictCode)).toEqual(['400101']);
+    expect(search('หนองบัว เชียงใหม่', 'title').map(a => a.subDistrictCode)).toEqual(['500101']);
+    expect(search('หนองบัว ภูเก็ต', 'title')).toEqual([]);
+  });
+
+  // ------------------------------------------
+  // Scenario 5: Names containing a space are found typed either way
+  // ------------------------------------------
+  it('should find a sub-district whose name contains a space', () => {
+    expect(search('บ้านใหม่ บางพัง', 'title').map(a => a.subDistrictCode)).toEqual(['120501']);
+    expect(search('บ้านใหม่บางพัง', 'title').map(a => a.subDistrictCode)).toEqual(['120501']);
+  });
+
+  // ------------------------------------------
+  // Scenario 6: Searching both datasets keeps the title row, drops the dopa duplicate
+  // ------------------------------------------
+  it('should dedupe by sub-district code with title winning', () => {
+    const results = search('หนองบัว');
+    const duplicates = results.filter(a => a.subDistrictCode === '400101');
+
+    expect(duplicates).toHaveLength(1);
+    // The title fixture spells the district "เมืองขอนแก่น"; the dopa one says just "เมือง".
+    expect(duplicates[0].districtName).toBe('เมืองขอนแก่น');
+  });
+
+  // ------------------------------------------
+  // Scenario 7: An explicit source never leaks rows from the other dataset
+  // ------------------------------------------
+  it('should honour the source filter', () => {
+    expect(search('ศิลา', 'title')).toEqual([]);
+    expect(search('ศิลา', 'dopa').map(a => a.subDistrictCode)).toEqual(['400102']);
+    expect(search('ศิลา').map(a => a.subDistrictCode)).toEqual(['400102']);
   });
 });

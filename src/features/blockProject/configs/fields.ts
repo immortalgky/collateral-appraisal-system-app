@@ -116,6 +116,7 @@ export const projectLocationFields: FormField[] = [
     subDistrictNameField: 'subDistrictName',
     districtNameField: 'districtName',
     provinceNameField: 'provinceName',
+    addressSource: 'title',
     wrapperClassName: 'col-span-4',
   },
   {

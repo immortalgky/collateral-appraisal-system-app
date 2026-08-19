@@ -72,6 +72,10 @@ export type AddressSource = 'title' | 'dopa';
 export type AddressStore = {
   titleAddresses: ThaiAddress[];
   dopaAddresses: ThaiAddress[];
+  /** Lowercased search haystacks, aligned by index with titleAddresses. */
+  titleSearchIndex: string[];
+  /** Lowercased search haystacks, aligned by index with dopaAddresses. */
+  dopaSearchIndex: string[];
   setTitleAddresses: (addresses: ThaiAddress[]) => void;
   setDopaAddresses: (addresses: ThaiAddress[]) => void;
   searchBySubDistrict: (query: string, source?: AddressSource) => ThaiAddress[];
