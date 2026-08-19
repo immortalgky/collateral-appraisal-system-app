@@ -6,8 +6,8 @@ import {
 } from 'react-hook-form';
 import type { z } from 'zod';
 import { FormSchemaContext, FormReadOnlyContext } from './context';
-import { flattenFormErrors } from './utils';
-import Alert from '../Alert';
+import { flattenFormErrors, useScrollToFirstError } from './utils';
+import FormErrorAlert from './FormErrorAlert';
 import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext';
 
 interface FormProviderProps<TFieldValues extends FieldValues> {
@@ -56,7 +56,7 @@ export function FormProvider<TFieldValues extends FieldValues>({
   const readOnly = usePageReadOnly();
   const { errors, isSubmitted, submitCount } = methods.formState;
   const [isDismissed, setIsDismissed] = useState(false);
-  const errorMessages =
+  const formErrors =
     showErrorAlert && isSubmitted && !isDismissed ? flattenFormErrors(errors) : [];
 
   // Reset dismissed state when user submits again
@@ -64,25 +64,14 @@ export function FormProvider<TFieldValues extends FieldValues>({
     setIsDismissed(false);
   }, [submitCount]);
 
+  // Independent of showErrorAlert: forms that hide the banner should still scroll.
+  useScrollToFirstError(methods);
+
   return (
     <FormSchemaContext.Provider value={schema}>
       <FormReadOnlyContext.Provider value={readOnly}>
         <RHFFormProvider {...methods}>
-          {errorMessages.length > 0 && (
-            <Alert
-              variant="danger"
-              title={`Please fix the following errors (${errorMessages.length}):`}
-              className="mb-4"
-              dismissible
-              onDismiss={() => setIsDismissed(true)}
-            >
-              <ul className="list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto text-xs">
-                {errorMessages.map((message, index) => (
-                  <li key={index}>{message}</li>
-                ))}
-              </ul>
-            </Alert>
-          )}
+          <FormErrorAlert errors={formErrors} onDismiss={() => setIsDismissed(true)} />
           {children}
         </RHFFormProvider>
       </FormReadOnlyContext.Provider>

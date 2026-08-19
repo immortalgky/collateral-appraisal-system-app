@@ -195,6 +195,9 @@ const TitleInformationForm = () => {
         ))}
 
         <FormCard
+          // Scroll target for the array-level "must have at least 1 item" error: with no titles
+          // added there are no per-field anchors inside to aim at.
+          data-field="titles"
           title={t('forms.titleInformation')}
           subtitle={
             isEditing

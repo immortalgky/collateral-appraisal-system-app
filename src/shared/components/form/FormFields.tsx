@@ -580,8 +580,14 @@ function FieldRenderer({
     }
   };
 
-  // Wrap the field component with the wrapper div
-  return <div className={clsx(field.wrapperClassName)}>{renderFieldComponent()}</div>;
+  // Wrap the field component with the wrapper div.
+  // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
+  // because Dropdown never forwards `name` to the DOM.
+  return (
+    <div data-field={name} className={clsx(field.wrapperClassName)}>
+      {renderFieldComponent()}
+    </div>
+  );
 }
 
 // Re-export types for convenience

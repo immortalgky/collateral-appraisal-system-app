@@ -122,32 +122,44 @@ interface BaseFormField {
 interface FieldProps {
   control: Control<FieldValues, any, FieldValues>;
   value: FormField;
-  namePrefix?: string;
-  index?: number;
+  /** Fully-qualified react-hook-form path, built by the parent so the wrapper can anchor on it too. */
+  name: string;
 }
 
-const FormSection = ({ fields, namePrefix = '', index }: FormSectionProps) => {
-  const { control } = useFormContext();
-  return (
-    <>
-      {fields.map(value => (
-        <div className={clsx(value.wrapperClassName)} key={value.name || value.key}>
-          <Field control={control} value={value} namePrefix={namePrefix} index={index} />
-        </div>
-      ))}
-    </>
-  );
-};
-
-const Field = ({ control, value, namePrefix, index }: FieldProps) => {
-  let name = value.name || '';
+/** Build the react-hook-form path for a field, e.g. `titles.0.titleNo`. */
+const buildFieldName = (fieldName: string, namePrefix?: string, index?: number) => {
+  let name = fieldName || '';
   if (index !== undefined) {
     name = `${index}.${name}`;
   }
   if (namePrefix !== undefined && namePrefix.trim() !== '') {
     name = `${namePrefix}.${name}`;
   }
+  return name;
+};
 
+const FormSection = ({ fields, namePrefix = '', index }: FormSectionProps) => {
+  const { control } = useFormContext();
+  return (
+    <>
+      {fields.map(value => {
+        const name = buildFieldName(value.name || '', namePrefix, index);
+        return (
+          // data-field is how scrollToField locates this field; see form/utils.ts.
+          <div
+            data-field={name}
+            className={clsx(value.wrapperClassName)}
+            key={value.name || value.key}
+          >
+            <Field control={control} value={value} name={name} />
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+const Field = ({ control, value, name }: FieldProps) => {
   const {
     field,
     fieldState: { error },

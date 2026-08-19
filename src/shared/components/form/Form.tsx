@@ -3,8 +3,8 @@ import { FormProvider as RHFFormProvider, useForm, type UseFormProps, type UseFo
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { FormSchemaContext } from './context';
-import { flattenFormErrors } from './utils';
-import Alert from '../Alert';
+import { flattenFormErrors, useScrollToFirstError } from './utils';
+import FormErrorAlert from './FormErrorAlert';
 
 interface FormProps<TSchema extends z.ZodType<any, any, any>> {
   /** Zod schema - automatically sets up zodResolver */
@@ -71,32 +71,21 @@ export function Form<TSchema extends z.ZodType<any, any, any>>({
 
   const { errors, isSubmitted, submitCount } = methods.formState;
   const [isDismissed, setIsDismissed] = useState(false);
-  const errorMessages = showErrorAlert && isSubmitted && !isDismissed ? flattenFormErrors(errors) : [];
+  const formErrors = showErrorAlert && isSubmitted && !isDismissed ? flattenFormErrors(errors) : [];
 
   // Reset dismissed state when user submits again
   useEffect(() => {
     setIsDismissed(false);
   }, [submitCount]);
 
+  // Independent of showErrorAlert: forms that hide the banner should still scroll.
+  useScrollToFirstError(methods);
+
   return (
     <FormSchemaContext.Provider value={schema}>
       <RHFFormProvider {...methods}>
         <form onSubmit={handleSubmit} className={className}>
-          {errorMessages.length > 0 && (
-            <Alert
-              variant="danger"
-              title={`Please fix the following errors (${errorMessages.length}):`}
-              className="mb-4"
-              dismissible
-              onDismiss={() => setIsDismissed(true)}
-            >
-              <ul className="list-disc list-inside space-y-0.5 max-h-24 overflow-y-auto text-xs">
-                {errorMessages.map((message, index) => (
-                  <li key={index}>{message}</li>
-                ))}
-              </ul>
-            </Alert>
-          )}
+          <FormErrorAlert errors={formErrors} onDismiss={() => setIsDismissed(true)} />
           {children(methods)}
         </form>
       </RHFFormProvider>

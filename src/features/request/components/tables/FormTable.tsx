@@ -102,6 +102,8 @@ const TotalCell = ({
   onReset: () => void;
   onSetValue: (v: any) => void;
 }) => {
+  const { t } = useTranslation('request');
+
   if (isReadOnly || !totalFieldName) {
     return (
       <span className="text-sm font-semibold text-gray-900 text-right block">
@@ -109,7 +111,6 @@ const TotalCell = ({
       </span>
     );
   }
-  const { t } = useTranslation('request');
 
   if (isOverridden) {
     return (
@@ -137,7 +138,9 @@ const TotalCell = ({
   }
   return (
     <div className="flex items-center gap-2">
-      <NumberInput value={value} disabled decimalPlaces={2} className="font-semibold" />
+      <span className="flex-1 text-sm font-semibold text-gray-900 text-right block px-3">
+        {fmtNum(value)}
+      </span>
       {allowOverride && (
         <IconBtn
           size={7}
@@ -220,20 +223,18 @@ const TableCell = ({
           allowNegative={column.allowNegative}
         />
       );
-    if (column.inputType === 'dropdown' && (column.options || column.group))
-      return (
-        <Dropdown
-          value={field.value}
-          onChange={field.onChange}
-          group={column.group}
-          options={column.options}
-        />
-      );
+    // Spread the whole field (not just value/onChange): without field.ref, react-hook-form has no
+    // focusable handle on the dropdown, unlike the number and text branches above.
+    // Split branches because Dropdown takes `group` or `options`, and the column type has both optional.
+    if (column.inputType === 'dropdown') {
+      if (column.options) return <Dropdown {...field} options={column.options} />;
+      if (column.group) return <Dropdown {...field} group={column.group} />;
+    }
     return <Input type={column.inputType} {...field} maxLength={column.maxLength} />;
   };
 
   return (
-    <div>
+    <div data-field={`${name}.${index}.${column.name}`}>
       {input()}
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
@@ -324,7 +325,9 @@ const FormTable = ({
       : { width: (col as FormTableRegularColumn).width ?? 'auto', minWidth: '100px' };
 
   return (
-    <div>
+    // Anchored on the array name so an "at least 1 item" error still has somewhere to scroll to:
+    // when the array is empty there are no rows, hence no per-cell data-field.
+    <div data-field={name}>
       <table className="table w-full table-fixed">
         <thead>
           <tr className="bg-primary/10">
@@ -475,7 +478,6 @@ const FormTable = ({
                     return (
                       <td key={i} className="py-3 px-4 text-sm font-semibold text-gray-600">
                         <div className="flex items-center gap-2">
-                          <Icon style="solid" name="sigma" className="size-4 text-primary" />{' '}
                           {t('table.total')}
                           {isOverridden && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
