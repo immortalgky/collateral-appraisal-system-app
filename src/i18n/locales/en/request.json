@@ -136,6 +136,7 @@
     "roomNumber": "Room Number",
     "floorNumber": "Floor Number",
     "buildingNumber": "Building Number",
+    "condoRegistrationNumber": "Condo Registration Number",
     "condoName": "Condo Name",
     "usageAreaSqM": "Usage Area (Sq.M)",
     "vehicleType": "Vehicle Type",
