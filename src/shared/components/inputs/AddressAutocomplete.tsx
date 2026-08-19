@@ -3,6 +3,7 @@ import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOption
 import clsx from 'clsx';
 import Icon from '../Icon';
 import { useAddressStore } from '@/shared/store';
+import { useAddressesQuery } from '@/shared/api/addresses';
 import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 import type { AddressSource } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
@@ -42,8 +43,21 @@ const AddressAutocomplete = ({
   const titleAddresses = useAddressStore(state => state.titleAddresses);
   const dopaAddresses = useAddressStore(state => state.dopaAddresses);
 
-  // An empty store means the address master never loaded (API down) rather than "nothing matched",
-  // so the empty state can tell the two apart instead of blaming the user's query.
+  // The layouts already mount this query; react-query dedupes by key and the entry is
+  // staleTime: Infinity, so reading it here costs nothing and does not refetch. It is the
+  // only way to tell "still loading" from "loaded and empty" — the store looks the same.
+  const { titleQuery, dopaQuery } = useAddressesQuery();
+
+  const isLoadingAddresses =
+    addressSource === 'title'
+      ? titleQuery.isPending
+      : addressSource === 'dopa'
+        ? dopaQuery.isPending
+        : titleQuery.isPending || dopaQuery.isPending;
+
+  // An empty store *after* the fetch settled means the address master never loaded (API down)
+  // rather than "nothing matched", so the empty state can tell the two apart instead of
+  // blaming the user's query.
   const hasAddressData =
     addressSource === 'title'
       ? titleAddresses.length > 0
@@ -51,14 +65,18 @@ const AddressAutocomplete = ({
         ? dopaAddresses.length > 0
         : titleAddresses.length > 0 || dopaAddresses.length > 0;
 
+  // Trimmed once, here: a whitespace-only query is not a query. searchBySubDistrict already
+  // returns [] for it, so without this the "ไม่พบข้อมูล" empty state would appear for a lone space.
+  const trimmedQuery = query.trim();
+
   const { filteredAddresses, totalMatches } = useMemo(() => {
-    if (query.length < 1) return { filteredAddresses: [], totalMatches: 0 };
-    const matches = searchBySubDistrict(query, addressSource);
+    if (trimmedQuery.length < 1) return { filteredAddresses: [], totalMatches: 0 };
+    const matches = searchBySubDistrict(trimmedQuery, addressSource);
     return {
       filteredAddresses: matches.slice(0, MAX_VISIBLE_RESULTS),
       totalMatches: matches.length,
     };
-  }, [query, searchBySubDistrict, addressSource]);
+  }, [trimmedQuery, searchBySubDistrict, addressSource]);
 
   const formatDisplayValue = (address: ThaiAddress | null): string => {
     if (!address) return '';
@@ -126,11 +144,13 @@ const AddressAutocomplete = ({
               'empty:hidden',
             )}
           >
-            {query.length > 0 && filteredAddresses.length === 0 && (
+            {trimmedQuery.length > 0 && filteredAddresses.length === 0 && (
               <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                {hasAddressData
-                  ? `ไม่พบข้อมูลที่ตรงกับ "${query}"`
-                  : 'ไม่สามารถโหลดข้อมูลที่อยู่ได้ กรุณาลองใหม่อีกครั้ง'}
+                {isLoadingAddresses
+                  ? 'กำลังโหลดข้อมูลที่อยู่...'
+                  : hasAddressData
+                    ? `ไม่พบข้อมูลที่ตรงกับ "${trimmedQuery}"`
+                    : 'ไม่สามารถโหลดข้อมูลที่อยู่ได้ กรุณาลองใหม่อีกครั้ง'}
               </div>
             )}
 
