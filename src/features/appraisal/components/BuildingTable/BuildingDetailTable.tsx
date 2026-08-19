@@ -373,7 +373,11 @@ const BuildingDetailTable = ({
 
   return (
     <>
-      <div className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip">
+      {/* data-field: scroll target for array-level errors on this table (see form/utils.ts). */}
+      <div
+        data-field={name}
+        className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip"
+      >
         <div className="w-full h-full overflow-auto">
           <table
             className={clsx(

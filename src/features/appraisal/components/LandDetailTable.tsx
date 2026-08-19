@@ -71,7 +71,8 @@ export default function LandDetailTable() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    // data-field: scroll target for array-level errors on this table (see form/utils.ts).
+    <div data-field="landDetails" className="flex flex-col gap-2">
       {/* Section Header */}
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium">Land Detail</span>
@@ -110,7 +111,7 @@ export default function LandDetailTable() {
               fields.map((field, index) => (
                 <tr key={field.id}>
                   {tableHeaders.map(header => (
-                    <td key={header.key}>
+                    <td key={header.key} data-field={`landDetails.${index}.${header.key}`}>
                       {editIndex === index && !readOnly ? (
                         <input
                           type="text"

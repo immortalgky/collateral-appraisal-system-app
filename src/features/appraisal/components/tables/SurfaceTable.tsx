@@ -100,7 +100,8 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
   };
 
   return (
-    <div className="col-span-12">
+    // data-field: scroll target for array-level errors on this table (see form/utils.ts).
+    <div data-field={name} className="col-span-12">
       <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
         <table className="table w-full">
           <thead>

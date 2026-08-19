@@ -26,6 +26,7 @@
 export { Form } from './Form';
 export { FormProvider } from './FormProvider';
 export { FormFields } from './FormFields';
+export { FormErrorAlert } from './FormErrorAlert';
 
 // Context & Hooks
 export { FormSchemaContext, useFormSchema, FormReadOnlyContext, useFormReadOnly } from './context';
@@ -62,6 +63,16 @@ export {
   constraintsToInputProps,
   getAllFieldConstraints,
   type FieldConstraints,
+} from './utils';
+
+// Scroll-to-error. Fields are addressed by the `data-field` attribute that FormFields, FormSection
+// and the array tables put on each field/container wrapper. Forms that do not use the shared
+// FormProvider can still opt in by calling useScrollToFirstError(methods) themselves.
+export {
+  flattenFormErrors,
+  scrollToField,
+  useScrollToFirstError,
+  type FlatFormError,
 } from './utils';
 
 // Schema Builder

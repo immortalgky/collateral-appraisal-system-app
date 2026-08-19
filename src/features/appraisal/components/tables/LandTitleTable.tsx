@@ -86,7 +86,8 @@ const LandTitleTable = ({
   const isEmpty = values.length === 0;
 
   return (
-    <div className="w-full grid">
+    // data-field: scroll target for array-level errors on this table (see form/utils.ts).
+    <div data-field={name} className="w-full grid">
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed border-gray-200 rounded-lg bg-gray-50">
           <Icon name="file-lines" style="regular" className="text-3xl text-gray-300 mb-2" />
