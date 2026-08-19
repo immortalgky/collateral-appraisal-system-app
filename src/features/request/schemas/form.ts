@@ -310,6 +310,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   bookNumber: '',
   pageNumber: '',
   rawang: '',
+  mapSheetNumber: '',
   landParcelNumber: '',
   surveyNumber: '',
   aerialMapName: '',

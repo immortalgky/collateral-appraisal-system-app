@@ -2,6 +2,12 @@ import type { TFunction } from 'i18next';
 import type { FieldArrayField, FormField } from '@/shared/components/form';
 import type { ListBoxItem } from '@/shared/components';
 import { mapCollateral } from '@features/request/data/mapCollateral.ts';
+import {
+  AERIAL_TITLE_TYPES,
+  LAND_PARCEL_TITLE_TYPES,
+  RAWANG_TITLE_TYPES,
+  SURVEY_TITLE_TYPES,
+} from '@/shared/constants/titleTypes';
 
 // =============================================================================
 // Utility
@@ -558,6 +564,31 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       name: 'rawang',
       wrapperClassName: 'col-span-2',
       maxLength: 30,
+      showWhen: { field: 'titleType', is: RAWANG_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.mapSheetNumber'),
+      name: 'mapSheetNumber',
+      wrapperClassName: 'col-span-2',
+      maxLength: 10,
+      showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.aerialMapName'),
+      name: 'aerialMapName',
+      wrapperClassName: 'col-span-2',
+      maxLength: 100,
+      showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.aerialMapNumber'),
+      name: 'aerialMapNumber',
+      wrapperClassName: 'col-span-2',
+      maxLength: 50,
+      showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'text-input',
@@ -565,6 +596,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       name: 'landParcelNumber',
       wrapperClassName: 'col-span-2',
       maxLength: 10,
+      showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'text-input',
@@ -572,6 +604,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       name: 'surveyNumber',
       wrapperClassName: 'col-span-2',
       maxLength: 10,
+      showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'number-input',
@@ -1105,6 +1138,7 @@ export function makeDopaAddressFields(t: TFunction<'request'>): FormField[] {
       name: 'dopaAddress.postcode',
       disabled: true,
       wrapperClassName: 'col-span-2',
+      hide: true,
     },
   ];
 }
@@ -1201,6 +1235,31 @@ export const titleLandFields: FormField[] = [
     name: 'rawang',
     wrapperClassName: 'col-span-2',
     maxLength: 30,
+    showWhen: { field: 'titleType', is: RAWANG_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Sheet Number'),
+    name: 'mapSheetNumber',
+    wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Aerial Photo Name'),
+    name: 'aerialMapName',
+    wrapperClassName: 'col-span-2',
+    maxLength: 100,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Aerial Photo Number'),
+    name: 'aerialMapNumber',
+    wrapperClassName: 'col-span-2',
+    maxLength: 50,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -1208,6 +1267,7 @@ export const titleLandFields: FormField[] = [
     name: 'landParcelNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -1215,6 +1275,7 @@ export const titleLandFields: FormField[] = [
     name: 'surveyNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -1713,6 +1774,7 @@ export const dopaAddressFields: FormField[] = [
     name: 'dopaAddress.postcode',
     disabled: true,
     wrapperClassName: 'col-span-2',
+    hide: true,
   },
 ];
 
@@ -1733,8 +1795,6 @@ export const titlesFieldConfig: FieldArrayField = {
     ...dopaAddressFields,
     // Schema-only fields (not in any rendering config)
     { type: 'text-input', name: 'titleDetail', label: 'Title Detail' },
-    { type: 'text-input', name: 'aerialMapName', label: 'Aerial Map Name' },
-    { type: 'text-input', name: 'aerialMapNumber', label: 'Aerial Map Number' },
   ]),
 };
 
