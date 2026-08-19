@@ -632,6 +632,7 @@ export const createCondoFormDefault: createCondoFormType = {
   roomNumber: '',
   floorNumber: '',
   usableArea: 0,
+  constructionCompletionPercent: 100,
   latitude: 0,
   longitude: 0,
   subDistrict: '',

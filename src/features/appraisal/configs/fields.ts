@@ -1409,6 +1409,15 @@ export const condoFields: FormField[] = [
     required: true,
     maxIntegerDigits: 5,
   },
+  {
+    type: 'number-input',
+    label: 'Construction Completion (%)',
+    name: 'constructionCompletionPercent',
+    wrapperClassName: 'col-span-3',
+    maxIntegerDigits: 3,
+    decimalPlaces: 2,
+    max: 100,
+  },
 ];
 
 export const condoAddressFields: FormField[] = [

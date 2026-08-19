@@ -243,6 +243,7 @@ export const mapCondoPropertyResponseToForm = (
     roomNumber: response.roomNumber ?? '',
     floorNumber: response.floorNumber ?? 0,
     usableArea: response.usableArea ?? 0,
+    constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
 
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
