@@ -764,7 +764,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       name: 'buildingNumber',
       wrapperClassName: 'col-span-2',
       requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
-      maxLength: 10,
+      maxLength: 30,
     },
     {
       type: 'text-input',
@@ -1417,7 +1417,7 @@ export const titleCondoFields: FormField[] = [
     name: 'buildingNumber',
     wrapperClassName: 'col-span-2',
     requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
-    maxLength: 10,
+    maxLength: 30,
   },
   {
     type: 'text-input',
