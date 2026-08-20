@@ -26,6 +26,7 @@ import {
   useApplyPricingSelection,
   useUpdateMethodValue,
   useUpdateRemark,
+  useSetPricingAnalysisSystemCalc,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type { UpdateMethodRequestType, UpdateRemarkRequestType } from '../schemas';
@@ -154,6 +155,7 @@ export function useSelectionActions({
   const updateMethodMutation = useUpdateMethodValue();
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
+  const setSystemCalcMutation = useSetPricingAnalysisSystemCalc();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
   const removeDocumentMutation = useRemovePricingAnalysisDocument();
   const {
@@ -272,10 +274,15 @@ export function useSelectionActions({
       return { success: false, failedFileNames: getFailedFileNames() };
     }
 
-    // Manual mode requires at least one supporting document — existing docs already
-    // attached to the analysis plus any new PDFs picked in this save, combined.
-    const isManualMode = state.systemCalculationMode !== 'System';
-    if (isManualMode) {
+    // Supporting documents are required whenever a value is entered by hand — either the
+    // whole analysis is Manual, or at least one included method has been individually
+    // overridden to manual (useSystemCalc === false). Existing docs + new PDFs are combined.
+    const requiresManualEvidence =
+      state.systemCalculationMode !== 'System' ||
+      state.summarySelected.some((a: Approach) =>
+        a.methods.some((m: Method) => m.isIncluded && !m.useSystemCalc),
+      );
+    if (requiresManualEvidence) {
       const totalDocuments = (state.documents?.length ?? 0) + pdfFiles.length;
       if (totalDocuments === 0) {
         toast.error(tp('toasts.documentRequired'));
@@ -415,11 +422,64 @@ export function useSelectionActions({
     navigate(returnTo ?? `${basePath}/property`);
   };
 
-  const changeSystemCalculation = (method: boolean) => {
+  const changeSystemCalculation = async (method: boolean) => {
     dispatch({
       type: 'CHANGE_CALCULATION_METHOD',
       payload: { systemCalculationMethodType: method ? 'System' : 'FillIn' },
     });
+
+    try {
+      await setSystemCalcMutation.mutateAsync({
+        pricingAnalysisId,
+        useSystemCalc: method,
+      });
+      await qc.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
+      });
+    } catch (err) {
+      dispatch({
+        type: 'CHANGE_CALCULATION_METHOD',
+        payload: { systemCalculationMethodType: method ? 'FillIn' : 'System' },
+      });
+      throw err;
+    }
+  };
+
+  const toggleMethodCalcMode = async (arg: MethodKey) => {
+    const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
+    const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
+    if (!method?.id || !isServerId(method.id)) return;
+
+    const prevUseSystemCalc = method.useSystemCalc;
+    const nextUseSystemCalc = !prevUseSystemCalc;
+
+    dispatch({
+      type: 'SUMMARY_SET_METHOD_CALC_MODE',
+      payload: {
+        approachType: arg.approachType,
+        methodType: arg.methodType,
+        useSystemCalc: nextUseSystemCalc,
+      },
+    });
+
+    try {
+      await updateMethodMutation.mutateAsync({
+        id: pricingAnalysisId,
+        methodId: method.id,
+        request: { useSystemCalc: nextUseSystemCalc } as UpdateMethodRequestType,
+      });
+    } catch (err: any) {
+      // Revert on failure.
+      dispatch({
+        type: 'SUMMARY_SET_METHOD_CALC_MODE',
+        payload: {
+          approachType: arg.approachType,
+          methodType: arg.methodType,
+          useSystemCalc: prevUseSystemCalc,
+        },
+      });
+      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+    }
   };
 
   // ==================== Add Method ====================
@@ -519,6 +579,7 @@ export function useSelectionActions({
     isSavingSummary: isSaving,
     cancelPricingAccordion,
     changeSystemCalculation,
+    toggleMethodCalcMode,
     addMethod,
     requestDeleteMethod,
     requestRemoveDocument,

@@ -19,7 +19,7 @@ interface PricingAnalysisApproachAccordionProps {
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
-
+  onToggleMethodCalcMode?: (arg: { approachType: string; methodType: string }) => void;
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   configMethods?: PricingAnalysisConfigType['methods'];
@@ -43,7 +43,7 @@ export const PricingAnalysisApproachAccordion = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
-
+  onToggleMethodCalcMode,
   onAddMethod,
   onDeleteMethod,
   configMethods,
@@ -174,8 +174,11 @@ export const PricingAnalysisApproachAccordion = ({
                 onToggleMethod={onToggleMethod}
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
-                isManualMode={isManualMode}
-                onManualValueSync={onManualValueSync}
+                isManualMode={isManualMode || !method.useSystemCalc}
+                onManualValueSync={
+                  isManualMode || !method.useSystemCalc ? onManualValueSync : undefined
+                }
+                onToggleMethodCalcMode={isManualMode ? undefined : onToggleMethodCalcMode}
                 disabled={disabled}
               />
             ))}
@@ -193,8 +196,11 @@ export const PricingAnalysisApproachAccordion = ({
                 onToggleMethod={onToggleMethod}
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCalculationMethod={onSelectCalculationMethod}
-                isManualMode={isManualMode}
-                onManualValueSync={onManualValueSync}
+                isManualMode={isManualMode || !method.useSystemCalc}
+                onManualValueSync={
+                  isManualMode || !method.useSystemCalc ? onManualValueSync : undefined
+                }
+                onToggleMethodCalcMode={isManualMode ? undefined : onToggleMethodCalcMode}
                 disabled={disabled}
               />
             ))}

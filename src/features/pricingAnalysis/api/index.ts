@@ -566,6 +566,29 @@ export function useUpdateRemark() {
   });
 }
 
+/**
+ * Set the analysis-wide system-calculation mode.
+ * PUT /pricing-analysis/{id}/system-calc
+ * Only touches useSystemCalc — does not modify final values.
+ */
+export function useSetPricingAnalysisSystemCalc() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      useSystemCalc,
+    }: {
+      pricingAnalysisId: string;
+      useSystemCalc: boolean;
+    }): Promise<{ id: string; useSystemCalc: boolean }> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/system-calc`,
+        { useSystemCalc },
+      );
+      return response;
+    },
+  });
+}
+
 // ==================== Recalculate & Reset Hooks ====================
 
 /**

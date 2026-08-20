@@ -78,6 +78,7 @@ export function createInitialState(
         isIncluded: !!apiMethod,
         isSelected: apiMethod?.isSelected ?? false,
         appraisalValue: apiMethod?.methodValue ?? confMethod.appraisalValue ?? 0,
+        useSystemCalc: apiMethod?.useSystemCalc ?? true,
       };
     }) as Method[];
 

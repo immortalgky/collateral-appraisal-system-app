@@ -444,8 +444,7 @@ function PricingAnalysisContent({
   const handleConfirmChangeCalculation = async () => {
     if (pendingSystemCalcMode === null) return;
     try {
-      // await onChangechangeSystemCalculation();
-      selectionActions.changeSystemCalculation(pendingSystemCalcMode);
+      await selectionActions.changeSystemCalculation(pendingSystemCalcMode);
       toast.success(t('toasts.changed'));
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('toasts.saveFailed'));
@@ -493,6 +492,7 @@ function PricingAnalysisContent({
                         onCancelEditMode={selectionActions.cancelEdit}
                         onSelectCandidateMethod={selectionActions.selectCandidateMethod}
                         onSelectCandidateApproach={selectionActions.selectCandidateApproach}
+                        onToggleMethodCalcMode={selectionActions.toggleMethodCalcMode}
                         onAddMethod={selectionActions.addMethod}
                         onDeleteMethod={selectionActions.requestDeleteMethod}
                         pricingConfiguration={pricingConfiguration}

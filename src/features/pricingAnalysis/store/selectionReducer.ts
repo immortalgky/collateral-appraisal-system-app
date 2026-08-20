@@ -114,6 +114,13 @@ export type SelectionAction =
        *  as part of the batched Save click. */
       type: 'SUMMARY_UPDATE_METHOD_VALUE';
       payload: { approachType: string; methodType: string; value: number; methodId?: string };
+    }
+  | {
+      /** Flip one method between system calc / manual locally (DB write happens in
+       *  useSelectionActions.toggleMethodCalcMode). No detail refetch — a refetch would
+       *  re-run INIT and reset the local-only analysis-wide toggle. */
+      type: 'SUMMARY_SET_METHOD_CALC_MODE';
+      payload: { approachType: string; methodType: string; useSystemCalc: boolean };
     };
 
 /** filter out approaches and methods that are not selected in editing mode
@@ -155,6 +162,19 @@ const cloneApproaches = (approaches: Approach[]): Approach[] => {
       }))
     : [];
 };
+
+const resetForCalcModeChange = (approaches: Approach[], useSystemCalc: boolean): Approach[] =>
+  approaches.map(appr => ({
+    ...appr,
+    isSelected: false,
+    appraisalValue: 0,
+    methods: appr.methods.map(method => ({
+      ...method,
+      isSelected: false,
+      appraisalValue: 0,
+      useSystemCalc,
+    })),
+  }));
 
 export function approachMethodReducer(
   state: SelectionState,
@@ -211,9 +231,18 @@ export function approachMethodReducer(
     }
 
     case 'CHANGE_CALCULATION_METHOD': {
+      const mode = action.payload.systemCalculationMethodType;
+      const useSystemCalc = mode === 'System';
       return {
         ...state,
-        systemCalculationMode: action.payload.systemCalculationMethodType,
+        systemCalculationMode: mode,
+        summarySelected: resetForCalcModeChange(state.summarySelected, useSystemCalc),
+        editSaved: resetForCalcModeChange(state.editSaved, useSystemCalc),
+        editDraft: resetForCalcModeChange(state.editDraft, useSystemCalc),
+        activeMethod: undefined,
+        dirtyManualValueKeys: [],
+        dirtyMethodApproachTypes: [],
+        dirtyApproachSelection: false,
       };
     }
 
@@ -514,6 +543,27 @@ export function approachMethodReducer(
       };
 
       return nextState;
+    }
+
+    case 'SUMMARY_SET_METHOD_CALC_MODE': {
+      const { approachType, methodType, useSystemCalc } = action.payload;
+      const apply = (approaches: Approach[]) =>
+        approaches.map(appr =>
+          appr.approachType !== approachType
+            ? appr
+            : {
+                ...appr,
+                methods: appr.methods.map(m =>
+                  m.methodType === methodType ? { ...m, useSystemCalc, isSelected: false } : m,
+                ),
+              },
+        );
+      return {
+        ...state,
+        summarySelected: apply(state.summarySelected),
+        editSaved: apply(state.editSaved),
+        editDraft: apply(state.editDraft),
+      };
     }
 
     default:
