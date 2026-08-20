@@ -48,6 +48,7 @@
     "noRequestsFiltered": "Try different filters",
     "noRequestsCreate": "Create your first request",
     "noTitles": "No titles yet",
+    "noCollateralType": "No type selected",
     "noTitlesReadOnly": "No title documents have been added",
     "noTitlesAdd": "Add your first title document to get started",
     "noDetailsFilledIn": "No details filled in yet",

@@ -137,7 +137,7 @@ const TitleInformationForm = () => {
   };
 
   const getCollateralTypeLabel = (type: string | undefined) => {
-    if (!type) return t('empty.noTitles');
+    if (!type) return t('empty.noCollateralType');
     return collateralTypeParams.find(p => p.code === type)?.description ?? type;
   };
 

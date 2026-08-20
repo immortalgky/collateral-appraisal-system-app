@@ -48,6 +48,7 @@
     "noRequestsFiltered": "请尝试其他筛选条件",
     "noRequestsCreate": "创建您的第一个申请",
     "noTitles": "暂无产权",
+    "noCollateralType": "未选择类型",
     "noTitlesReadOnly": "尚未添加产权文件",
     "noTitlesAdd": "添加您的第一个产权文件以开始",
     "noDetailsFilledIn": "尚未填写详细信息",

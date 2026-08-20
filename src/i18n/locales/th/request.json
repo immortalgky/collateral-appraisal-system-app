@@ -48,6 +48,7 @@
     "noRequestsFiltered": "ลองเปลี่ยนตัวกรอง",
     "noRequestsCreate": "สร้างคำขอแรกของคุณ",
     "noTitles": "ยังไม่มีกรรมสิทธิ์",
+    "noCollateralType": "ยังไม่ได้เลือกประเภท",
     "noTitlesReadOnly": "ยังไม่มีเอกสารกรรมสิทธิ์",
     "noTitlesAdd": "เพิ่มเอกสารกรรมสิทธิ์แรกเพื่อเริ่มต้น",
     "noDetailsFilledIn": "ยังไม่มีรายละเอียด",
