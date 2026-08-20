@@ -151,9 +151,9 @@ function CondoDetailForm() {
             against the section's 12-col grid. The Latitude field's rightIcon
             opens the MapLocationPicker — no separate button needed. */}
         <FormFields fields={fields} />
-        <FieldGroupLabel label="Address" />
+        <FieldGroupLabel label={t('forms.condo.sectionTitleDocumentAddress')} />
         <FormFields fields={condoAddressFields} />
-        <FieldGroupLabel label="Dopa Address" />
+        <FieldGroupLabel label={t('forms.condo.sectionDopaAddress')} />
         <FormFields fields={condoDopaAddressFields} />
         <FormFields fields={tailFields} />
       </SectionRow>

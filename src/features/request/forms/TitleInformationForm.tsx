@@ -23,7 +23,6 @@ import {
   RequestTitleDto,
   type RequestTitleDtoType,
 } from '@/features/request/schemas/form';
-import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 import clsx from 'clsx';
 import { useTitleLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 
@@ -543,12 +542,9 @@ const TitleTableView = ({
       if (titleStr) details.push({ label: t('titleDetails.title'), value: titleStr });
     }
 
-    // Province + district — look up names from store if not available on the DTO
-    const titleAddrLookup = title?.titleAddress?.subDistrict
-      ? findAddressBySubDistrictCode(title.titleAddress.subDistrict)
-      : undefined;
-    const province = title?.titleAddress?.provinceName || titleAddrLookup?.provinceName || '';
-    const district = title?.titleAddress?.districtName || titleAddrLookup?.districtName || '';
+    // titleAddress stores province/district as readable text directly (description mode)
+    const province = title?.titleAddress?.province || '';
+    const district = title?.titleAddress?.district || '';
     if (province) {
       details.push({
         label: t('titleDetails.location'),

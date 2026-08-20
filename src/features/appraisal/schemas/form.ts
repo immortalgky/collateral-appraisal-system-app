@@ -97,9 +97,26 @@ export const createLandForm = buildFormSchema(allLandFields, createLandFormBase)
   rentedOutRefinement,
 );
 
+// Project Land's UI (BlockLandDetailForm) never renders the DOPA Address section, so
+// `dopaSubDistrict` must not be required here — drop the required base definition instead of
+// relying on array-order overwrite to relax it.
 export const createProjectLandForm = buildFormSchema(
   [
-    ...allLandFields,
+    ...allLandFields.filter(field => field.name !== 'dopaSubDistrict'),
+    {
+      type: 'location-selector',
+      label: 'Dopa Sub District',
+      name: 'dopaSubDistrict',
+      districtField: 'dopaDistrict',
+      districtNameField: 'dopaDistrictName',
+      provinceField: 'dopaProvince',
+      provinceNameField: 'dopaProvinceName',
+      postcodeField: 'dopaPostcode',
+      subDistrictNameField: 'dopaSubDistrictName',
+      addressSource: 'dopa',
+      wrapperClassName: 'col-span-4',
+      required: false,
+    },
     {
       type: 'parameter-search',
       label: 'Land Office',

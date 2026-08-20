@@ -1110,6 +1110,8 @@
     "land": {
       "pageTitle": "รายละเอียดที่ดิน",
       "sectionTitleInfo": "ข้อมูลที่ดิน",
+      "sectionTitleDocumentAddress": "ที่อยู่ตามเอกสารกรรมสิทธิ์",
+      "sectionDopaAddress": "ที่อยู่ตาม DOPA",
       "sectionTitleLocation": "ที่ตั้งที่ดิน",
       "sectionTitleBoundary": "ขนาดและแนวเขต",
       "sectionTitleCharacteristics": "ลักษณะที่ดิน",
@@ -1124,6 +1126,8 @@
     },
     "condo": {
       "sectionTitle": "รายละเอียดคอนโด",
+      "sectionTitleDocumentAddress": "ที่อยู่ตามเอกสารกรรมสิทธิ์",
+      "sectionDopaAddress": "ที่อยู่ตาม DOPA",
       "areaDetail": "รายละเอียดพื้นที่",
       "pma": "ข้อมูล PMA",
       "buildingInsuranceSectionTitle": "ประกันภัยอาคาร",
