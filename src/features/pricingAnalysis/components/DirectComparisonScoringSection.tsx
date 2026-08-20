@@ -704,7 +704,10 @@ export const DirectComparisonScoringSection = ({
             </tr>
 
             {/* 2nd revision */}
-            {(groupCollateralType === 'LB' || groupCollateralType === 'U') && (
+            {(groupCollateralType === 'LB' ||
+              groupCollateralType === 'LS' ||
+              groupCollateralType === 'U' ||
+              groupCollateralType === 'LSU') && (
               <DirectComparisonSecondRevision
                 comparativeSurveys={comparativeSurveys}
                 collateralType={groupCollateralType}

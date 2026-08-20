@@ -5,7 +5,6 @@ import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelect
 import { MethodFooterActions } from './MethodFooterActions';
 import { makeWQSDto, WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
-import { COLLATERAL_TYPE } from '../data/constants';
 import toast from 'react-hot-toast';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
@@ -89,9 +88,10 @@ export function WQSPanel({
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'WQS_COST';
   const property: Record<string, unknown> | undefined = isCostApproach
-    ? properties?.find(p => p.propertyType === 'L')
+    ? (properties?.find(p => p.propertyType === 'L' || p.propertyType === 'LSL') ?? properties?.[0])
     : properties?.[0];
-  const buildingCost = properties?.filter(p => p.propertyType === 'B') ?? [];
+  const buildingCost =
+    properties?.filter(p => p.propertyType === 'B' || p.propertyType === 'LSB') ?? [];
 
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
