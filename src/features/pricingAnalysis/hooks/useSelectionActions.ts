@@ -28,6 +28,7 @@ import {
   useUpdateMethodValue,
   useUpdateRemark,
   useSetPricingAnalysisSystemCalc,
+  useUpdateFinalValue,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type { UpdateMethodRequestType, UpdateRemarkRequestType } from '../schemas';
@@ -158,6 +159,7 @@ export function useSelectionActions({
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
   const setSystemCalcMutation = useSetPricingAnalysisSystemCalc();
+  const updateFinalValueMutation = useUpdateFinalValue();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
   const removeDocumentMutation = useRemovePricingAnalysisDocument();
   const {
