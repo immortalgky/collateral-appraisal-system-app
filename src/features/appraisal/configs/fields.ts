@@ -914,16 +914,6 @@ export const buildingInfoField: FormField[] = [
     options: ['No', 'Yes'],
   },
   {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
-    wrapperClassName: 'col-span-3',
-    disableWhen: { field: 'isUnderConstruction', is: true },
-    maxIntegerDigits: 3,
-    decimalPlaces: 2,
-    max: 100,
-  },
-  {
     type: 'datetime-input',
     label: 'License Expiration Date',
     name: 'constructionLicenseExpirationDate',
@@ -1416,13 +1406,11 @@ export const condoFields: FormField[] = [
     maxIntegerDigits: 5,
   },
   {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
+    type: 'boolean-toggle',
+    label: 'Under Construction',
+    name: 'isUnderConstruction',
     wrapperClassName: 'col-span-3',
-    maxIntegerDigits: 3,
-    decimalPlaces: 2,
-    max: 100,
+    options: ['No', 'Yes'],
   },
 ];
 

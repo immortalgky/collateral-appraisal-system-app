@@ -1,12 +1,12 @@
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys, useGetLeaseAgreementCondoPropertyById } from '../api';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { PageReadOnlyContext, usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useAppraisalId, useBasePath } from '../context/AppraisalContext';
+import { useAppraisalId, useBasePath, useIsCiAppraisal } from '../context/AppraisalContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import PropertyPhotoSection from '../components/PropertyPhotoSection';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { mapCondoPropertyResponseToForm } from '../utils/mappers';
+import { mapCondoFormDataToApiPayload, mapCondoPropertyResponseToForm } from '../utils/mappers';
 import {
   createLeaseAgreementCondoForm,
   createLeaseAgreementCondoFormDefault,
@@ -31,6 +31,8 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { Button } from '@/shared/components';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type SubmitHandler, useForm } from 'react-hook-form';
+import { FormReadOnlyContext } from '@/shared/components/form';
+import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 
 // ─── Inline create/update mutations ──────────────────────────────
 
@@ -87,7 +89,9 @@ const useUpdateLeaseAgreementCondoProperty = () => {
 
 const CreateLeaseAgreementCondoPage = () => {
   const { t } = useTranslation('appraisal');
-  const isReadOnly = usePageReadOnly();
+  const _baseReadOnly = usePageReadOnly();
+  const isCiAppraisal = useIsCiAppraisal();
+  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -137,7 +141,19 @@ const CreateLeaseAgreementCondoPage = () => {
   const isPending = isCreating || isUpdating;
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'condo' | 'lease-agreement' | 'rental-info'>('condo');
+  // ─── Construction tab ─────────────────────────────────────────
+  const isUnderConstruction = methods.watch('isUnderConstruction');
+  const tabParam = searchParams.get('tab');
+  const initialCondoTab = tabParam === 'construction' ? 'construction' : 'condo';
+  const [activeTab, setActiveTab] = useState<
+    'condo' | 'construction' | 'lease-agreement' | 'rental-info'
+  >(initialCondoTab);
+
+  useEffect(() => {
+    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
+      setActiveTab('condo');
+    }
+  }, [isUnderConstruction, activeTab, isCiAppraisal]);
 
   const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -147,7 +163,8 @@ const CreateLeaseAgreementCondoPage = () => {
   const onSubmit: SubmitHandler<createLeaseAgreementCondoFormType> = async data => {
     setSaveAction('submit');
     const { leaseAgreement, rentalInfo, ...rest } = data;
-    const payload = { ...rest, leaseAgreement, rentalInfo };
+    const basePayload = mapCondoFormDataToApiPayload(rest as any);
+    const payload = { ...basePayload, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -189,7 +206,8 @@ const CreateLeaseAgreementCondoPage = () => {
     setSaveAction('draft');
     const data = getValues();
     const { leaseAgreement, rentalInfo, ...rest } = data;
-    const payload = { ...rest, leaseAgreement, rentalInfo };
+    const basePayload = mapCondoFormDataToApiPayload(rest as any);
+    const payload = { ...basePayload, leaseAgreement, rentalInfo };
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -253,6 +271,16 @@ const CreateLeaseAgreementCondoPage = () => {
               icon: 'building',
               onClick: () => setActiveTab('condo'),
             },
+            ...(isUnderConstruction || isCiAppraisal
+              ? [
+                  {
+                    label: 'Construction Inspection',
+                    id: 'construction-section',
+                    icon: 'helmet-safety',
+                    onClick: () => setActiveTab('construction'),
+                  },
+                ]
+              : []),
             {
               label: 'Lease Agreement',
               id: 'lease-agreement-section',
@@ -269,148 +297,189 @@ const CreateLeaseAgreementCondoPage = () => {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLeaseAgreementCondoForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+      <PageReadOnlyContext.Provider value={isReadOnly}>
+        <FormProvider methods={methods} schema={createLeaseAgreementCondoForm}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <div
+              id="form-scroll-container"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section */}
-                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    {appraisalId && (
-                      <PropertyPhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        propertyId={propertyId}
-                      />
-                    )}
-                  </Section>
+              <ResizableSidebar
+                isOpen={isOpen}
+                onToggle={onToggle}
+                openedWidth="w-1/5"
+                closedWidth="w-1/50"
+              >
+                <ResizableSidebar.Main>
+                  <div className="flex-auto flex flex-col gap-6 min-w-0">
+                    <PageReadOnlyContext.Provider value={_baseReadOnly}>
+                      <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                        {/* Photos Section */}
+                        <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                              <Icon
+                                name="images"
+                                style="solid"
+                                className="w-5 h-5 text-indigo-600"
+                              />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                          </div>
+                          <div className="h-px bg-gray-200 mb-4" />
+                          {appraisalId && (
+                            <PropertyPhotoSection
+                              ref={photoSectionRef}
+                              appraisalId={appraisalId}
+                              propertyId={propertyId}
+                            />
+                          )}
+                        </Section>
+                      </FormReadOnlyContext.Provider>
+                    </PageReadOnlyContext.Provider>
 
-                  {/* Condo Tab Content */}
-                  <div
-                    id="condo-section"
-                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'condo' ? 'hidden' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon
-                          name="mountain-sun"
-                          style="solid"
-                          className="w-5 h-5 text-amber-600"
-                        />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">Condo Information</h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-
-                    <Section
-                      id="condo-info"
-                      anchor
-                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                    {/* Condo Tab Content */}
+                    <div
+                      id="condo-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'condo' ? 'hidden' : ''}`}
                     >
-                      <CondoDetailForm />
-                    </Section>
-                  </div>
-                  {/* Lease Agreement Tab Content */}
-                  <div
-                    id="lease-agreement-section"
-                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
-                  >
-                    <Section anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
                           <Icon
-                            name="file-contract"
+                            name="mountain-sun"
                             style="solid"
-                            className="w-5 h-5 text-purple-600"
+                            className="w-5 h-5 text-amber-600"
                           />
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
+                        <h2 className="text-lg font-semibold text-gray-900">Condo Information</h2>
                       </div>
-                      <div className="h-px bg-gray-200 mb-6" />
-                      <LeaseAgreementForm namePrefix="leaseAgreement" />
-                    </Section>
-                  </div>
+                      <div className="h-px bg-gray-200" />
 
-                  {/* Rental Info Tab Content */}
-                  <div
-                    id="rental-info-section"
-                    className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
-                  >
-                    <Section anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon
-                            name="calendar-days"
-                            style="solid"
-                            className="w-5 h-5 text-teal-600"
-                          />
+                      <Section
+                        id="condo-info"
+                        anchor
+                        className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                      >
+                        <CondoDetailForm />
+                      </Section>
+                    </div>
+
+                    {/* Construction Inspection Tab Content */}
+                    {(isUnderConstruction || isCiAppraisal) && (
+                      <div
+                        id="construction-section"
+                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <Icon
+                              name="helmet-safety"
+                              style="solid"
+                              className="w-5 h-5 text-teal-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            Construction Inspection
+                          </h2>
                         </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
+                        <div className="h-px bg-gray-200" />
+                        <Section id="construction-info" anchor className="flex flex-col gap-6">
+                          <FormReadOnlyContext.Provider value={_baseReadOnly}>
+                            <ConstructionInspectionTab
+                              readOnly={_baseReadOnly}
+                              ciMode={isCiAppraisal}
+                            />
+                          </FormReadOnlyContext.Provider>
+                        </Section>
                       </div>
-                      <div className="h-px bg-gray-200 mb-6" />
-                      <RentalInfoForm namePrefix="rentalInfo" />
-                    </Section>
-                  </div>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+                    )}
 
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
-              {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                    {/* Lease Agreement Tab Content */}
+                    <div
+                      id="lease-agreement-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Icon
+                              name="file-contract"
+                              style="solid"
+                              className="w-5 h-5 text-purple-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
+                        </div>
+                        <div className="h-px bg-gray-200 mb-6" />
+                        <LeaseAgreementForm namePrefix="leaseAgreement" />
+                      </Section>
+                    </div>
+
+                    {/* Rental Info Tab Content */}
+                    <div
+                      id="rental-info-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                            <Icon
+                              name="calendar-days"
+                              style="solid"
+                              className="w-5 h-5 text-teal-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
+                        </div>
+                        <div className="h-px bg-gray-200 mb-6" />
+                        <RentalInfoForm namePrefix="rentalInfo" />
+                      </Section>
+                    </div>
+                  </div>
+                </ResizableSidebar.Main>
+              </ResizableSidebar>
+            </div>
+
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!_baseReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
+              {!_baseReadOnly && (
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                    Save draft
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    Save
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormProvider>
+      </PageReadOnlyContext.Provider>
     </div>
   );
 };
