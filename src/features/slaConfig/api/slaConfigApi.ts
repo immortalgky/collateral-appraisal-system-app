@@ -145,3 +145,107 @@ export const useDeleteSlaPolicy = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: slaConfigKeys.all }),
   });
 };
+
+// ─── Holidays ─────────────────────────────────────────────────────────────────
+// The business-day SLA clock skips these dates. There is no update endpoint by
+// design — a wrong entry is deleted and re-added.
+
+export interface HolidayDto {
+  id: string;
+  date: string; // DateOnly — "YYYY-MM-DD"
+  description: string;
+  year: number;
+}
+
+export interface CreateHolidayBody {
+  date: string; // "YYYY-MM-DD"
+  description: string;
+}
+
+export const slaHolidayKeys = {
+  all: ['sla-holidays'] as const,
+  list: (year?: number) => [...slaHolidayKeys.all, 'list', year ?? 'all'] as const,
+};
+
+export const useGetHolidays = (year?: number) =>
+  useQuery({
+    queryKey: slaHolidayKeys.list(year),
+    queryFn: async (): Promise<HolidayDto[]> => {
+      const { data } = await axios.get<HolidayDto[]>('/api/sla/holidays', {
+        params: year ? { year } : undefined,
+      });
+      return data ?? [];
+    },
+  });
+
+export const useCreateHoliday = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: CreateHolidayBody): Promise<HolidayDto> => {
+      const { data } = await axios.post<HolidayDto>('/api/sla/holidays', body);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: slaHolidayKeys.all }),
+  });
+};
+
+export const useDeleteHoliday = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      await axios.delete(`/api/sla/holidays/${id}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: slaHolidayKeys.all }),
+  });
+};
+
+// ─── Business hours ───────────────────────────────────────────────────────────
+// A single active window (not per-weekday) plus an optional lunch break, in one
+// timezone. POST is an upsert against the active row, so there is no delete.
+
+export interface BusinessHoursDto {
+  id: string;
+  startTime: string; // TimeOnly — "HH:mm:ss"
+  endTime: string;
+  lunchStartTime: string | null;
+  lunchEndTime: string | null;
+  timeZone: string;
+  isActive: boolean;
+}
+
+export interface UpsertBusinessHoursBody {
+  startTime: string;
+  endTime: string;
+  timeZone: string;
+  lunchStartTime?: string | null;
+  lunchEndTime?: string | null;
+}
+
+export const businessHoursKeys = {
+  all: ['sla-business-hours'] as const,
+};
+
+export const useGetBusinessHours = () =>
+  useQuery({
+    queryKey: businessHoursKeys.all,
+    queryFn: async (): Promise<BusinessHoursDto | null> => {
+      try {
+        const { data } = await axios.get<BusinessHoursDto>('/api/sla/business-hours');
+        return data;
+      } catch (error: unknown) {
+        // Never configured yet — the screen renders empty defaults rather than an error.
+        if ((error as { response?: { status?: number } })?.response?.status === 404) return null;
+        throw error;
+      }
+    },
+  });
+
+export const useUpsertBusinessHours = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: UpsertBusinessHoursBody): Promise<void> => {
+      await axios.post('/api/sla/business-hours', body);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: businessHoursKeys.all }),
+  });
+};
