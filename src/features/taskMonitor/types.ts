@@ -20,7 +20,11 @@ export interface MonitoredTask {
   taskStatus: MonitorTaskStatus;
   appraisalStatus: string | null;
   workflowInstanceId: string;
+  /** SLA anchor — frozen across a supervisor hand-off. Drives elapsed/remaining, not display. */
   assignedAt: string | null;
+  /** When the current assignee received the task. This is what the "Assigned" column shows.
+   *  Optional: an API predating the holder-clock work omits it — fall back to `assignedAt`. */
+  assigneeAssignedAt?: string | null;
   appraisalNumber: string | null;
   prevAppraisalNumber: string | null;
   customerName: string | null;

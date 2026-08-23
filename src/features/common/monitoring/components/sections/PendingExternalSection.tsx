@@ -234,6 +234,7 @@ const COLUMNS: ColumnDef<PendingExternalTask>[] = [
     sortKey: 'AssignedDate',
     render: row => (
       <SlaDueCell
+        dueDate={row.dueDate}
         assignedDate={row.assignedDate}
         targetHours={row.olaTargetHours}
         slaStatus={row.slaStatus}

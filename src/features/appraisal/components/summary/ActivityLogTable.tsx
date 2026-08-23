@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import type { ActivityLogItemDto } from '@/features/appraisal/api/workflow';
+import HolderTimingTooltip from './HolderTimingTooltip';
 
 interface ActivityLogTableProps {
   activityLog: ActivityLogItemDto[];
@@ -75,7 +76,21 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
                   )}
                 </td>
                 <td className="text-gray-600 whitespace-nowrap">
-                  {formatDateTime(item.startDate)}
+                  <HolderTimingTooltip
+                    timing={{
+                      receivedAt: item.startDate,
+                      stepEnteredAt: item.stepEnteredAt ?? item.startDate,
+                      openedAt: item.openedAt ?? null,
+                      taskState: item.taskState ?? null,
+                      slaStartAt: item.slaStartAt ?? null,
+                      dueAt: item.dueAt ?? null,
+                      slaStatus: item.slaStatus ?? null,
+                      slaDurationHours: item.slaDurationHours ?? null,
+                      isPending: item.endDate == null,
+                    }}
+                  >
+                    {formatDateTime(item.startDate)}
+                  </HolderTimingTooltip>
                 </td>
                 <td className="text-gray-600 whitespace-nowrap">
                   {item.endDate ? (

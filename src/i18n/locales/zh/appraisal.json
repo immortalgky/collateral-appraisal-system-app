@@ -924,6 +924,17 @@
       "status": "状态",
       "movement": "动态",
       "remark": "备注"
+    },
+    "timing": {
+      "receivedAt": "接收时间",
+      "openedAt": "开启时间",
+      "notOpenedYet": "尚未开启",
+      "noOpenRecord": "无记录",
+      "stepEnteredAt": "进入此步骤",
+      "slaStartAt": "SLA 起算",
+      "dueAt": "到期",
+      "slaStatus": "SLA 状态",
+      "hoursShort": "{{hours}} 小时"
     }
   },
   "documentChecklist": {
