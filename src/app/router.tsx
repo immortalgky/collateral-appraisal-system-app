@@ -220,6 +220,12 @@ const BlockReappraisalListPage = lazy(
 const BlockReappraisalDetailPage = lazy(
   () => import('@/features/blockReappraisal/pages/BlockReappraisalDetailPage')
 );
+const AppraisalDataCorrectionSearchPage = lazy(
+  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionSearchPage')
+);
+const AppraisalDataCorrectionDetailPage = lazy(
+  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionDetailPage')
+);
 const SupportingDataMaintenanceListPage = lazy(() =>
   import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(m => ({
     default: m.SupportingDataMaintenanceListPage,
@@ -728,6 +734,17 @@ export const router = createBrowserRouter([
       {
         path: 'standalone/block-reappraisal/:collateralMasterId',
         element: <BlockReappraisalDetailPage />,
+      },
+      // ─── Appraisal Data Correction ──────────────────────────────────────────
+      {
+        path: 'standalone/appraisal-data-correction',
+        element: (
+          <RoleProtectedRoute allowedRoles={[]} requiredPermission="APPRAISAL_DATA_CORRECTION" />
+        ),
+        children: [
+          { index: true, element: <AppraisalDataCorrectionSearchPage /> },
+          { path: ':appraisalId', element: <AppraisalDataCorrectionDetailPage /> },
+        ],
       },
       // ─── Periodical Reappraisal (AS400) ────────────────────────────────────
       {

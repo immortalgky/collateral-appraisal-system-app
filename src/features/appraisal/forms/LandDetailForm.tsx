@@ -46,7 +46,7 @@ interface LandDetailFormProps {
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
   <>
-    <div className="col-span-full xl:col-span-1 pt-1">
+    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -110,11 +110,12 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('forms.land.pageTitle')}</h2>
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow title={t('forms.land.sectionTitleInfo')} icon="info-circle">
+      {/* No page heading here: the section header above this form already names it, so
+          printing it again read as two copies of the same title. */}
+      <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
+        <SectionRow title={t('forms.land.sectionTitleInfo')} icon="circle-info">
           <FormFields fields={landFields} />
-          <FieldGroupLabel label="Address" />
+          <FieldGroupLabel label="Title Address" />
           <FormFields fields={landAddressFields} />
           <FieldGroupLabel label="Dopa Address" />
           <FormFields fields={landDopaAddressFields} />

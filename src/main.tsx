@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import './i18n';
 import './index.css'; // Import global CSS which includes Tailwind
+// Imported here rather than @import-ed from index.css: Tailwind v4's Vite plugin does
+// not reliably watch partials pulled into the CSS entry, so edits were served stale.
+import './styles/formLayout.css';
 import App from '@app/App';
 import { queryClient } from '@app/queryClient';
 import { AuthInitializer, AuthProvider } from '@features/auth/components';

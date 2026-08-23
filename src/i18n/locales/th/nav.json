@@ -42,5 +42,10 @@
     "compact": "กะทัดรัด",
     "normal": "ปกติ",
     "comfortable": "สบายตา"
+  },
+  "formLayout": {
+    "label": "เลย์เอาต์ฟอร์มประเมิน",
+    "grid": "ตาราง",
+    "classic": "มาตรฐาน"
   }
 }

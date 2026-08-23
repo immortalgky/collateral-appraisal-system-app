@@ -21,7 +21,7 @@ interface SectionRowProps {
 
 const SectionRow = ({ title, icon, children }: SectionRowProps) => (
   <>
-    <div className="col-span-full xl:col-span-1 pt-1">
+    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -40,10 +40,10 @@ const SectionRow = ({ title, icon, children }: SectionRowProps) => (
 const FactorsSkeleton = () => (
   <div className="space-y-4">
     <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-    <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
       {[1, 2, 3, 4].map(i => (
         <div key={i} className="contents">
-          <div className="col-span-full xl:col-span-1 pt-1">
+          <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-gray-200 animate-pulse" />
               <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
@@ -336,7 +336,7 @@ const MarketComparableForm = () => {
   return (
     <div className="flex flex-col gap-6">
       {/* Static Fields */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+      <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
         {formStaticSections.map(section => (
           <SectionRow key={section.label} title={section.label} icon={section.icon}>
             <FormFields fields={section.fields} />
@@ -350,7 +350,7 @@ const MarketComparableForm = () => {
           <FactorsSkeleton />
         ) : (
           factors.length > 0 && (
-            <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+            <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
               {factors.map((fac: any, index: number) => {
                 const fields: FormField[] = buildFormField(fac, index);
                 return (

@@ -159,7 +159,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     return (
       <div className={clsx('w-full', props.className)}>
         {label && (
-          <div className="block text-xs font-medium text-gray-700 mb-1">
+          <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
             {label}
             {required && <span className="text-danger ml-0.5">*</span>}
           </div>

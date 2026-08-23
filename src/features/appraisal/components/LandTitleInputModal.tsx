@@ -1,6 +1,7 @@
 import Button from '@/shared/components/Button';
 import { buildFormSchema, type FormField, FormFields } from '@/shared/components/form';
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FormProvider, useForm } from 'react-hook-form';
 
 import { landtitlesFields } from '@features/appraisal/configs/fields.ts';
@@ -56,7 +57,12 @@ const LandTitleModal = ({
     })
   );
 
-  return (
+  // Rendered into <body>. `position: fixed` is only viewport-relative while no ancestor
+  // establishes a containing block, and this dialog sits deep inside the form — under an
+  // `overflow-hidden` wrapper and a scroll container. A portal makes that irrelevant instead
+  // of leaving the dialog's position at the mercy of its ancestors, and it also lifts the
+  // dialog out of `.cas-form-grid` so the grid layout's field rules never reach inside it.
+  return createPortal(
     <FormProvider {...form}>
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-8">
         <div className="bg-white rounded-2xl shadow-2xl w-3/5 max-h-full flex flex-col">
@@ -83,7 +89,8 @@ const LandTitleModal = ({
           </div>
         </div>
       </div>
-    </FormProvider>
+    </FormProvider>,
+    document.body,
   );
 };
 

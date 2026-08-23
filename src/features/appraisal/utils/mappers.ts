@@ -168,7 +168,6 @@ export const mapBuildingPropertyResponseToForm = (
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
-    constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     hasObligation: response.hasObligation ?? '',
@@ -243,7 +242,7 @@ export const mapCondoPropertyResponseToForm = (
     roomNumber: response.roomNumber ?? '',
     floorNumber: response.floorNumber ?? 0,
     usableArea: response.usableArea ?? 0,
-    constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
+    isUnderConstruction: response.isUnderConstruction ?? false,
 
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
@@ -336,6 +335,7 @@ export const mapCondoPropertyResponseToForm = (
     forcedSalePrice: response.forceSellingPrice ?? 0,
 
     remark: response.remark ?? '',
+    ...mapConstructionInspectionResponseToForm((response as any).constructionInspection),
   };
 };
 
@@ -450,7 +450,6 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
-    constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     buildingType: response.buildingType ?? '',
@@ -636,6 +635,20 @@ const mapConstructionInspectionFormToApi = (data: any) => {
           mimeType: constructionSummary?.mimeType ?? null,
           fileSizeBytes: constructionSummary?.fileSizeBytes ?? null,
         }),
+  };
+};
+
+export const mapCondoFormDataToApiPayload = (data: createCondoFormType): any => {
+  const {
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
+    ...rest
+  } = data;
+  return {
+    ...rest,
+    constructionInspection: mapConstructionInspectionFormToApi(data),
   };
 };
 

@@ -71,7 +71,7 @@ const RadioGroup = ({
   if (variant !== 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
-        {label && <Label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
+        {label && <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
 
         <HeadlessRadioGroup
           value={value}
@@ -119,7 +119,7 @@ const RadioGroup = ({
   if (variant === 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
-        {label && <Label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
+        {label && <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
 
         <HeadlessRadioGroup
           value={value}
@@ -196,7 +196,7 @@ const RadioGroup = ({
   // Default variant
   return (
     <Field className={clsx('flex flex-col', className)}>
-      {label && <Label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
+      {label && <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
 
       <HeadlessRadioGroup
         value={value}

@@ -42,5 +42,10 @@
     "compact": "Compact",
     "normal": "Normal",
     "comfortable": "Comfortable"
+  },
+  "formLayout": {
+    "label": "Appraisal form layout",
+    "grid": "Grid",
+    "classic": "Classic"
   }
 }

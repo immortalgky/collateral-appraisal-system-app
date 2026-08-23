@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
 // import ThemeToggle from '@shared/components/ThemeToggle'; // hidden for now
 import DensityPicker from '@shared/components/DensityPicker';
+import FormLayoutPicker from '@shared/components/FormLayoutPicker';
 import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
@@ -322,6 +323,11 @@ export default function Navbar({
                 {/* UI density — scales the whole app for smaller screens */}
                 <div className="border-b border-gray-100 dark:border-base-300">
                   <DensityPicker />
+                </div>
+
+                {/* Appraisal form layout — grid vs classic field arrangement */}
+                <div className="border-b border-gray-100 dark:border-base-300">
+                  <FormLayoutPicker />
                 </div>
 
                 {userNavigation.map(item =>

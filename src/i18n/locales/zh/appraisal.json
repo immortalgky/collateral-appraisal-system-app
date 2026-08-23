@@ -1383,7 +1383,7 @@
     "rentalInfoSection": "租赁信息",
     "condoSection": "公寓信息",
     "buildingSection": "建筑信息",
-    "constructionSection": "施工检验",
+    "constructionSection": "施工明细",
     "machinerySection": "机械信息",
     "navPhotos": "照片",
     "navLand": "土地",
@@ -1391,7 +1391,7 @@
     "navRentalInfo": "租赁信息",
     "navCondo": "公寓",
     "navBuilding": "建筑",
-    "navConstructionInspection": "施工检验",
+    "navConstructionInspection": "施工明细",
     "navMachinery": "机械",
     "saveDraft": "保存草稿",
     "save": "保存"

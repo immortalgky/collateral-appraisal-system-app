@@ -42,5 +42,10 @@
     "compact": "紧凑",
     "normal": "标准",
     "comfortable": "宽松"
+  },
+  "formLayout": {
+    "label": "估价表单布局",
+    "grid": "表格",
+    "classic": "标准"
   }
 }
