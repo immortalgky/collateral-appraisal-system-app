@@ -90,7 +90,7 @@ const AppraisalSelector = ({
   return (
     <div className={className}>
       {label && (
-        <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+        <label data-field-label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
       )}
       <div className="relative">
         <input

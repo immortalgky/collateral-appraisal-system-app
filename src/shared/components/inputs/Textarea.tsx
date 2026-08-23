@@ -34,7 +34,7 @@ const Textarea = ({
   return (
     <Field className={clsx(fullWidth && 'w-full', 'flex', 'flex-col')}>
       {label && (
-        <Label className="block text-xs font-medium text-gray-700 mb-1">
+        <Label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
           {label}
           {required && <span className="text-danger ml-0.5">*</span>}
         </Label>

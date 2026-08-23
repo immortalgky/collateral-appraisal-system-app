@@ -19,7 +19,7 @@ interface SectionRowProps {
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
   <>
-    <div className="col-span-1 pt-1">
+    <div className="cas-section-head col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -276,7 +276,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
   return (
     <div className="w-full max-w-full overflow-hidden">
       <h2 className="text-lg font-semibold text-gray-900 mb-6">Rental Info</h2>
-      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
+      <div className="cas-section-grid grid grid-cols-5 gap-x-6 gap-y-4">
         {/* Schedule Header Fields */}
         <SectionRow title="Schedule" icon="calendar-days">
           <FormFields fields={rentalScheduleField} namePrefix={namePrefix} />

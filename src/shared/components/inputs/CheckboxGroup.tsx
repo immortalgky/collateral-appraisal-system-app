@@ -81,7 +81,7 @@ const CheckboxGroup = ({
   const Header = () => (
     <div className="flex items-center justify-between gap-2">
       {label && (
-        <label className="text-sm font-medium text-gray-700">
+        <label data-field-label className="text-sm font-medium text-gray-700">
           {label}
           {required && <span className="text-danger ml-1">*</span>}
         </label>

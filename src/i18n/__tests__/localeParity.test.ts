@@ -21,6 +21,7 @@ const ZH_ENGLISH_FALLBACK = new Set([
   'monitoring',
   'historySearch',
   'blockUnitMaintenance',
+  'appraisalDataCorrection',
   'feeAppointmentApproval',
   'feeApprovalConfig',
   'evaluationConfig',

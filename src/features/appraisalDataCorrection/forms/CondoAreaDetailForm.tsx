@@ -1,0 +1,33 @@
+import FormTable from '@/features/request/components/tables/FormTable';
+
+interface CondoAreaDetailFormProps {
+  name: string;
+}
+function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
+  return (
+    <div className="col-span-12 rounded border border-gray-200">
+      <FormTable
+        columns={condoAreaColumns}
+        name={name}
+        sumColumns={['areaSize']}
+        sequenceField="sequence"
+      />
+    </div>
+  );
+}
+
+const condoAreaColumns = [
+  { rowNumberColumn: true as const, label: '#' },
+  { name: 'areaDescription', label: 'Area Detail', width: '70%', maxLength: 200 },
+  {
+    name: 'areaSize',
+    label: 'Area (Sq. M.)',
+    inputType: 'number' as const,
+    width: '20%',
+    align: 'right' as const,
+    maxIntegerDigits: 5,
+    decimalPlaces: 2,
+  },
+];
+
+export default CondoAreaDetailForm;

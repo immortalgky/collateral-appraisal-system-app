@@ -10,6 +10,7 @@ import type {
   CompanyStore,
   DealerStore,
   Density,
+  FormLayout,
   LoadingStore,
   LocaleStore,
   ParameterStore,
@@ -23,6 +24,7 @@ import {
   SIDEBAR_DEFAULT_WIDTH,
 } from './components/sidebarConstants';
 import { DEFAULT_DENSITY, isDensity } from './components/densityConstants';
+import { DEFAULT_FORM_LAYOUT, isFormLayout } from './components/formLayoutConstants';
 import type { Dealer, Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
@@ -44,6 +46,8 @@ export const useUIStore = create<UIStore>()(
       toggleTheme: () => set(state => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
       density: DEFAULT_DENSITY,
       setDensity: (density: Density) => set({ density }),
+      formLayout: DEFAULT_FORM_LAYOUT,
+      setFormLayout: (formLayout: FormLayout) => set({ formLayout }),
     }),
     {
       name: 'cas-ui-store',
@@ -52,6 +56,7 @@ export const useUIStore = create<UIStore>()(
         sidebarWidth: state.sidebarWidth,
         theme: state.theme,
         density: state.density,
+        formLayout: state.formLayout,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<{
@@ -59,6 +64,7 @@ export const useUIStore = create<UIStore>()(
           sidebarCollapsed: unknown;
           theme: unknown;
           density: unknown;
+          formLayout: unknown;
         }>;
         const rawW = p.sidebarWidth;
         const w =
@@ -68,7 +74,17 @@ export const useUIStore = create<UIStore>()(
         const collapsed = typeof p.sidebarCollapsed === 'boolean' ? p.sidebarCollapsed : false;
         const theme: Theme = p.theme === 'light' || p.theme === 'dark' ? p.theme : 'light';
         const density: Density = isDensity(p.density) ? p.density : DEFAULT_DENSITY;
-        return { ...current, sidebarWidth: w, sidebarCollapsed: collapsed, theme, density };
+        const formLayout: FormLayout = isFormLayout(p.formLayout)
+          ? p.formLayout
+          : DEFAULT_FORM_LAYOUT;
+        return {
+          ...current,
+          sidebarWidth: w,
+          sidebarCollapsed: collapsed,
+          theme,
+          density,
+          formLayout,
+        };
       },
     },
   ),
@@ -118,8 +134,7 @@ export const useLoadingStore = create<LoadingStore>(set => ({
       set({ isLoading: false, message: undefined });
     }
   },
-  setMessage: (message: string) =>
-    set(state => (state.isLoading ? { message } : {})),
+  setMessage: (message: string) => set(state => (state.isLoading ? { message } : {})),
 }));
 
 // Export utility functions for manual loading control
@@ -249,4 +264,3 @@ export const useCompanyStore = create<CompanyStore>(set => ({
   setCompanies: (companies: CompanyItem[]) => set({ companies, isLoaded: true, isLoading: false }),
   setLoading: (loading: boolean) => set({ isLoading: loading }),
 }));
-

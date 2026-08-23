@@ -27,7 +27,6 @@ interface TableCellProps {
   value: string;
   field: FormField;
   row: Record<string, any>;
-  allFields: FormField[];
   control: Control<FieldValues, any, FieldValues>;
 }
 
@@ -38,7 +37,12 @@ const LandTitleTable = ({
   stickyColumns = 0,
 }: LandTitleTableProps) => {
   const readOnly = useFormReadOnly();
-  const tableFields = fields.filter(f => !('showWhen' in f && f.showWhen));
+  // Every field gets its own column. This used to drop conditional fields and squeeze their
+  // value onto the end of whatever field their `showWhen` points at — the source of the
+  // "Title deed - -" in the Title Type column. That merge only ever surfaced the first
+  // dependant, so Rawang, Land Number, Survey Number, Sheet Number and both Aerial Photo
+  // fields had nowhere to appear at all.
+  const tableFields = fields;
   const { control, getValues } = useFormContext();
   const { append, remove, update } = useFieldArray({ control, name });
   const values = getValues(name) || [];
@@ -51,10 +55,16 @@ const LandTitleTable = ({
     if (!tableRef.current || stickyColumns <= 0) return;
     const headerCells = tableRef.current.querySelectorAll('thead th');
     const offsets: number[] = [];
-    let cumulative = 0;
+    // Each offset is the *previous pinned offset* plus that column's width, then floored — not a
+    // floored running total of true widths. The difference is the white seam that shows through
+    // between pinned columns after scrolling: with columns of 30.4 and 71.6, flooring the true
+    // total pins the third at 102 while the second ends at 101.6, leaving 0.4px of table visible.
+    // Chaining the floor makes pinned cells overlap by a fraction instead of parting.
+    // getBoundingClientRect because offsetWidth is already rounded.
+    let left = 0;
     for (let i = 0; i < totalSticky && i < headerCells.length; i++) {
-      offsets.push(cumulative);
-      cumulative += (headerCells[i] as HTMLElement).offsetWidth;
+      offsets.push(left);
+      left = Math.floor(left + (headerCells[i] as HTMLElement).getBoundingClientRect().width);
     }
     setStickyOffsets(offsets);
   }, [stickyColumns, totalSticky]);
@@ -62,6 +72,16 @@ const LandTitleTable = ({
   useEffect(() => {
     computeOffsets();
   }, [computeOffsets, values.length]);
+
+  // Column widths also change with the container, the density setting and font loading, none of
+  // which the row-count dependency above covers — and a stale offset is what produces the seam.
+  useEffect(() => {
+    const el = tableRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(computeOffsets);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [computeOffsets]);
 
   const [modalState, setModalState] = useState<
     { type: 'add' } | { type: 'edit'; index: number } | null
@@ -87,7 +107,12 @@ const LandTitleTable = ({
 
   return (
     // data-field: scroll target for array-level errors on this table (see form/utils.ts).
-    <div data-field={name} className="w-full grid">
+    // cas-repeater: tells the grid layout this data-field is a table, not a labelled field. It
+    // cannot be detected with `:has(table)` because that is false while the table is empty, and
+    // the empty state would then be turned into a two-column row.
+    // `flex flex-col`, not `grid`: as a grid the scroll box and the "Add item" row are grid items
+    // sized against the table's `min-w-max` content, which puts the button beside the table.
+    <div data-field={name} className="cas-repeater flex w-full min-w-0 flex-col">
       {isEmpty ? (
         <div className="flex flex-col items-center justify-center py-10 border border-dashed border-gray-200 rounded-lg bg-gray-50">
           <Icon name="file-lines" style="regular" className="text-3xl text-gray-300 mb-2" />
@@ -111,7 +136,10 @@ const LandTitleTable = ({
       ) : (
         <>
           <div className="max-h-60 overflow-auto border border-gray-200 rounded-lg min-w-0">
-            <table ref={tableRef} className="table table-zebra table-xs min-w-max">
+            <table
+              ref={tableRef}
+              className="cas-sticky-table table table-zebra table-xs min-w-max"
+            >
               <thead>
                 <tr>
                   {showRowNumber && (
@@ -174,7 +202,6 @@ const LandTitleTable = ({
                               value={row[field.name]}
                               field={field}
                               row={row}
-                              allFields={fields}
                               control={control}
                             />
                           </td>
@@ -257,7 +284,7 @@ const LandTitleTable = ({
   );
 };
 
-const TableCell = ({ name, index, value, field, row, allFields, control }: TableCellProps) => {
+const TableCell = ({ name, index, value, field, row, control }: TableCellProps) => {
   const cellName = `${name}.${index}.${field.name}`;
   const {
     fieldState: { error },
@@ -295,16 +322,10 @@ const TableCell = ({ name, index, value, field, row, allFields, control }: Table
   ];
 
   if (hasGroup && !hasOptions && groupFieldTypes.includes(field.type)) {
-    const dependentField = allFields.find(
-      f =>
-        'showWhen' in f && f.showWhen && 'field' in f.showWhen && f.showWhen.field === field.name,
-    );
-    const depValue = dependentField ? row[dependentField.name] : null;
     return (
       <div>
         <div>
           <ParameterDisplay group={field.group!} code={value} />
-          {depValue ? ` - ${depValue}` : ''}
         </div>
         {error && <div className="mt-1 text-xs text-danger">{error?.message}</div>}
       </div>
@@ -322,14 +343,6 @@ const TableCell = ({ name, index, value, field, row, allFields, control }: Table
   ) {
     const matched = field.options.find(opt => opt.value == value);
     if (matched) displayValue = matched.label;
-  }
-
-  const dependentField = allFields.find(
-    f => 'showWhen' in f && f.showWhen && 'field' in f.showWhen && f.showWhen.field === field.name,
-  );
-  if (dependentField) {
-    const depValue = row[dependentField.name];
-    if (depValue) displayValue = `${displayValue} - ${depValue}`;
   }
 
   return (

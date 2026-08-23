@@ -41,6 +41,7 @@ import enWorkflowAssignmentConfig from './locales/en/workflowAssignmentConfig.js
 import enCompanyRoundRobinConfig from './locales/en/companyRoundRobinConfig.json';
 import enJobSchedules from './locales/en/jobSchedules.json';
 import enAddressMaster from './locales/en/addressMaster.json';
+import enAppraisalDataCorrection from './locales/en/appraisalDataCorrection.json';
 
 export const defaultNS = 'common' as const;
 
@@ -83,6 +84,7 @@ export const resources = {
     companyRoundRobinConfig: enCompanyRoundRobinConfig,
     jobSchedules: enJobSchedules,
     addressMaster: enAddressMaster,
+    appraisalDataCorrection: enAppraisalDataCorrection,
   },
 } as const;
 
@@ -151,6 +153,7 @@ i18n
 i18n.addResourceBundle('zh', 'monitoring', enMonitoring, true, false);
 i18n.addResourceBundle('zh', 'historySearch', enHistorySearch, true, false);
 i18n.addResourceBundle('zh', 'blockUnitMaintenance', enBlockUnitMaintenance, true, false);
+i18n.addResourceBundle('zh', 'appraisalDataCorrection', enAppraisalDataCorrection, true, false);
 i18n.addResourceBundle('zh', 'workflowAssignmentConfig', enWorkflowAssignmentConfig, true, false);
 i18n.addResourceBundle('zh', 'companyRoundRobinConfig', enCompanyRoundRobinConfig, true, false);
 i18n.addResourceBundle('zh', 'jobSchedules', enJobSchedules, true, false);

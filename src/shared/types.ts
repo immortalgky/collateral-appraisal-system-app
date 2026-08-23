@@ -6,6 +6,9 @@ export type Theme = 'light' | 'dark';
 /** UI scale preference. Applied as a root font-size multiplier. */
 export type Density = 'compact' | 'normal' | 'comfortable';
 
+/** Field arrangement on the appraisal property forms. See formLayoutConstants.ts. */
+export type FormLayout = 'classic' | 'grid';
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -21,6 +24,8 @@ export type UIStore = {
   toggleTheme: () => void;
   density: Density;
   setDensity: (density: Density) => void;
+  formLayout: FormLayout;
+  setFormLayout: (layout: FormLayout) => void;
 };
 
 export type ParameterStore = {

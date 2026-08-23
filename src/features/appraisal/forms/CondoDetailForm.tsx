@@ -44,7 +44,7 @@ interface SectionRowProps {
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
   <>
-    <div className="col-span-full xl:col-span-1 pt-1">
+    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -144,7 +144,7 @@ function CondoDetailForm() {
   );
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
       <SectionRow title="Condominium Information" icon="building">
         {/* FormFields must remain a DIRECT child of the SectionRow grid so each
             field's wrapperClassName (col-span-3, col-span-6, etc.) resolves

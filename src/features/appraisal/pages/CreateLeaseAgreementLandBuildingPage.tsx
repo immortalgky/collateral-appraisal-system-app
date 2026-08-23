@@ -40,7 +40,6 @@ import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { FormReadOnlyContext } from '@shared/components/form';
 import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -93,9 +92,8 @@ const useUpdateLeaseAgreementLandBuildingProperty = () => {
 
 const CreateLeaseAgreementLandBuildingPage = () => {
   const { t } = useTranslation('appraisal');
-  const _baseReadOnly = usePageReadOnly();
+  const isReadOnly = usePageReadOnly();
   const isCiAppraisal = useIsCiAppraisal();
-  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -311,7 +309,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
 
       <PageReadOnlyContext.Provider value={isReadOnly}>
         <FormProvider methods={methods} schema={createLeaseAgreementLandAndBuildingForm}>
-          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+          <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
             {/* Scrollable Form Content */}
             <div
               id="form-scroll-container"
@@ -325,31 +323,26 @@ const CreateLeaseAgreementLandBuildingPage = () => {
               >
                 <ResizableSidebar.Main>
                   <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    {/* Photos Section — re-override to status-only readonly so CI appraisals can still manage photos */}
-                    <PageReadOnlyContext.Provider value={_baseReadOnly}>
-                      <FormReadOnlyContext.Provider value={_baseReadOnly}>
-                        <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                              <Icon
-                                name="images"
-                                style="solid"
-                                className="w-5 h-5 text-indigo-600"
-                              />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                          </div>
-                          <div className="h-px bg-gray-200 mb-4" />
-                          {appraisalId && (
-                            <PropertyPhotoSection
-                              ref={photoSectionRef}
-                              appraisalId={appraisalId}
-                              propertyId={propertyId}
-                            />
-                          )}
-                        </Section>
-                      </FormReadOnlyContext.Provider>
-                    </PageReadOnlyContext.Provider>
+                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <Icon
+                            name="images"
+                            style="solid"
+                            className="w-5 h-5 text-indigo-600"
+                          />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
+                      </div>
+                      <div className="h-px bg-gray-200 mb-4" />
+                      {appraisalId && (
+                        <PropertyPhotoSection
+                          ref={photoSectionRef}
+                          appraisalId={appraisalId}
+                          propertyId={propertyId}
+                        />
+                      )}
+                    </Section>
 
                     {/* Land Tab Content */}
                     <div
@@ -422,12 +415,10 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                         </div>
                         <div className="h-px bg-gray-200" />
                         <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <FormReadOnlyContext.Provider value={_baseReadOnly}>
-                            <ConstructionInspectionTab
-                              readOnly={_baseReadOnly}
-                              ciMode={isCiAppraisal}
-                            />
-                          </FormReadOnlyContext.Provider>
+                          <ConstructionInspectionTab
+                            readOnly={isReadOnly}
+                            ciMode={isCiAppraisal}
+                          />
                         </Section>
                       </div>
                     )}
@@ -482,14 +473,14 @@ const CreateLeaseAgreementLandBuildingPage = () => {
             <ActionBar>
               <ActionBar.Left>
                 <CancelButton />
-                {!_baseReadOnly && (
+                {!isReadOnly && (
                   <>
                     <ActionBar.Divider />
                     <ActionBar.UnsavedIndicator show={hasDirtyFields} />
                   </>
                 )}
               </ActionBar.Left>
-              {!_baseReadOnly && (
+              {!isReadOnly && (
                 <ActionBar.Right>
                   <Button
                     variant="ghost"

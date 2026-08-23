@@ -91,7 +91,7 @@ const AddressAutocomplete = ({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-xs font-medium text-gray-700 mb-1">
+        <label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
           {label}
           {required && <span className="text-danger ml-0.5">*</span>}
         </label>

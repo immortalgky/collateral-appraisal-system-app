@@ -73,14 +73,18 @@ const CondoPMAForm = ({
           )}
         </div>
         <div className="h-px bg-gray-200 mb-4" />
-        <div className="text-xs font-medium text-primary mb-2">Title Information</div>
+        <div className="cas-section-head text-xs font-medium text-primary mb-2">
+          <span>Title Information</span>
+        </div>
         <div className="grid grid-cols-9 gap-4">
           <FormFields fields={condoPmaDetailFields} />
         </div>
 
         {/* Address sub-group */}
         <div className="mt-5">
-          <div className="text-xs font-medium text-primary mb-2">Address</div>
+          <div className="cas-section-head text-xs font-medium text-primary mb-2">
+          <span>Address</span>
+        </div>
           <div className="grid grid-cols-9 gap-4">
             <FormFields fields={condoPmaAddressFields} />
           </div>
@@ -89,7 +93,9 @@ const CondoPMAForm = ({
 
       {/* Value Section (prices) */}
       <div id="value-section">
-        <div className="text-xs font-medium text-primary mb-2">Value Information</div>
+        <div className="cas-section-head text-xs font-medium text-primary mb-2">
+          <span>Value Information</span>
+        </div>
         <div className="grid grid-cols-9 gap-4">
           <FormFields fields={pmaField} />
         </div>

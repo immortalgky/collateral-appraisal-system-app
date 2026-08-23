@@ -52,7 +52,7 @@ const Toggle = ({
     <div className={clsx('text-sm', className)}>
       <fieldset>
         {label && (
-          <legend className="font-medium text-gray-700 mb-1.5">
+          <legend data-field-label className="font-medium text-gray-700 mb-1.5">
             {label}
             {required && <span className="text-danger ml-0.5">*</span>}
           </legend>

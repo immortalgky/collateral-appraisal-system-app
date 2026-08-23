@@ -1,0 +1,833 @@
+/* ============================================================================
+   Appraisal form layout — `grid`
+   ============================================================================
+   Driven by the `formLayout` UI preference, written to <html data-form-layout>
+   by ThemeProvider alongside data-theme and --cas-density.
+
+   SCOPE, deliberately narrow: every rule also requires `.cas-form-grid`, which
+   today only the Appraisal Data Correction screen sets. That screen owns private
+   copies of the property forms, so this can be trialled on real data without any
+   risk to the create/edit screens appraisers use daily. Widening it later means
+   adding the class to those pages; the rules stay put.
+
+   The `classic` layout has no rules at all — it IS the components' own styling.
+
+   Hooks, all present in the markup:
+     [data-field]        per-field wrapper           FormFields.tsx:587
+     [data-field-label]  the label, whatever its tag  shared input components
+     .cas-section-grid   a form's SectionRow container
+     .cas-section-head   the SectionRow title cell
+
+   Three things that look arbitrary but are load-bearing:
+
+   Every field rule requires `:has([data-field-label])`. `data-field` marks more
+   than labelled inputs — LandTitleTable puts it on its own root as a scroll
+   target for array-level errors — and turning that into a two-column row parked
+   the "Add item" button beside the table instead of under it. Anything without a
+   label of its own is left alone.
+
+   `display: contents` on the component root. The inputs wrap label and control
+   differently — a plain div, a Headless Field, a fieldset with a legend — so
+   hoisting the root's children into the field's own grid is what lets one rule
+   serve all of them. The control's `relative` wrapper survives, which is what the
+   absolutely-positioned right icons measure against.
+
+   Fields keep their configured column spans. An earlier version forced
+   `grid-column: span 12`, which put every field on its own row and cost about a
+   third of the density this layout exists for.
+
+   No opt-out class for dialogs: LandTitleInputModal portals into <body>, so it is
+   not a descendant of `.cas-form-grid` and never sees these rules. An earlier
+   `.cas-form-plain` block tried to undo them with `revert`, which rolls back to
+   the UA default rather than to the component's own Tailwind classes — it wiped
+   the dialog's `flex` and `inline-grid` and broke its layout instead of restoring
+   it.
+   ============================================================================ */
+
+/* ── section: title bar on top instead of a left rail ─────────────────────── */
+[data-form-layout='grid'] .cas-form-grid .cas-section-grid {
+  display: block;
+}
+[data-form-layout='grid'] .cas-form-grid .cas-section-head {
+  padding: 0.375rem 0.75rem;
+  margin: 0;
+  background: var(--color-primary-50);
+  border-top: 1px solid var(--color-base-300);
+  border-bottom: 1px solid var(--color-base-300);
+}
+[data-form-layout='grid'] .cas-form-grid .cas-section-head span {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary-700);
+}
+/* The icon chip shrinks to just the glyph — the bar is already the emphasis. */
+[data-form-layout='grid'] .cas-form-grid .cas-section-head > div > div:first-child {
+  width: 1rem;
+  height: 1rem;
+  background: transparent;
+  border-radius: 0;
+}
+[data-form-layout='grid'] .cas-form-grid .cas-section-head + * {
+  margin-bottom: 0.75rem;
+}
+
+/* The 1rem gutter separates cards in the classic layout; between table rows it
+   only opens holes, and the row borders already do the separating.
+
+   `:has([data-field])` — a descendant, not a child. The create/edit screens nest
+   a `Card` between a SectionRow's grid and the fields, so the outer grid has no
+   field as a direct child and an earlier `:has(> [data-field])` left its `gap-4`
+   standing: one white band per Card, which is what the rows were floating in.
+   The descendant form still spares the photo section, the reason for the guard —
+   a grid of thumbnails contains no `[data-field]` at any depth. */
+[data-form-layout='grid'] .cas-form-grid .grid:has([data-field]) {
+  gap: 0;
+}
+
+/* ── field: label cell, then control ────────────────────────────────────────
+   A flex row with a fixed-basis label, not a two-track grid. The label width has
+   to be identical on every row whatever the field's span, and grid tracks would
+   not hold it: `minmax(0, 7rem)` still let the column grow on full-width fields
+   such as Land Description, because a track's max is a ceiling for free-space
+   distribution, not for content. `flex: 0 0 var(--cas-label-w)` is unconditional.
+
+   The width is a custom property so there is one number to tune, and it is in rem
+   so it tracks the density setting. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:has([data-field-label]):not(:has(table)) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
+  border-bottom: 1px solid var(--color-base-300);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:has([data-field-label]):not(:has(table)):hover {
+  background: var(--color-primary-50);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:has([data-field-label]):not(:has(table)) > * {
+  display: contents;
+}
+/* …except when the root is itself a positioning context. ParameterSearchInput
+   hangs its results panel off `.relative` on its root and positions it with
+   `absolute left-0 right-0 top-full`. `display: contents` generates no box, so
+   that `position: relative` stopped applying and the panel anchored to the row
+   instead — which is why the dropdown appeared to open into nothing. Such a root
+   becomes the flex row itself, which keeps the box and still splits label from
+   control. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  > .relative {
+  display: flex;
+  align-items: center;
+  /* `flex: 1 1 0`, not `width: 100%`. Once the row wraps — which it must, so a
+     validation message can take its own line — a 100%-wide item no longer shares
+     the line with the label, it is pushed below it. A zero-basis item that grows
+     fills exactly the same space and still fits beside the label. */
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* Some components bury the label a level deeper — the chip group wraps it in a
+   header row, the toggle in a fieldset with a legend. Flatten whatever holds it
+   so the label still lands in the first column and the control in the second. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  :has(> [data-field-label]):not([data-field-label]) {
+  display: contents;
+}
+[data-form-layout='grid'] .cas-form-grid {
+  /* Fields that share a row. Narrow, because three of them have to fit across the
+     page — measured over all 213 labels in the config, 9.5rem clears about 94% on
+     one line and the rest wrap. */
+  --cas-label-w: 9.5rem;
+}
+/* A field that owns the whole row has width to spare, so give its label enough to
+   never wrap at all: the longest label in the config measures 13.1rem, and 16rem
+   clears it with room for the density setting to shrink the root font. 162 of the 337
+   fields are col-span-12 — Land Office, Land Description, Is Obligation and the
+   rest of the single-field rows — so this is the common case, not an exception.
+   col-span-9 is close enough to full width to want the same treatment. */
+[data-form-layout='grid'] .cas-form-grid [data-field].col-span-12,
+[data-form-layout='grid'] .cas-form-grid [data-field].col-span-9 {
+  --cas-label-w: 16rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] [data-field-label] {
+  flex: 0 0 var(--cas-label-w);
+  width: var(--cas-label-w);
+  margin: 0;
+  padding: 0 0.5rem;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  /* Wrap rather than truncate. Measured across all 213 labels in the config at this
+     size: 9.5rem clears about 94% of them on one line, and the handful that don't —
+     "Wide frontage of land adjacent to the road" at 210px is the worst — take a
+     second line. Sizing the column for the longest label would cost every row 60px
+     of width to spare a dozen; losing the end of a label to an ellipsis is worse
+     than a taller row on those dozen. */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  padding-block: 0.25rem;
+  border-right: 1px solid var(--color-base-300);
+  background: var(--color-base-200);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Everything beside the label shares the remaining width. `min-width: 0` is what
+   stops a long value or a wide select from pushing the row wider than the field. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  > *
+  > :not([data-field-label]):not(.text-danger):not(:has(> p.text-danger)),
+/* …and one level deeper, for components that nest twice before the label.
+   LocationSelector wraps AddressAutocomplete, so the control sits at
+   [data-field] > div > div.w-full > div.relative. The outer div is flattened by
+   the `> *` rule and the inner one by the `:has(> [data-field-label])` rule, so
+   the control really is a flex item of the row — but a `> * >` selector reaches
+   only the first depth, leaving it at `w-full` with an auto basis. Once the row
+   was allowed to wrap for validation messages, a 100%-wide item stopped sharing
+   the line with the label and dropped below it: Sub District and Dopa Sub
+   District, on every screen that uses the address selector. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  :has(> [data-field-label]):not([data-field-label])
+  > div:not([data-field-label]):not(.text-danger):not(:has(> p.text-danger)) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Controls drop their frame — the row supplies the structure. Padding is set on
+   the inline axis only, and the right side is left alone wherever a component has
+   already reserved it: pr-9 (Input), pr-12 (NumberInput with a right icon),
+   pr-10 (its suffix). Overriding those slid values under the icon. */
+[data-form-layout='grid'] .cas-form-grid [data-field] input,
+[data-form-layout='grid'] .cas-form-grid [data-field] textarea,
+[data-form-layout='grid'] .cas-form-grid [data-field] select {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+  padding-block: 0.1875rem;
+  padding-left: 0.5rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] input:not(.pr-9):not(.pr-10):not(.pr-12),
+[data-form-layout='grid'] .cas-form-grid [data-field] textarea,
+[data-form-layout='grid'] .cas-form-grid [data-field] select {
+  padding-right: 0.5rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] input:focus,
+[data-form-layout='grid'] .cas-form-grid [data-field] textarea:focus,
+[data-form-layout='grid'] .cas-form-grid [data-field] select:focus {
+  background: var(--color-base-100);
+  box-shadow: inset 0 0 0 2px var(--color-primary-500);
+  border-color: transparent;
+}
+
+/* ── helper line and character counter ────────────────────────────────────
+   The counter is the component root's third child, so flattening drops it into
+   the next implicit row — under the label, where it read as a stray "1/100".
+   It belongs to the control, so it moves into the control's column, right
+   aligned; and where the control is a textarea there is room to tuck it into the
+   bottom corner, which is where the classic layout puts it too. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  > *
+  > :nth-child(n + 3):not(.text-danger):not(:has(> p.text-danger)) {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  padding: 0 0.5rem 0.125rem;
+  font-size: 0.625rem;
+  line-height: 1.2;
+  gap: 0.5rem;
+}
+/* Tall rows: pin the label to the top instead of floating it in the middle.
+   Covers anything that can grow past one line — a textarea, and a choice group
+   that wraps. Plot Location runs to three rows of chips, and a label centred
+   against that sits opposite the middle chip with nothing to do with it. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:has(textarea),
+[data-form-layout='grid'] .cas-form-grid [data-field]:has(.flex-wrap),
+[data-form-layout='grid'] .cas-form-grid [data-field]:has([role='radiogroup']) {
+  align-items: start;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:has(textarea) [data-field-label],
+[data-form-layout='grid'] .cas-form-grid [data-field]:has(.flex-wrap) [data-field-label],
+[data-form-layout='grid'] .cas-form-grid [data-field]:has([role='radiogroup']) [data-field-label] {
+  padding-top: 0.4375rem;
+  align-items: flex-start;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:has(textarea) > * > :nth-child(n + 3) {
+  position: absolute;
+  right: 0.25rem;
+  bottom: 0.25rem;
+  padding: 0;
+  pointer-events: none;
+}
+
+/* ── compact variant for choice controls ──────────────────────────────────
+   Toggles, radio pills and chips are sized for a stacked form where each gets a
+   line of its own: 2rem tall, full-round, filled grey when unselected. On a row
+   they have to share a text input's height, and a six-option field like Is
+   Obligation turned into a wall of grey blobs that dominated everything around it.
+
+   So: one size down, square-ish corners rather than pills, and — the part that
+   matters most at this density — an unselected option is a hairline outline on the
+   row's own background instead of a filled block. Only the selected one carries
+   fill, which is the single thing the eye needs to find when scanning a column of
+   these.
+
+   Targeting note: `RadioGroup` renders each option through Headless UI's `Radio`,
+   which is a div with `role="radio"`, not a button. An earlier version of these
+   rules matched `button` only and silently missed every radio pill on the screen. */
+[data-form-layout='grid'] .cas-form-grid [data-field] [role='radiogroup'],
+[data-form-layout='grid'] .cas-form-grid [data-field] .flex-wrap {
+  gap: 0.25rem;
+  margin-block: 0;
+  padding-block: 0.25rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] :is([role='radio'], [role='radiogroup'] button) {
+  height: 1.5rem;
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  box-shadow: none;
+}
+/* Unselected: outline only. The filled state is left to the components' own
+   `bg-primary`, so the selected option keeps its colour without being restated. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  div[role='radio']:not([data-checked]):not([aria-checked='true']) {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--color-base-300);
+  color: var(--color-secondary-500);
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  div[role='radio']:not([data-checked]):not([aria-checked='true']):hover {
+  background: var(--color-base-200);
+}
+/* The toggle's sliding thumb is inset from its track; shrink it to match. */
+[data-form-layout='grid'] .cas-form-grid [data-field] [role='radiogroup'] > span {
+  inset-block: 0.125rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] fieldset > div[role='radiogroup'] {
+  padding: 0.0625rem;
+  margin-inline: 0.5rem;
+}
+/* Checkbox chips get the same treatment. */
+[data-form-layout='grid'] .cas-form-grid [data-field] label:has(> input[type='checkbox']),
+[data-form-layout='grid'] .cas-form-grid [data-field] label:has(> input[type='radio']) {
+  min-height: 1.5rem;
+  padding: 0 0.5rem 0 0.375rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] .flex-wrap {
+  padding-inline: 0.5rem;
+}
+
+/* ── sticky columns: cover the sub-pixel seam ──────────────────────────────
+   Not gated on the layout — this is a paint bug, not a style choice.
+
+   Integer `left` offsets are necessary but not sufficient. Once the container has
+   been scrolled horizontally the browser positions sticky cells against a
+   `scrollLeft` that is itself fractional after momentum scrolling, and each cell
+   rounds independently at paint time. Adjacent cells then part by a fraction of a
+   pixel and the table's own background shows through as a white hairline — which
+   is why it appeared only after scrolling to the end and back, not on first paint.
+
+   No arithmetic fixes that. Instead every sticky cell paints one extra pixel of
+   its own background past its right edge, so there is nothing left to show
+   through. `background: inherit` keeps it correct for the teal header and for
+   both zebra shades without naming any colour. */
+.cas-sticky-table :is(th, td).sticky::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -1px;
+  width: 1px;
+  background: inherit;
+}
+
+/* ── boundary table: cells, not boxed inputs ───────────────────────────────
+   The four directions are a table, so its inputs are dressed like the rows above
+   them — no frame of their own, the cell borders do the dividing, and focus is an
+   inset ring rather than an outline that would sit proud of the grid. Ungated on
+   the layout: this table only exists on the correction screen. */
+.cas-boundary-table input,
+.cas-boundary-table textarea {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+  padding: 0.375rem 0.75rem;
+}
+.cas-boundary-table input:hover,
+.cas-boundary-table textarea:hover {
+  background: var(--color-base-200);
+}
+.cas-boundary-table input:focus,
+.cas-boundary-table textarea:focus {
+  background: var(--color-base-100);
+  box-shadow: inset 0 0 0 2px var(--color-primary-500);
+  border-color: transparent;
+}
+
+/* ── leading icons ─────────────────────────────────────────────────────────
+   The decorative icon inside a search or date field sits at the control's left
+   edge and its `pl-9` reserves the room. On a row that is space this layout
+   cannot spare — and the label already says what the field is — so the icon goes
+   and the reserved padding comes back. Only the left, `pointer-events-none` ones:
+   the right-hand map picker and clear button are controls, not decoration. */
+[data-form-layout='grid'] .cas-form-grid [data-field] .pointer-events-none:not(.right-0) {
+  display: none !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] input.pl-9,
+[data-form-layout='grid'] .cas-form-grid [data-field] input.pl-10 {
+  padding-left: 0.5rem;
+}
+
+/* ── field-group heading ───────────────────────────────────────────────────
+   ADDRESS / DOPA ADDRESS become full-width bands rather than floating text, so
+   they read as the boundary between two clusters of rows — and so the fields
+   under DOPA ADDRESS can drop the "Dopa" prefix from their own labels. */
+[data-form-layout='grid'] .cas-form-grid .cas-group-label {
+  margin: 0;
+  padding: 0.625rem 0.5rem 0.5rem;
+  line-height: 1;
+  background: var(--color-base-200);
+  border-top: 1px solid var(--color-base-300);
+  border-bottom: 1px solid var(--color-base-300);
+}
+[data-form-layout='grid'] .cas-form-grid .cas-group-label span {
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  color: var(--color-secondary-500);
+}
+
+/* ── dropdown: a cell, not a boxed control ─────────────────────────────────
+   Dropdown renders through Headless UI's ListboxButton, which is a <button> —
+   not an input, select or textarea — so the rule that strips frames from the
+   other controls never reached it and it kept a rounded border in the middle of
+   a square grid. Matched on `aria-haspopup="listbox"`, which Headless UI sets
+   itself, rather than on a Tailwind class that could be restyled away. */
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-haspopup='listbox'] {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-haspopup='listbox'] > div {
+  padding: 0.1875rem 0.5rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-haspopup='listbox']:hover {
+  background: var(--color-base-200);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-haspopup='listbox']:focus {
+  background: var(--color-base-100);
+  box-shadow: inset 0 0 0 2px var(--color-primary-500);
+  border-color: transparent;
+}
+
+/* ── checkbox chips: same language as the radio pills ──────────────────────
+   The chip variant ships as a white pill with a grey border whatever its state,
+   telling selected from unselected by a teal tint that is easy to miss across a
+   seventeen-option field like Plot Location. Given the radio pills next to them
+   already say "outline means no, fill means yes", the chips say it the same way. */
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-pressed] {
+  min-height: 1.5rem;
+  padding: 0 0.5rem;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
+  border-width: 0;
+  background: transparent;
+  color: var(--color-secondary-500);
+  box-shadow: inset 0 0 0 1px var(--color-base-300);
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  button[aria-pressed]:not([aria-pressed='true']):hover {
+  background: var(--color-base-200);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-pressed='true']:hover {
+  background: var(--color-primary-700);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-pressed='true'] {
+  border-width: 0;
+  background: var(--color-primary-600);
+  color: #fff;
+  box-shadow: none;
+}
+
+/* "Clear all" is a sibling of the label inside the chip group's header row, so
+   flattening that header dropped it between the label column and the chips. It is
+   an action on the whole field, so it belongs at the end of the row. */
+/* Only a field that holds a chip group may wrap; every other row stays one line. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:has(button[aria-pressed]) {
+  flex-wrap: wrap;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] button:has(> [name='xmark']),
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  [data-field-label]
+  ~ button:not([aria-pressed]):not([aria-haspopup]) {
+  order: 99;
+  flex-basis: 100%;
+  justify-content: flex-start;
+  padding: 0 0.5rem 0.25rem var(--cas-label-w);
+  font-size: 0.6875rem;
+  white-space: nowrap;
+}
+
+/* ── chips: reserve the tick's space ───────────────────────────────────────
+   The chip renders its check icon only while selected, so every click changed the
+   chip's width and reflowed the whole wrapped group — options jumping between
+   lines under the cursor. An empty box holds that space when unselected, which
+   also makes the control legible as a multi-select rather than a row of buttons:
+   the box is the affordance, the tick is the state.
+
+   Sized to match the icon it stands in for — `size-3` inside a `gap-1.5` button —
+   so selected and unselected chips are exactly the same width. */
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-pressed]::before {
+  content: '';
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.1875rem;
+  background: var(--color-base-100);
+}
+/* Selected chips show the real tick instead, in the same slot. */
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-pressed='true']::before {
+  display: none;
+}
+
+/* ── focus: one ring, not two ──────────────────────────────────────────────
+   Textarea only sets `focus:outline-none` on its error branch, so in the normal
+   state the browser's own 2px blue ring drew outside the control while the teal
+   inset ring drew inside it. Two rings in two colours for one state.
+
+   The outline goes and the teal inset ring stands alone. Focus stays visible —
+   that ring is 2px of primary against the row, drawn for keyboard and pointer
+   alike — so nothing is lost for anyone navigating without a mouse. */
+[data-form-layout='grid'] .cas-form-grid [data-field] input:focus,
+[data-form-layout='grid'] .cas-form-grid [data-field] textarea:focus,
+[data-form-layout='grid'] .cas-form-grid [data-field] select:focus,
+[data-form-layout='grid'] .cas-form-grid [data-field] button[aria-haspopup='listbox']:focus,
+.cas-boundary-table input:focus,
+.cas-boundary-table textarea:focus {
+  outline: none;
+}
+
+/* ── standalone checkboxes ─────────────────────────────────────────────────
+   A `type: 'checkbox'` field carries its label inside the control, so it has no
+   `[data-field-label]` and every rule above skips it. That left rows like Is
+   Expropriate / Is Encroached with no divider, no height and no tint — four
+   controls floating in white while the rows around them were ruled and banded.
+
+   They get the row treatment on their own terms: the same divider and height as
+   a labelled row, the label column's tint behind them so the eye reads them as
+   one block, and an accent-coloured box so ticked and unticked differ at a glance
+   rather than by a hairline. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:not(:has([data-field-label])):not(:has(table)):not(.cas-repeater) {
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border-bottom: 1px solid var(--color-base-300);
+  background: var(--color-base-200);
+  font-size: 0.75rem;
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:not(:has([data-field-label])):not(:has(table)):not(.cas-repeater):hover {
+  background: var(--color-primary-50);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] input[type='checkbox'] {
+  accent-color: var(--color-primary-600);
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* ── every table on the screen is square ───────────────────────────────────
+   The title-deed and boundary tables had their rounding removed in their own
+   copies; SurfaceTable and the depreciation table are still the shared
+   components, so theirs is dropped here instead. Scoped to `.cas-form-grid`, so
+   the create screens keep their rounded cards.
+
+   Kept as CSS rather than two more copied components: the difference is one
+   property, and copying a 236-line table to change a corner radius buys nothing
+   but another file to keep in step. */
+/* One radius for every table frame on the screen. The components ship a mix —
+   `rounded-lg` on Surface, `rounded-2xl` on Area Details, none on others — which
+   read as four different tables stacked up. A small radius, not none: the ask was
+   to bring them into line, and squaring them off is a different decision that was
+   never made. Cells stay square; only the outer frame is rounded. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) div:has(> table) {
+  border-radius: 0.25rem 0.25rem 0 0;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) :is(table, th, td) {
+  border-radius: 0;
+}
+
+/* ── every repeater table reads like the title-deed one ────────────────────
+   Three tables sit on this screen and each shipped with its own idea of a table.
+   The title deeds use a dark teal head with white text and 1.5/3 cells; Surface
+   uses the same colour but twice the padding and a grey circle around the row
+   number; Area Details comes from the request module's FormTable, whose head is
+   a 10%-tint with teal text — a different control entirely to the eye.
+
+   One treatment for all three. Values are the title table's, since that is the
+   one the density was tuned against. Scoped to `.cas-form-grid`, so Surface and
+   FormTable keep their own look everywhere else they are used. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) thead tr {
+  background: var(--color-primary-700);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) thead th {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #fff;
+  background: transparent;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+}
+/* The row number is a number, not a token — the same call as on the title table.
+   Matched on `rounded-full`, the thing that makes it a badge. An earlier attempt
+   guarded with `:not([class*='text-'])` to avoid catching plain text spans, but
+   the badge itself carries `text-sm text-gray-600`, so the guard excluded the one
+   element it was written for. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  tbody
+  td:not([colspan])
+  > span.rounded-full {
+  display: inline;
+  width: auto;
+  height: auto;
+  padding: 0;
+  background: transparent;
+  color: var(--color-secondary-500);
+  font-weight: 400;
+}
+/* Row actions down to the title table's 1.5rem hit area — data rows only. The
+   empty state lives in a `td[colspan]` and its "Add first surface" button carries
+   a label, so squaring it to 24px wrapped the text out of the button. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td:not([colspan]) button {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+/* The add-row strip: same height and type as the title table's. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) table ~ button,
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) div:has(> table) ~ * button {
+  padding-block: 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* ── inputs inside a repeater table are cells ──────────────────────────────
+   Area Details drew each editable cell as a bordered box sitting inside a
+   bordered cell — a frame within a frame, and the only table on the screen that
+   did it. The boundary table already treats its inputs as cells; the same applies
+   here, so an editable table looks like a table whichever component built it.
+
+   The cell gives up its own padding so the input fills it edge to edge, which is
+   what makes the whole cell a click target rather than just the box inside it. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td:has(input, textarea, select) {
+  padding: 0;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td :is(input, textarea, select) {
+  border-color: transparent;
+  background: transparent;
+  border-radius: 0;
+  padding: 0.375rem 0.75rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td :is(input, textarea):hover {
+  background: var(--color-base-200);
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td :is(input, textarea, select):focus {
+  background: var(--color-base-100);
+  box-shadow: inset 0 0 0 2px var(--color-primary-500);
+  border-color: transparent;
+  outline: none;
+}
+
+/* ── table cells: no tint, tighter rows ────────────────────────────────────
+   Editable cells were showing a grey ground. It comes from the input's own
+   disabled/base styling rather than the cell — Area (Sq. M.) is computed and so
+   renders disabled, and the components paint `bg-gray-50` for that — but on a row
+   where the cell borders already say "this is a field", the tint only makes the
+   table look half greyed-out. The cell keeps its own background, whatever the
+   control's state.
+
+   Rows also come down a notch: a repeater on this screen is a dense list, and it
+   was carrying more height than the field rows above it. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td :is(input, textarea, select),
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  tbody
+  td
+  :is(input, textarea, select):disabled {
+  background: transparent;
+  padding: 0.25rem 0.625rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td {
+  padding: 0.25rem 0.625rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td:has(input, textarea, select) {
+  padding: 0;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) thead th {
+  padding: 0.375rem 0.625rem;
+}
+
+/* ── the cell owns its background, and the total row is a row ──────────────
+   Two leftovers from making the repeaters match. daisyUI's `.table` tints
+   alternate rows, which read as "this row is disabled" once the inputs inside
+   had lost their own fill — so the tint goes and the cell stays the surface it
+   sits on. And FormTable's `tfoot` was still carrying full-size padding, leaving
+   the totals line taller than the data it sums. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody tr,
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td {
+  background: transparent;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tfoot :is(td, th) {
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.75rem;
+}
+
+/* ── nothing below the header carries a fill ───────────────────────────────
+   The grey kept coming back from a different place each time — daisyUI's row
+   striping, the input's own disabled fill, `tfoot`'s `bg-gray-50`, the add-row
+   strip. Chasing them one at a time meant a fix that looked right in isolation
+   and still left tint on the screen.
+
+   So this stops naming sources: everything under the header is transparent, and
+   the header keeps its teal because `thead` is not in the list. Buttons are left
+   out too — the delete action's red tint is meaningful. `!important` because the
+   fills come from utility classes that would otherwise win on specificity in at
+   least one of those four places. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  :is(tbody, tfoot)
+  :is(tr, td, th, div, span, input, textarea, select),
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) div:has(> table) ~ *,
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) table ~ * {
+  background-color: transparent !important;
+}
+
+/* The add-row strip closes the frame the table opened, so it carries the matching
+   bottom corners rather than its own `rounded-b-lg`. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) div:has(> table) ~ *,
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) div:has(> table) ~ * button {
+  border-radius: 0 0 0.25rem 0.25rem;
+}
+
+/* ── sticky cells need a ground of their own ───────────────────────────────
+   Two rules above hand the table's fill to the row: `thead th` goes transparent
+   so the header row's teal shows through, and everything under the header goes
+   transparent so no stray tint survives. Both are right for a cell that stays
+   put — and wrong for one that is pinned, because the columns scrolling beneath
+   a pinned cell then show straight through it. That is the overlapping header
+   text: two sets of labels drawn in the same pixels.
+
+   A pinned cell paints its own ground: the header's teal, the body's surface. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) thead th.sticky {
+  background-color: var(--color-primary-700) !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td.sticky {
+  background-color: var(--color-base-100) !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody tr:hover td.sticky {
+  background-color: var(--color-primary-50) !important;
+}
+
+/* ── the control fills the space the field was given ───────────────────────
+   Widening a field's column span moved the cell boundary but not the control
+   inside it: the wrapper chain between `[data-field]` and the input is deeper for
+   some components than the one level the flex rule reaches, so a search input sat
+   at its natural width with the rest of the cell blank. Everything on the value
+   side stretches, so making a field wider actually makes its input wider. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater)
+  :is(div, input, textarea, select):not([data-field-label]):not(.absolute) {
+  width: 100%;
+}
+/* …except the choice controls. A text input should own its cell; a toggle, a pill
+   group or a set of chips is sized by its options, and stretching one turned a
+   two-word Yes/No switch into a bar the width of the page. */
+/* `!important` because the stretch rule above carries three `:has`/`:not` clauses
+   and outscores any reasonable selector written here. */
+[data-form-layout='grid'] .cas-form-grid [data-field] :is(fieldset, [role='radiogroup'], .flex-wrap),
+[data-form-layout='grid'] .cas-form-grid [data-field] :is(fieldset, [role='radiogroup'], .flex-wrap) div {
+  width: auto !important;
+  /* `flex` as well as `width`: the Toggle wraps its radiogroup in a fieldset that
+     holds the legend, so the flattening rule makes that radiogroup a flex item of
+     the row — and the width-sharing rule would then grow it to fill the row,
+     stretching a Yes/No switch across the page exactly as `width: 100%` did. */
+  flex: 0 1 auto !important;
+}
+/* Chip groups are the exception to the exception: they take the remaining space.
+   A group like Entrance-Exit is wider than the space beside its label, and
+   `flex-shrink` cannot save it — flex decides line breaks from each item's
+   hypothetical size *before* shrinking, so a 930px group next to a 208px label
+   is moved to its own line and never gets the chance to shrink. A zero basis
+   makes it fit by definition; it wraps internally, so the cost is a second row of
+   chips rather than clipped text. Toggles and pill switches keep `0 1 auto` above
+   because they are narrow and stretching them is what this whole block prevents. */
+[data-form-layout='grid'] .cas-form-grid [data-field] .flex-wrap {
+  flex: 1 1 0 !important;
+  min-width: 0;
+}
+
+/* ── validation message: its own line, not a column ─────────────────────────
+   The message is a sibling of the control inside the component root, and
+   `display: contents` on that root makes it a flex item of the field row — so a
+   long message and the input split the cell between them, which on Condominium
+   Name left an input a few pixels wide that could barely be clicked.
+
+   `flex-basis: 100%` forces a line break in the wrap; `order` puts it after the
+   control whatever source order the component uses.
+
+   Matched on `:is(p, div).text-danger`, never on a bare `.text-danger`: the
+   required-marker asterisk inside a label is a `<span class="text-danger">`, and
+   catching that would make the label itself claim a full line. The second
+   selector is for the base Input, which wraps its message and char counter in a
+   `flex justify-between` row. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater),
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater)
+  > .relative {
+  flex-wrap: wrap;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] :is(p, div).text-danger,
+[data-form-layout='grid'] .cas-form-grid [data-field] div:has(> p.text-danger) {
+  flex: 0 0 100%;
+  order: 9;
+  margin-top: 0;
+  padding: 0 0 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+}

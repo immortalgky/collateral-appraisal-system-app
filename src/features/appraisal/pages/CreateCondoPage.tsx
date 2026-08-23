@@ -201,7 +201,7 @@ const CreateCondoPage = () => {
       </div>
 
       <FormProvider methods={methods} schema={createCondoForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+        <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
             id="form-scroll-container"
