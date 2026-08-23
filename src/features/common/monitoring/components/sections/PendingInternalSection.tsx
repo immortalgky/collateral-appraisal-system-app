@@ -203,7 +203,9 @@ const COLUMNS: ColumnDef<PendingTask>[] = [
   {
     key: 'slaDue',
     label: 'Due Date',
-    sortKey: 'AssignedDate',
+    // The deadline, not the holder clock. AssignedDate now maps to AssigneeAssignedAt on the view,
+    // which has nothing to do with the value this column renders.
+    sortKey: 'DueDate',
     render: row => (
       <SlaDueCell
         dueDate={row.dueDate}

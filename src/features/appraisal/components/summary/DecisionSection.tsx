@@ -148,7 +148,6 @@ const mapHistoryItemToStep = (item: TaskHistoryItem): ActivityStep => ({
     dueAt: item.dueAt ?? null,
     slaStatus: item.slaStatus ?? null,
     slaDurationHours: item.slaDurationHours ?? null,
-    isPending: item.completedAt == null,
   },
 });
 
