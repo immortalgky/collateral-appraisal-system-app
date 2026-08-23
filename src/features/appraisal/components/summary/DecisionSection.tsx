@@ -131,11 +131,22 @@ const mapHistoryItemToStep = (item: TaskHistoryItem): ActivityStep => ({
   role: item.assignedType,
   assigneeName: item.assignedTo || null,
   assigneeDisplayName: item.assignedToDisplayName || null,
-  startedAt: item.assignedAt,
+  startedAt: item.assigneeAssignedAt,
   completedAt: item.completedAt,
   status: item.completedAt ? 'completed' : 'in_progress',
   movement: item.movement,
   remark: item.remark,
+  timing: {
+    receivedAt: item.assigneeAssignedAt,
+    stepEnteredAt: item.assignedAt,
+    openedAt: item.openedAt ?? null,
+    taskState: item.taskState ?? null,
+    slaStartAt: item.slaStartAt ?? null,
+    dueAt: item.dueAt ?? null,
+    slaStatus: item.slaStatus ?? null,
+    slaDurationHours: item.slaDurationHours ?? null,
+    isPending: item.completedAt == null,
+  },
 });
 
 // ==================== Component ====================
@@ -190,7 +201,12 @@ const DecisionSection = ({
     () =>
       (taskHistoryData?.items ?? [])
         .slice()
-        .sort((a, b) => new Date(a.assignedAt).getTime() - new Date(b.assignedAt).getTime())
+        // assigneeAssignedAt, not assignedAt: a supervisor reassign freezes assignedAt across the
+        // outgoing and incoming rows to keep the SLA clock running, so sorting on it ties.
+        .sort(
+          (a, b) =>
+            new Date(a.assigneeAssignedAt).getTime() - new Date(b.assigneeAssignedAt).getTime(),
+        )
         .map(mapHistoryItemToStep),
     [taskHistoryData],
   );

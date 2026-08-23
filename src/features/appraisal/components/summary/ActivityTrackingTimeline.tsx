@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
+import HolderTimingTooltip, { type HolderTiming } from './HolderTimingTooltip';
 
 export interface ActivityStep {
   stepName: string;
@@ -14,6 +15,8 @@ export interface ActivityStep {
   status: 'completed' | 'in_progress' | 'pending';
   movement: string | null;
   remark: string | null;
+  /** Full timing breakdown for the hover tooltip. Absent on steps with no task row behind them. */
+  timing?: HolderTiming;
 }
 
 /** Return true if this step represents a backward movement (send-back / reject) */
@@ -246,7 +249,13 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
               {step.startedAt && (
                 <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-500 flex-wrap">
                   <Icon name="clock" style="regular" className="w-3 h-3 text-gray-400" />
-                  <span>{formatDateTime(step.startedAt)}</span>
+                  {step.timing ? (
+                    <HolderTimingTooltip timing={step.timing}>
+                      {formatDateTime(step.startedAt)}
+                    </HolderTimingTooltip>
+                  ) : (
+                    <span>{formatDateTime(step.startedAt)}</span>
+                  )}
 
                   {!isInstant && step.completedAt && (
                     <>

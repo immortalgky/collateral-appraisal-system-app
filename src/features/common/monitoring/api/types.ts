@@ -92,7 +92,10 @@ export interface PendingTask {
   slaStatus: string | null;
   priority: string | null;
   requestedDate: string | null;
+  /** When the CURRENT PIC received the task — not the SLA anchor, which stays frozen on a redirect. */
   assignedDate: string | null;
+  /** The task's actual deadline. Use directly; never re-derive from assignedDate + olaTargetHours. */
+  dueDate?: string | null;
   openDate: string | null;
   appointmentDate: string | null;
   pic: string | null;

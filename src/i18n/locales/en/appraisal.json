@@ -934,6 +934,17 @@
       "status": "Status",
       "movement": "Movement",
       "remark": "Remark"
+    },
+    "timing": {
+      "receivedAt": "Received",
+      "openedAt": "Opened",
+      "notOpenedYet": "not opened yet",
+      "noOpenRecord": "no record",
+      "stepEnteredAt": "Step started",
+      "slaStartAt": "SLA starts from",
+      "dueAt": "Due",
+      "slaStatus": "SLA",
+      "hoursShort": "{{hours}}h"
     }
   },
   "documentChecklist": {
