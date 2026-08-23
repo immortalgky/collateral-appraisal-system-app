@@ -4,11 +4,7 @@ import clsx from 'clsx';
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  useAppraisalId,
-  useBasePath,
-  useIsCiAppraisal,
-} from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
 import {
   DispatchCtx,
@@ -99,9 +95,7 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
   const navigate = useNavigate();
   const basePath = useBasePath();
   const queryClient = useQueryClient();
-  const _baseReadOnly = usePageReadOnly();
-  const isCiAppraisal = useIsCiAppraisal();
-  const isReadOnly = _baseReadOnly || isCiAppraisal;
+  const isReadOnly = usePageReadOnly();
 
   // Resolve the effective subject from prop or route params
   const resolvedSubject: PricingAnalysisSubject =
