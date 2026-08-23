@@ -465,9 +465,11 @@ function RequestListingPage() {
                             backend rejects it too, this just keeps the action out of reach. */}
                         {!isRequestSubmitted(request.status) && (
                           <button
+                            type="button"
                             onClick={e => request.id && handleDelete(e, request.id)}
                             className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
                             title={t('actions.delete')}
+                            aria-label={t('actions.delete')}
                           >
                             <Icon style="regular" name="trash-can" className="size-4" />
                           </button>
