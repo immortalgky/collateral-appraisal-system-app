@@ -1,3 +1,26 @@
+/*
+ * Self-hosted webfonts (no external CDN — the bank network blocks fonts.googleapis.com).
+ *
+ * Roboto carries Latin, digits and punctuation; Sarabun carries Thai. Roboto ships
+ * no Thai glyphs at all, so Thai falls through to Sarabun via the --font-sans stack
+ * in styles/theme.css. Only Sarabun's *thai* subset is imported on purpose — pulling
+ * its Latin subset would let Sarabun win Latin text on any weight Roboto happens to
+ * be missing, and the two Latins do not match.
+ *
+ * Weights mirror what the app actually uses: 400/500/600/700 (font-black is 4 call
+ * sites and gets synthesised from 700). Roboto is a variable font, so one file
+ * covers the whole 100-900 range.
+ *
+ * No italic face is loaded. Every `italic` in the app is muted helper text that is
+ * Thai in practice, and Sarabun has no italic here either — a real Roboto italic
+ * would cost 46 kB to change almost nothing. The browser obliques instead.
+ */
+@import "@fontsource-variable/roboto/wght.css";
+@import "@fontsource/sarabun/thai-400.css";
+@import "@fontsource/sarabun/thai-500.css";
+@import "@fontsource/sarabun/thai-600.css";
+@import "@fontsource/sarabun/thai-700.css";
+
 @import "tailwindcss";
 @import "./styles/theme.css" layer(theme);
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
