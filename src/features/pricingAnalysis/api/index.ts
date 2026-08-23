@@ -17,6 +17,8 @@ import {
   type SelectMethodResponseType,
   type SetFinalValueRequestType,
   type SetFinalValueResponseType,
+  type SetManualCostBreakdownRequestType,
+  type SetManualCostBreakdownResponseType,
   type UpdateFinalValueRequestType,
   type UpdateFinalValueResponseType,
   type UpdateMethodRequestType,
@@ -1254,6 +1256,41 @@ export function useUpdateMethodValue() {
       });
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.comparativeFactors(variables.id, variables.methodId),
+      });
+    },
+  });
+}
+
+/**
+ * Record a hand-entered Cost-approach land rate so the appraisal summary can print ที่ดิน and
+ * สิ่งปลูกสร้าง as separate rows. Send only what the appraiser types — the server multiplies the
+ * rate by the title-deed area and reads the building total off the depreciation schedule.
+ * A null rate clears the breakdown and the summary goes back to one combined row.
+ * POST /pricing-analysis/{id}/methods/{methodId}/manual-cost-breakdown
+ */
+export function useSetManualCostBreakdown() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      methodId,
+      request,
+    }: {
+      id: string;
+      methodId: string;
+      request: SetManualCostBreakdownRequestType;
+    }): Promise<SetManualCostBreakdownResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${id}/methods/${methodId}/manual-cost-breakdown`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.pricingMethod(variables.methodId),
       });
     },
   });

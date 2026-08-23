@@ -3,7 +3,8 @@ import Badge from '@/shared/components/Badge';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
-import type { Method } from '../../types/selection';
+import type { ManualCostBreakdownContext, Method } from '../../types/selection';
+import { ManualCostBreakdown } from './ManualCostBreakdown';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/shared/hooks/useDebounce';
@@ -29,6 +30,8 @@ interface PricingAnalysisMethodCardProps {
     value: number;
     methodId?: string;
   }) => void;
+  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  manualCostBreakdown?: ManualCostBreakdownContext;
   disabled?: boolean;
 }
 
@@ -50,6 +53,7 @@ export const PricingAnalysisMethodCard = ({
   onDeleteMethod,
   isManualMode,
   onManualValueSync,
+  manualCostBreakdown,
   disabled = false,
 }: PricingAnalysisMethodCardProps) => {
   const isReadOnly = usePageReadOnly();
@@ -110,6 +114,25 @@ export const PricingAnalysisMethodCard = ({
       setManualInput(method.appraisalValue ?? null);
       (e.target as HTMLInputElement).blur();
     }
+  };
+
+  // The land/building split only means something for a Cost group that actually has land to price
+  // by the square wa — every other approach states one blended figure, and the summary report
+  // prints those as a single combined row no matter what is stored.
+  const showCostBreakdown =
+    !!isManualMode && !!manualCostBreakdown && (manualCostBreakdown.landAreaInSqWa ?? 0) > 0;
+
+  // The breakdown owns the price field while it is shown: the total follows from the rate, and the
+  // appraiser rounds it afterwards in the same input.
+  const handleDerivedTotal = (total: number) => {
+    setManualInput(total);
+    if (!onManualValueSync || total === method.appraisalValue) return;
+    onManualValueSync({
+      approachType,
+      methodType: method.methodType,
+      value: total,
+      methodId: method.id,
+    });
   };
   if (viewMode === 'editing') {
     return (
@@ -263,6 +286,16 @@ export const PricingAnalysisMethodCard = ({
           </div>
         )}
 
+        {showCostBreakdown && manualCostBreakdown && (
+          <ManualCostBreakdown
+            approachType={approachType}
+            method={method}
+            context={manualCostBreakdown}
+            onTotalChange={handleDerivedTotal}
+            disabled={disabled}
+          />
+        )}
+
         {/* Status badge */}
         <Badge
           size="xs"
@@ -293,7 +326,7 @@ export const PricingAnalysisMethodCard = ({
         onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
       };
 
-  return (
+  const listRow = (
     <ListWrapper
       {...listWrapperProps}
       className={clsx(
@@ -399,5 +432,25 @@ export const PricingAnalysisMethodCard = ({
         <Icon name="chevron-right" style="solid" className="size-3 text-gray-300 shrink-0" />
       )}
     </ListWrapper>
+  );
+
+  if (!showCostBreakdown || !manualCostBreakdown) return listRow;
+
+  // The breakdown is a stack of rows, so it cannot live inside the single-line list row — it sits
+  // under it, indented to the label column so the two read as one entry.
+  return (
+    <div className="flex flex-col">
+      {listRow}
+      <div className="pl-10 pr-3 pb-2">
+        <ManualCostBreakdown
+          approachType={approachType}
+          method={method}
+          context={manualCostBreakdown}
+          onTotalChange={handleDerivedTotal}
+          disabled={disabled}
+          compact
+        />
+      </div>
+    </div>
   );
 };

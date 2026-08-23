@@ -3,7 +3,7 @@ import { PricingAnalysisApproachCard } from './PricingAnalysisApproachCard';
 import { PricingAnalysisMethodCard } from './PricingAnalysisMethodCard';
 import type { ViewLayout } from './PricingAnalysisMethodCard';
 import { Icon } from '@/shared/components';
-import type { Approach } from '../../types/selection';
+import type { Approach, ManualCostBreakdownContext } from '../../types/selection';
 import type { PricingAnalysisConfigType } from '../../schemas';
 import type { ViewMode } from '@features/pricingAnalysis/store/selectionReducer';
 import { useState } from 'react';
@@ -31,6 +31,8 @@ interface PricingAnalysisApproachAccordionProps {
     value: number;
     methodId?: string;
   }) => void;
+  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  manualCostBreakdown?: ManualCostBreakdownContext;
   disabled?: boolean;
 }
 
@@ -50,6 +52,7 @@ export const PricingAnalysisApproachAccordion = ({
   onViewLayoutChange,
   isManualMode,
   onManualValueSync,
+  manualCostBreakdown,
   disabled = false,
 }: PricingAnalysisApproachAccordionProps) => {
   const { t } = useTranslation('pricingAnalysis');
@@ -176,6 +179,9 @@ export const PricingAnalysisApproachAccordion = ({
                 onSelectCalculationMethod={onSelectCalculationMethod}
                 isManualMode={isManualMode}
                 onManualValueSync={onManualValueSync}
+                manualCostBreakdown={
+                  approach.approachType === 'COSTAPPR' ? manualCostBreakdown : undefined
+                }
                 disabled={disabled}
               />
             ))}
@@ -195,6 +201,9 @@ export const PricingAnalysisApproachAccordion = ({
                 onSelectCalculationMethod={onSelectCalculationMethod}
                 isManualMode={isManualMode}
                 onManualValueSync={onManualValueSync}
+                manualCostBreakdown={
+                  approach.approachType === 'COSTAPPR' ? manualCostBreakdown : undefined
+                }
                 disabled={disabled}
               />
             ))}

@@ -6,6 +6,7 @@ import { PricingAnalysisApproachAccordion } from './PricingAnalysisApproachAccor
 import type { ViewLayout } from './PricingAnalysisMethodCard';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PricingAnalysisConfigType } from '../../schemas';
+import type { ManualCostBreakdownContext } from '../../types/selection';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
@@ -61,6 +62,8 @@ interface PricingAnalysisApproachMethodSelectorProps {
     value: number;
     methodId?: string;
   }) => void;
+  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  manualCostBreakdown?: ManualCostBreakdownContext;
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
   removeDocumentConfirm?: {
     isOpen: boolean;
@@ -90,6 +93,7 @@ export const PricingAnalysisApproachMethodSelector = ({
   pricingConfiguration,
   deleteConfirm,
   onManualValueSync,
+  manualCostBreakdown,
   onRequestRemoveDocument,
   removeDocumentConfirm,
 }: PricingAnalysisApproachMethodSelectorProps) => {
@@ -246,6 +250,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                 onViewLayoutChange={handleViewLayoutChange}
                 isManualMode={isManualMode}
                 onManualValueSync={isManualMode ? onManualValueSync : undefined}
+                manualCostBreakdown={isManualMode ? manualCostBreakdown : undefined}
                 disabled={isSummarySaving}
               />
             ))}

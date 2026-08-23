@@ -35,6 +35,12 @@ export interface Method {
   appraisalValue: number;
   isIncluded: boolean;
   isSelected: boolean;
+  /**
+   * Land price per square wa, typed by the appraiser when pricing a Cost-approach group by hand.
+   * Its presence is what lets the appraisal summary print ที่ดิน and สิ่งปลูกสร้าง on separate
+   * rows — null means the group is priced as one blended figure.
+   */
+  landRatePerSqWa?: number | null;
 }
 
 export interface Approach {
@@ -84,4 +90,25 @@ export interface MethodConfiguration {
   showAdjustedValueSection?: boolean;
   showAdjustedWeightSection?: boolean;
   showAdjustFinalValueSection?: boolean;
+}
+
+/**
+ * What the manual Cost-approach card needs to split a group's value into land and building.
+ *
+ * Both figures come from the server with the pricing analysis: the area is the group's title-deed
+ * total and the building figure is its depreciated schedule total — the same one the appraisal
+ * summary subtotals as รวมมูลค่าสิ่งปลูกสร้าง. Reading them rather than deriving them here is what
+ * keeps the card's arithmetic and the report's rows in agreement.
+ */
+export interface ManualCostBreakdownContext {
+  /** Group land area in square wa. Null or 0 means there is no land to price by rate. */
+  landAreaInSqWa: number | null;
+  /** Depreciated building total for the group. Null or 0 means the schedule has not been entered. */
+  buildingValue: number | null;
+  onLandRateSync: (arg: {
+    approachType: string;
+    methodType: string;
+    rate: number | null;
+    methodId?: string;
+  }) => void;
 }

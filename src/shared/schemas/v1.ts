@@ -1225,6 +1225,12 @@ const MethodDto = z
     methodValue: z.number().nullable(),
     isSelected: z.boolean(),
     comparativeAnalysisTemplateId: z.string().uuid().nullable(),
+    valuePerUnit: z.number().nullish(),
+    unitType: z.string().nullish(),
+    landArea: z.number().nullish(),
+    landValue: z.number().nullish(),
+    buildingValue: z.number().nullish(),
+    appraisalPrice: z.number().nullish(),
   })
   .passthrough();
 const ApproachDto = z
@@ -1259,6 +1265,30 @@ const GetPricingAnalysisResponse = z
     approaches: z.array(ApproachDto),
     documents: z.array(PricingAnalysisDocumentDto),
     remark: z.string().nullable(),
+    landAreaInSqWa: z.number().nullish(),
+    buildingValue: z.number().nullish(),
+  })
+  .passthrough();
+const SetManualCostBreakdownRequest = z
+  .object({
+    landRatePerSqWa: z.number().nullable().default(null),
+    appraisalPrice: z.number().nullable().default(null),
+  })
+  .partial()
+  .passthrough();
+const SetManualCostBreakdownResponse = z
+  .object({
+    methodId: z.string().uuid(),
+    finalValueId: z.string().uuid().nullable(),
+    landRatePerSqWa: z.number().nullish(),
+    landArea: z.number().nullish(),
+    landValue: z.number().nullish(),
+    buildingValue: z.number().nullish(),
+    computedTotal: z.number(),
+    appraisalPrice: z.number().nullish(),
+    methodValue: z.number().nullish(),
+    approachValue: z.number().nullish(),
+    finalAppraisedValue: z.number().nullish(),
   })
   .passthrough();
 const UpdateMethodRequest = z
@@ -5196,6 +5226,8 @@ export const schemas = {
   ApproachDto,
   PricingAnalysisDocumentDto,
   GetPricingAnalysisResponse,
+  SetManualCostBreakdownRequest,
+  SetManualCostBreakdownResponse,
   UpdateMethodRequest,
   UpdateMethodResponse,
   UpdateFinalValueRequest,
