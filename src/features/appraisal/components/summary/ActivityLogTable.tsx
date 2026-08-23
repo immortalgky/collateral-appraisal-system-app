@@ -86,7 +86,6 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
                       dueAt: item.dueAt ?? null,
                       slaStatus: item.slaStatus ?? null,
                       slaDurationHours: item.slaDurationHours ?? null,
-                      isPending: item.endDate == null,
                     }}
                   >
                     {formatDateTime(item.startDate)}

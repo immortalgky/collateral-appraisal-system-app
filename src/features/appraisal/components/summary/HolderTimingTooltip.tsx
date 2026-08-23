@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 
@@ -20,8 +20,6 @@ export interface HolderTiming {
   dueAt: string | null;
   slaStatus: string | null;
   slaDurationHours: number | null;
-  /** True while the task is still open. */
-  isPending: boolean;
   /**
    * The task's own status. A null `openedAt` means two different things: "never opened" while the
    * task is still Assigned, and "we have no record" once it is InProgress or archived — the latter
@@ -48,6 +46,15 @@ const formatDateTime = (iso: string): string => {
 
 // The task layer emits "OnTime" and the appraisal layer "OnTrack" for the same state — SlaCells and
 // TaskMonitorTable both accept either, so this must too or a healthy SLA renders in neutral gray.
+// SLA code → i18n key, mirroring SlaBadge in TaskMonitorTable. The label beside it is translated,
+// so printing the raw enum here left a Thai panel reading "สถานะ SLA  Breached".
+const SLA_LABEL_KEY: Record<string, 'onTrack' | 'onTime' | 'atRisk' | 'breached'> = {
+  ontrack: 'onTrack',
+  ontime: 'onTime',
+  atrisk: 'atRisk',
+  breached: 'breached',
+};
+
 const slaStatusTone: Record<string, string> = {
   breached: 'text-rose-300',
   atrisk: 'text-amber-300',
@@ -85,6 +92,8 @@ interface HolderTimingTooltipProps {
  */
 const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => {
   const { t } = useTranslation('appraisal');
+  const { t: tSla } = useTranslation('taskMonitor');
+  const panelId = useId();
   const triggerRef = useRef<HTMLSpanElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [anchor, setAnchor] = useState<DOMRect | null>(null);
@@ -98,6 +107,18 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
     setAnchor(null);
     setPosition(null);
   }, []);
+
+  // WCAG 2.1 SC 1.4.13 requires content shown on hover or focus to be dismissible without moving
+  // the pointer or focus away.
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Escape' && anchor) {
+        e.stopPropagation();
+        close();
+      }
+    },
+    [anchor, close],
+  );
 
   // Measure the rendered panel, then place it: below when it fits, flipped above when it does not,
   // and always clamped inside the viewport. Runs before paint so the panel never shows mid-flight.
@@ -133,17 +154,22 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
   // Same reasoning: a hidden row is indistinguishable from an unknown one, and the SLA anchor is
   // exactly the fact a reader comes here to check. Shown whenever it is known.
   const showSlaStart = timing.slaStartAt != null;
-  const tone = timing.slaStatus ? slaStatusTone[timing.slaStatus.toLowerCase()] : undefined;
+  const slaKey = timing.slaStatus ? timing.slaStatus.toLowerCase() : null;
+  const tone = slaKey ? slaStatusTone[slaKey] : undefined;
+  const slaLabelKey = slaKey ? SLA_LABEL_KEY[slaKey] : undefined;
 
   return (
     <>
       <span
         ref={triggerRef}
         tabIndex={0}
+        role="button"
+        aria-describedby={anchor ? panelId : undefined}
         onMouseEnter={open}
         onMouseLeave={close}
         onFocus={open}
         onBlur={close}
+        onKeyDown={onKeyDown}
         className="border-b border-dotted border-gray-300 cursor-help outline-none
                    focus-visible:ring-1 focus-visible:ring-blue-400 rounded-sm"
       >
@@ -154,6 +180,7 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
         createPortal(
           <div
             ref={panelRef}
+            id={panelId}
             role="tooltip"
             style={{
               top: position?.top ?? 0,
@@ -209,7 +236,9 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
 
             {timing.slaStatus && (
               <Row label={t('activityTracking.timing.slaStatus')}>
-                <span className={tone ?? 'text-gray-200'}>{timing.slaStatus}</span>
+                <span className={tone ?? 'text-gray-200'}>
+                  {slaLabelKey ? tSla(`sla.${slaLabelKey}`) : timing.slaStatus}
+                </span>
               </Row>
             )}
           </div>,
