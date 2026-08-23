@@ -1,6 +1,6 @@
 import Button from '@/shared/components/Button';
 import { buildFormSchema, type FormField, FormFields } from '@/shared/components/form';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { FormProvider, useForm } from 'react-hook-form';
 
@@ -24,6 +24,34 @@ const LandTitleModal = ({
   onSave,
   readOnly = false,
 }: LandTitleModalProps) => {
+  // Escape closes, the way every other dialog in the app does. Bound on the document rather
+  // than the panel so it works before anything inside has been focused.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        onCancel();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onCancel]);
+
+  // Clicking the backdrop closes, but only when the press started there too. Without the
+  // mousedown check, selecting text inside a field and releasing outside the panel would count
+  // as an outside click and throw the edit away.
+  const pressedBackdrop = useRef(false);
+  const onBackdropMouseDown = useCallback((event: React.MouseEvent) => {
+    pressedBackdrop.current = event.target === event.currentTarget;
+  }, []);
+  const onBackdropClick = useCallback(
+    (event: React.MouseEvent) => {
+      if (pressedBackdrop.current && event.target === event.currentTarget) onCancel();
+      pressedBackdrop.current = false;
+    },
+    [onCancel],
+  );
+
   const form = useForm({
     resolver: zodResolver(createLandTitleForm),
     defaultValues: defaultValues ?? {},
@@ -64,14 +92,28 @@ const LandTitleModal = ({
   // dialog out of `.cas-form-grid` so the grid layout's field rules never reach inside it.
   return createPortal(
     <FormProvider {...form}>
-      <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-8">
-        <div className="bg-white rounded-2xl shadow-2xl w-3/5 max-h-full flex flex-col">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-8"
+        role="presentation"
+        onMouseDown={onBackdropMouseDown}
+        onClick={onBackdropClick}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Title Detail"
+          className="flex max-h-full w-3/5 flex-col rounded-2xl bg-white shadow-2xl"
+        >
           <div className="px-8 pt-8 pb-4 shrink-0">
-            <h2 className="text-lg font-semibold">Land Detail</h2>
+            <h2 className="text-lg font-semibold">Title Detail</h2>
             <div className="h-px bg-gray-200 mt-4"></div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-8 py-2">
+          {/* cas-form-grid opts the dialog into the grid layout too. It portals into <body>, so
+              it is not inside the page's own `.cas-form-grid` and had to say so itself —
+              otherwise the one screen that edits a title deed looked nothing like the screen
+              behind it. Inert for anyone on the classic layout, as everywhere else. */}
+          <div className="cas-form-grid flex-1 overflow-y-auto px-8 py-2">
             <div className="grid grid-cols-12 gap-4">
               <FormFields fields={fields} />
             </div>

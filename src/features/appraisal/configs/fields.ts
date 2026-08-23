@@ -29,6 +29,7 @@ export const landInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 150,
   },
+
   {
     type: 'number-input',
     label: 'Latitude',
@@ -42,6 +43,7 @@ export const landInfoField: FormField[] = [
     min: -90,
     max: 90,
   },
+
   {
     type: 'number-input',
     label: 'Longitude',
@@ -81,6 +83,7 @@ export const landAddressFields: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
+
   {
     type: 'text-input',
     label: 'Province',
@@ -114,6 +117,7 @@ export const landDopaAddressFields: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
+
   {
     type: 'text-input',
     label: 'Province',
@@ -132,6 +136,7 @@ export const landInfoFieldTail: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
   },
+
   {
     type: 'textarea',
     label: 'Land Description',
@@ -141,23 +146,26 @@ export const landInfoFieldTail: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
     name: 'isOwnerVerifiedLand',
     options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerNameLand',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     disableWhen: { field: 'isOwnerVerifiedLand', is: false },
     requiredWhen: { field: 'isOwnerVerifiedLand', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
   },
+
   {
     type: 'radio-group',
     label: 'Is Obligation',
@@ -167,6 +175,7 @@ export const landInfoFieldTail: FormField[] = [
     group: 'Obligation',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Obligation',
@@ -186,6 +195,7 @@ export const landLocationField: FormField[] = [
     options: ['In Correct', 'Correct'],
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'radio-group',
     label: 'Check By',
@@ -195,6 +205,7 @@ export const landLocationField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -205,6 +216,7 @@ export const landLocationField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'text-input',
     label: 'Street',
@@ -213,6 +225,7 @@ export const landLocationField: FormField[] = [
     required: true,
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Soi',
@@ -220,6 +233,7 @@ export const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-3',
     maxLength: 100,
   },
+
   {
     type: 'number-input',
     label: 'Distance',
@@ -228,6 +242,7 @@ export const landLocationField: FormField[] = [
     maxIntegerDigits: 5,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'Village',
@@ -236,6 +251,7 @@ export const landLocationField: FormField[] = [
     maxLength: 100,
     required: true,
   },
+
   {
     type: 'text-input',
     label: 'Address / Location',
@@ -243,6 +259,7 @@ export const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 200,
   },
+
   {
     type: 'dropdown',
     label: 'Land Shape',
@@ -250,6 +267,7 @@ export const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-12',
     group: 'LandShape',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -260,6 +278,7 @@ export const landLocationField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'dropdown',
     label: 'Type of urban plan',
@@ -267,6 +286,7 @@ export const landLocationField: FormField[] = [
     wrapperClassName: 'col-span-12',
     group: 'TypeOfUrbanPlanning',
   },
+
   {
     type: 'checkbox-group',
     label: 'Location',
@@ -275,6 +295,7 @@ export const landLocationField: FormField[] = [
     group: 'Location',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -283,6 +304,7 @@ export const landLocationField: FormField[] = [
     showWhen: { field: 'landZoneType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'landZoneType', is: '99', operator: 'contains' },
     maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -296,6 +318,7 @@ export const plotLocationField: FormField[] = [
     group: 'PlotLocation',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -304,6 +327,7 @@ export const plotLocationField: FormField[] = [
     showWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
     maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -318,6 +342,7 @@ export const landFillField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -328,6 +353,7 @@ export const landFillField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'number-input',
     label: 'Landfill ( % )',
@@ -337,6 +363,7 @@ export const landFillField: FormField[] = [
     maxIntegerDigits: 3,
     max: 100,
   },
+
   {
     type: 'number-input',
     label: 'Soil Level ( cm )',
@@ -357,6 +384,7 @@ export const roadField: FormField[] = [
     maxIntegerDigits: 3,
     decimalPlaces: 0,
   },
+
   {
     type: 'number-input',
     label: 'Right of Way',
@@ -365,6 +393,7 @@ export const roadField: FormField[] = [
     maxIntegerDigits: 3,
     decimalPlaces: 0,
   },
+
   {
     type: 'number-input',
     label: 'Wide frontage of land adjacent to the road',
@@ -372,6 +401,7 @@ export const roadField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
   },
+
   {
     type: 'number-input',
     label: 'Number of sides facing the road',
@@ -380,6 +410,7 @@ export const roadField: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 1,
   },
+
   {
     type: 'text-input',
     label: 'Road passing in front of the land',
@@ -387,6 +418,7 @@ export const roadField: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 100,
   },
+
   {
     type: 'radio-group',
     label: 'Land Accessibility',
@@ -396,6 +428,7 @@ export const roadField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Land Accessibility Description',
@@ -416,6 +449,7 @@ export const roadSurfaceField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -438,6 +472,7 @@ export const publicUtilityField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -460,6 +495,7 @@ export const landUseField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -482,6 +518,7 @@ export const landEntranceField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -503,6 +540,7 @@ export const transpotationField: FormField[] = [
     group: 'Transportation',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -525,6 +563,7 @@ export const anticipationProsperityField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -544,12 +583,14 @@ export const expropriateField: FormField[] = [
     label: 'Is Expropriate',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'checkbox',
     name: 'isInExpropriationLine',
     label: 'In Line Expropriate',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'text-input',
     label: 'Royal Decree',
@@ -557,6 +598,7 @@ export const expropriateField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 20,
   },
+
   {
     type: 'textarea',
     label: 'Is Expropriated',
@@ -567,6 +609,7 @@ export const expropriateField: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Is In Line Expropriate',
@@ -586,6 +629,7 @@ export const encroachedField: FormField[] = [
     label: 'Is Encroached',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'number-input',
     label: 'Encroached Area (Sq.Wa)',
@@ -594,6 +638,7 @@ export const encroachedField: FormField[] = [
     disableWhen: { field: 'isEncroached', is: false },
     maxIntegerDigits: 8,
   },
+
   {
     type: 'textarea',
     label: 'Is Encroached',
@@ -613,6 +658,7 @@ export const electricityField: FormField[] = [
     label: 'Has Electricity',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'number-input',
     label: 'Distance',
@@ -630,6 +676,7 @@ export const landBoundaryField: FormField[] = [
     name: 'isLandlocked',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Is Landlocked Other',
@@ -640,12 +687,14 @@ export const landBoundaryField: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
   {
     type: 'checkbox',
     label: 'Is Forest Boundary',
     name: 'isForestBoundary',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Is Forest Boundary Other',
@@ -656,6 +705,7 @@ export const landBoundaryField: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -678,6 +728,7 @@ export const evictionField: FormField[] = [
     group: 'Eviction',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -710,6 +761,7 @@ export const sizeAndBoundary: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
+
   {
     type: 'number-input',
     label: 'North Estimate Length',
@@ -718,6 +770,7 @@ export const sizeAndBoundary: FormField[] = [
     maxIntegerDigits: 5,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'South Consecutive Area',
@@ -725,6 +778,7 @@ export const sizeAndBoundary: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
+
   {
     type: 'number-input',
     label: 'South Estimate Length',
@@ -733,6 +787,7 @@ export const sizeAndBoundary: FormField[] = [
     maxIntegerDigits: 5,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'East Consecutive Area',
@@ -740,6 +795,7 @@ export const sizeAndBoundary: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
+
   {
     type: 'number-input',
     label: 'East Estimate Length',
@@ -748,6 +804,7 @@ export const sizeAndBoundary: FormField[] = [
     maxIntegerDigits: 5,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'West Consecutive Area',
@@ -755,6 +812,7 @@ export const sizeAndBoundary: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 200,
   },
+
   {
     type: 'number-input',
     label: 'West Estimate Length',
@@ -773,6 +831,7 @@ export const otherInformationField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Depth of Pit',
@@ -780,6 +839,7 @@ export const otherInformationField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxIntegerDigits: 5,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Has Building',
@@ -787,6 +847,7 @@ export const otherInformationField: FormField[] = [
     options: ['No', 'Yes'],
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -797,6 +858,7 @@ export const otherInformationField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Land is rented out to others',
@@ -829,6 +891,7 @@ export const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 150,
   },
+
   {
     type: 'text-input',
     label: 'Building No.',
@@ -837,6 +900,7 @@ export const buildingInfoField: FormField[] = [
     required: true,
     maxLength: 30,
   },
+
   {
     type: 'text-input',
     label: 'House No.',
@@ -847,6 +911,7 @@ export const buildingInfoField: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Model Name',
@@ -855,25 +920,28 @@ export const buildingInfoField: FormField[] = [
     required: true,
     maxLength: 100,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
     name: 'isOwnerVerifiedBuilding',
     required: true,
     options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerNameBuilding',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
     required: true,
     disableWhen: { field: 'isOwnerVerifiedBuilding', is: false },
     requiredWhen: { field: 'isOwnerVerifiedBuilding', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Construction on Title Deed No.',
@@ -882,6 +950,7 @@ export const buildingInfoField: FormField[] = [
     required: true,
     maxLength: 500,
   },
+
   {
     type: 'radio-group',
     label: 'No House Number',
@@ -891,6 +960,7 @@ export const buildingInfoField: FormField[] = [
     orientation: 'horizontal',
     variant: 'button',
   },
+
   {
     type: 'radio-group',
     label: 'Building Condition',
@@ -900,6 +970,7 @@ export const buildingInfoField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -910,6 +981,7 @@ export const buildingInfoField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Under Construction',
@@ -917,12 +989,14 @@ export const buildingInfoField: FormField[] = [
     wrapperClassName: 'col-span-3',
     options: ['No', 'Yes'],
   },
+
   {
     type: 'datetime-input',
     label: 'License Expiration Date',
     name: 'constructionLicenseExpirationDate',
     wrapperClassName: 'col-span-6',
   },
+
   {
     type: 'boolean-toggle',
     label: 'Appraisal',
@@ -931,6 +1005,7 @@ export const buildingInfoField: FormField[] = [
     options: ['Not Appraised', 'Appraise'],
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'radio-group',
     label: 'Is Obligation',
@@ -940,6 +1015,7 @@ export const buildingInfoField: FormField[] = [
     group: 'Obligation',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Obligation',
@@ -963,6 +1039,7 @@ export const buildingTypeField: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
   },
+
   {
     type: 'textarea',
     label: 'Building Type Other',
@@ -973,6 +1050,7 @@ export const buildingTypeField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'number-input',
     label: 'Total Floor',
@@ -996,6 +1074,7 @@ export const decorationField: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
   },
+
   {
     type: 'textarea',
     label: 'Decoration Other',
@@ -1015,6 +1094,7 @@ export const encroachmentField: FormField[] = [
     name: 'isEncroachingOthers',
     wrapperClassName: 'col-span-3 flex items-center',
   },
+
   {
     type: 'number-input',
     label: 'Encroaching Area',
@@ -1023,6 +1103,7 @@ export const encroachmentField: FormField[] = [
     disableWhen: { field: 'isEncroachingOthers', is: false },
     maxIntegerDigits: 8,
   },
+
   {
     type: 'textarea',
     label: 'Encroachment Remark',
@@ -1057,6 +1138,7 @@ export const buildingStyleField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1077,6 +1159,7 @@ export const isResidentialField: FormField[] = [
     options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-10 flex items-center',
   },
+
   {
     type: 'number-input',
     label: 'Building Age',
@@ -1086,6 +1169,7 @@ export const isResidentialField: FormField[] = [
     decimalPlaces: 1,
     allowZero: true,
   },
+
   {
     type: 'textarea',
     label: 'Due To',
@@ -1108,6 +1192,7 @@ export const constructionStyleField: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Remark',
@@ -1130,6 +1215,7 @@ export const generalStructureField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1152,6 +1238,7 @@ export const roofFrameField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1174,6 +1261,7 @@ export const roofField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1196,6 +1284,7 @@ export const ceilingField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1218,6 +1307,7 @@ export const wallField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1228,6 +1318,7 @@ export const wallField: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'checkbox-group',
     label: 'Exterior Wall',
@@ -1237,6 +1328,7 @@ export const wallField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1259,6 +1351,7 @@ export const fenceField: FormField[] = [
 
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1281,6 +1374,7 @@ export const constTypeFeild: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1315,6 +1409,7 @@ export const utilizationFeild: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1351,6 +1446,7 @@ export const condoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 150,
   },
+
   {
     type: 'text-input',
     label: 'Condominium Name',
@@ -1359,6 +1455,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Room No',
@@ -1367,6 +1464,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Floor No',
@@ -1375,6 +1473,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Building No',
@@ -1383,6 +1482,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxLength: 30,
   },
+
   {
     type: 'text-input',
     label: 'Condominium Registration No',
@@ -1391,6 +1491,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Model Name',
@@ -1399,6 +1500,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxLength: 100,
   },
+
   {
     type: 'number-input',
     label: 'Usable Area (Sq.M)',
@@ -1407,6 +1509,7 @@ export const condoFields: FormField[] = [
     required: true,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'textarea',
     label: 'Title Number',
@@ -1416,6 +1519,7 @@ export const condoFields: FormField[] = [
     maxLength: 500,
     showCharCount: true,
   },
+
   {
     // The percentage moved into the Construction Inspection tab; this flag is what opens it.
     // col-span-6, not 3, so the row still sums to 12 like every other row in this group.
@@ -1451,6 +1555,7 @@ export const condoAddressFields: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
+
   {
     type: 'text-input',
     label: 'Province',
@@ -1484,6 +1589,7 @@ export const condoDopaAddressFields: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
+
   {
     type: 'text-input',
     label: 'Province',
@@ -1507,6 +1613,7 @@ export const condoFieldsTail: FormField[] = [
     min: -90,
     max: 90,
   },
+
   {
     type: 'number-input',
     label: 'Longitude',
@@ -1520,6 +1627,7 @@ export const condoFieldsTail: FormField[] = [
     min: -180,
     max: 180,
   },
+
   {
     type: 'parameter-search',
     label: 'Land Office',
@@ -1528,24 +1636,27 @@ export const condoFieldsTail: FormField[] = [
     required: true,
     group: 'LandOffice',
   },
+
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
     name: 'isOwnerVerified',
     required: true,
     options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerName',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disableWhen: { field: 'isOwnerVerified', is: false },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
   },
+
   {
     type: 'radio-group',
     label: 'Condominium Condition',
@@ -1555,6 +1666,7 @@ export const condoFieldsTail: FormField[] = [
     orientation: 'horizontal',
     variant: 'button',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1565,6 +1677,7 @@ export const condoFieldsTail: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'radio-group',
     label: 'Is Obligation',
@@ -1574,6 +1687,7 @@ export const condoFieldsTail: FormField[] = [
     group: 'Obligation',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Obligation',
@@ -1583,6 +1697,7 @@ export const condoFieldsTail: FormField[] = [
     requiredWhen: { field: 'hasObligation', is: ObligationDetail, operator: 'in' },
     maxLength: 100,
   },
+
   {
     type: 'dropdown',
     label: 'Document Validation',
@@ -1603,6 +1718,7 @@ export const condoLocationFields: FormField[] = [
     group: 'CondoLocation',
     variant: 'button',
   },
+
   {
     type: 'text-input',
     label: 'Street',
@@ -1610,6 +1726,7 @@ export const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Soi',
@@ -1617,6 +1734,7 @@ export const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'number-input',
     label: 'Distance',
@@ -1625,6 +1743,7 @@ export const condoLocationFields: FormField[] = [
     maxIntegerDigits: 5,
     suffix: 'm',
   },
+
   {
     type: 'number-input',
     label: 'Road Width',
@@ -1634,6 +1753,7 @@ export const condoLocationFields: FormField[] = [
     decimalPlaces: 0,
     suffix: 'm',
   },
+
   {
     type: 'number-input',
     label: 'Right of Way',
@@ -1642,6 +1762,7 @@ export const condoLocationFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 3,
   },
+
   {
     type: 'radio-group',
     label: 'Road Surface',
@@ -1651,6 +1772,7 @@ export const condoLocationFields: FormField[] = [
     group: 'RoadSurface',
     variant: 'button',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1661,6 +1783,7 @@ export const condoLocationFields: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'checkbox-group',
     label: 'Public Utility',
@@ -1669,6 +1792,7 @@ export const condoLocationFields: FormField[] = [
     orientation: 'horizontal',
     group: 'PublicUtility',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1693,6 +1817,7 @@ export const condoDecorationFields: FormField[] = [
     group: 'Decoration',
     variant: 'button',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1714,6 +1839,7 @@ export const ageHeightCondoFields: FormField[] = [
     maxIntegerDigits: 3,
     decimalPlaces: 1,
   },
+
   {
     type: 'number-input',
     label: 'Total Number of Floors',
@@ -1758,6 +1884,7 @@ export const condoRoomLayoutFormFields: FormField[] = [
     group: 'RoomLayout',
     variant: 'default',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1779,6 +1906,7 @@ export const locationViewFormFields: FormField[] = [
     orientation: 'horizontal',
     group: 'LocationView',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1801,6 +1929,7 @@ export const floorFormFields: FormField[] = [
     group: 'GroundFlooringMaterials',
     variant: 'button',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1811,6 +1940,7 @@ export const floorFormFields: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'radio-group',
     label: 'Upper Flooring Materials',
@@ -1820,6 +1950,7 @@ export const floorFormFields: FormField[] = [
     group: 'UpperFlooringMaterials',
     variant: 'button',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1830,6 +1961,7 @@ export const floorFormFields: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'radio-group',
     label: 'Bathroom Flooring Materials',
@@ -1839,6 +1971,7 @@ export const floorFormFields: FormField[] = [
     group: 'BathroomFlooringMaterials',
     variant: 'button',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1860,6 +1993,7 @@ export const roofFormFields: FormField[] = [
     orientation: 'horizontal',
     group: 'Roof',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1879,12 +2013,14 @@ export const expropriationFields: FormField[] = [
     name: 'isExpropriated',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'checkbox',
     label: 'In Line Expropriated',
     name: 'isInExpropriationLine',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'text-input',
     label: 'Royal Decree',
@@ -1892,6 +2028,7 @@ export const expropriationFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 20,
   },
+
   {
     type: 'textarea',
     label: 'Is Expropriated',
@@ -1902,6 +2039,7 @@ export const expropriationFields: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Is In Line Expropriated',
@@ -1923,6 +2061,7 @@ export const condoFacilityFields: FormField[] = [
     orientation: 'horizontal',
     group: 'Facilities',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1931,6 +2070,7 @@ export const condoFacilityFields: FormField[] = [
     showWhen: { field: 'facilityType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'facilityType', is: '99', operator: 'contains' },
     maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -1943,6 +2083,7 @@ export const environmentFields: FormField[] = [
     orientation: 'horizontal',
     group: 'Environment',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -1962,6 +2103,7 @@ export const inForestBoundaryFormFields: FormField[] = [
     name: 'isForestBoundary',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Is In Forest Boundary',
@@ -1998,6 +2140,7 @@ export const condoLandCharacteristicsFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     group: 'TypeOfUrbanPlanning',
   },
+
   {
     type: 'radio-group',
     label: 'Land Condition',
@@ -2008,6 +2151,7 @@ export const condoLandCharacteristicsFields: FormField[] = [
     variant: 'button',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2018,6 +2162,7 @@ export const condoLandCharacteristicsFields: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'checkbox-group',
     label: 'Land Use',
@@ -2026,6 +2171,7 @@ export const condoLandCharacteristicsFields: FormField[] = [
     group: 'LandUse',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2036,6 +2182,7 @@ export const condoLandCharacteristicsFields: FormField[] = [
     maxLength: 100,
     showCharCount: true,
   },
+
   {
     type: 'checkbox-group',
     label: 'Entrance-Exit',
@@ -2044,6 +2191,7 @@ export const condoLandCharacteristicsFields: FormField[] = [
     group: 'LandEntranceExit',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2067,6 +2215,7 @@ export const condoGovernmentPriceFields: FormField[] = [
     options: ['No', 'Yes'],
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'number-input',
     label: 'Government Price per Sq.M',
@@ -2077,6 +2226,7 @@ export const condoGovernmentPriceFields: FormField[] = [
     disableWhen: { field: 'isMissingFromSurvey', is: true },
     disabledValue: 0,
   },
+
   {
     type: 'number-input',
     label: 'Government Price',
@@ -2101,6 +2251,7 @@ export const condoBuildingInsuranceFields: FormField[] = [
     options: [],
     wrapperClassName: 'col-span-6',
   },
+
   {
     type: 'number-input',
     label: 'Building Insurance Price',
@@ -2152,6 +2303,7 @@ export const interiorWallFields: FormField[] = [
     group: 'Interior',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2173,6 +2325,7 @@ export const exteriorWallFields: FormField[] = [
     group: 'Exterior',
     wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2213,6 +2366,7 @@ export const groundFloorFields: FormField[] = [
     group: 'GroundFlooringMaterials',
     variant: 'default',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2235,6 +2389,7 @@ export const upperFloorFields: FormField[] = [
     group: 'UpperFlooringMaterials',
     variant: 'default',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2257,6 +2412,7 @@ export const bathroomFloorFields: FormField[] = [
     group: 'BathroomFlooringMaterials',
     variant: 'default',
   },
+
   {
     type: 'textarea',
     label: 'Other',
@@ -2281,23 +2437,26 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 150,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Check Owner',
     name: 'isOwnerVerified',
     options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
   },
+
   {
     type: 'text-input',
     label: 'Owner',
     name: 'ownerName',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     disableWhen: { field: 'isOwnerVerified', is: false },
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Registration No.',
@@ -2305,6 +2464,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-5',
     maxLength: 50,
   },
+
   {
     type: 'radio-group',
     label: 'Condition Use ',
@@ -2314,6 +2474,7 @@ export const machineInfoFields: FormField[] = [
     orientation: 'horizontal',
     variant: 'button',
   },
+
   {
     type: 'boolean-toggle',
     label: 'Can Use',
@@ -2321,6 +2482,7 @@ export const machineInfoFields: FormField[] = [
     options: ['Can not', 'Can'],
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'text-input',
     label: 'Machinery Name',
@@ -2328,6 +2490,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-9',
     maxLength: 300,
   },
+
   {
     type: 'text-input',
     label: 'Brand',
@@ -2335,6 +2498,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Model',
@@ -2342,6 +2506,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Series',
@@ -2349,6 +2514,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     maxLength: 100,
   },
+
   {
     type: 'number-input',
     label: 'Year',
@@ -2358,6 +2524,7 @@ export const machineInfoFields: FormField[] = [
     maxIntegerDigits: 4,
     thousandSeparator: false,
   },
+
   {
     type: 'number-input',
     label: 'Quantity',
@@ -2366,6 +2533,7 @@ export const machineInfoFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 6,
   },
+
   {
     type: 'parameter-search',
     label: 'Country of Manufacture',
@@ -2373,6 +2541,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     group: 'Country',
   },
+
   {
     type: 'date-input',
     label: 'Purchase Date',
@@ -2380,6 +2549,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     disableFutureDates: true,
   },
+
   {
     type: 'number-input',
     label: 'Purchase Price',
@@ -2388,6 +2558,7 @@ export const machineInfoFields: FormField[] = [
     maxIntegerDigits: 15,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'Location ',
@@ -2395,6 +2566,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Machinery Condition ',
@@ -2402,6 +2574,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-9',
     maxLength: 50,
   },
+
   {
     type: 'number-input',
     label: 'Machinery Age ',
@@ -2410,6 +2583,7 @@ export const machineInfoFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 3,
   },
+
   {
     type: 'text-input',
     label: 'Usage Purpose',
@@ -2417,6 +2591,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 300,
   },
+
   {
     type: 'text-input',
     label: 'Capacity',
@@ -2424,6 +2599,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 300,
   },
+
   {
     type: 'number-input',
     label: 'Width',
@@ -2431,6 +2607,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     maxIntegerDigits: 3,
   },
+
   {
     type: 'number-input',
     label: 'Length',
@@ -2438,6 +2615,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     maxIntegerDigits: 3,
   },
+
   {
     type: 'number-input',
     label: 'Height',
@@ -2445,6 +2623,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     maxIntegerDigits: 3,
   },
+
   {
     type: 'text-input',
     label: 'Machine Dimensions',
@@ -2452,6 +2631,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 300,
   },
+
   {
     type: 'text-input',
     label: 'Energy Use',
@@ -2459,6 +2639,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Machinery Efficiency ',
@@ -2466,6 +2647,7 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 50,
   },
+
   {
     type: 'text-input',
     label: 'Machinery Technology ',
@@ -2473,33 +2655,41 @@ export const machineInfoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 100,
   },
+
   {
     type: 'textarea',
     label: 'Machinery Parts',
     name: 'machineParts',
     wrapperClassName: 'col-span-12',
     maxLength: 4000,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Other',
     name: 'other',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Remark ',
     name: 'remark',
     wrapperClassName: 'col-span-12',
     maxLength: 4000,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Appraiser Opinion ',
     name: 'appraiserOpinion',
     wrapperClassName: 'col-span-12',
     maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
@@ -2595,22 +2785,24 @@ export const landtitlesFields: FormField[] = [
     label: 'Title Type',
     type: 'dropdown',
     group: 'DeedType',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     required: true,
   },
+
   {
     name: 'titleNumber',
     label: 'Title Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     required: true,
     maxLength: 200,
   },
+
   {
     name: 'bookNumber',
     label: 'Book Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 10,
     requiredWhen: {
       conditions: [
@@ -2626,7 +2818,7 @@ export const landtitlesFields: FormField[] = [
     name: 'pageNumber',
     label: 'Page Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 10,
     requiredWhen: {
       conditions: [
@@ -2642,16 +2834,17 @@ export const landtitlesFields: FormField[] = [
     name: 'rawang',
     label: 'Rawang',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 30,
     showWhen: { field: 'titleType', is: RAWANG_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'DEED' },
   },
+
   {
     name: 'landParcelNumber',
     label: 'Land Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 10,
     showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
     requiredWhen: {
@@ -2666,60 +2859,66 @@ export const landtitlesFields: FormField[] = [
     name: 'surveyNumber',
     label: 'Survey Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 10,
     showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'DEED' },
   },
+
   {
     name: 'mapSheetNumber',
     label: 'Sheet Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 10,
     showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
+
   {
     name: 'aerialMapName',
     label: 'Aerial Photo Name',
     type: 'text-input',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxLength: 100,
     showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
+
   {
     name: 'aerialMapNumber',
     label: 'Aerial Photo Number',
     type: 'text-input',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     maxLength: 50,
     showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     requiredWhen: { field: 'titleType', is: 'NS3K' },
   },
+
   {
     name: 'rai',
     label: 'Rai',
     type: 'number-input',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     name: 'ngan',
     label: 'Ngan',
     type: 'number-input',
-    wrapperClassName: 'col-span-1',
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 0,
     maxIntegerDigits: 1,
     max: 3,
   },
+
   {
     name: 'squareWa',
     label: 'Sq.Wa',
     type: 'number-input',
-    wrapperClassName: 'col-span-1',
+    wrapperClassName: 'col-span-3',
     requiredWhen: {
       conditions: [
         { field: 'rai', operator: 'isEmpty' },
@@ -2738,6 +2937,7 @@ export const landtitlesFields: FormField[] = [
     disabled: true,
     decimalPlaces: 2,
   },
+
   {
     name: 'boundaryMarkerType',
     label: 'Boundary Marker',
@@ -2745,6 +2945,7 @@ export const landtitlesFields: FormField[] = [
     group: 'BoundaryMarker',
     wrapperClassName: 'col-span-12',
   },
+
   {
     name: 'boundaryMarkerRemark',
     label: 'Boundary Other',
@@ -2754,6 +2955,7 @@ export const landtitlesFields: FormField[] = [
     showCharCount: true,
     showWhen: { field: 'boundaryMarkerType', is: '99' },
   },
+
   {
     name: 'documentValidationResultType',
     label: 'Document Validate',
@@ -2764,18 +2966,20 @@ export const landtitlesFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
   },
+
   {
     name: 'isMissingFromSurvey',
     label: 'Missed out on the survey',
     type: 'boolean-toggle',
     options: ['No', 'Yes'],
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
   },
+
   {
     name: 'governmentPricePerSqWa',
     label: 'Government Price per Sq.Wa',
     type: 'number-input',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
     maxIntegerDigits: 16,
     decimalPlaces: 2,
     // Missing-from-survey land has no government price → force to 0 and lock.
@@ -2783,11 +2987,12 @@ export const landtitlesFields: FormField[] = [
     disableWhen: { field: 'isMissingFromSurvey', is: true },
     disabledValue: 0,
   },
+
   {
     name: 'governmentPrice',
     label: 'Government Price',
     type: 'number-input',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
     disabled: true,
     maxIntegerDigits: 16,
     decimalPlaces: 2,
@@ -2807,6 +3012,7 @@ export const pmaField: FormField[] = [
     maxIntegerDigits: 15,
     leftIcon: bahtPrefix,
   },
+
   {
     type: 'number-input',
     label: 'Force Selling Price',
@@ -2816,6 +3022,7 @@ export const pmaField: FormField[] = [
     maxIntegerDigits: 15,
     leftIcon: bahtPrefix,
   },
+
   {
     type: 'number-input',
     label: 'Building Insurance',
@@ -2842,6 +3049,7 @@ export const landPmaTitleFields: FormField[] = [
     required: true,
     maxLength: 200,
   },
+
   {
     type: 'text-input',
     label: 'Book Number',
@@ -2850,6 +3058,7 @@ export const landPmaTitleFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Page Number',
@@ -2858,6 +3067,7 @@ export const landPmaTitleFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Rawang',
@@ -2866,6 +3076,7 @@ export const landPmaTitleFields: FormField[] = [
     required: true,
     maxLength: 30,
   },
+
   {
     type: 'text-input',
     label: 'Land Number',
@@ -2874,6 +3085,7 @@ export const landPmaTitleFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Survey Number',
@@ -2893,6 +3105,7 @@ export const landPmaAreaFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Ngan',
@@ -2902,6 +3115,7 @@ export const landPmaAreaFields: FormField[] = [
     maxIntegerDigits: 1,
     max: 3,
   },
+
   {
     type: 'number-input',
     label: 'Sq.Wa',
@@ -2909,6 +3123,7 @@ export const landPmaAreaFields: FormField[] = [
     wrapperClassName: 'cas-inline col-span-3',
     maxIntegerDigits: 3,
   },
+
   {
     // Read-only computed total (Rai*400 + Ngan*100 + Sq.Wa), kept in sync by a useWatch+useEffect
     // derive in LandBuildingPMAForm. Rai/Ngan/Sq.Wa are individually optional; the required-area
@@ -2939,6 +3154,7 @@ export const landPmaAddressFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     required: true,
   },
+
   {
     type: 'text-input',
     label: 'District',
@@ -2947,6 +3163,7 @@ export const landPmaAddressFields: FormField[] = [
     required: true,
     wrapperClassName: 'col-span-4',
   },
+
   {
     type: 'text-input',
     label: 'Province',
@@ -2975,6 +3192,7 @@ export const condoPmaDetailFields: FormField[] = [
     required: true,
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Room Number',
@@ -2983,6 +3201,7 @@ export const condoPmaDetailFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Floor Number',
@@ -2991,6 +3210,7 @@ export const condoPmaDetailFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'text-input',
     label: 'Building Number',
@@ -2999,6 +3219,7 @@ export const condoPmaDetailFields: FormField[] = [
     required: true,
     maxLength: 30,
   },
+
   {
     type: 'text-input',
     label: 'Condo Registration Number',
@@ -3007,6 +3228,7 @@ export const condoPmaDetailFields: FormField[] = [
     required: true,
     maxLength: 10,
   },
+
   {
     type: 'textarea',
     label: 'Title Number',
@@ -3033,6 +3255,7 @@ export const condoPmaAddressFields: FormField[] = [
     wrapperClassName: 'col-span-5',
     required: true,
   },
+
   {
     type: 'text-input',
     label: 'District',
@@ -3041,6 +3264,7 @@ export const condoPmaAddressFields: FormField[] = [
     required: true,
     wrapperClassName: 'col-span-4',
   },
+
   {
     type: 'text-input',
     label: 'Province',
@@ -3069,6 +3293,7 @@ export const leaseInfoField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Lessee Name',
@@ -3087,6 +3312,7 @@ export const leaseContractField: FormField[] = [
     maxIntegerDigits: 3,
     decimalPlaces: 2,
   },
+
   {
     type: 'number-input',
     label: 'Remaining Lease as Appraisal Date',
@@ -3095,6 +3321,7 @@ export const leaseContractField: FormField[] = [
     maxIntegerDigits: 3,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'Contract No',
@@ -3111,12 +3338,14 @@ export const leaseDatesFeesField: FormField[] = [
     name: 'leaseStartDate',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'date-input',
     label: 'Lease End Date',
     name: 'leaseEndDate',
     wrapperClassName: 'col-span-3',
   },
+
   {
     type: 'number-input',
     label: 'Lease Rent Fee',
@@ -3125,6 +3354,7 @@ export const leaseDatesFeesField: FormField[] = [
     maxIntegerDigits: 15,
     decimalPlaces: 2,
   },
+
   {
     type: 'number-input',
     label: 'Rent Adjust',
@@ -3143,6 +3373,7 @@ export const leaseTermsField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'number-input',
     label: 'Additional Expenses',
@@ -3151,6 +3382,7 @@ export const leaseTermsField: FormField[] = [
     maxIntegerDigits: 15,
     decimalPlaces: 2,
   },
+
   {
     type: 'text-input',
     label: 'Lease Terminate',
@@ -3158,6 +3390,7 @@ export const leaseTermsField: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Contract Renewal',
@@ -3174,13 +3407,16 @@ export const leaseRentalTermsField: FormField[] = [
     name: 'rentalTermsImpactingPropertyUse',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Termination of Lease',
     name: 'terminationOfLease',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -3191,6 +3427,7 @@ export const leaseOtherField: FormField[] = [
     name: 'remark',
     wrapperClassName: 'col-span-12',
     maxLength: 4000,
+    showCharCount: true,
   },
 ];
 
@@ -3216,6 +3453,7 @@ export const rentalScheduleField: FormField[] = [
     maxIntegerDigits: 3,
     required: true,
   },
+
   {
     type: 'date-input',
     label: 'First Year Start From',
@@ -3223,6 +3461,7 @@ export const rentalScheduleField: FormField[] = [
     wrapperClassName: 'col-span-3',
     required: true,
   },
+
   {
     type: 'number-input',
     label: 'Contract Rental Fee per Year',
@@ -3232,6 +3471,7 @@ export const rentalScheduleField: FormField[] = [
     maxIntegerDigits: 15,
     required: true,
   },
+
   {
     type: 'number-input',
     label: 'Up Front',
@@ -3249,15 +3489,16 @@ export const rentalGrowthPeriodField: FormField[] = [
     type: 'number-input',
     label: 'Growth Rate %',
     name: 'growthRatePercent',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     maxIntegerDigits: 3,
     decimalPlaces: 2,
   },
+
   {
     type: 'number-input',
     label: 'Every (Year)',
     name: 'growthIntervalYears',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     maxIntegerDigits: 3,
     decimalPlaces: 0,
   },
@@ -3277,6 +3518,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     maxLength: 100,
   },
+
   {
     type: 'number-input',
     label: 'Surveyed (no. of machines)',
@@ -3285,6 +3527,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Appraised (no. of machines)',
@@ -3293,6 +3536,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Installed & In Use',
@@ -3301,6 +3545,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Appraised as Scrap',
@@ -3309,6 +3554,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Appraised by Document',
@@ -3317,6 +3563,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
+
   {
     type: 'number-input',
     label: 'Not Installed',
@@ -3325,27 +3572,34 @@ export const machinerySummaryGeneralFields: FormField[] = [
     decimalPlaces: 0,
     maxIntegerDigits: 10,
   },
+
   {
     type: 'textarea',
     label: 'Maintenance',
     name: 'maintenance',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Exterior',
     name: 'exterior',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Performance',
     name: 'performance',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
+
   {
     type: 'boolean-toggle',
     label: 'Market Demand Available',
@@ -3353,6 +3607,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     options: ['No', 'Yes'],
     wrapperClassName: 'col-span-12',
   },
+
   {
     // FSD = MAX (no cap) — no `maxLength`, intentionally unbounded.
     type: 'textarea',
@@ -3376,6 +3631,7 @@ export const machinerySummaryLegalFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'text-input',
     label: 'Owner',
@@ -3383,12 +3639,14 @@ export const machinerySummaryLegalFields: FormField[] = [
     wrapperClassName: 'col-span-6',
     maxLength: 100,
   },
+
   {
     type: 'textarea',
     label: 'Machine Address',
     name: 'machineAddress',
     wrapperClassName: 'col-span-12',
     maxLength: 500,
+    showCharCount: true,
   },
   // Lat/Lon — matches the pattern used by land (landInfoField) and condo (condoFields) detail
   // forms: 6 decimal places, 3 integer digits, signed, ±90/±180 range. Required per
@@ -3408,6 +3666,7 @@ export const machinerySummaryLegalFields: FormField[] = [
     min: -90,
     max: 90,
   },
+
   {
     type: 'number-input',
     label: 'Longitude',
@@ -3421,19 +3680,23 @@ export const machinerySummaryLegalFields: FormField[] = [
     min: -180,
     max: 180,
   },
+
   {
     type: 'textarea',
     label: 'Obligation',
     name: 'obligation',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Other',
     name: 'other',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
 ];
 
@@ -3458,6 +3721,7 @@ export const machineryBookSection1Fields: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Valuation Purpose',
@@ -3466,6 +3730,7 @@ export const machineryBookSection1Fields: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
   {
     type: 'textarea',
     label: 'Property Characteristics',
