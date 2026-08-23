@@ -30,21 +30,15 @@ interface ConstructionSummaryFormProps {
     fileSizeBytes?: number | null;
   } | null;
   summaryCurrentValue: number;
-  remark: string;
   onUpdateSummary: (field: string, value: string | number | null) => void;
-  onSetRemark: (value: string) => void;
   readOnly?: boolean;
-  ciMode?: boolean;
 }
 
 export function ConstructionSummaryForm({
   summary,
   summaryCurrentValue,
-  remark,
   onUpdateSummary,
-  onSetRemark,
   readOnly,
-  ciMode,
 }: ConstructionSummaryFormProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -159,7 +153,7 @@ export function ConstructionSummaryForm({
                   value={summary?.summaryDetail ?? ''}
                   placeholder="Enter detail..."
                   onChange={e => onUpdateSummary('summaryDetail', e.target.value)}
-                  disabled={readOnly || ciMode}
+                  disabled={readOnly}
                   className="w-full px-2.5 py-1.5 border border-gray-200 rounded-md text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-500 transition-colors"
                 />
               </td>
@@ -195,7 +189,7 @@ export function ConstructionSummaryForm({
         </div>
 
         {/* Upload area — show when no document attached and not read-only */}
-        {!hasDocument && !readOnly && !ciMode && (
+        {!hasDocument && !readOnly && (
           <>
             <input
               ref={fileInputRef}
@@ -276,7 +270,7 @@ export function ConstructionSummaryForm({
                 </p>
               </div>
             </button>
-            {!readOnly && !ciMode && (
+            {!readOnly && (
               <button
                 type="button"
                 onClick={handleRemoveDocument}
@@ -287,23 +281,6 @@ export function ConstructionSummaryForm({
             )}
           </div>
         )}
-      </div>
-
-      {/* Remark */}
-      <div>
-        <label className="flex items-center gap-2 text-xs font-semibold text-gray-700 mb-2">
-          <Icon name="message" style="regular" className="size-3.5 text-gray-400" />
-          Remark
-        </label>
-        <textarea
-          value={remark}
-          onChange={e => onSetRemark(e.target.value)}
-          maxLength={4000}
-          disabled={readOnly || ciMode}
-          rows={3}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-xs leading-relaxed focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-500 resize-none transition-colors"
-          placeholder="Enter remark or additional notes..."
-        />
       </div>
     </div>
   );

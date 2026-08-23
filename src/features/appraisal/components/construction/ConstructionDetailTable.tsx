@@ -56,7 +56,6 @@ interface ConstructionDetailTableProps {
   onUpdateSubItem: (index: number, field: string, value: number) => void;
   onDeleteSubItem: (index: number) => void;
   readOnly?: boolean;
-  ciMode?: boolean;
 }
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -156,7 +155,6 @@ export function ConstructionDetailTable({
   onUpdateSubItem,
   onDeleteSubItem,
   readOnly,
-  ciMode,
 }: ConstructionDetailTableProps) {
   const isOverLimit = grandTotal.totalProportion > 100;
   const [pendingDeleteIndex, setPendingDeleteIndex] = useState<number | null>(null);
@@ -204,7 +202,7 @@ export function ConstructionDetailTable({
                 <div>Curr. Value</div>
                 <div className="text-[10px] font-normal opacity-80">(Baht)</div>
               </th>
-              {!readOnly && !ciMode && <th className="w-9 px-1 py-2.5" />}
+              {!readOnly && <th className="w-9 px-1 py-2.5" />}
             </tr>
           </thead>
           <tbody>
@@ -228,7 +226,6 @@ export function ConstructionDetailTable({
                   onUpdateSubItem={onUpdateSubItem}
                   onDeleteSubItem={index => setPendingDeleteIndex(index)}
                   readOnly={readOnly}
-                  ciMode={ciMode}
                 />
               );
             })}
@@ -265,7 +262,7 @@ export function ConstructionDetailTable({
               <td className="text-right px-3 py-2.5 tabular-nums">
                 {formatNumber(grandTotal.totalCurrentPropertyValue, 2)}
               </td>
-              {!readOnly && !ciMode && <td className="px-1 py-2.5" />}
+              {!readOnly && <td className="px-1 py-2.5" />}
             </tr>
           </tbody>
         </table>
@@ -292,7 +289,6 @@ function CategorySection({
   onUpdateSubItem,
   onDeleteSubItem,
   readOnly,
-  ciMode,
 }: {
   group: ConstructionWorkGroupDto;
   items: ComputedItem[];
@@ -306,7 +302,6 @@ function CategorySection({
   onUpdateSubItem: (index: number, field: string, value: number) => void;
   onDeleteSubItem: (index: number) => void;
   readOnly?: boolean;
-  ciMode?: boolean;
 }) {
   const icon = CATEGORY_ICONS[group.code] || 'folder';
 
@@ -314,11 +309,11 @@ function CategorySection({
     <>
       {/* Category Header */}
       <tr className="bg-gray-50/80 border-t border-gray-200">
-        <td colSpan={readOnly || ciMode ? 8 : 9} className="px-3 py-2">
+        <td colSpan={readOnly ? 8 : 9} className="px-3 py-2">
           <div className="flex items-center gap-2">
             <Icon name={icon} style="solid" className="size-3 text-gray-500" />
             <span className="font-semibold text-xs text-gray-700">{group.nameEn}</span>
-            {!readOnly && !ciMode && (
+            {!readOnly && (
               <AddSubItemDropdown
                 group={group}
                 existingItemIds={existingItemIds}
@@ -350,14 +345,18 @@ function CategorySection({
           <td className="text-right px-3 py-1.5 text-gray-700 tabular-nums">
             {formatNumber(item.constructionValue, 2)}
           </td>
-          {/* Proportion — EDITABLE */}
+          {/* Proportion — EDITABLE, including on a progressive round: an inspector who adds a
+              work item this round has to rebalance the split so it still totals 100%.
+              Side effect to be aware of: Prev. Value = ConstructionValue x PreviousProgressPct,
+              so re-splitting the proportions also moves the previous-round values this report
+              prints. Previous Progress % itself stays read-only — that is real history. */}
           <td className="px-1 py-0.5">
             <NumberInput
               value={item.proportionPct}
               onChange={e => onUpdateSubItem(item._index, 'proportionPct', e.target.value ?? 0)}
               decimalPlaces={2}
               max={100}
-              disabled={readOnly || ciMode}
+              disabled={readOnly}
               className="!py-1 !text-xs !rounded-md"
             />
           </td>
@@ -390,7 +389,7 @@ function CategorySection({
           <td className="text-right px-3 py-1.5 text-gray-800 font-medium tabular-nums">
             {formatNumber(item.currentPropertyValue, 2)}
           </td>
-          {!readOnly && !ciMode && (
+          {!readOnly && (
             <td className="px-1 py-1.5 text-center">
               <button
                 type="button"
@@ -431,7 +430,7 @@ function CategorySection({
           <td className="text-right px-3 py-2 tabular-nums">
             {formatNumber(subtotal.totalCurrentPropertyValue, 2)}
           </td>
-          {!readOnly && !ciMode && <td className="px-1 py-2" />}
+          {!readOnly && <td className="px-1 py-2" />}
         </tr>
       )}
     </>

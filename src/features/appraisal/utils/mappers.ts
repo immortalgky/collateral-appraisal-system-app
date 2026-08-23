@@ -608,6 +608,8 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   return {
     isFullDetail,
     totalValue,
+    // Remark is mode-independent: the backend keeps it on both Summary and Full Detail rows.
+    remark: constructionRemark ?? null,
     ...(isFullDetail
       ? {
           workDetails: (constructionSubItems ?? []).map((item: any, idx: number) => ({
@@ -627,7 +629,6 @@ const mapConstructionInspectionFormToApi = (data: any) => {
           summaryPreviousValue: constructionSummary?.summaryPreviousValue ?? null,
           summaryCurrentProgressPct: constructionSummary?.summaryCurrentProgressPct ?? null,
           summaryCurrentValue: constructionSummary?.summaryCurrentValue ?? null,
-          remark: constructionRemark ?? null,
           documentId: constructionSummary?.documentId ?? null,
           fileName: constructionSummary?.fileName ?? null,
           filePath: constructionSummary?.filePath ?? null,
