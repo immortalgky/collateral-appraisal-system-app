@@ -17,11 +17,24 @@ import { useConstructionWorkGroups } from '../../api/constructionWorkGroups';
 import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
+import { ConstructionRemarkField } from '../construction/ConstructionRemarkField';
 import type { PropertyItem } from '../../types';
 import { isBuildingType, getDetailEndpoint, getRouteSegment } from '../../utils/propertyTypeConfig';
 
 interface ConstructionInspectionTabProps {
   readOnly?: boolean;
+  /**
+   * Progressive (ใบตรวจงวด) appraisal. The work items, their proportions and the
+   * detail/summary mode are carried over from the previous inspection round by
+   * `ConstructionInspection.CopyForNextInspection`.
+   *
+   * Only two things stay locked on such a round: the detail/summary mode itself (flipping
+   * it wipes the carried-over data) and the copy-from-another-property shortcut. The work
+   * items and their proportions ARE editable — an inspector who finds work that the previous
+   * round missed has to be able to add it and rebalance the split back to 100%. The
+   * previous-round progress percentages are display-only for everyone, here and in the
+   * summary form, since they are recorded history.
+   */
   ciMode?: boolean;
 }
 
@@ -467,22 +480,27 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
             onUpdateSubItem={handleUpdateSubItem}
             onDeleteSubItem={handleDeleteSubItem}
             readOnly={readOnly}
-            ciMode={ciMode}
           />
         ) : (
           <ConstructionSummaryForm
             totalValue={totalValue}
             summary={summary}
             summaryCurrentValue={summaryCurrentValue}
-            remark={remark}
             onUpdateSummary={(field, value) =>
               setValue(`constructionSummary.${field}`, value, { shouldDirty: true })
             }
-            onSetRemark={value => setValue('constructionRemark', value, { shouldDirty: true })}
             readOnly={readOnly}
-            ciMode={ciMode}
           />
         )}
+
+        {/* Remark sits outside the mode branch — it is captured in both modes. */}
+        <div className="mt-5">
+          <ConstructionRemarkField
+            value={remark}
+            onChange={value => setValue('constructionRemark', value, { shouldDirty: true })}
+            readOnly={readOnly}
+          />
+        </div>
       </div>
     </div>
   );

@@ -11,14 +11,11 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
 import DataErrorState from '@/shared/components/DataErrorState';
 
 const MarketComparableListingPage = () => {
   const { t } = useTranslation('appraisal');
-  const _baseReadOnly = usePageReadOnly();
-  const isCiAppraisal = useIsCiAppraisal();
-  const isReadOnly = _baseReadOnly || isCiAppraisal;
+  const isReadOnly = usePageReadOnly();
   const { isOpen, onToggle } = useDisclosure();
   // Fetch market comparable data (general pool, no appraisalId needed)
   const { data: marketComparables, isLoading, isError, error, refetch } = useGetMarketComparables();
