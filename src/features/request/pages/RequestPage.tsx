@@ -41,6 +41,7 @@ import {
 } from '../api';
 import { useSearchRequestors } from '../api/requestors';
 import { mapCopyTemplateToForm, mapRequestResponseToForm } from '../utils/mappers';
+import { isRequestSubmitted } from '../utils/status';
 import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
 import { AppraisalCopyProvider } from '../contexts/AppraisalCopyContext';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
@@ -97,6 +98,13 @@ function RequestPage() {
     isError,
     error,
   } = useGetRequestById(requestId);
+
+  // A submitted request belongs to the appraisal workflow: it can no longer be deleted,
+  // duplicated, saved as a draft or re-submitted. Only a validated Save stays available so
+  // the maker can still fix data after a route-back to appraisal-initiation.
+  // Guarded on isEditMode because isRequestSubmitted fails closed on missing data, which
+  // would otherwise hide Submit on the create route where no request is loaded yet.
+  const isSubmitted = isEditMode && isRequestSubmitted(requestData?.status);
 
   // Add minimum loading delay for better UX (show skeleton) - only in edit mode
   // When data is cached, isLoadingRequest will be false immediately, so we skip the delay
@@ -733,30 +741,36 @@ function RequestPage() {
                   {!isRouteBackFollowup && (
                     <>
                       <CancelButton fallbackPath={`${basePath}/requests`} />
-                      <ActionBar.Divider />
-                      <DeleteButton
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                        disabled={!isEditMode || isPending}
-                      />
-                      <DuplicateButton
-                        onClick={handleDuplicate}
-                        disabled={!isEditMode || isPending}
-                      />
+                      {!isSubmitted && (
+                        <>
+                          <ActionBar.Divider />
+                          <DeleteButton
+                            onClick={() => setIsDeleteDialogOpen(true)}
+                            disabled={!isEditMode || isPending}
+                          />
+                          <DuplicateButton
+                            onClick={handleDuplicate}
+                            disabled={!isEditMode || isPending}
+                          />
+                        </>
+                      )}
                     </>
                   )}
                   <ActionBar.UnsavedIndicator show={isDirty} />
                 </ActionBar.Left>
                 <ActionBar.Right>
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={handleSaveDraft}
-                    isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending}
-                  >
-                    <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
-                    {t('actions.saveDraft')}
-                  </Button>
+                  {!isSubmitted && (
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      onClick={handleSaveDraft}
+                      isLoading={isPending && saveAction === 'draft'}
+                      disabled={isPending}
+                    >
+                      <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
+                      {t('actions.saveDraft')}
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     type="submit"
@@ -766,7 +780,7 @@ function RequestPage() {
                     <Icon style="solid" name="check" className="size-4 mr-2" />
                     {t('actions.save')}
                   </Button>
-                  {!isRouteBackFollowup && (
+                  {!isRouteBackFollowup && !isSubmitted && (
                     <Button
                       type="button"
                       onClick={handleSubmitRequest}
