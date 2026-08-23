@@ -392,11 +392,11 @@ const CreateLandBuildingPage = () => {
                         className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
                             <Icon
                               name="helmet-safety"
                               style="solid"
-                              className="w-5 h-5 text-teal-600"
+                              className="w-5 h-5 text-amber-600"
                             />
                           </div>
                           <h2 className="text-lg font-semibold text-gray-900">

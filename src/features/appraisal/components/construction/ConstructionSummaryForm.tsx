@@ -300,10 +300,14 @@ export function ConstructionSummaryForm({
           onChange={e => onSetRemark(e.target.value)}
           maxLength={4000}
           disabled={readOnly || ciMode}
-          rows={3}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-xs leading-relaxed focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-500 resize-none transition-colors"
+          rows={6}
+          className="w-full min-h-24 px-3 py-2.5 border border-gray-200 rounded-lg text-xs leading-relaxed focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-500 resize-y transition-colors"
           placeholder="Enter remark or additional notes..."
         />
+        {/* The 4000-character cap was already enforced, just never shown — you only found out
+            by being cut off mid-word. `min-h-24` keeps a dragged-down box from being pulled
+            back smaller than its resting height. */}
+        <p className="mt-1 text-right text-xs text-gray-400">{remark.length}/4000</p>
       </div>
     </div>
   );

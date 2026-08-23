@@ -19,6 +19,38 @@ interface NavAnchorItem {
   href?: string;
 }
 
+/**
+ * Icon tint per anchor, keyed on the icon name rather than a new prop, so the ~40 call sites
+ * stay untouched and any page using the same icon gets the same colour for free.
+ *
+ * The hues echo the section header chips the pages already paint: photos indigo, land amber,
+ * lease purple, rental teal. Construction is amber-500 — the site-safety yellow, and the one
+ * colour asked for by name.
+ */
+const ANCHOR_ICON_TINT: Record<string, string> = {
+  images: 'text-indigo-500',
+  camera: 'text-indigo-500',
+  'helmet-safety': 'text-amber-500',
+  'mountain-sun': 'text-amber-600',
+  building: 'text-sky-600',
+  buildings: 'text-sky-600',
+  'file-contract': 'text-purple-500',
+  'calendar-days': 'text-teal-500',
+  clock: 'text-teal-500',
+  'layer-group': 'text-cyan-600',
+  'chart-line': 'text-emerald-600',
+  'magnifying-glass-chart': 'text-emerald-600',
+  'circle-check': 'text-green-600',
+  gavel: 'text-rose-500',
+  user: 'text-blue-500',
+  'user-tie': 'text-blue-600',
+  tags: 'text-pink-500',
+  tag: 'text-pink-500',
+  rotate: 'text-orange-500',
+  'hand-pointer': 'text-violet-500',
+  'map-location-dot': 'text-amber-600',
+};
+
 const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsProps) => {
   const navigate = useNavigate();
   const isCompact = variant === 'compact';
@@ -137,15 +169,19 @@ const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsPro
                 'relative z-10 flex items-center gap-1.5 rounded-md font-medium transition-all duration-200 cursor-pointer',
                 isCompact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs',
                 isActive
-                  ? 'text-gray-800 bg-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
+                  ? 'text-primary-700 bg-white shadow-sm ring-1 ring-primary-200'
+                  : 'text-gray-500 hover:text-primary-600 hover:bg-white/60',
               )}
             >
               {anchor.icon && (
                 <Icon
                   style="solid"
                   name={anchor.icon}
-                  className={clsx('size-3.5', isActive ? 'text-gray-700' : 'text-gray-400')}
+                  className={clsx(
+                    'size-3.5 transition-opacity',
+                    ANCHOR_ICON_TINT[anchor.icon] ?? 'text-primary-500',
+                    isActive ? 'opacity-100' : 'opacity-55',
+                  )}
                 />
               )}
               <span>{anchor.label}</span>

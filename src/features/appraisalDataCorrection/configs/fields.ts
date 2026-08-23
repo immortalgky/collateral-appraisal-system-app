@@ -1379,12 +1379,13 @@ export const condoFields: FormField[] = [
     maxLength: 100,
   },
   {
-    type: 'text-input',
-    label: 'Construction on Title Deed No',
+    type: 'textarea',
+    label: 'Title Number',
     name: 'titleNumber',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-12',
     required: true,
     maxLength: 500,
+    showCharCount: true,
   },
   {
     type: 'text-input',
@@ -2944,7 +2945,7 @@ export const condoPmaDetailFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'Construction on Title Deed Number',
+    label: 'Title Number',
     name: 'titleNumber',
     wrapperClassName: 'col-span-12',
     required: true,

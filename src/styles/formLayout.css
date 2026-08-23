@@ -823,11 +823,98 @@
   flex-wrap: wrap;
 }
 [data-form-layout='grid'] .cas-form-grid [data-field] :is(p, div).text-danger,
-[data-form-layout='grid'] .cas-form-grid [data-field] div:has(> p.text-danger) {
+[data-form-layout='grid'] .cas-form-grid [data-field] div:has(> p.text-danger),
+/* The same footer row without an error in it — Input and Textarea render helper text and the
+   character counter there whether or not the field is invalid, and left in the row it takes
+   width from the control just as the message did. `:not(:has([data-field-label]))` keeps the
+   chip group's header out of this: it is also a `justify-between` row, but it carries the
+   field's label and must stay on the first line. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  div.justify-between:has(> p):not(:has([data-field-label])) {
   flex: 0 0 100%;
   order: 9;
   margin-top: 0;
   padding: 0 0 0.125rem 0.5rem;
   font-size: 0.6875rem;
   line-height: 1.3;
+}
+
+/* ── section stack: bands butt up against each other ────────────────────────
+   The PMA forms space their blocks with `gap-6`, which reads right when each
+   block is a card. In this layout the band *is* the divider, so that 24px is an
+   empty strip between two bars. Classic keeps its gutter — only the class is
+   read here, never removed from the markup. */
+[data-form-layout='grid'] .cas-form-grid .cas-section-stack {
+  gap: 0;
+}
+
+/* ── open popovers paint above the rows that follow ─────────────────────────
+   Making every field `position: relative` put them all in the same stacking
+   context at z-index auto, where paint order is document order — so the section
+   *below* an open dropdown draws over its panel, which is why the Sub District
+   list appeared cut off with VALUE INFORMATION on top of it. Lifting only the
+   field that currently has something open keeps the rest of the order intact. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([aria-expanded='true'], [role='listbox'], [role='dialog']) {
+  z-index: 40;
+}
+/* The z-index alone was not enough: the panel was not being painted under the next
+   section, it was being cut off by `overflow-hidden` on the <Section> wrapping the
+   form — which exists to stop wide tables blowing the page out sideways, and takes
+   the dropdown with it. Unclip only while something is open, and only the wrapper
+   that actually contains it, so the horizontal guard is back the moment it closes. */
+[data-form-layout='grid']
+  .cas-form-grid
+  /* Flat, not `:has([data-field]:has(…))` — a `:has()` inside a `:has()` is invalid
+     and the browser drops the whole rule, which is why the first attempt changed
+     nothing at all. A descendant selector inside one `:has()` is fine. */
+  .overflow-hidden:has([data-field] [aria-expanded='true'], [data-field] [role='listbox']) {
+  overflow: visible;
+}
+
+/* ── one field per row, PMA forms only ─────────────────────────────────────
+   Scoped to `.cas-section-stack`, which only the two PMA forms carry. An earlier
+   version keyed on `.cas-form-grid` and so reached all eleven opted-in screens,
+   including the property create/edit pages where three fields across a row is the
+   density the layout exists for.
+
+   Within a PMA form every field takes the whole grid row, whatever span its
+   config gives it.
+   Done here rather than by rewriting ~340 wrapperClassName values because the
+   spans still have to mean something in the classic layout, which lays label
+   above control and reads fine three-across.
+
+   `grid-column: 1 / -1` covers every grid width in the app — the property forms
+   are 12 columns, the PMA forms 9 — without either needing to be named.
+
+   With no field sharing a row, the narrow label column has no reason to exist,
+   so the wide measurement becomes the default: 16rem clears the longest label in
+   the config (13.1rem) with room for the density setting to shrink the root font. */
+[data-form-layout='grid'] .cas-form-grid .cas-section-stack [data-field]:not(.cas-inline) {
+  grid-column: 1 / -1;
+}
+[data-form-layout='grid'] .cas-form-grid .cas-section-stack {
+  --cas-label-w: 16rem;
+}
+
+/* Inside that footer row, leave its own two children alone. The message rule above
+   also matches the <p> nested in it, so the message was getting `flex: 0 0 100%`
+   and `order: 9` *within the footer* — which pushed it onto a second line after the
+   character counter, printing "0/500" before the error instead of the counter
+   sitting at the far right where `justify-between` puts it. */
+[data-form-layout='grid'] .cas-form-grid [data-field] div.justify-between > :is(p, span) {
+  flex: 0 1 auto;
+  order: 0;
+  padding: 0;
+}
+
+/* Opt a PMA field back out of one-field-per-row. Rai / Ngan / Sq.Wa / Total Sq.Wa are
+   four short numbers that read as one measurement, and stacking them cost four rows to
+   say what one row says. The span in the class is what decides the width; this rule only
+   releases the full-row override above. */
+[data-form-layout='grid'] .cas-form-grid .cas-section-stack [data-field].cas-inline {
+  --cas-label-w: 9.5rem;
 }

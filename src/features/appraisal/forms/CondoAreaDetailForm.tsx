@@ -5,7 +5,7 @@ interface CondoAreaDetailFormProps {
 }
 function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   return (
-    <div className="col-span-12 border-2 rounded-2xl border-gray-100">
+    <div className="col-span-12 rounded border border-gray-200">
       <FormTable
         columns={condoAreaColumns}
         name={name}

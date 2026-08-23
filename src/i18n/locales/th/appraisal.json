@@ -1388,7 +1388,7 @@
     "rentalInfoSection": "ข้อมูลการเช่า",
     "condoSection": "ข้อมูลคอนโด",
     "buildingSection": "ข้อมูลอาคาร",
-    "constructionSection": "การตรวจสอบการก่อสร้าง",
+    "constructionSection": "รายละเอียดงานก่อสร้าง",
     "machinerySection": "ข้อมูลเครื่องจักร",
     "navPhotos": "รูปภาพ",
     "navLand": "ที่ดิน",
@@ -1396,7 +1396,7 @@
     "navRentalInfo": "ข้อมูลการเช่า",
     "navCondo": "คอนโด",
     "navBuilding": "อาคาร",
-    "navConstructionInspection": "การตรวจสอบการก่อสร้าง",
+    "navConstructionInspection": "รายละเอียดงานก่อสร้าง",
     "navMachinery": "เครื่องจักร",
     "saveDraft": "บันทึกร่าง",
     "save": "บันทึก"
