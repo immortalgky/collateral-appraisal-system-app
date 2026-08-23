@@ -1,7 +1,11 @@
 import { useForm, type SubmitErrorHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import { makeDirectComparisonDto, DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
+import {
+  makeDirectComparisonDto,
+  DirectComparisonDto,
+  type DirectComparisonType,
+} from '../schemas/directComparisonForm';
 import { useEffect, useState } from 'react';
 import type {
   CalculationType,
@@ -23,7 +27,6 @@ import { initializeDirectComparisonForm } from '@features/pricingAnalysis/adapte
 import { syncDirectComparisonFormSurveys } from '@features/pricingAnalysis/adapters/syncDirectComparisonFormSurveys.ts';
 import { restoreDirectComparisonFromSavedData } from '@features/pricingAnalysis/adapters/restoreDirectComparisonFromSavedData.ts';
 import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
-import { COLLATERAL_TYPE } from '@features/pricingAnalysis/data/constants';
 import { DirectComparisonForm } from '@features/pricingAnalysis/components/DirectComparisonForm.tsx';
 import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
@@ -90,9 +93,10 @@ export function DirectComparisonPanel({
   const isCostApproach = methodType === 'DC_COST';
 
   const property: Record<string, unknown> | undefined = isCostApproach
-    ? properties?.find(p => p.propertyType === 'L')
+    ? (properties?.find(p => p.propertyType === 'L' || p.propertyType === 'LSL') ?? properties?.[0])
     : properties?.[0];
-  const buildingCost = properties?.filter(p => p.propertyType === 'B') ?? [];
+  const buildingCost =
+    properties?.filter(p => p.propertyType === 'B' || p.propertyType === 'LSB') ?? [];
 
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
