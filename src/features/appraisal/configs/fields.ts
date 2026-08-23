@@ -918,16 +918,6 @@ export const buildingInfoField: FormField[] = [
     options: ['No', 'Yes'],
   },
   {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
-    wrapperClassName: 'col-span-3',
-    disableWhen: { field: 'isUnderConstruction', is: true },
-    maxIntegerDigits: 3,
-    decimalPlaces: 2,
-    max: 100,
-  },
-  {
     type: 'datetime-input',
     label: 'License Expiration Date',
     name: 'constructionLicenseExpirationDate',
@@ -1426,13 +1416,13 @@ export const condoFields: FormField[] = [
     maxLength: 500,
   },
   {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
+    // The percentage moved into the Construction Inspection tab; this flag is what opens it.
+    // col-span-6, not 3, so the row still sums to 12 like every other row in this group.
+    type: 'boolean-toggle',
+    label: 'Under Construction',
+    name: 'isUnderConstruction',
     wrapperClassName: 'col-span-6',
-    maxIntegerDigits: 3,
-    decimalPlaces: 2,
-    max: 100,
+    options: ['No', 'Yes'],
   },
 ];
 

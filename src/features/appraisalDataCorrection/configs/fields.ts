@@ -916,16 +916,6 @@ export const buildingInfoField: FormField[] = [
     options: ['No', 'Yes'],
   },
   {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
-    wrapperClassName: 'col-span-3',
-    disableWhen: { field: 'isUnderConstruction', is: true },
-    maxIntegerDigits: 3,
-    decimalPlaces: 2,
-    max: 100,
-  },
-  {
     type: 'datetime-input',
     label: 'License Expiration Date',
     name: 'constructionLicenseExpirationDate',
@@ -1405,13 +1395,13 @@ export const condoFields: FormField[] = [
     maxLength: 10,
   },
   {
-    type: 'number-input',
-    label: 'Construction Completion (%)',
-    name: 'constructionCompletionPercent',
+    // The percentage lives in the Construction Inspection tab now. What is correctable here is
+    // whether the unit is under construction at all — turning this off clears that inspection.
+    type: 'boolean-toggle',
+    label: 'Under Construction',
+    name: 'isUnderConstruction',
     wrapperClassName: 'col-span-12',
-    maxIntegerDigits: 3,
-    decimalPlaces: 2,
-    max: 100,
+    options: ['No', 'Yes'],
   },
 ];
 

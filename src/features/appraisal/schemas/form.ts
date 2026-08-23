@@ -211,9 +211,15 @@ const AreaDetailDto = z
 
 export const createCondoFormBase = z.object({
   areaDetails: z.array(AreaDetailDto).nullable(),
+  constructionEnterDetail: z.boolean().nullable().optional(),
+  constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
+  constructionSummary: constructionSummaryFormItem.nullable().optional(),
+  constructionRemark: z.string().nullable().optional(),
 });
 
-export const createCondoForm = buildFormSchema(allCondoFields, createCondoFormBase);
+export const createCondoForm = buildFormSchema(allCondoFields, createCondoFormBase).superRefine(
+  constructionProportionRefinement,
+);
 
 export const createLandAndBuildingFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
@@ -558,7 +564,6 @@ export const createBuildingFormDefault: createBuildingFormType = {
   buildingConditionType: '',
   buildingConditionTypeOther: '',
   isUnderConstruction: false,
-  constructionCompletionPercent: 100,
   constructionLicenseExpirationDate: null,
   isAppraisable: false,
   hasObligation: '',
@@ -632,7 +637,7 @@ export const createCondoFormDefault: createCondoFormType = {
   roomNumber: '',
   floorNumber: '',
   usableArea: 0,
-  constructionCompletionPercent: 100,
+  isOwnerVerifiedBuilding: true,
   latitude: 0,
   longitude: 0,
   subDistrict: '',
@@ -701,6 +706,22 @@ export const createCondoFormDefault: createCondoFormType = {
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',
+  constructionEnterDetail: true,
+  constructionSubItems: [],
+  constructionSummary: {
+    summaryDetail: '',
+    summaryPreviousProgressPct: 0,
+    summaryPreviousValue: 0,
+    summaryCurrentProgressPct: 0,
+    summaryCurrentValue: 0,
+    documentId: null,
+    fileName: null,
+    filePath: null,
+    fileExtension: null,
+    mimeType: null,
+    fileSizeBytes: null,
+  },
+  constructionRemark: '',
 };
 
 export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
