@@ -94,15 +94,19 @@ const LandTitleModal = ({
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Land Detail"
+          aria-label="Title Detail"
           className="flex max-h-full w-3/5 flex-col rounded-2xl bg-white shadow-2xl"
         >
           <div className="px-8 pt-8 pb-4 shrink-0">
-            <h2 className="text-lg font-semibold">Land Detail</h2>
+            <h2 className="text-lg font-semibold">Title Detail</h2>
             <div className="h-px bg-gray-200 mt-4"></div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-8 py-2">
+          {/* cas-form-grid opts the dialog into the grid layout too. It portals into <body>, so
+              it is not inside the page's own `.cas-form-grid` and had to say so itself —
+              otherwise the one screen that edits a title deed looked nothing like the screen
+              behind it. Inert for anyone on the classic layout, as everywhere else. */}
+          <div className="cas-form-grid flex-1 overflow-y-auto px-8 py-2">
             <div className="grid grid-cols-12 gap-4">
               <FormFields fields={fields} />
             </div>

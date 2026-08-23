@@ -99,7 +99,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: 2rem;
+  min-height: 2.25rem;
   border-bottom: 1px solid var(--color-base-300);
 }
 [data-form-layout='grid'] .cas-form-grid [data-field]:has([data-field-label]):not(:has(table)):hover {
@@ -212,7 +212,7 @@
   border-color: transparent;
   background: transparent;
   border-radius: 0;
-  padding-block: 0.1875rem;
+  padding-block: 0.3125rem;
   padding-left: 0.5rem;
 }
 [data-form-layout='grid'] .cas-form-grid [data-field] input:not(.pr-9):not(.pr-10):not(.pr-12),
@@ -255,12 +255,11 @@
 [data-form-layout='grid'] .cas-form-grid [data-field]:has([role='radiogroup']) {
   align-items: start;
 }
-[data-form-layout='grid'] .cas-form-grid [data-field]:has(textarea) [data-field-label],
-[data-form-layout='grid'] .cas-form-grid [data-field]:has(.flex-wrap) [data-field-label],
-[data-form-layout='grid'] .cas-form-grid [data-field]:has([role='radiogroup']) [data-field-label] {
-  padding-top: 0.4375rem;
-  align-items: flex-start;
-}
+/* Every label is centred, whatever the row's height. Tall rows used to pin theirs to the top,
+   keyed on the control type as a stand-in for height — CSS cannot ask how tall a row turned
+   out. That stand-in was never exact: a chip group got a top-aligned label whether or not it
+   actually wrapped. Centring throughout costs nothing to be wrong about, and keeps the label
+   column reading as one straight line down the form. */
 [data-form-layout='grid'] .cas-form-grid [data-field]:has(textarea) > * > :nth-child(n + 3) {
   position: absolute;
   right: 0.25rem;
@@ -546,7 +545,7 @@
   [data-field]:not(:has([data-field-label])):not(:has(table)):not(.cas-repeater) {
   display: flex;
   align-items: center;
-  min-height: 2rem;
+  min-height: 2.25rem;
   padding: 0.25rem 0.5rem;
   border-bottom: 1px solid var(--color-base-300);
   background: var(--color-base-200);
@@ -917,4 +916,37 @@
    releases the full-row override above. */
 [data-form-layout='grid'] .cas-form-grid .cas-section-stack [data-field].cas-inline {
   --cas-label-w: 9.5rem;
+}
+
+/* ── the label column reaches the bottom of a wrapped row ───────────────────
+   The label paints its own grey and stretches with `align-self: stretch`, which
+   only stretches it to the height of the flex *line* it sits on. Once a row wraps
+   — a chip group pushing "Clear all" onto a second line — everything below that
+   first line was left white to the left of the field, so the grey column looked
+   like it stopped halfway down the row.
+
+   The field paints the column instead, as a hard-edged gradient the width of the
+   label. It covers the whole row however many lines it grows to, and the label's
+   own background then has nothing left to do. Behind the label, not in front:
+   `background-image` on the row sits under any child's own background. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:has([data-field-label]) {
+  /* The last 1px of the column is the divider. Drawn in the same gradient rather than
+     left to the label's own `border-right`, which — like its background — reaches only
+     to the bottom of the first line and stopped short on a wrapped row. */
+  background-image: linear-gradient(
+    to right,
+    var(--color-base-200) 0 calc(var(--cas-label-w) - 1px),
+    var(--color-base-300) calc(var(--cas-label-w) - 1px) var(--cas-label-w),
+    transparent var(--cas-label-w)
+  );
+}
+[data-form-layout='grid'] .cas-form-grid [data-field] [data-field-label] {
+  background: transparent;
+  border-right: 0;
+}
+/* Hover still wins — it repaints the whole row, column included. */
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater):hover {
+  background-image: none;
 }

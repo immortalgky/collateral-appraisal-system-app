@@ -38,29 +38,19 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
 const LeaseAgreementForm = ({ namePrefix }: { namePrefix?: string }) => {
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Detail of Lease Agreement</h2>
+      {/* No page heading: the section header below already names this form, and the tab
+          above it says the same thing a third time. */}
       <div className="cas-section-grid grid grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow title="Information" icon="circle-info">
+        {/* One section, not six. Split into Information / Contract / Dates & Fees / Terms /
+            Rental Terms / Other, a form of eleven fields carried six header bands — more
+            chrome than content, and the groups named steps of a lease rather than anything
+            the reader has to tell apart. */}
+        <SectionRow title="Contract Information" icon="file-contract" isLast>
           <FormFields fields={leaseInfoField} namePrefix={namePrefix} />
-        </SectionRow>
-
-        <SectionRow title="Contract" icon="file-contract">
           <FormFields fields={leaseContractField} namePrefix={namePrefix} />
-        </SectionRow>
-
-        <SectionRow title="Dates & Fees" icon="calendar-days">
           <FormFields fields={leaseDatesFeesField} namePrefix={namePrefix} />
-        </SectionRow>
-
-        <SectionRow title="Terms" icon="file-lines">
           <FormFields fields={leaseTermsField} namePrefix={namePrefix} />
-        </SectionRow>
-
-        <SectionRow title="Rental Terms" icon="scroll">
           <FormFields fields={leaseRentalTermsField} namePrefix={namePrefix} />
-        </SectionRow>
-
-        <SectionRow title="Other" icon="circle-info" isLast>
           <FormFields fields={leaseOtherField} namePrefix={namePrefix} />
         </SectionRow>
       </div>

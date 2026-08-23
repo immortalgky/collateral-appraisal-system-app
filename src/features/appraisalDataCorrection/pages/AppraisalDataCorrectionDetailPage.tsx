@@ -225,7 +225,12 @@ function PropertyCorrectionEditor({
   }
 
   const onSubmit = (values: Record<string, unknown>) => {
-    const reason = String(values.reason ?? '').trim();
+    // Read from the form, not from `values`. The resolver runs the property's own schema, which
+    // has no `reason` in it, and a zod object drops the keys it does not declare — so `values`
+    // arrives here without one however much was typed, and the check below failed every time
+    // with "A reason is required" sitting under a filled box. Same trap as the land title
+    // dialog, where zod stripped the row id and the correction saved as nothing.
+    const reason = String(getValues('reason') ?? '').trim();
     if (!reason) {
       methods.setError('reason', { type: 'required', message: t('detail.reasonRequired') });
       return;
