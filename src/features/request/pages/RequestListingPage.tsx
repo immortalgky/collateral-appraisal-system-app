@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useRelativeTime } from '@/shared/hooks/useFormatters';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useDeleteRequest, useGetRequests } from '../api';
+import { isRequestSubmitted } from '../utils/status';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
@@ -460,13 +461,17 @@ function RequestListingPage() {
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center justify-center">
-                        <button
-                          onClick={e => request.id && handleDelete(e, request.id)}
-                          className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                          title={t('actions.delete')}
-                        >
-                          <Icon style="regular" name="trash-can" className="size-4" />
-                        </button>
+                        {/* Deleting a submitted request would orphan its appraisal task; the
+                            backend rejects it too, this just keeps the action out of reach. */}
+                        {!isRequestSubmitted(request.status) && (
+                          <button
+                            onClick={e => request.id && handleDelete(e, request.id)}
+                            className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                            title={t('actions.delete')}
+                          >
+                            <Icon style="regular" name="trash-can" className="size-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
