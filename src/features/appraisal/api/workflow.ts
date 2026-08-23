@@ -17,7 +17,8 @@ export interface ActivityLogItemDto {
   assignedToDisplayName: string | null;
   /** When THIS row's holder received the task. Frozen SLA anchor lives in stepEnteredAt. */
   startDate: string;
-  stepEnteredAt: string;
+  /** Optional: an API predating the holder-clock work omits it — fall back to `startDate`. */
+  stepEnteredAt?: string | null;
   // The API omits null fields from the payload, so these arrive as `undefined` when unset —
   // notably on rows archived before the columns existed, which are deliberately not backfilled.
   openedAt?: string | null;
@@ -126,7 +127,8 @@ export interface TaskHistoryItem {
   /** SLA clock anchor — frozen across a supervisor reassign, so it repeats across hand-off rows. */
   assignedAt: string;
   /** When this row's holder received the task. Sort and display on this, not assignedAt. */
-  assigneeAssignedAt: string;
+  /** Optional: an API predating the holder-clock work omits it — fall back to `assignedAt`. */
+  assigneeAssignedAt?: string | null;
   openedAt?: string | null;
   /** Assigned | InProgress | Completing | Completed — tells "never opened" from "no record". */
   taskState?: string | null;

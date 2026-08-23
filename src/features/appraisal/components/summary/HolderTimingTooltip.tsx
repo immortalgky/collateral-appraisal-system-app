@@ -46,10 +46,13 @@ const formatDateTime = (iso: string): string => {
   });
 };
 
+// The task layer emits "OnTime" and the appraisal layer "OnTrack" for the same state — SlaCells and
+// TaskMonitorTable both accept either, so this must too or a healthy SLA renders in neutral gray.
 const slaStatusTone: Record<string, string> = {
   breached: 'text-rose-300',
   atrisk: 'text-amber-300',
   ontime: 'text-emerald-300',
+  ontrack: 'text-emerald-300',
 };
 
 interface RowProps {
@@ -102,7 +105,9 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
     if (!anchor || !panelRef.current) return;
     const { offsetWidth: w, offsetHeight: h } = panelRef.current;
     const fitsBelow = anchor.bottom + OFFSET + h + VIEWPORT_MARGIN <= window.innerHeight;
-    const top = fitsBelow ? anchor.bottom + OFFSET : Math.max(VIEWPORT_MARGIN, anchor.top - OFFSET - h);
+    const top = fitsBelow
+      ? anchor.bottom + OFFSET
+      : Math.max(VIEWPORT_MARGIN, anchor.top - OFFSET - h);
     const left = Math.max(
       VIEWPORT_MARGIN,
       Math.min(anchor.left, window.innerWidth - w - VIEWPORT_MARGIN),
@@ -128,7 +133,6 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
   // Same reasoning: a hidden row is indistinguishable from an unknown one, and the SLA anchor is
   // exactly the fact a reader comes here to check. Shown whenever it is known.
   const showSlaStart = timing.slaStartAt != null;
-  const showOpened = timing.openedAt != null || timing.isPending;
   const tone = timing.slaStatus ? slaStatusTone[timing.slaStatus.toLowerCase()] : undefined;
 
   return (
@@ -163,19 +167,21 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
               {formatDateTime(timing.receivedAt)}
             </Row>
 
-            {showOpened && (
-              <Row label={t('activityTracking.timing.openedAt')}>
-                {timing.openedAt ? (
-                  formatDateTime(timing.openedAt)
-                ) : (
-                  <span className="text-gray-400 italic">
-                    {timing.taskState === 'Assigned'
-                      ? t('activityTracking.timing.notOpenedYet')
-                      : t('activityTracking.timing.noOpenRecord')}
-                  </span>
-                )}
-              </Row>
-            )}
+            {/* Always rendered, for the same reason as the rows around it: an omitted row is
+                indistinguishable from an unknown one. When empty it says which kind of empty —
+                "not opened yet" only while the task is still Assigned, "no record" once it is
+                InProgress or archived and the stamp is simply not recoverable. */}
+            <Row label={t('activityTracking.timing.openedAt')}>
+              {timing.openedAt ? (
+                formatDateTime(timing.openedAt)
+              ) : (
+                <span className="text-gray-400 italic">
+                  {timing.taskState === 'Assigned'
+                    ? t('activityTracking.timing.notOpenedYet')
+                    : t('activityTracking.timing.noOpenRecord')}
+                </span>
+              )}
+            </Row>
 
             {showStepEntered && (
               <Row label={t('activityTracking.timing.stepEnteredAt')}>

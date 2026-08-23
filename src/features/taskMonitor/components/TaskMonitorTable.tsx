@@ -196,7 +196,7 @@ function TaskMonitorTable({
                   <SlaBadge sla={task.slaStatus} />
                 </td>
                 <td className="px-4 py-3">
-                  <DateCell value={task.assigneeAssignedAt} />
+                  <DateCell value={task.assigneeAssignedAt ?? task.assignedAt} />
                 </td>
                 <td className="px-4 py-3">
                   <DateCell value={task.dueAt} />

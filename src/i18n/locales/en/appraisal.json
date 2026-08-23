@@ -938,8 +938,8 @@
     "timing": {
       "receivedAt": "Received",
       "openedAt": "Opened",
-      "notOpenedYet": "not opened yet",
-      "noOpenRecord": "no record",
+      "notOpenedYet": "Not opened yet",
+      "noOpenRecord": "No record",
       "stepEnteredAt": "Step started",
       "slaStartAt": "SLA starts from",
       "dueAt": "Due",

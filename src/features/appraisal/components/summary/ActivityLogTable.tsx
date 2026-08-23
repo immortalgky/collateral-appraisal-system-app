@@ -79,7 +79,7 @@ const ActivityLogTable = ({ activityLog, pageSize = 10 }: ActivityLogTableProps)
                   <HolderTimingTooltip
                     timing={{
                       receivedAt: item.startDate,
-                      stepEnteredAt: item.stepEnteredAt,
+                      stepEnteredAt: item.stepEnteredAt ?? item.startDate,
                       openedAt: item.openedAt ?? null,
                       taskState: item.taskState ?? null,
                       slaStartAt: item.slaStartAt ?? null,
