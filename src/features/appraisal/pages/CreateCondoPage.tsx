@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { FormProvider, FormReadOnlyContext } from '@shared/components/form';
+import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -38,10 +38,9 @@ import { useCollateralPrefillStore } from '@/features/collateralMaster/store/col
 import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 
 const CreateCondoPage = () => {
-  const _baseReadOnly = usePageReadOnly();
+  const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const isCiAppraisal = useIsCiAppraisal();
-  const isReadOnly = _baseReadOnly || isCiAppraisal;
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -311,33 +310,29 @@ const CreateCondoPage = () => {
               >
                 <ResizableSidebar.Main>
                   <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    <PageReadOnlyContext.Provider value={_baseReadOnly}>
-                      <FormReadOnlyContext.Provider value={_baseReadOnly}>
-                        {/* Photos Section */}
-                        <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                          <div className="flex items-center gap-3 mb-4">
-                            <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                              <Icon
-                                name="images"
-                                style="solid"
-                                className="w-5 h-5 text-indigo-600"
-                              />
-                            </div>
-                            <h2 className="text-lg font-semibold text-gray-900">
-                              {t('createPage.photosSection')}
-                            </h2>
-                          </div>
-                          <div className="h-px bg-gray-200 mb-4" />
-                          {appraisalId && (
-                            <PropertyPhotoSection
-                              ref={photoSectionRef}
-                              appraisalId={appraisalId}
-                              propertyId={propertyId}
-                            />
-                          )}
-                        </Section>
-                      </FormReadOnlyContext.Provider>
-                    </PageReadOnlyContext.Provider>
+                    {/* Photos Section */}
+                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <Icon
+                            name="images"
+                            style="solid"
+                            className="w-5 h-5 text-indigo-600"
+                          />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          {t('createPage.photosSection')}
+                        </h2>
+                      </div>
+                      <div className="h-px bg-gray-200 mb-4" />
+                      {appraisalId && (
+                        <PropertyPhotoSection
+                          ref={photoSectionRef}
+                          appraisalId={appraisalId}
+                          propertyId={propertyId}
+                        />
+                      )}
+                    </Section>
 
                     {/* Condo Tab Content */}
                     <div
@@ -383,12 +378,10 @@ const CreateCondoPage = () => {
                         </div>
                         <div className="h-px bg-gray-200" />
                         <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <FormReadOnlyContext.Provider value={_baseReadOnly}>
-                            <ConstructionInspectionTab
-                              readOnly={_baseReadOnly}
-                              ciMode={isCiAppraisal}
-                            />
-                          </FormReadOnlyContext.Provider>
+                          <ConstructionInspectionTab
+                            readOnly={isReadOnly}
+                            ciMode={isCiAppraisal}
+                          />
                         </Section>
                       </div>
                     )}
@@ -401,14 +394,14 @@ const CreateCondoPage = () => {
             <ActionBar>
               <ActionBar.Left>
                 <CancelButton />
-                {!_baseReadOnly && (
+                {!isReadOnly && (
                   <>
                     <ActionBar.Divider />
                     <ActionBar.UnsavedIndicator show={hasDirtyFields} />
                   </>
                 )}
               </ActionBar.Left>
-              {!_baseReadOnly && (
+              {!isReadOnly && (
                 <ActionBar.Right>
                   <Button
                     variant="ghost"
