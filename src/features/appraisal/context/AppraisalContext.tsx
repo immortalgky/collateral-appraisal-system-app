@@ -36,6 +36,13 @@ export interface AppraisalData {
   /** Persisted Construction Inspection round number (null/undefined for non-CI appraisals) */
   inspectionNumber?: number | null;
 
+  /**
+   * The appraisal's final appraised value (ValuationAnalyses.AppraisedValue). Stands in as the
+   * construction "value once finished" for property types that have no building depreciation
+   * table to total — a condo unit.
+   */
+  appraisalValue?: number | null;
+
   // Workflow task context (set when opened from task list)
   workflowInstanceId?: string;
   activityId?: string;
@@ -158,6 +165,15 @@ export function useAppraisalHasAppraisalBook(): boolean {
 export function useAppraisalInspectionNumber(): number | null | undefined {
   const context = useContext(AppraisalContext);
   return context?.appraisal?.inspectionNumber;
+}
+
+/**
+ * Hook to get the appraisal's final appraised value.
+ * Returns 0 when it has not been set yet.
+ */
+export function useAppraisalAppraisedValue(): number {
+  const context = useContext(AppraisalContext);
+  return context?.appraisal?.appraisalValue ?? 0;
 }
 
 /**

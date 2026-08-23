@@ -30,6 +30,8 @@ interface ConstructionSummaryFormProps {
     fileSizeBytes?: number | null;
   } | null;
   summaryCurrentValue: number;
+  /** Derived from the entered percentage — the persisted column holds 0. */
+  summaryPreviousValue: number;
   onUpdateSummary: (field: string, value: string | number | null) => void;
   readOnly?: boolean;
 }
@@ -37,6 +39,7 @@ interface ConstructionSummaryFormProps {
 export function ConstructionSummaryForm({
   summary,
   summaryCurrentValue,
+  summaryPreviousValue,
   onUpdateSummary,
   readOnly,
 }: ConstructionSummaryFormProps) {
@@ -161,7 +164,7 @@ export function ConstructionSummaryForm({
                 {formatNumber(summary?.summaryPreviousProgressPct ?? 0, 2)} %
               </td>
               <td className="text-right px-3 py-2 text-gray-400 tabular-nums bg-gray-50/50">
-                {formatNumber(summary?.summaryPreviousValue ?? 0, 2)}
+                {formatNumber(summaryPreviousValue, 2)}
               </td>
               <td className="px-1.5 py-1">
                 <NumberInput
