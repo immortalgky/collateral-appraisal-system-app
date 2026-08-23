@@ -99,12 +99,19 @@ function RequestPage() {
     error,
   } = useGetRequestById(requestId);
 
-  // A submitted request belongs to the appraisal workflow: it can no longer be deleted,
-  // duplicated, saved as a draft or re-submitted. Only a validated Save stays available so
-  // the maker can still fix data after a route-back to appraisal-initiation.
-  // Guarded on isEditMode because isRequestSubmitted fails closed on missing data, which
-  // would otherwise hide Submit on the create route where no request is loaded yet.
-  const isSubmitted = isEditMode && isRequestSubmitted(requestData?.status);
+  // A submitted request belongs to the appraisal workflow: it can no longer be deleted, saved as
+  // a draft or re-submitted -- the backend rejects all three with a 400. Duplicate is hidden with
+  // them by product decision, not because the backend blocks it; it only seeds a new request.
+  // Only a validated Save stays available, so the maker can still fix data after a route-back to
+  // appraisal-initiation.
+  //
+  // requestedAt is passed alongside status so this matches the backend invariant exactly: legacy
+  // rows demoted to 'New' by the original bug still read as submitted here.
+  //
+  // Guarded on isEditMode because isRequestSubmitted fails closed on missing data, which would
+  // otherwise hide Submit on the create route where no request is loaded yet.
+  const isSubmitted =
+    isEditMode && isRequestSubmitted(requestData?.status, requestData?.requestedAt);
 
   // Add minimum loading delay for better UX (show skeleton) - only in edit mode
   // When data is cached, isLoadingRequest will be false immediately, so we skip the delay

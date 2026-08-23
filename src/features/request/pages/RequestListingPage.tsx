@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useRelativeTime } from '@/shared/hooks/useFormatters';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useDeleteRequest, useGetRequests } from '../api';
-import { isRequestSubmitted } from '../utils/status';
+import { isRequestSubmitted, PRE_SUBMIT_STATUSES } from '../utils/status';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
@@ -107,7 +107,8 @@ function RequestListingPage() {
   }, [requests]);
 
   // Filter options
-  const statusOptions = ['Draft', 'New'];
+  // Same source as the delete gate, so the filter and the gate can never drift apart.
+  const statusOptions = PRE_SUBMIT_STATUSES;
   const purposeParams = useParametersByGroup('AppraisalPurpose');
 
   const handleRowClick = (requestId: string) => {
