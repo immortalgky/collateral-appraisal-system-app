@@ -58,6 +58,14 @@
     "pending": "Pending",
     "notIncluded": "Not included"
   },
+  "manualCost": {
+    "landRate": "Land price / sq.wa",
+    "landArea": "Land area (sq.wa)",
+    "landValue": "Land value",
+    "buildingValue": "Building value",
+    "total": "Total",
+    "noBuildingSchedule": "No depreciation schedule yet — enter one on the Building Detail page for the building value to appear."
+  },
   "toasts": {
     "saved": "Saved!",
     "valueSaved": "Value saved",

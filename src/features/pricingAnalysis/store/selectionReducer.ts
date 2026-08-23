@@ -30,6 +30,10 @@ export type SelectionState = {
 
   // Track dirty method value change
   dirtyManualValueKeys: string[];
+  /** Methods whose manual Cost land rate changed — tracked apart from dirtyManualValueKeys so a
+   *  method that only had its price edited is never sent a null rate, which would delete a
+   *  breakdown it never had (a MachineryCost method's FMV row, say). */
+  dirtyCostBreakdownKeys: string[];
   // Track selected method or approach change
   dirtyMethodApproachTypes: string[];
   /** True when the final approach selection has changed locally since the last successful
@@ -114,6 +118,19 @@ export type SelectionAction =
        *  as part of the batched Save click. */
       type: 'SUMMARY_UPDATE_METHOD_VALUE';
       payload: { approachType: string; methodType: string; value: number; methodId?: string };
+    }
+  | {
+      /** Local-only, same batching as SUMMARY_UPDATE_METHOD_VALUE. Records the land price per
+       *  square wa an appraiser types on a manual Cost-approach method; saveSummary sends it to
+       *  the manual-cost-breakdown endpoint instead of the plain method-value one. A null rate
+       *  clears the breakdown. */
+      type: 'SUMMARY_UPDATE_METHOD_LAND_RATE';
+      payload: {
+        approachType: string;
+        methodType: string;
+        rate: number | null;
+        methodId?: string;
+      };
     };
 
 /** filter out approaches and methods that are not selected in editing mode
@@ -194,6 +211,7 @@ export function approachMethodReducer(
         // Preserve across re-INIT too (e.g. a background refetch firing between the user
         // typing a manual value and clicking Save shouldn't drop the pending dirty flag).
         dirtyManualValueKeys: state.dirtyManualValueKeys ?? [],
+        dirtyCostBreakdownKeys: state.dirtyCostBreakdownKeys ?? [],
         // A reset baseline has nothing dirty against it yet.
         dirtyMethodApproachTypes: resetSelection ? [] : (state.dirtyMethodApproachTypes ?? []),
         dirtyApproachSelection: resetSelection ? false : (state.dirtyApproachSelection ?? false),
@@ -407,6 +425,7 @@ export function approachMethodReducer(
     case 'SUMMARY_SAVE': {
       if (
         state.dirtyManualValueKeys.length === 0 &&
+        state.dirtyCostBreakdownKeys.length === 0 &&
         state.dirtyMethodApproachTypes.length === 0 &&
         !state.dirtyApproachSelection
       )
@@ -415,6 +434,7 @@ export function approachMethodReducer(
       return {
         ...state,
         dirtyManualValueKeys: [],
+        dirtyCostBreakdownKeys: [],
         dirtyMethodApproachTypes: [],
         dirtyApproachSelection: false,
       };
@@ -514,6 +534,30 @@ export function approachMethodReducer(
       };
 
       return nextState;
+    }
+
+    case 'SUMMARY_UPDATE_METHOD_LAND_RATE': {
+      if (state.summarySelected == null) return state;
+
+      return {
+        ...state,
+        summarySelected: state.summarySelected.map(appr => {
+          if (appr.approachType !== action.payload.approachType) return appr;
+
+          return {
+            ...appr,
+            methods: appr.methods.map(method =>
+              method.methodType === action.payload.methodType
+                ? { ...method, landRatePerSqWa: action.payload.rate }
+                : method,
+            ),
+          };
+        }),
+        dirtyCostBreakdownKeys:
+          action.payload.methodId && !state.dirtyCostBreakdownKeys.includes(action.payload.methodId)
+            ? [...state.dirtyCostBreakdownKeys, action.payload.methodId]
+            : state.dirtyCostBreakdownKeys,
+      };
     }
 
     default:

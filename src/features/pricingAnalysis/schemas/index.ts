@@ -62,6 +62,14 @@ export type SetFinalValueResponseType = z.infer<typeof schemas.SetFinalValueResp
 export type UpdateFinalValueRequestType = z.infer<typeof schemas.UpdateFinalValueRequest>;
 export type UpdateFinalValueResponseType = z.infer<typeof schemas.UpdateFinalValueResponse>;
 
+// -- Manual Cost Breakdown --
+export type SetManualCostBreakdownRequestType = z.infer<
+  typeof schemas.SetManualCostBreakdownRequest
+>;
+export type SetManualCostBreakdownResponseType = z.infer<
+  typeof schemas.SetManualCostBreakdownResponse
+>;
+
 // -- Remark --
 export type UpdateRemarkRequestType = z.infer<typeof schemas.UpdateRemarkRequest>;
 export type UpdateRemarkResponseType = z.infer<typeof schemas.UpdateRemarkResponse>;

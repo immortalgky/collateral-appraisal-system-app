@@ -36,6 +36,10 @@ const COST_METHOD_SERVER_TO_CONFIG: Record<string, string> = {
   DirectComparison: 'DC_COST',
 };
 
+/** Mirrors the server's PricingUnit vocabulary: PerSqWa/PerSqm price by area, PerUnit is a lumpsum. */
+const isLandRateUnit = (unitType?: string | null) =>
+  unitType === 'PerSqWa' || unitType === 'PerSqm';
+
 /** Normalise an approach/method type so it matches the config key.
  *  If the value is already a config key (e.g. "MARAPPR") it passes through. */
 const normalizeApproachType = (t: string) => SERVER_TO_CONFIG_APPROACH[t] ?? t;
@@ -78,6 +82,12 @@ export function createInitialState(
         isIncluded: !!apiMethod,
         isSelected: apiMethod?.isSelected ?? false,
         appraisalValue: apiMethod?.methodValue ?? confMethod.appraisalValue ?? 0,
+
+        // valuePerUnit doubles as the calculated land rate, so only read it back as a manual
+        // entry when the unit says it prices land by area. A PerUnit lumpsum carries no rate.
+        landRatePerSqWa: isLandRateUnit(apiMethod?.unitType)
+          ? (apiMethod?.valuePerUnit ?? null)
+          : null,
       };
     }) as Method[];
 

@@ -10,6 +10,7 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PropertyGroupItemDto } from '@features/appraisal/api';
 import type { PricingAnalysisConfigType } from '../../schemas';
+import type { ManualCostBreakdownContext } from '../../types/selection';
 import { mapGroupItemToPropertyItem } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
 import type { FlatContext, ProjectModelPricingContextDto } from '../../utils/flattenPricingContext';
 import { ServerDataCtx } from '../../store/selectionContext';
@@ -73,6 +74,8 @@ interface PricingAnalysisAccordionProps {
     value: number;
     methodId?: string;
   }) => void;
+  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  manualCostBreakdown?: ManualCostBreakdownContext;
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
   removeDocumentConfirm?: {
     isOpen: boolean;
@@ -115,6 +118,7 @@ export const PricingAnalysisAccordion = ({
   modelThumbnailSrc,
   deleteConfirm,
   onManualValueSync,
+  manualCostBreakdown,
   onRequestRemoveDocument,
   removeDocumentConfirm,
 }: PricingAnalysisAccordionProps) => {
@@ -299,6 +303,7 @@ export const PricingAnalysisAccordion = ({
                 pricingConfiguration={pricingConfiguration}
                 deleteConfirm={deleteConfirm}
                 onManualValueSync={onManualValueSync}
+                manualCostBreakdown={manualCostBreakdown}
                 onRequestRemoveDocument={onRequestRemoveDocument}
                 removeDocumentConfirm={removeDocumentConfirm}
               />

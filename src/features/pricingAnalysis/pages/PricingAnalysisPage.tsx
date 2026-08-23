@@ -1,7 +1,7 @@
 import '@features/pricingAnalysis/i18n';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
@@ -25,7 +25,10 @@ import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageRead
 import toast from 'react-hot-toast';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
 import { MethodSectionRenderer } from '@features/pricingAnalysis/components/MethodSectionRenderer';
-import type { PricingServerData } from '@features/pricingAnalysis/types/selection';
+import type {
+  ManualCostBreakdownContext,
+  PricingServerData,
+} from '@features/pricingAnalysis/types/selection';
 import { propertyGroupKeys } from '@features/appraisal/api/propertyGroup';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -58,6 +61,7 @@ const initialState: SelectionState = {
   summarySelected: [],
   systemCalculationMode: 'System',
   dirtyManualValueKeys: [],
+  dirtyCostBreakdownKeys: [],
   dirtyMethodApproachTypes: [],
   dirtyApproachSelection: false,
 };
@@ -419,6 +423,38 @@ function PricingAnalysisContent({
     [dispatch],
   );
 
+  // (8c) Land price per square wa, typed on a manual Cost-approach card. Batched into the same
+  // Save click as the value above; saveSummary routes a Cost method carrying a rate to the
+  // manual-cost-breakdown endpoint so the appraisal summary can split ที่ดิน from สิ่งปลูกสร้าง.
+  const handleManualLandRateSync = useCallback(
+    ({
+      approachType,
+      methodType,
+      rate,
+      methodId,
+    }: {
+      approachType: string;
+      methodType: string;
+      rate: number | null;
+      methodId?: string;
+    }) => {
+      dispatch({
+        type: 'SUMMARY_UPDATE_METHOD_LAND_RATE',
+        payload: { approachType, methodType, rate, methodId },
+      });
+    },
+    [dispatch],
+  );
+
+  const manualCostBreakdown: ManualCostBreakdownContext = useMemo(
+    () => ({
+      landAreaInSqWa: pricingSelection?.landAreaInSqWa ?? null,
+      buildingValue: pricingSelection?.buildingValue ?? null,
+      onLandRateSync: handleManualLandRateSync,
+    }),
+    [pricingSelection?.landAreaInSqWa, pricingSelection?.buildingValue, handleManualLandRateSync],
+  );
+
   // (9) Assemble server data for context
   const serverData: PricingServerData = {
     groupDetail,
@@ -496,6 +532,7 @@ function PricingAnalysisContent({
                         modelThumbnailSrc={modelThumbnailSrc}
                         deleteConfirm={selectionActions.deleteConfirm}
                         onManualValueSync={handleManualValueSync}
+                        manualCostBreakdown={manualCostBreakdown}
                         onRequestRemoveDocument={selectionActions.requestRemoveDocument}
                         removeDocumentConfirm={selectionActions.removeDocumentConfirm}
                       />

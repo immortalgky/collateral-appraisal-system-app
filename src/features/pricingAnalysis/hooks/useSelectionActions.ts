@@ -24,11 +24,16 @@ import {
   useDeletePricingAnalysisMethod,
   useRemovePricingAnalysisDocument,
   useApplyPricingSelection,
+  useSetManualCostBreakdown,
   useUpdateMethodValue,
   useUpdateRemark,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
-import type { UpdateMethodRequestType, UpdateRemarkRequestType } from '../schemas';
+import type {
+  SetManualCostBreakdownRequestType,
+  UpdateMethodRequestType,
+  UpdateRemarkRequestType,
+} from '../schemas';
 import {
   isServerId,
   mapToServerApproachType,
@@ -152,6 +157,7 @@ export function useSelectionActions({
 
   const applySelectionMutation = useApplyPricingSelection();
   const updateMethodMutation = useUpdateMethodValue();
+  const manualCostBreakdownMutation = useSetManualCostBreakdown();
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
@@ -334,13 +340,42 @@ export function useSelectionActions({
       // saved yet actively CLEARS the approach value rather than leaving the old number.
       // No per-item try/catch here (unlike the PDF loop below) — a failed value save
       // must block the rest of the save.
-      if (state.dirtyManualValueKeys.length > 0) {
+      const dirtyValueKeys = state.dirtyManualValueKeys;
+      const dirtyBreakdownKeys = state.dirtyCostBreakdownKeys;
+
+      if (dirtyValueKeys.length > 0 || dirtyBreakdownKeys.length > 0) {
         const dirtyMethods = state.summarySelected
           .flatMap(appr => appr.methods)
-          .filter(m => m.id && state.dirtyManualValueKeys.includes(m.id));
+          .filter(
+            m => m.id && (dirtyValueKeys.includes(m.id) || dirtyBreakdownKeys.includes(m.id)),
+          );
 
         for (const method of dirtyMethods) {
           if (!method.id || !isServerId(method.id)) continue;
+
+          // A touched land rate goes to the breakdown endpoint, which stores the rate, the
+          // title-deed land value and the depreciated building total alongside the price —
+          // that per-component record is what makes the appraisal summary print ที่ดิน and
+          // สิ่งปลูกสร้าง on separate rows, and a null rate there removes it again.
+          //
+          // Keyed on the rate having actually been edited, never on the method merely being
+          // dirty: a Cost method whose price alone changed would otherwise be sent rate null
+          // and lose a breakdown it never had — a MachineryCost method's FMV row, say.
+          //
+          // Exactly one endpoint per method. Both write the method value, so falling through
+          // to updateMethod afterwards would race the two writes.
+          if (dirtyBreakdownKeys.includes(method.id)) {
+            await manualCostBreakdownMutation.mutateAsync({
+              id: pricingAnalysisId,
+              methodId: method.id,
+              request: {
+                landRatePerSqWa: method.landRatePerSqWa ?? null,
+                appraisalPrice: method.appraisalValue,
+              } as SetManualCostBreakdownRequestType,
+            });
+            continue;
+          }
+
           await updateMethodMutation.mutateAsync({
             id: pricingAnalysisId,
             methodId: method.id,
@@ -394,7 +429,7 @@ export function useSelectionActions({
       }
 
       dispatch({ type: 'EDIT_SAVE' });
-      // Clears dirtyManualValueKeys/dirtyMethodApproachTypes/dirtyApproachSelection now
+      // Clears every dirty tracker (values, cost breakdowns, selection) now
       // that everything dirty has landed server-side.
       dispatch({ type: 'SUMMARY_SAVE' });
       await qc.invalidateQueries({
