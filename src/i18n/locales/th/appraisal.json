@@ -934,6 +934,17 @@
       "status": "สถานะ",
       "movement": "การเคลื่อนไหว",
       "remark": "หมายเหตุ"
+    },
+    "timing": {
+      "receivedAt": "ได้รับงาน",
+      "openedAt": "เปิดงาน",
+      "notOpenedYet": "ยังไม่เปิด",
+      "noOpenRecord": "ไม่มีข้อมูล",
+      "stepEnteredAt": "งานเข้าขั้นตอนนี้",
+      "slaStartAt": "SLA เริ่มจับ",
+      "dueAt": "ครบกำหนด",
+      "slaStatus": "สถานะ SLA",
+      "hoursShort": "{{hours}} ชม."
     }
   },
   "documentChecklist": {

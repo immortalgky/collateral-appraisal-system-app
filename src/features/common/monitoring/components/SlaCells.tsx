@@ -70,10 +70,14 @@ export function getRowVariantClasses(bucket: 'breached' | 'atRisk' | 'healthy' |
 }
 
 // ─── SLA Due cell ─────────────────────────────────────────────────────────────
-// SLA Due = AssignedDate + OlaTargetHours. Icon prefix surfaces urgency at a glance:
-// breached → red solid exclamation circle; at-risk → amber clock; otherwise gray clock.
+// Prefers the task's real DueAt. The AssignedDate + OlaTargetHours fallback only covers rows from a
+// server that predates DueDate; it is doubly wrong now, because assignedDate became the current
+// holder's clock (a redirect moves it while the deadline stays put) and because it counts calendar
+// hours where DueAt is business-time. Icon prefix surfaces urgency at a glance: breached → red solid
+// exclamation circle; at-risk → amber clock; otherwise gray clock.
 
 interface SlaDueCellProps {
+  dueDate?: string | null;
   assignedDate: string | null;
   targetHours: number | null;
   slaStatus: string | null;
@@ -82,19 +86,25 @@ interface SlaDueCellProps {
 }
 
 export function SlaDueCell({
+  dueDate: dueDateIso,
   assignedDate,
   targetHours,
   slaStatus,
   slaDurationHours,
 }: SlaDueCellProps) {
-  if (!assignedDate || targetHours == null) {
-    return <span className="text-gray-400 text-xs">—</span>;
-  }
-
   let dueDate: Date;
   try {
-    dueDate = new Date(parseISO(assignedDate).getTime() + targetHours * 3_600_000);
+    if (dueDateIso) {
+      dueDate = parseISO(dueDateIso);
+    } else if (assignedDate && targetHours != null) {
+      dueDate = new Date(parseISO(assignedDate).getTime() + targetHours * 3_600_000);
+    } else {
+      return <span className="text-gray-400 text-xs">—</span>;
+    }
   } catch {
+    return <span className="text-gray-400 text-xs">—</span>;
+  }
+  if (Number.isNaN(dueDate.getTime())) {
     return <span className="text-gray-400 text-xs">—</span>;
   }
 
