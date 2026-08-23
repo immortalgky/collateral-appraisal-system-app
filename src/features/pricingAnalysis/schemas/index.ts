@@ -70,6 +70,12 @@ export type SetManualCostBreakdownResponseType = z.infer<
   typeof schemas.SetManualCostBreakdownResponse
 >;
 
+// -- Pricing Analysis (root) --
+export type UpdatePricingAnalysisRequestType = z.infer<typeof schemas.UpdatePricingAnalysisRequest>;
+export type UpdatePricingAnalysisResponseType = z.infer<
+  typeof schemas.UpdatePricingAnalysisResponse
+>;
+
 // -- Remark --
 export type UpdateRemarkRequestType = z.infer<typeof schemas.UpdateRemarkRequest>;
 export type UpdateRemarkResponseType = z.infer<typeof schemas.UpdateRemarkResponse>;
