@@ -26,12 +26,14 @@ import {
   useApplyPricingSelection,
   useSetManualCostBreakdown,
   useUpdateMethodValue,
+  useUpdatePricingAnalysis,
   useUpdateRemark,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type {
   SetManualCostBreakdownRequestType,
   UpdateMethodRequestType,
+  UpdatePricingAnalysisRequestType,
   UpdateRemarkRequestType,
 } from '../schemas';
 import {
@@ -160,6 +162,7 @@ export function useSelectionActions({
   const manualCostBreakdownMutation = useSetManualCostBreakdown();
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
+  const updatePricingAnalysisMutation = useUpdatePricingAnalysis();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
   const removeDocumentMutation = useRemovePricingAnalysisDocument();
   const {
@@ -427,6 +430,25 @@ export function useSelectionActions({
           request: { remark: nextRemark } as UpdateRemarkRequestType,
         });
       }
+
+      // ── Step 4: Calculation mode — the Manual/System toggle, written LAST ────
+      // The toggle is the user's explicit choice, so it has to outrank the implicit writes
+      // the other save paths make: SetFinalValue/UpdateFinalValue force UseSystemCalc false,
+      // SetManualCostBreakdown (step 1 above, for a touched land rate) forces it false too,
+      // and SaveComparativeAnalysis forces it true — each as a side-effect of whichever
+      // screen was saved last. Sending it after everything else makes the toggle the
+      // authoritative value and repairs a flag an earlier save left inconsistent.
+      // Sent unconditionally (it is idempotent) — the mode may be the only thing the user
+      // changed, in which case every step above is a no-op and nothing else would persist it.
+      await updatePricingAnalysisMutation.mutateAsync({
+        pricingAnalysisId,
+        request: {
+          marketValue: null,
+          appraisedValue: null,
+          forcedSaleValue: null,
+          useSystemCalc: !isManualMode,
+        } as UpdatePricingAnalysisRequestType,
+      });
 
       dispatch({ type: 'EDIT_SAVE' });
       // Clears every dirty tracker (values, cost breakdowns, selection) now

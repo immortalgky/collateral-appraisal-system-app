@@ -1211,8 +1211,8 @@ const GetQuotationByIdResponse = z
   .passthrough();
 const UpdatePricingAnalysisRequest = z
   .object({
-    marketValue: z.number(),
-    appraisedValue: z.number(),
+    marketValue: z.number().nullable(),
+    appraisedValue: z.number().nullable(),
     forcedSaleValue: z.number().nullable(),
     useSystemCalc: z.boolean().nullable(),
   })

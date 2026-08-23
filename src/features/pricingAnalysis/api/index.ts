@@ -23,6 +23,8 @@ import {
   type UpdateFinalValueResponseType,
   type UpdateMethodRequestType,
   type UpdateMethodResponseType,
+  type UpdatePricingAnalysisRequestType,
+  type UpdatePricingAnalysisResponseType,
   type UpdateRemarkRequestType,
   type UpdateRemarkResponseType,
 } from '../schemas';
@@ -563,6 +565,31 @@ export function useUpdateRemark() {
         `/pricing-analysis/${pricingAnalysisId}/remark`,
         request,
       );
+      return response;
+    },
+  });
+}
+
+// ==================== Calculation Mode Hooks ====================
+/**
+ * Update the analysis-level fields. Every value in the body is optional server-side and only
+ * what is sent gets written, so the summary screen uses it to persist the Manual/System toggle
+ * alone (all value fields null) without disturbing the final values the rollup just computed.
+ * PUT /pricing-analysis/{id}
+ *
+ * Not invalidated here — only called from saveSummary (useSelectionActions), which does a
+ * single consolidated invalidate after the whole batch lands.
+ */
+export function useUpdatePricingAnalysis() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      request: UpdatePricingAnalysisRequestType;
+    }): Promise<UpdatePricingAnalysisResponseType> => {
+      const { data: response } = await axios.put(`/pricing-analysis/${pricingAnalysisId}`, request);
       return response;
     },
   });

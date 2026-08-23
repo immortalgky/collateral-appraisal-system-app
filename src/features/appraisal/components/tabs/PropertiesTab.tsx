@@ -436,6 +436,14 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   // Validate the group first; only navigate once every rule passes.
   const handleGoToPricingAnalysis = useCallback(
     (groupId: string) => {
+      // Read-only entry (opened from Search, or a terminal/non-editable appraisal) can only
+      // view the analysis and cannot fix anything the pre-flight would flag, so skip the
+      // validation gate entirely and go straight to the page.
+      if (readOnly) {
+        navigateToPricingAnalysis(groupId);
+        return;
+      }
+
       const group = groupsRef.current.find(g => g.id === groupId);
       // item.type carries the backend property type code; the validation registry normalises it.
       const properties: GroupPropertyRef[] = (group?.items ?? []).map((item, index) => ({
@@ -447,7 +455,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
         navigateToPricingAnalysis(groupId),
       );
     },
-    [openPricingValidation, navigateToPricingAnalysis, appraisalId],
+    [readOnly, openPricingValidation, navigateToPricingAnalysis, appraisalId],
   );
 
   const contextMenuItems = readOnly
