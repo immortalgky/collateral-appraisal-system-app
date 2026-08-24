@@ -19,6 +19,8 @@ import {
   type SetFinalValueResponseType,
   type UpdateFinalValueRequestType,
   type UpdateFinalValueResponseType,
+  type UpdateLandValueRequestType,
+  type UpdateLandValueResponseType,
   type UpdateMethodRequestType,
   type UpdateMethodResponseType,
   type UpdateRemarkRequestType,
@@ -489,6 +491,37 @@ export function useUpdateFinalValue() {
     }): Promise<UpdateFinalValueResponseType> => {
       const { data: response } = await axios.put(
         `/pricing-analysis/${pricingAnalysisId}/final-values/${valueId}`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
+      });
+    },
+  });
+}
+
+/**
+ * Update the manual land value for a Cost Approach land-pricing method
+ * PUT /pricing-analysis/{id}/methods/{methodId}/land-value
+ */
+export function useUpdateLandValue() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      methodId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      methodId: string;
+      request: UpdateLandValueRequestType;
+    }): Promise<UpdateLandValueResponseType> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/land-value`,
         request,
       );
       return response;

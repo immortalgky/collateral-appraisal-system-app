@@ -2,11 +2,17 @@ import { Icon } from '@/shared/components';
 import Badge from '@/shared/components/Badge';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import type { Method } from '../../types/selection';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/shared/hooks/useDebounce';
+import { CostApproachLandValueSection } from './CostApproachLandValueSection';
+import {
+  hasLandProperty as computeHasLandProperty,
+  isCostApproachLandPricingMethod,
+} from './costApproachLandPricingMethods';
+import { ServerDataCtx } from '../../store/selectionContext';
 
 const MANUAL_VALUE_DEBOUNCE_MS = 1000;
 
@@ -25,6 +31,12 @@ interface PricingAnalysisMethodCardProps {
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   isManualMode?: boolean;
   onManualValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
+  onLandValueSync?: (arg: {
     approachType: string;
     methodType: string;
     value: number;
@@ -52,14 +64,20 @@ export const PricingAnalysisMethodCard = ({
   onDeleteMethod,
   isManualMode,
   onManualValueSync,
+  onLandValueSync,
   disabled = false,
 }: PricingAnalysisMethodCardProps) => {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
+  const serverData = useContext(ServerDataCtx);
+  const hasLandProperty = computeHasLandProperty(serverData?.properties);
   const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue ?? null);
   const debouncedManualInput = useDebounce(manualInput, MANUAL_VALUE_DEBOUNCE_MS);
   const appraisalValueRef = useRef(method.appraisalValue);
   appraisalValueRef.current = method.appraisalValue;
+  const [isAppraisalValueDirty, setIsAppraisalValueDirty] = useState<boolean>(
+    method.appraisalValue > 0,
+  );
 
   // Local-only sync: 1s after the user stops typing, push the value into the reducer
   // so anything reading state.summarySelected mid-edit (approach totals, the
@@ -92,10 +110,16 @@ export const PricingAnalysisMethodCard = ({
   useEffect(() => {
     const external = method.appraisalValue ?? null;
     setManualInput(prev => (prev === external ? prev : external && external > 0 ? external : null));
+    // Only *clear* dirty on a genuine reset (external value emptied out, e.g. a calc-mode
+    // toggle) — never set it true here. Setting it true from a truthy external value would
+    // also fire when this is just the auto-fill effect's own debounced push echoing back,
+    // which would wrongly lock auto-fill off after its first successful save.
+    if (!external) setIsAppraisalValueDirty(false);
   }, [method.appraisalValue]);
 
   const handleManualChange = (e: { target: { name?: string; value: number | null } }) => {
     setManualInput(e.target.value);
+    setIsAppraisalValueDirty(true);
   };
 
   // Immediate flush on blur — no server call, just guarantees the reducer has the
@@ -122,6 +146,85 @@ export const PricingAnalysisMethodCard = ({
       (e.target as HTMLInputElement).blur();
     }
   };
+
+  // Land Value input — independent state from manualInput above (Finding A: the two boxes
+  // used to share state, so typing here overwrote the method's own value). Same
+  // debounce-then-blur-flush pattern, targeting method.landValue / onLandValueSync instead.
+  const [landValueInput, setLandValueInput] = useState<number | null>(method.landValue ?? null);
+  const debouncedLandValueInput = useDebounce(landValueInput, MANUAL_VALUE_DEBOUNCE_MS);
+  const landValueRef = useRef(method.landValue);
+  landValueRef.current = method.landValue;
+
+  useEffect(() => {
+    if (!isManualMode || !onLandValueSync) return;
+    if (debouncedLandValueInput == null || debouncedLandValueInput < 0) return;
+    if (debouncedLandValueInput === landValueRef.current) return;
+
+    onLandValueSync({
+      approachType,
+      methodType: method.methodType,
+      value: debouncedLandValueInput,
+      methodId: method.id,
+    });
+  }, [
+    debouncedLandValueInput,
+    isManualMode,
+    onLandValueSync,
+    approachType,
+    method.methodType,
+    method.id,
+  ]);
+
+  useEffect(() => {
+    const external = method.landValue ?? null;
+    setLandValueInput(prev => (prev === external ? prev : external));
+  }, [method.landValue]);
+
+  const handleLandValueChange = (e: { target: { name?: string; value: number | null } }) => {
+    setLandValueInput(e.target.value);
+  };
+
+  const handleLandValueBlur = () => {
+    if (!isManualMode || !onLandValueSync) return;
+    if (landValueInput == null || landValueInput < 0) return;
+    if (landValueInput === method.landValue) return;
+
+    onLandValueSync({
+      approachType,
+      methodType: method.methodType,
+      value: landValueInput,
+      methodId: method.id,
+    });
+  };
+
+  const handleLandValueKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setLandValueInput(method.landValue ?? null);
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
+  // Default the method's own value to land + building total while the user hasn't directly
+  // edited it. isAppraisalValueDirty starts true for a method that already had a saved value
+  // on load (never overwrite existing data), and flips true the moment handleManualChange
+  // fires. Only setManualInput here — the existing debounced sync effect above (watching
+  // debouncedManualInput) still handles persisting the auto-filled value via onManualValueSync,
+  // same as if the user had typed it.
+  useEffect(() => {
+    if (!isManualMode || isAppraisalValueDirty || !hasLandProperty) return;
+    if (!isCostApproachLandPricingMethod(method.methodType)) return;
+
+    const sum = (landValueInput ?? 0) + (method.buildingValue ?? 0);
+    setManualInput(prev => (prev === sum ? prev : sum));
+  }, [
+    isManualMode,
+    isAppraisalValueDirty,
+    hasLandProperty,
+    method.methodType,
+    landValueInput,
+    method.buildingValue,
+  ]);
+
   if (viewMode === 'editing') {
     return (
       <div
@@ -296,6 +399,20 @@ export const PricingAnalysisMethodCard = ({
           </div>
         )}
 
+        <CostApproachLandValueSection
+          variant="grid"
+          method={method}
+          isManualMode={isManualMode}
+          isReadOnly={isReadOnly}
+          disabled={disabled}
+          hasLandProperty={hasLandProperty}
+          landValueInput={landValueInput}
+          onLandValueChange={handleLandValueChange}
+          onLandValueBlur={handleLandValueBlur}
+          onLandValueKeyDown={handleLandValueKeyDown}
+          t={t}
+        />
+
         {/* Status badge */}
         <Badge
           size="xs"
@@ -326,43 +443,8 @@ export const PricingAnalysisMethodCard = ({
         onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
       };
 
-  const CostApproachManualWrapper = ({ children }: { children: React.ReactNode }) => {
-    return (
-      <div className="flex flex-col">
-        {children}
-
-        {approachType == 'COSTAPPR' && isManualMode && (
-          <div className="flex flex-row text-gray-500">
-            <ul className="w-full flex flex-col items-end">
-              <li className="w-full flex justify-between items-center gap-2">
-                <p>+ Land Value</p>
-                {/* <NumberInput
-                  value={manualInput}
-                  disabled={disabled}
-                  onChange={handleManualChange}
-                  onBlur={handleManualBlur}
-                  onKeyDown={handleManualKeyDown}
-                  decimalPlaces={2}
-                  placeholder="0.00"
-                  fullWidth={false}
-                  className="w-40"
-                  rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
-                /> */}
-              </li>
-              <li className="w-full flex justify-between items-center">
-                <p>+ Building cost</p>
-                <p>{100_000}</p>
-              </li>
-              <li className="w-full flex justify-between items-center">= {200_000}</li>
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <CostApproachManualWrapper>
+    <div className="flex flex-col">
       <ListWrapper
         {...listWrapperProps}
         className={clsx(
@@ -496,6 +578,18 @@ export const PricingAnalysisMethodCard = ({
           <Icon name="chevron-right" style="solid" className="size-3 text-gray-300 shrink-0" />
         )}
       </ListWrapper>
-    </CostApproachManualWrapper>
+      <CostApproachLandValueSection
+        method={method}
+        isManualMode={isManualMode}
+        isReadOnly={isReadOnly}
+        disabled={disabled}
+        hasLandProperty={hasLandProperty}
+        landValueInput={landValueInput}
+        onLandValueChange={handleLandValueChange}
+        onLandValueBlur={handleLandValueBlur}
+        onLandValueKeyDown={handleLandValueKeyDown}
+        t={t}
+      />
+    </div>
   );
 };

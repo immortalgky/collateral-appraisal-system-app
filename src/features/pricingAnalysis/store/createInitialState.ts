@@ -1,6 +1,15 @@
 import type { GetPricingAnalysisResponseType, PricingAnalysisConfigType } from '../schemas';
 import type { Approach, Method } from '../types/selection';
 
+// TODO: drop this augmentation once src/shared/schemas/v1.ts is regenerated against the API's
+// updated OpenAPI spec — LandValue/BuildingValue are already live on the server's MethodDto,
+// the generated client just hasn't been refreshed to know about them yet.
+type ApiMethodWithLandValue =
+  GetPricingAnalysisResponseType['approaches'][number]['methods'][number] & {
+    landValue?: number | null;
+    buildingValue?: number;
+  };
+
 // Reverse mapping: server types → config types
 // (forward mapping lives in saveEditingSelection.ts)
 const SERVER_TO_CONFIG_APPROACH: Record<string, string> = {
@@ -59,7 +68,7 @@ export function createInitialState(
   return pricingAnalysisConfig.map((confAppr: PricingAnalysisConfigType) => {
     const apiAppr = apiApproachByType.get(confAppr.approachType);
 
-    const apiMethods = apiAppr?.methods ?? [];
+    const apiMethods = (apiAppr?.methods ?? []) as ApiMethodWithLandValue[];
     const apiMethodByType = new Map(
       apiMethods.map(m => [normalizeMethodType(m.methodType, confAppr.approachType), m]),
     );
@@ -79,6 +88,8 @@ export function createInitialState(
         isSelected: apiMethod?.isSelected ?? false,
         appraisalValue: apiMethod?.methodValue ?? confMethod.appraisalValue ?? 0,
         useSystemCalc: apiMethod?.useSystemCalc ?? true,
+        landValue: apiMethod?.landValue ?? null,
+        buildingValue: apiMethod?.buildingValue ?? 0,
       };
     }) as Method[];
 

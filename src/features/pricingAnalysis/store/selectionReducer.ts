@@ -30,6 +30,8 @@ export type SelectionState = {
 
   // Track dirty method value change
   dirtyManualValueKeys: string[];
+  // Track dirty land value change (Cost Approach land-pricing methods, manual mode)
+  dirtyLandValueKeys: string[];
   // Track selected method or approach change
   dirtyMethodApproachTypes: string[];
   /** True when the final approach selection has changed locally since the last successful
@@ -109,6 +111,14 @@ export type SelectionAction =
       payload: { approachType: string; methodType: string; value: number; methodId?: string };
     }
   | {
+      /** Local-only sync fired both immediately on blur and ~1s after the user stops
+       *  typing in the Land Value input (see PricingAnalysisMethodCard). Does not touch the
+       *  server — saveSummary (useSelectionActions) persists dirtyLandValueKeys as part of
+       *  the batched Save click, same as SUMMARY_UPDATE_METHOD_VALUE. */
+      type: 'SUMMARY_UPDATE_LAND_VALUE';
+      payload: { approachType: string; methodType: string; value: number; methodId?: string };
+    }
+  | {
       /** Flip one method between system calc / manual locally (DB write happens in
        *  useSelectionActions.toggleMethodCalcMode). No detail refetch — a refetch would
        *  re-run INIT and reset the local-only analysis-wide toggle. */
@@ -166,6 +176,7 @@ const resetForCalcModeChange = (approaches: Approach[], useSystemCalc: boolean):
       isSelected: false,
       appraisalValue: 0,
       useSystemCalc,
+      landValue: null,
     })),
   }));
 
@@ -196,6 +207,7 @@ export function approachMethodReducer(
         // Preserve across re-INIT too (e.g. a background refetch firing between the user
         // typing a manual value and clicking Save shouldn't drop the pending dirty flag).
         dirtyManualValueKeys: state.dirtyManualValueKeys ?? [],
+        dirtyLandValueKeys: state.dirtyLandValueKeys ?? [],
         dirtyMethodApproachTypes: state.dirtyMethodApproachTypes ?? [],
         dirtyApproachSelection: state.dirtyApproachSelection ?? false,
       };
@@ -212,6 +224,7 @@ export function approachMethodReducer(
         editDraft: resetForCalcModeChange(state.editDraft, useSystemCalc),
         activeMethod: undefined,
         dirtyManualValueKeys: [],
+        dirtyLandValueKeys: [],
         dirtyMethodApproachTypes: [],
         dirtyApproachSelection: false,
       };
@@ -407,6 +420,7 @@ export function approachMethodReducer(
     case 'SUMMARY_SAVE': {
       if (
         state.dirtyManualValueKeys.length === 0 &&
+        state.dirtyLandValueKeys.length === 0 &&
         state.dirtyMethodApproachTypes.length === 0 &&
         !state.dirtyApproachSelection
       )
@@ -415,6 +429,7 @@ export function approachMethodReducer(
       return {
         ...state,
         dirtyManualValueKeys: [],
+        dirtyLandValueKeys: [],
         dirtyMethodApproachTypes: [],
         dirtyApproachSelection: false,
       };
@@ -516,6 +531,31 @@ export function approachMethodReducer(
       return nextState;
     }
 
+    case 'SUMMARY_UPDATE_LAND_VALUE': {
+      if (state.summarySelected == null) return state;
+      if (action.payload.value == null || action.payload.value < 0) return state;
+
+      const nextState: SelectionState = {
+        ...state,
+        summarySelected: state.summarySelected.map(appr => {
+          if (appr.approachType !== action.payload.approachType) return appr;
+
+          const updatedMethods = appr.methods.map(method => {
+            if (method.methodType !== action.payload.methodType) return method;
+            return { ...method, landValue: action.payload.value };
+          });
+
+          return { ...appr, methods: updatedMethods };
+        }),
+        dirtyLandValueKeys:
+          action.payload.methodId && !state.dirtyLandValueKeys.includes(action.payload.methodId)
+            ? [...state.dirtyLandValueKeys, action.payload.methodId]
+            : state.dirtyLandValueKeys,
+      };
+
+      return nextState;
+    }
+
     case 'SUMMARY_SET_METHOD_CALC_MODE': {
       const { approachType, methodType, useSystemCalc } = action.payload;
       const apply = (approaches: Approach[]) =>
@@ -525,7 +565,9 @@ export function approachMethodReducer(
             : {
                 ...appr,
                 methods: appr.methods.map(m =>
-                  m.methodType === methodType ? { ...m, useSystemCalc, isSelected: false } : m,
+                  m.methodType === methodType
+                    ? { ...m, useSystemCalc, isSelected: false, landValue: null, appraisalValue: 0 }
+                    : m,
                 ),
               },
         );

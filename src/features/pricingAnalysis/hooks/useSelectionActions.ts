@@ -28,10 +28,14 @@ import {
   useUpdateMethodValue,
   useUpdateRemark,
   useSetPricingAnalysisSystemCalc,
-  useUpdateFinalValue,
+  useUpdateLandValue,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
-import type { UpdateMethodRequestType, UpdateRemarkRequestType } from '../schemas';
+import type {
+  UpdateLandValueRequestType,
+  UpdateMethodRequestType,
+  UpdateRemarkRequestType,
+} from '../schemas';
 import {
   isServerId,
   mapToServerApproachType,
@@ -63,6 +67,14 @@ export function useSelectionActions({
   // Deselect confirmation dialog
   const { isOpen: isConfirmOpen, onOpen: openConfirm, onClose: closeConfirm } = useDisclosure();
   const [pendingDeselect, setPendingDeselect] = useState<MethodKey | null>(null);
+
+  // Per-method calc-mode toggle confirmation dialog
+  const {
+    isOpen: isToggleCalcModeConfirmOpen,
+    onOpen: openToggleCalcModeConfirm,
+    onClose: closeToggleCalcModeConfirm,
+  } = useDisclosure();
+  const [pendingToggleCalcMode, setPendingToggleCalcMode] = useState<MethodKey | null>(null);
 
   const enterEdit = () => dispatch({ type: 'EDIT_ENTER' });
   const cancelEdit = () => dispatch({ type: 'EDIT_CANCEL' });
@@ -159,7 +171,7 @@ export function useSelectionActions({
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
   const setSystemCalcMutation = useSetPricingAnalysisSystemCalc();
-  const updateFinalValueMutation = useUpdateFinalValue();
+  const updateLandValueMutation = useUpdateLandValue();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
   const removeDocumentMutation = useRemovePricingAnalysisDocument();
   const {
@@ -361,6 +373,24 @@ export function useSelectionActions({
         }
       }
 
+      // ── Step 1b: Persist dirty land values (Cost Approach land-pricing methods) ──
+      // Same "must land before selection" rationale as Step 1, and same
+      // no-per-item-try/catch policy — a failed land value save must block the rest.
+      if (state.dirtyLandValueKeys.length > 0) {
+        const dirtyLandMethods = state.summarySelected
+          .flatMap(appr => appr.methods)
+          .filter(m => m.id && state.dirtyLandValueKeys.includes(m.id));
+
+        for (const method of dirtyLandMethods) {
+          if (!method.id || !isServerId(method.id)) continue;
+          await updateLandValueMutation.mutateAsync({
+            pricingAnalysisId,
+            methodId: method.id,
+            request: { landValue: method.landValue ?? 0 } as UpdateLandValueRequestType,
+          });
+        }
+      }
+
       // ── Step 2: Select the currently-selected method, but only for approaches ──
       // where that selection actually changed since the last successful save.
       // Must still happen before selectApproach below — the server's SelectApproach
@@ -442,10 +472,75 @@ export function useSelectionActions({
     }
   };
 
-  const toggleMethodCalcMode = async (arg: MethodKey) => {
+  // Toggling a method's calc mode clears its value (and land value, if it has one) on either
+  // direction — same reset the backend now applies (UpdateMethodCommandHandler). Always confirm
+  // first, matching the existing analysis-wide toggle's unconditional-confirm behavior.
+  const requestToggleMethodCalcMode = (arg: MethodKey) => {
     const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
     const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
     if (!method?.id || !isServerId(method.id)) return;
+
+    setPendingToggleCalcMode(arg);
+    openToggleCalcModeConfirm();
+  };
+
+  // True when this specific toggle is the one that will trip UpdateMethodCommandHandler's
+  // ClearDocuments() guard: toggling manual → system, the analysis is already System mode, and
+  // no *other* method is still manual — i.e. this is the last one. Mirrors the backend check so
+  // the confirm text only warns about document loss when it's actually about to happen.
+  const willClearDocuments = (() => {
+    if (!pendingToggleCalcMode) return false;
+    if (state.systemCalculationMode !== 'System') return false;
+    if ((state.documents?.length ?? 0) === 0) return false;
+
+    const appr = state.summarySelected.find(
+      (a: Approach) => a.approachType === pendingToggleCalcMode.approachType,
+    );
+    const method = appr?.methods.find(
+      (m: Method) => m.methodType === pendingToggleCalcMode.methodType,
+    );
+    if (!method || method.useSystemCalc) return false;
+
+    return state.summarySelected.every((a: Approach) =>
+      a.methods.every(
+        (m: Method) =>
+          (a.approachType === pendingToggleCalcMode!.approachType &&
+            m.methodType === pendingToggleCalcMode!.methodType) ||
+          m.useSystemCalc,
+      ),
+    );
+  })();
+
+  const toggleCalcModeConfirmMessage: string = (() => {
+    if (!pendingToggleCalcMode) return '';
+    const appr = state.summarySelected.find(
+      (a: Approach) => a.approachType === pendingToggleCalcMode.approachType,
+    );
+    const method = appr?.methods.find(
+      (m: Method) => m.methodType === pendingToggleCalcMode.methodType,
+    );
+    const hasLandValue = method?.landValue != null;
+    const key = hasLandValue
+      ? willClearDocuments
+        ? 'confirm.toggleMethodCalcModeValueAndLandDocuments'
+        : 'confirm.toggleMethodCalcModeValueAndLand'
+      : willClearDocuments
+        ? 'confirm.toggleMethodCalcModeValueDocuments'
+        : 'confirm.toggleMethodCalcModeValue';
+    return String(tp(key));
+  })();
+
+  const confirmToggleMethodCalcMode = async () => {
+    const arg = pendingToggleCalcMode;
+    if (!arg) return;
+
+    const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
+    const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
+    if (!method?.id || !isServerId(method.id)) {
+      setPendingToggleCalcMode(null);
+      closeToggleCalcModeConfirm();
+      return;
+    }
 
     const prevUseSystemCalc = method.useSystemCalc;
     const nextUseSystemCalc = !prevUseSystemCalc;
@@ -476,7 +571,15 @@ export function useSelectionActions({
         },
       });
       toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+    } finally {
+      setPendingToggleCalcMode(null);
+      closeToggleCalcModeConfirm();
     }
+  };
+
+  const cancelToggleMethodCalcMode = () => {
+    setPendingToggleCalcMode(null);
+    closeToggleCalcModeConfirm();
   };
 
   // ==================== Add Method ====================
@@ -567,7 +670,8 @@ export function useSelectionActions({
     isSavingSummary: isSaving,
     cancelPricingAccordion,
     changeSystemCalculation,
-    toggleMethodCalcMode,
+    isChangingSystemCalc: setSystemCalcMutation.isPending,
+    requestToggleMethodCalcMode,
     addMethod,
     requestDeleteMethod,
     requestRemoveDocument,
@@ -577,6 +681,15 @@ export function useSelectionActions({
       pending: pendingDeselect,
       confirmDeselect,
       cancelDeselect,
+    },
+
+    toggleCalcModeConfirm: {
+      isOpen: isToggleCalcModeConfirmOpen,
+      pending: pendingToggleCalcMode,
+      message: toggleCalcModeConfirmMessage,
+      confirmToggle: confirmToggleMethodCalcMode,
+      cancelToggle: cancelToggleMethodCalcMode,
+      isToggling: updateMethodMutation.isPending,
     },
 
     deleteConfirm: {

@@ -62,6 +62,20 @@ interface PricingAnalysisApproachMethodSelectorProps {
     value: number;
     methodId?: string;
   }) => void;
+  onLandValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
+  toggleCalcModeConfirm?: {
+    isOpen: boolean;
+    pending: { approachType: string; methodType: string } | null;
+    message: string;
+    confirmToggle: () => void;
+    cancelToggle: () => void;
+    isToggling: boolean;
+  };
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
   removeDocumentConfirm?: {
     isOpen: boolean;
@@ -92,6 +106,8 @@ export const PricingAnalysisApproachMethodSelector = ({
   pricingConfiguration,
   deleteConfirm,
   onManualValueSync,
+  onLandValueSync,
+  toggleCalcModeConfirm,
   onRequestRemoveDocument,
   removeDocumentConfirm,
 }: PricingAnalysisApproachMethodSelectorProps) => {
@@ -251,6 +267,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                 onViewLayoutChange={handleViewLayoutChange}
                 isManualMode={isManualMode}
                 onManualValueSync={onManualValueSync}
+                onLandValueSync={onLandValueSync}
                 onToggleMethodCalcMode={onToggleMethodCalcMode}
                 disabled={isSummarySaving}
               />
@@ -441,6 +458,18 @@ export const PricingAnalysisApproachMethodSelector = ({
           confirmText={t('confirm.confirmText')}
           variant="danger"
           isLoading={removeDocumentConfirm.isRemoving}
+        />
+      )}
+
+      {toggleCalcModeConfirm && (
+        <ConfirmDialog
+          isOpen={toggleCalcModeConfirm.isOpen}
+          onClose={toggleCalcModeConfirm.cancelToggle}
+          onConfirm={toggleCalcModeConfirm.confirmToggle}
+          message={toggleCalcModeConfirm.message}
+          confirmText={t('confirm.confirmText')}
+          variant="warning"
+          isLoading={toggleCalcModeConfirm.isToggling}
         />
       )}
     </div>

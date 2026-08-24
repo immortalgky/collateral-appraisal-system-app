@@ -73,6 +73,20 @@ interface PricingAnalysisAccordionProps {
     value: number;
     methodId?: string;
   }) => void;
+  onLandValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
+  toggleCalcModeConfirm?: {
+    isOpen: boolean;
+    pending: { approachType: string; methodType: string } | null;
+    message: string;
+    confirmToggle: () => void;
+    cancelToggle: () => void;
+    isToggling: boolean;
+  };
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
   removeDocumentConfirm?: {
     isOpen: boolean;
@@ -115,6 +129,8 @@ export const PricingAnalysisAccordion = ({
   modelThumbnailSrc,
   deleteConfirm,
   onManualValueSync,
+  onLandValueSync,
+  toggleCalcModeConfirm,
   onRequestRemoveDocument,
   removeDocumentConfirm,
 }: PricingAnalysisAccordionProps) => {
@@ -300,6 +316,8 @@ export const PricingAnalysisAccordion = ({
                 pricingConfiguration={pricingConfiguration}
                 deleteConfirm={deleteConfirm}
                 onManualValueSync={onManualValueSync}
+                onLandValueSync={onLandValueSync}
+                toggleCalcModeConfirm={toggleCalcModeConfirm}
                 onRequestRemoveDocument={onRequestRemoveDocument}
                 removeDocumentConfirm={removeDocumentConfirm}
               />

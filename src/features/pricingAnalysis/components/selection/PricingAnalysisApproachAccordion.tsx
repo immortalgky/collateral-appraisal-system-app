@@ -31,6 +31,12 @@ interface PricingAnalysisApproachAccordionProps {
     value: number;
     methodId?: string;
   }) => void;
+  onLandValueSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    value: number;
+    methodId?: string;
+  }) => void;
   disabled?: boolean;
 }
 
@@ -50,6 +56,7 @@ export const PricingAnalysisApproachAccordion = ({
   onViewLayoutChange,
   isManualMode,
   onManualValueSync,
+  onLandValueSync,
   disabled = false,
 }: PricingAnalysisApproachAccordionProps) => {
   const { t } = useTranslation('pricingAnalysis');
@@ -178,6 +185,9 @@ export const PricingAnalysisApproachAccordion = ({
                 onManualValueSync={
                   isManualMode || !method.useSystemCalc ? onManualValueSync : undefined
                 }
+                onLandValueSync={
+                  isManualMode || !method.useSystemCalc ? onLandValueSync : undefined
+                }
                 onToggleMethodCalcMode={isManualMode ? undefined : onToggleMethodCalcMode}
                 disabled={disabled}
               />
@@ -199,6 +209,9 @@ export const PricingAnalysisApproachAccordion = ({
                 isManualMode={isManualMode || !method.useSystemCalc}
                 onManualValueSync={
                   isManualMode || !method.useSystemCalc ? onManualValueSync : undefined
+                }
+                onLandValueSync={
+                  isManualMode || !method.useSystemCalc ? onLandValueSync : undefined
                 }
                 onToggleMethodCalcMode={isManualMode ? undefined : onToggleMethodCalcMode}
                 disabled={disabled}

@@ -62,6 +62,7 @@ const initialState: SelectionState = {
   summarySelected: [],
   systemCalculationMode: 'System',
   dirtyManualValueKeys: [],
+  dirtyLandValueKeys: [],
   dirtyMethodApproachTypes: [],
   dirtyApproachSelection: false,
 };
@@ -425,6 +426,28 @@ function PricingAnalysisContent({
     [dispatch],
   );
 
+  // (8c) Update land value on manual mode — same local-only sync as handleManualValueSync;
+  // the real save is batched into saveSummary (useSelectionActions), not fired per keystroke.
+  const handleLandValueSync = useCallback(
+    ({
+      approachType,
+      methodType,
+      value,
+      methodId,
+    }: {
+      approachType: string;
+      methodType: string;
+      value: number;
+      methodId?: string;
+    }) => {
+      dispatch({
+        type: 'SUMMARY_UPDATE_LAND_VALUE',
+        payload: { approachType, methodType, value, methodId },
+      });
+    },
+    [dispatch],
+  );
+
   // (9) Assemble server data for context
   const serverData: PricingServerData = {
     groupDetail,
@@ -492,7 +515,7 @@ function PricingAnalysisContent({
                         onCancelEditMode={selectionActions.cancelEdit}
                         onSelectCandidateMethod={selectionActions.selectCandidateMethod}
                         onSelectCandidateApproach={selectionActions.selectCandidateApproach}
-                        onToggleMethodCalcMode={selectionActions.toggleMethodCalcMode}
+                        onToggleMethodCalcMode={selectionActions.requestToggleMethodCalcMode}
                         onAddMethod={selectionActions.addMethod}
                         onDeleteMethod={selectionActions.requestDeleteMethod}
                         pricingConfiguration={pricingConfiguration}
@@ -502,6 +525,8 @@ function PricingAnalysisContent({
                         modelThumbnailSrc={modelThumbnailSrc}
                         deleteConfirm={selectionActions.deleteConfirm}
                         onManualValueSync={handleManualValueSync}
+                        onLandValueSync={handleLandValueSync}
+                        toggleCalcModeConfirm={selectionActions.toggleCalcModeConfirm}
                         onRequestRemoveDocument={selectionActions.requestRemoveDocument}
                         removeDocumentConfirm={selectionActions.removeDocumentConfirm}
                       />
@@ -577,13 +602,21 @@ function PricingAnalysisContent({
         onClose={() => setPendingSystemCalcMode(null)}
         onConfirm={handleConfirmChangeCalculation}
         title={t('confirm.changeCalculationTitle')}
-        message={t('confirm.changeCalculationMessage', {
-          mode: pendingSystemCalcMode
-            ? t('calculationMode.systemToggle')
-            : t('calculationMode.manualToggle'),
-        })}
+        message={t(
+          // Only switching TO System clears manual-evidence documents
+          // (SetSystemCalcCommandHandler.ClearDocuments) — matches the backend guard.
+          pendingSystemCalcMode && (state.documents?.length ?? 0) > 0
+            ? 'confirm.changeCalculationMessageWithDocuments'
+            : 'confirm.changeCalculationMessage',
+          {
+            mode: pendingSystemCalcMode
+              ? t('calculationMode.systemToggle')
+              : t('calculationMode.manualToggle'),
+          },
+        )}
         confirmText={t('confirm.confirmText')}
         variant="warning"
+        isLoading={selectionActions.isChangingSystemCalc}
       />
     </div>
   );

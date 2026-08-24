@@ -36,6 +36,10 @@ export interface Method {
   isIncluded: boolean;
   isSelected: boolean;
   useSystemCalc: boolean;
+  /** User-edited land price (Cost Approach land-pricing methods, manual mode only). */
+  landValue?: number | null;
+  /** Server-computed building value from the anchor's building properties, read-only. */
+  buildingValue?: number;
 }
 
 export interface Approach {
