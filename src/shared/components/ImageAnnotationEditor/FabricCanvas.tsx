@@ -13,7 +13,7 @@ import {
   Triangle,
 } from 'fabric';
 import type { FabricCanvasProps, SelectedObjectInfo } from './types';
-import { NUMBER_MARKER_RADIUS, NUMBER_MARKER_COLORS } from './constants';
+import { NUMBER_MARKER_RADIUS, NUMBER_MARKER_COLORS, ANNOTATION_FONT_FAMILY } from './constants';
 
 function getObjectInfo(canvas: Canvas): SelectedObjectInfo | null {
   const active = canvas.getActiveObject();
@@ -247,7 +247,7 @@ export default function FabricCanvas({
           fontSize: toolOptions.fontSize,
           fill: toolOptions.strokeColor,
           opacity: toolOptions.opacity,
-          fontFamily: 'Arial',
+          fontFamily: ANNOTATION_FONT_FAMILY,
         });
         canvas.add(text);
         canvas.setActiveObject(text);
@@ -273,7 +273,7 @@ export default function FabricCanvas({
           fontSize: toolOptions.fontSize,
           fill: '#FFFFFF',
           fontWeight: 'bold',
-          fontFamily: 'Arial',
+          fontFamily: ANNOTATION_FONT_FAMILY,
           originX: 'center',
           originY: 'center',
         });

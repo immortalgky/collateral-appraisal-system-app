@@ -1,5 +1,18 @@
 @theme {
     /* ========================================
+       Typography
+       Roboto = Latin, digits, punctuation. Sarabun = Thai.
+       Roboto has no Thai subset, so Thai text falls through to Sarabun; the
+       @font-face rules are self-hosted and imported at the top of src/index.css.
+       Tailwind v4 derives --default-font-family from --font-sans, so overriding
+       this one token retypes the whole app, including preflight's html rule.
+       NOTE: the family name is "Roboto Variable" (fontsource's variable build),
+       not "Roboto" — a plain "Roboto" here would silently match nothing.
+       ======================================== */
+    --font-sans: 'Roboto Variable', 'Sarabun', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+    /* ========================================
        Base Colors
        ======================================== */
     --color-base-100: oklch(100% 0 0);
