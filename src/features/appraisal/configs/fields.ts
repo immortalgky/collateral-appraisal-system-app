@@ -1847,6 +1847,7 @@ export const ageHeightCondoFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     required: true,
     maxIntegerDigits: 3,
+    decimalPlaces: 1,
   },
 ];
 
