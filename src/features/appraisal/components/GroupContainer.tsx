@@ -248,16 +248,36 @@ export const GroupContainer = React.memo(
                 <div className="flex items-center gap-1">
                   {!isPma && (
                     <button
-                      className="relative p-1.5 text-gray-500 hover:text-orange-600 hover:bg-orange-50 cursor-pointer rounded-md transition-colors"
+                      type="button"
                       onClick={() => handleOnClickPricingButton()}
-                      title="Pricing Analysis"
+                      title={
+                        group.pricingAnalysisId
+                          ? 'Pricing Analysis — linked. Click to open.'
+                          : 'Pricing Analysis — not linked yet. Click to create.'
+                      }
+                      className="group inline-flex h-8 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 pl-2.5 pr-3 text-gray-600 transition-colors duration-150 ease-out hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700"
                     >
-                      <Icon name="badge-dollar" className="text-base" />
+                      <Icon name="badge-dollar" className="text-sm" style="solid" />
+                      <span className="text-sm font-semibold leading-none whitespace-nowrap">
+                        Pricing Analysis
+                      </span>
                       <span
-                        className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full ${
+                        aria-hidden="true"
+                        className="mx-0.5 h-3 w-px shrink-0 bg-gray-300 transition-colors duration-150 ease-out group-hover:bg-orange-300"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
                           group.pricingAnalysisId ? 'bg-emerald-500' : 'bg-gray-300'
                         }`}
                       />
+                      <span
+                        className={`text-[11px] font-medium leading-none whitespace-nowrap ${
+                          group.pricingAnalysisId ? 'text-emerald-600' : 'text-gray-400'
+                        }`}
+                      >
+                        {group.pricingAnalysisId ? 'Linked' : 'Not linked'}
+                      </span>
                     </button>
                   )}
                 </div>
