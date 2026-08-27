@@ -50,6 +50,7 @@ const applyLocationMethod = (
 };
 
 const roundToNearest10000 = (value: number): number => Math.round(value / 10000) * 10000;
+const roundToNearest1000 = (value: number): number => Math.round(value / 1000) * 1000;
 
 export const recomputeUnitPrice = (
   unit: ProjectUnitPrice,
@@ -93,7 +94,7 @@ const recomputeCondo = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUni
   const totalAppraisalValueRounded = Math.round(totalAppraisalValue);
   const forceSellingPrice =
     a.forceSalePercentage != null
-      ? Math.round((totalAppraisalValueRounded * a.forceSalePercentage) / 100)
+      ? roundToNearest1000((totalAppraisalValueRounded * a.forceSalePercentage) / 100)
       : undefined;
 
   return {
@@ -136,7 +137,7 @@ const recomputeLB = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPr
   const totalAppraisalValueRounded = roundToNearest10000(totalAppraisalValue);
   const forceSellingPrice =
     a.forceSalePercentage != null
-      ? Math.round((totalAppraisalValueRounded * a.forceSalePercentage) / 100)
+      ? roundToNearest1000((totalAppraisalValueRounded * a.forceSalePercentage) / 100)
       : undefined;
 
   return {

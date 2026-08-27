@@ -8,7 +8,7 @@ import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigationTypes';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
-import { SIDEBAR_COLLAPSED_WIDTH } from './sidebarConstants';
+import { DENSITY_SCALE } from './densityConstants';
 import { SidebarStarButton } from '@features/menuFavorites/components/SidebarStarButton';
 import { SidebarFavoritesSection } from '@features/menuFavorites/components/SidebarFavoritesSection';
 
@@ -313,7 +313,6 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
   const isSettingsActive = location.pathname === '/settings';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
-  const sidebarWidth = useUIStore(state => state.sidebarWidth);
   const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ move: ((e: PointerEvent) => void) | null; up: (() => void) | null }>({
@@ -336,8 +335,11 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
     document.body.style.userSelect = 'none';
     const startX = e.clientX;
     const startW = useUIStore.getState().sidebarWidth;
+    // The stored width is design px; the rendered edge is scaled by density, so the
+    // cursor delta has to be converted back for the handle to track 1:1.
+    const scale = DENSITY_SCALE[useUIStore.getState().density];
     const move = (ev: PointerEvent) =>
-      useUIStore.getState().setSidebarWidth(startW + (ev.clientX - startX));
+      useUIStore.getState().setSidebarWidth(startW + (ev.clientX - startX) / scale);
     const up = () => {
       setIsDragging(false);
       document.body.style.userSelect = '';
@@ -354,7 +356,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
     <aside
       className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
       style={{
-        width: sidebarCollapsed ? SIDEBAR_COLLAPSED_WIDTH : sidebarWidth,
+        width: 'var(--cas-sidebar-w)',
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >

@@ -17,16 +17,6 @@ const PricingAnalysisSection = ({
 }: PricingAnalysisSectionProps) => {
   const { t } = useTranslation('appraisal');
 
-  if (isLoading) {
-    return (
-      <FormCard title={t('view360.pricingAnalysisSection.heading')} icon="table-cells" iconColor="teal">
-        <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
-        </div>
-      </FormCard>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 px-1">
@@ -37,14 +27,26 @@ const PricingAnalysisSection = ({
       </div>
 
       {/* Approach Matrix */}
-      <FormCard title={t('view360.pricingAnalysisSection.decisionApproach')} icon="table-cells" iconColor="teal">
-        {decisionSummary?.approachMatrix && decisionSummary.approachMatrix.length > 0 ? (
+      {/* The heading and card title stay mounted across loading → loaded so only the
+          body swaps; branching above this point made the title change mid-load. */}
+      <FormCard
+        title={t('view360.pricingAnalysisSection.decisionApproach')}
+        icon="table-cells"
+        iconColor="teal"
+      >
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
+          </div>
+        ) : decisionSummary?.approachMatrix && decisionSummary.approachMatrix.length > 0 ? (
           <ApproachMatrixTable
             groups={decisionSummary.approachMatrix}
             onGroupClick={onGroupClick}
           />
         ) : (
-          <p className="text-sm text-gray-500">{t('view360.pricingAnalysisSection.noApproachData')}</p>
+          <p className="text-sm text-gray-500">
+            {t('view360.pricingAnalysisSection.noApproachData')}
+          </p>
         )}
       </FormCard>
     </div>

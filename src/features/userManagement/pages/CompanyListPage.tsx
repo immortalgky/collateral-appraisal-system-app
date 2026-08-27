@@ -10,9 +10,11 @@ import { TableRowSkeleton } from '@shared/components/Skeleton';
 import CompanyDetailPanel from '../components/CompanyDetailPanel';
 import ListSortMenu from '../components/ListSortMenu';
 import { useGetAdminCompanies, useCreateAdminCompany } from '../api/companies';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 const CompanyListPage = () => {
   const { t } = useTranslation(['userManagement', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
@@ -153,7 +155,9 @@ const CompanyListPage = () => {
                   )}
                 >
                   <div className="flex items-center justify-between gap-1">
-                    <div className="text-sm font-medium text-gray-800 truncate">{company.name}</div>
+                    <div className="text-sm font-medium text-gray-800 truncate">
+                      {localizeCompanyName(company.name, company.nameLocal)}
+                    </div>
                     {!company.isActive && (
                       <span className="shrink-0 text-xs text-gray-400">{t('status.inactive')}</span>
                     )}

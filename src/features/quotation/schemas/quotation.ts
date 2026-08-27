@@ -72,6 +72,7 @@ export const CompanyQuotationSchema = z.object({
   id: z.string().uuid(),
   companyId: z.string().uuid(),
   companyName: z.string(),
+  companyNameLocal: z.string().nullish(),
   quotationNumber: z.string().nullable().optional(),
   status: CompanyQuotationStatusSchema,
   /**
@@ -126,6 +127,7 @@ export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;
 export const InvitedCompanySchema = z.object({
   companyId: z.string().uuid(),
   companyName: z.string(),
+  companyNameLocal: z.string().nullish(),
   email: z.string().nullable().optional(),
 });
 

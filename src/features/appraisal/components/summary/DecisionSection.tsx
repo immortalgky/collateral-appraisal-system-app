@@ -125,17 +125,30 @@ const resolveCommentPlaceholderKey = (value: string | null, label: string | null
 // ==================== Helpers ====================
 
 /** Map a backend TaskHistoryItem to the timeline's ActivityStep shape. */
+/** The holder clock, or the SLA anchor when talking to an API that predates it. */
+const receivedAtOf = (item: TaskHistoryItem): string => item.assigneeAssignedAt ?? item.assignedAt;
+
 const mapHistoryItemToStep = (item: TaskHistoryItem): ActivityStep => ({
   stepName: item.taskName,
   taskDescription: item.taskDescription,
   role: item.assignedType,
   assigneeName: item.assignedTo || null,
   assigneeDisplayName: item.assignedToDisplayName || null,
-  startedAt: item.assignedAt,
+  startedAt: receivedAtOf(item),
   completedAt: item.completedAt,
   status: item.completedAt ? 'completed' : 'in_progress',
   movement: item.movement,
   remark: item.remark,
+  timing: {
+    receivedAt: receivedAtOf(item),
+    stepEnteredAt: item.assignedAt,
+    openedAt: item.openedAt ?? null,
+    taskState: item.taskState ?? null,
+    slaStartAt: item.slaStartAt ?? null,
+    dueAt: item.dueAt ?? null,
+    slaStatus: item.slaStatus ?? null,
+    slaDurationHours: item.slaDurationHours ?? null,
+  },
 });
 
 // ==================== Component ====================
@@ -190,7 +203,9 @@ const DecisionSection = ({
     () =>
       (taskHistoryData?.items ?? [])
         .slice()
-        .sort((a, b) => new Date(a.assignedAt).getTime() - new Date(b.assignedAt).getTime())
+        // assigneeAssignedAt, not assignedAt: a supervisor reassign freezes assignedAt across the
+        // outgoing and incoming rows to keep the SLA clock running, so sorting on it ties.
+        .sort((a, b) => new Date(receivedAtOf(a)).getTime() - new Date(receivedAtOf(b)).getTime())
         .map(mapHistoryItemToStep),
     [taskHistoryData],
   );

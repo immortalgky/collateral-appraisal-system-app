@@ -34,9 +34,9 @@
     "appraisalNumber": "评估编号",
     "customerName": "客户名称",
     "appraisalStaff": "评估人员",
-    "appraisalValue": "评估价值",
     "decision": "决议",
-    "no": "序"
+    "no": "序",
+    "votes": "投票"
   },
   "filters": {
     "searchPlaceholder": "搜索会议编号或客户名称",
@@ -66,6 +66,8 @@
     "release": "发布",
     "routeBack": "退回",
     "remove": "移除",
+    "recall": "召回",
+    "forceRecall": "强制召回",
     "saveAgenda": "保存议程",
     "saveChanges": "保存更改",
     "createMeeting": "创建会议",
@@ -113,7 +115,8 @@
     "New": "新评估",
     "ReAppraisal": "再评估",
     "Progressive": "进度评估",
-    "PreAppraisal": "预评估"
+    "PreAppraisal": "预评估",
+    "other": "其他"
   },
   "ackGroups": {
     "urgent": "确认紧急审批（第2组）",
@@ -126,7 +129,8 @@
     "queuedItemsToInclude": "待纳入的队列项目",
     "schedule": "会议安排",
     "committeeMembers": "委员会成员",
-    "agenda": "议程"
+    "agenda": "议程",
+    "lifecycle": "日程与生命周期"
   },
   "fields": {
     "title": "标题",
@@ -141,6 +145,7 @@
     "reasonRequired": "原因",
     "cancelReasonPlaceholder": "取消本次会议的原因是什么？",
     "routeBackReasonPlaceholder": "描述退回本评估的原因...",
+    "recallReasonPlaceholder": "描述召回本次发布的原因...",
     "user": "用户",
     "agendaCertifyMinutes": "核准上次会议记录",
     "agendaCertifyMinutesWithNo": "核准第 {{no}} 次会议记录",
@@ -160,6 +165,7 @@
     "releaseAppraisal": "发布评估",
     "removeAppraisal": "移除评估",
     "routeBackAppraisal": "退回评估",
+    "recallAppraisal": "召回评估",
     "addAppraisalsFromQueue": "从队列添加评估",
     "addMember": "添加委员",
     "addToExistingMeeting": "添加到现有会议",
@@ -228,6 +234,13 @@
     "description": "将 {{label}} 退回评估团队进行修改，必须提供原因。",
     "routingBack": "退回中..."
   },
+  "recallDialog": {
+    "description": "将 {{label}} 召回至本次会议的待定状态，以便重新发布或退回。必须提供原因。",
+    "confirm": "此操作会将 {{label}} 从委员会审批中拉回。任何进行中的审批轮次将被关闭。",
+    "recalling": "召回中...",
+    "forceWarning": "已有委员对 {{label}} 投票。继续操作将永久丢弃这些投票，且无法恢复。请仅在确定的情况下强制召回。",
+    "forceRecalling": "强制召回中..."
+  },
   "bulkCreateDialog": {
     "description": "选择一个或多个日期，系统将为每个所选日期创建一个新会议。之后可以为每个会议添加委员。",
     "datesSelected": "已选 {{n}} 个日期",
@@ -284,6 +297,12 @@
     "itemReleaseFailed": "发布评估失败",
     "itemRoutedBack": "评估已退回评估团队",
     "itemRouteBackFailed": "退回评估失败",
+    "itemRecalled": "评估已召回至待定状态",
+    "itemRecallFailed": "召回评估失败",
+    "itemRecallAlreadyResolved": "无法召回 — 审批已完成并继续处理",
+    "itemRecallNotReleased": "无法召回 — 该评估已不处于可召回状态（可能已被召回或退回）",
+    "itemRecallBusy": "暂时无法召回 — 审批正在处理中，请稍后再试。",
+    "itemForceRecalled": "已强制召回评估 — 现有投票已被丢弃",
     "itemRemoved": "评估 {{label}} 已退回队列",
     "itemRemoveFailed": "移除评估失败",
     "memberAdded": "委员已添加",
@@ -350,5 +369,69 @@
     "pickerSelected": "已选 {{count}} 项",
     "pickerConfirm": "确认",
     "generateInvitation": "生成邀请函"
+  },
+  "pulse": {
+    "title": "会议概览",
+    "released": "已放行",
+    "decisionTotal": "决议事项",
+    "valueDistribution": "按评估类型分布的价值",
+    "kpiDecision": "决议事项",
+    "kpiAck": "知会事项",
+    "kpiAppraised": "总价值",
+    "unknownValues": "有 {{n}} 个事项尚无评估价值",
+    "unknownValuesPlural": "有 {{n}} 个事项尚无评估价值"
+  },
+  "timeline": {
+    "title": "生命周期",
+    "created": "已创建",
+    "cutOff": "截止",
+    "invitationSent": "已发送邀请",
+    "scheduledStart": "计划开始",
+    "started": "已开始",
+    "ended": "已结束",
+    "cancelled": "已取消",
+    "pending": "待处理",
+    "by": "由 {{name}}",
+    "lastUpdated": "最后更新"
+  },
+  "votes": {
+    "title": "审批人投票",
+    "awaiting": "等待审批人投票",
+    "lastVoted": "最近投票 {{time}}",
+    "approve": "批准",
+    "reject": "否决",
+    "route_back": "退回",
+    "notVoted": "尚未投票"
+  },
+  "session": {
+    "live": "实时",
+    "updatedAgo": "更新于 {{time}}",
+    "justNow": "刚刚",
+    "nowDeciding": "正在审议",
+    "startsIn": "{{time}} 后开始",
+    "running": "已进行 {{time}}",
+    "remaining": "还剩 {{n}} 个事项待决议",
+    "remainingPlural": "还剩 {{n}} 个事项待决议",
+    "allReleased": "所有决议事项均已放行。"
+  },
+  "items": {
+    "subtotal": "小计",
+    "decisionRecord": "决议记录",
+    "decidedBy": "决议人",
+    "decidedAt": "决议时间",
+    "reason": "原因",
+    "toggleDetail": "显示 {{label}} 的决议详情",
+    "noMatches": "没有符合筛选条件的事项。",
+    "searchPlaceholder": "按评估编号、客户或员工筛选",
+    "allDecisions": "全部决议状态",
+    "showing": "显示 {{shown}} / {{total}}",
+    "noItems": "本次会议尚未加入任何评估事项。",
+    "action": "操作",
+    "actionReleased": "已放行",
+    "actionRoutedBack": "已退回",
+    "actionRecalled": "已撤回"
+  },
+  "roster": {
+    "removeTitle": "移除委员"
   }
 }

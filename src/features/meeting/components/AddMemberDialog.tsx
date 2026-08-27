@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -8,8 +7,8 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import { type MemberFormValues, useMemberFormSchema } from '../schemas/meeting';
 import { useAddMeetingMember, useGetMeetingDetail } from '../api/meetings';
-import type { CommitteeMemberPosition } from '../api/types';
-import { POSITION_OPTIONS } from '../constants';
+import { DEFAULT_MEMBER_POSITION } from '../constants';
+import { useSelectablePositions, usePositionLabel } from '../hooks/usePositions';
 import { useGetUsers } from '@features/userManagement/api/users';
 
 // ASP.NET Identity role name used to seed the committee user list
@@ -26,6 +25,12 @@ const sharedInputClass =
 
 const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) => {
   const { t } = useTranslation('meeting');
+  const selectablePositions = useSelectablePositions();
+  const positionLabel = usePositionLabel();
+  // Taken from the offered list, so a narrowed MeetingPosition group cannot seed a value with no
+  // matching option.
+  const defaultPosition = (selectablePositions[0] ??
+    DEFAULT_MEMBER_POSITION) as MemberFormValues['position'];
   const addMember = useAddMeetingMember();
   const schema = useMemberFormSchema();
 
@@ -45,20 +50,18 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
     u => !existingMemberUserIds.has(u.username),
   );
 
+  // No reset-on-open effect: MeetingRoster mounts this dialog only while it is open, so every open
+  // builds the form fresh. The effect it replaces listed `defaultPosition` in its deps, so a change
+  // to the position list while the dialog was open wiped whatever the user had typed.
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
   } = useForm<MemberFormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { userId: '', memberName: '', position: 'Member' },
+    defaultValues: { userId: '', memberName: '', position: defaultPosition },
   });
-
-  useEffect(() => {
-    if (isOpen) reset({ userId: '', memberName: '', position: 'Member' });
-  }, [isOpen, reset]);
 
   const handleClose = () => {
     if (!addMember.isPending) onClose();
@@ -155,9 +158,9 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
             {t('columns.position')} <span className="text-red-500">*</span>
           </label>
           <select id="member-position" {...register('position')} className={sharedInputClass}>
-            {POSITION_OPTIONS.map(pos => (
+            {selectablePositions.map(pos => (
               <option key={pos} value={pos}>
-                {t(`position.${pos}` as `position.${CommitteeMemberPosition}`)}
+                {positionLabel(pos)}
               </option>
             ))}
           </select>

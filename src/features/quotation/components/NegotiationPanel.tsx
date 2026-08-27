@@ -4,6 +4,7 @@ import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import { useAuthStore } from '@/features/auth/store';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { QuotationRequestDetailDto, CompanyQuotationDto } from '../schemas/quotation';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import NegotiationModal from './NegotiationModal';
@@ -18,6 +19,7 @@ interface NegotiationPanelProps {
 
 const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const isIntAdmin = useAuthStore(s => s.user?.roles?.includes('IntAdmin') ?? false);
   const {
     isOpen: isNegotiateOpen,
@@ -64,7 +66,8 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-amber-900">
-              {t('negotiation.rmRequestsNegotiation')} <strong>{winner.companyName}</strong>
+              {t('negotiation.rmRequestsNegotiation')}{' '}
+              <strong>{localizeCompanyName(winner.companyName, winner.companyNameLocal)}</strong>
             </p>
             {rmNegotiationNote && (
               <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
@@ -126,7 +129,9 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-semibold text-gray-900">{winner.companyName}</span>
+                <span className="text-base font-semibold text-gray-900">
+                  {localizeCompanyName(winner.companyName, winner.companyNameLocal)}
+                </span>
                 <QuotationStatusBadge status={winner.status} />
               </div>
               <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
@@ -269,7 +274,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
         onClose={closeNegotiate}
         quotationId={quotation.id}
         companyQuotationId={winner.id}
-        companyName={winner.companyName}
+        companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
         currentRounds={roundsUsed}
         maxRounds={MAX_ROUNDS}
       />
@@ -277,14 +282,14 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
         isOpen={isRejectOpen}
         onClose={closeReject}
         quotationId={quotation.id}
-        companyName={winner.companyName}
+        companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
       />
       <FinalizeModal
         isOpen={isFinalizeOpen}
         onClose={closeFinalize}
         quotationId={quotation.id}
         companyQuotationId={winner.id}
-        companyName={winner.companyName}
+        companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
         winnerItems={winner.items ?? []}
         appraisals={quotation.appraisals ?? []}
       />

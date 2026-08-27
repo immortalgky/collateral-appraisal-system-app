@@ -7,6 +7,8 @@ import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { useAddressStore } from '@/shared/store';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface AppraisalResultsTableProps {
   columns: AppraisalColumnDef[];
@@ -36,6 +38,7 @@ function AppraisalResultsTable({
   pageSize = 0,
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
+  const localizeCompanyName = useLocalizedCompanyName();
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
 
@@ -48,6 +51,24 @@ function AppraisalResultsTable({
     }
     return map;
   }, [titleAddresses, dopaAddresses]);
+
+  const bankingSegments = useParametersByGroup('BankingSegment');
+  const segmentCodeToLabel = useMemo(
+    () => new Map(bankingSegments.map(p => [p.code, p.description])),
+    [bankingSegments],
+  );
+
+  const purposes = useParametersByGroup('AppraisalPurpose');
+  const purposeCodeToLabel = useMemo(
+    () => new Map(purposes.map(p => [p.code, p.description])),
+    [purposes],
+  );
+
+  const propertyTypes = useParametersByGroup('PropertyType');
+  const propertyTypeCodeToLabel = useMemo(
+    () => new Map(propertyTypes.map(p => [p.code, p.description])),
+    [propertyTypes],
+  );
 
   const getCellValue = (item: AppraisalDto, key: string): string => {
     const val = item[key as keyof AppraisalDto];
@@ -62,6 +83,24 @@ function AppraisalResultsTable({
     }
     if (key === 'province') {
       return provinceCodeToName.get(val as string) ?? String(val);
+    }
+    if (key === 'bankingSegment') {
+      return segmentCodeToLabel.get(val as string) ?? String(val);
+    }
+    if (key === 'purpose') {
+      return purposeCodeToLabel.get(val as string) ?? String(val);
+    }
+    if (key === 'propertyTypes') {
+      // Comma-joined codes from the view (e.g. "B, L, LB") — resolve each to its description
+      return String(val)
+        .split(',')
+        .map(code => code.trim())
+        .filter(Boolean)
+        .map(code => propertyTypeCodeToLabel.get(code) ?? code)
+        .join(', ');
+    }
+    if (key === 'companyName') {
+      return localizeCompanyName(val as string, item.companyNameLocal);
     }
     return String(val);
   };

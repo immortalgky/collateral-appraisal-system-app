@@ -1,3 +1,26 @@
+/*
+ * Self-hosted webfonts (no external CDN — the bank network blocks fonts.googleapis.com).
+ *
+ * Roboto carries Latin, digits and punctuation; Sarabun carries Thai. Roboto ships
+ * no Thai glyphs at all, so Thai falls through to Sarabun via the --font-sans stack
+ * in styles/theme.css. Only Sarabun's *thai* subset is imported on purpose — pulling
+ * its Latin subset would let Sarabun win Latin text on any weight Roboto happens to
+ * be missing, and the two Latins do not match.
+ *
+ * Weights mirror what the app actually uses: 400/500/600/700 (font-black is 4 call
+ * sites and gets synthesised from 700). Roboto is a variable font, so one file
+ * covers the whole 100-900 range.
+ *
+ * No italic face is loaded. Every `italic` in the app is muted helper text that is
+ * Thai in practice, and Sarabun has no italic here either — a real Roboto italic
+ * would cost 46 kB to change almost nothing. The browser obliques instead.
+ */
+@import "@fontsource-variable/roboto/wght.css";
+@import "@fontsource/sarabun/thai-400.css";
+@import "@fontsource/sarabun/thai-500.css";
+@import "@fontsource/sarabun/thai-600.css";
+@import "@fontsource/sarabun/thai-700.css";
+
 @import "tailwindcss";
 @import "./styles/theme.css" layer(theme);
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
@@ -40,21 +63,37 @@
 }
 
 /* Additional global styles */
-html {
-    scroll-behavior: smooth;
-    font-size: 13px;
+
+/*
+ * Root sizing = viewport step x user density.
+ *
+ * --cas-root-step is the automatic, viewport-driven baseline; --cas-density is the
+ * user's UI Density preference (see densityConstants.ts, applied by ThemeProvider).
+ * Everything rem-based — fonts, Tailwind spacing, the right details panel — follows.
+ *
+ * Media queries stay in px on purpose: an em/rem query would resolve against the
+ * initial 16px font, not this one, so px keeps the steps honest and loop-free.
+ */
+:root {
+    --cas-root-step: 13px;
+    --cas-density: 1;
 }
 
 @media (min-width: 1600px) {
-    html {
-        font-size: 14px;
+    :root {
+        --cas-root-step: 14px;
     }
 }
 
 @media (min-width: 1920px) {
-    html {
-        font-size: 16px;
+    :root {
+        --cas-root-step: 16px;
     }
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: calc(var(--cas-root-step) * var(--cas-density));
 }
 
 body {

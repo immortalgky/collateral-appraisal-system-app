@@ -44,6 +44,7 @@ export type TeamWorkloadResponse = {
 export type CompanyAppraisalSummaryItem = {
   companyId: string;
   companyName: string;
+  companyNameLocal?: string | null;
   assignedCount: number;
   completedCount: number;
   overdueCount: number;

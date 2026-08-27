@@ -22,6 +22,7 @@ interface FormTableProps {
   sumColumns?: string[];
   totalFieldName?: string;
   allowOverride?: boolean;
+  sequenceField?: string;
 }
 
 type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
@@ -101,6 +102,8 @@ const TotalCell = ({
   onReset: () => void;
   onSetValue: (v: any) => void;
 }) => {
+  const { t } = useTranslation('request');
+
   if (isReadOnly || !totalFieldName) {
     return (
       <span className="text-sm font-semibold text-gray-900 text-right block">
@@ -108,7 +111,6 @@ const TotalCell = ({
       </span>
     );
   }
-  const { t } = useTranslation('request');
 
   if (isOverridden) {
     return (
@@ -136,7 +138,9 @@ const TotalCell = ({
   }
   return (
     <div className="flex items-center gap-2">
-      <NumberInput value={value} disabled decimalPlaces={2} className="font-semibold" />
+      <span className="flex-1 text-sm font-semibold text-gray-900 text-right block px-3">
+        {fmtNum(value)}
+      </span>
       {allowOverride && (
         <IconBtn
           size={7}
@@ -147,6 +151,45 @@ const TotalCell = ({
         />
       )}
     </div>
+  );
+};
+
+// --- SequenceCell: editable position input driving reorder ---
+
+const SequenceCell = ({
+  name,
+  index,
+  sequenceField,
+  total,
+  control,
+  onCommit,
+}: {
+  name: string;
+  index: number;
+  sequenceField: string;
+  total: number;
+  control: Control<FieldValues>;
+  onCommit: (fromIndex: number, target: number) => void;
+}) => {
+  const { field } = useController({ name: `${name}.${index}.${sequenceField}`, control });
+
+  return (
+    <NumberInput
+      {...field}
+      decimalPlaces={0}
+      allowNegative={false}
+      thousandSeparator={false}
+      min={1}
+      max={total}
+      className="!text-center"
+      onKeyDown={e => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+      onBlur={() => {
+        field.onBlur();
+        onCommit(index, Number(field.value) || index + 1);
+      }}
+    />
   );
 };
 
@@ -180,20 +223,18 @@ const TableCell = ({
           allowNegative={column.allowNegative}
         />
       );
-    if (column.inputType === 'dropdown' && (column.options || column.group))
-      return (
-        <Dropdown
-          value={field.value}
-          onChange={field.onChange}
-          group={column.group}
-          options={column.options}
-        />
-      );
+    // Spread the whole field (not just value/onChange): without field.ref, react-hook-form has no
+    // focusable handle on the dropdown, unlike the number and text branches above.
+    // Split branches because Dropdown takes `group` or `options`, and the column type has both optional.
+    if (column.inputType === 'dropdown') {
+      if (column.options) return <Dropdown {...field} options={column.options} />;
+      if (column.group) return <Dropdown {...field} group={column.group} />;
+    }
     return <Input type={column.inputType} {...field} maxLength={column.maxLength} />;
   };
 
   return (
-    <div>
+    <div data-field={`${name}.${index}.${column.name}`}>
       {input()}
       {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
     </div>
@@ -208,11 +249,12 @@ const FormTable = ({
   sumColumns = [],
   totalFieldName,
   allowOverride = false,
+  sequenceField,
 }: FormTableProps) => {
   const { t } = useTranslation(['request', 'common']);
   const { getValues, setValue, control, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
-  const { append, remove } = useFieldArray({ control, name });
+  const { fields, append, remove } = useFieldArray({ control, name });
   const values = getValues(name);
   const watchedValues = watch(name);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; index: number | null }>({
@@ -221,10 +263,41 @@ const FormTable = ({
   });
   const [isOverridden, setIsOverridden] = useState(false);
 
+  // Display order from the current sequence values
+  const rowList = (values as Record<string, unknown>[] | undefined) ?? [];
+  const displayOrder = sequenceField
+    ? rowList
+        .map((_, i) => i)
+        .sort(
+          (a, b) =>
+            (Number(rowList[a]?.[sequenceField]) || 0) - (Number(rowList[b]?.[sequenceField]) || 0),
+        )
+    : rowList.map((_, i) => i);
+
   const handleAddRow = () => {
     const newRow: Record<string, any> = {};
     for (const col of columns) if (isRegular(col)) newRow[col.name] = '';
+    if (sequenceField) {
+      const maxSeq = rowList.reduce((m, r) => Math.max(m, Number(r?.[sequenceField]) || 0), 0);
+      newRow[sequenceField] = maxSeq + 1;
+    }
     append(newRow);
+  };
+
+  const handleSequenceCommit = (originalIndex: number, rawTarget: number) => {
+    if (!sequenceField) return;
+    const total = displayOrder.length;
+    if (total === 0) return;
+    const currentPos = displayOrder.indexOf(originalIndex);
+    const targetPos = Math.min(Math.max(Math.round(rawTarget) || currentPos + 1, 1), total) - 1;
+    const newOrder = [...displayOrder];
+    if (targetPos !== currentPos) {
+      newOrder.splice(currentPos, 1);
+      newOrder.splice(targetPos, 0, originalIndex);
+    }
+    newOrder.forEach((origIdx, pos) => {
+      setValue(`${name}.${origIdx}.${sequenceField}`, pos + 1, { shouldDirty: true });
+    });
   };
 
   const calcSum = (col: string): number =>
@@ -252,7 +325,9 @@ const FormTable = ({
       : { width: (col as FormTableRegularColumn).width ?? 'auto', minWidth: '100px' };
 
   return (
-    <div>
+    // Anchored on the array name so an "at least 1 item" error still has somewhere to scroll to:
+    // when the array is empty there are no rows, hence no per-cell data-field.
+    <div data-field={name}>
       <table className="table w-full table-fixed">
         <thead>
           <tr className="bg-primary/10">
@@ -296,55 +371,76 @@ const FormTable = ({
               </td>
             </tr>
           ) : (
-            values?.map((field: Record<string, any>, i: number) => (
-              <tr key={i} className="hover:bg-gray-50 transition-colors">
-                {columns.map((col, ci) =>
-                  isRegular(col) ? (
-                    <td key={ci} className="py-1.5 px-3">
-                      {isReadOnly ? (
-                        // Read-only: show formatted value
-                        <div
-                          className={
-                            col.inputType === 'number' ? 'text-right text-sm' : 'text-sm truncate'
-                          }
-                        >
-                          {col.inputType === 'dropdown' && col.group ? (
-                            <ParameterDisplay group={col.group} code={field[col.name]} />
-                          ) : col.inputType === 'number' ? (
-                            (() => {
-                              const n = parseFloat(field[col.name]);
-                              return isNaN(n) ? '-' : fmtNum(n, col.decimalPlaces ?? 2);
-                            })()
-                          ) : (
-                            (field[col.name] ?? '-')
-                          )}
-                        </div>
-                      ) : (
-                        <TableCell name={name} index={i} column={col} control={control} />
-                      )}
+            displayOrder.map((originalIndex, displayPos) => {
+              const field = rowList[originalIndex] as Record<string, any>;
+              return (
+                <tr
+                  key={fields[originalIndex]?.id ?? originalIndex}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  {columns.map((col, ci) =>
+                    isRegular(col) ? (
+                      <td key={ci} className="py-1.5 px-3">
+                        {isReadOnly ? (
+                          <div
+                            className={
+                              col.inputType === 'number' ? 'text-right text-sm' : 'text-sm truncate'
+                            }
+                          >
+                            {col.inputType === 'dropdown' && col.group ? (
+                              <ParameterDisplay group={col.group} code={field[col.name]} />
+                            ) : col.inputType === 'number' ? (
+                              (() => {
+                                const n = parseFloat(field[col.name]);
+                                return isNaN(n) ? '-' : fmtNum(n, col.decimalPlaces ?? 2);
+                              })()
+                            ) : (
+                              (field[col.name] ?? '-')
+                            )}
+                          </div>
+                        ) : (
+                          <TableCell
+                            name={name}
+                            index={originalIndex}
+                            column={col}
+                            control={control}
+                          />
+                        )}
+                      </td>
+                    ) : sequenceField && !isReadOnly ? (
+                      <td key={ci} className="py-1.5 px-3" style={{ width: '60px' }}>
+                        <SequenceCell
+                          name={name}
+                          index={originalIndex}
+                          sequenceField={sequenceField}
+                          total={displayOrder.length}
+                          control={control}
+                          onCommit={handleSequenceCommit}
+                        />
+                      </td>
+                    ) : (
+                      <td key={ci} className="py-1.5 px-3" style={{ width: '60px' }}>
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                          {displayPos + 1}
+                        </span>
+                      </td>
+                    ),
+                  )}
+                  {!isReadOnly && (
+                    <td className="py-1.5 px-3">
+                      <div className="flex gap-1 justify-end">
+                        <IconBtn
+                          onClick={() => setDeleteConfirm({ isOpen: true, index: originalIndex })}
+                          icon="trash"
+                          className="bg-danger-50 text-danger-600 hover:bg-danger-100"
+                          title={t('table.deleteRow')}
+                        />
+                      </div>
                     </td>
-                  ) : (
-                    <td key={ci} className="py-1.5 px-3" style={{ width: '60px' }}>
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
-                        {i + 1}
-                      </span>
-                    </td>
-                  ),
-                )}
-                {!isReadOnly && (
-                  <td className="py-1.5 px-3">
-                    <div className="flex gap-1 justify-end">
-                      <IconBtn
-                        onClick={() => setDeleteConfirm({ isOpen: true, index: i })}
-                        icon="trash"
-                        className="bg-danger-50 text-danger-600 hover:bg-danger-100"
-                        title={t('table.deleteRow')}
-                      />
-                    </div>
-                  </td>
-                )}
-              </tr>
-            ))
+                  )}
+                </tr>
+              );
+            })
           )}
         </tbody>
         {hasSumRow && (
@@ -382,7 +478,6 @@ const FormTable = ({
                     return (
                       <td key={i} className="py-3 px-4 text-sm font-semibold text-gray-600">
                         <div className="flex items-center gap-2">
-                          <Icon style="solid" name="sigma" className="size-4 text-primary" />{' '}
                           {t('table.total')}
                           {isOverridden && (
                             <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
@@ -421,6 +516,19 @@ const FormTable = ({
         onConfirm={() => {
           if (deleteConfirm.index !== null) {
             remove(deleteConfirm.index);
+            if (sequenceField) {
+              const remaining = (getValues(name) as Record<string, unknown>[] | undefined) ?? [];
+              remaining
+                .map((_, i) => i)
+                .sort(
+                  (a, b) =>
+                    (Number(remaining[a]?.[sequenceField]) || 0) -
+                    (Number(remaining[b]?.[sequenceField]) || 0),
+                )
+                .forEach((origIdx, pos) => {
+                  setValue(`${name}.${origIdx}.${sequenceField}`, pos + 1, { shouldDirty: true });
+                });
+            }
             setDeleteConfirm({ isOpen: false, index: null });
           }
         }}

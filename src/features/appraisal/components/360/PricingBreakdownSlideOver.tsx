@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueries, useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import Icon from '@/shared/components/Icon';
+import DataErrorState from '@/shared/components/DataErrorState';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { pricingAnalysisKeys } from '@features/pricingAnalysis/api/queryKeys';
 import MachineryCostBreakdown360 from './method-breakdowns/MachineryCostBreakdown360';
@@ -186,10 +188,11 @@ const METHOD_LABELS: Record<string, string> = {
 };
 
 const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideOverProps) => {
+  const { t } = useTranslation('appraisal');
   const [expandedMethodId, setExpandedMethodId] = useState<string | null>(null);
 
   // Step 1: Fetch pricing analysis overview
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
     queryFn: async (): Promise<PricingAnalysisData> => {
       const { data } = await axios.get(`/pricing-analysis/${pricingAnalysisId}`);
@@ -238,10 +241,12 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 gap-2">
-        <Icon name="circle-exclamation" style="solid" className="w-6 h-6 text-red-400" />
-        <p className="text-sm text-red-600">Failed to load pricing breakdown.</p>
-      </div>
+      <DataErrorState
+        variant="inline"
+        title={t('view360.errors.pricingBreakdown')}
+        message={(error as Error)?.message}
+        onRetry={refetch}
+      />
     );
   }
 

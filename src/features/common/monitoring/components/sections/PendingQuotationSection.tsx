@@ -12,6 +12,7 @@ import { DateInput, MultiSelectDropdown } from '@shared/components/inputs';
 import type { ListBoxItem } from '@shared/components/inputs';
 import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
 import { useCompanyStore } from '@shared/store';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 import { usePendingQuotations } from '../../api/monitoringApi';
 import type { PendingQuotation, PendingQuotationFilter, SortDir } from '../../api/types';
@@ -158,6 +159,7 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
   const [appraisalCompanyFilter, setAppraisalCompanyFilter] = useState('');
 
   const companies = useCompanyStore(s => s.companies);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const term = debouncedSearch || undefined;
   const filter: PendingQuotationFilter = {
@@ -233,7 +235,14 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
       ? [
           {
             key: 'appraisalCompanyId',
-            label: `Company: ${companies.find(c => c.id === appraisalCompanyFilter)?.companyName ?? appraisalCompanyFilter}`,
+            label: `Company: ${
+              (() => {
+                const match = companies.find(c => c.id === appraisalCompanyFilter);
+                return match
+                  ? localizeCompanyName(match.companyName, match.companyNameLocal)
+                  : appraisalCompanyFilter;
+              })()
+            }`,
             onClear: () => {
               setAppraisalCompanyFilter('');
               setPage(0);

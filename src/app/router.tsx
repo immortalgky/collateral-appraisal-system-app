@@ -220,6 +220,12 @@ const BlockReappraisalListPage = lazy(
 const BlockReappraisalDetailPage = lazy(
   () => import('@/features/blockReappraisal/pages/BlockReappraisalDetailPage')
 );
+const AppraisalDataCorrectionSearchPage = lazy(
+  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionSearchPage')
+);
+const AppraisalDataCorrectionDetailPage = lazy(
+  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionDetailPage')
+);
 const SupportingDataMaintenanceListPage = lazy(() =>
   import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(m => ({
     default: m.SupportingDataMaintenanceListPage,
@@ -238,6 +244,10 @@ const TaskAssignmentConfigPage = lazy(
 );
 const CompanyRoundRobinConfigPage = lazy(
   () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
+);
+const JobSchedulesPage = lazy(() => import('@features/jobSchedules/pages/JobSchedulesPage'));
+const AddressMasterPage = lazy(
+  () => import('@features/addressMaster/pages/AddressMasterPage')
 );
 const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
 const OperationalReportRoute = lazy(
@@ -587,6 +597,22 @@ export const router = createBrowserRouter([
             ),
             children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
           },
+          // Title (Land Dept) and DOPA geocode hierarchies
+          {
+            path: 'address-masters',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="ADDRESS_MASTER_MANAGE" />
+            ),
+            children: [{ index: true, element: <AddressMasterPage /> }],
+          },
+          // Hangfire recurring-job schedules across every module
+          {
+            path: 'job-schedules',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="JOB_SCHEDULE_MANAGE" />
+            ),
+            children: [{ index: true, element: <JobSchedulesPage /> }],
+          },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {
             path: 'collateral-masters',
@@ -708,6 +734,17 @@ export const router = createBrowserRouter([
       {
         path: 'standalone/block-reappraisal/:collateralMasterId',
         element: <BlockReappraisalDetailPage />,
+      },
+      // ─── Appraisal Data Correction ──────────────────────────────────────────
+      {
+        path: 'standalone/appraisal-data-correction',
+        element: (
+          <RoleProtectedRoute allowedRoles={[]} requiredPermission="APPRAISAL_DATA_CORRECTION" />
+        ),
+        children: [
+          { index: true, element: <AppraisalDataCorrectionSearchPage /> },
+          { path: ':appraisalId', element: <AppraisalDataCorrectionDetailPage /> },
+        ],
       },
       // ─── Periodical Reappraisal (AS400) ────────────────────────────────────
       {

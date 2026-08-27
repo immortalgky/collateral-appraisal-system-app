@@ -127,6 +127,7 @@ export interface CollateralEngagementSummaryDto {
   appraiserUserId?: string | null;
   appraisalCompanyId?: string | null;
   appraisalCompanyName?: string | null;
+  appraisalCompanyNameLocal?: string | null;
   createdOn: string;
 }
 

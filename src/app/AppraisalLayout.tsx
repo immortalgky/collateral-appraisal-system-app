@@ -322,6 +322,7 @@ function AppraisalLayout() {
             facilityLimit: (requestData as any)?.detail?.loanDetail?.facilityLimit ?? 0,
             hasAppraisalBook: (requestData as any)?.detail?.hasAppraisalBook ?? false,
             inspectionNumber: (appraisalData as any)?.inspectionNumber ?? null,
+            appraisalValue: (appraisalData as any)?.appraisalValue ?? null,
             basePath: `/appraisals/${appraisalId}`,
           }
         : null,

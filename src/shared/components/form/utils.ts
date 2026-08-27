@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { z, ZodTypeAny } from 'zod';
 
 /**
@@ -276,19 +278,31 @@ function humanizeFieldLabel(key: string): string {
     .trim();
 }
 
+/** A single flattened validation error: where it lives, and what to show for it. */
+export interface FlatFormError {
+  /** Dotted react-hook-form path, e.g. `purpose`, `detail.loanDetail.bankingSegment`, `properties.0.buildingType`. */
+  path: string;
+  /** Display text, `"Label: message"` (or just the message when no label can be derived). */
+  text: string;
+}
+
 /**
- * Recursively flatten react-hook-form FieldErrors into an array of error messages,
- * each prefixed with the humanized field label so the error banner names the offending field.
- * Handles nested objects and array fields (numeric array indices fall back to the array field name).
+ * Recursively flatten react-hook-form FieldErrors into an array of errors carrying both the
+ * humanized display text (so the banner names the offending field) and the dotted field path
+ * (so the banner can scroll to it — see `scrollToField`).
+ *
+ * Handles nested objects and array fields (numeric array indices fall back to the array field name
+ * as the label source, while still contributing to the path).
  *
  * @example
  * // Input: { name: { message: 'Required' }, address: { street: { message: 'Too short' } } }
- * // Output: ['Name: Required', 'Street: Too short']
+ * // Output: [{ path: 'name', text: 'Name: Required' },
+ * //          { path: 'address.street', text: 'Street: Too short' }]
  */
-export function flattenFormErrors(errors: Record<string, any>): string[] {
-  const messages: string[] = [];
+export function flattenFormErrors(errors: Record<string, any>): FlatFormError[] {
+  const found: FlatFormError[] = [];
 
-  function traverse(obj: Record<string, any>, parentKey?: string) {
+  function traverse(obj: Record<string, any>, parentKey?: string, parentPath = '') {
     for (const key of Object.keys(obj)) {
       const value = obj[key];
 
@@ -296,19 +310,79 @@ export function flattenFormErrors(errors: Record<string, any>): string[] {
 
       // Numeric keys are array indices — carry the array field name down as the label source.
       const isIndex = /^\d+$/.test(key);
-      const labelKey = isIndex ? parentKey : key;
+      // RHF parks array-level errors on a synthetic `root` key. It is not a real field: keep the
+      // parent's name for the label and leave it out of the path so the array itself stays targetable.
+      const isRoot = key === 'root';
+      const labelKey = isIndex || isRoot ? parentKey : key;
+      const path = isRoot ? parentPath : parentPath ? `${parentPath}.${key}` : key;
 
       // If this is an error object with a message property, extract it
       if (typeof value.message === 'string' && value.message) {
         const label = labelKey ? humanizeFieldLabel(labelKey) : '';
-        messages.push(label ? `${label}: ${value.message}` : value.message);
+        found.push({ path, text: label ? `${label}: ${value.message}` : value.message });
       } else if (typeof value === 'object') {
         // Recurse into nested objects (nested fields or array items)
-        traverse(value, labelKey);
+        traverse(value, labelKey, path);
       }
     }
   }
 
   traverse(errors);
-  return messages;
+  return found;
+}
+
+/**
+ * Scroll the field at `path` into view and focus its control.
+ *
+ * Fields are addressed by the `data-field` attribute that `FormFields` and `FormTable` put on each
+ * field wrapper. A `[name=...]` selector would not work: `Dropdown` never forwards `name` to the DOM.
+ *
+ * Falls back to a prefix match so array-level errors (`customers`, `titles`) land on the first cell
+ * of the offending table, which no focus-based mechanism could ever reach.
+ */
+export function scrollToField(path: string): void {
+  if (!path) return;
+
+  const escaped = CSS.escape(path);
+  const el =
+    document.querySelector(`[data-field="${escaped}"]`) ??
+    document.querySelector(`[data-field^="${escaped}."]`);
+
+  if (!el) return;
+
+  // Honour prefers-reduced-motion. A `behavior` passed here overrides the global
+  // `scroll-behavior: smooth` in index.css, so the check has to happen in JS, not CSS.
+  // scrollToField is a plain function, so matchMedia is read directly rather than through
+  // the useMediaQuery hook that wraps it.
+  const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+
+  el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+  // preventScroll so focusing does not fight the smooth scroll already in flight.
+  el.querySelector<HTMLElement>('input,select,textarea,button')?.focus({ preventScroll: true });
+}
+
+/**
+ * After a failed submit, scroll to the first validation error.
+ *
+ * The app cannot rely on react-hook-form's `shouldFocusError` for this: it only reaches fields whose
+ * ref landed on a focusable node, it handles a single field, and it can never reach array-level
+ * errors, which have no input behind them at all.
+ */
+export function useScrollToFirstError<T extends FieldValues>(methods: UseFormReturn<T>): void {
+  const { submitCount } = methods.formState;
+
+  useEffect(() => {
+    if (!submitCount) return;
+    // Read errors here rather than depending on them: as a dep, every keystroke that clears an
+    // error would re-fire the scroll.
+    const [first] = flattenFormErrors(methods.formState.errors);
+    if (!first) return;
+    // Next frame: the error banner is inserted above the form on this same commit, and scrolling
+    // before that reflow lands on a stale offset. Cancelled on unmount — a form that closes
+    // between submit and the next frame would otherwise scroll to whatever `data-field` the
+    // replacement screen happens to expose.
+    const frame = requestAnimationFrame(() => scrollToField(first.path));
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitCount]);
 }

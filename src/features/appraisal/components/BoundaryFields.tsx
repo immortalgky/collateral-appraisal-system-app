@@ -95,19 +95,13 @@ interface BoundaryFieldsProps {
  */
 const BoundaryFields = ({ readOnly }: BoundaryFieldsProps) => {
   return (
-    <div className="col-span-12">
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
+    <div className="cas-boundary-table col-span-12">
+      <div className="rounded border border-gray-200 overflow-hidden">
         {/* Header row */}
-        <div className="grid grid-cols-[6rem_1fr_10rem] bg-gray-50 border-b border-gray-200 divide-x divide-gray-200">
-          <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
-            Direction
-          </div>
-          <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
-            Consecutive Area
-          </div>
-          <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
-            Est. Length (m)
-          </div>
+        <div className="grid grid-cols-[6rem_1fr_10rem] bg-primary-700 divide-x divide-primary-600">
+          <div className="px-3 py-2 text-xs font-medium text-white">Direction</div>
+          <div className="px-3 py-2 text-xs font-medium text-white">Consecutive Area</div>
+          <div className="px-3 py-2 text-xs font-medium text-white">Est. Length (m)</div>
         </div>
 
         {/* Data rows */}
@@ -121,10 +115,10 @@ const BoundaryFields = ({ readOnly }: BoundaryFieldsProps) => {
             <div className="px-3 py-2 text-sm font-medium text-gray-700 self-stretch flex items-center">
               {direction}
             </div>
-            <div className="px-2 py-2">
+            <div>
               <AdjacentAreaCell name={adjacentAreaField} readOnly={readOnly} />
             </div>
-            <div className="px-2 py-2">
+            <div>
               <BoundaryLengthCell name={boundaryLengthField} readOnly={readOnly} />
             </div>
           </div>

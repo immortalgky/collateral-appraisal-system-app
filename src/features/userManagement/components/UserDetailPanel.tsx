@@ -9,6 +9,7 @@ import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatLocaleDateTime } from '@shared/utils/dateUtils';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import {
   useGetUserById,
   useAdminUpdateUser,
@@ -82,13 +83,18 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     department: '',
     companyId: null,
     aoCode: '',
+    employeeId: '',
   });
   const [editScope, setEditScope] = useState<'Bank' | 'Company'>('Bank');
   const [editAuthSource, setEditAuthSource] = useState<'Local' | 'LDAP'>('Local');
   const ldapLookup = useLdapLookup();
 
+  const localizeCompanyName = useLocalizedCompanyName();
   const { data: eligibleCompanies } = useGetEligibleCompanies();
-  const companyChoices = (eligibleCompanies ?? []).map(c => ({ value: c.id, label: c.name }));
+  const companyChoices = (eligibleCompanies ?? []).map(c => ({
+    value: c.id,
+    label: localizeCompanyName(c.name, c.nameLocal),
+  }));
 
   // Re-sync first/last name, email, position and department from AD for an LDAP user.
   const handleEditLdapResync = () => {
@@ -121,6 +127,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       companyId: scope === 'Bank' ? null : prev.companyId,
       department: scope === 'Company' ? '' : prev.department,
       aoCode: scope === 'Company' ? '' : prev.aoCode,
+      employeeId: scope === 'Company' ? '' : prev.employeeId,
     }));
   };
 
@@ -134,6 +141,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       department: user.department ?? '',
       companyId: user.companyId,
       aoCode: user.aoCode ?? '',
+      employeeId: user.employeeId ?? '',
     });
     setEditScope(user.companyId ? 'Company' : 'Bank');
     setEditAuthSource(user.authSource === 'LDAP' ? 'LDAP' : 'Local');
@@ -168,6 +176,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         department: isCompany ? null : editForm.department || null,
         companyId: isCompany ? editForm.companyId || null : null,
         aoCode: isCompany ? null : editForm.aoCode || null,
+        employeeId: isCompany ? null : editForm.employeeId || null,
         authSource: editAuthSource,
       },
       {
@@ -390,10 +399,16 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 ? [
                     { label: t('fields.department'), value: user.department },
                     { label: t('fields.aoCode'), value: user.aoCode },
+                    { label: t('fields.employeeId'), value: user.employeeId },
                   ]
                 : []),
               ...(user.companyName
-                ? [{ label: t('fields.company'), value: user.companyName }]
+                ? [
+                    {
+                      label: t('fields.company'),
+                      value: localizeCompanyName(user.companyName, user.companyNameLocal),
+                    },
+                  ]
                 : []),
               { label: t('fields.authSource'), value: user.authSource },
               ...(user.lastLoginAt
@@ -529,7 +544,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           {userScope === 'Company' ? (
             <p className="text-sm text-gray-500">
               {t('hints.teamNotApplicableCompany', {
-                company: user.companyName ?? user.companyId ?? '',
+                company: user.companyName
+                  ? localizeCompanyName(user.companyName, user.companyNameLocal)
+                  : (user.companyId ?? ''),
               })}
             </p>
           ) : !user.teams || user.teams.length === 0 ? (
@@ -762,6 +779,16 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                       setEditForm(prev => ({ ...prev, aoCode: value }));
                     }}
                     placeholder={t('placeholders.aoCode')}
+                  />
+                  <TextInput
+                    label={t('fields.employeeId')}
+                    value={editForm.employeeId ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, employeeId: value }));
+                    }}
+                    placeholder={t('placeholders.employeeId')}
+                    maxLength={50}
                   />
                 </>
               )}

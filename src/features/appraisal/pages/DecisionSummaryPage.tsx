@@ -40,6 +40,9 @@ import {
   useSaveDecisionSummary,
   useUpdateForceSaleRate,
 } from '../api/decisionSummary';
+import { useGetAssignment } from '../api/administration';
+import ValuationEngagementChips from '../components/ValuationEngagementChips';
+import { useAuthStore } from '@features/auth/store.ts';
 import {
   useCompleteActivity,
   useGetActivityActions,
@@ -250,19 +253,37 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         showCharCount: true,
       },
     ],
-    appraiserOpinionFields: [
+    externalAppraiserOpinionFields: [
       {
         type: 'dropdown' as const,
-        name: 'appraiserOpinionType',
+        name: 'externalAppraiserOpinionType',
         label: t('decisionSummary.fields.opinionType'),
         options: opinionTypeOptions,
         placeholder: t('decisionSummary.fields.opinionTypePlaceholder'),
       },
       {
         type: 'textarea' as const,
-        name: 'appraiserOpinion',
-        label: t('decisionSummary.fields.appraiserOpinion'),
-        placeholder: t('decisionSummary.fields.appraiserOpinionPlaceholder'),
+        name: 'externalAppraiserOpinion',
+        label: t('decisionSummary.fields.externalAppraiserOpinion'),
+        placeholder: t('decisionSummary.fields.externalAppraiserOpinionPlaceholder'),
+        wrapperClassName: 'mt-3',
+        maxLength: 4000,
+        showCharCount: true,
+      },
+    ],
+    internalAppraiserOpinionFields: [
+      {
+        type: 'dropdown' as const,
+        name: 'internalAppraiserOpinionType',
+        label: t('decisionSummary.fields.opinionType'),
+        options: opinionTypeOptions,
+        placeholder: t('decisionSummary.fields.opinionTypePlaceholder'),
+      },
+      {
+        type: 'textarea' as const,
+        name: 'internalAppraiserOpinion',
+        label: t('decisionSummary.fields.internalAppraiserOpinion'),
+        placeholder: t('decisionSummary.fields.internalAppraiserOpinionPlaceholder'),
         wrapperClassName: 'mt-3',
         maxLength: 4000,
         showCharCount: true,
@@ -307,6 +328,23 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         showCharCount: true,
       },
     ],
+    constructionDocumentsFields: [
+      {
+        type: 'checkbox' as const,
+        name: 'hasConstructionLicenseDoc',
+        label: t('decisionSummary.fields.constructionLicenseDoc'),
+      },
+      {
+        type: 'checkbox' as const,
+        name: 'hasConstructionProgressTableDoc',
+        label: t('decisionSummary.fields.constructionProgressTableDoc'),
+      },
+      {
+        type: 'checkbox' as const,
+        name: 'hasConstructionPhotoDoc',
+        label: t('decisionSummary.fields.constructionPhotoDoc'),
+      },
+    ],
   };
 };
 
@@ -316,12 +354,14 @@ type SectionKey =
   | 'decisionApproach'
   | 'priceSummary'
   | 'constructionSummary'
+  | 'constructionDocuments'
   | 'priceVerification'
   | 'governmentPrice'
   | 'condition'
   | 'remark'
-  | 'appraiserOpinion'
+  | 'externalAppraiserOpinion'
   | 'committeeOpinion'
+  | 'internalAppraiserOpinion'
   | 'reviewPrices'
   | 'additionalAssumptions'
   | 'committeeApproval';
@@ -330,6 +370,7 @@ interface ActivitySectionConfig {
   sections: SectionKey[];
   readOnly?: boolean;
   editableSections?: SectionKey[];
+  readOnlySections?: SectionKey[];
 }
 
 const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
@@ -343,8 +384,9 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'additionalAssumptions',
     ],
   },
@@ -353,8 +395,9 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'additionalAssumptions',
     ],
     readOnly: true,
@@ -364,8 +407,9 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'additionalAssumptions',
     ],
     readOnly: true,
@@ -375,24 +419,26 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'priceVerification',
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
       'additionalAssumptions',
     ],
     readOnly: true,
     editableSections: [
+      'constructionDocuments',
       'priceVerification',
       'condition',
       'remark',
-      'appraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
-      'additionalAssumptions',
     ],
   },
   'int-appraisal-execution': {
@@ -400,25 +446,54 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'internalAppraiserOpinion',
       'committeeOpinion',
       'additionalAssumptions',
     ],
+    // No `readOnly` flag here, so this list is not the usual "stays editable despite readOnly"
+    // exemption — it is the opt-in whitelist that 'constructionDocuments' checks on its own
+    // (see the SectionReadOnlyWrap below). The internal appraiser attaches the docs, so they
+    // may tick the boxes; every other section here is already editable and is unaffected.
+    editableSections: ['constructionDocuments'],
+  },
+  'int-offline-book-keyin': {
+    // Mirrors int-appraisal-execution (fully editable — the keyer reproduces the whole book),
+    // plus externalAppraiserOpinion: the case is External, so the report prints the EXTERNAL
+    // opinion column of AppraisalDecisions and the keyer must be able to transcribe the company's
+    // opinion from the paper book into it. The company + book date are not a section — they live in
+    // the Valuation header (ValuationEngagementChips) alongside the appraisal date.
+    sections: [
+      'decisionApproach',
+      'priceSummary',
+      'constructionSummary',
+      'constructionDocuments',
+      'governmentPrice',
+      'condition',
+      'remark',
+      'externalAppraiserOpinion',
+      'internalAppraiserOpinion',
+      'committeeOpinion',
+      'additionalAssumptions',
+    ],
+    editableSections: ['constructionDocuments'],
   },
   'int-appraisal-check': {
     sections: [
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'priceVerification',
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
       'additionalAssumptions',
     ],
@@ -429,18 +504,38 @@ const ACTIVITY_SECTION_CONFIG: Record<string, ActivitySectionConfig> = {
       'decisionApproach',
       'priceSummary',
       'constructionSummary',
+      'constructionDocuments',
       'priceVerification',
       'governmentPrice',
       'condition',
       'remark',
-      'appraiserOpinion',
+      'externalAppraiserOpinion',
       'committeeOpinion',
+      'internalAppraiserOpinion',
       'reviewPrices',
       'additionalAssumptions',
     ],
     readOnly: true,
   },
-  'pending-approval': { sections: ['committeeApproval'] },
+  'pending-approval': {
+    sections: [
+      'decisionApproach',
+      'priceSummary',
+      'constructionSummary',
+      'constructionDocuments',
+      'priceVerification',
+      'governmentPrice',
+      'condition',
+      'remark',
+      'externalAppraiserOpinion',
+      'internalAppraiserOpinion',
+      'committeeOpinion',
+      'reviewPrices',
+      'additionalAssumptions',
+      'committeeApproval',
+    ],
+    readOnly: true,
+  },
 };
 
 /** Wraps children with FormReadOnlyContext override when forceReadOnly is true */
@@ -483,6 +578,15 @@ const DecisionSummaryPage = () => {
   const workflowInstanceId = useWorkflowInstanceId();
   const activityId = useActivityId();
   const isTaskOwner = useIsTaskOwner();
+  const currentUser = useAuthStore(state => state.user);
+
+  // The offline-engagement card posts to its own endpoint, so it cannot live in this page's RHF
+  // form. It hands back a save handle instead, which the action-bar Save calls alongside the
+  // decision save — one Save button for the user, two writes underneath.
+  const engagementSaveRef = useRef<(() => Promise<boolean>) | null>(null);
+
+  const [engagementDirty, setEngagementDirty] = useState(false);
+  const [engagementComplete, setEngagementComplete] = useState(true);
 
   // On the appraisal route (no taskId) the context has no workflow ids, so the live
   // approval / activity-tracking / meeting sections would render empty. Resolve them
@@ -491,6 +595,22 @@ const DecisionSummaryPage = () => {
   const resolvedWorkflowInstanceId =
     workflowInstanceId ?? workflowProgress?.workflowInstanceId ?? undefined;
   const resolvedActivityId = activityId ?? workflowProgress?.currentActivityId ?? undefined;
+
+  // Internal vs external path. The endpoint already drops Rejected/Cancelled rows and orders newest
+  // first (GetAssignmentsQueryHandler), so the head row is the current assignment — the same "latest
+  // live assignment" rule the report loader and the opinion-split migration backfill use.
+  const { data: assignments } = useGetAssignment(appraisalId ?? '');
+  const isExternalPath = assignments?.[0]?.assignmentType?.toLowerCase() === 'external';
+  // Mirror of the backend guard in SetOfflineExternalEngagementCommandHandler: only the owner of
+  // the live off-system key-in task may change the engagement, and only before the book has been
+  // handed on for review. Everyone else — including every normal external case — sees it read-only.
+  const engagementAssignment = assignments?.[0] ?? null;
+  const engagementStatus = engagementAssignment?.assignmentStatus?.toLowerCase();
+  const canEditOfflineEngagement =
+    activityId === 'int-offline-book-keyin' &&
+    isTaskOwner &&
+    !isReadOnly &&
+    (!engagementStatus || ['pending', 'assigned', 'inprogress'].includes(engagementStatus));
 
   // Section visibility by activity — intentionally keyed off the *context* activityId
   // (undefined on the appraisal route) so Appraisal Search still shows all sections.
@@ -501,11 +621,20 @@ const DecisionSummaryPage = () => {
     sectionConfig === null || sectionConfig.sections.includes(key);
   const isActivityReadOnly = sectionConfig?.readOnly ?? false;
   const shouldForceReadOnly = (key: SectionKey) =>
-    !isReadOnly && isActivityReadOnly && !sectionConfig?.editableSections?.includes(key);
+    (!isReadOnly && isActivityReadOnly && !sectionConfig?.editableSections?.includes(key)) ||
+    (sectionConfig?.readOnlySections?.includes(key) ?? false);
   const hasEditableSections =
     sectionConfig === null
       ? false
       : !sectionConfig.readOnly || (sectionConfig.editableSections?.length ?? 0) > 0;
+  // The 3 construction-doc checkboxes may only be persisted as an override by someone who could
+  // actually see AND edit them (same predicate the section's SectionReadOnlyWrap uses below).
+  // Every other save echoes the stored value back untouched, so `override ?? auto` keeps
+  // auto-deriving from the uploaded D026/D012/D011 documents.
+  const canEditConstructionDocs =
+    showSection('constructionDocuments') &&
+    !isReadOnly &&
+    (!activityId || !!sectionConfig?.editableSections?.includes('constructionDocuments'));
 
   // Decision state (lifted from DecisionSection)
   const [selectedDecision, setSelectedDecision] = useState<string | null>(null);
@@ -575,8 +704,7 @@ const DecisionSummaryPage = () => {
   const isManualAssignment =
     selectedAction?.assignmentMode === 'user' && !!selectedAction.targetActivityId;
 
-  const reasonRequired =
-    selectedAction?.movement === 'C' || selectedAction?.movement === 'B';
+  const reasonRequired = selectedAction?.movement === 'C' || selectedAction?.movement === 'B';
 
   // Form setup
   const mapDataToForm = useMemo(() => {
@@ -587,12 +715,20 @@ const DecisionSummaryPage = () => {
       condition: data.condition ?? null,
       remarkType: data.remarkType ?? null,
       remark: data.remark ?? null,
-      appraiserOpinionType: data.appraiserOpinionType ?? null,
-      appraiserOpinion: data.appraiserOpinion ?? null,
+      externalAppraiserOpinionType: data.externalAppraiserOpinionType ?? null,
+      externalAppraiserOpinion: data.externalAppraiserOpinion ?? null,
       committeeOpinionType: data.committeeOpinionType ?? null,
       committeeOpinion: data.committeeOpinion ?? null,
+      internalAppraiserOpinionType: data.internalAppraiserOpinionType ?? null,
+      internalAppraiserOpinion: data.internalAppraiserOpinion ?? null,
       totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
       additionalAssumptions: data.additionalAssumptions ?? null,
+      hasConstructionLicenseDoc:
+        data.hasConstructionLicenseDoc ?? data.constructionLicenseDocAttached ?? false,
+      hasConstructionProgressTableDoc:
+        data.hasConstructionProgressTableDoc ?? data.constructionProgressTableDocAttached ?? false,
+      hasConstructionPhotoDoc:
+        data.hasConstructionPhotoDoc ?? data.constructionPhotoDocAttached ?? false,
     };
   }, [data]);
 
@@ -621,6 +757,25 @@ const DecisionSummaryPage = () => {
   const notVerifiedLock =
     (sectionConfig === null || sectionConfig.sections.includes('priceVerification')) &&
     isPriceVerifiedNow !== true;
+
+  // External Appraiser Opinion card. Shown whenever the activity's section config lists it — on the
+  // read-only activities it renders empty rather than disappearing, so a missing external comment is
+  // distinguishable from "section not applicable" (an appraisal can pass ext-appraisal-execution, the
+  // only place the field is editable, without one being captured). Editability is unchanged and comes
+  // from shouldForceReadOnly / priceVerifiedLock at the render site.
+  const externalOpinionVisible = showSection('externalAppraiserOpinion');
+  // Additional/Special Assumptions are the *appraiser's* input, so they follow the path: on the
+  // external path they belong with the external appraiser (rendered inside this External card,
+  // editable only at ext-appraisal-execution and read-only reference everywhere else on that path
+  // — including book verification); on the internal path they belong with the internal appraiser
+  // (rendered in Group B). The path comes from the appraisal's current assignment — NOT from whether
+  // an external opinion happens to have a value, which misfiled an external job's assumptions into
+  // the internal section whenever the external appraiser left the opinion blank. The
+  // !showSection('internalAppraiserOpinion') clause keeps the pure ext-* screens correct before the
+  // assignment query resolves (they have no internal opinion section at all).
+  const assumptionsInExternalCard =
+    showSection('additionalAssumptions') &&
+    (isExternalPath || !showSection('internalAppraiserOpinion'));
 
   // Track whether the user has toggled isPriceVerified after the data loaded.
   // This lets us distinguish "loaded as verified → show stored review values"
@@ -691,7 +846,7 @@ const DecisionSummaryPage = () => {
   const totalAppraisalPriceReviewNow = watch('totalAppraisalPriceReview');
   const forceSellingPriceReviewDerived =
     totalAppraisalPriceReviewNow != null && effectiveForceSellingRate != null
-      ? (totalAppraisalPriceReviewNow * effectiveForceSellingRate) / 100
+      ? Math.round((totalAppraisalPriceReviewNow * effectiveForceSellingRate) / 100 / 1000) * 1000
       : null;
 
   // The rate now round-trips through the server on blur, so the displayed FSP amount can
@@ -847,8 +1002,20 @@ const DecisionSummaryPage = () => {
       if (!complete && draftPayload) {
         saveDraft(draftPayload);
       }
+      // The save is a full replace, so a form that merely *carries* the construction-doc
+      // checkboxes (they live in defaultValues even when the section is hidden) would freeze the
+      // seeded value as an explicit override. Echo the server's stored value back instead —
+      // neither creating a new override nor erasing a real one from book verification.
+      const summaryBody = canEditConstructionDocs
+        ? formData
+        : {
+            ...formData,
+            hasConstructionLicenseDoc: data?.hasConstructionLicenseDoc ?? null,
+            hasConstructionProgressTableDoc: data?.hasConstructionProgressTableDoc ?? null,
+            hasConstructionPhotoDoc: data?.hasConstructionPhotoDoc ?? null,
+          };
       saveSummary(
-        { appraisalId, body: formData },
+        { appraisalId, body: summaryBody },
         {
           onSuccess: () => {
             if (canComplete) {
@@ -888,8 +1055,26 @@ const DecisionSummaryPage = () => {
   };
 
   // Save button (and Enter key) → persist only. Submit → complete (via ConfirmDialog).
-  const onSave = (formData: DecisionSummaryFormType) => persistDecision(formData, false);
-  const onSubmit = (formData: DecisionSummaryFormType) => persistDecision(formData, true);
+  const onSave = async (formData: DecisionSummaryFormType) => {
+    // Abort if the engagement has pending edits that fail validation — persisting the decision
+    // while silently dropping the company or book date would be worse than saving nothing.
+    if (engagementSaveRef.current && !(await engagementSaveRef.current())) return;
+    return persistDecision(formData, false);
+  };
+  const onSubmit = async (formData: DecisionSummaryFormType) => {
+    // Submit means "hand the book on", so persist any staged engagement first.
+    if (engagementSaveRef.current && !(await engagementSaveRef.current())) return;
+
+    // Then refuse to complete an External assignment with no company recorded. The completion
+    // pipeline enforces the same rule via the existing ValidateAppraisalFields step
+    // (externalCompanyRecorded, from vw_AppraisalValidationContext); failing here just gives a
+    // plain message instead of a pipeline error.
+    if (canEditOfflineEngagement && !engagementComplete) {
+      toast.error(t('offlineEngagement.blockedOnSubmit'));
+      return;
+    }
+    return persistDecision(formData, true);
+  };
 
   const handleCancel = () => {
     if (data) {
@@ -899,10 +1084,12 @@ const DecisionSummaryPage = () => {
         condition: data.condition ?? null,
         remarkType: data.remarkType ?? null,
         remark: data.remark ?? null,
-        appraiserOpinionType: data.appraiserOpinionType ?? null,
-        appraiserOpinion: data.appraiserOpinion ?? null,
+        externalAppraiserOpinionType: data.externalAppraiserOpinionType ?? null,
+        externalAppraiserOpinion: data.externalAppraiserOpinion ?? null,
         committeeOpinionType: data.committeeOpinionType ?? null,
         committeeOpinion: data.committeeOpinion ?? null,
+        internalAppraiserOpinionType: data.internalAppraiserOpinionType ?? null,
+        internalAppraiserOpinion: data.internalAppraiserOpinion ?? null,
         totalAppraisalPriceReview: data.totalAppraisalPriceReview ?? null,
         additionalAssumptions: data.additionalAssumptions ?? null,
       });
@@ -951,6 +1138,20 @@ const DecisionSummaryPage = () => {
                           <div className="h-6 w-px bg-gray-200" />
                         </>
                       )}
+                      {/* Who appraised it — shown for any case that has an external company, so a
+                          normal external assignment is as legible here as an off-system one. Also
+                          the edit affordance for an off-system engagement. */}
+                      {appraisalId && (
+                        <ValuationEngagementChips
+                          appraisalId={appraisalId}
+                          assignment={assignments?.[0] ?? null}
+                          canEdit={canEditOfflineEngagement}
+                          currentUsername={currentUser?.username ?? null}
+                          saveHandleRef={engagementSaveRef}
+                          onDirtyChange={setEngagementDirty}
+                          onCompletenessChange={setEngagementComplete}
+                        />
+                      )}
                       {data?.appraisalDate ? (
                         <div className="flex items-center gap-1.5 text-xs text-gray-500">
                           <span className="text-sm leading-none">🗓️</span>
@@ -968,83 +1169,86 @@ const DecisionSummaryPage = () => {
                   }
                 >
                   {showSection('priceSummary') && (
-                    <div className="py-4">
-                      {data?.isBlock ? (
+                    <div className="py-4 space-y-4">
+                      {/* The three headline figures render for BOTH block and non-block. Block
+                          additionally gets the per-model breakdown table below; it used to
+                          REPLACE this strip, which left block appraisals with no headline
+                          appraised / force-selling / insurance values on the page. */}
+                      <div className="grid grid-cols-3 gap-6">
+                        <div className="text-left">
+                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                            {t('decisionSummary.fields.totalAppraisalPrice')}
+                          </p>
+                          <p className="text-xl font-semibold tabular-nums text-teal-700 mt-1">
+                            {data?.totalAppraisalPrice != null
+                              ? formatNumber(data.totalAppraisalPrice, 2)
+                              : '-'}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                            {t('decisionSummary.fields.forceSellingPrice')}
+                          </p>
+                          <p className="text-xl font-semibold tabular-nums text-amber-700 mt-1">
+                            {forceSellingPriceDisplay != null
+                              ? formatNumber(forceSellingPriceDisplay, 2)
+                              : '-'}
+                          </p>
+                          <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceSummary')}>
+                            <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                              {/* Not an RHF field — persists immediately on blur via a
+                                    dedicated endpoint (see handleForceSaleRateBlur), so
+                                    FormFields/schema validation don't apply here.
+                                    Empty when no override — placeholder shows the resolved
+                                    (inherited) rate greyed out, so blank visibly means "using
+                                    the system default", not "zero". */}
+                              <NumberInput
+                                name="forceSellingRateOverride"
+                                fullWidth={false}
+                                className="w-20"
+                                decimalPlaces={2}
+                                thousandSeparator={false}
+                                maxIntegerDigits={3}
+                                min={0.01}
+                                max={100}
+                                suffix="%"
+                                value={forceSaleRateDraft}
+                                onChange={e => setForceSaleRateDraft(e.target.value)}
+                                onBlur={handleForceSaleRateBlur}
+                                disabled={updateForceSaleRate.isPending}
+                                placeholder={
+                                  data?.forceSellingRate != null
+                                    ? data.forceSellingRate.toFixed(2)
+                                    : undefined
+                                }
+                              />
+                              <span className="text-xs text-gray-400">
+                                {t('decisionSummary.fields.forceSellingPriceHint')}
+                              </span>
+                            </div>
+                          </SectionReadOnlyWrap>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                            {t('decisionSummary.fields.buildingInsurance')}
+                          </p>
+                          <p className="text-xl font-semibold tabular-nums text-gray-700 mt-1">
+                            {data?.buildingInsurance != null
+                              ? formatNumber(data.buildingInsurance, 2)
+                              : '-'}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {t('decisionSummary.fields.buildingInsuranceHint')}
+                          </p>
+                        </div>
+                      </div>
+                      {data?.isBlock && (
                         <BlockPriceSummaryTable
                           rows={data.blockModelPrices ?? []}
                           projectTotal={data.totalAppraisalPrice ?? 0}
                           forceSellingPrice={data.forceSellingPrice ?? 0}
                           buildingInsurance={data.buildingInsurance ?? 0}
                         />
-                      ) : (
-                        <div className="grid grid-cols-3 gap-6">
-                          <div className="text-left">
-                            <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-                              {t('decisionSummary.fields.totalAppraisalPrice')}
-                            </p>
-                            <p className="text-xl font-semibold tabular-nums text-teal-700 mt-1">
-                              {data?.totalAppraisalPrice != null
-                                ? formatNumber(data.totalAppraisalPrice, 2)
-                                : '-'}
-                            </p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-                              {t('decisionSummary.fields.forceSellingPrice')}
-                            </p>
-                            <p className="text-xl font-semibold tabular-nums text-amber-700 mt-1">
-                              {forceSellingPriceDisplay != null
-                                ? formatNumber(forceSellingPriceDisplay, 2)
-                                : '-'}
-                            </p>
-                            <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceSummary')}>
-                              <div className="flex items-center justify-center gap-1.5 mt-0.5">
-                                {/* Not an RHF field — persists immediately on blur via a
-                                    dedicated endpoint (see handleForceSaleRateBlur), so
-                                    FormFields/schema validation don't apply here.
-                                    Empty when no override — placeholder shows the resolved
-                                    (inherited) rate greyed out, so blank visibly means "using
-                                    the system default", not "zero". */}
-                                <NumberInput
-                                  name="forceSellingRateOverride"
-                                  fullWidth={false}
-                                  className="w-20"
-                                  decimalPlaces={2}
-                                  thousandSeparator={false}
-                                  maxIntegerDigits={3}
-                                  min={0.01}
-                                  max={100}
-                                  suffix="%"
-                                  value={forceSaleRateDraft}
-                                  onChange={e => setForceSaleRateDraft(e.target.value)}
-                                  onBlur={handleForceSaleRateBlur}
-                                  disabled={updateForceSaleRate.isPending}
-                                  placeholder={
-                                    data?.forceSellingRate != null
-                                      ? data.forceSellingRate.toFixed(2)
-                                      : undefined
-                                  }
-                                />
-                                <span className="text-xs text-gray-400">
-                                  {t('decisionSummary.fields.forceSellingPriceHint')}
-                                </span>
-                              </div>
-                            </SectionReadOnlyWrap>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
-                              {t('decisionSummary.fields.buildingInsurance')}
-                            </p>
-                            <p className="text-xl font-semibold tabular-nums text-gray-700 mt-1">
-                              {data?.buildingInsurance != null
-                                ? formatNumber(data.buildingInsurance, 2)
-                                : '-'}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-0.5">
-                              {t('decisionSummary.fields.buildingInsuranceHint')}
-                            </p>
-                          </div>
-                        </div>
                       )}
                     </div>
                   )}
@@ -1063,7 +1267,9 @@ const DecisionSummaryPage = () => {
                     </InlineSubSection>
                   )}
                   {showSection('governmentPrice') && (
-                    <InlineSubSection title={t('decisionSummaryPageExtra.governmentAppraisalPrice')}>
+                    <InlineSubSection
+                      title={t('decisionSummaryPageExtra.governmentAppraisalPrice')}
+                    >
                       {data?.governmentPrices?.length ? (
                         <InlineSubSection
                           compact
@@ -1126,6 +1332,72 @@ const DecisionSummaryPage = () => {
                       />
                     </InlineSubSection>
                   )}
+
+                  {/* Supporting Documents (เอกสารประกอบ) — lives inside the Construction Summary card.
+                      Each checkbox's initial value is the EFFECTIVE value (manual override ?? auto-
+                      detected document presence) computed in mapDataToForm; ticking here always saves
+                      as an explicit override via the whole-form save.
+                      Editable ONLY where an activity whitelists 'constructionDocuments' in
+                      editableSections (today: appraisal-book-verification). Elsewhere it renders
+                      read-only — including the execution activities that lack a `readOnly` flag, which
+                      shouldForceReadOnly alone would leave editable. On the appraisal-search route
+                      (activityId undefined) the page-level read-only mode applies, as for other sections. */}
+                  {showSection('constructionDocuments') && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={
+                        !!activityId &&
+                        !sectionConfig?.editableSections?.includes('constructionDocuments')
+                      }
+                    >
+                      <InlineSubSection
+                        title={t('decisionSummaryPageExtra.constructionDocumentsTitle')}
+                        description={t('decisionSummaryPageExtra.constructionDocumentsHint')}
+                      >
+                        <div className="grid grid-cols-1 gap-2">
+                          <FormFields fields={fields.constructionDocumentsFields} />
+                        </div>
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
+                  )}
+                </GroupCard>
+              )}
+
+              {/* External Appraiser Opinion — standalone card, above Group B. Rendered on every
+                  activity whose section config lists it, empty included: shared activities
+                  (int-appraisal-check / int-appraisal-verification / book verification) run on both
+                  paths, and hiding a null made a never-captured external comment indistinguishable
+                  from the section simply not applying. */}
+              {(externalOpinionVisible || assumptionsInExternalCard) && (
+                <GroupCard
+                  icon="user-tie"
+                  iconColor="blue"
+                  title={t('decisionSummary.fields.externalAppraiserOpinions')}
+                >
+                  {externalOpinionVisible && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={
+                        shouldForceReadOnly('externalAppraiserOpinion') || priceVerifiedLock
+                      }
+                    >
+                      <InlineSubSection>
+                        <FormFields fields={fields.externalAppraiserOpinionFields} />
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
+                  )}
+                  {/* Additional / Special Assumptions live here on the external-only screens
+                      (no internal opinion present) — the external appraiser's input. On internal /
+                      book-verification screens they render in Group B with the internal opinion. */}
+                  {assumptionsInExternalCard && (
+                    <SectionReadOnlyWrap
+                      forceReadOnly={
+                        shouldForceReadOnly('additionalAssumptions') || priceVerifiedLock
+                      }
+                    >
+                      <InlineSubSection title={t('decisionSummary.fields.additionalAssumptions')}>
+                        <FormFields fields={fields.additionalAssumptionsFields} />
+                      </InlineSubSection>
+                    </SectionReadOnlyWrap>
+                  )}
                 </GroupCard>
               )}
 
@@ -1135,14 +1407,17 @@ const DecisionSummaryPage = () => {
                 'reviewPrices',
                 'condition',
                 'remark',
-                'appraiserOpinion',
+                'internalAppraiserOpinion',
                 'committeeOpinion',
-                'additionalAssumptions',
               ) && (
                 <GroupCard
                   icon="users"
                   iconColor="cyan"
-                  title={t('decisionSummary.sections.reviewOpinions')}
+                  title={
+                    anyVisible('priceVerification', 'reviewPrices')
+                      ? t('decisionSummary.sections.reviewOpinions')
+                      : t('decisionSummary.sections.opinions')
+                  }
                 >
                   {showSection('priceVerification') && (
                     <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceVerification')}>
@@ -1184,12 +1459,14 @@ const DecisionSummaryPage = () => {
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
-                  {showSection('appraiserOpinion') && (
+                  {showSection('internalAppraiserOpinion') && (
                     <SectionReadOnlyWrap
-                      forceReadOnly={shouldForceReadOnly('appraiserOpinion') || priceVerifiedLock}
+                      forceReadOnly={shouldForceReadOnly('internalAppraiserOpinion')}
                     >
-                      <InlineSubSection title={t('decisionSummary.fields.appraiserOpinions')}>
-                        <FormFields fields={fields.appraiserOpinionFields} />
+                      <InlineSubSection
+                        title={t('decisionSummary.fields.internalAppraiserOpinions')}
+                      >
+                        <FormFields fields={fields.internalAppraiserOpinionFields} />
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
@@ -1200,7 +1477,10 @@ const DecisionSummaryPage = () => {
                       </InlineSubSection>
                     </SectionReadOnlyWrap>
                   )}
-                  {showSection('additionalAssumptions') && (
+                  {/* Additional / Special Assumptions — shown here only on the internal path
+                      (the internal appraiser's input). On the external path they render inside the
+                      External Appraiser Opinion card instead (see assumptionsInExternalCard). */}
+                  {showSection('additionalAssumptions') && !assumptionsInExternalCard && (
                     <SectionReadOnlyWrap
                       forceReadOnly={
                         shouldForceReadOnly('additionalAssumptions') || priceVerifiedLock
@@ -1282,7 +1562,7 @@ const DecisionSummaryPage = () => {
                       type="submit"
                       disabled={
                         (!appraisalId && !(isTaskOwner && !!taskId)) ||
-                        (!isDirty && !draftDirty) ||
+                        (!isDirty && !draftDirty && !engagementDirty) ||
                         isSaving
                       }
                     >

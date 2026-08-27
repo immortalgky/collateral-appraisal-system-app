@@ -2,17 +2,12 @@ import { Icon } from '@/shared/components';
 import Badge from '@/shared/components/Badge';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useContext, useEffect, useRef, useState } from 'react';
-import type { Method } from '../../types/selection';
+import { useEffect, useState } from 'react';
+import type { ManualCostBreakdownContext, Method } from '../../types/selection';
+import { ManualCostBreakdown } from './ManualCostBreakdown';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import { CostApproachLandValueSection } from './CostApproachLandValueSection';
-import {
-  hasLandProperty as computeHasLandProperty,
-  isCostApproachLandPricingMethod,
-} from './costApproachLandPricingMethods';
-import { ServerDataCtx } from '../../store/selectionContext';
 
 const MANUAL_VALUE_DEBOUNCE_MS = 1000;
 
@@ -36,12 +31,8 @@ interface PricingAnalysisMethodCardProps {
     value: number;
     methodId?: string;
   }) => void;
-  onLandValueSync?: (arg: {
-    approachType: string;
-    methodType: string;
-    value: number;
-    methodId?: string;
-  }) => void;
+  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  manualCostBreakdown?: ManualCostBreakdownContext;
   disabled?: boolean;
 }
 
@@ -64,30 +55,23 @@ export const PricingAnalysisMethodCard = ({
   onDeleteMethod,
   isManualMode,
   onManualValueSync,
-  onLandValueSync,
+  manualCostBreakdown,
   disabled = false,
 }: PricingAnalysisMethodCardProps) => {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
-  const serverData = useContext(ServerDataCtx);
-  const hasLandProperty = computeHasLandProperty(serverData?.properties);
   const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue ?? null);
   const debouncedManualInput = useDebounce(manualInput, MANUAL_VALUE_DEBOUNCE_MS);
-  const appraisalValueRef = useRef(method.appraisalValue);
-  appraisalValueRef.current = method.appraisalValue;
-  const [isAppraisalValueDirty, setIsAppraisalValueDirty] = useState<boolean>(
-    method.appraisalValue > 0,
-  );
 
   // Local-only sync: 1s after the user stops typing, push the value into the reducer
   // so anything reading state.summarySelected mid-edit (approach totals, the
   // SUMMARY_SELECT_METHOD "must have value" guard) sees it without waiting for blur.
-  // Fires only when the *typed* value settles — not when method.appraisalValue changes —
-  // so an external reset (analysis-wide calc-mode change) can't make this re-push a stale value.
+  // The equality check against method.appraisalValue is what stops this from looping:
+  // once the dispatch lands, method.appraisalValue catches up and the effect no-ops.
   useEffect(() => {
     if (!isManualMode || !onManualValueSync) return;
     if (debouncedManualInput == null || debouncedManualInput < 0) return;
-    if (debouncedManualInput === appraisalValueRef.current) return;
+    if (debouncedManualInput === method.appraisalValue) return;
 
     onManualValueSync({
       approachType,
@@ -102,24 +86,11 @@ export const PricingAnalysisMethodCard = ({
     approachType,
     method.methodType,
     method.id,
+    method.appraisalValue,
   ]);
-
-  // Adopt external changes to the committed value back into the local input. Handles the
-  // analysis-wide calc-mode reset (every method's appraisalValue → 0) and any other external
-  // update, so the NumberInput never keeps showing / re-pushing a stale value until refresh.
-  useEffect(() => {
-    const external = method.appraisalValue ?? null;
-    setManualInput(prev => (prev === external ? prev : external && external > 0 ? external : null));
-    // Only *clear* dirty on a genuine reset (external value emptied out, e.g. a calc-mode
-    // toggle) — never set it true here. Setting it true from a truthy external value would
-    // also fire when this is just the auto-fill effect's own debounced push echoing back,
-    // which would wrongly lock auto-fill off after its first successful save.
-    if (!external) setIsAppraisalValueDirty(false);
-  }, [method.appraisalValue]);
 
   const handleManualChange = (e: { target: { name?: string; value: number | null } }) => {
     setManualInput(e.target.value);
-    setIsAppraisalValueDirty(true);
   };
 
   // Immediate flush on blur — no server call, just guarantees the reducer has the
@@ -147,84 +118,24 @@ export const PricingAnalysisMethodCard = ({
     }
   };
 
-  // Land Value input — independent state from manualInput above (Finding A: the two boxes
-  // used to share state, so typing here overwrote the method's own value). Same
-  // debounce-then-blur-flush pattern, targeting method.landValue / onLandValueSync instead.
-  const [landValueInput, setLandValueInput] = useState<number | null>(method.landValue ?? null);
-  const debouncedLandValueInput = useDebounce(landValueInput, MANUAL_VALUE_DEBOUNCE_MS);
-  const landValueRef = useRef(method.landValue);
-  landValueRef.current = method.landValue;
+  // The land/building split only means something for a Cost group that actually has land to price
+  // by the square wa — every other approach states one blended figure, and the summary report
+  // prints those as a single combined row no matter what is stored.
+  const showCostBreakdown =
+    !!isManualMode && !!manualCostBreakdown && (manualCostBreakdown.landAreaInSqWa ?? 0) > 0;
 
-  useEffect(() => {
-    if (!isManualMode || !onLandValueSync) return;
-    if (debouncedLandValueInput == null || debouncedLandValueInput < 0) return;
-    if (debouncedLandValueInput === landValueRef.current) return;
-
-    onLandValueSync({
+  // The breakdown owns the price field while it is shown: the total follows from the rate, and the
+  // appraiser rounds it afterwards in the same input.
+  const handleDerivedTotal = (total: number) => {
+    setManualInput(total);
+    if (!onManualValueSync || total === method.appraisalValue) return;
+    onManualValueSync({
       approachType,
       methodType: method.methodType,
-      value: debouncedLandValueInput,
-      methodId: method.id,
-    });
-  }, [
-    debouncedLandValueInput,
-    isManualMode,
-    onLandValueSync,
-    approachType,
-    method.methodType,
-    method.id,
-  ]);
-
-  useEffect(() => {
-    const external = method.landValue ?? null;
-    setLandValueInput(prev => (prev === external ? prev : external));
-  }, [method.landValue]);
-
-  const handleLandValueChange = (e: { target: { name?: string; value: number | null } }) => {
-    setLandValueInput(e.target.value);
-  };
-
-  const handleLandValueBlur = () => {
-    if (!isManualMode || !onLandValueSync) return;
-    if (landValueInput == null || landValueInput < 0) return;
-    if (landValueInput === method.landValue) return;
-
-    onLandValueSync({
-      approachType,
-      methodType: method.methodType,
-      value: landValueInput,
+      value: total,
       methodId: method.id,
     });
   };
-
-  const handleLandValueKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setLandValueInput(method.landValue ?? null);
-      (e.target as HTMLInputElement).blur();
-    }
-  };
-
-  // Default the method's own value to land + building total while the user hasn't directly
-  // edited it. isAppraisalValueDirty starts true for a method that already had a saved value
-  // on load (never overwrite existing data), and flips true the moment handleManualChange
-  // fires. Only setManualInput here — the existing debounced sync effect above (watching
-  // debouncedManualInput) still handles persisting the auto-filled value via onManualValueSync,
-  // same as if the user had typed it.
-  useEffect(() => {
-    if (!isManualMode || isAppraisalValueDirty || !hasLandProperty) return;
-    if (!isCostApproachLandPricingMethod(method.methodType)) return;
-
-    const sum = (landValueInput ?? 0) + (method.buildingValue ?? 0);
-    setManualInput(prev => (prev === sum ? prev : sum));
-  }, [
-    isManualMode,
-    isAppraisalValueDirty,
-    hasLandProperty,
-    method.methodType,
-    landValueInput,
-    method.buildingValue,
-  ]);
-
   if (viewMode === 'editing') {
     return (
       <div
@@ -399,19 +310,15 @@ export const PricingAnalysisMethodCard = ({
           </div>
         )}
 
-        <CostApproachLandValueSection
-          variant="grid"
-          method={method}
-          isManualMode={isManualMode}
-          isReadOnly={isReadOnly}
-          disabled={disabled}
-          hasLandProperty={hasLandProperty}
-          landValueInput={landValueInput}
-          onLandValueChange={handleLandValueChange}
-          onLandValueBlur={handleLandValueBlur}
-          onLandValueKeyDown={handleLandValueKeyDown}
-          t={t}
-        />
+        {showCostBreakdown && manualCostBreakdown && (
+          <ManualCostBreakdown
+            approachType={approachType}
+            method={method}
+            context={manualCostBreakdown}
+            onTotalChange={handleDerivedTotal}
+            disabled={disabled}
+          />
+        )}
 
         {/* Status badge */}
         <Badge
@@ -443,153 +350,153 @@ export const PricingAnalysisMethodCard = ({
         onClick: () => onSelectCalculationMethod({ approachType, methodType: method.methodType }),
       };
 
-  return (
-    <div className="flex flex-col">
-      <ListWrapper
-        {...listWrapperProps}
-        className={clsx(
-          'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full',
-          isManualMode ? '' : disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-          method.isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : 'hover:bg-gray-50',
-        )}
-      >
-        {/* Candidate checkbox */}
-        {isReadOnly ? (
+  const listRow = (
+    <ListWrapper
+      {...listWrapperProps}
+      className={clsx(
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 w-full',
+        isManualMode ? '' : disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+        method.isSelected ? 'bg-primary/5 ring-1 ring-primary/30' : 'hover:bg-gray-50',
+      )}
+    >
+      {/* Candidate checkbox */}
+      {isReadOnly ? (
+        <div
+          className={clsx(
+            'size-4 rounded border-2 flex items-center justify-center shrink-0',
+            method.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
+          )}
+        >
+          {method.isSelected && <Icon name="check" style="solid" className="size-2.5 text-white" />}
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={e => {
+            e.stopPropagation();
+            onSelectCandidateMethod({ approachType, methodType: method.methodType });
+          }}
+          className={clsx(
+            'shrink-0',
+            disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+          )}
+        >
           <div
             className={clsx(
-              'size-4 rounded border-2 flex items-center justify-center shrink-0',
-              method.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
+              'size-4 rounded border-2 flex items-center justify-center transition-all',
+              method.isSelected
+                ? 'bg-primary border-primary'
+                : 'border-gray-300 hover:border-gray-400',
             )}
           >
             {method.isSelected && (
               <Icon name="check" style="solid" className="size-2.5 text-white" />
             )}
           </div>
-        ) : (
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={e => {
-              e.stopPropagation();
-              onSelectCandidateMethod({ approachType, methodType: method.methodType });
-            }}
-            className={clsx(
-              'shrink-0',
-              disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-            )}
-          >
-            <div
-              className={clsx(
-                'size-4 rounded border-2 flex items-center justify-center transition-all',
-                method.isSelected
-                  ? 'bg-primary border-primary'
-                  : 'border-gray-300 hover:border-gray-400',
-              )}
-            >
-              {method.isSelected && (
-                <Icon name="check" style="solid" className="size-2.5 text-white" />
-              )}
-            </div>
-          </button>
+        </button>
+      )}
+      <Icon
+        name={method.icon}
+        style="solid"
+        className={clsx('size-4 shrink-0', method.isSelected ? 'text-primary' : 'text-gray-400')}
+      />
+      <span
+        className={clsx(
+          'flex-1 text-sm text-left',
+          method.isSelected ? 'font-medium text-primary' : 'text-gray-700',
         )}
-        <Icon
-          name={method.icon}
-          style="solid"
-          className={clsx('size-4 shrink-0', method.isSelected ? 'text-primary' : 'text-gray-400')}
-        />
-        <span
+      >
+        {method.label}
+      </span>
+      {!isReadOnly && onToggleMethodCalcMode && (
+        <button
+          type="button"
+          disabled={disabled}
+          aria-pressed={isManualMode}
+          title={t('calculationMode.manual')}
+          onClick={e => {
+            e.stopPropagation();
+            onToggleMethodCalcMode({ approachType, methodType: method.methodType });
+          }}
           className={clsx(
-            'flex-1 text-sm text-left',
-            method.isSelected ? 'font-medium text-primary' : 'text-gray-700',
+            'shrink-0 inline-flex items-center h-6 px-1.5 text-[9px] rounded-full border-2 font-medium transition-all duration-200',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:ring-offset-1',
+            isManualMode
+              ? 'border-orange-600 bg-orange-600 text-white'
+              : 'border-gray-300 bg-white text-gray-600 hover:border-orange-600/50 hover:bg-orange-600/50 hover:text-white',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           )}
         >
-          {method.label}
-        </span>
-        {!isReadOnly && onToggleMethodCalcMode && (
-          <button
-            type="button"
-            disabled={disabled}
-            aria-pressed={isManualMode}
-            title={t('calculationMode.manual')}
-            onClick={e => {
-              e.stopPropagation();
-              onToggleMethodCalcMode({ approachType, methodType: method.methodType });
-            }}
-            className={clsx(
-              'shrink-0 inline-flex items-center h-6 px-1.5 text-[9px] rounded-full border-2 font-medium transition-all duration-200',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:ring-offset-1',
-              isManualMode
-                ? 'border-orange-600 bg-orange-600 text-white'
-                : 'border-gray-300 bg-white text-gray-600 hover:border-orange-600/50 hover:bg-orange-600/50 hover:text-white',
-              disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-            )}
-          >
-            <span>m</span>
-          </button>
-        )}
-        {isManualMode ? (
-          isReadOnly ? (
-            <div className="flex items-center gap-1 text-sm font-semibold text-gray-600">
-              <span>{Number(method.appraisalValue).toLocaleString()}</span>
-              <Icon name="baht-sign" style="light" className="size-3" />
-            </div>
-          ) : (
-            <NumberInput
-              value={manualInput}
-              disabled={disabled}
-              onChange={handleManualChange}
-              onBlur={handleManualBlur}
-              onKeyDown={handleManualKeyDown}
-              decimalPlaces={2}
-              placeholder="0.00"
-              fullWidth={false}
-              className="w-40"
-              rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
-            />
-          )
-        ) : (
-          <div
-            className={clsx(
-              'flex items-center gap-1 text-sm font-semibold',
-              method.isSelected ? 'text-primary' : 'text-gray-600',
-            )}
-          >
+          <span>m</span>
+        </button>
+      )}
+      {isManualMode ? (
+        isReadOnly ? (
+          <div className="flex items-center gap-1 text-sm font-semibold text-gray-600">
             <span>{Number(method.appraisalValue).toLocaleString()}</span>
             <Icon name="baht-sign" style="light" className="size-3" />
           </div>
-        )}
-        <Badge
-          size="xs"
-          dot
-          badgeStyle="soft"
-          type="status"
-          value={
-            statusKey === 'calculated'
-              ? 'completed'
-              : statusKey === 'pending'
-                ? 'draft'
-                : 'cancelled'
-          }
-          className="shrink-0"
+        ) : (
+          <NumberInput
+            value={manualInput}
+            disabled={disabled}
+            onChange={handleManualChange}
+            onBlur={handleManualBlur}
+            onKeyDown={handleManualKeyDown}
+            decimalPlaces={2}
+            placeholder="0.00"
+            fullWidth={false}
+            className="w-40"
+            rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
+          />
+        )
+      ) : (
+        <div
+          className={clsx(
+            'flex items-center gap-1 text-sm font-semibold',
+            method.isSelected ? 'text-primary' : 'text-gray-600',
+          )}
         >
-          {statusLabel}
-        </Badge>
-        {!isManualMode && (
-          <Icon name="chevron-right" style="solid" className="size-3 text-gray-300 shrink-0" />
-        )}
-      </ListWrapper>
-      <CostApproachLandValueSection
-        method={method}
-        isManualMode={isManualMode}
-        isReadOnly={isReadOnly}
-        disabled={disabled}
-        hasLandProperty={hasLandProperty}
-        landValueInput={landValueInput}
-        onLandValueChange={handleLandValueChange}
-        onLandValueBlur={handleLandValueBlur}
-        onLandValueKeyDown={handleLandValueKeyDown}
-        t={t}
-      />
+          <span>{Number(method.appraisalValue).toLocaleString()}</span>
+          <Icon name="baht-sign" style="light" className="size-3" />
+        </div>
+      )}
+      <Badge
+        size="xs"
+        dot
+        badgeStyle="soft"
+        type="status"
+        value={
+          statusKey === 'calculated' ? 'completed' : statusKey === 'pending' ? 'draft' : 'cancelled'
+        }
+        className="shrink-0"
+      >
+        {statusLabel}
+      </Badge>
+      {!isManualMode && (
+        <Icon name="chevron-right" style="solid" className="size-3 text-gray-300 shrink-0" />
+      )}
+    </ListWrapper>
+  );
+
+  if (!showCostBreakdown || !manualCostBreakdown) return listRow;
+
+  // The breakdown is a stack of rows, so it cannot live inside the single-line list row — it sits
+  // under it, indented to the label column so the two read as one entry.
+  return (
+    <div className="flex flex-col">
+      {listRow}
+      <div className="pl-10 pr-3 pb-2">
+        <ManualCostBreakdown
+          approachType={approachType}
+          method={method}
+          context={manualCostBreakdown}
+          onTotalChange={handleDerivedTotal}
+          disabled={disabled}
+          compact
+        />
+      </div>
     </div>
   );
 };

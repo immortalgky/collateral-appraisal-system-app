@@ -1,14 +1,10 @@
 import '@features/pricingAnalysis/i18n';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  useAppraisalId,
-  useBasePath,
-  useIsCiAppraisal,
-} from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
 import {
   DispatchCtx,
@@ -29,7 +25,10 @@ import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageRead
 import toast from 'react-hot-toast';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
 import { MethodSectionRenderer } from '@features/pricingAnalysis/components/MethodSectionRenderer';
-import type { PricingServerData } from '@features/pricingAnalysis/types/selection';
+import type {
+  ManualCostBreakdownContext,
+  PricingServerData,
+} from '@features/pricingAnalysis/types/selection';
 import { propertyGroupKeys } from '@features/appraisal/api/propertyGroup';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
@@ -62,7 +61,7 @@ const initialState: SelectionState = {
   summarySelected: [],
   systemCalculationMode: 'System',
   dirtyManualValueKeys: [],
-  dirtyLandValueKeys: [],
+  dirtyCostBreakdownKeys: [],
   dirtyMethodApproachTypes: [],
   dirtyApproachSelection: false,
 };
@@ -100,9 +99,7 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
   const navigate = useNavigate();
   const basePath = useBasePath();
   const queryClient = useQueryClient();
-  const _baseReadOnly = usePageReadOnly();
-  const isCiAppraisal = useIsCiAppraisal();
-  const isReadOnly = _baseReadOnly || isCiAppraisal;
+  const isReadOnly = usePageReadOnly();
 
   // Resolve the effective subject from prop or route params
   const resolvedSubject: PricingAnalysisSubject =
@@ -426,26 +423,36 @@ function PricingAnalysisContent({
     [dispatch],
   );
 
-  // (8c) Update land value on manual mode — same local-only sync as handleManualValueSync;
-  // the real save is batched into saveSummary (useSelectionActions), not fired per keystroke.
-  const handleLandValueSync = useCallback(
+  // (8c) Land price per square wa, typed on a manual Cost-approach card. Batched into the same
+  // Save click as the value above; saveSummary routes a Cost method carrying a rate to the
+  // manual-cost-breakdown endpoint so the appraisal summary can split ที่ดิน from สิ่งปลูกสร้าง.
+  const handleManualLandRateSync = useCallback(
     ({
       approachType,
       methodType,
-      value,
+      rate,
       methodId,
     }: {
       approachType: string;
       methodType: string;
-      value: number;
+      rate: number | null;
       methodId?: string;
     }) => {
       dispatch({
-        type: 'SUMMARY_UPDATE_LAND_VALUE',
-        payload: { approachType, methodType, value, methodId },
+        type: 'SUMMARY_UPDATE_METHOD_LAND_RATE',
+        payload: { approachType, methodType, rate, methodId },
       });
     },
     [dispatch],
+  );
+
+  const manualCostBreakdown: ManualCostBreakdownContext = useMemo(
+    () => ({
+      landAreaInSqWa: pricingSelection?.landAreaInSqWa ?? null,
+      buildingValue: pricingSelection?.buildingValue ?? null,
+      onLandRateSync: handleManualLandRateSync,
+    }),
+    [pricingSelection?.landAreaInSqWa, pricingSelection?.buildingValue, handleManualLandRateSync],
   );
 
   // (9) Assemble server data for context
@@ -525,8 +532,8 @@ function PricingAnalysisContent({
                         modelThumbnailSrc={modelThumbnailSrc}
                         deleteConfirm={selectionActions.deleteConfirm}
                         onManualValueSync={handleManualValueSync}
-                        onLandValueSync={handleLandValueSync}
                         toggleCalcModeConfirm={selectionActions.toggleCalcModeConfirm}
+                        manualCostBreakdown={manualCostBreakdown}
                         onRequestRemoveDocument={selectionActions.requestRemoveDocument}
                         removeDocumentConfirm={selectionActions.removeDocumentConfirm}
                       />

@@ -46,9 +46,17 @@ import QuotationSection from '../components/QuotationSection';
 import QuotationEntryModal from '../components/QuotationEntryModal';
 import { useAuthStore } from '@features/auth/store.ts';
 import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.ts';
+import { useSystemConfigurationBool } from '@shared/api/systemConfiguration';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
+
+/**
+ * AssignmentMethod persisted for an off-system external DRAFT. Matches the backend's
+ * AppraisalAssignment.OfflineAssignmentMethod so reopening the draft re-seeds the
+ * "External (Appraised Offline)" radio rather than falling back to a plain external method.
+ */
+const OFFLINE_DRAFT_METHOD = 'Offline';
 
 const AdministrationPage = () => {
   const { t } = useTranslation('appraisal');
@@ -78,6 +86,17 @@ const AdministrationPage = () => {
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
+
+  // Phase-1 go-live kill switch. While this is false, CompanySelectionActivity refuses to assign
+  // ANY company in-system — round-robin, an admin's manual pick, a quotation winner and the CI
+  // carry-over alike — and escalates back to admin. So "Route to External" must not be offered at
+  // all: submitting it would hand the case straight back to the admin who just submitted it.
+  // Defaults to true so a missing key behaves exactly as before the switch existed.
+  const canAssignCompanyInSystem = useSystemConfigurationBool(
+    'ExternalCompanyAssignmentEnabled',
+    true,
+  );
+
   // Relay endpoint advances the appraisal-assignment workflow task, which only the task owner
   // can complete. Gate the Assign button on both: missing workflow context (deep-linked outside
   // a task) or non-owner can browse the page read-only, but cannot submit.
@@ -113,7 +132,41 @@ const AdministrationPage = () => {
   const selectedFollowupStaff = watch('selectedFollowupStaff');
   const followupStaffMethod = watch('followupStaffMethod');
 
-  // Get eligible internal staff (used for both internal manual selection and external followup staff)
+  // The form defaults to External + Request Quotation. While in-system company assignment is
+  // disabled that is a DISABLED option, so it cannot stay the default — the admin would land on a
+  // greyed-out selection with the External Assignment Details form open beneath it and could submit
+  // an assignment the backend bounces straight back.
+  //
+  // It falls back to 'external-offline' rather than to no selection because during the go-live
+  // window virtually every case reaching this screen IS an off-system engagement — the bank is
+  // engaging companies outside CAS, and rule 40 routes all of them here. Internal remains one
+  // click away for the exception. 'quotation' is external-only, so the method falls back to manual.
+  //
+  // Fixing this in the defaults rather than with a corrective effect is deliberate: reset() below
+  // re-applies assignmentFormDefaults whenever one of its async deps resolves, so an effect that
+  // clears the value afterwards just loses the race.
+  const resolvedFormDefaults: AssignmentFormType = canAssignCompanyInSystem
+    ? assignmentFormDefaults
+    : {
+        ...assignmentFormDefaults,
+        assignmentType: 'external-offline',
+        assignmentMethod: 'manual',
+      };
+
+  // A saved draft can still carry 'external' from before the switch was thrown. Move it to the
+  // offline equivalent for the same reason — a disabled option must never remain selected.
+  useEffect(() => {
+    if (!canAssignCompanyInSystem && assignmentType === 'external') {
+      setValue('assignmentType', 'external-offline');
+      setValue('assignmentMethod', 'manual');
+    }
+  }, [canAssignCompanyInSystem, assignmentType, setValue]);
+
+  // Eligible internal staff — used for internal manual selection, the external followup staff, and
+  // the offline keyer. All three activities resolve to the IntAppraisalStaff group and return the
+  // same people, so ONE fixed activity id is queried deliberately: this result is a dependency of
+  // the seeding reset below, and re-keying it on assignmentType made every type change refetch and
+  // reset the form, snapping the user's choice back to the default.
   const { data: eligibleStaff } = useGetEligibleStaff(
     workflowInstanceId ?? undefined,
     'appraisal-book-verification',
@@ -221,14 +274,24 @@ const AdministrationPage = () => {
     setValue('selectedCompany', null);
     setValue('companyId', null);
     setValue('assignmentMethod', 'manual');
-    if (value === 'internal') {
+    // Neither internal nor off-system external uses a FOLLOWUP staff member: internal has no
+    // company to follow up on, and off-system external skips appraisal-book-verification (the
+    // only activity that consumes the followup staff) entirely. Both DO use the staff picker
+    // above, which selects who performs the work.
+    if (value === 'internal' || value === 'external-offline') {
       setValue('selectedFollowupStaff', null);
       setValue('followupStaffId', null);
     }
   };
 
-  // Update form when data is fetched
+  // Update form when data is fetched.
+  //
+  // Guarded on isDirty: this effect re-runs whenever ANY of its async dependencies settles
+  // (assignedStaff, assignedCompany, followupStaff, eligibleStaff, the config flag). Without the
+  // guard a late-arriving query resets the form underneath the user and discards whatever they had
+  // just selected. Seeding is only meaningful before the first edit anyway.
   useEffect(() => {
+    if (isDirty) return;
     if (currentAssignment) {
       const formValues = mapAssignmentResponseToForm(currentAssignment);
       // Only re-seed the saved selections when the row holds real data — i.e. a draft has been
@@ -250,7 +313,7 @@ const AdministrationPage = () => {
         eligibleStaff?.find(s => s.id === currentAssignment.internalAppraiserId) ??
         null;
       reset({
-        ...assignmentFormDefaults,
+        ...resolvedFormDefaults,
         ...(hasSavedSelection ? formValues : {}),
         selectedStaff: resolvedStaff,
         selectedCompany: assignedCompany ?? null,
@@ -266,6 +329,10 @@ const AdministrationPage = () => {
     assignedCompany,
     followupStaff,
     eligibleStaff,
+    // The config query resolves after the first render, so the reset must re-run once the flag is
+    // known — otherwise the form keeps the External default seeded before the answer arrived.
+    canAssignCompanyInSystem,
+    isDirty,
   ]);
 
   // Handle form submission
@@ -302,35 +369,51 @@ const AdministrationPage = () => {
     // assignmentType always reflects the user's Internal/External choice — the backend
     // AssignmentType value object only accepts those two codes. The "quotation" choice
     // lives on assignmentMethod, not on assignmentType.
-    const isExternal = data.assignmentType === 'external';
+    //
+    // Off-system external counts as External for the backend value object, but nothing is
+    // selected here: the keyer records the company and the book date at int-offline-book-keyin,
+    // so company / followup-staff fields are all sent null.
+    const isOfflineExternal = data.assignmentType === 'external-offline';
+    const isExternal = data.assignmentType === 'external' || isOfflineExternal;
     const isQuotationMethod = data.assignmentMethod === 'quotation';
 
     // For quotation method on an external assignment, send the finalized winner's company id
     // (not whatever was previously selected manually). Internal+quotation falls back to staffId.
-    const resolvedAssigneeCompanyId = isExternal
-      ? isQuotationMethod && quotationWinner
-        ? quotationWinner.companyId
-        : data.companyId
-      : null;
+    const resolvedAssigneeCompanyId =
+      isExternal && !isOfflineExternal
+        ? isQuotationMethod && quotationWinner
+          ? quotationWinner.companyId
+          : data.companyId
+        : null;
 
-    // Derive decisionTaken and assigneeCompanyName to send to the backend relay
-    const decisionTaken = isExternal ? ('EXT' as const) : ('INT' as const);
-    const resolvedAssigneeCompanyName = isExternal
-      ? isQuotationMethod && quotationWinner
-        ? quotationWinner.companyName
-        : (data.selectedCompany?.companyName ?? null)
-      : null;
+    // Derive decisionTaken and assigneeCompanyName to send to the backend relay.
+    // EXTO routes to int-offline-book-keyin; EXT to company-selection; INT to int-appraisal-execution.
+    const decisionTaken = isOfflineExternal
+      ? ('EXTO' as const)
+      : isExternal
+        ? ('EXT' as const)
+        : ('INT' as const);
+    const resolvedAssigneeCompanyName =
+      isExternal && !isOfflineExternal
+        ? isQuotationMethod && quotationWinner
+          ? quotationWinner.companyName
+          : (data.selectedCompany?.companyName ?? null)
+        : null;
 
     createAssignment(
       {
         appraisalId: appraisalId ?? '',
         assignmentType: isExternal ? 'External' : 'Internal',
-        assigneeUserId: isExternal ? null : data.staffId,
+        // The offline path is External for the backend value object, but the person chosen here is
+        // the INTERNAL appraiser who will key the book in — so the staff id travels exactly as it
+        // does for Internal, and the handler pins them onto int-offline-book-keyin.
+        assigneeUserId: isExternal && !isOfflineExternal ? null : data.staffId,
         assigneeCompanyId: resolvedAssigneeCompanyId,
         assigneeCompanyName: resolvedAssigneeCompanyName,
         assignmentMethod: data.assignmentMethod,
-        internalAppraiserId: isExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
+        internalAppraiserId: isExternal && !isOfflineExternal ? data.followupStaffId : null,
+        internalFollowupAssignmentMethod:
+          isExternal && !isOfflineExternal ? data.followupStaffMethod : null,
         assignedBy: currentUser?.username ?? null,
         workflowInstanceId,
         decisionTaken,
@@ -361,16 +444,27 @@ const AdministrationPage = () => {
   const handleSaveDraft = () => {
     if (!appraisalId) return;
     const data = getValues();
-    const isExternal = data.assignmentType === 'external';
+    // 'external-offline' is External too. Collapsing it to Internal here silently discarded the
+    // admin's choice: the draft round-tripped as Internal, the radio re-seeded to "Internal Staff"
+    // on reopen, and an unnoticing admin then relayed decisionTaken 'INT' — sending an internal
+    // appraiser to re-do work the bank had already paid an outside company for.
+    const isDraftOfflineExternal = data.assignmentType === 'external-offline';
+    const isExternal = data.assignmentType === 'external' || isDraftOfflineExternal;
     saveAssignmentDraft(
       {
         appraisalId,
         assignmentType: isExternal ? 'External' : 'Internal',
-        assigneeUserId: isExternal ? null : data.staffId,
-        assigneeCompanyId: isExternal ? data.companyId : null,
-        assignmentMethod: data.assignmentMethod,
-        internalAppraiserId: isExternal ? data.followupStaffId : null,
-        internalFollowupAssignmentMethod: isExternal ? data.followupStaffMethod : null,
+        // Off-system external DOES carry a staff id — the internal appraiser who will key the book
+        // in. Only a true external assignment has no internal assignee. Dropping it here (as the
+        // plain `isExternal ? null` test did) silently discarded the admin's chosen keyer, so the
+        // draft came back with the picker empty.
+        assigneeUserId: isExternal && !isDraftOfflineExternal ? null : data.staffId,
+        // Off-system external picks no company here — the keyer records it later.
+        assigneeCompanyId: isExternal && !isDraftOfflineExternal ? data.companyId : null,
+        assignmentMethod: isDraftOfflineExternal ? OFFLINE_DRAFT_METHOD : data.assignmentMethod,
+        internalAppraiserId: isExternal && !isDraftOfflineExternal ? data.followupStaffId : null,
+        internalFollowupAssignmentMethod:
+          isExternal && !isDraftOfflineExternal ? data.followupStaffMethod : null,
         remark: data.remarks,
       },
       {
@@ -457,6 +551,21 @@ const AdministrationPage = () => {
                         description: t('administration.assignmentType.externalDesc'),
                         icon: 'building',
                         color: 'purple',
+                        // Shown but disabled while the go-live switch is off, with the hint below
+                        // explaining why — mirroring how isInternalDisabled is handled. Submitting
+                        // it would reach company-selection, which escalates the case straight back
+                        // here; leaving it visible tells the admin the path exists and is paused,
+                        // rather than silently removing an option they expect to see.
+                        disabled: !canAssignCompanyInSystem,
+                      },
+                      {
+                        value: 'external-offline',
+                        label: t('administration.assignmentType.externalOffline'),
+                        description: t('administration.assignmentType.externalOfflineDesc'),
+                        icon: 'keyboard',
+                        color: 'amber',
+                        // Company selection happens outside CAS, so a pending quotation on this
+                        // appraisal has no bearing on whether this option is available.
                         disabled: false,
                       },
                     ].map(option => (
@@ -535,299 +644,57 @@ const AdministrationPage = () => {
                   </p>
                 </div>
               )}
+              {!canAssignCompanyInSystem && (
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                  <Icon
+                    name="circle-info"
+                    style="solid"
+                    className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
+                  />
+                  <p className="text-xs text-amber-700">
+                    {t('administration.assignmentType.externalDisabledHint')}
+                  </p>
+                </div>
+              )}
             </FormCard>
 
-            {/* Assignment Details Card */}
-            <FormCard
-              title={
-                assignmentType === 'internal'
-                  ? t('administration.assignmentDetails.titleInternal')
-                  : t('administration.assignmentDetails.titleExternal')
-              }
-              subtitle={t('administration.assignmentDetails.subtitle')}
-              icon={assignmentType === 'internal' ? 'user' : 'building'}
-              iconColor={assignmentType === 'internal' ? 'emerald' : 'purple'}
-            >
-              {/* Assignment Method */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  {t('administration.assignmentDetails.methodLabel')}
-                </label>
-                <Controller
-                  name="assignmentMethod"
-                  control={control}
-                  render={({ field }) => {
-                    // Define options based on assignment type
-                    const baseOptions = [
-                      {
-                        value: 'manual',
-                        label: t('administration.assignmentDetails.manual'),
-                        description: t('administration.assignmentDetails.manualDesc'),
-                        icon: 'hand-pointer',
-                      },
-                      {
-                        value: 'roundrobin',
-                        label: t('administration.assignmentDetails.roundrobin'),
-                        description: t('administration.assignmentDetails.roundrobinDesc'),
-                        icon: 'rotate',
-                      },
-                    ];
-
-                    // Add quotation option for external only
-                    const options =
-                      assignmentType === 'external'
-                        ? [
-                            ...baseOptions,
-                            {
-                              value: 'quotation',
-                              label: t('administration.assignmentDetails.quotation'),
-                              description: t('administration.assignmentDetails.quotationDesc'),
-                              icon: 'file-invoice-dollar',
-                            },
-                          ]
-                        : baseOptions;
-
-                    // Use purple for external, primary for internal
-                    const isExternal = assignmentType === 'external';
-
-                    return (
-                      <HeadlessRadioGroup
-                        value={field.value}
-                        onChange={field.onChange}
-                        className={clsx('grid gap-3', isExternal ? 'grid-cols-3' : 'grid-cols-2')}
-                        disabled={isReadOnly || isLockedByQuotation}
-                      >
-                        {options.map(option => (
-                          <HeadlessRadioGroup.Option
-                            key={option.value}
-                            value={option.value}
-                            className={({ checked, disabled }) =>
-                              clsx(
-                                'rounded-lg border p-3 transition-all',
-                                disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
-                                checked
-                                  ? isExternal
-                                    ? 'border-purple-500 bg-purple-50'
-                                    : 'border-emerald-500 bg-emerald-50'
-                                  : 'border-gray-200 hover:border-gray-300',
-                              )
-                            }
-                          >
-                            {({ checked }) => (
-                              <div className="flex items-center gap-3">
-                                <Icon
-                                  name={option.icon}
-                                  style={checked ? 'solid' : 'regular'}
-                                  className={clsx(
-                                    'w-4 h-4 shrink-0',
-                                    checked
-                                      ? isExternal
-                                        ? 'text-purple-600'
-                                        : 'text-emerald-600'
-                                      : 'text-gray-400',
-                                  )}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div
-                                    className={clsx(
-                                      'text-sm font-medium',
-                                      checked ? 'text-gray-900' : 'text-gray-600',
-                                    )}
-                                  >
-                                    {option.label}
-                                  </div>
-                                  <div className="text-xs text-gray-500 truncate">
-                                    {option.description}
-                                  </div>
-                                </div>
-                                <div
-                                  className={clsx(
-                                    'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                                    checked
-                                      ? isExternal
-                                        ? 'border-purple-500'
-                                        : 'border-emerald-500'
-                                      : 'border-gray-300',
-                                  )}
-                                >
-                                  {checked && (
-                                    <div
-                                      className={clsx(
-                                        'w-2 h-2 rounded-full',
-                                        isExternal ? 'bg-purple-500' : 'bg-emerald-500',
-                                      )}
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </HeadlessRadioGroup.Option>
-                        ))}
-                      </HeadlessRadioGroup>
-                    );
-                  }}
-                />
-              </div>
-
-              {/* Manual Selection - Internal Staff */}
-              {assignmentMethod === 'manual' && assignmentType === 'internal' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('administration.manualStaff.label')} <span className="text-danger">*</span>
-                  </label>
-                  {selectedStaff ? (
-                    <StaffDisplay
-                      staff={selectedStaff}
-                      onClear={
-                        isReadOnly || isLockedByQuotation
-                          ? undefined
-                          : () => {
-                              setValue('selectedStaff', null, { shouldDirty: true });
-                              setValue('staffId', null, { shouldDirty: true });
-                            }
-                      }
-                    />
-                  ) : (
-                    !isReadOnly &&
-                    !isLockedByQuotation && (
-                      <button
-                        type="button"
-                        onClick={openStaffModal}
-                        className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
-                      >
-                        <span className="text-sm text-gray-500">
-                          {t('administration.manualStaff.placeholder')}
-                        </span>
-                        <Icon
-                          name="magnifying-glass"
-                          style="regular"
-                          className="w-4 h-4 text-gray-400"
-                        />
-                      </button>
-                    )
-                  )}
-                  {errors.staffId && (
-                    <p className="mt-2 text-sm text-danger">{errors.staffId.message}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Manual Selection - External Company */}
-              {assignmentMethod === 'manual' && assignmentType === 'external' && (
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('administration.manualCompany.label')} <span className="text-danger">*</span>
-                  </label>
-                  {selectedCompany ? (
-                    <CompanyDisplay
-                      company={selectedCompany}
-                      onClear={
-                        isReadOnly || isLockedByQuotation
-                          ? undefined
-                          : () => {
-                              setValue('selectedCompany', null, { shouldDirty: true });
-                              setValue('companyId', null, { shouldDirty: true });
-                            }
-                      }
-                    />
-                  ) : (
-                    !isReadOnly &&
-                    !isLockedByQuotation && (
-                      <button
-                        type="button"
-                        onClick={openCompanyModal}
-                        className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
-                      >
-                        <span className="text-sm text-gray-500">
-                          {t('administration.manualCompany.placeholder')}
-                        </span>
-                        <Icon
-                          name="magnifying-glass"
-                          style="regular"
-                          className="w-4 h-4 text-gray-400"
-                        />
-                      </button>
-                    )
-                  )}
-                  {errors.companyId && (
-                    <p className="mt-2 text-sm text-danger">{errors.companyId.message}</p>
-                  )}
-                </div>
-              )}
-
-              {/* Round-robin Info */}
-              {assignmentMethod === 'roundrobin' && (
-                <div
-                  className={clsx(
-                    'mb-6 rounded-lg p-4',
-                    assignmentType === 'internal' ? 'bg-emerald-50' : 'bg-purple-50',
-                  )}
-                >
-                  <div className="flex items-start gap-3">
-                    <Icon
-                      name="circle-info"
-                      style="solid"
-                      className={clsx(
-                        'w-5 h-5 mt-0.5',
-                        assignmentType === 'internal' ? 'text-emerald-500' : 'text-purple-500',
-                      )}
-                    />
-                    <div>
-                      <p
-                        className={clsx(
-                          'text-sm font-medium',
-                          assignmentType === 'internal' ? 'text-emerald-900' : 'text-purple-900',
-                        )}
-                      >
-                        {t('administration.roundrobinInfo.title')}
-                      </p>
-                      <p
-                        className={clsx(
-                          'text-sm mt-1',
-                          assignmentType === 'internal' ? 'text-emerald-700' : 'text-purple-700',
-                        )}
-                      >
-                        {assignmentType === 'internal'
-                          ? t('administration.roundrobinInfo.internalDesc')
-                          : t('administration.roundrobinInfo.externalDesc')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Internal Followup Staff - Only for external assignments */}
-              {assignmentType === 'external' && (
-                <div className="mb-6">
+            {/* Off-system external: nothing to select here. The company and the book's appraisal
+                date are recorded by the keyer at int-offline-book-keyin, who has the paper book. */}
+            {assignmentType === 'external-offline' && (
+              <FormCard
+                title={t('administration.offlineExternal.title')}
+                subtitle={t('administration.offlineExternal.subtitle')}
+                icon="keyboard"
+                iconColor="amber"
+              >
+                {/* Who keys the book in. Kept here, in amber, rather than reusing the Internal
+                    Assignment Details card: the person is an internal appraiser, but the decision
+                    belongs to this engagement and reads as part of it. */}
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    {t('administration.followupStaff.label')}{' '}
-                    {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
+                    {t('administration.offlineExternal.keyerMethodLabel')}
                   </label>
-
-                  {/* Followup method chooser */}
                   <Controller
-                    name="followupStaffMethod"
+                    name="assignmentMethod"
                     control={control}
                     render={({ field }) => (
                       <HeadlessRadioGroup
                         value={field.value}
-                        onChange={(value: 'manual' | 'roundrobin') =>
-                          handleFollowupMethodChange(value)
-                        }
-                        className="grid grid-cols-2 gap-3 mb-4"
-                        disabled={isReadOnly || isLockedByQuotation}
+                        onChange={field.onChange}
+                        className="grid grid-cols-2 gap-3"
+                        disabled={isReadOnly}
                       >
                         {[
                           {
                             value: 'manual',
-                            label: t('administration.followupStaff.manualLabel'),
-                            description: t('administration.followupStaff.manualDesc'),
+                            label: t('administration.assignmentDetails.manual'),
+                            description: t('administration.assignmentDetails.manualDesc'),
                             icon: 'hand-pointer',
                           },
                           {
                             value: 'roundrobin',
-                            label: t('administration.followupStaff.roundrobinLabel'),
-                            description: t('administration.followupStaff.roundrobinDesc'),
+                            label: t('administration.assignmentDetails.roundrobin'),
+                            description: t('administration.assignmentDetails.roundrobinDesc'),
                             icon: 'rotate',
                           },
                         ].map(option => (
@@ -839,7 +706,7 @@ const AdministrationPage = () => {
                                 'rounded-lg border p-3 transition-all',
                                 disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
                                 checked
-                                  ? 'border-purple-500 bg-purple-50'
+                                  ? 'border-amber-500 bg-amber-50'
                                   : 'border-gray-200 hover:border-gray-300',
                               )
                             }
@@ -851,7 +718,7 @@ const AdministrationPage = () => {
                                   style={checked ? 'solid' : 'regular'}
                                   className={clsx(
                                     'w-4 h-4 shrink-0',
-                                    checked ? 'text-purple-600' : 'text-gray-400',
+                                    checked ? 'text-amber-600' : 'text-gray-400',
                                   )}
                                 />
                                 <div className="flex-1 min-w-0">
@@ -870,12 +737,10 @@ const AdministrationPage = () => {
                                 <div
                                   className={clsx(
                                     'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                                    checked ? 'border-purple-500' : 'border-gray-300',
+                                    checked ? 'border-amber-500' : 'border-gray-300',
                                   )}
                                 >
-                                  {checked && (
-                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
-                                  )}
+                                  {checked && <div className="w-2 h-2 rounded-full bg-amber-500" />}
                                 </div>
                               </div>
                             )}
@@ -884,71 +749,494 @@ const AdministrationPage = () => {
                       </HeadlessRadioGroup>
                     )}
                   />
+                </div>
 
-                  {/* Round-robin info box */}
-                  {followupStaffMethod === 'roundrobin' && (
-                    <div className="rounded-lg p-4 bg-purple-50">
-                      <div className="flex items-start gap-3">
-                        <Icon
-                          name="circle-info"
-                          style="solid"
-                          className="w-5 h-5 mt-0.5 text-purple-500"
-                        />
-                        <div>
-                          <p className="text-sm font-medium text-purple-900">
-                            {t('administration.roundrobinInfo.title')}
-                          </p>
-                          <p className="text-sm mt-1 text-purple-700">
-                            {t('administration.followupStaff.roundrobinInfo')}
-                          </p>
-                        </div>
+                {assignmentMethod === 'manual' && (
+                  <div className="mt-6">
+                    {/* Same classes and spacing as the "Who keys in the book" label above, so the
+                        two read as one stack rather than two differently-spaced sections. */}
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      {t('administration.manualStaff.label')} <span className="text-danger">*</span>
+                    </label>
+                    {selectedStaff ? (
+                      <StaffDisplay
+                        staff={selectedStaff}
+                        onClear={
+                          isReadOnly
+                            ? undefined
+                            : () => {
+                                setValue('selectedStaff', null, { shouldDirty: true });
+                                setValue('staffId', null, { shouldDirty: true });
+                              }
+                        }
+                      />
+                    ) : (
+                      !isReadOnly && (
+                        <button
+                          type="button"
+                          onClick={openStaffModal}
+                          className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-amber-50 hover:border-amber-400 transition-colors flex items-center justify-between"
+                        >
+                          <span className="text-sm text-gray-500">
+                            {t('administration.manualStaff.placeholder')}
+                          </span>
+                          <Icon
+                            name="magnifying-glass"
+                            style="regular"
+                            className="w-4 h-4 text-gray-400"
+                          />
+                        </button>
+                      )
+                    )}
+                    {errors.staffId && (
+                      <p className="mt-2 text-sm text-danger">{errors.staffId.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {assignmentMethod === 'roundrobin' && (
+                  <div className="mt-6 rounded-lg bg-amber-50 p-4">
+                    <div className="flex items-start gap-3">
+                      <Icon
+                        name="circle-info"
+                        style="solid"
+                        className="w-5 h-5 mt-0.5 text-amber-500"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-amber-900">
+                          {t('administration.roundrobinInfo.title')}
+                        </p>
+                        <p className="text-sm mt-1 text-amber-700">
+                          {t('administration.offlineExternal.keyerRoundrobinDesc')}
+                        </p>
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
+              </FormCard>
+            )}
 
-                  {/* Manual staff selection */}
-                  {followupStaffMethod === 'manual' && (
-                    <>
-                      {selectedFollowupStaff ? (
-                        <StaffDisplay
-                          staff={selectedFollowupStaff}
-                          onClear={
-                            isReadOnly || isLockedByQuotation
-                              ? undefined
-                              : () => {
-                                  setValue('selectedFollowupStaff', null, { shouldDirty: true });
-                                  setValue('followupStaffId', null, { shouldDirty: true });
-                                }
-                          }
-                          variant="purple"
-                        />
-                      ) : (
-                        !isReadOnly &&
-                        !isLockedByQuotation && (
-                          <button
-                            type="button"
-                            onClick={openFollowupStaffModal}
-                            className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
-                          >
-                            <span className="text-sm text-gray-500">
-                              {t('administration.followupStaff.placeholder')}
-                            </span>
-                            <Icon
-                              name="magnifying-glass"
-                              style="regular"
-                              className="w-4 h-4 text-purple-400"
-                            />
-                          </button>
-                        )
-                      )}
-                      {errors.followupStaffId && (
-                        <p className="mt-2 text-sm text-danger">{errors.followupStaffId.message}</p>
-                      )}
-                    </>
-                  )}
+            {/* Assignment Details Card */}
+            {/* Only render the details form for a REAL selection. With nothing selected (the
+                default while in-system company assignment is disabled) there is no assignee kind
+                to configure, and showing the external form under a greyed-out option is what made
+                a disabled path look submittable. */}
+            {(assignmentType === 'internal' || assignmentType === 'external') && (
+              <FormCard
+                title={
+                  assignmentType === 'internal'
+                    ? t('administration.assignmentDetails.titleInternal')
+                    : t('administration.assignmentDetails.titleExternal')
+                }
+                subtitle={t('administration.assignmentDetails.subtitle')}
+                icon={assignmentType === 'internal' ? 'user' : 'building'}
+                iconColor={assignmentType === 'internal' ? 'emerald' : 'purple'}
+              >
+                {/* Assignment Method */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    {t('administration.assignmentDetails.methodLabel')}
+                  </label>
+                  <Controller
+                    name="assignmentMethod"
+                    control={control}
+                    render={({ field }) => {
+                      // Define options based on assignment type
+                      const baseOptions = [
+                        {
+                          value: 'manual',
+                          label: t('administration.assignmentDetails.manual'),
+                          description: t('administration.assignmentDetails.manualDesc'),
+                          icon: 'hand-pointer',
+                        },
+                        {
+                          value: 'roundrobin',
+                          label: t('administration.assignmentDetails.roundrobin'),
+                          description: t('administration.assignmentDetails.roundrobinDesc'),
+                          icon: 'rotate',
+                        },
+                      ];
+
+                      // Add quotation option for external only
+                      const options =
+                        assignmentType === 'external'
+                          ? [
+                              ...baseOptions,
+                              {
+                                value: 'quotation',
+                                label: t('administration.assignmentDetails.quotation'),
+                                description: t('administration.assignmentDetails.quotationDesc'),
+                                icon: 'file-invoice-dollar',
+                              },
+                            ]
+                          : baseOptions;
+
+                      // Use purple for external, primary for internal
+                      const isExternal = assignmentType === 'external';
+
+                      return (
+                        <HeadlessRadioGroup
+                          value={field.value}
+                          onChange={field.onChange}
+                          className={clsx('grid gap-3', isExternal ? 'grid-cols-3' : 'grid-cols-2')}
+                          disabled={isReadOnly || isLockedByQuotation}
+                        >
+                          {options.map(option => (
+                            <HeadlessRadioGroup.Option
+                              key={option.value}
+                              value={option.value}
+                              className={({ checked, disabled }) =>
+                                clsx(
+                                  'rounded-lg border p-3 transition-all',
+                                  disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
+                                  checked
+                                    ? isExternal
+                                      ? 'border-purple-500 bg-purple-50'
+                                      : 'border-emerald-500 bg-emerald-50'
+                                    : 'border-gray-200 hover:border-gray-300',
+                                )
+                              }
+                            >
+                              {({ checked }) => (
+                                <div className="flex items-center gap-3">
+                                  <Icon
+                                    name={option.icon}
+                                    style={checked ? 'solid' : 'regular'}
+                                    className={clsx(
+                                      'w-4 h-4 shrink-0',
+                                      checked
+                                        ? isExternal
+                                          ? 'text-purple-600'
+                                          : 'text-emerald-600'
+                                        : 'text-gray-400',
+                                    )}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div
+                                      className={clsx(
+                                        'text-sm font-medium',
+                                        checked ? 'text-gray-900' : 'text-gray-600',
+                                      )}
+                                    >
+                                      {option.label}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                      {option.description}
+                                    </div>
+                                  </div>
+                                  <div
+                                    className={clsx(
+                                      'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                                      checked
+                                        ? isExternal
+                                          ? 'border-purple-500'
+                                          : 'border-emerald-500'
+                                        : 'border-gray-300',
+                                    )}
+                                  >
+                                    {checked && (
+                                      <div
+                                        className={clsx(
+                                          'w-2 h-2 rounded-full',
+                                          isExternal ? 'bg-purple-500' : 'bg-emerald-500',
+                                        )}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </HeadlessRadioGroup.Option>
+                          ))}
+                        </HeadlessRadioGroup>
+                      );
+                    }}
+                  />
                 </div>
-              )}
-            </FormCard>
+
+                {/* Manual Selection - Internal Staff */}
+                {assignmentMethod === 'manual' && assignmentType === 'internal' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('administration.manualStaff.label')} <span className="text-danger">*</span>
+                    </label>
+                    {selectedStaff ? (
+                      <StaffDisplay
+                        staff={selectedStaff}
+                        onClear={
+                          isReadOnly || isLockedByQuotation
+                            ? undefined
+                            : () => {
+                                setValue('selectedStaff', null, { shouldDirty: true });
+                                setValue('staffId', null, { shouldDirty: true });
+                              }
+                        }
+                      />
+                    ) : (
+                      !isReadOnly &&
+                      !isLockedByQuotation && (
+                        <button
+                          type="button"
+                          onClick={openStaffModal}
+                          className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
+                        >
+                          <span className="text-sm text-gray-500">
+                            {t('administration.manualStaff.placeholder')}
+                          </span>
+                          <Icon
+                            name="magnifying-glass"
+                            style="regular"
+                            className="w-4 h-4 text-gray-400"
+                          />
+                        </button>
+                      )
+                    )}
+                    {errors.staffId && (
+                      <p className="mt-2 text-sm text-danger">{errors.staffId.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Manual Selection - External Company */}
+                {assignmentMethod === 'manual' && assignmentType === 'external' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('administration.manualCompany.label')}{' '}
+                      <span className="text-danger">*</span>
+                    </label>
+                    {selectedCompany ? (
+                      <CompanyDisplay
+                        company={selectedCompany}
+                        onClear={
+                          isReadOnly || isLockedByQuotation
+                            ? undefined
+                            : () => {
+                                setValue('selectedCompany', null, { shouldDirty: true });
+                                setValue('companyId', null, { shouldDirty: true });
+                              }
+                        }
+                      />
+                    ) : (
+                      !isReadOnly &&
+                      !isLockedByQuotation && (
+                        <button
+                          type="button"
+                          onClick={openCompanyModal}
+                          className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
+                        >
+                          <span className="text-sm text-gray-500">
+                            {t('administration.manualCompany.placeholder')}
+                          </span>
+                          <Icon
+                            name="magnifying-glass"
+                            style="regular"
+                            className="w-4 h-4 text-gray-400"
+                          />
+                        </button>
+                      )
+                    )}
+                    {errors.companyId && (
+                      <p className="mt-2 text-sm text-danger">{errors.companyId.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Round-robin Info */}
+                {assignmentMethod === 'roundrobin' && (
+                  <div
+                    className={clsx(
+                      'mb-6 rounded-lg p-4',
+                      assignmentType === 'internal' ? 'bg-emerald-50' : 'bg-purple-50',
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Icon
+                        name="circle-info"
+                        style="solid"
+                        className={clsx(
+                          'w-5 h-5 mt-0.5',
+                          assignmentType === 'internal' ? 'text-emerald-500' : 'text-purple-500',
+                        )}
+                      />
+                      <div>
+                        <p
+                          className={clsx(
+                            'text-sm font-medium',
+                            assignmentType === 'internal' ? 'text-emerald-900' : 'text-purple-900',
+                          )}
+                        >
+                          {t('administration.roundrobinInfo.title')}
+                        </p>
+                        <p
+                          className={clsx(
+                            'text-sm mt-1',
+                            assignmentType === 'internal' ? 'text-emerald-700' : 'text-purple-700',
+                          )}
+                        >
+                          {assignmentType === 'internal'
+                            ? t('administration.roundrobinInfo.internalDesc')
+                            : t('administration.roundrobinInfo.externalDesc')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Internal Followup Staff - Only for external assignments */}
+                {assignmentType === 'external' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      {t('administration.followupStaff.label')}{' '}
+                      {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
+                    </label>
+
+                    {/* Followup method chooser */}
+                    <Controller
+                      name="followupStaffMethod"
+                      control={control}
+                      render={({ field }) => (
+                        <HeadlessRadioGroup
+                          value={field.value}
+                          onChange={(value: 'manual' | 'roundrobin') =>
+                            handleFollowupMethodChange(value)
+                          }
+                          className="grid grid-cols-2 gap-3 mb-4"
+                          disabled={isReadOnly || isLockedByQuotation}
+                        >
+                          {[
+                            {
+                              value: 'manual',
+                              label: t('administration.followupStaff.manualLabel'),
+                              description: t('administration.followupStaff.manualDesc'),
+                              icon: 'hand-pointer',
+                            },
+                            {
+                              value: 'roundrobin',
+                              label: t('administration.followupStaff.roundrobinLabel'),
+                              description: t('administration.followupStaff.roundrobinDesc'),
+                              icon: 'rotate',
+                            },
+                          ].map(option => (
+                            <HeadlessRadioGroup.Option
+                              key={option.value}
+                              value={option.value}
+                              className={({ checked, disabled }) =>
+                                clsx(
+                                  'rounded-lg border p-3 transition-all',
+                                  disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
+                                  checked
+                                    ? 'border-purple-500 bg-purple-50'
+                                    : 'border-gray-200 hover:border-gray-300',
+                                )
+                              }
+                            >
+                              {({ checked }) => (
+                                <div className="flex items-center gap-3">
+                                  <Icon
+                                    name={option.icon}
+                                    style={checked ? 'solid' : 'regular'}
+                                    className={clsx(
+                                      'w-4 h-4 shrink-0',
+                                      checked ? 'text-purple-600' : 'text-gray-400',
+                                    )}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div
+                                      className={clsx(
+                                        'text-sm font-medium',
+                                        checked ? 'text-gray-900' : 'text-gray-600',
+                                      )}
+                                    >
+                                      {option.label}
+                                    </div>
+                                    <div className="text-xs text-gray-500 truncate">
+                                      {option.description}
+                                    </div>
+                                  </div>
+                                  <div
+                                    className={clsx(
+                                      'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
+                                      checked ? 'border-purple-500' : 'border-gray-300',
+                                    )}
+                                  >
+                                    {checked && (
+                                      <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </HeadlessRadioGroup.Option>
+                          ))}
+                        </HeadlessRadioGroup>
+                      )}
+                    />
+
+                    {/* Round-robin info box */}
+                    {followupStaffMethod === 'roundrobin' && (
+                      <div className="rounded-lg p-4 bg-purple-50">
+                        <div className="flex items-start gap-3">
+                          <Icon
+                            name="circle-info"
+                            style="solid"
+                            className="w-5 h-5 mt-0.5 text-purple-500"
+                          />
+                          <div>
+                            <p className="text-sm font-medium text-purple-900">
+                              {t('administration.roundrobinInfo.title')}
+                            </p>
+                            <p className="text-sm mt-1 text-purple-700">
+                              {t('administration.followupStaff.roundrobinInfo')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Manual staff selection */}
+                    {followupStaffMethod === 'manual' && (
+                      <>
+                        {selectedFollowupStaff ? (
+                          <StaffDisplay
+                            staff={selectedFollowupStaff}
+                            onClear={
+                              isReadOnly || isLockedByQuotation
+                                ? undefined
+                                : () => {
+                                    setValue('selectedFollowupStaff', null, { shouldDirty: true });
+                                    setValue('followupStaffId', null, { shouldDirty: true });
+                                  }
+                            }
+                            variant="purple"
+                          />
+                        ) : (
+                          !isReadOnly &&
+                          !isLockedByQuotation && (
+                            <button
+                              type="button"
+                              onClick={openFollowupStaffModal}
+                              className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
+                            >
+                              <span className="text-sm text-gray-500">
+                                {t('administration.followupStaff.placeholder')}
+                              </span>
+                              <Icon
+                                name="magnifying-glass"
+                                style="regular"
+                                className="w-4 h-4 text-purple-400"
+                              />
+                            </button>
+                          )
+                        )}
+                        {errors.followupStaffId && (
+                          <p className="mt-2 text-sm text-danger">
+                            {errors.followupStaffId.message}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
+              </FormCard>
+            )}
 
             {/* Current Assignment Info (if already assigned) */}
             {/*{currentAssignment && (*/}
@@ -1000,7 +1288,11 @@ const AdministrationPage = () => {
 
             {/* Quotation Section - visible when quotation method is selected OR when a
                 non-terminal quotation already owns this appraisal (refresh case). */}
-            {(assignmentMethod === 'quotation' || isLockedByQuotation) && (
+            {/* Method-driven visibility is external-only (a stale 'quotation' method must not open
+                this section when no type is selected), but a locked appraisal always shows it —
+                the lock banner above links to #quotation-section. */}
+            {((assignmentType === 'external' && assignmentMethod === 'quotation') ||
+              isLockedByQuotation) && (
               <div id="quotation-section">
                 <QuotationSection
                   appraisalId={appraisalId ?? ''}

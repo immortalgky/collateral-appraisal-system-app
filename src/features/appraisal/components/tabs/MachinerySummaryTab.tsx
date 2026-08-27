@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import FormCard from '@shared/components/sections/FormCard';
+import ActionBar from '@/shared/components/ActionBar';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { FormFields, type FormField } from '@/shared/components/form';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -21,7 +22,34 @@ import { machinerySummaryGeneralFields, machinerySummaryLegalFields } from '../.
 import { mapMachinerySummaryResponseToForm } from '../../utils/mappers';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 
+// Literal key map — the strictly-typed `t()` rejects a dynamically-concatenated key
+// (`propertyInfo.machinerySummary.fields.${field.name}`), so each field name maps to its
+// literal translation key here. FormFields renders `field.label` verbatim (no i18n), so the
+// label must be translated before the config array is handed to it.
+const FIELD_LABEL_KEYS = {
+  inIndustrial: 'propertyInfo.machinerySummary.fields.inIndustrial',
+  surveyedNumber: 'propertyInfo.machinerySummary.fields.surveyedNumber',
+  appraisalNumber: 'propertyInfo.machinerySummary.fields.appraisalNumber',
+  installedAndUseCount: 'propertyInfo.machinerySummary.fields.installedAndUseCount',
+  appraisalScrapCount: 'propertyInfo.machinerySummary.fields.appraisalScrapCount',
+  appraisedByDocumentCount: 'propertyInfo.machinerySummary.fields.appraisedByDocumentCount',
+  notInstalledCount: 'propertyInfo.machinerySummary.fields.notInstalledCount',
+  maintenance: 'propertyInfo.machinerySummary.fields.maintenance',
+  exterior: 'propertyInfo.machinerySummary.fields.exterior',
+  performance: 'propertyInfo.machinerySummary.fields.performance',
+  marketDemandAvailable: 'propertyInfo.machinerySummary.fields.marketDemandAvailable',
+  marketDemand: 'propertyInfo.machinerySummary.fields.marketDemand',
+  proprietor: 'propertyInfo.machinerySummary.fields.proprietor',
+  owner: 'propertyInfo.machinerySummary.fields.owner',
+  machineAddress: 'propertyInfo.machinerySummary.fields.machineAddress',
+  latitude: 'propertyInfo.machinerySummary.fields.latitude',
+  longitude: 'propertyInfo.machinerySummary.fields.longitude',
+  obligation: 'propertyInfo.machinerySummary.fields.obligation',
+  other: 'propertyInfo.machinerySummary.fields.other',
+} as const;
+
 const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
+  const { t } = useTranslation('appraisal');
   const { watch, setValue } = useFormContext();
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -40,15 +68,17 @@ const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
   const machineryLegalFields = useMemo<FormField[]>(
     () =>
       machinerySummaryLegalFields.map(field => {
+        const key = FIELD_LABEL_KEYS[field.name as keyof typeof FIELD_LABEL_KEYS];
+        const translated = key ? { ...field, label: t(key) } : field;
         if (
           !readOnly &&
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
         )
-          return { ...field, rightIcon: pickerButton };
-        return field;
+          return { ...translated, rightIcon: pickerButton };
+        return translated;
       }),
-    [pickerButton, readOnly],
+    [pickerButton, readOnly, t],
   );
 
   return (
@@ -94,6 +124,16 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isLoading]);
 
+  // Translate the general-section field labels (FormFields renders labels verbatim).
+  const generalFields = useMemo<FormField[]>(
+    () =>
+      machinerySummaryGeneralFields.map(field => {
+        const key = FIELD_LABEL_KEYS[field.name as keyof typeof FIELD_LABEL_KEYS];
+        return key ? { ...field, label: t(key) } : field;
+      }),
+    [t],
+  );
+
   const onSubmit: SubmitHandler<machinerySummaryFormType> = values => {
     if (!appraisalId) return;
     saveMutation.mutate(
@@ -131,25 +171,13 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
     <FormProvider methods={methods} schema={machinerySummaryForm}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-900">
-              {t('propertyInfo.machinerySummary.title')}
-            </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {t('propertyInfo.machinerySummary.subtitle')}
-            </p>
-          </div>
-          {!readOnly && (
-            <Button type="submit" size="sm" disabled={saveMutation.isPending}>
-              <Icon
-                name={saveMutation.isPending ? 'spinner' : 'floppy-disk'}
-                style="solid"
-                className={`w-3.5 h-3.5 mr-1.5 ${saveMutation.isPending ? 'animate-spin' : ''}`}
-              />
-              {t('propertyInfo.machinerySummary.save')}
-            </Button>
-          )}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">
+            {t('propertyInfo.machinerySummary.title')}
+          </h3>
+          <p className="text-xs text-gray-500 mt-0.5">
+            {t('propertyInfo.machinerySummary.subtitle')}
+          </p>
         </div>
 
         {/* Section 3.1 — General machinery */}
@@ -160,7 +188,7 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
           iconColor="blue"
         >
           <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={machinerySummaryGeneralFields} disabled={readOnly} showCharCount />
+            <FormFields fields={generalFields} disabled={readOnly} showCharCount />
           </div>
         </FormCard>
 
@@ -173,6 +201,25 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
         >
           <MachinerySummaryLegalForm readOnly={readOnly} />
         </FormCard>
+
+        {/* Sticky footer actions — pinned to the bottom of the scroll area */}
+        {!readOnly && (
+          <ActionBar>
+            <ActionBar.Left>
+              <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
+            </ActionBar.Left>
+            <ActionBar.Right>
+              <Button
+                type="submit"
+                isLoading={saveMutation.isPending}
+                disabled={saveMutation.isPending}
+              >
+                <Icon name="check" style="solid" className="size-4 mr-2" />
+                {t('propertyInfo.machinerySummary.save')}
+              </Button>
+            </ActionBar.Right>
+          </ActionBar>
+        )}
       </form>
     </FormProvider>
   );

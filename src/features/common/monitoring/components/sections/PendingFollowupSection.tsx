@@ -40,6 +40,7 @@ import { DateCell } from '../DateCell';
 import PicAutocomplete from '../PicAutocomplete';
 import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
 import { useCompanyStore } from '@shared/store';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 const SLA_OPTIONS = [
   { value: 'OnTime', label: 'On Time' },
@@ -203,9 +204,12 @@ const COLUMNS: ColumnDef<PendingTask>[] = [
   {
     key: 'slaDue',
     label: 'Due Date',
-    sortKey: 'AssignedDate',
+    // The deadline, not the holder clock. AssignedDate now maps to AssigneeAssignedAt on the view,
+    // which has nothing to do with the value this column renders.
+    sortKey: 'DueDate',
     render: row => (
       <SlaDueCell
+        dueDate={row.dueDate}
         assignedDate={row.assignedDate}
         targetHours={row.olaTargetHours}
         slaStatus={row.slaStatus}
@@ -314,6 +318,7 @@ function PendingFollowupSection({ onCountChange }: PendingFollowupSectionProps) 
   const purposeOptions = useParameterOptions('AppraisalPurpose');
   const propertyTypeOptions = useParameterOptions('PropertyType');
   const companies = useCompanyStore(s => s.companies);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   const taskTypeOptions = useMemo(
     () => [
@@ -487,7 +492,14 @@ function PendingFollowupSection({ onCountChange }: PendingFollowupSectionProps) 
       ? [
           {
             key: 'appraisalCompanyId',
-            label: `Company: ${companies.find(c => c.id === appraisalCompanyFilter)?.companyName ?? appraisalCompanyFilter}`,
+            label: `Company: ${
+              (() => {
+                const match = companies.find(c => c.id === appraisalCompanyFilter);
+                return match
+                  ? localizeCompanyName(match.companyName, match.companyNameLocal)
+                  : appraisalCompanyFilter;
+              })()
+            }`,
             onClear: () => {
               setAppraisalCompanyFilter('');
               setPage(0);
@@ -510,7 +522,11 @@ function PendingFollowupSection({ onCountChange }: PendingFollowupSectionProps) 
     if (group == null || groupBy == null) {
       setDrill(null);
     } else {
-      setDrill({ field: groupBy, key: group.key, label: group.label || group.key });
+      setDrill({
+        field: groupBy,
+        key: group.key,
+        label: localizeCompanyName(group.label || group.key, group.labelLocal),
+      });
     }
     setPage(0);
   };

@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import Icon from '@/shared/components/Icon';
 import { useGetCompanyById } from '../../api/administration';
 import { useAddressStore, useCompanyStore } from '@/shared/store';
+import { useParameterDescription } from '@/shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface ActiveFilterChipsProps {
   filters: Record<string, string>;
@@ -15,6 +17,13 @@ const formatLabel = (key: string): string =>
     .replace(/^./, s => s.toUpperCase())
     .trim();
 
+/** Filter keys whose value is a master-data code, so the chip shows the description instead. */
+const PARAMETER_CHIP_GROUPS: Record<string, string> = {
+  bankingSegment: 'BankingSegment',
+  purpose: 'AppraisalPurpose',
+  propertyType: 'PropertyType',
+};
+
 interface CompanyChipProps {
   label: string;
   companyId: string;
@@ -24,14 +33,17 @@ interface CompanyChipProps {
 function CompanyChip({ label, companyId, onRemove }: CompanyChipProps) {
   const companies = useCompanyStore(s => s.companies);
   const isLoaded = useCompanyStore(s => s.isLoaded);
+  const localizeCompanyName = useLocalizedCompanyName();
 
   // Prefer store lookup; fall back to API only if store hasn't loaded
   const { data: apiCompany } = useGetCompanyById(!isLoaded ? companyId : null);
 
   const displayValue = useMemo(() => {
-    const fromStore = companies.find(c => c.id === companyId)?.companyName;
-    return fromStore ?? apiCompany?.companyName ?? companyId;
-  }, [companies, companyId, apiCompany]);
+    const fromStore = companies.find(c => c.id === companyId);
+    if (fromStore) return localizeCompanyName(fromStore.companyName, fromStore.companyNameLocal);
+    if (apiCompany) return localizeCompanyName(apiCompany.companyName, apiCompany.companyNameLocal);
+    return companyId;
+  }, [companies, companyId, apiCompany, localizeCompanyName]);
 
   return (
     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
@@ -76,6 +88,31 @@ function ProvinceChip({ label, provinceCode, onRemove }: ProvinceChipProps) {
   );
 }
 
+interface ParameterChipProps {
+  label: string;
+  group: string;
+  code: string;
+  onRemove: () => void;
+}
+
+function ParameterChip({ label, group, code, onRemove }: ParameterChipProps) {
+  // Falls back to the raw code when the parameter store hasn't hydrated or the code is unknown
+  const description = useParameterDescription(group, code);
+
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">
+      <span className="font-medium">{label}:</span> {description}
+      <button
+        onClick={onRemove}
+        aria-label={`Remove ${label} filter`}
+        className="hover:text-primary/70 ml-0.5"
+      >
+        <Icon style="solid" name="xmark" className="size-3" />
+      </button>
+    </span>
+  );
+}
+
 function ActiveFilterChips({ filters, onRemove, onClearAll }: ActiveFilterChipsProps) {
   const active = Object.entries(filters).filter(([, v]) => v !== '' && v !== undefined);
   if (active.length === 0) return null;
@@ -98,6 +135,19 @@ function ActiveFilterChips({ filters, onRemove, onClearAll }: ActiveFilterChipsP
               key={key}
               label={label}
               provinceCode={value}
+              onRemove={() => onRemove(key)}
+            />
+          );
+        }
+
+        const parameterGroup = PARAMETER_CHIP_GROUPS[key];
+        if (parameterGroup) {
+          return (
+            <ParameterChip
+              key={key}
+              label={label}
+              group={parameterGroup}
+              code={value}
               onRemove={() => onRemove(key)}
             />
           );

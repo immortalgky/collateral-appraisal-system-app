@@ -27,7 +27,7 @@ import StickyRemarkFooter from '../components/360/StickyRemarkFooter';
 import RequestInfoSection from '../components/360/RequestInfoSection';
 import PropertyGroupsSection from '../components/360/PropertyGroupsSection';
 import PricingAnalysisSection from '../components/360/PricingAnalysisSection';
-import FooterSection from '../components/360/FooterSection';
+import AppraiserInfoSection from '../components/360/AppraiserInfoSection';
 import PropertyDetailSlideOver from '../components/360/PropertyDetailSlideOver';
 import PricingBreakdownSlideOver from '../components/360/PricingBreakdownSlideOver';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -75,7 +75,12 @@ const Appraisal360Page = () => {
     error: requestError,
     refetch: refetchRequest,
   } = useGetRequestById(appraisal?.requestId);
-  const { groups, isLoading: isLoadingGroups } = useEnrichedPropertyGroups(appraisalId);
+  const {
+    groups,
+    isLoading: isLoadingGroups,
+    error: groupsError,
+    refetch: refetchGroups,
+  } = useEnrichedPropertyGroups(appraisalId);
   const {
     data: decisionSummary,
     isLoading: isLoadingDecision,
@@ -206,7 +211,7 @@ const Appraisal360Page = () => {
   if (isAppraisalError) {
     return (
       <DataErrorState
-        title="Failed to load appraisal"
+        title={t('view360.errors.appraisal')}
         message={(appraisalError as Error)?.message}
         onRetry={refetchAppraisal}
       />
@@ -236,7 +241,7 @@ const Appraisal360Page = () => {
               }
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-teal-600" />
-              Appraisal Report
+              {t('view360.page.appraisalReport')}
             </button>
             <button
               type="button"
@@ -249,7 +254,7 @@ const Appraisal360Page = () => {
               }
             >
               <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-purple-600" />
-              Appraisal Summary
+              {t('view360.page.appraisalSummary')}
             </button>
             <button
               type="button"
@@ -271,7 +276,7 @@ const Appraisal360Page = () => {
                 </g>
                 <circle cx="12" cy="9" r="2.6" fill="#fff" />
               </svg>
-              View on Map
+              {t('view360.page.viewOnMap')}
             </button>
           </>
         }
@@ -282,12 +287,13 @@ const Appraisal360Page = () => {
         className="flex-1 min-h-0 overflow-y-auto"
         onScroll={e => setScrolled(e.currentTarget.scrollTop > 8)}
       >
-        <div className="flex flex-col gap-6 py-6">
+        {/* pb-24 reserves room for the StickyRemarkFooter FAB (h-14 at bottom-6) */}
+        <div className="flex flex-col gap-6 pt-6 pb-24">
           {/* Request Information */}
           {isRequestError ? (
             <DataErrorState
               variant="inline"
-              title="Failed to load request info"
+              title={t('view360.errors.requestInfo')}
               message={(requestError as Error)?.message}
               onRetry={refetchRequest}
             />
@@ -295,18 +301,32 @@ const Appraisal360Page = () => {
             <RequestInfoSection appraisal={appraisal} request={request} />
           )}
 
-          {/* Property Groups */}
-          <PropertyGroupsSection
-            groups={groups}
-            isLoading={isLoadingGroups}
-            onPropertyClick={handlePropertyClick}
-          />
+          {/* Appraiser Information — sits with the request context, above the property detail */}
+          <AppraiserInfoSection appraisal={appraisal} />
+
+          {/* Property Groups — only swap in the error state when there is nothing to show.
+              The hook's error covers the list AND every group detail, so an unguarded check
+              would hide already-loaded groups when one detail fails or a refetch errors. */}
+          {groupsError && groups.length === 0 ? (
+            <DataErrorState
+              variant="inline"
+              title={t('view360.errors.propertyGroups')}
+              message={(groupsError as Error)?.message}
+              onRetry={refetchGroups}
+            />
+          ) : (
+            <PropertyGroupsSection
+              groups={groups}
+              isLoading={isLoadingGroups}
+              onPropertyClick={handlePropertyClick}
+            />
+          )}
 
           {/* Pricing Analysis */}
           {isDecisionError ? (
             <DataErrorState
               variant="inline"
-              title="Failed to load pricing analysis"
+              title={t('view360.errors.pricingAnalysis')}
               message={(decisionError as Error)?.message}
               onRetry={refetchDecision}
             />
@@ -317,9 +337,6 @@ const Appraisal360Page = () => {
               onGroupClick={handleGoToPricingAnalysis}
             />
           )}
-
-          {/* Footer */}
-          <FooterSection appraisal={appraisal} />
         </div>
       </div>
 
@@ -334,7 +351,7 @@ const Appraisal360Page = () => {
       <SlideOverPanel
         isOpen={slideOver.type === 'property'}
         onClose={handleCloseSlideOver}
-        title={slideOver.type === 'property' ? 'Property Detail' : ''}
+        title={slideOver.type === 'property' ? t('view360.page.propertyDetailTitle') : ''}
         subtitle={slideOver.type === 'property' ? slideOver.groupName : undefined}
         width="xl"
       >
@@ -350,7 +367,7 @@ const Appraisal360Page = () => {
       <SlideOverPanel
         isOpen={slideOver.type === 'pricing'}
         onClose={handleCloseSlideOver}
-        title={slideOver.type === 'pricing' ? 'Pricing Breakdown' : ''}
+        title={slideOver.type === 'pricing' ? t('view360.page.pricingBreakdownTitle') : ''}
         subtitle={slideOver.type === 'pricing' ? slideOver.groupName : undefined}
         width="xl"
       >

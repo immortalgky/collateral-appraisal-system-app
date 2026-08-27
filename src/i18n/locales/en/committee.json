@@ -21,7 +21,15 @@
     "user": "User",
     "role": "Role",
     "attendance": "Attendance",
-    "active": "Active"
+    "active": "Active",
+    "name": "Name",
+    "description": "Description",
+    "quorumType": "Quorum",
+    "quorumValueCount": "Quorum (members)",
+    "quorumValuePercent": "Quorum (%)",
+    "majorityType": "Approval rule",
+    "votingMode": "Voting mode",
+    "majorityValue": "Approvals required"
   },
   "attendance": {
     "always": "Always",
@@ -29,7 +37,13 @@
     "even": "Even meetings (2, 4, 6, ...)"
   },
   "help": {
-    "attendance": "Controls which meetings this member is included in when a committee snapshot is taken. Odd = meetings 1, 3, 5, ...; Even = meetings 2, 4, 6, ..."
+    "attendance": "Controls which meetings this member is included in when a committee snapshot is taken. Odd = meetings 1, 3, 5, ...; Even = meetings 2, 4, 6, ...",
+    "majority": "Evaluated against the full committee, not only the votes cast.",
+    "votingWaitForAll": "Every member must vote before the result is decided.",
+    "votingQuorum": "Resolves as soon as quorum and the approval rule are met; remaining members' tasks are closed.",
+    "committeeActive": "Inactive committees are not offered for new approvals.",
+    "majorityFixedCount": "An absolute number of approvals, regardless of how many members the committee has.",
+    "majorityValue": "Must be between 1 and the {{max}} active member(s)."
   },
   "addDialog": {
     "title": "Add Committee Member",
@@ -50,7 +64,13 @@
   },
   "validation": {
     "selectUser": "Select a user",
-    "memberNameRequired": "Member name is required"
+    "memberNameRequired": "Member name is required",
+    "nameRequired": "Name is required",
+    "quorumMin": "Quorum must be at least 1",
+    "quorumPercentMax": "Percentage quorum cannot exceed 100",
+    "majorityValueRequired": "Enter the number of approvals required",
+    "majorityValueExceedsMembers": "Cannot exceed the {{max}} active member(s) — the round could never resolve",
+    "roleRetired": "This role is retired — choose one of the current roles"
   },
   "toasts": {
     "added": "Member added",
@@ -58,6 +78,79 @@
     "updated": "Member updated",
     "updateFailed": "Failed to update member",
     "removed": "Member removed",
-    "removeFailed": "Failed to remove member"
+    "removeFailed": "Failed to remove member",
+    "settingsUpdated": "Committee settings updated",
+    "settingsUpdateFailed": "Failed to update committee settings"
+  },
+  "summary": {
+    "title": "Committee Settings",
+    "edit": "Edit",
+    "quorumFixed": "{{value}} member(s)",
+    "quorumPercent": "{{value}}% of active members",
+    "majorityFixedCount": "{{value}} approval(s)"
+  },
+  "settingsDialog": {
+    "title": "Edit Committee Settings"
+  },
+  "quorumType": {
+    "fixed": "Fixed count",
+    "percentage": "Percentage"
+  },
+  "majorityType": {
+    "simple": "Simple majority",
+    "twoThirds": "Two-thirds",
+    "unanimous": "Unanimous",
+    "fixedCount": "Fixed number of approvals"
+  },
+  "votingMode": {
+    "waitForAll": "Wait for all votes",
+    "quorum": "Resolve at quorum"
+  },
+  "conditions": {
+    "title": "Approval Conditions ({{count}} active)",
+    "add": "Add condition",
+    "edit": "Edit condition",
+    "remove": "Remove condition",
+    "empty": "No conditions — a round passes on quorum and the approval rule alone.",
+    "priorityShort": "P{{value}}",
+    "noMemberHolds": "no active member",
+    "summary": {
+      "role": "A {{role}} must vote to approve",
+      "minVotes": "At least {{value}} approve vote(s)"
+    },
+    "type": {
+      "roleRequired": "A specific role must approve",
+      "minVotes": "A minimum number of approvals"
+    },
+    "fields": {
+      "type": "Condition",
+      "role": "Required role",
+      "minVotes": "Approvals required",
+      "priority": "Priority",
+      "description": "Description",
+      "active": "Active"
+    },
+    "help": {
+      "role": "Evaluated against the roles of members who voted. A role no active member holds would block every round, so it is rejected.",
+      "snapshot": "Conditions are captured when an approval round starts, so changes apply to new rounds only — approvals already in progress keep the rules they began with."
+    },
+    "validation": {
+      "minVotes": "Must be at least 1",
+      "roleRequired": "Select a role that casts a vote"
+    },
+    "dialog": {
+      "addTitle": "Add Approval Condition",
+      "editTitle": "Edit Approval Condition"
+    },
+    "confirm": {
+      "remove": "Remove this condition?\n\n{{rule}}\n\nNew rounds will no longer require it."
+    },
+    "toasts": {
+      "added": "Condition added",
+      "updated": "Condition updated",
+      "removed": "Condition removed",
+      "saveFailed": "Failed to save the condition",
+      "removeFailed": "Failed to remove the condition"
+    }
   }
 }

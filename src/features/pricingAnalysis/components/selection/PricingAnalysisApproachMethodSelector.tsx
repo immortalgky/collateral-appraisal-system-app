@@ -6,6 +6,7 @@ import { PricingAnalysisApproachAccordion } from './PricingAnalysisApproachAccor
 import type { ViewLayout } from './PricingAnalysisMethodCard';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PricingAnalysisConfigType } from '../../schemas';
+import type { ManualCostBreakdownContext } from '../../types/selection';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
@@ -62,12 +63,6 @@ interface PricingAnalysisApproachMethodSelectorProps {
     value: number;
     methodId?: string;
   }) => void;
-  onLandValueSync?: (arg: {
-    approachType: string;
-    methodType: string;
-    value: number;
-    methodId?: string;
-  }) => void;
   toggleCalcModeConfirm?: {
     isOpen: boolean;
     pending: { approachType: string; methodType: string } | null;
@@ -76,6 +71,8 @@ interface PricingAnalysisApproachMethodSelectorProps {
     cancelToggle: () => void;
     isToggling: boolean;
   };
+  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  manualCostBreakdown?: ManualCostBreakdownContext;
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
   removeDocumentConfirm?: {
     isOpen: boolean;
@@ -106,8 +103,8 @@ export const PricingAnalysisApproachMethodSelector = ({
   pricingConfiguration,
   deleteConfirm,
   onManualValueSync,
-  onLandValueSync,
   toggleCalcModeConfirm,
+  manualCostBreakdown,
   onRequestRemoveDocument,
   removeDocumentConfirm,
 }: PricingAnalysisApproachMethodSelectorProps) => {
@@ -267,8 +264,8 @@ export const PricingAnalysisApproachMethodSelector = ({
                 onViewLayoutChange={handleViewLayoutChange}
                 isManualMode={isManualMode}
                 onManualValueSync={onManualValueSync}
-                onLandValueSync={onLandValueSync}
                 onToggleMethodCalcMode={onToggleMethodCalcMode}
+                manualCostBreakdown={manualCostBreakdown}
                 disabled={isSummarySaving}
               />
             ))}

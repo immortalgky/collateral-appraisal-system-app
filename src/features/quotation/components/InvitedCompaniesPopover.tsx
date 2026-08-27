@@ -14,10 +14,12 @@ import {
 } from '@floating-ui/react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface InvitedCompany {
   companyId: string;
   companyName: string;
+  companyNameLocal?: string | null;
 }
 
 interface InvitedCompaniesPopoverProps {
@@ -27,6 +29,7 @@ interface InvitedCompaniesPopoverProps {
 
 const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPopoverProps) => {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const [open, setOpen] = useState(false);
 
   const { refs, floatingStyles, context } = useFloating({
@@ -83,8 +86,11 @@ const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPo
                       className="px-3 py-1.5 text-xs text-gray-800 flex items-start gap-1.5"
                     >
                       <span className="text-gray-300 select-none">•</span>
-                      <span className="truncate" title={c.companyName}>
-                        {c.companyName}
+                      <span
+                        className="truncate"
+                        title={localizeCompanyName(c.companyName, c.companyNameLocal)}
+                      >
+                        {localizeCompanyName(c.companyName, c.companyNameLocal)}
                       </span>
                     </li>
                   ))}

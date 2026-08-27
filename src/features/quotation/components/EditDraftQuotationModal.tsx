@@ -20,6 +20,7 @@ import type {
 } from '../schemas/quotation';
 import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
 import type { SelectedAppraisal } from './AppraisalPicker';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface EditDraftQuotationModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ interface EditDraftQuotationModalProps {
 interface SelectedCompany {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
 }
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
@@ -50,6 +52,7 @@ type DocSelections = Record<string, Record<string, SharedDocumentSelectionDto['l
  */
 const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotationModalProps) => {
   const { t } = useTranslation(['quotation', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const [cutOffTime, setCutOffTime] = useState<string | null>(null);
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,14 +98,18 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
   );
 
   const allCompanies: SelectedCompany[] = useMemo(
-    () => (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.name })),
+    () =>
+      (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal })),
     [rawCompanies],
   );
 
   const filteredCompanies = useMemo(() => {
     if (!searchQuery.trim()) return allCompanies;
     const q = searchQuery.toLowerCase();
-    return allCompanies.filter(c => c.companyName.toLowerCase().includes(q));
+    return allCompanies.filter(
+      c =>
+        c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
+    );
   }, [allCompanies, searchQuery]);
 
   // Seed form once per open
@@ -114,6 +121,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
       (quotation.invitedCompanies ?? []).map(c => ({
         id: c.companyId,
         companyName: c.companyName,
+        companyNameLocal: c.companyNameLocal,
       })),
     );
     setAppraisals(
@@ -375,12 +383,16 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                     className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
                   >
                     <Icon name="building" style="solid" className="size-3.5" />
-                    <span className="font-medium">{c.companyName}</span>
+                    <span className="font-medium">
+                      {localizeCompanyName(c.companyName, c.companyNameLocal)}
+                    </span>
                     <button
                       type="button"
                       onClick={() => handleRemoveCompany(c.id)}
                       className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
-                      aria-label={t('aria.removeCompany', { company: c.companyName })}
+                      aria-label={t('aria.removeCompany', {
+                        company: localizeCompanyName(c.companyName, c.companyNameLocal),
+                      })}
                     >
                       <Icon name="xmark" style="solid" className="size-3" />
                     </button>
@@ -488,7 +500,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                             />
                           </div>
                           <span className="text-sm font-medium text-gray-900 truncate flex-1">
-                            {c.companyName}
+                            {localizeCompanyName(c.companyName, c.companyNameLocal)}
                           </span>
                         </button>
                       );

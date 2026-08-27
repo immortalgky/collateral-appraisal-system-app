@@ -10,18 +10,16 @@
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 
+import { SELECTABLE_POSITIONS } from '../constants';
+
 // ==================== Shared sub-schemas ====================
 
-const POSITION_VALUES = [
-  'Chairman',
-  'Director',
-  'Secretary',
-  'UW',
-  'Risk',
-  'Appraisal',
-  'Credit',
-  'Member',
-] as const;
+/**
+ * Positions accepted when WRITING a member. Only the currently-selectable ones — Risk / Appraisal /
+ * Credit / Member are retired and the API rejects them on save, even though they still appear on
+ * existing rosters (see POSITION_OPTIONS in ../constants for the full read-side union).
+ */
+const POSITION_VALUES = SELECTABLE_POSITIONS;
 
 // ==================== Schema factories ====================
 
@@ -97,6 +95,14 @@ export const makeMeetingSchemas = (t: TFunction<'meeting'>) => {
       .max(500, t('validation.reasonMax')),
   });
 
+  const recallSchema = z.object({
+    reason: z
+      .string()
+      .trim()
+      .min(1, t('validation.reasonRequired'))
+      .max(500, t('validation.reasonMax')),
+  });
+
   const memberFormSchema = z.object({
     userId: z.string().min(1).max(100),
     memberName: z.string().min(1).max(200),
@@ -119,6 +125,7 @@ export const makeMeetingSchemas = (t: TFunction<'meeting'>) => {
     bulkCreateMeetingsSchema,
     cancelMeetingSchema,
     routeBackSchema,
+    recallSchema,
     memberFormSchema,
     updateMemberPositionSchema,
     updateAgendaSchema,
@@ -166,33 +173,20 @@ export const routeBackSchema = z.object({
 });
 export type RouteBackFormValues = z.infer<typeof routeBackSchema>;
 
+export const recallSchema = z.object({
+  reason: z.string().trim().min(1).max(500),
+});
+export type RecallFormValues = z.infer<typeof recallSchema>;
+
 export const memberFormSchema = z.object({
   userId: z.string().min(1).max(100),
   memberName: z.string().min(1).max(200),
-  position: z.enum([
-    'Chairman',
-    'Director',
-    'Secretary',
-    'UW',
-    'Risk',
-    'Appraisal',
-    'Credit',
-    'Member',
-  ] as const),
+  position: z.enum(POSITION_VALUES),
 });
 export type MemberFormValues = z.infer<typeof memberFormSchema>;
 
 export const updateMemberPositionSchema = z.object({
-  position: z.enum([
-    'Chairman',
-    'Director',
-    'Secretary',
-    'UW',
-    'Risk',
-    'Appraisal',
-    'Credit',
-    'Member',
-  ] as const),
+  position: z.enum(POSITION_VALUES),
 });
 export type UpdateMemberPositionFormValues = z.infer<typeof updateMemberPositionSchema>;
 
@@ -223,6 +217,11 @@ export const useCancelMeetingSchema = () => {
 export const useRouteBackSchema = () => {
   const { t } = useTranslation('meeting');
   return makeMeetingSchemas(t).routeBackSchema;
+};
+
+export const useRecallSchema = () => {
+  const { t } = useTranslation('meeting');
+  return makeMeetingSchemas(t).recallSchema;
 };
 
 export const useMemberFormSchema = () => {

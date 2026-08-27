@@ -1,0 +1,45 @@
+{
+  "search": {
+    "title": "Appraisal Data Correction",
+    "subtitle": "Fix descriptive property data on Completed appraisals",
+    "placeholder": "Search by appraisal number or customer name",
+    "loadFailed": "Failed to load appraisals",
+    "empty": "No appraisals found",
+    "tryDifferentSearch": "Try a different search term",
+    "emptyHint": "Only Completed or Cancelled appraisals appear here",
+    "col": {
+      "appraisalNumber": "Appraisal No.",
+      "customerName": "Customer",
+      "status": "Status",
+      "propertyTypes": "Property Types"
+    }
+  },
+  "detail": {
+    "noProperties": "No properties found on this appraisal",
+    "unnamedProperty": "Unnamed property",
+    "unsupportedType": "Correction is not supported for property type \"{{type}}\"",
+    "saveSuccess": "Correction saved",
+    "saveFailed": "Failed to save correction. Please try again.",
+    "historyToggle": "History",
+    "landTitlesSection": "Land Titles",
+    "titleRowLabel": "Title #{{number}}",
+    "submit": "Save Correction",
+    "selectProperty": "Select a property from the list",
+    "appraisalNotCompleted": "This appraisal is no longer Completed — it may have been reopened or cancelled. Refresh and check its status before retrying.",
+    "reasonTitle": "Reason for this correction",
+    "reasonRequired": "A reason is required.",
+    "noChanges": "Nothing has changed yet.",
+    "discard": "Cancel"
+  },
+  "confirmDialog": {
+    "title": "Confirm Data Correction",
+    "confirm": "Save Correction",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "noChanges": "No fields were changed",
+    "reasonLabel": "Reason"
+  },
+  "history": {
+    "empty": "No corrections have been made to this property yet"
+  }
+}

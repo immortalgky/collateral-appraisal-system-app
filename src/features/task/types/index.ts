@@ -125,6 +125,8 @@ export interface Task {
   requestReceivedDate: string | null;
   internalFollowupStaff: string | null;
   appraiser: string | null;
+  /** Non-null ONLY on external-assignment rows; when null, display `appraiser` as-is. */
+  appraiserCompanyNameLocal: string | null;
   assignedDate: string | null;
   reportReceivedAt: string | null;
   // Pool task / lock fields

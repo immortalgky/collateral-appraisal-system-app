@@ -3,6 +3,12 @@ import type { ThaiAddress } from './data/thaiAddresses';
 
 export type Theme = 'light' | 'dark';
 
+/** UI scale preference. Applied as a root font-size multiplier. */
+export type Density = 'compact' | 'normal' | 'comfortable';
+
+/** Field arrangement on the appraisal property forms. See formLayoutConstants.ts. */
+export type FormLayout = 'classic' | 'grid';
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -16,6 +22,10 @@ export type UIStore = {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
+  density: Density;
+  setDensity: (density: Density) => void;
+  formLayout: FormLayout;
+  setFormLayout: (layout: FormLayout) => void;
 };
 
 export type ParameterStore = {
@@ -72,6 +82,10 @@ export type AddressSource = 'title' | 'dopa';
 export type AddressStore = {
   titleAddresses: ThaiAddress[];
   dopaAddresses: ThaiAddress[];
+  /** Lowercased search haystacks, aligned by index with titleAddresses. */
+  titleSearchIndex: string[];
+  /** Lowercased search haystacks, aligned by index with dopaAddresses. */
+  dopaSearchIndex: string[];
   setTitleAddresses: (addresses: ThaiAddress[]) => void;
   setDopaAddresses: (addresses: ThaiAddress[]) => void;
   searchBySubDistrict: (query: string, source?: AddressSource) => ThaiAddress[];
@@ -86,6 +100,7 @@ export type LocaleStore = {
 export type CompanyItem = {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
 };
 
 export type CompanyStore = {

@@ -41,6 +41,7 @@ export interface InternalStaff {
 export interface ExternalCompany {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
   registrationNo: string;
   contactPerson: string;
   contactPhone: string;
@@ -80,6 +81,12 @@ export interface CurrentAssignment {
   remark: string | null;
   // Set when the admin has saved a draft; null for a freshly-created (never-drafted) assignment.
   draftSavedAt: string | null;
+  /**
+   * Off-system external only: the appraisal date keyed off the company's paper book
+   * (ValuationAnalyses.ValuationDate). Null on every other path, where the date is derived from
+   * the appointment. Seeds the keyin screen so a correction cannot overwrite the recorded date.
+   */
+  offlineBookDate?: string | null;
   createdOn: string | null;
 }
 

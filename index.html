@@ -6,16 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Collateral Appraisal System</title>
     <script>
+        // Applied before first paint. React only mounts after the auth check
+        // resolves, so theme and UI density have to land here or the app would
+        // paint light-and-unscaled first, then snap.
+        // Density factors mirror DENSITY_SCALE in src/shared/components/densityConstants.ts.
         try {
             var raw = localStorage.getItem('cas-ui-store');
             if (raw) {
                 var parsed = JSON.parse(raw);
-                var theme = parsed && parsed.state && parsed.state.theme;
+                var state = (parsed && parsed.state) || {};
+                var theme = state.theme;
                 if (theme === 'dark' || theme === 'light') {
                     document.documentElement.setAttribute('data-theme', theme);
                 }
+                var scale = { compact: 0.92, normal: 1, comfortable: 1.12 }[state.density];
+                if (scale) {
+                    document.documentElement.style.setProperty('--cas-density', String(scale));
+                }
             }
-        } catch (e) { /* fall back to default data-theme="light" */ }
+        } catch (e) { /* fall back to default data-theme="light" and --cas-density: 1 */ }
     </script>
 </head>
 <body class="h-full">

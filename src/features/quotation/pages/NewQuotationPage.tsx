@@ -16,6 +16,7 @@ import axios from '@shared/api/axiosInstance';
 import { useAuthStore } from '@features/auth/store.ts';
 import { useCreateQuotation, useGetLoanTypeMatchedCompanies } from '../api/quotation';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import {
   AppraisalPicker,
@@ -39,6 +40,7 @@ type NewQuotationFormValues = z.infer<typeof newQuotationSchema>;
 interface SelectedCompany {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
 }
 
 // ─── CompanyPicker ────────────────────────────────────────────────────────────
@@ -52,6 +54,7 @@ interface CompanyPickerProps {
 
 function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPickerProps) {
   const { t } = useTranslation('quotation');
+  const localizeCompanyName = useLocalizedCompanyName();
   const [query, setQuery] = useState('');
   const selectedIds = new Set(selected.map(c => c.id));
 
@@ -69,14 +72,17 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
     () =>
       (rawCompanies ?? [])
         .filter(c => c.id !== excludedCompanyId)
-        .map(c => ({ id: c.id, companyName: c.name })),
+        .map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal })),
     [rawCompanies, excludedCompanyId],
   );
 
   const filtered = useMemo(() => {
     if (!query.trim()) return companies;
     const q = query.toLowerCase();
-    return companies.filter(c => c.companyName.toLowerCase().includes(q));
+    return companies.filter(
+      c =>
+        c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
+    );
   }, [companies, query]);
 
   if (isError) {
@@ -106,12 +112,14 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
               className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium"
             >
               <Icon name="building" style="solid" className="size-3" />
-              <span>{c.companyName}</span>
+              <span>{localizeCompanyName(c.companyName, c.companyNameLocal)}</span>
               <button
                 type="button"
                 onClick={() => onToggle(c)}
                 className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
-                aria-label={t('aria.removeCompany', { company: c.companyName })}
+                aria-label={t('aria.removeCompany', {
+                  company: localizeCompanyName(c.companyName, c.companyNameLocal),
+                })}
               >
                 <Icon name="xmark" style="solid" className="size-2.5" />
               </button>
@@ -200,7 +208,9 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
                     <div className="size-7 rounded bg-purple-100 flex items-center justify-center shrink-0">
                       <Icon name="building" style="solid" className="size-3.5 text-purple-600" />
                     </div>
-                    <span className="text-sm text-gray-900 flex-1 truncate">{c.companyName}</span>
+                    <span className="text-sm text-gray-900 flex-1 truncate">
+                      {localizeCompanyName(c.companyName, c.companyNameLocal)}
+                    </span>
                   </button>
                 );
               })}

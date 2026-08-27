@@ -5,6 +5,7 @@ import { useCompanyStore } from '../store';
 export interface CompanyOption {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
 }
 
 /**
@@ -19,7 +20,7 @@ export const useGetCompanyByIdMinimal = (companyId: string | null) => {
     queryFn: async (): Promise<CompanyOption> => {
       const { data } = await axios.get(`/companies/${companyId}`);
       const company = data.company ?? data;
-      return { id: company.id, companyName: company.name };
+      return { id: company.id, companyName: company.name, companyNameLocal: company.nameLocal ?? null };
     },
     enabled: !!companyId,
     staleTime: 30_000,
@@ -36,8 +37,8 @@ export const useCompaniesQuery = () => {
       store.setLoading(true);
       try {
         const { data } = await axios.get('/companies');
-        const raw: { id: string; name: string }[] = data.companies ?? data.items ?? [];
-        const companies = raw.map(c => ({ id: c.id, companyName: c.name }));
+        const raw: { id: string; name: string; nameLocal?: string | null }[] = data.companies ?? data.items ?? [];
+        const companies = raw.map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal ?? null }));
         useCompanyStore.getState().setCompanies(companies);
         return companies;
       } catch (err) {

@@ -116,7 +116,7 @@ function TaskMonitorTable({
     { key: 'purpose', label: t('columns.purpose'), sortKey: 'Purpose' },
     { key: 'appraisalStatus', label: t('columns.status'), sortKey: 'AppraisalStatus' },
     { key: 'slaStatus', label: t('columns.sla'), sortKey: 'SlaStatus' },
-    { key: 'assignedAt', label: t('columns.assigned'), sortKey: 'AssignedAt' },
+    { key: 'assigneeAssignedAt', label: t('columns.assigned'), sortKey: 'AssigneeAssignedAt' },
     { key: 'dueAt', label: t('columns.dueAt'), sortKey: 'DueAt' },
     { key: 'actions', label: 'Action' },
   ];
@@ -196,7 +196,7 @@ function TaskMonitorTable({
                   <SlaBadge sla={task.slaStatus} />
                 </td>
                 <td className="px-4 py-3">
-                  <DateCell value={task.assignedAt} />
+                  <DateCell value={task.assigneeAssignedAt ?? task.assignedAt} />
                 </td>
                 <td className="px-4 py-3">
                   <DateCell value={task.dueAt} />

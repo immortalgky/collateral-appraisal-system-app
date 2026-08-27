@@ -381,6 +381,7 @@ function TaskLayout() {
           isBlock: appraisalData?.isBlock ?? false,
           blockProjectType: appraisalData?.blockProjectType ?? undefined,
           inspectionNumber: (appraisalData as any)?.inspectionNumber ?? null,
+          appraisalValue: (appraisalData as any)?.appraisalValue ?? null,
           ...commonWorkflowFields,
         },
         isLoading: false,

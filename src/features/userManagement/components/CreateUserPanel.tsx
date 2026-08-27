@@ -14,6 +14,7 @@ import { useGetRoles } from '../api/roles';
 import { useGetGroups } from '../api/groups';
 import { useGetTeams } from '../api/teams';
 import { useGetAdminCompanies } from '../api/companies';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 interface CreateUserPanelProps {
   onCreated?: (userId: string) => void;
@@ -35,6 +36,7 @@ interface FormState {
   position: string;
   department: string;
   aoCode: string;
+  employeeId: string;
   companyId: string;
   roles: string[];
   groups: string[];
@@ -53,6 +55,7 @@ const EMPTY_FORM: FormState = {
   position: '',
   department: '',
   aoCode: '',
+  employeeId: '',
   companyId: '',
   roles: [],
   groups: [],
@@ -87,6 +90,7 @@ const SectionLabel = ({
 
 const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [accessTab, setAccessTab] = useState<AccessTab>('roles');
   const createUser = useCreateUser();
@@ -125,6 +129,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
       companyId: scope === 'Bank' ? '' : prev.companyId,
       department: scope === 'Company' ? '' : prev.department,
       aoCode: scope === 'Company' ? '' : prev.aoCode,
+      employeeId: scope === 'Company' ? '' : prev.employeeId,
     }));
     setAccessTab('roles');
   };
@@ -204,6 +209,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
         position: form.position.trim() || null,
         department: isCompany ? null : form.department.trim() || null,
         aoCode: isCompany ? null : form.aoCode.trim() || null,
+        employeeId: isCompany ? null : form.employeeId.trim() || null,
         companyId: isCompany ? form.companyId : null,
         roles: form.roles,
         groupIds: form.groups,
@@ -393,7 +399,10 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   required
                   value={form.companyId}
                   onChange={val => setField('companyId', (val as string) ?? '')}
-                  options={companies.map(c => ({ value: c.id, label: c.name }))}
+                  options={companies.map(c => ({
+                    value: c.id,
+                    label: localizeCompanyName(c.name, c.nameLocal),
+                  }))}
                   placeholder={t('placeholders.selectCompany')}
                   showValuePrefix={false}
                 />
@@ -420,6 +429,13 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   value={form.aoCode}
                   onChange={e => setField('aoCode', e.currentTarget.value)}
                   placeholder={t('placeholders.aoCode')}
+                />
+                <TextInput
+                  label={t('fields.employeeId')}
+                  value={form.employeeId}
+                  onChange={e => setField('employeeId', e.currentTarget.value)}
+                  placeholder={t('placeholders.employeeId')}
+                  maxLength={50}
                 />
               </>
             )}

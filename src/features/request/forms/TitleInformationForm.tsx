@@ -24,6 +24,7 @@ import {
   type RequestTitleDtoType,
 } from '@/features/request/schemas/form';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import clsx from 'clsx';
 import { useTitleLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
 
@@ -35,6 +36,9 @@ interface TitleFormProps {
 const TitleInformationForm = () => {
   const { t } = useTranslation(['request', 'common']);
   const titleInfoFieldsMemo = useMemo(() => makeTitleInfoFields(t), [t]);
+  // Same source as the Collateral Type dropdown below, so the card label and the
+  // selected option always read identically.
+  const collateralTypeParams = useParametersByGroup('CollateralType');
   const isReadOnly = useFormReadOnly();
   const [editIndex, setEditIndex] = useState<number | undefined>();
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; index: number | null }>({
@@ -133,9 +137,8 @@ const TitleInformationForm = () => {
   };
 
   const getCollateralTypeLabel = (type: string | undefined) => {
-    if (!type) return t('empty.noTitles');
-    const key = `collateralTypes.${type}` as const;
-    return t(key as any) || type;
+    if (!type) return t('empty.noCollateralType');
+    return collateralTypeParams.find(p => p.code === type)?.description ?? type;
   };
 
   const getCollateralTypeIcon = (type: string | undefined) => {
@@ -195,6 +198,9 @@ const TitleInformationForm = () => {
         ))}
 
         <FormCard
+          // Scroll target for the array-level "must have at least 1 item" error: with no titles
+          // added there are no per-field anchors inside to aim at.
+          data-field="titles"
           title={t('forms.titleInformation')}
           subtitle={
             isEditing

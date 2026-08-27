@@ -19,7 +19,7 @@ interface SectionRowProps {
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
   <>
-    <div className="col-span-1 pt-1">
+    <div className="cas-section-head col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -275,8 +275,9 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
 
   return (
     <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">Rental Info</h2>
-      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
+      {/* No page heading: the section bands below name each group, and the tab already
+          says "Rental Info". */}
+      <div className="cas-section-grid grid grid-cols-5 gap-x-6 gap-y-4">
         {/* Schedule Header Fields */}
         <SectionRow title="Schedule" icon="calendar-days">
           <FormFields fields={rentalScheduleField} namePrefix={namePrefix} />
@@ -285,24 +286,29 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
         {/* Growth Rate */}
         <SectionRow title="Growth Rate" icon="chart-line">
           <div className="col-span-12 space-y-4">
-            <FormStringToggle
-              name={p('growthRateType')}
-              label="Contract Rental Fee Growth Rate"
-              size="sm"
-              options={[
-                { name: 'Period', label: 'Frequency' },
-                { name: 'Property', label: 'Period' },
-              ]}
-            />
-
-            {growthRateType === 'Period' && (
-              <div className="grid grid-cols-12 gap-4">
-                <FormFields fields={rentalGrowthPeriodField} namePrefix={namePrefix} />
+            {/* The toggle and the fields it governs share one grid, so they read as consecutive
+                rows rather than two blocks with a gutter between them. data-field marks the
+                toggle as a row of its own — label left, control right; FormFields adds that
+                wrapper for config-driven fields, and this one is rendered by hand. */}
+            <div className="grid grid-cols-12 gap-4">
+              <div data-field={p('growthRateType')} className="col-span-12">
+                <FormStringToggle
+                  name={p('growthRateType')}
+                  label="Contract Rental Fee Growth Rate"
+                  size="sm"
+                  options={[
+                    { name: 'Period', label: 'Frequency' },
+                    { name: 'Property', label: 'Period' },
+                  ]}
+                />
               </div>
-            )}
 
-            {growthRateType === 'Property' && (
-              <div>
+              {growthRateType === 'Period' && (
+                <FormFields fields={rentalGrowthPeriodField} namePrefix={namePrefix} />
+              )}
+
+              {growthRateType === 'Property' && (
+                <div className="col-span-12">
                 <table className="w-full text-sm border-collapse">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
@@ -435,6 +441,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </SectionRow>
 

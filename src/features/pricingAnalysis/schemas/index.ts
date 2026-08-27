@@ -62,6 +62,20 @@ export type SetFinalValueResponseType = z.infer<typeof schemas.SetFinalValueResp
 export type UpdateFinalValueRequestType = z.infer<typeof schemas.UpdateFinalValueRequest>;
 export type UpdateFinalValueResponseType = z.infer<typeof schemas.UpdateFinalValueResponse>;
 
+// -- Manual Cost Breakdown --
+export type SetManualCostBreakdownRequestType = z.infer<
+  typeof schemas.SetManualCostBreakdownRequest
+>;
+export type SetManualCostBreakdownResponseType = z.infer<
+  typeof schemas.SetManualCostBreakdownResponse
+>;
+
+// -- Pricing Analysis (root) --
+export type UpdatePricingAnalysisRequestType = z.infer<typeof schemas.UpdatePricingAnalysisRequest>;
+export type UpdatePricingAnalysisResponseType = z.infer<
+  typeof schemas.UpdatePricingAnalysisResponse
+>;
+
 // -- Remark --
 export type UpdateRemarkRequestType = z.infer<typeof schemas.UpdateRemarkRequest>;
 export type UpdateRemarkResponseType = z.infer<typeof schemas.UpdateRemarkResponse>;
@@ -169,23 +183,3 @@ export {
   type LeaseholdFormType,
   type LandGrowthPeriodFormType,
 } from './leaseholdForm';
-
-// -- Update Land Value (manual mode) --
-// TODO: replace with `schemas.UpdateFinalValueManualRequest`/`Response` once
-// src/shared/schemas/v1.ts is regenerated — the backend endpoint
-// (PUT /pricing-analysis/{id}/methods/{methodId}/land-value) already exists and is typed
-// server-side (UpdateFinalValueManualRequest/Response), the generated client just hasn't
-// been refreshed against the updated OpenAPI spec yet.
-export const UpdateLandValueRequest = z.object({
-  landValue: z.number(),
-});
-export const UpdateLandValueResponse = z
-  .object({
-    methodId: z.string(),
-    landValue: z.number(),
-    landArea: z.number().nullable().optional(),
-    buildingValue: z.number(),
-  })
-  .passthrough();
-export type UpdateLandValueRequestType = z.infer<typeof UpdateLandValueRequest>;
-export type UpdateLandValueResponseType = z.infer<typeof UpdateLandValueResponse>;

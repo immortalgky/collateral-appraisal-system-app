@@ -55,3 +55,11 @@ export const MAX_HISTORY_SIZE = 50;
 
 export const NUMBER_MARKER_RADIUS = 16;
 export const NUMBER_MARKER_COLORS = ['#FF0000', '#0066FF', '#00CC00', '#FF6600', '#9933FF'];
+
+/**
+ * Fabric renders text straight to the canvas bitmap, so --font-sans never reaches it
+ * and whatever family is named here is baked into the exported image for good. Keep it
+ * in step with --font-sans in styles/theme.css: Roboto for Latin and digits, Sarabun
+ * for Thai (Roboto has no Thai glyphs, so a Thai caption would otherwise export as tofu).
+ */
+export const ANNOTATION_FONT_FAMILY = "'Roboto Variable', 'Sarabun', Arial, sans-serif";

@@ -2,12 +2,11 @@ import type { GetPricingAnalysisResponseType, PricingAnalysisConfigType } from '
 import type { Approach, Method } from '../types/selection';
 
 // TODO: drop this augmentation once src/shared/schemas/v1.ts is regenerated against the API's
-// updated OpenAPI spec — LandValue/BuildingValue are already live on the server's MethodDto,
-// the generated client just hasn't been refreshed to know about them yet.
+// updated OpenAPI spec — UseSystemCalc is already live on the server's MethodDto, the generated
+// client just hasn't been refreshed to know about it yet.
 type ApiMethodWithLandValue =
   GetPricingAnalysisResponseType['approaches'][number]['methods'][number] & {
-    landValue?: number | null;
-    buildingValue?: number;
+    useSystemCalc?: boolean;
   };
 
 // Reverse mapping: server types → config types
@@ -44,6 +43,10 @@ const COST_METHOD_SERVER_TO_CONFIG: Record<string, string> = {
   SaleGrid: 'SAG_COST',
   DirectComparison: 'DC_COST',
 };
+
+/** Mirrors the server's PricingUnit vocabulary: PerSqWa/PerSqm price by area, PerUnit is a lumpsum. */
+const isLandRateUnit = (unitType?: string | null) =>
+  unitType === 'PerSqWa' || unitType === 'PerSqm';
 
 /** Normalise an approach/method type so it matches the config key.
  *  If the value is already a config key (e.g. "MARAPPR") it passes through. */
@@ -88,8 +91,12 @@ export function createInitialState(
         isSelected: apiMethod?.isSelected ?? false,
         appraisalValue: apiMethod?.methodValue ?? confMethod.appraisalValue ?? 0,
         useSystemCalc: apiMethod?.useSystemCalc ?? true,
-        landValue: apiMethod?.landValue ?? null,
-        buildingValue: apiMethod?.buildingValue ?? 0,
+
+        // valuePerUnit doubles as the calculated land rate, so only read it back as a manual
+        // entry when the unit says it prices land by area. A PerUnit lumpsum carries no rate.
+        landRatePerSqWa: isLandRateUnit(apiMethod?.unitType)
+          ? (apiMethod?.valuePerUnit ?? null)
+          : null,
       };
     }) as Method[];
 

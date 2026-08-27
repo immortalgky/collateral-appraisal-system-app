@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 // Tab state is mirrored to the URL (?tab=xxx) so it survives reload, deep-link,
 // and the layout breadcrumb can append the active tab as a structural crumb.
 import clsx from 'clsx';
-import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { useAppraisalId, useIsCiAppraisal } from '@/features/appraisal/context/AppraisalContext';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { usePropertyBasePath } from '@/features/appraisal/hooks/usePropertyBasePath';
 import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import Icon from '@shared/components/Icon';
@@ -31,7 +30,6 @@ const VALID_TABS: TabId[] = ['properties', 'markets', 'gallery', 'photos', 'laws
 
 export default function PropertyInformationPage() {
   const { t } = useTranslation('appraisal');
-  const isReadOnly = usePageReadOnly();
   const isPma = usePropertyBasePath() === 'property-pma';
 
   // The Machinery Summary tab is appraisal-level (one record per appraisal) and only relevant
@@ -50,7 +48,6 @@ export default function PropertyInformationPage() {
       ? [{ id: 'machinery' as const, label: t('propertyInfo.tabs.machinery'), icon: 'gears' }]
       : []),
   ];
-  const isCiAppraisal = useIsCiAppraisal();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabId | null;
   const isTabAvailable = (id: TabId | null): id is TabId =>
@@ -97,40 +94,38 @@ export default function PropertyInformationPage() {
   };
 
   return (
-    <PageReadOnlyContext.Provider value={isReadOnly || isCiAppraisal}>
-      <div className="flex flex-col h-full min-h-0">
-        {/* Tab Navigation - Compact */}
-        <div className="shrink-0 pb-4">
-          <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">
-            {visibleTabs.map(tab => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleTabChange(tab.id)}
-                  className={clsx(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
-                    isActive
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
-                  )}
-                >
-                  <Icon
-                    name={tab.icon}
-                    style="solid"
-                    className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
-                  />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Tab Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
+    <div className="flex flex-col h-full min-h-0">
+      {/* Tab Navigation - Compact */}
+      <div className="shrink-0 pb-4">
+        <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">
+          {visibleTabs.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => handleTabChange(tab.id)}
+                className={clsx(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
+                  isActive
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
+                )}
+              >
+                <Icon
+                  name={tab.icon}
+                  style="solid"
+                  className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
+                />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </nav>
       </div>
-    </PageReadOnlyContext.Provider>
+
+      {/* Tab Content */}
+      <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
+    </div>
   );
 }

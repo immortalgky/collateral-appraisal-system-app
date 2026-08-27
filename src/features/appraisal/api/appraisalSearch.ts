@@ -14,6 +14,9 @@ export interface AppraisalSearchParams {
   assigneeCompanyId?: string;
   channel?: string;
   bankingSegment?: string;
+  purpose?: string;
+  /** Matches appraisals having at least one property of this type */
+  propertyType?: string;
   isPma?: boolean;
   province?: string;
   district?: string;
@@ -50,6 +53,8 @@ export interface AppraisalDto {
   slaDueDate: string | null;
   slaStatus: string | null;
   propertyCount: number;
+  /** Distinct property type codes on this appraisal, comma-joined (e.g. "B, L, LB") */
+  propertyTypes: string | null;
   createdAt: string | null;
   appraisalValue: number | null;
   assigneeUserId: string | null; // username like "P5229", not GUID
@@ -58,6 +63,7 @@ export interface AppraisalDto {
   assignmentStatus: string | null;
   assignedDate: string | null;
   companyName: string | null;
+  companyNameLocal?: string | null;
   customerName: string | null;
   province: string | null;
   district: string | null;

@@ -3,7 +3,12 @@ import { type SubmitHandler, useForm } from 'react-hook-form';
 import { FormProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import {
+  useBasePath,
+  useAppraisalId,
+  useIsCiAppraisal,
+  useAppraisalContextSafe,
+} from '@/features/appraisal/context/AppraisalContext';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
@@ -21,17 +26,21 @@ import {
   useUpdateCondoProperty,
 } from '../api/property';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
-import { mapCondoPropertyResponseToForm } from '../utils/mappers';
+import { mapCondoPropertyResponseToForm, mapCondoFormDataToApiPayload } from '../utils/mappers';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import PropertyPhotoSection, {
   type PropertyPhotoSectionRef,
 } from '../components/PropertyPhotoSection';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { PageReadOnlyContext, usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useProgressivePrefill } from '@/features/collateralMaster';
+import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
+import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 
 const CreateCondoPage = () => {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
+  const isCiAppraisal = useIsCiAppraisal();
   const navigate = useNavigate();
   const basePath = useBasePath();
 
@@ -43,7 +52,7 @@ const CreateCondoPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
-  const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetCondoPropertyById(appraisalId ?? '', propertyId);
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
@@ -72,6 +81,62 @@ const CreateCondoPage = () => {
     }
   }, [isEditMode, propertyData, reset]);
 
+  // ── Progressive appraisal prefill ──────────────────────────────────────────
+  // In create mode for a Progressive appraisal, seed the construction inspection
+  // fields from the prior inspection stored on the CollateralMaster.
+  const appraisalCtx = useAppraisalContextSafe();
+  const appraisal = appraisalCtx?.appraisal ?? null;
+  const isProgressive = appraisal?.appraisalType === 'Progressive';
+  const lastConstructionInspectionId = useCollateralPrefillStore(
+    s => s.lastConstructionInspectionId,
+  );
+  // Only call the hook when conditions warrant a prefill — null disables the query
+  const prefillInspectionId = !isEditMode && isProgressive ? lastConstructionInspectionId : null;
+
+  const { buildSeedRows, isSummaryMode, summaryPreviousProgressPct, priorDetails } =
+    useProgressivePrefill(prefillInspectionId);
+
+  // Guard: apply prefill only once per create-mode mount
+  const prefillAppliedRef = useRef(false);
+
+  useEffect(() => {
+    if (prefillAppliedRef.current) return;
+    if (!priorDetails) return;
+    if (isEditMode) return;
+
+    prefillAppliedRef.current = true;
+
+    if (!isSummaryMode) {
+      const seeds = buildSeedRows();
+      if (seeds && seeds.length > 0) {
+        methods.setValue('constructionEnterDetail', true, { shouldDirty: true });
+        methods.setValue(
+          'constructionSubItems',
+          seeds.map(s => ({
+            id: null,
+            constructionWorkGroupId: s.constructionWorkGroupId ?? '',
+            constructionWorkItemId: s.constructionWorkItemId ?? null,
+            workItemName: s.workItemName ?? '',
+            displayOrder: s.displayOrder ?? 0,
+            proportionPct: s.proportionPct ?? 0,
+            previousProgressPct: s.previousProgressPct ?? 0,
+            currentProgressPct: 0, // fresh inspection starts at 0 delta from previous
+          })),
+          { shouldDirty: true },
+        );
+      }
+    } else {
+      // Summary mode: seed the previous progress from prior summary
+      methods.setValue('constructionEnterDetail', false, { shouldDirty: true });
+      methods.setValue(
+        'constructionSummary.summaryPreviousProgressPct',
+        summaryPreviousProgressPct ?? 0,
+        { shouldDirty: true },
+      );
+    }
+  }, [priorDetails, isEditMode, isSummaryMode, buildSeedRows, summaryPreviousProgressPct, methods]);
+  // ──────────────────────────────────────────────────────────────────────────
+
   const { mutate: createCondoProperties, isPending: isCreating } = useCreateCondoProperty();
   const { mutate: updateCondoProperties, isPending: isUpdating } = useUpdateCondoProperty();
 
@@ -83,7 +148,8 @@ const CreateCondoPage = () => {
     setSaveAction('submit');
     // buildingInsurancePrice is server-derived (rate × usableArea) — display only,
     // never sent back on create/update.
-    const { buildingInsurancePrice: _buildingInsurancePrice, ...payload } = data;
+    const { buildingInsurancePrice: _buildingInsurancePrice, ...rest } = data;
+    const payload = mapCondoFormDataToApiPayload(rest as createCondoFormType);
     if (isEditMode && propertyId) {
       updateCondoProperties(
         {
@@ -132,7 +198,8 @@ const CreateCondoPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     // buildingInsurancePrice is server-derived — never sent back on save.
-    const { buildingInsurancePrice: _buildingInsurancePrice, ...payload } = getValues();
+    const { buildingInsurancePrice: _buildingInsurancePrice, ...rest } = getValues();
+    const payload = mapCondoFormDataToApiPayload(rest as createCondoFormType);
 
     if (isEditMode && propertyId) {
       updateCondoProperties(
@@ -179,6 +246,18 @@ const CreateCondoPage = () => {
     }
   };
 
+  const isUnderConstruction = methods.watch('isUnderConstruction');
+  const tabParam = searchParams.get('tab');
+  const initialCondoTab = tabParam === 'construction' ? 'construction' : 'condo';
+  const [activeTab, setActiveTab] = useState<'condo' | 'construction'>(initialCondoTab);
+
+  // Reset to default tab if construction tab is active but property is not under construction (CI appraisals always show it)
+  useEffect(() => {
+    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
+      setActiveTab('condo');
+    }
+  }, [isUnderConstruction, activeTab, isCiAppraisal]);
+
   if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -195,110 +274,161 @@ const CreateCondoPage = () => {
           containerId="form-scroll-container"
           anchors={[
             { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
-            { label: t('createPage.navCondo'), id: 'properties-section', icon: 'building' },
+            {
+              label: t('createPage.navCondo'),
+              id: 'properties-section',
+              icon: 'building',
+              onClick: () => setActiveTab('condo'),
+            },
+            ...(isUnderConstruction || isCiAppraisal
+              ? [
+                  {
+                    label: t('createPage.navConstructionInspection'),
+                    id: 'construction-section',
+                    icon: 'helmet-safety',
+                    onClick: () => setActiveTab('construction'),
+                  },
+                ]
+              : []),
           ]}
         />
       </div>
 
-      <FormProvider methods={methods} schema={createCondoForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+      <PageReadOnlyContext.Provider value={isReadOnly}>
+        <FormProvider methods={methods} schema={createCondoForm}>
+          <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <div
+              id="form-scroll-container"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section */}
-                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
+              <ResizableSidebar
+                isOpen={isOpen}
+                onToggle={onToggle}
+                openedWidth="w-1/5"
+                closedWidth="w-1/50"
+              >
+                <ResizableSidebar.Main>
+                  <div className="flex-auto flex flex-col gap-6 min-w-0">
+                    {/* Photos Section */}
+                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
+                          <Icon
+                            name="images"
+                            style="solid"
+                            className="w-5 h-5 text-indigo-600"
+                          />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          {t('createPage.photosSection')}
+                        </h2>
                       </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {t('createPage.photosSection')}
-                      </h2>
+                      <div className="h-px bg-gray-200 mb-4" />
+                      {appraisalId && (
+                        <PropertyPhotoSection
+                          ref={photoSectionRef}
+                          appraisalId={appraisalId}
+                          propertyId={propertyId}
+                        />
+                      )}
+                    </Section>
+
+                    {/* Condo Tab Content */}
+                    <div
+                      id="properties-section"
+                      className={`flex flex-col gap-6 ${activeTab !== 'condo' ? 'hidden' : ''}`}
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
+                          <Icon name="building" style="solid" className="w-5 h-5 text-violet-600" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">
+                          {t('createPage.condoSection')}
+                        </h2>
+                      </div>
+                      <div className="h-px bg-gray-200" />
+                      {/* Condo Form */}
+                      <Section
+                        id="condo-info"
+                        anchor
+                        className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                      >
+                        <CondoDetailForm />
+                      </Section>
                     </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    {appraisalId && (
-                      <PropertyPhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        propertyId={propertyId}
-                      />
+
+                    {/* Construction Inspection Tab Content */}
+                    {(isUnderConstruction || isCiAppraisal) && (
+                      <div
+                        id="construction-section"
+                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                            <Icon
+                              name="helmet-safety"
+                              style="solid"
+                              className="w-5 h-5 text-amber-600"
+                            />
+                          </div>
+                          <h2 className="text-lg font-semibold text-gray-900">
+                            {t('createPage.constructionSection')}
+                          </h2>
+                        </div>
+                        <div className="h-px bg-gray-200" />
+                        <Section id="construction-info" anchor className="flex flex-col gap-6">
+                          <ConstructionInspectionTab
+                            readOnly={isReadOnly}
+                            ciMode={isCiAppraisal}
+                          />
+                        </Section>
+                      </div>
                     )}
-                  </Section>
+                  </div>
+                </ResizableSidebar.Main>
+              </ResizableSidebar>
+            </div>
 
-                  {/* Condo Information Header */}
-                  <Section id="properties-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
-                        <Icon name="building" style="solid" className="w-5 h-5 text-violet-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {t('createPage.condoSection')}
-                      </h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                  </Section>
-
-                  {/* Condo Form */}
-                  <Section
-                    id="condo-info"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <CondoDetailForm />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
-
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!isReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
               {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                    {t('createPage.saveDraft')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    {t('createPage.save')}
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                  {t('createPage.saveDraft')}
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  {t('createPage.save')}
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormProvider>
+      </PageReadOnlyContext.Provider>
     </div>
   );
 };

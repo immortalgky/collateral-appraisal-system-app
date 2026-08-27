@@ -36,5 +36,16 @@
   "themeToggle": {
     "toDark": "เปลี่ยนเป็นโหมดมืด",
     "toLight": "เปลี่ยนเป็นโหมดสว่าง"
+  },
+  "density": {
+    "label": "ขนาดการแสดงผล",
+    "compact": "กะทัดรัด",
+    "normal": "ปกติ",
+    "comfortable": "สบายตา"
+  },
+  "formLayout": {
+    "label": "เลย์เอาต์ฟอร์มประเมิน",
+    "grid": "ตาราง",
+    "classic": "มาตรฐาน"
   }
 }

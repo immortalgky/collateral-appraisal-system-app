@@ -2,6 +2,12 @@ import type { TFunction } from 'i18next';
 import type { FieldArrayField, FormField } from '@/shared/components/form';
 import type { ListBoxItem } from '@/shared/components';
 import { mapCollateral } from '@features/request/data/mapCollateral.ts';
+import {
+  AERIAL_TITLE_TYPES,
+  LAND_PARCEL_TITLE_TYPES,
+  RAWANG_TITLE_TYPES,
+  SURVEY_TITLE_TYPES,
+} from '@/shared/constants/titleTypes';
 
 // =============================================================================
 // Utility
@@ -194,7 +200,8 @@ export function makeAddressFields(t: TFunction<'request'>): FormField[] {
       provinceNameField: 'detail.address.provinceName',
       postcodeField: 'detail.address.postcode',
       subDistrictNameField: 'detail.address.subDistrictName',
-      addressSource: 'title',
+      // Administrative address -> DOPA master (กรมการปกครอง), not the Title (deed) master.
+      addressSource: 'dopa',
       wrapperClassName: 'col-span-3',
       required: true,
     },
@@ -530,7 +537,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleNumber'),
       name: 'titleNumber',
       wrapperClassName: 'col-span-2',
-      maxLength: 200,
+      maxLength: 500,
       requiredWhen: {
         field: 'collateralType',
         is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -557,6 +564,31 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       name: 'rawang',
       wrapperClassName: 'col-span-2',
       maxLength: 30,
+      showWhen: { field: 'titleType', is: RAWANG_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.mapSheetNumber'),
+      name: 'mapSheetNumber',
+      wrapperClassName: 'col-span-2',
+      maxLength: 10,
+      showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.aerialMapName'),
+      name: 'aerialMapName',
+      wrapperClassName: 'col-span-2',
+      maxLength: 100,
+      showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.aerialMapNumber'),
+      name: 'aerialMapNumber',
+      wrapperClassName: 'col-span-2',
+      maxLength: 50,
+      showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'text-input',
@@ -564,6 +596,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       name: 'landParcelNumber',
       wrapperClassName: 'col-span-2',
       maxLength: 10,
+      showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'text-input',
@@ -571,6 +604,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       name: 'surveyNumber',
       wrapperClassName: 'col-span-2',
       maxLength: 10,
+      showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'number-input',
@@ -701,7 +735,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleNumber'),
       name: 'titleNumber',
       wrapperClassName: 'col-span-4',
-      maxLength: 40,
+      maxLength: 500,
       requiredWhen: {
         field: 'collateralType',
         is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -712,7 +746,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       type: 'text-input',
       label: t('fields.roomNumber'),
       name: 'roomNumber',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: 'col-span-1',
       requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
       maxLength: 10,
     },
@@ -720,7 +754,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       type: 'text-input',
       label: t('fields.floorNumber'),
       name: 'floorNumber',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: 'col-span-1',
       requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
       maxLength: 10,
     },
@@ -728,6 +762,14 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       type: 'text-input',
       label: t('fields.buildingNumber'),
       name: 'buildingNumber',
+      wrapperClassName: 'col-span-2',
+      requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
+      maxLength: 30,
+    },
+    {
+      type: 'text-input',
+      label: t('fields.condoRegistrationNumber'),
+      name: 'condoRegistrationNumber',
       wrapperClassName: 'col-span-2',
       requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
       maxLength: 10,
@@ -1005,6 +1047,7 @@ export function makeTitleAddressFields(t: TFunction<'request'>): FormField[] {
       name: 'titleAddress.postcode',
       disabled: true,
       wrapperClassName: 'col-span-2',
+      hide: true,
     },
   ];
 }
@@ -1095,6 +1138,7 @@ export function makeDopaAddressFields(t: TFunction<'request'>): FormField[] {
       name: 'dopaAddress.postcode',
       disabled: true,
       wrapperClassName: 'col-span-2',
+      hide: true,
     },
   ];
 }
@@ -1191,6 +1235,31 @@ export const titleLandFields: FormField[] = [
     name: 'rawang',
     wrapperClassName: 'col-span-2',
     maxLength: 30,
+    showWhen: { field: 'titleType', is: RAWANG_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Sheet Number'),
+    name: 'mapSheetNumber',
+    wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Aerial Photo Name'),
+    name: 'aerialMapName',
+    wrapperClassName: 'col-span-2',
+    maxLength: 100,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Aerial Photo Number'),
+    name: 'aerialMapNumber',
+    wrapperClassName: 'col-span-2',
+    maxLength: 50,
+    showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -1198,6 +1267,7 @@ export const titleLandFields: FormField[] = [
     name: 'landParcelNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'text-input',
@@ -1205,6 +1275,7 @@ export const titleLandFields: FormField[] = [
     name: 'surveyNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
+    showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -1274,7 +1345,7 @@ export const titleBuildingFields: FormField[] = [
     requiredWhen: {
       field: 'collateralType',
       operator: 'in',
-      is: [...BUILDING_REQUIRED_TYPES, ...CONDO_TYPES],
+      is: [...CONDO_TYPES],
     },
     decimalPlaces: 2,
     maxIntegerDigits: 3,
@@ -1293,7 +1364,6 @@ export const titleBuildingFields: FormField[] = [
     label: _st('Number of Building'),
     name: 'numberOfBuilding',
     wrapperClassName: 'col-span-3',
-    requiredWhen: { field: 'collateralType', operator: 'in', is: BUILDING_REQUIRED_TYPES },
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
@@ -1318,7 +1388,7 @@ export const titleCondoFields: FormField[] = [
     label: _st('Title Number'),
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
-    maxLength: 40,
+    maxLength: 500,
     requiredWhen: {
       field: 'collateralType',
       is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -1329,7 +1399,7 @@ export const titleCondoFields: FormField[] = [
     type: 'text-input',
     label: _st('Room Number'),
     name: 'roomNumber',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-1',
     requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 10,
   },
@@ -1337,7 +1407,7 @@ export const titleCondoFields: FormField[] = [
     type: 'text-input',
     label: _st('Floor Number'),
     name: 'floorNumber',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-1',
     requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 10,
   },
@@ -1345,6 +1415,14 @@ export const titleCondoFields: FormField[] = [
     type: 'text-input',
     label: _st('Building Number'),
     name: 'buildingNumber',
+    wrapperClassName: 'col-span-2',
+    requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
+    maxLength: 30,
+  },
+  {
+    type: 'text-input',
+    label: _st('Condo Registration Number'),
+    name: 'condoRegistrationNumber',
     wrapperClassName: 'col-span-2',
     requiredWhen: { field: 'collateralType', is: CONDO_TYPES, operator: 'in' },
     maxLength: 10,
@@ -1607,6 +1685,7 @@ export const titleAddressFields: FormField[] = [
     name: 'titleAddress.postcode',
     disabled: true,
     wrapperClassName: 'col-span-2',
+    hide: true,
   },
 ];
 
@@ -1695,6 +1774,7 @@ export const dopaAddressFields: FormField[] = [
     name: 'dopaAddress.postcode',
     disabled: true,
     wrapperClassName: 'col-span-2',
+    hide: true,
   },
 ];
 
@@ -1715,8 +1795,6 @@ export const titlesFieldConfig: FieldArrayField = {
     ...dopaAddressFields,
     // Schema-only fields (not in any rendering config)
     { type: 'text-input', name: 'titleDetail', label: 'Title Detail' },
-    { type: 'text-input', name: 'aerialMapName', label: 'Aerial Map Name' },
-    { type: 'text-input', name: 'aerialMapNumber', label: 'Aerial Map Number' },
   ]),
 };
 
@@ -1768,7 +1846,8 @@ export const addressFields: FormField[] = [
     provinceNameField: 'detail.address.provinceName',
     postcodeField: 'detail.address.postcode',
     subDistrictNameField: 'detail.address.subDistrictName',
-    addressSource: 'title',
+    // Administrative address -> DOPA master (กรมการปกครอง), not the Title (deed) master.
+    addressSource: 'dopa',
     wrapperClassName: 'col-span-3',
     required: true,
   },

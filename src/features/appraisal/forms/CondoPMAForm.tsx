@@ -3,6 +3,8 @@ import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import { useRelativeTime } from '@/shared/hooks/useFormatters';
 import { pmaField, condoPmaDetailFields, condoPmaAddressFields } from '../configs/fields';
+import { useFormContext, useWatch } from 'react-hook-form';
+import { useEffect } from 'react';
 
 type CondoPMAFormProps = {
   externalSyncStatus?: string | null;
@@ -18,8 +20,16 @@ const CondoPMAForm = ({
   const relTime = useRelativeTime();
   const synced = externalSyncedAt ? relTime(externalSyncedAt) : null;
 
+  const { setValue } = useFormContext();
+  const sellingPrice = useWatch({ name: 'sellingPrice' });
+
+  useEffect(() => {
+    const forceSalePrice = (sellingPrice * 70) / 100;
+    setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
+  }, [sellingPrice, setValue]);
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="cas-section-stack flex flex-col gap-6">
       {/* Property Section — sync status badge sits on this header line */}
       <div id="property-section">
         <div className="flex items-center justify-between mb-4">
@@ -63,15 +73,19 @@ const CondoPMAForm = ({
           )}
         </div>
         <div className="h-px bg-gray-200 mb-4" />
-        <div className="text-xs font-medium text-primary mb-2">Title Information</div>
+        <div className="cas-section-head text-xs font-medium text-primary mb-2">
+          <span>Title Information</span>
+        </div>
         <div className="grid grid-cols-9 gap-4">
           <FormFields fields={condoPmaDetailFields} />
         </div>
 
         {/* Address sub-group */}
-        <div className="mt-5">
-          <div className="text-xs font-medium text-primary mb-2">Address</div>
-          <div className="grid grid-cols-9 gap-4">
+        <div>
+          <div className="cas-section-head text-xs font-medium text-primary mb-2">
+          <span>Title Address</span>
+        </div>
+          <div className="grid grid-cols-12 gap-4">
             <FormFields fields={condoPmaAddressFields} />
           </div>
         </div>
@@ -79,7 +93,9 @@ const CondoPMAForm = ({
 
       {/* Value Section (prices) */}
       <div id="value-section">
-        <div className="text-xs font-medium text-primary mb-2">Value Information</div>
+        <div className="cas-section-head text-xs font-medium text-primary mb-2">
+          <span>Value Information</span>
+        </div>
         <div className="grid grid-cols-9 gap-4">
           <FormFields fields={pmaField} />
         </div>

@@ -303,12 +303,14 @@ export const createRequestFormDefault: createRequestFormType = {
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
   collateralStatus: false,
-  titleNumber: '',
+  titleNumber: null,
+  builtOnTitleNumber: null,
   titleType: '',
   notes: '',
   bookNumber: '',
   pageNumber: '',
   rawang: '',
+  mapSheetNumber: '',
   landParcelNumber: '',
   surveyNumber: '',
   aerialMapName: '',
@@ -336,6 +338,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   numberOfBuilding: null,
   condoName: '',
   buildingNumber: '',
+  condoRegistrationNumber: '',
   roomNumber: '',
   floorNumber: '',
   titleAddress: {

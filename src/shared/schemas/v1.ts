@@ -1211,8 +1211,8 @@ const GetQuotationByIdResponse = z
   .passthrough();
 const UpdatePricingAnalysisRequest = z
   .object({
-    marketValue: z.number(),
-    appraisedValue: z.number(),
+    marketValue: z.number().nullable(),
+    appraisedValue: z.number().nullable(),
     forcedSaleValue: z.number().nullable(),
     useSystemCalc: z.boolean().nullable(),
   })
@@ -1225,6 +1225,12 @@ const MethodDto = z
     methodValue: z.number().nullable(),
     isSelected: z.boolean(),
     comparativeAnalysisTemplateId: z.string().uuid().nullable(),
+    valuePerUnit: z.number().nullish(),
+    unitType: z.string().nullish(),
+    landArea: z.number().nullish(),
+    landValue: z.number().nullish(),
+    buildingValue: z.number().nullish(),
+    appraisalPrice: z.number().nullish(),
   })
   .passthrough();
 const ApproachDto = z
@@ -1259,6 +1265,30 @@ const GetPricingAnalysisResponse = z
     approaches: z.array(ApproachDto),
     documents: z.array(PricingAnalysisDocumentDto),
     remark: z.string().nullable(),
+    landAreaInSqWa: z.number().nullish(),
+    buildingValue: z.number().nullish(),
+  })
+  .passthrough();
+const SetManualCostBreakdownRequest = z
+  .object({
+    landRatePerSqWa: z.number().nullable().default(null),
+    appraisalPrice: z.number().nullable().default(null),
+  })
+  .partial()
+  .passthrough();
+const SetManualCostBreakdownResponse = z
+  .object({
+    methodId: z.string().uuid(),
+    finalValueId: z.string().uuid().nullable(),
+    landRatePerSqWa: z.number().nullish(),
+    landArea: z.number().nullish(),
+    landValue: z.number().nullish(),
+    buildingValue: z.number().nullish(),
+    computedTotal: z.number(),
+    appraisalPrice: z.number().nullish(),
+    methodValue: z.number().nullish(),
+    approachValue: z.number().nullish(),
+    finalAppraisedValue: z.number().nullish(),
   })
   .passthrough();
 const UpdateMethodRequest = z
@@ -2078,12 +2108,17 @@ const SaveDecisionSummaryRequest = z
     condition: z.string().nullable().default(null),
     remarkType: z.string().nullable().default(null),
     remark: z.string().nullable().default(null),
-    appraiserOpinionType: z.string().nullable().default(null),
-    appraiserOpinion: z.string().nullable().default(null),
+    externalAppraiserOpinionType: z.string().nullable().default(null),
+    externalAppraiserOpinion: z.string().nullable().default(null),
     committeeOpinionType: z.string().nullable().default(null),
     committeeOpinion: z.string().nullable().default(null),
+    internalAppraiserOpinionType: z.string().nullable().default(null),
+    internalAppraiserOpinion: z.string().nullable().default(null),
     totalAppraisalPriceReview: z.number().nullable().default(null),
     additionalAssumptions: z.string().nullable().default(null),
+    hasConstructionLicenseDoc: z.boolean().nullable().default(null),
+    hasConstructionProgressTableDoc: z.boolean().nullable().default(null),
+    hasConstructionPhotoDoc: z.boolean().nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -2096,12 +2131,17 @@ const SaveDecisionSummaryResponse = z
     condition: z.string().nullable(),
     remarkType: z.string().nullable(),
     remark: z.string().nullable(),
-    appraiserOpinionType: z.string().nullable(),
-    appraiserOpinion: z.string().nullable(),
+    externalAppraiserOpinionType: z.string().nullable(),
+    externalAppraiserOpinion: z.string().nullable(),
     committeeOpinionType: z.string().nullable(),
     committeeOpinion: z.string().nullable(),
+    internalAppraiserOpinionType: z.string().nullable(),
+    internalAppraiserOpinion: z.string().nullable(),
     totalAppraisalPriceReview: z.number().nullable(),
     additionalAssumptions: z.string().nullable(),
+    hasConstructionLicenseDoc: z.boolean().nullable(),
+    hasConstructionProgressTableDoc: z.boolean().nullable(),
+    hasConstructionPhotoDoc: z.boolean().nullable(),
   })
   .passthrough();
 const ApproachItem = z
@@ -2161,11 +2201,19 @@ const GetDecisionSummaryResponse = z
     condition: z.string().nullable(),
     remarkType: z.string().nullable(),
     remark: z.string().nullable(),
-    appraiserOpinionType: z.string().nullable(),
-    appraiserOpinion: z.string().nullable(),
+    externalAppraiserOpinionType: z.string().nullable(),
+    externalAppraiserOpinion: z.string().nullable(),
     committeeOpinionType: z.string().nullable(),
     committeeOpinion: z.string().nullable(),
+    internalAppraiserOpinionType: z.string().nullable(),
+    internalAppraiserOpinion: z.string().nullable(),
     additionalAssumptions: z.string().nullable(),
+    hasConstructionLicenseDoc: z.boolean().nullable(),
+    hasConstructionProgressTableDoc: z.boolean().nullable(),
+    hasConstructionPhotoDoc: z.boolean().nullable(),
+    constructionLicenseDocAttached: z.boolean(),
+    constructionProgressTableDocAttached: z.boolean(),
+    constructionPhotoDocAttached: z.boolean(),
   })
   .passthrough();
 const UpdateComparativeAnalysisTemplateRequest = z
@@ -2360,7 +2408,9 @@ const AssignAppraisalRequest = z
     internalFollowupAssignmentMethod: z.string().nullish().default(null),
     assignedBy: z.string().nullish().default(null),
     workflowInstanceId: z.string().uuid(),
-    decisionTaken: z.enum(['EXT', 'INT']),
+    // EXTO = external company engaged outside the system; routes to int-offline-book-keyin
+    // so an internal appraiser can key that company's book in.
+    decisionTaken: z.enum(['EXT', 'INT', 'EXTO']),
   })
   .passthrough();
 const AssignAppraisalResponse = z.object({ assignmentId: z.string().uuid() }).passthrough();
@@ -2696,6 +2746,9 @@ const UpdateLandPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     hasObligation: z.boolean().nullable().default(null),
@@ -2793,6 +2846,9 @@ const GetLandPropertyResponse = z
     subDistrict: z.string().nullable(),
     district: z.string().nullable(),
     province: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
     isLandLocationVerified: z.boolean().nullable(),
@@ -2942,6 +2998,9 @@ const UpdateLandAndBuildingPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     hasObligation: z.boolean().nullable().default(null),
@@ -3162,8 +3221,20 @@ const GetLandAndBuildingPropertyResponse = z
     district: z.string().nullable(),
     province: z.string().nullable(),
     landOffice: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
     ownerName: z.string().nullable(),
     isOwnerVerified: z.boolean().nullable(),
+    // `ownerName`/`isOwnerVerified` above are pre-existing and left in place so no other
+    // consumer's typing breaks, but per team lead (2026-08-20, verified against the C#
+    // handler) the wire actually carries these split per side: `OwnerNameLand`/
+    // `IsOwnerVerifiedLand` from landDetail, `OwnerNameBuilding`/`IsOwnerVerifiedBuilding`
+    // from buildingDetail (declared here, populated near the building fields below).
+    // Only ONE hasObligation/obligationDetails exists for the whole LB property (land-only
+    // — the building side's own obligation exists in the domain but isn't exposed here).
+    ownerNameLand: z.string().nullable().optional(),
+    isOwnerVerifiedLand: z.boolean().nullable().optional(),
     hasObligation: z.boolean().nullable(),
     obligationDetails: z.string().nullable(),
     isLandLocationVerified: z.boolean().nullable(),
@@ -3239,6 +3310,8 @@ const GetLandAndBuildingPropertyResponse = z
     modelName: z.string().nullable(),
     builtOnTitleNumber: z.string().nullable(),
     houseNumber: z.string().nullable(),
+    ownerNameBuilding: z.string().nullable().optional(),
+    isOwnerVerifiedBuilding: z.boolean().nullable().optional(),
     buildingConditionType: z.string().nullable(),
     buildingConditionTypeOther: z.string().nullable(),
     isUnderConstruction: z.boolean().nullable(),
@@ -3283,8 +3356,14 @@ const GetLandAndBuildingPropertyResponse = z
     buildingInsurancePrice: z.number().nullable(),
     sellingPrice: z.number().nullable(),
     forcedSalePrice: z.number().nullable(),
+    // `landRemark`/`buildingRemark` below are pre-existing schema drift — real on the
+    // create/update request schemas, but per team lead (2026-08-20, verified against
+    // GetLandAndBuildingPropertyResult.cs:174) the GET response has exactly ONE
+    // `remark`, sourced from landDetail. Left in place so nothing else's typing
+    // breaks; `remark` added as the accurate field.
     landRemark: z.string().nullable(),
     buildingRemark: z.string().nullable(),
+    remark: z.string().nullable().optional(),
     depreciationDetails: z.array(BuildingAppraisalDepreciationDetailDto),
     surfaces: z.array(BuildingAppraisalSurfaceDto),
     constructionInspection: ConstructionInspectionDto.nullable(),
@@ -3324,6 +3403,9 @@ const UpdateCondoPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     buildingConditionType: z.string().nullable().default(null),
@@ -3393,7 +3475,13 @@ const GetCondoPropertyResponse = z
     builtOnTitleNumber: z.string().nullable(),
     condoRegistrationNumber: z.string().nullable(),
     roomNumber: z.string().nullable(),
-    floorNumber: z.number().int().nullable(),
+    // Was `z.number().int()` — confirmed string on the backend (team lead, 2026-08-20).
+    floorNumber: z.string().nullable(),
+    // Added 2026-08-20 for the Appraisal Data Correction feature — GetCondoPropertyResult
+    // previously had none of these three.
+    physicalFloorNumber: z.number().int().nullable(),
+    titleNumber: z.string().nullable(),
+    titleType: z.string().nullable(),
     usableArea: z.number().nullable(),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
@@ -3401,6 +3489,9 @@ const GetCondoPropertyResponse = z
     district: z.string().nullable(),
     province: z.string().nullable(),
     landOffice: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
     ownerName: z.string().nullable(),
     isOwnerVerified: z.boolean().nullable(),
     buildingConditionType: z.string().nullable(),
@@ -3476,7 +3567,7 @@ const UpdateBuildingPropertyRequest = z
     obligationDetails: z.string().nullable().default(null),
     buildingType: z.string().nullable().default(null),
     buildingTypeOther: z.string().nullable().default(null),
-    numberOfFloors: z.number().int().nullable().default(null),
+    numberOfFloors: z.number().nullable().default(null),
     decorationType: z.string().nullable().default(null),
     decorationTypeOther: z.string().nullable().default(null),
     isEncroachingOthers: z.boolean().nullable().default(null),
@@ -4116,6 +4207,9 @@ const CreateLandPropertyRequest = z
     district: z.string().nullish().default(null),
     province: z.string().nullish().default(null),
     landOffice: z.string().nullish().default(null),
+    dopaSubDistrict: z.string().nullish().default(null),
+    dopaDistrict: z.string().nullish().default(null),
+    dopaProvince: z.string().nullish().default(null),
     isOwnerVerified: z.boolean().nullish().default(null),
     hasObligation: z.boolean().nullish().default(null),
     obligationDetails: z.string().nullish().default(null),
@@ -4201,6 +4295,9 @@ const CreateLandAndBuildingPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     hasObligation: z.boolean().nullable().default(null),
@@ -4292,7 +4389,7 @@ const CreateLandAndBuildingPropertyRequest = z
     totalBuildingArea: z.number().nullable().default(null),
     buildingAreaUnit: z.string().nullable().default(null),
     usableArea: z.number().nullable().default(null),
-    numberOfFloors: z.number().int().nullable().default(null),
+    numberOfFloors: z.number().nullable().default(null),
     buildingMaterialType: z.string().nullable().default(null),
     buildingStyleType: z.string().nullable().default(null),
     isResidential: z.boolean().nullable().default(null),
@@ -4357,6 +4454,9 @@ const CreateCondoPropertyRequest = z
     district: z.string().nullable().default(null),
     province: z.string().nullable().default(null),
     landOffice: z.string().nullable().default(null),
+    dopaSubDistrict: z.string().nullable().default(null),
+    dopaDistrict: z.string().nullable().default(null),
+    dopaProvince: z.string().nullable().default(null),
     ownerName: z.string().nullable().default(null),
     isOwnerVerified: z.boolean().nullable().default(null),
     buildingConditionType: z.string().nullable().default(null),
@@ -4377,7 +4477,7 @@ const CreateCondoPropertyRequest = z
     decorationTypeOther: z.string().nullable().default(null),
     buildingAge: z.number().int().nullable().default(null),
     constructionYear: z.number().int().nullable().default(null),
-    numberOfFloors: z.number().int().nullable().default(null),
+    numberOfFloors: z.number().nullable().default(null),
     buildingFormType: z.string().nullable().default(null),
     constructionMaterialType: z.string().nullable().default(null),
     roomLayoutType: z.string().nullable().default(null),
@@ -4435,7 +4535,7 @@ const CreateBuildingPropertyRequest = z
     obligationDetails: z.string().nullable().default(null),
     buildingType: z.string().nullable().default(null),
     buildingTypeOther: z.string().nullable().default(null),
-    numberOfFloors: z.number().int().nullable().default(null),
+    numberOfFloors: z.number().nullable().default(null),
     decorationType: z.string().nullable().default(null),
     decorationTypeOther: z.string().nullable().default(null),
     isEncroachingOthers: z.boolean().nullable().default(null),
@@ -4657,6 +4757,317 @@ const SimulateTransitionCompletedRequest = z
   .partial()
   .passthrough();
 
+// =============================================================================
+// PMA Property schemas
+// =============================================================================
+const GetLandPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  appraisalId: z.string().uuid(),
+  sellingPrice: z.number().nullable(),
+  forcedSalePrice: z.number().nullable(),
+  buildingInsurancePrice: z.number().nullable(),
+  externalSyncStatus: z.string(),
+  externalSyncError: z.string().nullable(),
+  externalSyncedAt: z.string().nullable(),
+  subDistrict: z.string().nullable(),
+  district: z.string().nullable(),
+  province: z.string().nullable(),
+  titles: z.array(LandTitleItemData).nullable(),
+});
+
+const GetCondoPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  appraisalId: z.string().uuid(),
+  buildingInsurancePrice: z.number().nullable(),
+  sellingPrice: z.number().nullable(),
+  forcedSalePrice: z.number().nullable(),
+  externalSyncStatus: z.string(),
+  externalSyncError: z.string().nullable(),
+  externalSyncedAt: z.string().nullable(),
+  condoName: z.string().nullable(),
+  buildingNumber: z.string().nullable(),
+  builtOnTitleNumber: z.string().nullable(),
+  condoRegistrationNumber: z.string().nullable(),
+  roomNumber: z.string().nullable(),
+  floorNumber: z.string().nullable(),
+  subDistrict: z.string().nullable(),
+  district: z.string().nullable(),
+  province: z.string().nullable(),
+});
+
+const CreateLandPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  titles: z.array(LandTitleItemData).nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+const CreateLandPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  landDetailId: z.string().uuid(),
+});
+
+const CreateCondoPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  condoName: z.string().nullable().optional(),
+  builtOnTitleNumber: z.string().nullable().optional(),
+  condoRegistrationNumber: z.string().nullable().optional(),
+  roomNumber: z.string().nullable().optional(),
+  floorNumber: z.string().nullable().optional(),
+  buildingNumber: z.string().nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+const CreateCondoPMAPropertyResponse = z.object({
+  propertyId: z.string().uuid(),
+  detailId: z.string().uuid(),
+});
+
+const UpdateLandPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  titles: z.array(LandTitleItemData).nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+const UpdateCondoPMAPropertyRequest = z.object({
+  sellingPrice: z.number().nullable().optional(),
+  forcedSalePrice: z.number().nullable().optional(),
+  buildingInsurancePrice: z.number().nullable().optional(),
+  condoName: z.string().nullable().optional(),
+  builtOnTitleNumber: z.string().nullable().optional(),
+  condoRegistrationNumber: z.string().nullable().optional(),
+  roomNumber: z.string().nullable().optional(),
+  floorNumber: z.string().nullable().optional(),
+  buildingNumber: z.string().nullable().optional(),
+  subDistrict: z.string().nullable().optional(),
+  district: z.string().nullable().optional(),
+  province: z.string().nullable().optional(),
+});
+
+// ─── Appraisal Data Correction ────────────────────────────────────────────
+// Hand-added: no codegen script in this repo for the correction endpoints.
+// Every field is optional — null/absent means "leave unchanged" on the wire;
+// the FE only ever sends dirty fields. See appraisalDataCorrection feature.
+const LandTitleCorrectionRequest = z
+  .object({
+    titleId: z.string().uuid(),
+    titleNumber: z.string().nullable(),
+    titleType: z.string().nullable(),
+    bookNumber: z.string().nullable(),
+    pageNumber: z.string().nullable(),
+    landParcelNumber: z.string().nullable(),
+    surveyNumber: z.string().nullable(),
+    mapSheetNumber: z.string().nullable(),
+    rawang: z.string().nullable(),
+    aerialMapName: z.string().nullable(),
+    aerialMapNumber: z.string().nullable(),
+    boundaryMarkerType: z.string().nullable(),
+    boundaryMarkerRemark: z.string().nullable(),
+    documentValidationResultType: z.string().nullable(),
+    isMissingFromSurvey: z.boolean().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial()
+  .extend({ titleId: z.string().uuid() });
+const LandCorrectionRequest = z
+  .object({
+    propertyName: z.string().nullable(),
+    landDescription: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
+    subDistrict: z.string().nullable(),
+    district: z.string().nullable(),
+    province: z.string().nullable(),
+    landOffice: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    isOwnerVerified: z.boolean().nullable(),
+    // Coded value ('02'..'99'), not a boolean — matches the radio-group field config.
+    hasObligation: z.string().nullable(),
+    obligationDetails: z.string().nullable(),
+    isLandLocationVerified: z.boolean().nullable(),
+    landCheckMethodType: z.string().nullable(),
+    landCheckMethodTypeOther: z.string().nullable(),
+    street: z.string().nullable(),
+    soi: z.string().nullable(),
+    village: z.string().nullable(),
+    addressLocation: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const BuildingCorrectionRequest = z
+  .object({
+    propertyName: z.string().nullable(),
+    buildingNumber: z.string().nullable(),
+    modelName: z.string().nullable(),
+    builtOnTitleNumber: z.string().nullable(),
+    houseNumber: z.string().nullable(),
+    // Coded value, not a boolean.
+    noHouseNumber: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    isOwnerVerified: z.boolean().nullable(),
+    hasObligation: z.string().nullable(),
+    obligationDetails: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const CondoCorrectionRequest = z
+  .object({
+    propertyName: z.string().nullable(),
+    condoName: z.string().nullable(),
+    buildingNumber: z.string().nullable(),
+    modelName: z.string().nullable(),
+    builtOnTitleNumber: z.string().nullable(),
+    condoRegistrationNumber: z.string().nullable(),
+    roomNumber: z.string().nullable(),
+    // String, unlike GetCondoPropertyResponse.floorNumber (number) — DTO trap.
+    floorNumber: z.string().nullable(),
+    physicalFloorNumber: z.number().nullable(),
+    titleNumber: z.string().nullable(),
+    titleType: z.string().nullable(),
+    latitude: z.number().nullable(),
+    longitude: z.number().nullable(),
+    subDistrict: z.string().nullable(),
+    district: z.string().nullable(),
+    province: z.string().nullable(),
+    landOffice: z.string().nullable(),
+    dopaSubDistrict: z.string().nullable(),
+    dopaDistrict: z.string().nullable(),
+    dopaProvince: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    isOwnerVerified: z.boolean().nullable(),
+    hasObligation: z.string().nullable(),
+    obligationDetails: z.string().nullable(),
+    documentValidationResultType: z.string().nullable(),
+    street: z.string().nullable(),
+    soi: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const VehicleCorrectionRequest = z
+  .object({
+    propertyName: z.string().nullable(),
+    vehicleName: z.string().nullable(),
+    engineNo: z.string().nullable(),
+    chassisNo: z.string().nullable(),
+    registrationNumber: z.string().nullable(),
+    brand: z.string().nullable(),
+    model: z.string().nullable(),
+    countryOfManufacture: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    isOwnerVerified: z.boolean().nullable(),
+    location: z.string().nullable(),
+    other: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const VesselCorrectionRequest = z
+  .object({
+    propertyName: z.string().nullable(),
+    vesselName: z.string().nullable(),
+    vesselCurrentName: z.string().nullable(),
+    formerName: z.string().nullable(),
+    engineNo: z.string().nullable(),
+    registrationNumber: z.string().nullable(),
+    registrationDate: z.string().datetime({ offset: true }).nullable(),
+    vesselType: z.string().nullable(),
+    classOfVessel: z.string().nullable(),
+    brand: z.string().nullable(),
+    model: z.string().nullable(),
+    placeOfManufacture: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    isOwnerVerified: z.boolean().nullable(),
+    location: z.string().nullable(),
+    other: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const MachineryCorrectionRequest = z
+  .object({
+    propertyName: z.string().nullable(),
+    machineName: z.string().nullable(),
+    engineNo: z.string().nullable(),
+    chassisNo: z.string().nullable(),
+    registrationNumber: z.string().nullable(),
+    serialNo: z.string().nullable(),
+    brand: z.string().nullable(),
+    model: z.string().nullable(),
+    series: z.string().nullable(),
+    manufacturer: z.string().nullable(),
+    ownerName: z.string().nullable(),
+    isOwnerVerified: z.boolean().nullable(),
+    location: z.string().nullable(),
+    other: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const LeaseAgreementCorrectionRequest = z
+  .object({
+    lesseeName: z.string().nullable(),
+    lessorName: z.string().nullable(),
+    contractNo: z.string().nullable(),
+    remark: z.string().nullable(),
+  })
+  .partial();
+const CorrectPropertyDataRequest = z
+  .object({
+    reason: z.string().min(1).max(1000),
+    description: z.string().nullable(),
+    land: LandCorrectionRequest.nullable(),
+    landTitles: z.array(LandTitleCorrectionRequest).nullable(),
+    building: BuildingCorrectionRequest.nullable(),
+    condo: CondoCorrectionRequest.nullable(),
+    vehicle: VehicleCorrectionRequest.nullable(),
+    vessel: VesselCorrectionRequest.nullable(),
+    machinery: MachineryCorrectionRequest.nullable(),
+    leaseAgreement: LeaseAgreementCorrectionRequest.nullable(),
+  })
+  .partial()
+  .extend({ reason: z.string().min(1).max(1000) });
+const CorrectPropertyDataResponse = z
+  .object({
+    appraisalId: z.string().uuid(),
+    propertyId: z.string().uuid(),
+    changedFieldCount: z.number().int(),
+    // JSON-encoded diff string — parsed on demand by the caller, not eagerly here.
+    changedFields: z.string(),
+  })
+  .passthrough();
+const PropertyCorrectionChangeDto = z
+  .object({
+    field: z.string(),
+    from: z.string().nullable(),
+    to: z.string().nullable(),
+  })
+  .passthrough();
+const PropertyCorrectionDto = z
+  .object({
+    id: z.string().uuid(),
+    appraisalPropertyId: z.string().uuid(),
+    propertyType: z.string(),
+    reason: z.string(),
+    changedBy: z.string(),
+    changedAt: z.string().datetime({ offset: true }),
+    changes: z.array(PropertyCorrectionChangeDto),
+  })
+  .passthrough();
+const GetPropertyCorrectionsResponse = z
+  .object({ corrections: z.array(PropertyCorrectionDto) })
+  .passthrough();
+
 export const schemas = {
   SearchResultItem,
   GlobalSearchResults,
@@ -4815,6 +5226,8 @@ export const schemas = {
   ApproachDto,
   PricingAnalysisDocumentDto,
   GetPricingAnalysisResponse,
+  SetManualCostBreakdownRequest,
+  SetManualCostBreakdownResponse,
   UpdateMethodRequest,
   UpdateMethodResponse,
   UpdateFinalValueRequest,
@@ -4947,6 +5360,14 @@ export const schemas = {
   UpdateVesselPropertyRequest,
   GetVesselPropertyResponse,
   UpdateVehiclePropertyRequest,
+  GetLandPMAPropertyResponse,
+  GetCondoPMAPropertyResponse,
+  CreateLandPMAPropertyRequest,
+  CreateLandPMAPropertyResponse,
+  CreateCondoPMAPropertyRequest,
+  CreateCondoPMAPropertyResponse,
+  UpdateLandPMAPropertyRequest,
+  UpdateCondoPMAPropertyRequest,
   GetVehiclePropertyResponse,
   UpdatePropertyGroupRequest,
   UpdatePropertyGroupResponse,
@@ -5074,6 +5495,19 @@ export const schemas = {
   SimulateTaskCompletionRequest,
   SimulateTaskAssignmentRequest,
   SimulateTransitionCompletedRequest,
+  LandTitleCorrectionRequest,
+  LandCorrectionRequest,
+  BuildingCorrectionRequest,
+  CondoCorrectionRequest,
+  VehicleCorrectionRequest,
+  VesselCorrectionRequest,
+  MachineryCorrectionRequest,
+  LeaseAgreementCorrectionRequest,
+  CorrectPropertyDataRequest,
+  CorrectPropertyDataResponse,
+  PropertyCorrectionChangeDto,
+  PropertyCorrectionDto,
+  GetPropertyCorrectionsResponse,
 };
 
 export type CreateRequestRequestType = z.infer<typeof CreateRequestRequest>;
@@ -5107,6 +5541,16 @@ export type GetLandAndBuildingPropertyResponseType = z.infer<
   typeof GetLandAndBuildingPropertyResponse
 >;
 export type GetMachineryPropertyResponseType = z.infer<typeof GetMachineryPropertyResponse>;
+// PMA Property types
+export type GetLandPMAPropertyResponseType = z.infer<typeof GetLandPMAPropertyResponse>;
+export type GetCondoPMAPropertyResponseType = z.infer<typeof GetCondoPMAPropertyResponse>;
+export type CreateLandPMAPropertyRequestType = z.infer<typeof CreateLandPMAPropertyRequest>;
+export type CreateLandPMAPropertyResponseType = z.infer<typeof CreateLandPMAPropertyResponse>;
+export type CreateCondoPMAPropertyRequestType = z.infer<typeof CreateCondoPMAPropertyRequest>;
+export type CreateCondoPMAPropertyResponseType = z.infer<typeof CreateCondoPMAPropertyResponse>;
+export type UpdateLandPMAPropertyRequestType = z.infer<typeof UpdateLandPMAPropertyRequest>;
+export type UpdateCondoPMAPropertyRequestType = z.infer<typeof UpdateCondoPMAPropertyRequest>;
+
 
 // Property Update response types
 // export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;
@@ -5253,6 +5697,34 @@ export type CreateMarketComparableFactorRequestType = z.infer<
 export type UpdateMarketComparableFactorRequestType = z.infer<
   typeof UpdateMarketComparableFactorRequest
 >;
+
+// Property group types (schemas existed but were never exported as named types)
+export type PropertyGroupDtoType = z.infer<typeof PropertyGroupDto>;
+export type GetPropertyGroupsResponseType = z.infer<typeof GetPropertyGroupsResponse>;
+export type PropertyGroupItemDtoType = z.infer<typeof PropertyGroupItemDto>;
+export type GetPropertyGroupByIdResponseType = z.infer<typeof GetPropertyGroupByIdResponse>;
+
+// Vehicle / Vessel property types (schemas existed but were never exported — needed to
+// build GET hooks for the appraisal-side vehicle/vessel property, which property.ts lacks)
+export type GetVehiclePropertyResponseType = z.infer<typeof GetVehiclePropertyResponse>;
+export type GetVesselPropertyResponseType = z.infer<typeof GetVesselPropertyResponse>;
+export type UpdateVehiclePropertyRequestType = z.infer<typeof UpdateVehiclePropertyRequest>;
+export type UpdateVesselPropertyRequestType = z.infer<typeof UpdateVesselPropertyRequest>;
+
+// Appraisal Data Correction types
+export type LandTitleCorrectionRequestType = z.infer<typeof LandTitleCorrectionRequest>;
+export type LandCorrectionRequestType = z.infer<typeof LandCorrectionRequest>;
+export type BuildingCorrectionRequestType = z.infer<typeof BuildingCorrectionRequest>;
+export type CondoCorrectionRequestType = z.infer<typeof CondoCorrectionRequest>;
+export type VehicleCorrectionRequestType = z.infer<typeof VehicleCorrectionRequest>;
+export type VesselCorrectionRequestType = z.infer<typeof VesselCorrectionRequest>;
+export type MachineryCorrectionRequestType = z.infer<typeof MachineryCorrectionRequest>;
+export type LeaseAgreementCorrectionRequestType = z.infer<typeof LeaseAgreementCorrectionRequest>;
+export type CorrectPropertyDataRequestType = z.infer<typeof CorrectPropertyDataRequest>;
+export type CorrectPropertyDataResponseType = z.infer<typeof CorrectPropertyDataResponse>;
+export type PropertyCorrectionChangeDtoType = z.infer<typeof PropertyCorrectionChangeDto>;
+export type PropertyCorrectionDtoType = z.infer<typeof PropertyCorrectionDto>;
+export type GetPropertyCorrectionsResponseType = z.infer<typeof GetPropertyCorrectionsResponse>;
 
 // Market Comparable Template detail types
 export type MarketComparableTemplateDetailDtoType = z.infer<

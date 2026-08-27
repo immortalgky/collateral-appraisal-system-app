@@ -22,6 +22,7 @@ export type GovernmentPriceRow = z.infer<typeof schemas.GovernmentPriceRow>;
 export interface CondoGovernmentPriceRow {
   titleNumber: string | null;
   roomNumber: string | null;
+  isMissingFromSurvey: boolean | null;
   usableArea: number | null;
   governmentPricePerSqm: number | null;
   governmentPrice: number | null;

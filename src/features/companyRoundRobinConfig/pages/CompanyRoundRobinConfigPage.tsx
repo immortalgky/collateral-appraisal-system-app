@@ -6,6 +6,7 @@ import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useCompaniesQuery, type CompanyOption } from '@shared/api/companies';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import {
   useListCompanyRoundRobinConfigs,
   useCreateCompanyRoundRobinConfig,
@@ -42,6 +43,7 @@ function ConfigModal({
   isSaving,
 }: ConfigModalProps) {
   const { t } = useTranslation('companyRoundRobinConfig');
+  const localizeCompanyName = useLocalizedCompanyName();
   const [loanType, setLoanType] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [entries, setEntries] = useState<CompanyWeight[]>([]);
@@ -55,9 +57,9 @@ function ConfigModal({
   }, [editing, isOpen]);
 
   const nameOf = useMemo(() => {
-    const map = new Map(companies.map(c => [c.id, c.companyName]));
+    const map = new Map(companies.map(c => [c.id, localizeCompanyName(c.companyName, c.companyNameLocal)]));
     return (id: string) => map.get(id) ?? id;
-  }, [companies]);
+  }, [companies, localizeCompanyName]);
 
   const availableCompanies = companies.filter(c => !entries.some(e => e.companyId === c.id));
 
@@ -128,7 +130,7 @@ function ConfigModal({
               <option value="">{t('modal.selectCompany')}</option>
               {availableCompanies.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.companyName}
+                  {localizeCompanyName(c.companyName, c.companyNameLocal)}
                 </option>
               ))}
             </select>

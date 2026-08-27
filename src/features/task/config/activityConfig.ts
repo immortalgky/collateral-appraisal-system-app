@@ -77,6 +77,13 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     icon: 'user',
     allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
   },
+  'int-offline-book-keyin': {
+    activityId: 'int-offline-book-keyin',
+    title: 'Offline Appraisal Book Keyin',
+    description: 'Tasks for keying in an appraisal book from a company engaged outside the system',
+    icon: 'keyboard',
+    allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalStaff'],
+  },
   'int-appraisal-check': {
     activityId: 'int-appraisal-check',
     title: 'Internal Appraisal Check',

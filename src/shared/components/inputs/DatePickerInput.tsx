@@ -309,7 +309,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     return (
       <div className={clsx('relative', fullWidth && 'w-full')}>
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-medium text-gray-700 mb-1">
+          <label data-field-label htmlFor={inputId} className="block text-xs font-medium text-gray-700 mb-1">
             {label}
             {required && <span className="text-danger ml-0.5">*</span>}
           </label>

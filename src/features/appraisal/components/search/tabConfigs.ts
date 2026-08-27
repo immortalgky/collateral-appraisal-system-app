@@ -6,8 +6,16 @@ import type { AppraisalDto } from '../../api/appraisalSearch';
 export interface FilterField {
   key: string;
   label: string;
-  type: 'text' | 'select' | 'date' | 'province-autocomplete' | 'company-autocomplete';
+  type:
+    | 'text'
+    | 'select'
+    | 'date'
+    | 'province-autocomplete'
+    | 'company-autocomplete'
+    | 'parameter-select';
   options?: { value: string; label: string }[];
+  /** Parameter group for type: 'parameter-select' (e.g. 'BankingSegment'). Options come from GET /parameters. */
+  parameterGroup?: string;
   placeholder?: string;
 }
 
@@ -200,9 +208,12 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
     label: t('list.filters.typeLabel'),
     type: 'select',
     placeholder: t('list.filters.typePlaceholder'),
+    // Mirrors the backend's AppraisalTypes.ValidValues — stored verbatim in the DB.
     options: [
       { value: 'New', label: t('list.appraisalType.New') },
-      { value: 'Revaluation', label: t('list.appraisalType.Revaluation') },
+      { value: 'ReAppraisal', label: t('list.appraisalType.ReAppraisal') },
+      { value: 'Progressive', label: t('list.appraisalType.Progressive') },
+      { value: 'PreAppraisal', label: t('list.appraisalType.PreAppraisal') },
     ],
   },
   {
@@ -214,6 +225,27 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
       { value: 'Internal', label: t('list.assignmentType.Internal') },
       { value: 'External', label: t('list.assignmentType.External') },
     ],
+  },
+  {
+    key: 'bankingSegment',
+    label: t('list.filters.bankingSegmentLabel'),
+    type: 'parameter-select',
+    parameterGroup: 'BankingSegment',
+    placeholder: t('list.filters.bankingSegmentPlaceholder'),
+  },
+  {
+    key: 'purpose',
+    label: t('list.filters.purposeLabel'),
+    type: 'parameter-select',
+    parameterGroup: 'AppraisalPurpose',
+    placeholder: t('list.filters.purposePlaceholder'),
+  },
+  {
+    key: 'propertyType',
+    label: t('list.filters.propertyTypeLabel'),
+    type: 'parameter-select',
+    parameterGroup: 'PropertyType',
+    placeholder: t('list.filters.propertyTypePlaceholder'),
   },
   {
     key: 'province',
@@ -241,6 +273,10 @@ export const makeAppraisalColumns = (t: TFunction<'appraisal'>): AppraisalColumn
   { key: 'slaStatus', label: t('list.columns.sla'), sortable: true },
   { key: 'province', label: t('list.columns.province'), sortable: true },
   { key: 'assignmentType', label: t('list.columns.assignment'), sortable: true },
+  { key: 'bankingSegment', label: t('list.columns.bankingSegment'), sortable: true },
+  { key: 'purpose', label: t('list.columns.purpose'), sortable: true },
+  // Comma-joined aggregate across the appraisal's properties — not meaningfully sortable
+  { key: 'propertyTypes', label: t('list.columns.propertyType'), sortable: false },
   { key: 'companyName', label: t('list.columns.company'), sortable: false },
   { key: 'appointmentDateTime', label: t('list.columns.appointment'), sortable: true },
   { key: 'createdAt', label: t('list.columns.created'), sortable: true },
@@ -290,7 +326,9 @@ export const appraisalFilters: FilterField[] = [
     placeholder: 'All types',
     options: [
       { value: 'New', label: 'New' },
-      { value: 'Revaluation', label: 'Revaluation' },
+      { value: 'ReAppraisal', label: 'Re-Appraisal' },
+      { value: 'Progressive', label: 'Progressive' },
+      { value: 'PreAppraisal', label: 'Pre-Appraisal' },
     ],
   },
   {
@@ -302,6 +340,27 @@ export const appraisalFilters: FilterField[] = [
       { value: 'Internal', label: 'Internal' },
       { value: 'External', label: 'External' },
     ],
+  },
+  {
+    key: 'bankingSegment',
+    label: 'Banking Segment',
+    type: 'parameter-select',
+    parameterGroup: 'BankingSegment',
+    placeholder: 'All segments',
+  },
+  {
+    key: 'purpose',
+    label: 'Purpose',
+    type: 'parameter-select',
+    parameterGroup: 'AppraisalPurpose',
+    placeholder: 'All purposes',
+  },
+  {
+    key: 'propertyType',
+    label: 'Property Type',
+    type: 'parameter-select',
+    parameterGroup: 'PropertyType',
+    placeholder: 'All property types',
   },
   {
     key: 'province',
@@ -329,6 +388,9 @@ export const appraisalColumns: AppraisalColumnDef[] = [
   { key: 'slaStatus', label: 'SLA', sortable: true },
   { key: 'province', label: 'Province', sortable: true },
   { key: 'assignmentType', label: 'Assignment', sortable: true },
+  { key: 'bankingSegment', label: 'Segment', sortable: true },
+  { key: 'purpose', label: 'Purpose', sortable: true },
+  { key: 'propertyTypes', label: 'Property Type', sortable: false },
   { key: 'companyName', label: 'Company', sortable: false },
   { key: 'appointmentDateTime', label: 'Appointment', sortable: true },
   { key: 'createdAt', label: 'Created', sortable: true },

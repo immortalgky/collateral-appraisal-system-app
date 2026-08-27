@@ -7,7 +7,10 @@ import CondoAreaDetailForm from './CondoAreaDetailForm';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import {
+  condoAddressFields,
+  condoDopaAddressFields,
   condoFields,
+  condoFieldsTail,
   condoLocationFields,
   condoLandCharacteristicsFields,
   condoGovernmentPriceFields,
@@ -29,6 +32,7 @@ import {
   remarkFormFields,
 } from '../configs/fields';
 import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
+import FieldGroupLabel from './FieldGroupLabel';
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -40,7 +44,7 @@ interface SectionRowProps {
 
 const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
   <>
-    <div className="col-span-full xl:col-span-1 pt-1">
+    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
       <div className="flex items-center gap-2">
         {icon && (
           <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
@@ -89,13 +93,21 @@ function CondoDetailForm() {
   useEffect(() => {
     const price = Number(govPricePerSqm) || 0;
     const area = Number(usableArea) || 0;
-    setValue('governmentPrice', price * area, { shouldValidate: true });
+    setValue('governmentPrice', Math.round(price * area * 100) / 100, { shouldValidate: true });
   }, [govPricePerSqm, usableArea, setValue]);
 
   const fields = useMemo<FormField[]>(
     () =>
       condoFields.map(field => {
         if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
+        return field;
+      }),
+    [fillIcon],
+  );
+
+  const tailFields = useMemo<FormField[]>(
+    () =>
+      condoFieldsTail.map(field => {
         if (
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
@@ -103,7 +115,7 @@ function CondoDetailForm() {
           return { ...field, rightIcon: pickerButton };
         return field;
       }),
-    [pickerButton, fillIcon],
+    [pickerButton],
   );
 
   // Building Insurance: buildingInsurancePrice is SERVER-DERIVED (rate × usableArea) —
@@ -132,13 +144,18 @@ function CondoDetailForm() {
   );
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
+    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
       <SectionRow title="Condominium Information" icon="building">
         {/* FormFields must remain a DIRECT child of the SectionRow grid so each
             field's wrapperClassName (col-span-3, col-span-6, etc.) resolves
             against the section's 12-col grid. The Latitude field's rightIcon
             opens the MapLocationPicker — no separate button needed. */}
         <FormFields fields={fields} />
+        <FieldGroupLabel label="Title Address" />
+        <FormFields fields={condoAddressFields} />
+        <FieldGroupLabel label="Dopa Address" />
+        <FormFields fields={condoDopaAddressFields} />
+        <FormFields fields={tailFields} />
       </SectionRow>
 
       <SectionRow title="Condominium Location" icon="map-location-dot">
@@ -211,9 +228,15 @@ function CondoDetailForm() {
         </div>
       </SectionRow>
 
-      <SectionRow title="Expropriation" icon="file-invoice">
+      {/* Expropriation and forest boundary are both legal limitations, and the land form
+          already groups them under one Limitation heading. Kept apart here, the condo form
+          split them with Facilities & Environment sitting between the two. */}
+      <SectionRow title={t('landCharacteristicsForm.sections.limitation')} icon="triangle-exclamation">
         <Card>
           <FormFields fields={expropriationFields} />
+        </Card>
+        <Card>
+          <FormFields fields={inForestBoundaryFormFields} />
         </Card>
       </SectionRow>
 
@@ -226,11 +249,6 @@ function CondoDetailForm() {
         </Card>
       </SectionRow>
 
-      <SectionRow title="In Forest Boundary" icon="tree-city">
-        <Card>
-          <FormFields fields={inForestBoundaryFormFields} />
-        </Card>
-      </SectionRow>
 
       <SectionRow title="Remarks" icon="comment" isLast>
         <FormFields fields={remarkFormFields} />

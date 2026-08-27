@@ -25,7 +25,10 @@ export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyResponseType,
 ): createLandFormType => {
   const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
+    ? findAddressBySubDistrictCode(response.subDistrict, 'title')
+    : undefined;
+  const dopaAddressLookup = response.dopaSubDistrict
+    ? findAddressBySubDistrictCode(response.dopaSubDistrict, 'dopa')
     : undefined;
   return {
     titles: (response as any).titles ?? [],
@@ -39,9 +42,15 @@ export const mapLandPropertyResponseToForm = (
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
+    dopaSubDistrict: response.dopaSubDistrict ?? '',
+    dopaSubDistrictName: dopaAddressLookup?.subDistrictName ?? '',
+    dopaDistrict: response.dopaDistrict ?? '',
+    dopaDistrictName: dopaAddressLookup?.districtName ?? '',
+    dopaProvince: response.dopaProvince ?? '',
+    dopaProvinceName: dopaAddressLookup?.provinceName ?? '',
     landDescription: response.landDescription ?? '',
-    isOwnerVerified: response.isOwnerVerified ?? false,
-    ownerName: response.ownerName ?? '',
+    isOwnerVerifiedLand: response.isOwnerVerified ?? true,
+    ownerNameLand: response.ownerName ?? '',
     hasObligation: response.hasObligation ?? '',
     obligationDetails: response.obligationDetails ?? '',
     isLandLocationVerified: response.isLandLocationVerified ?? false,
@@ -53,6 +62,7 @@ export const mapLandPropertyResponseToForm = (
     village: response.village ?? '',
     addressLocation: response.addressLocation ?? '',
     landShapeType: response.landShapeType ?? '',
+    landShapeTypeOther: response.landShapeTypeOther ?? '',
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
     landZoneTypeOther: response.landZoneTypeOther ?? '',
@@ -147,18 +157,17 @@ export const mapBuildingPropertyResponseToForm = (
   response: GetBuildingPropertyResponseType,
 ): createBuildingFormType => {
   return {
-    ownerName: response.ownerName ?? '',
+    ownerNameBuilding: response.ownerName ?? '',
     propertyName: response.propertyName ?? '',
     buildingNumber: response.buildingNumber ?? '',
     modelName: response.modelName ?? '',
     builtOnTitleNumber: response.builtOnTitleNumber ?? '',
-    isOwnerVerified: response.isOwnerVerified ?? false,
+    isOwnerVerifiedBuilding: response.isOwnerVerified ?? true,
     houseNumber: response.houseNumber ?? '',
     noHouseNumber: response.noHouseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
-    constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     hasObligation: response.hasObligation ?? '',
@@ -173,6 +182,7 @@ export const mapBuildingPropertyResponseToForm = (
     encroachingOthersArea: response.encroachingOthersArea ?? 0,
     buildingMaterialType: response.buildingMaterialType ?? '',
     buildingStyleType: response.buildingStyleType ?? '',
+    buildingStyleTypeOther: response.buildingStyleTypeOther ?? '',
     isResidential: response.isResidential ?? false,
     buildingAge: response.buildingAge ?? 0,
     residentialRemark: response.residentialRemark ?? '',
@@ -215,7 +225,10 @@ export const mapCondoPropertyResponseToForm = (
   response: GetCondoPropertyResponseType,
 ): createCondoFormType => {
   const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
+    ? findAddressBySubDistrictCode(response.subDistrict, 'title')
+    : undefined;
+  const dopaAddressLookup = response.dopaSubDistrict
+    ? findAddressBySubDistrictCode(response.dopaSubDistrict, 'dopa')
     : undefined;
   return {
     ownerName: response.ownerName ?? '',
@@ -224,11 +237,12 @@ export const mapCondoPropertyResponseToForm = (
     condoName: response.condoName ?? '',
     buildingNumber: response.buildingNumber ?? '',
     modelName: response.modelName ?? '',
-    builtOnTitleNumber: response.builtOnTitleNumber ?? '',
+    titleNumber: response.titleNumber ?? '',
     condoRegistrationNumber: response.condoRegistrationNumber ?? '',
     roomNumber: response.roomNumber ?? '',
     floorNumber: response.floorNumber ?? 0,
     usableArea: response.usableArea ?? 0,
+    isUnderConstruction: response.isUnderConstruction ?? false,
 
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
@@ -240,8 +254,14 @@ export const mapCondoPropertyResponseToForm = (
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
+    dopaSubDistrict: response.dopaSubDistrict ?? '',
+    dopaSubDistrictName: dopaAddressLookup?.subDistrictName ?? '',
+    dopaDistrict: response.dopaDistrict ?? '',
+    dopaDistrictName: dopaAddressLookup?.districtName ?? '',
+    dopaProvince: response.dopaProvince ?? '',
+    dopaProvinceName: dopaAddressLookup?.provinceName ?? '',
 
-    isOwnerVerified: response.isOwnerVerified ?? false,
+    isOwnerVerified: response.isOwnerVerified ?? true,
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     hasObligation: response.hasObligation ?? '',
@@ -255,6 +275,7 @@ export const mapCondoPropertyResponseToForm = (
     accessRoadWidth: response.accessRoadWidth ?? 0,
     rightOfWay: response.rightOfWay ?? 0,
     roadSurfaceType: response.roadSurfaceType ?? '',
+    roadSurfaceTypeOther: response.roadSurfaceTypeOther ?? '',
     publicUtilityType: response.publicUtilityType ?? [],
     publicUtilityTypeOther: response.publicUtilityTypeOther ?? '',
     // Not yet in the generated v1 response schema — cast until it's regenerated
@@ -266,6 +287,7 @@ export const mapCondoPropertyResponseToForm = (
     landUseTypeOther: (response as any).landUseTypeOther ?? '',
     landEntranceExitType: (response as any).landEntranceExitType ?? [],
     landEntranceExitTypeOther: (response as any).landEntranceExitTypeOther ?? '',
+    isMissingFromSurvey: response.isMissingFromSurvey ?? false,
     governmentPricePerSqm: (response as any).governmentPricePerSqm ?? 0,
     governmentPrice: (response as any).governmentPrice ?? 0,
     // Not yet in the generated v1 response schema — cast until it's regenerated
@@ -282,6 +304,7 @@ export const mapCondoPropertyResponseToForm = (
     roomLayoutType: response.roomLayoutType ?? '',
     roomLayoutTypeOther: response.roomLayoutTypeOther ?? '',
     locationViewType: response.locationViewType ?? [],
+    locationViewTypeOther: response.locationViewTypeOther ?? '',
     groundFloorMaterialType: response.groundFloorMaterialType ?? '',
     groundFloorMaterialTypeOther: response.groundFloorMaterialTypeOther ?? '',
     upperFloorMaterialType: response.upperFloorMaterialType ?? '',
@@ -305,12 +328,14 @@ export const mapCondoPropertyResponseToForm = (
     facilityType: response.facilityType ?? [],
     facilityTypeOther: response.facilityTypeOther ?? '',
     environmentType: response.environmentType ?? [],
+    environmentTypeOther: response.environmentTypeOther ?? '',
 
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forceSellingPrice ?? 0,
 
     remark: response.remark ?? '',
+    ...mapConstructionInspectionResponseToForm((response as any).constructionInspection),
   };
 };
 
@@ -318,7 +343,10 @@ export const mapLandAndBuildingPropertyResponseToForm = (
   response: GetLandAndBuildingPropertyResponseType,
 ): createLandAndBuildingFormType => {
   const addressLookup = response.subDistrict
-    ? findAddressBySubDistrictCode(response.subDistrict)
+    ? findAddressBySubDistrictCode(response.subDistrict, 'title')
+    : undefined;
+  const dopaAddressLookup = response.dopaSubDistrict
+    ? findAddressBySubDistrictCode(response.dopaSubDistrict, 'dopa')
     : undefined;
   return {
     titles: (response as any).titles ?? [],
@@ -332,9 +360,15 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     province: response.province ?? '',
     provinceName: addressLookup?.provinceName ?? '',
     landOffice: response.landOffice ?? '',
+    dopaSubDistrict: response.dopaSubDistrict ?? '',
+    dopaSubDistrictName: dopaAddressLookup?.subDistrictName ?? '',
+    dopaDistrict: response.dopaDistrict ?? '',
+    dopaDistrictName: dopaAddressLookup?.districtName ?? '',
+    dopaProvince: response.dopaProvince ?? '',
+    dopaProvinceName: dopaAddressLookup?.provinceName ?? '',
     landDescription: response.landDescription ?? '',
-    isOwnerVerified: response.isOwnerVerified ?? false,
-    ownerName: response.ownerName ?? '',
+    isOwnerVerifiedLand: response.isOwnerVerifiedLand ?? true,
+    ownerNameLand: response.ownerNameLand ?? '',
     hasObligation: response.hasObligation ?? '',
     obligationDetails: response.obligationDetails ?? '',
     isLandLocationVerified: response.isLandLocationVerified ?? false,
@@ -346,6 +380,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     village: response.village ?? '',
     addressLocation: response.addressLocation ?? '',
     landShapeType: response.landShapeType ?? '',
+    landShapeTypeOther: response.landShapeTypeOther ?? '',
     urbanPlanningType: response.urbanPlanningType ?? '',
     landZoneType: response.landZoneType ?? [],
     landZoneTypeOther: response.landZoneTypeOther ?? '',
@@ -408,12 +443,13 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     buildingNumber: response.buildingNumber ?? '',
     modelName: response.modelName ?? '',
     builtOnTitleNumber: response.builtOnTitleNumber ?? '',
+    isOwnerVerifiedBuilding: response.isOwnerVerifiedBuilding ?? true,
+    ownerNameBuilding: response.ownerNameBuilding ?? '',
     houseNumber: response.houseNumber ?? '',
     noHouseNumber: response.noHouseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     isUnderConstruction: response.isUnderConstruction ?? false,
-    constructionCompletionPercent: response.constructionCompletionPercent ?? 100,
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     buildingType: response.buildingType ?? '',
@@ -426,6 +462,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     encroachingOthersArea: response.encroachingOthersArea ?? 0,
     buildingMaterialType: response.buildingMaterialType ?? '',
     buildingStyleType: response.buildingStyleType ?? '',
+    buildingStyleTypeOther: response.buildingStyleTypeOther ?? '',
     isResidential: response.isResidential ?? false,
     buildingAge: response.buildingAge ?? 0,
     residentialRemark: response.residentialRemark ?? '',
@@ -514,7 +551,7 @@ export const mapCondoPMAPropertyResponseToForm = (
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
-    builtOnTitleNumber: response.builtOnTitleNumber ?? '',
+    titleNumber: response.titleNumber ?? '',
     condoRegistrationNumber: response.condoRegistrationNumber ?? '',
     roomNumber: response.roomNumber ?? '',
     floorNumber: response.floorNumber ?? 0,
@@ -570,6 +607,8 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   return {
     isFullDetail,
     totalValue,
+    // Remark is mode-independent: the backend keeps it on both Summary and Full Detail rows.
+    remark: constructionRemark ?? null,
     ...(isFullDetail
       ? {
           workDetails: (constructionSubItems ?? []).map((item: any, idx: number) => ({
@@ -589,7 +628,6 @@ const mapConstructionInspectionFormToApi = (data: any) => {
           summaryPreviousValue: constructionSummary?.summaryPreviousValue ?? null,
           summaryCurrentProgressPct: constructionSummary?.summaryCurrentProgressPct ?? null,
           summaryCurrentValue: constructionSummary?.summaryCurrentValue ?? null,
-          remark: constructionRemark ?? null,
           documentId: constructionSummary?.documentId ?? null,
           fileName: constructionSummary?.fileName ?? null,
           filePath: constructionSummary?.filePath ?? null,
@@ -597,6 +635,20 @@ const mapConstructionInspectionFormToApi = (data: any) => {
           mimeType: constructionSummary?.mimeType ?? null,
           fileSizeBytes: constructionSummary?.fileSizeBytes ?? null,
         }),
+  };
+};
+
+export const mapCondoFormDataToApiPayload = (data: createCondoFormType): any => {
+  const {
+    constructionSubItems,
+    constructionSummary,
+    constructionRemark,
+    constructionEnterDetail,
+    ...rest
+  } = data;
+  return {
+    ...rest,
+    constructionInspection: mapConstructionInspectionFormToApi(data),
   };
 };
 
@@ -639,12 +691,25 @@ export const mapLandAndBuildingFormDataToApiPayload = (
 };
 
 export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
+  // The backend stores only Internal/External on AssignmentType — the off-system variant is
+  // distinguished by AssignmentMethod = 'Offline'. Re-derive the third radio value here, or
+  // reopening an offline draft would show plain "External Company" and the admin's choice
+  // (and its EXTO routing) would be silently lost on the next Assign.
+  const isOffline = response.assignmentMethod?.toLowerCase() === 'offline';
+
   return {
-    assignmentType: response.assignmentType.toLowerCase() as 'internal' | 'external',
-    assignmentMethod: response.assignmentMethod.toLowerCase() as
-      | 'manual'
-      | 'roundrobin'
-      | 'quotation',
+    assignmentType: (isOffline ? 'external-offline' : response.assignmentType.toLowerCase()) as
+      | 'internal'
+      | 'external'
+      | 'external-offline',
+    // An offline row stores 'Offline' in AssignmentMethod as the TYPE marker, so the admin's
+    // manual-vs-roundrobin choice has to be recovered another way. It is implied by the data:
+    // manual means a specific keyer was named, round-robin means the activity picks one.
+    assignmentMethod: (isOffline
+      ? response.assigneeUserId
+        ? 'manual'
+        : 'roundrobin'
+      : response.assignmentMethod.toLowerCase()) as 'manual' | 'roundrobin' | 'quotation',
     staffId: response.assigneeUserId ?? null,
     companyId: response.assigneeCompanyId ?? null,
     followupStaffId: response.internalAppraiserId ?? null,

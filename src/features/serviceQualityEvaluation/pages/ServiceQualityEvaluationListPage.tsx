@@ -13,6 +13,7 @@ import { formatLocaleDate } from '@shared/utils/dateUtils';
 import EvaluationStatusBadge from '../components/EvaluationStatusBadge';
 import StarRating from '../components/StarRating';
 import { useGetEvaluationList } from '../api';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 type EvaluationView = 'active' | 'history';
 
@@ -26,6 +27,7 @@ const VIEW_STATUSES: Record<EvaluationView, string> = {
 function ServiceQualityEvaluationListPage() {
   const navigate = useNavigate();
   const { i18n, t } = useTranslation('serviceQualityEvaluation');
+  const localizeCompanyName = useLocalizedCompanyName();
 
   // Pagination
   const [pageNumber, setPageNumber] = useState(0);
@@ -276,7 +278,11 @@ function ServiceQualityEvaluationListPage() {
                     <td className="px-4 py-2.5">
                       <span className="font-medium text-primary">{item.appraisalNumber}</span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-700">{item.appraiserCompanyName || '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-700">
+                      {item.appraiserCompanyName
+                        ? localizeCompanyName(item.appraiserCompanyName, item.appraiserCompanyNameLocal)
+                        : '—'}
+                    </td>
                     <td className="px-4 py-2.5 text-gray-700">{item.customerName || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                       {formatLocaleDate(item.reportReceivedDate, i18n.language)}

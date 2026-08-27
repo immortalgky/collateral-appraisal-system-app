@@ -8,6 +8,7 @@ import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import {
   useCancelQuotation,
   useGetQuotationById,
@@ -45,6 +46,7 @@ const QuotationSelectionPage = () => {
   const id = useQuotationIdFromRoute();
   const navigate = useNavigate();
   const { t } = useTranslation(['quotation', 'appraisal', 'common']);
+  const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
   const { data: quotation, isLoading, isError } = useGetQuotationById(id);
@@ -505,7 +507,9 @@ const QuotationSelectionPage = () => {
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">{inv.companyName}</div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
+                          </div>
                         </td>
                         <td className="px-4 py-3 text-right">
                           <span className="text-sm text-gray-700 tabular-nums">
@@ -581,7 +585,11 @@ const QuotationSelectionPage = () => {
             <p
               dangerouslySetInnerHTML={{
                 __html: t('shared.quotationAwarded', {
-                  company: `<strong class="text-gray-900">${finalizedWinner?.companyName ?? '—'}</strong>`,
+                  company: `<strong class="text-gray-900">${
+                    finalizedWinner
+                      ? localizeCompanyName(finalizedWinner.companyName, finalizedWinner.companyNameLocal)
+                      : '—'
+                  }</strong>`,
                 }),
               }}
             />
@@ -676,7 +684,10 @@ const QuotationSelectionPage = () => {
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-amber-900">
                   {t('negotiation.rmRequestsNegotiation')}{' '}
-                  <strong>{tentativeWinner?.companyName}</strong>
+                  <strong>
+                    {tentativeWinner &&
+                      localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+                  </strong>
                 </p>
                 {quotation.rmNegotiationNote && (
                   <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
@@ -762,7 +773,7 @@ const QuotationSelectionPage = () => {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-900">
-                              {cq.companyName}
+                              {localizeCompanyName(cq.companyName, cq.companyNameLocal)}
                             </span>
                             {isWinner && (
                               <Icon name="crown" style="solid" className="size-4 text-indigo-500" />
@@ -798,7 +809,9 @@ const QuotationSelectionPage = () => {
                         <td className="px-4 py-3 text-center">
                           <button
                             type="button"
-                            aria-label={t('aria.viewDetail', { company: cq.companyName })}
+                            aria-label={t('aria.viewDetail', {
+                              company: localizeCompanyName(cq.companyName, cq.companyNameLocal),
+                            })}
                             onClick={() => setViewingCqId(cq.id)}
                             className="p-1 rounded hover:bg-gray-100 transition-colors"
                           >
@@ -850,7 +863,11 @@ const QuotationSelectionPage = () => {
               className="text-sm text-indigo-700"
               dangerouslySetInnerHTML={{
                 __html: t('selectWinner.body', {
-                  company: `<strong>${pickedCompany?.companyName}</strong>`,
+                  company: `<strong>${
+                    pickedCompany
+                      ? localizeCompanyName(pickedCompany.companyName, pickedCompany.companyNameLocal)
+                      : ''
+                  }</strong>`,
                 }),
               }}
             />
@@ -991,7 +1008,7 @@ const QuotationSelectionPage = () => {
           }}
           quotationId={quotation.id}
           companyQuotationId={finalizeTarget.id}
-          companyName={finalizeTarget.companyName}
+          companyName={localizeCompanyName(finalizeTarget.companyName, finalizeTarget.companyNameLocal)}
           winnerItems={finalizeTarget.items ?? []}
           appraisals={quotation.appraisals ?? []}
         />
@@ -1004,7 +1021,7 @@ const QuotationSelectionPage = () => {
           onClose={() => setIsNegotiationOpen(false)}
           quotationId={quotation.id}
           companyQuotationId={tentativeWinner.id}
-          companyName={tentativeWinner.companyName}
+          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
           currentRounds={tentativeWinner.negotiationRounds ?? 0}
         />
       )}
@@ -1015,7 +1032,7 @@ const QuotationSelectionPage = () => {
           isOpen={isRejectOpen}
           onClose={() => setIsRejectOpen(false)}
           quotationId={quotation.id}
-          companyName={tentativeWinner.companyName}
+          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
         />
       )}
 

@@ -23,17 +23,18 @@ import {
   useAttachPricingAnalysisDocument,
   useDeletePricingAnalysisMethod,
   useRemovePricingAnalysisDocument,
-  useSelectApproach,
-  useSelectMethod,
+  useApplyPricingSelection,
+  useSetManualCostBreakdown,
   useUpdateMethodValue,
+  useUpdatePricingAnalysis,
   useUpdateRemark,
   useSetPricingAnalysisSystemCalc,
-  useUpdateLandValue,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type {
-  UpdateLandValueRequestType,
+  SetManualCostBreakdownRequestType,
   UpdateMethodRequestType,
+  UpdatePricingAnalysisRequestType,
   UpdateRemarkRequestType,
 } from '../schemas';
 import {
@@ -165,13 +166,13 @@ export function useSelectionActions({
     }
   };
 
-  const selectMethodMutation = useSelectMethod();
-  const selectApproachMutation = useSelectApproach();
+  const applySelectionMutation = useApplyPricingSelection();
   const updateMethodMutation = useUpdateMethodValue();
+  const manualCostBreakdownMutation = useSetManualCostBreakdown();
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
   const setSystemCalcMutation = useSetPricingAnalysisSystemCalc();
-  const updateLandValueMutation = useUpdateLandValue();
+  const updatePricingAnalysisMutation = useUpdatePricingAnalysis();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
   const removeDocumentMutation = useRemovePricingAnalysisDocument();
   const {
@@ -309,11 +310,11 @@ export function useSelectionActions({
     setIsSaving(true);
     try {
       // ── Step 0: Documents ───────────────────────────────────────────────────
-      // Evidence must land before the selection below "locks in" a final value —
-      // selectApproach propagates ApproachValue → FinalAppraisedValue on the server,
-      // i.e. it's the actual finalization step. If we selected method/approach first
-      // and a PDF upload then failed, we'd be left with a finalized analysis missing
-      // the supporting documents that manual mode required in the first place.
+      // Evidence must land before the selection below "locks in" a final value — the
+      // selection call propagates ApproachValue → FinalAppraisedValue on the server,
+      // i.e. it's the actual finalization step. If we applied the selection first and a
+      // PDF upload then failed, we'd be left with a finalized analysis missing the
+      // supporting documents that manual mode required in the first place.
 
       // Manual-mode PDF uploads: each raw File still needs to go through the Document
       // module's two-step flow (create session → multipart upload) before it has a
@@ -352,19 +353,47 @@ export function useSelectionActions({
       }
 
       // ── Step 1: Persist dirty manual-mode values ────────────────────────────
-      // Must land before Step 2 (selectMethod) — the server's SelectMethod only
-      // propagates ApproachValue/FinalAppraisedValue `if (targetMethod.MethodValue.HasValue)`;
-      // it doesn't error if the value is missing, it just silently skips propagation.
+      // Must land before Step 2 — selecting a method now adopts that method's value
+      // VERBATIM on the server, null included, so selecting one whose value hasn't been
+      // saved yet actively CLEARS the approach value rather than leaving the old number.
       // No per-item try/catch here (unlike the PDF loop below) — a failed value save
-      // must block the rest of the save, since selecting a method with a stale/missing
-      // value would silently fail to propagate on the server.
-      if (state.dirtyManualValueKeys.length > 0) {
+      // must block the rest of the save.
+      const dirtyValueKeys = state.dirtyManualValueKeys;
+      const dirtyBreakdownKeys = state.dirtyCostBreakdownKeys;
+
+      if (dirtyValueKeys.length > 0 || dirtyBreakdownKeys.length > 0) {
         const dirtyMethods = state.summarySelected
           .flatMap(appr => appr.methods)
-          .filter(m => m.id && state.dirtyManualValueKeys.includes(m.id));
+          .filter(
+            m => m.id && (dirtyValueKeys.includes(m.id) || dirtyBreakdownKeys.includes(m.id)),
+          );
 
         for (const method of dirtyMethods) {
           if (!method.id || !isServerId(method.id)) continue;
+
+          // A touched land rate goes to the breakdown endpoint, which stores the rate, the
+          // title-deed land value and the depreciated building total alongside the price —
+          // that per-component record is what makes the appraisal summary print ที่ดิน and
+          // สิ่งปลูกสร้าง on separate rows, and a null rate there removes it again.
+          //
+          // Keyed on the rate having actually been edited, never on the method merely being
+          // dirty: a Cost method whose price alone changed would otherwise be sent rate null
+          // and lose a breakdown it never had — a MachineryCost method's FMV row, say.
+          //
+          // Exactly one endpoint per method. Both write the method value, so falling through
+          // to updateMethod afterwards would race the two writes.
+          if (dirtyBreakdownKeys.includes(method.id)) {
+            await manualCostBreakdownMutation.mutateAsync({
+              id: pricingAnalysisId,
+              methodId: method.id,
+              request: {
+                landRatePerSqWa: method.landRatePerSqWa ?? null,
+                appraisalPrice: method.appraisalValue,
+              } as SetManualCostBreakdownRequestType,
+            });
+            continue;
+          }
+
           await updateMethodMutation.mutateAsync({
             id: pricingAnalysisId,
             methodId: method.id,
@@ -373,49 +402,39 @@ export function useSelectionActions({
         }
       }
 
-      // ── Step 1b: Persist dirty land values (Cost Approach land-pricing methods) ──
-      // Same "must land before selection" rationale as Step 1, and same
-      // no-per-item-try/catch policy — a failed land value save must block the rest.
-      if (state.dirtyLandValueKeys.length > 0) {
-        const dirtyLandMethods = state.summarySelected
-          .flatMap(appr => appr.methods)
-          .filter(m => m.id && state.dirtyLandValueKeys.includes(m.id));
+      // ── Step 2: Selection — changed methods AND the final approach, ONE request ──
+      // Previously this was a loop of selectMethod calls followed by a separate
+      // selectApproach, i.e. N+1 transactions: if selectApproach failed after the method
+      // calls had committed, the analysis was left with the new methods but the old final
+      // approach. The server now applies both atomically and raises the valuation-summary
+      // event once instead of up to twice.
+      //
+      // Only approaches whose method choice actually changed are sent (unchanged ones keep
+      // the selection from a previous save), but finalApproachId is always sent — it is what
+      // the server propagates to FinalAppraisedValue.
+      const changedSelections = state.dirtyMethodApproachTypes
+        .map((approachType: string) => {
+          const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
+          const selectedMethod = appr?.methods.find((m: Method) => m.isSelected);
+          return appr?.id &&
+            isServerId(appr.id) &&
+            selectedMethod?.id &&
+            isServerId(selectedMethod.id)
+            ? { approachId: appr.id, methodId: selectedMethod.id }
+            : null;
+        })
+        .filter((s): s is { approachId: string; methodId: string } => s !== null);
 
-        for (const method of dirtyLandMethods) {
-          if (!method.id || !isServerId(method.id)) continue;
-          await updateLandValueMutation.mutateAsync({
-            pricingAnalysisId,
-            methodId: method.id,
-            request: { landValue: method.landValue ?? 0 } as UpdateLandValueRequestType,
-          });
-        }
-      }
-
-      // ── Step 2: Select the currently-selected method, but only for approaches ──
-      // where that selection actually changed since the last successful save.
-      // Must still happen before selectApproach below — the server's SelectApproach
-      // guards on "approach already has a selected method", which for untouched
-      // approaches is already satisfied from a prior save (or from server data on load).
-      for (const approachType of state.dirtyMethodApproachTypes) {
-        const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
-        const selectedMethod = appr?.methods.find((m: Method) => m.isSelected);
-        if (selectedMethod?.id && isServerId(selectedMethod.id)) {
-          await selectMethodMutation.mutateAsync({
-            pricingAnalysisId,
-            methodId: selectedMethod.id,
-          });
-        }
-      }
-
-      // ── Step 3: Select which approach is final — only if that choice changed ───
-      if (state.dirtyApproachSelection && finalApproach.id && isServerId(finalApproach.id)) {
-        await selectApproachMutation.mutateAsync({
+      const hasSelectionChange = changedSelections.length > 0 || state.dirtyApproachSelection;
+      if (hasSelectionChange && finalApproach.id && isServerId(finalApproach.id)) {
+        await applySelectionMutation.mutateAsync({
           pricingAnalysisId,
-          approachId: finalApproach.id,
+          selections: changedSelections,
+          finalApproachId: finalApproach.id,
         });
       }
 
-      // ── Step 4: Remark — persisted on the final selected method last, once ──
+      // ── Step 3: Remark — persisted on the final selected method last, once ──
       // everything it documents/justifies has already been committed. Compared
       // against the last-known server value (not just truthiness) so clearing the
       // box back to empty and saving actually propagates the clear.
@@ -427,8 +446,27 @@ export function useSelectionActions({
         });
       }
 
+      // ── Step 4: Calculation mode — the Manual/System toggle, written LAST ────
+      // The toggle is the user's explicit choice, so it has to outrank the implicit writes
+      // the other save paths make: SetFinalValue/UpdateFinalValue force UseSystemCalc false,
+      // SetManualCostBreakdown (step 1 above, for a touched land rate) forces it false too,
+      // and SaveComparativeAnalysis forces it true — each as a side-effect of whichever
+      // screen was saved last. Sending it after everything else makes the toggle the
+      // authoritative value and repairs a flag an earlier save left inconsistent.
+      // Sent unconditionally (it is idempotent) — the mode may be the only thing the user
+      // changed, in which case every step above is a no-op and nothing else would persist it.
+      await updatePricingAnalysisMutation.mutateAsync({
+        pricingAnalysisId,
+        request: {
+          marketValue: null,
+          appraisedValue: null,
+          forcedSaleValue: null,
+          useSystemCalc: state.systemCalculationMode === 'System',
+        } as UpdatePricingAnalysisRequestType,
+      });
+
       dispatch({ type: 'EDIT_SAVE' });
-      // Clears dirtyManualValueKeys/dirtyMethodApproachTypes/dirtyApproachSelection now
+      // Clears every dirty tracker (values, cost breakdowns, selection) now
       // that everything dirty has landed server-side.
       dispatch({ type: 'SUMMARY_SAVE' });
       await qc.invalidateQueries({
@@ -519,7 +557,7 @@ export function useSelectionActions({
     const method = appr?.methods.find(
       (m: Method) => m.methodType === pendingToggleCalcMode.methodType,
     );
-    const hasLandValue = method?.landValue != null;
+    const hasLandValue = method?.landRatePerSqWa != null;
     const key = hasLandValue
       ? willClearDocuments
         ? 'confirm.toggleMethodCalcModeValueAndLandDocuments'
@@ -606,6 +644,10 @@ export function useSelectionActions({
         request: { methodType: mapToServerMethodType(arg.methodType), status: null },
       });
 
+      // Adding a method invalidates every existing approach/method selection —
+      // consumed by the INIT that follows the query invalidation above.
+      dispatch({ type: 'PREPARE_SELECTION_RESET' });
+
       toast.success(tp('toasts.methodAdded'));
     } catch (err: any) {
       toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
@@ -646,6 +688,11 @@ export function useSelectionActions({
         approachId: appr.id,
         methodId: pendingDelete.methodId,
       });
+
+      // Removing a method invalidates every existing approach/method selection —
+      // consumed by the INIT that follows the query invalidation above.
+      dispatch({ type: 'PREPARE_SELECTION_RESET' });
+
       toast.success(tp('toasts.methodDeleted'));
       setPendingDelete(null);
       closeDelete();

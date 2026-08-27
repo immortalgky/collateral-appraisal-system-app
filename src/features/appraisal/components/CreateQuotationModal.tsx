@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
+import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface CreateQuotationModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ interface CreateQuotationModalProps {
 interface SelectedCompany {
   id: string;
   companyName: string;
+  companyNameLocal?: string | null;
 }
 
 const CreateQuotationModal = ({
@@ -44,6 +46,7 @@ const CreateQuotationModal = ({
   internalFollowupAssignmentMethod,
 }: CreateQuotationModalProps) => {
   const { t } = useTranslation('appraisal');
+  const localizeCompanyName = useLocalizedCompanyName();
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
@@ -64,7 +67,7 @@ const CreateQuotationModal = ({
     () =>
       (rawCompanies ?? [])
         .filter(c => c.id !== excludedCompanyId)
-        .map(c => ({ id: c.id, companyName: c.companyName })),
+        .map(c => ({ id: c.id, companyName: c.companyName, companyNameLocal: c.companyNameLocal })),
     [rawCompanies, excludedCompanyId],
   );
 
@@ -72,7 +75,11 @@ const CreateQuotationModal = ({
     if (!allCompanies) return [];
     if (!searchQuery.trim()) return allCompanies;
     const query = searchQuery.toLowerCase();
-    return allCompanies.filter(c => c.companyName.toLowerCase().includes(query));
+    return allCompanies.filter(
+      c =>
+        c.companyName.toLowerCase().includes(query) ||
+        c.companyNameLocal?.toLowerCase().includes(query),
+    );
   }, [allCompanies, searchQuery]);
 
   const { mutate: startQuotation, isPending } = useCreateQuotation();
@@ -156,7 +163,9 @@ const CreateQuotationModal = ({
                   className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
                 >
                   <Icon name="building" style="solid" className="size-3.5" />
-                  <span className="font-medium">{company.companyName}</span>
+                  <span className="font-medium">
+                    {localizeCompanyName(company.companyName, company.companyNameLocal)}
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveCompany(company.id)}
@@ -244,7 +253,7 @@ const CreateQuotationModal = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900 truncate">
-                            {company.companyName}
+                            {localizeCompanyName(company.companyName, company.companyNameLocal)}
                           </div>
                         </div>
                       </button>

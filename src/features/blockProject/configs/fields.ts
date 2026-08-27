@@ -116,6 +116,7 @@ export const projectLocationFields: FormField[] = [
     subDistrictNameField: 'subDistrictName',
     districtNameField: 'districtName',
     provinceNameField: 'provinceName',
+    addressSource: 'title',
     wrapperClassName: 'col-span-4',
   },
   {
@@ -351,7 +352,7 @@ export const condoProjectInfoFields: FormField[] = [
     label: 'Built on Title Deed Number',
     name: 'builtOnTitleDeedNumber',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
+    maxLength: 100,
   },
   {
     type: 'parameter-search',

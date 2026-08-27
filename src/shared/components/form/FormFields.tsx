@@ -238,19 +238,22 @@ function FieldRenderer({
     name = `${namePrefix}.${name}`;
   }
 
+  // Clamp a disabled field to its `disabledValue`. Subscribing to the field's own value
+  // (via useWatch) means this also re-fires when the value is re-seeded while already
+  // disabled — e.g. a parent reset()/async load populating the form after mount, which a
+  // one-shot "on became disabled" effect would miss.
+  const watchedValue = useWatch({ control, name });
   useEffect(() => {
     if (!isDisabled) return;
     if (field.disabledValue === undefined) return;
 
-    const currentValue = getValues(name);
-
-    if (currentValue !== field.disabledValue) {
+    if (getValues(name) !== field.disabledValue) {
       setValue(name, field.disabledValue, {
         shouldDirty: false,
         shouldValidate: true,
       });
     }
-  }, [isDisabled, name, field.disabledValue, getValues, setValue]);
+  }, [isDisabled, watchedValue, name, field.disabledValue, getValues, setValue]);
 
   // Clear field value when hidden by showWhen/hideWhen (clearOnHide defaults to true)
   const prevVisibleRef = useRef<boolean | null>(null);
@@ -577,8 +580,14 @@ function FieldRenderer({
     }
   };
 
-  // Wrap the field component with the wrapper div
-  return <div className={clsx(field.wrapperClassName)}>{renderFieldComponent()}</div>;
+  // Wrap the field component with the wrapper div.
+  // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
+  // because Dropdown never forwards `name` to the DOM.
+  return (
+    <div data-field={name} className={clsx(field.wrapperClassName)}>
+      {renderFieldComponent()}
+    </div>
+  );
 }
 
 // Re-export types for convenience

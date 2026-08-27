@@ -17,6 +17,7 @@ import {
   useRestoreCollateralMaster,
 } from '../api/hooks';
 import type { CollateralMasterDto } from '../api/types';
+import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -306,6 +307,7 @@ export default function CollateralMasterDetailPage() {
   const { masterId } = useParams<{ masterId: string }>();
   const navigate = useNavigate();
   const { i18n } = useTranslation();
+  const localizeCompanyName = useLocalizedCompanyName();
   const user = useAuthStore(s => s.user);
 
   const isAdmin = user?.permissions?.includes('COLLATERAL_ADMIN') ?? false;
@@ -516,7 +518,9 @@ export default function CollateralMasterDetailPage() {
                     </td>
                     <td className="px-4 py-2.5 text-xs text-gray-600">{eng.appraisalType}</td>
                     <td className="px-4 py-2.5 text-xs text-gray-600 max-w-[160px] truncate">
-                      {eng.appraisalCompanyName ?? '—'}
+                      {eng.appraisalCompanyName
+                        ? localizeCompanyName(eng.appraisalCompanyName, eng.appraisalCompanyNameLocal)
+                        : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-xs text-gray-600 whitespace-nowrap">
                       {formatLocaleDate(eng.appraisalDate, i18n.language)}

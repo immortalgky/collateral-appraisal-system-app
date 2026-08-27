@@ -17,12 +17,14 @@ import {
   type SelectMethodResponseType,
   type SetFinalValueRequestType,
   type SetFinalValueResponseType,
+  type SetManualCostBreakdownRequestType,
+  type SetManualCostBreakdownResponseType,
   type UpdateFinalValueRequestType,
   type UpdateFinalValueResponseType,
-  type UpdateLandValueRequestType,
-  type UpdateLandValueResponseType,
   type UpdateMethodRequestType,
   type UpdateMethodResponseType,
+  type UpdatePricingAnalysisRequestType,
+  type UpdatePricingAnalysisResponseType,
   type UpdateRemarkRequestType,
   type UpdateRemarkResponseType,
 } from '../schemas';
@@ -364,6 +366,50 @@ export function useSelectApproach() {
   });
 }
 
+// ==================== Apply Selection Hook ====================
+
+/**
+ * Apply the whole summary selection — the primary method for each changed approach AND the
+ * final approach — in a single request.
+ * POST /pricing-analysis/{id}/selection
+ *
+ * Supersedes calling useSelectMethod per approach followed by useSelectApproach. Those run as
+ * N+1 separate transactions, so a failure partway left the method selections committed with the
+ * old approach selection still in place; they also fired the ValuationAnalyses recompute up to
+ * twice per save. Server-side this is one transaction raising the final-value event once.
+ * useSelectMethod/useSelectApproach are kept for compatibility but are no longer called here.
+ *
+ * TODO: swap ApplySelectionResponseType for the generated schema type once the API client is
+ * regenerated from the updated OpenAPI spec (endpoint just added server-side).
+ */
+type ApplySelectionResponseType = {
+  finalApproachId: string;
+  finalApproachType: string;
+  finalAppraisedValue: number | null;
+};
+
+// Not invalidated here — saveSummary (useSelectionActions) does one consolidated invalidate
+// after documents/values/selection/remark have all landed.
+export function useApplyPricingSelection() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      selections,
+      finalApproachId,
+    }: {
+      pricingAnalysisId: string;
+      selections: { approachId: string; methodId: string }[];
+      finalApproachId: string;
+    }): Promise<ApplySelectionResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${pricingAnalysisId}/selection`,
+        { selections, finalApproachId },
+      );
+      return response;
+    },
+  });
+}
+
 // ==================== Pricing Analysis Document Hooks ====================
 
 /**
@@ -503,37 +549,6 @@ export function useUpdateFinalValue() {
   });
 }
 
-/**
- * Update the manual land value for a Cost Approach land-pricing method
- * PUT /pricing-analysis/{id}/methods/{methodId}/land-value
- */
-export function useUpdateLandValue() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      pricingAnalysisId,
-      methodId,
-      request,
-    }: {
-      pricingAnalysisId: string;
-      methodId: string;
-      request: UpdateLandValueRequestType;
-    }): Promise<UpdateLandValueResponseType> => {
-      const { data: response } = await axios.put(
-        `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/land-value`,
-        request,
-      );
-      return response;
-    },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.detail(variables.pricingAnalysisId),
-      });
-    },
-  });
-}
-
 // ==================== Remark Hooks ====================
 // Not invalidated here — only called once from saveSummary (useSelectionActions),
 // which does a single consolidated invalidate after the whole batch lands.
@@ -555,10 +570,15 @@ export function useUpdateRemark() {
   });
 }
 
+// ==================== Calculation Mode Hooks ====================
 /**
- * Set the analysis-wide system-calculation mode.
+ * Set the analysis-wide system-calculation mode immediately on toggle.
  * PUT /pricing-analysis/{id}/system-calc
- * Only touches useSystemCalc — does not modify final values.
+ * Only touches useSystemCalc — does not modify final values. Kept as a dedicated, immediate-write
+ * endpoint (rather than folding into useUpdatePricingAnalysis below) because switching modes is
+ * destructive server-side — it cascades a reset across every approach/method and, going
+ * manual→system, clears manual-evidence documents (SetSystemCalcCommandHandler) — so it must not
+ * wait for the batched Save Summary click the way the rest of the toggle's persistence does.
  */
 export function useSetPricingAnalysisSystemCalc() {
   return useMutation({
@@ -573,6 +593,33 @@ export function useSetPricingAnalysisSystemCalc() {
         `/pricing-analysis/${pricingAnalysisId}/system-calc`,
         { useSystemCalc },
       );
+      return response;
+    },
+  });
+}
+
+/**
+ * Update the analysis-level fields. Every value in the body is optional server-side and only
+ * what is sent gets written, so the summary screen uses it to persist the Manual/System toggle
+ * alone (all value fields null) without disturbing the final values the rollup just computed.
+ * PUT /pricing-analysis/{id}
+ *
+ * Not invalidated here — only called from saveSummary (useSelectionActions), which does a
+ * single consolidated invalidate after the whole batch lands. Acts as an idempotent resync of
+ * useSystemCalc at save time — a safety net in case an earlier step in the same save
+ * (SetFinalValue/UpdateFinalValue/SetManualCostBreakdown/SaveComparativeAnalysis) flipped the
+ * flag as a side effect after the immediate useSetPricingAnalysisSystemCalc call above landed.
+ */
+export function useUpdatePricingAnalysis() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      request,
+    }: {
+      pricingAnalysisId: string;
+      request: UpdatePricingAnalysisRequestType;
+    }): Promise<UpdatePricingAnalysisResponseType> => {
+      const { data: response } = await axios.put(`/pricing-analysis/${pricingAnalysisId}`, request);
       return response;
     },
   });
@@ -1266,6 +1313,41 @@ export function useUpdateMethodValue() {
       });
       queryClient.invalidateQueries({
         queryKey: pricingAnalysisKeys.comparativeFactors(variables.id, variables.methodId),
+      });
+    },
+  });
+}
+
+/**
+ * Record a hand-entered Cost-approach land rate so the appraisal summary can print ที่ดิน and
+ * สิ่งปลูกสร้าง as separate rows. Send only what the appraiser types — the server multiplies the
+ * rate by the title-deed area and reads the building total off the depreciation schedule.
+ * A null rate clears the breakdown and the summary goes back to one combined row.
+ * POST /pricing-analysis/{id}/methods/{methodId}/manual-cost-breakdown
+ */
+export function useSetManualCostBreakdown() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      methodId,
+      request,
+    }: {
+      id: string;
+      methodId: string;
+      request: SetManualCostBreakdownRequestType;
+    }): Promise<SetManualCostBreakdownResponseType> => {
+      const { data: response } = await axios.post(
+        `/pricing-analysis/${id}/methods/${methodId}/manual-cost-breakdown`,
+        request,
+      );
+      return response;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: pricingAnalysisKeys.pricingMethod(variables.methodId),
       });
     },
   });

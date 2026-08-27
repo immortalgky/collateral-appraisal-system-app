@@ -6,6 +6,7 @@ import {
   useBasePath,
   useAppraisalId,
   useAppraisalInspectionNumber,
+  useAppraisalAppraisedValue,
 } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
 import Toggle from '@shared/components/inputs/Toggle';
@@ -17,11 +18,24 @@ import { useConstructionWorkGroups } from '../../api/constructionWorkGroups';
 import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
+import { ConstructionRemarkField } from '../construction/ConstructionRemarkField';
 import type { PropertyItem } from '../../types';
 import { isBuildingType, getDetailEndpoint, getRouteSegment } from '../../utils/propertyTypeConfig';
 
 interface ConstructionInspectionTabProps {
   readOnly?: boolean;
+  /**
+   * Progressive (ใบตรวจงวด) appraisal. The work items, their proportions and the
+   * detail/summary mode are carried over from the previous inspection round by
+   * `ConstructionInspection.CopyForNextInspection`.
+   *
+   * Only two things stay locked on such a round: the detail/summary mode itself (flipping
+   * it wipes the carried-over data) and the copy-from-another-property shortcut. The work
+   * items and their proportions ARE editable — an inspector who finds work that the previous
+   * round missed has to be able to add it and rebalance the split back to 100%. The
+   * previous-round progress percentages are display-only for everyone, here and in the
+   * summary form, since they are recorded history.
+   */
   ciMode?: boolean;
 }
 
@@ -81,13 +95,29 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   const remark = useWatch({ control, name: 'constructionRemark' }) ?? '';
   const depreciationDetails = useWatch({ control, name: 'depreciationDetails' }) ?? [];
 
-  // Total Value = sum of priceAfterDepreciation from building depreciation details
-  const totalValue = useMemo(() => {
-    return (depreciationDetails as any[]).reduce(
-      (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
-      0,
-    );
-  }, [depreciationDetails]);
+  // Total Value = sum of priceAfterDepreciation from building depreciation details.
+  //
+  // A condo unit has no depreciation table, so that sum is always 0 and every figure derived from
+  // it — Current Value, Overall Progress, the per-row Value columns — collapsed to zero however
+  // much progress the inspector entered. Fall back to the appraisal's own appraised value: it is
+  // the same "worth once finished" figure the depreciation table gives a house, and it is the base
+  // the server substitutes for the Decision Summary card, the construction report and the
+  // regulatory export.
+  const appraisedValue = useAppraisalAppraisedValue();
+  const depreciationTotal = useMemo(
+    () =>
+      (depreciationDetails as any[]).reduce(
+        (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
+        0,
+      ),
+    [depreciationDetails],
+  );
+
+  // True while the property values its own construction — a house, through its depreciation table.
+  // False for a condo unit, which is bought finished: its value does not step up with the milestone,
+  // so the appraised value stands unscaled in every money column and only the percentage moves.
+  const hasOwnValueBase = depreciationTotal > 0;
+  const totalValue = hasOwnValueBase ? depreciationTotal : appraisedValue;
 
   // Calculations — user inputs proportionPct (%) and currentProgressPct (%)
   // constructionValue = totalValue * (proportionPct / 100)
@@ -175,18 +205,34 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   }, [computedSubItems]);
 
   const summaryCurrentValue = useMemo(
-    () => totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100),
-    [totalValue, summary?.summaryCurrentProgressPct],
+    () =>
+      hasOwnValueBase ? totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100) : totalValue,
+    [hasOwnValueBase, totalValue, summary?.summaryCurrentProgressPct],
   );
 
+  // Derived rather than read from summaryPreviousValue: that column is computed here for display
+  // and never written back into the form, so what persists is 0. The percentage is bound to a real
+  // input and does persist — the same reason the server derives its figures from the percentage.
+  const summaryPreviousValue = useMemo(
+    () =>
+      hasOwnValueBase ? totalValue * ((summary?.summaryPreviousProgressPct ?? 0) / 100) : totalValue,
+    [hasOwnValueBase, totalValue, summary?.summaryPreviousProgressPct],
+  );
+
+  // Progress is read off the mode flag, never off the money: without a value base there is no ratio
+  // to take, and a condo whose appraised value has not been set yet would otherwise report 0%
+  // however much progress the inspector entered.
   const overallProgress = useMemo(() => {
-    if (totalValue === 0) return 0;
     if (enterDetail) {
-      return (grandTotal.totalCurrentPropertyValue / totalValue) * 100;
+      return hasOwnValueBase && totalValue > 0
+        ? (grandTotal.totalCurrentPropertyValue / totalValue) * 100
+        : grandTotal.totalCurrentProportion;
     }
     return summary?.summaryCurrentProgressPct ?? 0;
   }, [
     enterDetail,
+    hasOwnValueBase,
+    grandTotal.totalCurrentProportion,
     totalValue,
     grandTotal.totalCurrentPropertyValue,
     summary?.summaryCurrentProgressPct,
@@ -467,22 +513,28 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
             onUpdateSubItem={handleUpdateSubItem}
             onDeleteSubItem={handleDeleteSubItem}
             readOnly={readOnly}
-            ciMode={ciMode}
           />
         ) : (
           <ConstructionSummaryForm
             totalValue={totalValue}
             summary={summary}
             summaryCurrentValue={summaryCurrentValue}
-            remark={remark}
+            summaryPreviousValue={summaryPreviousValue}
             onUpdateSummary={(field, value) =>
               setValue(`constructionSummary.${field}`, value, { shouldDirty: true })
             }
-            onSetRemark={value => setValue('constructionRemark', value, { shouldDirty: true })}
             readOnly={readOnly}
-            ciMode={ciMode}
           />
         )}
+
+        {/* Remark sits outside the mode branch — it is captured in both modes. */}
+        <div className="mt-5">
+          <ConstructionRemarkField
+            value={remark}
+            onChange={value => setValue('constructionRemark', value, { shouldDirty: true })}
+            readOnly={readOnly}
+          />
+        </div>
       </div>
     </div>
   );
