@@ -472,7 +472,19 @@ export function useSelectionActions({
     navigate(returnTo ?? `${basePath}/property`);
   };
 
-  const changeSystemCalculation = (method: boolean) => {
+  const changeSystemCalculation = async (method: boolean) => {
+    if (pricingAnalysisId) {
+      await updatePricingAnalysisMutation.mutateAsync({
+        pricingAnalysisId,
+        request: {
+          marketValue: null,
+          appraisedValue: null,
+          forcedSaleValue: null,
+          useSystemCalc: method,
+        } as UpdatePricingAnalysisRequestType,
+      });
+    }
+
     dispatch({
       type: 'CHANGE_CALCULATION_METHOD',
       payload: { systemCalculationMethodType: method ? 'System' : 'FillIn' },
