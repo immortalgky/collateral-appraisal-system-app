@@ -99,13 +99,37 @@ export const createLandForm = buildFormSchema(allLandFields, createLandFormBase)
 
 export const createProjectLandForm = buildFormSchema(
   [
-    ...allLandFields,
+    ...allLandFields.filter(
+      field =>
+        ![
+          'dopaSubDistrict',
+          'dopaSubDistrictName',
+          'dopaDistrict',
+          'dopaDistrictName',
+          'dopaProvince',
+          'dopaProvinceName',
+          'dopaPostcode',
+          'ownerNameLand',
+          'isOwnerVerifiedLand',
+          'landOffice',
+        ].includes(field.name),
+    ),
     {
-      type: 'parameter-search',
-      label: 'Land Office',
-      name: 'landOffice',
-      group: 'LandOffice',
+      type: 'boolean-toggle',
+      label: 'Check Owner',
+      name: 'isOwnerVerified',
+      options: ['Can not', 'Can'],
+      wrapperClassName: 'col-span-3',
+    },
+    {
+      type: 'text-input',
+      label: 'Owner',
+      name: 'ownerName',
       wrapperClassName: 'col-span-4',
+      disableWhen: { field: 'isOwnerVerified', is: false },
+      requiredWhen: { field: 'isOwnerVerified', is: true },
+      disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+      maxLength: 100,
     },
   ],
   createLandFormBase,

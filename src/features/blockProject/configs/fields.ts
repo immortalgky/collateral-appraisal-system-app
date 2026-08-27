@@ -108,7 +108,7 @@ export const projectLocationFields: FormField[] = [
   // `LocationSelector` pattern).
   {
     type: 'location-selector',
-    label: 'Sub District',
+    label: 'DOPA Sub District',
     name: 'subDistrict',
     districtField: 'district',
     provinceField: 'province',
@@ -121,14 +121,14 @@ export const projectLocationFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'District',
+    label: 'DOPA District',
     name: 'districtName',
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'text-input',
-    label: 'Province',
+    label: 'DOPA Province',
     name: 'provinceName',
     disabled: true,
     wrapperClassName: 'col-span-4',
