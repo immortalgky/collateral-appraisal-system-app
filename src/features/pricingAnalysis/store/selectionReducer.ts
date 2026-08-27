@@ -594,24 +594,31 @@ export function approachMethodReducer(
     case 'SUMMARY_SET_METHOD_CALC_MODE': {
       const { approachType, methodType, useSystemCalc } = action.payload;
       const apply = (approaches: Approach[]) =>
-        approaches.map(appr =>
-          appr.approachType !== approachType
-            ? appr
-            : {
-                ...appr,
-                methods: appr.methods.map(m =>
-                  m.methodType === methodType
-                    ? {
-                        ...m,
-                        useSystemCalc,
-                        isSelected: false,
-                        landRatePerSqWa: null,
-                        appraisalValue: 0,
-                      }
-                    : m,
-                ),
-              },
-        );
+        approaches.map(appr => {
+          if (appr.approachType !== approachType) return appr;
+
+          // If the toggled method was the one the approach's displayed value came from,
+          // the approach now has no selected method either — its rollup resets to 0 in
+          // lockstep with the method below, instead of keeping the stale pre-toggle value.
+          const wasSelected =
+            appr.methods.find(m => m.methodType === methodType)?.isSelected ?? false;
+
+          return {
+            ...appr,
+            appraisalValue: wasSelected ? 0 : appr.appraisalValue,
+            methods: appr.methods.map(m =>
+              m.methodType === methodType
+                ? {
+                    ...m,
+                    useSystemCalc,
+                    isSelected: false,
+                    landRatePerSqWa: null,
+                    appraisalValue: 0,
+                  }
+                : m,
+            ),
+          };
+        });
       return {
         ...state,
         summarySelected: apply(state.summarySelected),

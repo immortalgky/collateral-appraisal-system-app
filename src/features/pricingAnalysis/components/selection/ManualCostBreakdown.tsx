@@ -1,7 +1,7 @@
 import { Icon } from '@/shared/components';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -56,14 +56,24 @@ export const ManualCostBreakdown = ({
   const methodType = method.methodType;
   const methodId = method.id;
   const savedRate = method.landRatePerSqWa ?? null;
+  const savedRateRef = useRef(savedRate);
+  savedRateRef.current = savedRate;
 
   // Same shape as the price input's debounce: push into the reducer once typing settles, and
-  // no-op afterwards because the saved rate has caught up with what was typed.
+  // no-op afterwards because the saved rate has caught up with what was typed. Compares against
+  // a ref (not method.landRatePerSqWa directly) so an external reset — a calc-mode toggle
+  // clearing the rate — can't make this re-fire and push the stale pre-toggle rate right back.
   useEffect(() => {
-    if (debouncedRate === savedRate) return;
+    if (debouncedRate === savedRateRef.current) return;
     if (debouncedRate != null && debouncedRate < 0) return;
     onLandRateSync({ approachType, methodType, rate: debouncedRate, methodId });
-  }, [debouncedRate, savedRate, onLandRateSync, approachType, methodType, methodId]);
+  }, [debouncedRate, onLandRateSync, approachType, methodType, methodId]);
+
+  // Adopt external resets (calc-mode toggle clearing the rate) back into the local input —
+  // without this the field keeps showing whatever was typed before the toggle.
+  useEffect(() => {
+    setRateInput(prev => (prev === savedRate ? prev : savedRate));
+  }, [savedRate]);
 
   const handleChange = (e: { target: { name?: string; value: number | null } }) => {
     const next = e.target.value;
