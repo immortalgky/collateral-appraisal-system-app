@@ -25,6 +25,14 @@ export interface OAuthClientListItem {
 export interface OAuthClientDetail extends OAuthClientListItem {
   redirectUris: string[];
   postLogoutRedirectUris: string[];
+  /**
+   * Idle timeout for this client's sessions, in minutes — refresh tokens are rolling, so it is the
+   * longest a session may go unused before the user must sign in again.
+   *
+   * Optional because the API omits null fields entirely rather than sending `null`: a client with
+   * no setting of its own inherits the server-wide default, and the key simply is not there.
+   */
+  refreshTokenLifetimeMinutes?: number | null;
 }
 
 export interface OAuthClientListResult {
@@ -42,6 +50,8 @@ export interface CreateClientRequest {
   postLogoutRedirectUris: string[];
   grantTypes: string[];
   scopes: string[];
+  /** null / omitted = inherit the server-wide default. */
+  refreshTokenLifetimeMinutes?: number | null;
 }
 
 export type UpdateClientRequest = Omit<CreateClientRequest, 'clientId' | 'clientType'>;

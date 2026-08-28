@@ -43,6 +43,11 @@ export async function redirectToLogin() {
   url.searchParams.set('state', state);
   url.searchParams.set('code_challenge', codeChallenge);
   url.searchParams.set('code_challenge_method', 'S256');
+  // We only get here once AuthInitializer's silent /auth/refresh has already failed, so the session
+  // is genuinely over. prompt=login tells the server to drop its SSO cookie and show the password
+  // form instead of quietly issuing a new code off a surviving cookie — otherwise reopening the
+  // browser signs the user straight back in without credentials.
+  url.searchParams.set('prompt', 'login');
 
   // Redirect the browser to login
   window.location.href = url.toString();

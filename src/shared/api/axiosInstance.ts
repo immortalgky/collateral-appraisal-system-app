@@ -35,6 +35,27 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 // --- Memory-only access token ---
 let accessToken: string | null = null;
 
+// Set when /auth/refresh answers 401 — the refresh cookie is gone, expired, or revoked.
+// Deliberately NOT set for a transient failure (offline, DNS, 5xx): those callers must keep
+// retrying at full speed.
+let sessionExpired = false;
+
+/**
+ * Whether reconnect loops should back off because refreshing looks hopeless: the last /auth/refresh
+ * answered 401 and nothing since has produced a usable token.
+ *
+ * A hint, not a guarantee, and deliberately biased towards under-reporting:
+ * - 401 also covers a token-rotation race between tabs, so consumers slow down rather than stop.
+ * - It stays false while a clock-valid access token is being rejected server-side (revoked token,
+ *   deleted user) — no refresh runs in that window, so nothing observes the rejection. Bounded by
+ *   the access-token TTL, after which the next refresh reports the truth.
+ * - The boot refresh in AuthInitializer calls the endpoint directly and does not feed this flag.
+ *   By then no hub is running, and the flag is per-page-load state anyway.
+ */
+export function isSessionExpired(): boolean {
+  return sessionExpired;
+}
+
 // --- BroadcastChannel for multi-tab sync (feature-detected) ---
 type AuthChannelMessage = { type: 'token_update'; token: string | null } | { type: 'logout' };
 
@@ -57,6 +78,9 @@ const authChannel: AuthChannel =
 authChannel.addEventListener('message', event => {
   if (event.data?.type === 'token_update') {
     accessToken = event.data.token;
+    // Another tab signed in successfully, so this tab's session is alive again — un-stick any
+    // reconnect loop that gave up here.
+    if (event.data.token) sessionExpired = false;
   }
   if (event.data?.type === 'logout') {
     accessToken = null;
@@ -67,6 +91,8 @@ authChannel.addEventListener('message', event => {
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
+  // A real token means we are authenticated again, whatever happened before.
+  if (token) sessionExpired = false;
   // Broadcast to other tabs
   authChannel.postMessage({ type: 'token_update', token });
 }
@@ -100,6 +126,10 @@ export const refreshClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
+  // Without this a hung refresh leaves refreshPromise pending forever: accessTokenFactory never
+  // resolves, the reconnect attempt stalls, and sessionExpired is never set — bypassing the
+  // back-off entirely. Matches the main instance's timeout.
+  timeout: 1000 * 10,
 });
 
 // --- Refresh queue pattern ---
@@ -108,8 +138,19 @@ let refreshPromise: Promise<string | null> | null = null;
 async function refreshAccessToken(): Promise<string | null> {
   try {
     const { data } = await refreshClient.post('/auth/refresh');
+    // Clear here rather than leaving it to callers: the invariant consumers want is "the LAST
+    // refresh attempt 401'd", not "some refresh 401'd at some point". Callers that reach for a
+    // still-valid cached token never come through here, so relying on setAccessToken() alone
+    // would let the flag outlive the condition it describes.
+    sessionExpired = false;
     return data.accessToken ?? null;
-  } catch {
+  } catch (error) {
+    // 401 is the server's definitive "this session is over" — the refresh cookie is missing,
+    // expired, or revoked, and retrying can never succeed. Everything else (offline, DNS, 5xx)
+    // may well recover, so leave the flag alone and let callers keep retrying.
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      sessionExpired = true;
+    }
     return null;
   }
 }
@@ -144,6 +185,11 @@ function isTokenExpired(token: string, skewSeconds = 30): boolean {
  */
 export async function getFreshAccessToken(): Promise<string | null> {
   if (accessToken && !isTokenExpired(accessToken)) {
+    // Holding a usable token is itself evidence the session is alive, so clear the flag here too.
+    // Without this it can stick: in a two-tab rotation race the loser's 401 can land *after* the
+    // winner has already broadcast its fresh token, leaving this tab authenticated but backed off.
+    // Every later call short-circuits on this branch, so nothing else would ever reset it.
+    sessionExpired = false;
     return accessToken;
   }
   if (!refreshPromise) {

@@ -46,7 +46,11 @@
       "postLogoutRedirectUris": "Post-Logout Redirect URIs",
       "cancel": "Cancel",
       "create": "Register",
-      "save": "Save"
+      "save": "Save",
+      "refreshTokenLifetime": "Session idle timeout (minutes)",
+      "refreshTokenLifetimePlaceholder": "Leave empty to use the server default",
+      "refreshTokenLifetimeHint": "How long a session may go unused before the user must sign in again. 480 = 8 hours. Leave empty to inherit the server default of 7 days.",
+      "refreshTokenLifetimeInvalid": "Enter a whole number of minutes between 1 and 43200 (30 days), or leave it empty."
     },
     "grant": {
       "authorization_code": "Authorization Code",

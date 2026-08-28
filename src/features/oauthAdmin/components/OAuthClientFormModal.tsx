@@ -31,6 +31,9 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
   const [scopes, setScopes] = useState('');
   const [redirectUris, setRedirectUris] = useState('');
   const [postLogoutRedirectUris, setPostLogoutRedirectUris] = useState('');
+  // Held as a string so the field can be genuinely empty, which means "inherit the server default".
+  // A number state would collapse '' to 0 or NaN and lose that distinction.
+  const [refreshTokenLifetimeMinutes, setRefreshTokenLifetimeMinutes] = useState('');
 
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient();
@@ -46,6 +49,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       setScopes(detail.scopes.join(' '));
       setRedirectUris(detail.redirectUris.join('\n'));
       setPostLogoutRedirectUris(detail.postLogoutRedirectUris.join('\n'));
+      setRefreshTokenLifetimeMinutes(detail.refreshTokenLifetimeMinutes?.toString() ?? '');
     } else {
       // Create mode, OR edit mode while the target client's detail is still loading — clear the
       // form so a previously-edited client's values can never linger and be submitted.
@@ -56,6 +60,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       setScopes('');
       setRedirectUris('');
       setPostLogoutRedirectUris('');
+      setRefreshTokenLifetimeMinutes('');
     }
     // Key on detail?.id, not the detail object: this populates once when the client's detail first
     // loads (and re-runs when the edited id changes), but a later background refetch of the same
@@ -76,6 +81,11 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       postLogoutRedirectUris: splitLines(postLogoutRedirectUris),
       grantTypes,
       scopes: splitList(scopes),
+      // Empty means "no client-specific value" — send null so the server removes the setting
+      // rather than storing something it would silently ignore.
+      refreshTokenLifetimeMinutes: refreshTokenLifetimeMinutes.trim()
+        ? Number(refreshTokenLifetimeMinutes)
+        : null,
     };
 
     if (isEdit) {
@@ -94,9 +104,20 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
   };
 
   const requiresRedirect = grantTypes.includes('authorization_code');
+  // Empty is valid — it means "inherit the server default". Anything else must be a whole number in
+  // the range the server accepts. min/max on a number input are only advisory here (there is no
+  // <form> to run constraint validation), and a decimal would fail JSON binding on the server and
+  // surface as a bare 400 with no message, so the check has to live in canSubmit.
+  const lifetimeInput = refreshTokenLifetimeMinutes.trim();
+  const isLifetimeValid =
+    lifetimeInput === '' ||
+    (Number.isInteger(Number(lifetimeInput)) &&
+      Number(lifetimeInput) >= 1 &&
+      Number(lifetimeInput) <= 43200);
   const canSubmit =
     displayName.trim() !== '' &&
     grantTypes.length > 0 &&
+    isLifetimeValid &&
     (!requiresRedirect || splitLines(redirectUris).length > 0);
 
   return (
@@ -223,6 +244,29 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
             rows={2}
             className={`${inputClass} font-mono`}
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {t('clients.form.refreshTokenLifetime')}
+          </label>
+          <input
+            type="number"
+            min={1}
+            max={43200}
+            step={1}
+            value={refreshTokenLifetimeMinutes}
+            onChange={e => setRefreshTokenLifetimeMinutes(e.target.value)}
+            placeholder={t('clients.form.refreshTokenLifetimePlaceholder')}
+            className={inputClass}
+          />
+          <p
+            className={`mt-1 text-xs ${isLifetimeValid ? 'text-gray-400' : 'text-red-600'}`}
+          >
+            {isLifetimeValid
+              ? t('clients.form.refreshTokenLifetimeHint')
+              : t('clients.form.refreshTokenLifetimeInvalid')}
+          </p>
         </div>
       </div>
 
