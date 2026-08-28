@@ -40,6 +40,12 @@ export interface TitleImportPreview {
   errors: TitleImportRowError[];
   /** Worksheets the file carried that the importer does not recognise. */
   ignoredSheets: string[];
+  /**
+   * Columns a row needed that the uploaded sheet does not have. Deleting columns you do not use is
+   * supported, so this lists only what was actually reached and found absent — dropping "Notes"
+   * from a land file names it once here instead of once per row.
+   */
+  missingColumns: string[];
 }
 
 /**

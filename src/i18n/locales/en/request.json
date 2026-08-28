@@ -471,6 +471,7 @@
     "tabValid_one": "Row to import ({{count}})",
     "tabValid_other": "Rows to import ({{count}})",
     "tabInvalid_one": "Problem found ({{count}})",
-    "tabInvalid_other": "Problems found ({{count}})"
+    "tabInvalid_other": "Problems found ({{count}})",
+    "missingColumns": "This file has no column for: {{columns}} — some rows need them. Add the column to the header row, or check the header spelling."
   }
 }

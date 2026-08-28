@@ -462,6 +462,7 @@
     "imported_other": "已导入 {{count}} 条",
     "rejectedOnAppend_other": "有 {{count}} 条被表单拒绝（{{rows}}），请联系系统管理员。",
     "tabValid_other": "将导入的记录（{{count}}）",
-    "tabInvalid_other": "发现的问题（{{count}}）"
+    "tabInvalid_other": "发现的问题（{{count}}）",
+    "missingColumns": "文件中缺少部分记录所需的列：{{columns}} — 请在标题行补上该列，或检查列名拼写。"
   }
 }

@@ -388,6 +388,21 @@ function PreviewStep({
         <Chip label={t('titleImport.statInvalid')} value={preview.invalidRows} tone="danger" />
       </div>
 
+      {/* Actionable, unlike the ignored-sheet note: the fix is one edit to the header row, and
+          without it a 300-row file repeats the same complaint 300 times in the problems tab. */}
+      {preview.missingColumns.length > 0 && (
+        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50 border border-amber-200">
+          <Icon
+            style="solid"
+            name="triangle-exclamation"
+            className="size-4 text-amber-500 mt-0.5 shrink-0"
+          />
+          <p className="text-xs text-amber-800">
+            {t('titleImport.missingColumns', { columns: preview.missingColumns.join(', ') })}
+          </p>
+        </div>
+      )}
+
       {preview.ignoredSheets.length > 0 && (
         <p className="text-xs text-gray-500">
           {t('titleImport.ignoredSheets', { sheets: preview.ignoredSheets.join(', ') })}
