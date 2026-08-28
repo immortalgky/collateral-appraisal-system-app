@@ -12,6 +12,7 @@ import TitleMachineForm from './TitleMachineForm';
 import FormCard from '@/shared/components/sections/FormCard';
 import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { NumberInput } from '@/shared/components/inputs';
 import TitleDocumentAddressForm from './TitleDocumentAddressForm';
 import DopaAddressForm from './DopaAddressForm';
 import { TitleLookupIntegration } from '@/features/collateralMaster/components/TitleLookupIntegration';
@@ -27,6 +28,23 @@ import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import clsx from 'clsx';
 import { useTitleLevelRequiredDocuments } from '../hooks/useRequiredDocuments';
+import { TitleImportDialog } from '../components/TitleImportDialog';
+import type { TitleImportRow } from '../api/titleImport';
+import toast from 'react-hot-toast';
+
+/**
+ * Ceiling on one duplicate action.
+ *
+ * Not a performance limit — measured 2026-08-27, the form holds 300 imported titles with a detail
+ * view opening in 0.8 s, and survives 600. It is about blast radius: one mistyped digit in a dialog
+ * should not be able to produce hundreds of rows the user then has to delete one by one. A batch
+ * that large belongs in a spreadsheet they can review before uploading.
+ */
+const MAX_DUPLICATE_COPIES = 100;
+
+/** Empty or nonsense in the box means one copy; the ceiling is enforced here, not by the input. */
+const clampCopies = (value: number | null | undefined) =>
+  Math.min(Math.max(Math.trunc(value || 1), 1), MAX_DUPLICATE_COPIES);
 
 interface TitleFormProps {
   index: number;
@@ -45,6 +63,11 @@ const TitleInformationForm = () => {
     isOpen: false,
     index: null,
   });
+  const [isImportOpen, setImportOpen] = useState(false);
+  // copies is nullable on purpose: the box is legitimately empty mid-edit, and coercing it back to
+  // 1 on every keystroke makes NumberInput rewrite the display under the caret — backspace 5, see 1
+  // reappear, type 2, and the field reads 12.
+  const [duplicate, setDuplicate] = useState<{ index: number; copies: number | null } | null>(null);
   const { control } = useFormContext();
   const { append, remove } = useFieldArray({ control, name: 'titles' });
   const titles: RequestTitleDtoType[] = useWatch({ name: 'titles', control });
@@ -103,6 +126,79 @@ const TitleInformationForm = () => {
     setTimeout(scrollToSection, 100);
   };
 
+  /**
+   * Drops the rows the user accepted in the import dialog into the field array.
+   *
+   * The server already validated them against the same rules the form uses, but they are re-parsed
+   * here anyway: if one ever fails, the two rule sets have drifted, and losing that quietly would
+   * mean the user only finds out when Save returns a 400.
+   */
+  const handleImportedRows = (rows: TitleImportRow[]) => {
+    const accepted: RequestTitleDtoType[] = [];
+    const rejected: string[] = [];
+
+    rows.forEach(row => {
+      // Address names are display-only and live outside the persisted DTO, so they are resolved
+      // from the geocode the same way the picker does rather than being trusted from the response.
+      const titleLookup = row.title.titleAddress?.subDistrict
+        ? findAddressBySubDistrictCode(row.title.titleAddress.subDistrict, 'title')
+        : undefined;
+      const dopaLookup = row.title.dopaAddress?.subDistrict
+        ? findAddressBySubDistrictCode(row.title.dopaAddress.subDistrict, 'dopa')
+        : undefined;
+
+      const candidate = {
+        ...requestTitleDefault,
+        ...row.title,
+        titleAddress: {
+          ...requestTitleDefault.titleAddress,
+          ...row.title.titleAddress,
+          subDistrictName: titleLookup?.subDistrictName ?? row.subDistrictName ?? '',
+          districtName: titleLookup?.districtName ?? row.districtName ?? '',
+          provinceName: titleLookup?.provinceName ?? row.provinceName ?? '',
+        },
+        dopaAddress: {
+          ...requestTitleDefault.dopaAddress,
+          ...row.title.dopaAddress,
+          subDistrictName: dopaLookup?.subDistrictName ?? row.dopaSubDistrictName ?? '',
+          districtName: dopaLookup?.districtName ?? row.dopaDistrictName ?? '',
+          provinceName: dopaLookup?.provinceName ?? row.dopaProvinceName ?? '',
+        },
+        documents: [],
+      } as RequestTitleDtoType;
+
+      // Keep the PARSED value, not the candidate: zod carries the coercions the form's own inputs
+      // rely on, and appending the raw object would skip them.
+      const parsed = RequestTitleDto.safeParse(candidate);
+      if (parsed.success) {
+        accepted.push(parsed.data as RequestTitleDtoType);
+      } else {
+        rejected.push(`${row.sheet} #${row.rowNumber}`);
+      }
+    });
+
+    if (accepted.length > 0) {
+      // One append with the whole batch: appending in a loop re-renders the list once per row.
+      append(accepted);
+    }
+
+    if (rejected.length > 0) {
+      // Name them. A bare count tells the user something went wrong in a 400-row import and gives
+      // them no way to find it, and they would save the request believing the file went in whole.
+      const shown = rejected.slice(0, 5).join(', ');
+      toast.error(
+        t('titleImport.rejectedOnAppend', {
+          count: rejected.length,
+          rows: rejected.length > 5 ? `${shown}, …` : shown,
+        }),
+        { duration: 10_000 },
+      );
+    }
+    if (accepted.length > 0) {
+      toast.success(t('titleImport.imported', { count: accepted.length }));
+    }
+  };
+
   const handleSelectTitle = (index: number) => {
     setEditIndex(index);
     scrollToSection();
@@ -130,10 +226,33 @@ const TitleInformationForm = () => {
   };
 
   const handleDuplicateTitle = (index: number) => {
-    const titleToDuplicate = titles[index];
-    const { id, documents, ...rest } = titleToDuplicate;
-    append({ ...rest, id: undefined, documents: [] });
-    setEditIndex(titles.length);
+    setDuplicate({ index, copies: 1 });
+  };
+
+  const confirmDuplicate = () => {
+    if (!duplicate) return;
+
+    const source = titles[duplicate.index];
+    if (!source) return;
+
+    const copies = clampCopies(duplicate.copies);
+    const { id, documents, ...rest } = source;
+
+    // structuredClone per copy, not a shared spread: a shallow copy would hand every duplicate the
+    // same titleAddress/dopaAddress object, so editing one row's address could reach the others.
+    append(
+      Array.from({ length: copies }, () => ({
+        ...structuredClone(rest),
+        id: undefined,
+        documents: [],
+      })),
+    );
+
+    // A single copy is almost always about to be edited, so open it. A batch is not — the user
+    // wants to see the list they just created.
+    if (copies === 1) setEditIndex(titles.length);
+
+    setDuplicate(null);
   };
 
   const getCollateralTypeLabel = (type: string | undefined) => {
@@ -221,14 +340,24 @@ const TitleInformationForm = () => {
                 {t('titleOptions.backToList')}
               </button>
             ) : !isReadOnly ? (
-              <button
-                type="button"
-                onClick={handleAddTitle}
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors"
-              >
-                <Icon style="solid" name="plus" className="size-4" />
-                {t('titleOptions.addTitle')}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setImportOpen(true)}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors"
+                >
+                  <Icon style="solid" name="file-excel" className="size-4" />
+                  {t('titleImport.button')}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddTitle}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 transition-colors"
+                >
+                  <Icon style="solid" name="plus" className="size-4" />
+                  {t('titleOptions.addTitle')}
+                </button>
+              </div>
             ) : null
           }
         >
@@ -402,6 +531,50 @@ const TitleInformationForm = () => {
               </button>
             </div>
           )}
+
+          <TitleImportDialog
+            isOpen={isImportOpen}
+            onClose={() => setImportOpen(false)}
+            onConfirm={handleImportedRows}
+          />
+
+          <ConfirmDialog
+            isOpen={duplicate !== null}
+            onClose={() => setDuplicate(null)}
+            onConfirm={confirmDuplicate}
+            title={t('titleOptions.duplicateTitle')}
+            confirmText={t('titleOptions.duplicateConfirm', {
+              count: clampCopies(duplicate?.copies),
+            })}
+            cancelText={t('common:actions.cancel')}
+            variant="primary"
+          >
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-gray-600">
+                {t('titleOptions.duplicateMessage', {
+                  type:
+                    duplicate === null
+                      ? ''
+                      : getCollateralTypeLabel(titles[duplicate.index]?.collateralType),
+                  n: (duplicate?.index ?? 0) + 1,
+                })}
+              </p>
+              <NumberInput
+                label={t('titleOptions.duplicateCount')}
+                value={duplicate?.copies ?? null}
+                onChange={e =>
+                  setDuplicate(prev => (prev ? { ...prev, copies: e.target.value } : prev))
+                }
+                decimalPlaces={0}
+                thousandSeparator={false}
+                min={1}
+                max={MAX_DUPLICATE_COPIES}
+              />
+              <p className="text-xs text-gray-400">
+                {t('titleOptions.duplicateHint', { max: MAX_DUPLICATE_COPIES })}
+              </p>
+            </div>
+          </ConfirmDialog>
 
           <ConfirmDialog
             isOpen={deleteConfirm.isOpen}
