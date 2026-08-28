@@ -3,3 +3,4 @@ export * from './documents';
 export * from './comments';
 export * from './requiredDocuments';
 export * from './documentTypes';
+export * from './titleImport';
