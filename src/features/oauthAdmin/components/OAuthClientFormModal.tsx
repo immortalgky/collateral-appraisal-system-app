@@ -18,6 +18,27 @@ interface Props {
 const inputClass =
   'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
 
+// Mirrors the server bounds in ClientPermissionMapper. Access and identity tokens are bearer
+// credentials that cannot be revoked before they expire, so they are capped far shorter than the
+// refresh token, which is a reference token checked against the database on every use.
+const MAX_SHORT_LIVED_MINUTES = 24 * 60;
+const MAX_REFRESH_MINUTES = 30 * 24 * 60;
+
+/** Empty means "inherit the server default", so it is sent as null rather than a number. */
+const toMinutes = (value: string): number | null => (value.trim() ? Number(value) : null);
+
+/**
+ * Empty is valid. Anything else must be a whole number within the server's range — `min`/`max` on a
+ * number input are advisory here because the modal has no <form> to run constraint validation, and a
+ * decimal would fail JSON binding server-side and surface as a bare 400 with no message.
+ */
+const isLifetimeValid = (value: string, maxMinutes: number): boolean => {
+  const trimmed = value.trim();
+  if (trimmed === '') return true;
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= maxMinutes;
+};
+
 const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => {
   const { t } = useTranslation('oauthAdmin');
   const isEdit = editId !== null;
@@ -31,8 +52,10 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
   const [scopes, setScopes] = useState('');
   const [redirectUris, setRedirectUris] = useState('');
   const [postLogoutRedirectUris, setPostLogoutRedirectUris] = useState('');
-  // Held as a string so the field can be genuinely empty, which means "inherit the server default".
-  // A number state would collapse '' to 0 or NaN and lose that distinction.
+  // Held as strings so a field can be genuinely empty, which means "inherit the server default".
+  // Number state would collapse '' to 0 or NaN and lose that distinction.
+  const [accessTokenLifetimeMinutes, setAccessTokenLifetimeMinutes] = useState('');
+  const [identityTokenLifetimeMinutes, setIdentityTokenLifetimeMinutes] = useState('');
   const [refreshTokenLifetimeMinutes, setRefreshTokenLifetimeMinutes] = useState('');
 
   const createMutation = useCreateClient();
@@ -49,6 +72,8 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       setScopes(detail.scopes.join(' '));
       setRedirectUris(detail.redirectUris.join('\n'));
       setPostLogoutRedirectUris(detail.postLogoutRedirectUris.join('\n'));
+      setAccessTokenLifetimeMinutes(detail.accessTokenLifetimeMinutes?.toString() ?? '');
+      setIdentityTokenLifetimeMinutes(detail.identityTokenLifetimeMinutes?.toString() ?? '');
       setRefreshTokenLifetimeMinutes(detail.refreshTokenLifetimeMinutes?.toString() ?? '');
     } else {
       // Create mode, OR edit mode while the target client's detail is still loading — clear the
@@ -60,6 +85,8 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       setScopes('');
       setRedirectUris('');
       setPostLogoutRedirectUris('');
+      setAccessTokenLifetimeMinutes('');
+      setIdentityTokenLifetimeMinutes('');
       setRefreshTokenLifetimeMinutes('');
     }
     // Key on detail?.id, not the detail object: this populates once when the client's detail first
@@ -83,9 +110,9 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       scopes: splitList(scopes),
       // Empty means "no client-specific value" — send null so the server removes the setting
       // rather than storing something it would silently ignore.
-      refreshTokenLifetimeMinutes: refreshTokenLifetimeMinutes.trim()
-        ? Number(refreshTokenLifetimeMinutes)
-        : null,
+      accessTokenLifetimeMinutes: toMinutes(accessTokenLifetimeMinutes),
+      identityTokenLifetimeMinutes: toMinutes(identityTokenLifetimeMinutes),
+      refreshTokenLifetimeMinutes: toMinutes(refreshTokenLifetimeMinutes),
     };
 
     if (isEdit) {
@@ -104,20 +131,15 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
   };
 
   const requiresRedirect = grantTypes.includes('authorization_code');
-  // Empty is valid — it means "inherit the server default". Anything else must be a whole number in
-  // the range the server accepts. min/max on a number input are only advisory here (there is no
-  // <form> to run constraint validation), and a decimal would fail JSON binding on the server and
-  // surface as a bare 400 with no message, so the check has to live in canSubmit.
-  const lifetimeInput = refreshTokenLifetimeMinutes.trim();
-  const isLifetimeValid =
-    lifetimeInput === '' ||
-    (Number.isInteger(Number(lifetimeInput)) &&
-      Number(lifetimeInput) >= 1 &&
-      Number(lifetimeInput) <= 43200);
+  const isAccessLifetimeValid = isLifetimeValid(accessTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES);
+  const isIdentityLifetimeValid = isLifetimeValid(identityTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES);
+  const isRefreshLifetimeValid = isLifetimeValid(refreshTokenLifetimeMinutes, MAX_REFRESH_MINUTES);
   const canSubmit =
     displayName.trim() !== '' &&
     grantTypes.length > 0 &&
-    isLifetimeValid &&
+    isAccessLifetimeValid &&
+    isIdentityLifetimeValid &&
+    isRefreshLifetimeValid &&
     (!requiresRedirect || splitLines(redirectUris).length > 0);
 
   return (
@@ -246,27 +268,43 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
           />
         </div>
 
-        <div>
+        <div className="pt-2 border-t border-gray-100">
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('clients.form.refreshTokenLifetime')}
+            {t('clients.form.tokenLifetimes')}
           </label>
-          <input
-            type="number"
-            min={1}
-            max={43200}
-            step={1}
-            value={refreshTokenLifetimeMinutes}
-            onChange={e => setRefreshTokenLifetimeMinutes(e.target.value)}
-            placeholder={t('clients.form.refreshTokenLifetimePlaceholder')}
-            className={inputClass}
-          />
-          <p
-            className={`mt-1 text-xs ${isLifetimeValid ? 'text-gray-400' : 'text-red-600'}`}
-          >
-            {isLifetimeValid
-              ? t('clients.form.refreshTokenLifetimeHint')
-              : t('clients.form.refreshTokenLifetimeInvalid')}
-          </p>
+          <p className="mb-2 text-xs text-gray-400">{t('clients.form.tokenLifetimesHint')}</p>
+
+          <div className="grid grid-cols-3 gap-3">
+            {(
+              [
+                ['access', accessTokenLifetimeMinutes, setAccessTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES, isAccessLifetimeValid],
+                ['identity', identityTokenLifetimeMinutes, setIdentityTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES, isIdentityLifetimeValid],
+                ['refresh', refreshTokenLifetimeMinutes, setRefreshTokenLifetimeMinutes, MAX_REFRESH_MINUTES, isRefreshLifetimeValid],
+              ] as const
+            ).map(([kind, value, setValue, max, isValid]) => (
+              <div key={kind}>
+                <label className="block text-xs text-gray-500 mb-1">
+                  {t(`clients.form.tokenLifetime.${kind}` as const)}
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={max}
+                  step={1}
+                  value={value}
+                  onChange={e => setValue(e.target.value)}
+                  placeholder={t('clients.form.tokenLifetimeInherit')}
+                  className={inputClass}
+                  aria-invalid={!isValid}
+                />
+                {!isValid && (
+                  <p className="mt-1 text-xs text-red-600">
+                    {t('clients.form.tokenLifetimeInvalid', { max })}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
