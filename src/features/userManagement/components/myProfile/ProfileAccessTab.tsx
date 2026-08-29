@@ -40,8 +40,12 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
   const localizeCompanyName = useLocalizedCompanyName();
   const [permissionSearch, setPermissionSearch] = useState('');
 
+  const roles = me.roles ?? [];
+  const groups = me.groups ?? [];
+  const teams = me.teams ?? [];
+
   const permissions = useMemo(() => {
-    const sorted = [...me.permissions].sort((a, b) => a.localeCompare(b));
+    const sorted = [...(me.permissions ?? [])].sort((a, b) => a.localeCompare(b));
     const term = permissionSearch.trim().toUpperCase();
     return term ? sorted.filter(p => p.toUpperCase().includes(term)) : sorted;
   }, [me.permissions, permissionSearch]);
@@ -65,13 +69,13 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         icon="user-shield"
         color="violet"
         title={t('sections.roles')}
-        count={me.roles.length}
+        count={roles.length}
       >
-        {me.roles.length === 0 ? (
+        {roles.length === 0 ? (
           <p className="text-sm text-gray-400">{t('empty.noRolesAssigned')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {me.roles.map(role => (
+            {roles.map(role => (
               <Pill key={role} tone="bg-violet-50 text-violet-700" dot="bg-violet-400">
                 {roleLabel(role)}
               </Pill>
@@ -84,13 +88,13 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         icon="users-rectangle"
         color="amber"
         title={t('sections.groups')}
-        count={me.groups.length}
+        count={groups.length}
       >
-        {me.groups.length === 0 ? (
+        {groups.length === 0 ? (
           <p className="text-sm text-gray-400">{t('empty.noGroupsAssigned')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {me.groups.map(group => (
+            {groups.map(group => (
               <Pill
                 key={group.groupId}
                 tone="bg-amber-50 text-amber-700"
@@ -107,13 +111,13 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         icon="people-group"
         color="teal"
         title={t('sections.teams')}
-        count={me.teams.length}
+        count={teams.length}
       >
-        {me.teams.length === 0 ? (
+        {teams.length === 0 ? (
           <p className="text-sm text-gray-400">{t('empty.noTeamsAssigned')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {me.teams.map(team => (
+            {teams.map(team => (
               <Pill
                 key={team.teamId}
                 tone="bg-teal-50 text-teal-700"
@@ -130,7 +134,7 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         icon="key"
         color="slate"
         title={t('sections.permissions')}
-        count={me.permissions.length}
+        count={me.permissions?.length ?? 0}
         action={
           <input
             type="search"
@@ -143,7 +147,9 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
       >
         {permissions.length === 0 ? (
           <p className="text-sm text-gray-400">
-            {me.permissions.length === 0 ? t('empty.noPermissionsAssigned') : t('empty.noResults')}
+            {(me.permissions?.length ?? 0) === 0
+              ? t('empty.noPermissionsAssigned')
+              : t('empty.noResults')}
           </p>
         ) : (
           <div className="flex flex-wrap gap-1.5">

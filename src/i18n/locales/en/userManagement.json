@@ -555,7 +555,7 @@
     "passwordManagedByAd": "Your password is managed in Active Directory. Change it through your usual Windows account tools.",
     "passwordChangedAt": "Password last changed",
     "session": "Session",
-    "sessionPolicy": "You are signed out automatically after a period of inactivity. On a shared computer, use Sign out — closing the browser does not reliably end your session.",
+    "sessionPolicy": "On a shared computer, always use Sign out when you finish — closing the browser does not reliably end your session.",
     "appearance": "Appearance",
     "browserOnlySetting": "These settings are saved in this browser only. They do not follow you to another computer.",
     "densityHint": "Scales the whole interface. Compact fits more on smaller screens.",

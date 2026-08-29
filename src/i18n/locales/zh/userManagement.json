@@ -553,7 +553,7 @@
     "passwordManagedByAd": "您的密码由 Active Directory 管理，请通过常用的 Windows 账户工具修改。",
     "passwordChangedAt": "上次修改密码",
     "session": "会话",
-    "sessionPolicy": "闲置一段时间后系统会自动退出登录。若使用共用电脑，请务必点击退出登录——仅关闭浏览器并不能确保会话结束。",
+    "sessionPolicy": "使用共用电脑时，请务必在结束后点击退出登录——仅关闭浏览器并不能确保会话结束。",
     "appearance": "外观",
     "browserOnlySetting": "这些设置仅保存在当前浏览器中，不会同步到其他电脑。",
     "densityHint": "缩放整个界面。紧凑模式可在小屏幕上显示更多内容。",

@@ -145,10 +145,21 @@ const MyProfilePage = () => {
         ))}
       </div>
 
-      {activeTab === 'profile' && <ProfileInfoTab me={me} isLdap={isLdap} />}
-      {activeTab === 'security' && <ProfileSecurityTab me={me} isLdap={isLdap} />}
-      {activeTab === 'preferences' && <ProfilePreferencesTab />}
-      {activeTab === 'access' && <ProfileAccessTab me={me} />}
+      {/* Hidden rather than unmounted: ProfileInfoTab holds the edit form in local
+          state, and unmounting it would throw away unsaved typing the moment someone
+          clicked another tab — with no prompt and no way back. */}
+      <div className={clsx(activeTab !== 'profile' && 'hidden')}>
+        <ProfileInfoTab me={me} isLdap={isLdap} />
+      </div>
+      <div className={clsx(activeTab !== 'security' && 'hidden')}>
+        <ProfileSecurityTab me={me} isLdap={isLdap} />
+      </div>
+      <div className={clsx(activeTab !== 'preferences' && 'hidden')}>
+        <ProfilePreferencesTab />
+      </div>
+      <div className={clsx(activeTab !== 'access' && 'hidden')}>
+        <ProfileAccessTab me={me} />
+      </div>
     </div>
   );
 };

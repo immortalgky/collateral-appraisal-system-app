@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Button from '@shared/components/Button';
@@ -35,13 +35,24 @@ const ProfileInfoTab = ({ me, isLdap }: ProfileInfoTabProps) => {
   const updateField = (key: keyof ReturnType<typeof toForm>, value: string) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
-  // Compare trimmed: handleSave sends trimmed values, so an untrimmed field would
-  // otherwise stay "dirty" forever after a successful save.
+  // Trim BOTH sides. handleSave sends trimmed values, so comparing untrimmed would
+  // leave the form permanently dirty after a save; but nothing trims on write either
+  // (neither this handler nor the admin one), so a stored "John " must not read as
+  // dirty before the user has touched anything.
   const isDirty =
-    form.firstName.trim() !== me.firstName ||
-    form.lastName.trim() !== me.lastName ||
-    form.position.trim() !== (me.position ?? '') ||
-    form.department.trim() !== (me.department ?? '');
+    form.firstName.trim() !== (me.firstName ?? '').trim() ||
+    form.lastName.trim() !== (me.lastName ?? '').trim() ||
+    form.position.trim() !== (me.position ?? '').trim() ||
+    form.department.trim() !== (me.department ?? '').trim();
+
+  // ['me'] refetches on window focus. Without this, an admin editing the same user in
+  // another window would leave this form holding the old values, and the next Save
+  // would quietly write them back over the admin's change. Untouched form only —
+  // never discard what the user is in the middle of typing.
+  useEffect(() => {
+    if (!isDirty) setForm(toForm(me));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me]);
 
   const handleSave = () => {
     if (!form.firstName.trim() || !form.lastName.trim()) {
