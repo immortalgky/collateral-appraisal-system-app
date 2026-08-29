@@ -35,8 +35,11 @@ const toMinutes = (value: string): number | null => (value.trim() ? Number(value
 const isLifetimeValid = (value: string, maxMinutes: number): boolean => {
   const trimmed = value.trim();
   if (trimmed === '') return true;
+  // Digits only. Number() would happily accept "1e3" and "+5" — both typeable in a number input —
+  // and submit 1000 or 5 while the field still displays what was typed.
+  if (!/^\d+$/.test(trimmed)) return false;
   const parsed = Number(trimmed);
-  return Number.isInteger(parsed) && parsed >= 1 && parsed <= maxMinutes;
+  return parsed >= 1 && parsed <= maxMinutes;
 };
 
 const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => {
@@ -131,8 +134,14 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
   };
 
   const requiresRedirect = grantTypes.includes('authorization_code');
-  const isAccessLifetimeValid = isLifetimeValid(accessTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES);
-  const isIdentityLifetimeValid = isLifetimeValid(identityTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES);
+  const isAccessLifetimeValid = isLifetimeValid(
+    accessTokenLifetimeMinutes,
+    MAX_SHORT_LIVED_MINUTES,
+  );
+  const isIdentityLifetimeValid = isLifetimeValid(
+    identityTokenLifetimeMinutes,
+    MAX_SHORT_LIVED_MINUTES,
+  );
   const isRefreshLifetimeValid = isLifetimeValid(refreshTokenLifetimeMinutes, MAX_REFRESH_MINUTES);
   const canSubmit =
     displayName.trim() !== '' &&
@@ -269,24 +278,46 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         </div>
 
         <div className="pt-2 border-t border-gray-100">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <p className="block text-sm font-medium text-gray-700 mb-1">
             {t('clients.form.tokenLifetimes')}
-          </label>
+          </p>
           <p className="mb-2 text-xs text-gray-400">{t('clients.form.tokenLifetimesHint')}</p>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {(
               [
-                ['access', accessTokenLifetimeMinutes, setAccessTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES, isAccessLifetimeValid],
-                ['identity', identityTokenLifetimeMinutes, setIdentityTokenLifetimeMinutes, MAX_SHORT_LIVED_MINUTES, isIdentityLifetimeValid],
-                ['refresh', refreshTokenLifetimeMinutes, setRefreshTokenLifetimeMinutes, MAX_REFRESH_MINUTES, isRefreshLifetimeValid],
+                [
+                  'access',
+                  accessTokenLifetimeMinutes,
+                  setAccessTokenLifetimeMinutes,
+                  MAX_SHORT_LIVED_MINUTES,
+                  isAccessLifetimeValid,
+                ],
+                [
+                  'identity',
+                  identityTokenLifetimeMinutes,
+                  setIdentityTokenLifetimeMinutes,
+                  MAX_SHORT_LIVED_MINUTES,
+                  isIdentityLifetimeValid,
+                ],
+                [
+                  'refresh',
+                  refreshTokenLifetimeMinutes,
+                  setRefreshTokenLifetimeMinutes,
+                  MAX_REFRESH_MINUTES,
+                  isRefreshLifetimeValid,
+                ],
               ] as const
             ).map(([kind, value, setValue, max, isValid]) => (
               <div key={kind}>
-                <label className="block text-xs text-gray-500 mb-1">
+                <label
+                  htmlFor={`token-lifetime-${kind}`}
+                  className="block text-xs text-gray-500 mb-1"
+                >
                   {t(`clients.form.tokenLifetime.${kind}` as const)}
                 </label>
                 <input
+                  id={`token-lifetime-${kind}`}
                   type="number"
                   min={1}
                   max={max}
@@ -296,9 +327,12 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
                   placeholder={t('clients.form.tokenLifetimeInherit')}
                   className={inputClass}
                   aria-invalid={!isValid}
+                  // Without this the field announces as "invalid" with no reason, and the Save button
+                  // is disabled with nothing explaining why.
+                  aria-describedby={isValid ? undefined : `token-lifetime-${kind}-error`}
                 />
                 {!isValid && (
-                  <p className="mt-1 text-xs text-red-600">
+                  <p id={`token-lifetime-${kind}-error`} className="mt-1 text-xs text-red-600">
                     {t('clients.form.tokenLifetimeInvalid', { max })}
                   </p>
                 )}
