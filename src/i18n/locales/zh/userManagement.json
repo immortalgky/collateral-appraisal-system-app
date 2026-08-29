@@ -536,5 +536,30 @@
     "members": "成员",
     "username": "用户名",
     "module": "模块"
+  },
+  "myProfile": {
+    "tabs": {
+      "profile": "个人资料",
+      "security": "安全",
+      "preferences": "偏好设置",
+      "access": "我的权限"
+    },
+    "loadFailed": "无法加载您的个人资料，请刷新页面。",
+    "ldapManaged": "您的姓名、邮箱、职位和部门由 Active Directory 同步，每次登录时都会更新，因此无法在此修改。",
+    "managedByAdmin": "由管理员维护",
+    "contactAdminToChange": "如需修改以上信息，请联系系统管理员。",
+    "password": "密码",
+    "passwordHint": "请设置符合当前密码策略的新密码。",
+    "passwordManagedByAd": "您的密码由 Active Directory 管理，请通过常用的 Windows 账户工具修改。",
+    "passwordChangedAt": "上次修改密码",
+    "session": "会话",
+    "sessionPolicy": "闲置一段时间后系统会自动退出登录。若使用共用电脑，请务必点击退出登录——仅关闭浏览器并不能确保会话结束。",
+    "appearance": "外观",
+    "browserOnlySetting": "这些设置仅保存在当前浏览器中，不会同步到其他电脑。",
+    "densityHint": "缩放整个界面。紧凑模式可在小屏幕上显示更多内容。",
+    "formLayoutHint": "评估物业表单中字段的排列方式。",
+    "language": "语言",
+    "languageHint": "界面使用的语言。",
+    "accessHint": "这是您目前在系统中的权限。如果缺少某个菜单或操作，请联系系统管理员核对此处列出的角色与权限。"
   }
 }

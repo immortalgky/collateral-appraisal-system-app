@@ -30,6 +30,7 @@ import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMen
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
+import { userNavigation } from '@shared/config/userNavigation';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -76,15 +77,6 @@ function useTaskLockHeartbeat(taskId: string | undefined, isLockOwner: boolean) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLockOwner, taskId]);
 }
-
-const userNavigation = [
-  { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
-  {
-    name: 'Sign out',
-    nameKey: 'userMenu.signOut',
-    href: `${import.meta.env.VITE_API_URL}/connect/logout?client_id=spa&post_logout_redirect_uri=${import.meta.env.VITE_APP_URL}/`,
-  },
-];
 
 const routeLabels: Record<string, { label: string; icon: string }> = {
   request: { label: 'Request Information', icon: 'folder-open' },

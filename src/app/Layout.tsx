@@ -22,15 +22,7 @@ import {
 } from '@shared/contexts/RightMenuPortalContext';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
-
-const userNavigation = [
-  { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
-  {
-    name: 'Sign out',
-    nameKey: 'userMenu.signOut',
-    href: `${import.meta.env.VITE_API_URL}/connect/logout?client_id=spa&post_logout_redirect_uri=${import.meta.env.VITE_APP_URL}/`,
-  },
-];
+import { userNavigation } from '@shared/config/userNavigation';
 
 /**
  * Component that conditionally renders the right menu toggle button

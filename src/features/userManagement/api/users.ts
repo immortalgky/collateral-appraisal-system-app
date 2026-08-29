@@ -46,6 +46,9 @@ export const useUpdateProfile = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ME_KEY });
+      // The navbar reads the auth store, which is fed by the separate
+      // ['currentUser'] query — without this the header keeps the old name.
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
   });
 };

@@ -538,5 +538,30 @@
     "members": "Members",
     "username": "Username",
     "module": "Module"
+  },
+  "myProfile": {
+    "tabs": {
+      "profile": "Profile",
+      "security": "Security",
+      "preferences": "Preferences",
+      "access": "My access"
+    },
+    "loadFailed": "Could not load your profile. Please refresh the page.",
+    "ldapManaged": "Your name, email, position and department are synced from Active Directory and are refreshed every time you sign in, so they cannot be edited here.",
+    "managedByAdmin": "Managed by your administrator",
+    "contactAdminToChange": "Contact your system administrator to have any of these changed.",
+    "password": "Password",
+    "passwordHint": "Choose a new password that meets the current password policy.",
+    "passwordManagedByAd": "Your password is managed in Active Directory. Change it through your usual Windows account tools.",
+    "passwordChangedAt": "Password last changed",
+    "session": "Session",
+    "sessionPolicy": "You are signed out automatically after a period of inactivity. On a shared computer, use Sign out — closing the browser does not reliably end your session.",
+    "appearance": "Appearance",
+    "browserOnlySetting": "These settings are saved in this browser only. They do not follow you to another computer.",
+    "densityHint": "Scales the whole interface. Compact fits more on smaller screens.",
+    "formLayoutHint": "How fields are arranged on the appraisal property forms.",
+    "language": "Language",
+    "languageHint": "Language used across the interface.",
+    "accessHint": "This is what you can do in the system today. If a menu or action is missing, ask your system administrator to review the roles and permissions listed here."
   }
 }

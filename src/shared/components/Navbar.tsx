@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
@@ -22,6 +23,7 @@ import ConnectionStatusIndicator, {
 } from '@features/notification/components/ConnectionStatusIndicator';
 import * as appHub from '@shared/realtime/appHub';
 import { HeaderFavoritesDropdown } from '@features/menuFavorites/components/HeaderFavoritesDropdown';
+import type { UserNavItem } from '@shared/config/userNavigation';
 
 const searchFilters = [
   { id: 'all' as const, labelKey: 'search.filters.all', icon: 'layer-group', color: 'gray' },
@@ -52,6 +54,14 @@ const filterColorStyles: Record<string, { bg: string; text: string; activeBg: st
   amber: { bg: 'bg-amber-50', text: 'text-amber-500', activeBg: 'bg-amber-100' },
 };
 
+const userMenuItemClass =
+  'flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 data-focus:bg-gray-50 dark:data-focus:bg-base-300 data-focus:outline-hidden transition-colors';
+
+const userMenuIcons: Record<string, string> = {
+  'Your profile': 'user',
+  Settings: 'gear',
+};
+
 function handleLogout(href: string) {
   // Navigate FIRST — clearing Zustand state would trigger ProtectedRoute
   // to redirect to /login, which cancels the server logout navigation.
@@ -70,7 +80,7 @@ function handleLogout(href: string) {
 export default function Navbar({
   userNavigation,
 }: {
-  userNavigation: Record<string, string>[];
+  userNavigation: UserNavItem[];
 }): React.ReactNode {
   const { t } = useTranslation('nav');
   const currentUser = useAuthStore(state => state.user);
@@ -331,13 +341,13 @@ export default function Navbar({
                 </div>
 
                 {userNavigation.map(item =>
-                  item.name === 'Sign out' ? (
+                  item.external ? (
                     <MenuItem
                       key={item.name}
                       as="button"
                       type="button"
                       onClick={() => handleLogout(item.href)}
-                      className="flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 data-focus:bg-gray-50 dark:data-focus:bg-base-300 data-focus:outline-hidden transition-colors"
+                      className={userMenuItemClass}
                     >
                       <Icon
                         name="arrow-right-from-bracket"
@@ -347,24 +357,17 @@ export default function Navbar({
                       {item.nameKey ? t(item.nameKey as never) : item.name}
                     </MenuItem>
                   ) : (
+                    // In-app destinations go through the router so the SPA does not
+                    // reload (and drop its in-memory access token) on every click.
                     <MenuItem key={item.name}>
-                      <a
-                        href={item.href}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 data-focus:bg-gray-50 dark:data-focus:bg-base-300 data-focus:outline-hidden transition-colors"
-                      >
+                      <Link to={item.href} className={userMenuItemClass}>
                         <Icon
-                          name={
-                            item.name === 'Your profile'
-                              ? 'user'
-                              : item.name === 'Settings'
-                                ? 'gear'
-                                : 'arrow-right-from-bracket'
-                          }
+                          name={userMenuIcons[item.name] ?? 'circle'}
                           style="regular"
                           className="size-4 text-gray-400"
                         />
                         {item.nameKey ? t(item.nameKey as never) : item.name}
-                      </a>
+                      </Link>
                     </MenuItem>
                   ),
                 )}
