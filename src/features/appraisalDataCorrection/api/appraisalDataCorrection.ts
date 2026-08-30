@@ -42,12 +42,13 @@ export function useSearchClosedAppraisals(
   const fullParams: AppraisalSearchParams = { ...params, status: 'Completed' };
   return useQuery({
     queryKey: appraisalDataCorrectionKeys.search(fullParams),
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const cleanParams = Object.fromEntries(
         Object.entries(fullParams).filter(([, v]) => v !== undefined && v !== '' && v !== null),
       );
       const { data } = await axios.get<AppraisalSearchResponse>('/appraisals', {
         params: cleanParams,
+        signal,
       });
       return data;
     },
