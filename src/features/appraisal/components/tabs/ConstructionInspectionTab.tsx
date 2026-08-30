@@ -196,12 +196,19 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
         (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
         0,
       ),
-      weightedPreviousProgress:
-        totalConstructionValue > 0
-          ? (totalPreviousPropertyValue / totalConstructionValue) * 100
-          : 0,
-      weightedCurrentProgress:
-        totalConstructionValue > 0 ? (totalCurrentPropertyValue / totalConstructionValue) * 100 : 0,
+      // Summed off the entered percentages, not divided out of the money. The money columns are
+      // rounded to whole baht (CA-614), so their sum no longer divides back to the base exactly —
+      // a finished building read 99.98%. The server reports these the same way; see
+      // ConstructionValueBreakdown.ConstructionProgressPercent.
+      weightedPreviousProgress: computedSubItems.reduce(
+        (s: number, i: any) =>
+          s + (Number(i.proportionPct) || 0) * ((Number(i.previousProgressPct) || 0) / 100),
+        0,
+      ),
+      weightedCurrentProgress: computedSubItems.reduce(
+        (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
+        0,
+      ),
       totalPreviousPropertyValue,
       totalCurrentPropertyValue,
     };
@@ -226,24 +233,14 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
     [hasOwnValueBase, totalValue, summary?.summaryPreviousProgressPct],
   );
 
-  // Progress is read off the mode flag, never off the money: without a value base there is no ratio
-  // to take, and a condo whose appraised value has not been set yet would otherwise report 0%
-  // however much progress the inspector entered.
+  // Read off the entered percentages, never off the money. Dividing the money by the base stopped
+  // being exact once the money was rounded to whole baht (CA-614) — a finished building read
+  // 99.98% — and without a value base there is no ratio to take at all: a condo whose appraised
+  // value has not been set yet would report 0% however much progress the inspector entered.
   const overallProgress = useMemo(() => {
-    if (enterDetail) {
-      return hasOwnValueBase && totalValue > 0
-        ? (grandTotal.totalCurrentPropertyValue / totalValue) * 100
-        : grandTotal.totalCurrentProportion;
-    }
+    if (enterDetail) return grandTotal.totalCurrentProportion;
     return summary?.summaryCurrentProgressPct ?? 0;
-  }, [
-    enterDetail,
-    hasOwnValueBase,
-    grandTotal.totalCurrentProportion,
-    totalValue,
-    grandTotal.totalCurrentPropertyValue,
-    summary?.summaryCurrentProgressPct,
-  ]);
+  }, [enterDetail, grandTotal.totalCurrentProportion, summary?.summaryCurrentProgressPct]);
 
   // Copy from another property
   const [isCopyOpen, setIsCopyOpen] = useState(false);

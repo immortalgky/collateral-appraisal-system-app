@@ -10,10 +10,14 @@
  *
  * The toFixed is not cosmetic. The server rounds decimals, this rounds doubles, and the two part
  * company at exact half-baht boundaries: 12,979,700 x 28.5% is 3,699,214.5, which the server rounds
- * up to 3,699,215 while a bare Math.round on the double sees 3,699,214.4999999 and rounds down. A
- * stored value carries at most six decimals — money to two, a percentage to four, divided by a
- * hundred — so snapping to six sheds the float error without touching any real value. Verified
- * against exact integer arithmetic over 400k random inputs and every constructible half-baht
- * boundary: no disagreement with the server in either set.
+ * up to 3,699,215 while a bare Math.round on the double sees 3,699,214.4999999 and rounds down.
+ * Every value passed here is a whole-baht figure times a four-decimal percentage over a hundred, so
+ * it carries at most six decimals and snapping to six sheds the float error without touching any
+ * real value. Checked against exact integer arithmetic over 400k random inputs and every
+ * constructible half-baht boundary: no disagreement with the server in either set.
+ *
+ * Math.round breaks ties toward +∞ where the server breaks them away from zero. The two differ only
+ * for negative half-baht values, and none of these figures can be negative: they are a non-negative
+ * base times a percentage the form holds at 0 or above.
  */
 export const roundBaht = (value: number) => Math.round(Number(value.toFixed(6)));

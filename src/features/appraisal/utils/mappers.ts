@@ -601,6 +601,10 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   // Rounded to match what the inspection screen showed while the figures were being entered.
   // The server rounds this on save anyway, but it rounds decimals and the screen rounds doubles,
   // so sending the raw sum let the two land a baht apart at half-baht boundaries.
+  //
+  // Only the depreciation rows, deliberately. A condo unit has no depreciation table, so this is 0
+  // and stays 0 — that zero is what tells the server the inspection has no value base of its own,
+  // and the screen substituting the appraised value for display must not leak into the payload.
   const totalValue = roundBaht(
     (depreciationDetails ?? []).reduce(
       (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
