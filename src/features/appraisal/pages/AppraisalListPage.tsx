@@ -127,6 +127,15 @@ function AppraisalListPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
   const facets = data?.facets;
 
+  // The running row number has to be derived from the response these rows came in, not from the
+  // local paging state. `keepPreviousData` means `items` lags one fetch behind, so after clicking
+  // "next page" the local pageNumber is already 1 while the rows on screen are still page 0's —
+  // numbering them 26-50 until the new page lands. The server echoes back the page it served, so
+  // the numbers and the rows always agree. Note pageSize is echoed as the *effective* size, which
+  // the API clamps, so this also stays right when a caller asks for more than the maximum.
+  const servedPageNumber = data?.result.pageNumber ?? 0;
+  const servedPageSize = data?.result.pageSize ?? pageSize;
+
   // Handlers
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -335,8 +344,9 @@ function AppraisalListPage() {
           sortDir={sortDir}
           onSort={handleSort}
           onRowClick={handleRowClick}
-          pageNumber={pageNumber}
-          pageSize={pageSize}
+          pageNumber={servedPageNumber}
+          pageSize={servedPageSize}
+          isStale={isFetching && !showSkeleton}
         />
         <Pagination
           currentPage={pageNumber}

@@ -23,8 +23,15 @@ export const queryClient = new QueryClient({
       retry: (failureCount, error) => {
         if (axios.isCancel(error)) return false;
 
+        const RETRYABLE_4XX = [408, 425, 429];
         const status = axios.isAxiosError(error) ? error.response?.status : undefined;
-        if (status !== undefined && status >= 400 && status < 500) return false;
+        if (
+          status !== undefined &&
+          status >= 400 &&
+          status < 500 &&
+          !RETRYABLE_4XX.includes(status)
+        )
+          return false;
 
         return failureCount < 2;
       },
