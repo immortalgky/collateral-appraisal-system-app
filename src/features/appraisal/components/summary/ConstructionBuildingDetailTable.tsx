@@ -69,6 +69,12 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
   // the rows — exactly what ConstructionValueBreakdown.ConstructionProgressPercent does on the
   // server, and what the card above this table already shows. Returning 0 instead would print
   // 0.00 % under rows reading 40 % and 60 % and a card reading 50 %.
+  //
+  // One case the two cannot agree on: the server clamps each row to 100 before sending it, and the
+  // card clamps only its weighted result, so a building whose proportions add up past 100 is
+  // counted as 100 here and at its raw figure there. That needs an inspection saved with an
+  // invalid split — the entry table warns about it — and clamping the rows is what keeps every
+  // number on this table readable.
   const weight = rows.reduce((sum, r) => sum + r.totalValue, 0);
   const weightedPct = (pick: (r: (typeof rows)[number]) => number) => {
     const value =

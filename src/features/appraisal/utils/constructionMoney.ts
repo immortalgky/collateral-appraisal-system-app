@@ -11,10 +11,10 @@
  * The toFixed is not cosmetic. The server rounds decimals, this rounds doubles, and the two part
  * company at exact half-baht boundaries: 12,979,700 x 28.5% is 3,699,214.5, which the server rounds
  * up to 3,699,215 while a bare Math.round on the double sees 3,699,214.4999999 and rounds down.
- * Every value passed here is a whole-baht figure times a four-decimal percentage over a hundred, so
- * it carries at most six decimals and snapping to six sheds the float error without touching any
- * real value. Checked against exact integer arithmetic over 400k random inputs and every
- * constructible half-baht boundary: no disagreement with the server in either set.
+ * Six decimals is the bound for the per-item chain, where a whole-baht figure is multiplied by a
+ * four-decimal percentage over a hundred. The two call sites that round a raw sum of
+ * priceAfterDepreciation carry at most two, so they are inside it as well; snapping to six sheds
+ * the float error without touching any real value in either case.
  *
  * Math.round breaks ties toward +∞ where the server breaks them away from zero. The two differ only
  * for negative half-baht values, and none of these figures can be negative: they are a non-negative
