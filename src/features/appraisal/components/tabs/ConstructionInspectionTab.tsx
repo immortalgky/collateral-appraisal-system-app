@@ -189,26 +189,37 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       (s: number, i: any) => s + i.currentPropertyValue,
       0,
     );
+    const totalProportion = computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0);
+
     return {
       totalConstructionValue,
-      totalProportion: computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0),
+      totalProportion,
       totalCurrentProportion: computedSubItems.reduce(
         (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
         0,
       ),
-      // Summed off the entered percentages, not divided out of the money. The money columns are
+      // Weighted off the entered percentages, not divided out of the money. The money columns are
       // rounded to whole baht (CA-614), so their sum no longer divides back to the base exactly —
-      // a finished building read 99.98%. The server reports these the same way; see
-      // ConstructionValueBreakdown.ConstructionProgressPercent.
-      weightedPreviousProgress: computedSubItems.reduce(
-        (s: number, i: any) =>
-          s + (Number(i.proportionPct) || 0) * ((Number(i.previousProgressPct) || 0) / 100),
-        0,
-      ),
-      weightedCurrentProgress: computedSubItems.reduce(
-        (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
-        0,
-      ),
+      // a finished building read 99.98%. Dividing by the proportions rather than just summing the
+      // products keeps this a PROGRESS figure on the same 0-100 scale as the column it heads: a job
+      // finished on every item reads 100% even when the proportions only add up to 80. The server
+      // combines buildings the same way — see ConstructionValueBreakdown.
+      weightedPreviousProgress:
+        totalProportion > 0
+          ? computedSubItems.reduce(
+              (s: number, i: any) =>
+                s + (Number(i.proportionPct) || 0) * (Number(i.previousProgressPct) || 0),
+              0,
+            ) / totalProportion
+          : 0,
+      weightedCurrentProgress:
+        totalProportion > 0
+          ? computedSubItems.reduce(
+              (s: number, i: any) =>
+                s + (Number(i.proportionPct) || 0) * (Number(i.currentProgressPct) || 0),
+              0,
+            ) / totalProportion
+          : 0,
       totalPreviousPropertyValue,
       totalCurrentPropertyValue,
     };

@@ -56,11 +56,24 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
 
   if (rows.length === 0) return null;
 
-  const totalValue = rows.reduce((sum, r) => sum + r.totalValue, 0);
   const previousValue = rows.reduce((sum, r) => sum + r.previousValue, 0);
   const currentValue = rows.reduce((sum, r) => sum + r.currentValue, 0);
   const increasedValue = currentValue - previousValue;
-  const pctOf = (value: number) => (totalValue > 0 ? (value / totalValue) * 100 : 0);
+
+  // Weighted off the percentages the rows already carry, not off the money. Dividing the summed
+  // money by the summed base stopped being exact once the money was rounded to whole baht
+  // (CA-614), and it broke outright for a condo unit, whose inspection carries no value base: the
+  // rows show the entered percentages while this row printed 100.00 % or 0.00 %. The server
+  // combines buildings the same way — see ConstructionValueBreakdown.ConstructionProgressPercent.
+  const weight = rows.reduce((sum, r) => sum + r.totalValue, 0);
+  const weightedPct = (pick: (r: (typeof rows)[number]) => number) => {
+    const value =
+      weight > 0 ? rows.reduce((sum, r) => sum + r.totalValue * pick(r), 0) / weight : 0;
+    return Math.min(100, Math.max(0, value));
+  };
+  const previousPct = weightedPct(r => r.previousProgressPct);
+  const currentPct = weightedPct(r => r.currentProgressPct);
+  const increasedPct = currentPct - previousPct;
 
   return (
     <div className="overflow-x-auto rounded border border-gray-200">
@@ -123,15 +136,11 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
                 <td className={groupTdPctClass('previous')}>
                   {formatNumber(row.previousProgressPct, 2)} %
                 </td>
-                <td className={groupTdClass('previous')}>
-                  {formatNumber(row.previousValue, 2)}
-                </td>
+                <td className={groupTdClass('previous')}>{formatNumber(row.previousValue, 2)}</td>
                 <td className={groupTdPctClass('increased')}>
                   {formatNumber(rowIncreasedPct, 2)} %
                 </td>
-                <td className={groupTdClass('increased')}>
-                  {formatNumber(rowIncreasedValue, 2)}
-                </td>
+                <td className={groupTdClass('increased')}>{formatNumber(rowIncreasedValue, 2)}</td>
                 <td className={groupTdPctClass('current')}>
                   {formatNumber(row.currentProgressPct, 2)} %
                 </td>
@@ -145,17 +154,11 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
             <td colSpan={4} className={tdLeftClass}>
               {t('constructionBuildingDetailTable.summaryRow')}
             </td>
-            <td className={groupTdPctClass('previous')}>
-              {formatNumber(pctOf(previousValue), 2)} %
-            </td>
+            <td className={groupTdPctClass('previous')}>{formatNumber(previousPct, 2)} %</td>
             <td className={groupTdClass('previous')}>{formatNumber(previousValue, 2)}</td>
-            <td className={groupTdPctClass('increased')}>
-              {formatNumber(pctOf(increasedValue), 2)} %
-            </td>
+            <td className={groupTdPctClass('increased')}>{formatNumber(increasedPct, 2)} %</td>
             <td className={groupTdClass('increased')}>{formatNumber(increasedValue, 2)}</td>
-            <td className={groupTdPctClass('current')}>
-              {formatNumber(pctOf(currentValue), 2)} %
-            </td>
+            <td className={groupTdPctClass('current')}>{formatNumber(currentPct, 2)} %</td>
             <td className={groupTdClass('current')}>{formatNumber(currentValue, 2)}</td>
           </tr>
         </tfoot>
