@@ -69,9 +69,12 @@ export function useGlobalSearch() {
 
   // Keyboard navigation walks the two-level list as one flat sequence, in render order, skipping
   // any group the user has folded.
+  // A single-appraisal group renders as a bare row with no header, so it has no fold to respect.
   const flatResults = useMemo(
     () =>
-      ordered.flatMap(g => (collapsedGroups.has(groupKey(g)) ? [] : g.appraisals)),
+      ordered.flatMap(g =>
+        g.appraisals.length > 1 && collapsedGroups.has(groupKey(g)) ? [] : g.appraisals,
+      ),
     [ordered, collapsedGroups],
   );
 

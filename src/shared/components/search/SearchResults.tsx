@@ -197,6 +197,25 @@ export default function SearchResults({
       {restGroups.map(group => {
         const key = groupKey(group);
         const isCollapsed = collapsedGroups.has(key);
+
+        // A group of one is just a result. Searching a common given name produces a group per
+        // person, and a header reading "1 appraisal" over every single row is noise — the row's own
+        // badge already names the field and value that matched.
+        if (group.appraisals.length === 1) {
+          const item = group.appraisals[0];
+          const index = runningIndex++;
+          return (
+            <div key={key} className="p-2 border-b border-gray-100 dark:border-base-300 last:border-b-0">
+              <SearchResultItem
+                item={item}
+                index={index}
+                isHighlighted={highlightedIndex === index}
+                onClick={() => onOpenResult(item)}
+              />
+            </div>
+          );
+        }
+
         return (
           <div key={key} className="border-b border-gray-100 dark:border-base-300 last:border-b-0">
             <button
