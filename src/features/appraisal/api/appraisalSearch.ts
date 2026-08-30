@@ -128,12 +128,17 @@ export const appraisalSearchKeys = {
 export function useAppraisalSearch(params: AppraisalSearchParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: appraisalSearchKeys.list(params),
-    queryFn: async () => {
+    // `signal` comes from React Query and is forwarded to axios so a superseded request is
+    // actually aborted. The filter dropdowns are not debounced — only the search box is — so
+    // setting three filters in a row used to leave three requests running to completion with
+    // two of the results discarded on arrival.
+    queryFn: async ({ signal }) => {
       const cleanParams = Object.fromEntries(
         Object.entries(params).filter(([, v]) => v !== undefined && v !== '' && v !== null),
       );
       const { data } = await axios.get<AppraisalSearchResponse>('/appraisals', {
         params: cleanParams,
+        signal,
       });
       return data;
     },

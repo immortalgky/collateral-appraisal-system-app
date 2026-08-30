@@ -22,6 +22,7 @@ import SavedSearchesDropdown from '../components/search/SavedSearchesDropdown';
 import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
 import DataErrorState from '@/shared/components/DataErrorState';
+import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
 
 const NON_FILTER_KEYS = new Set(['search', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
 
@@ -96,7 +97,7 @@ function AppraisalListPage() {
   ]);
 
   // Data hooks
-  const { data, isFetching, isError, error, refetch } = useAppraisalSearch({
+  const { data, isLoading, isFetching, isError, error, refetch } = useAppraisalSearch({
     search: debouncedSearch || undefined,
     pageNumber,
     pageSize,
@@ -108,6 +109,14 @@ function AppraisalListPage() {
   // Loading feedback: true only while a request is in flight (not during typing/debounce)
   const isSearchPending = isFetching;
 
+  // The table skeleton shows immediately on the first load — there is nothing else to put on
+  // screen — but on a refetch it waits until the request has actually been slow. Typical
+  // responses are a few hundred milliseconds, and a skeleton that appears and vanishes inside
+  // that reads as the screen glitching rather than as feedback. `keepPreviousData` holds the
+  // previous page in the meantime, and the search box keeps its own spinner throughout.
+  const isSlowRefetch = useDelayedFlag(isFetching && !isLoading, 250);
+  const showSkeleton = isLoading || isSlowRefetch;
+
   const { data: smartViews = [] } = useSmartViews();
   const { data: savedSearches = [] } = useSavedSearches('appraisal');
   const createSavedSearch = useCreateSavedSearch();
@@ -117,6 +126,15 @@ function AppraisalListPage() {
   const totalCount = data?.result.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
   const facets = data?.facets;
+
+  // The running row number has to be derived from the response these rows came in, not from the
+  // local paging state. `keepPreviousData` means `items` lags one fetch behind, so after clicking
+  // "next page" the local pageNumber is already 1 while the rows on screen are still page 0's —
+  // numbering them 26-50 until the new page lands. The server echoes back the page it served, so
+  // the numbers and the rows always agree. Note pageSize is echoed as the *effective* size, which
+  // the API clamps, so this also stays right when a caller asks for more than the maximum.
+  const servedPageNumber = data?.result.pageNumber ?? 0;
+  const servedPageSize = data?.result.pageSize ?? pageSize;
 
   // Handlers
   const handleSort = (field: string) => {
@@ -321,13 +339,14 @@ function AppraisalListPage() {
         <AppraisalResultsTable
           columns={appraisalColumns}
           items={items}
-          isLoading={isFetching}
+          isLoading={showSkeleton}
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
           onRowClick={handleRowClick}
-          pageNumber={pageNumber}
-          pageSize={pageSize}
+          pageNumber={servedPageNumber}
+          pageSize={servedPageSize}
+          isStale={isFetching && !showSkeleton}
         />
         <Pagination
           currentPage={pageNumber}

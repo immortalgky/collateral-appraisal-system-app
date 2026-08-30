@@ -23,6 +23,12 @@ interface AppraisalResultsTableProps {
   pageNumber?: number;
   /** Number of rows per page, used to compute a continuous running row number */
   pageSize?: number;
+  /**
+   * True while a refetch is in flight and the rows on screen are the previous result set.
+   * They are shown for continuity, so they are dimmed and made inert — clicking one would open
+   * an appraisal from a result set that is about to be replaced.
+   */
+  isStale?: boolean;
 }
 
 function AppraisalResultsTable({
@@ -36,6 +42,7 @@ function AppraisalResultsTable({
   loadingRowId,
   pageNumber = 0,
   pageSize = 0,
+  isStale = false,
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
   const localizeCompanyName = useLocalizedCompanyName();
@@ -123,7 +130,12 @@ function AppraisalResultsTable({
   };
 
   return (
-    <div className="flex-1 min-h-0 overflow-auto">
+    <div
+      className={`flex-1 min-h-0 overflow-auto transition-opacity ${
+        isStale ? 'opacity-60 pointer-events-none' : ''
+      }`}
+      aria-busy={isStale}
+    >
       <table className="table table-sm min-w-max w-full">
         <thead className="sticky top-0 z-20 bg-gray-50">
           <tr className="border-b border-gray-200">
@@ -156,7 +168,12 @@ function AppraisalResultsTable({
           {isLoading ? (
             <TableRowSkeleton
               columns={[{ width: 'w-8' }, ...columns.map(() => ({ width: 'w-32' }))]}
-              rows={8}
+              // Match the rows being replaced so the table keeps its height — a fixed 8 made the
+              // body collapse from a full page down to 8 rows and back on every load. Clamped at
+              // both ends: never fewer than 8 (a short last page would collapse the same way) and
+              // never more than a page (a bookmarked pageSize=100 would paint 1,400 pulsing cells
+              // on a cold load, where there is no height to preserve in the first place).
+              rows={Math.min(Math.max(items.length, 8), pageSize || 8)}
             />
           ) : items.length === 0 ? (
             <tr>
