@@ -40,6 +40,7 @@ import {
   type PeriodPresetKey,
 } from '../utils/periodPresets';
 import { computePace } from '../utils/computePace';
+import { APPRAISAL_SEARCH_ROUTE } from '@shared/constants/search';
 
 type DataPoint = {
   key: string; // ISO bucket key
@@ -452,7 +453,7 @@ function TotalAppraisalsWidget() {
     const params = new URLSearchParams({ createdFrom: bucketFrom, createdTo: bucketTo });
     // Close expand modal before navigating so it doesn't sit open behind the new route.
     setExpanded(false);
-    navigate(`/appraisals/list?${params}`);
+    navigate(`${APPRAISAL_SEARCH_ROUTE}?${params}`);
   };
 
   const handleDotClick = (point: DataPoint | undefined) => {

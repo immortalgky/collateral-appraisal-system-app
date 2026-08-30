@@ -15,8 +15,7 @@ import FormLayoutPicker from '@shared/components/FormLayoutPicker';
 import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
 import SearchResults from '@shared/components/search/SearchResults';
-import SearchPreviewModal from '@shared/components/search/SearchPreviewModal';
-import type { SearchFilter } from '@shared/types/search';
+import type { SearchScope } from '@shared/types/search';
 import NotificationDropdown from '@features/notification/components/NotificationDropdown';
 import ConnectionStatusIndicator, {
   ConnectionStatusDot,
@@ -25,12 +24,16 @@ import * as appHub from '@shared/realtime/appHub';
 import { HeaderFavoritesDropdown } from '@features/menuFavorites/components/HeaderFavoritesDropdown';
 import type { UserNavItem } from '@shared/config/userNavigation';
 
-const searchFilters = [
+/**
+ * These pick which GROUP OF COLUMNS the server searches — not what kind of thing comes back.
+ * Every result is an appraisal now, so a scope named after an entity would be misleading.
+ */
+const searchScopes = [
   { id: 'all' as const, labelKey: 'search.filters.all', icon: 'layer-group', color: 'gray' },
   {
-    id: 'requests' as const,
-    labelKey: 'search.filters.requests',
-    icon: 'folder-open',
+    id: 'documents' as const,
+    labelKey: 'search.filters.documents',
+    icon: 'hashtag',
     color: 'blue',
   },
   {
@@ -47,11 +50,31 @@ const searchFilters = [
   },
 ];
 
-const filterColorStyles: Record<string, { bg: string; text: string; activeBg: string }> = {
-  gray: { bg: 'bg-gray-100', text: 'text-gray-500', activeBg: 'bg-gray-200' },
-  blue: { bg: 'bg-blue-50', text: 'text-blue-500', activeBg: 'bg-blue-100' },
-  purple: { bg: 'bg-purple-50', text: 'text-purple-500', activeBg: 'bg-purple-100' },
-  amber: { bg: 'bg-amber-50', text: 'text-amber-500', activeBg: 'bg-amber-100' },
+// Written out as literals: Tailwind scans source text, so an interpolated `ring-${color}-200`
+// is never generated and the active chip silently loses its ring.
+const scopeColorStyles: Record<
+  string,
+  { bg: string; text: string; activeBg: string; ring: string }
+> = {
+  gray: {
+    bg: 'bg-gray-100',
+    text: 'text-gray-500',
+    activeBg: 'bg-gray-200',
+    ring: 'ring-gray-200',
+  },
+  blue: { bg: 'bg-blue-50', text: 'text-blue-500', activeBg: 'bg-blue-100', ring: 'ring-blue-200' },
+  purple: {
+    bg: 'bg-purple-50',
+    text: 'text-purple-500',
+    activeBg: 'bg-purple-100',
+    ring: 'ring-purple-200',
+  },
+  amber: {
+    bg: 'bg-amber-50',
+    text: 'text-amber-500',
+    activeBg: 'bg-amber-100',
+    ring: 'ring-amber-200',
+  },
 };
 
 const userMenuItemClass =
@@ -89,8 +112,8 @@ export default function Navbar({
 
   const search = useGlobalSearch();
 
-  const activeFilter = searchFilters.find(f => f.id === search.selectedFilter) || searchFilters[0];
-  const activeColorStyle = filterColorStyles[activeFilter.color];
+  const activeScope = searchScopes.find(s => s.id === search.selectedScope) ?? searchScopes[0];
+  const activeColorStyle = scopeColorStyles[activeScope.color];
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -154,9 +177,9 @@ export default function Navbar({
                     activeColorStyle.text,
                   )}
                 >
-                  <Icon name={activeFilter.icon} style="solid" className="size-3" />
+                  <Icon name={activeScope.icon} style="solid" className="size-3" />
                   <span className="hidden sm:inline leading-none">
-                    {t(activeFilter.labelKey as never)}
+                    {t(activeScope.labelKey as never)}
                   </span>
                   <Icon name="chevron-down" style="solid" className="size-2.5 opacity-60" />
                 </button>
@@ -175,7 +198,7 @@ export default function Navbar({
                   onChange={e => search.setSearchQuery(e.target.value)}
                   onFocus={() => search.setIsFocused(true)}
                   placeholder={t('search.placeholder')}
-                  aria-label="Search"
+                  aria-label={t('search.ariaLabel')}
                   aria-controls="search-results"
                   aria-activedescendant={
                     search.highlightedIndex >= 0
@@ -208,15 +231,15 @@ export default function Navbar({
                       {t('search.searchIn')}
                     </p>
                     <div className="flex flex-wrap gap-1.5 mt-1">
-                      {searchFilters.map(filter => {
-                        const colorStyle = filterColorStyles[filter.color];
-                        const isActive = search.selectedFilter === filter.id;
+                      {searchScopes.map(scope => {
+                        const colorStyle = scopeColorStyles[scope.color];
+                        const isActive = search.selectedScope === scope.id;
                         return (
                           <button
-                            key={filter.id}
+                            key={scope.id}
                             type="button"
                             aria-pressed={isActive}
-                            onClick={() => search.setSelectedFilter(filter.id as SearchFilter)}
+                            onClick={() => search.setSelectedScope(scope.id as SearchScope)}
                             className={clsx(
                               'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all',
                               isActive
@@ -224,38 +247,47 @@ export default function Navbar({
                                     colorStyle.activeBg,
                                     colorStyle.text,
                                     'ring-1 ring-inset',
-                                    `ring-${filter.color}-200`,
+                                    colorStyle.ring,
                                   ]
                                 : 'bg-gray-50 dark:bg-base-300 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-base-300',
                             )}
                           >
-                            <Icon name={filter.icon} style="solid" className="size-3.5" />
-                            {t(filter.labelKey as never)}
+                            <Icon name={scope.icon} style="solid" className="size-3.5" />
+                            {t(scope.labelKey as never)}
                           </button>
                         );
                       })}
                     </div>
+                    <p className="px-2 pt-2 text-xs text-gray-400 dark:text-gray-500">
+                      {t(`search.scopeHint.${search.selectedScope}` as never)}
+                    </p>
                   </div>
 
                   {/* Search Results or Recent Searches */}
                   <SearchResults
-                    data={search.data}
-                    filter={search.selectedFilter}
+                    exactGroups={search.exactGroups}
+                    restGroups={search.restGroups}
+                    collapsedGroups={search.collapsedGroups}
+                    onToggleGroup={search.toggleGroup}
                     isLoading={search.isLoading}
                     isError={search.isError}
                     isShowingResults={search.isShowingResults}
+                    expandSubstring={search.expandSubstring}
                     highlightedIndex={search.highlightedIndex}
-                    flatResults={search.flatResults}
+                    seeAllIndex={search.seeAllIndex}
+                    totalMatched={search.totalMatched}
                     recentSearches={search.recentSearches}
-                    onSelectResult={search.selectResult}
+                    onOpenResult={search.openResult}
+                    onOpenFullResults={search.openFullResults}
                     onSelectRecentSearch={search.selectRecentSearch}
+                    onSearchSubstring={search.searchSubstring}
                     onRetry={() => search.refetch()}
                   />
 
                   {/* Search Tips */}
                   <div className="px-4 py-2 bg-gray-50 dark:bg-base-300 border-t border-gray-100 dark:border-base-300">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      <span className="font-medium">Tip:</span> {t('search.tip')}
+                      <span className="font-medium">{t('search.tipLabel')}</span> {t('search.tip')}
                     </p>
                   </div>
                 </div>
@@ -376,9 +408,6 @@ export default function Navbar({
           </div>
         </div>
       </div>
-
-      {/* Search Preview Modal */}
-      <SearchPreviewModal item={search.previewItem} onClose={search.closePreview} />
     </>
   );
 }

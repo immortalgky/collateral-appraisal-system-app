@@ -85,7 +85,9 @@
       "ReAppraisal": "ประเมินใหม่",
       "Progressive": "ตามความคืบหน้า",
       "PreAppraisal": "ประเมินเบื้องต้น"
-    }
+    },
+    "searchTooShort": "พิมพ์อย่างน้อย {{count}} ตัวอักษรเพื่อค้นหา",
+    "searchPrefixHint": "ค้นจากต้นคำ พิมพ์ * นำหน้าเพื่อค้นแบบมีคำนั้นอยู่ตรงกลาง"
   },
   "appointment": {
     "sectionTitle": "ข้อมูลการนัดหมาย",
@@ -424,7 +426,10 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
+      "priceVerificationOptions": [
+        "ยังไม่ตรวจสอบ",
+        "ตรวจสอบแล้ว"
+      ],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",

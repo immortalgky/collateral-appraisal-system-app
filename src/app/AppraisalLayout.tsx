@@ -24,8 +24,7 @@ import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useMenuStore } from '@features/menuManagement/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
 import { userNavigation } from '@shared/config/userNavigation';
-
-const RETURN_PATH_KEY = 'appraisalReturnPath';
+import { APPRAISAL_SEARCH_ROUTE, RETURN_PATH_KEY } from '@shared/constants/search';
 
 /**
  * Resolve the return path for the Exit button.
@@ -43,11 +42,11 @@ function resolveReturnPath(appraisalId: string, locationState: unknown): string 
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.appraisalId?.toLowerCase() === appraisalId?.toLowerCase()) {
-        return parsed.returnPath ?? '/appraisals/list';
+        return parsed.returnPath ?? APPRAISAL_SEARCH_ROUTE;
       }
     }
   } catch { /* ignore */ }
-  return '/appraisals/list';
+  return APPRAISAL_SEARCH_ROUTE;
 }
 
 // Map route segments to page labels

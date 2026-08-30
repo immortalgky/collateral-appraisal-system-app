@@ -1,12 +1,7 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
-import type { SearchResultItem as SearchResultItemType } from '@shared/types/search';
-
-const categoryConfig = {
-  requests: { icon: 'folder-open', color: 'text-blue-500', bg: 'bg-blue-50' },
-  customers: { icon: 'users', color: 'text-purple-500', bg: 'bg-purple-50' },
-  properties: { icon: 'building', color: 'text-amber-500', bg: 'bg-amber-50' },
-};
+import type { SearchAppraisal } from '@shared/types/search';
 
 const statusStyles: Record<string, string> = {
   pending: 'bg-yellow-50 text-yellow-700',
@@ -17,40 +12,101 @@ const statusStyles: Record<string, string> = {
 };
 
 interface Props {
-  item: SearchResultItemType;
+  item: SearchAppraisal;
+  /** Flat keyboard index. Also the DOM id aria-activedescendant points at. */
+  index: number;
   isHighlighted: boolean;
+  /** Fields already shown in the group header — no need to repeat them on the row. */
+  suppressField?: string;
   onClick: () => void;
 }
 
-export default function SearchResultItem({ item, isHighlighted, onClick }: Props) {
-  const config = categoryConfig[item.category];
-  const statusStyle = item.status ? statusStyles[item.status] ?? 'bg-gray-100 text-gray-600' : null;
+export default function SearchResultItem({
+  item,
+  index,
+  isHighlighted,
+  suppressField,
+  onClick,
+}: Props) {
+  const { t } = useTranslation('nav');
+
+  // No appraisal number yet means the request has not been turned into an appraisal.
+  const isRequestOnly = !item.appraisalNumber;
+  const title = item.appraisalNumber ?? item.requestNumber ?? '—';
+  const statusStyle = item.status
+    ? (statusStyles[item.status.toLowerCase()] ?? 'bg-gray-100 text-gray-600')
+    : null;
+
+  const badges = item.matchedOn.filter(m => m.field !== suppressField).slice(0, 3);
+
+  const subtitle = [item.customerName, item.propertyTypes, item.province]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <button
       type="button"
+      id={`search-result-${index}`}
       role="option"
       aria-selected={isHighlighted}
       onClick={onClick}
       className={clsx(
-        'flex items-center gap-3 w-full px-3 py-2.5 text-left rounded-lg transition-colors',
-        isHighlighted ? 'bg-primary-50' : 'hover:bg-gray-50',
+        'flex items-start gap-3 w-full px-3 py-2.5 text-left rounded-lg transition-colors',
+        isHighlighted ? 'bg-primary-50' : 'hover:bg-gray-50 dark:hover:bg-base-300',
       )}
     >
-      <div className={clsx('flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center', config.bg)}>
-        <Icon name={item.icon ?? config.icon} style="solid" className={clsx('size-4', config.color)} />
+      <div
+        className={clsx(
+          'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5',
+          isRequestOnly ? 'bg-gray-100' : 'bg-blue-50',
+        )}
+      >
+        <Icon
+          name={isRequestOnly ? 'pen-to-square' : 'file-lines'}
+          style="solid"
+          className={clsx('size-4', isRequestOnly ? 'text-gray-500' : 'text-blue-500')}
+        />
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-        <p className="text-xs text-gray-500 truncate">{item.subtitle}</p>
-      </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-gray-900 dark:text-base-content tabular-nums">
+            {title}
+          </span>
+          {item.status && statusStyle && (
+            <span
+              className={clsx('px-2 py-0.5 rounded-full text-xs font-medium shrink-0', statusStyle)}
+            >
+              {item.status}
+            </span>
+          )}
+          {isRequestOnly && (
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 shrink-0">
+              {t('search.noAppraisalNumber')}
+            </span>
+          )}
+        </div>
 
-      {item.status && statusStyle && (
-        <span className={clsx('flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium', statusStyle)}>
-          {item.status}
-        </span>
-      )}
+        {subtitle && (
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400 truncate">{subtitle}</p>
+        )}
+
+        {badges.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {badges.map(m => (
+              <span
+                key={`${m.field}-${m.value}`}
+                className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-base-300 bg-gray-50 dark:bg-base-300 text-xs text-gray-600 dark:text-gray-300"
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                  {t(`search.fields.${m.field}` as never, { defaultValue: m.field })}
+                </span>
+                <span className="truncate max-w-[14rem]">{m.value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </button>
   );
 }

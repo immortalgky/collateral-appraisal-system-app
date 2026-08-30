@@ -23,8 +23,12 @@ import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
+import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 
-const NON_FILTER_KEYS = new Set(['search', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
+// `q` is accepted as an inbound alias for `search` so a link built by the global search bar works
+// either way. It is normalised to `search` on mount and never written back, so the canonical URL
+// stays single-form.
+const NON_FILTER_KEYS = new Set(['search', 'q', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
 
 function AppraisalListPage() {
   const { t } = useTranslation(['appraisal', 'common']);
@@ -35,7 +39,7 @@ function AppraisalListPage() {
 
   // Read initial state from URL (once on mount)
   const initRef = useRef({
-    search: searchParams.get('search') || '',
+    search: searchParams.get('search') || searchParams.get('q') || '',
     page: Number(searchParams.get('page')) || 0,
     pageSize: Number(searchParams.get('pageSize')) || 25,
     sortBy: searchParams.get('sortBy') || 'CreatedAt',
@@ -61,9 +65,17 @@ function AppraisalListPage() {
   const [activeViewKey, setActiveViewKey] = useState<string | null>(init.view);
   const [selectedAppraisalId, setSelectedAppraisalId] = useState<string | null>(null);
 
-  // Debounce search input
+  // Debounce search input.
+  //
+  // Terms below the minimum are never sent. The server matches nothing on them — every appraisal
+  // number shares its first two digits, so a shorter term is not a search — and a request would
+  // come back as an ordinary empty page, indistinguishable from "no such appraisal". The hint
+  // below the box says so instead.
+  const isSearchTooShort = searchTerm.trim().length > 0 && searchTerm.trim().length < MIN_SEARCH_LENGTH;
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    const term = searchTerm.trim();
+    const next = term.length >= MIN_SEARCH_LENGTH ? searchTerm : '';
+    const timer = setTimeout(() => setDebouncedSearch(next), 300);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -277,6 +289,7 @@ function AppraisalListPage() {
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+            aria-describedby="appraisal-search-hint"
           />
           {isSearchPending ? (
             <Icon
@@ -298,6 +311,11 @@ function AppraisalListPage() {
             )
           )}
         </div>
+        <p id="appraisal-search-hint" className="text-xs text-gray-400 dark:text-gray-500">
+          {isSearchTooShort
+            ? t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })
+            : t('list.searchPrefixHint')}
+        </p>
         <SearchFilterBar
           filters={appraisalFilters}
           values={filters}

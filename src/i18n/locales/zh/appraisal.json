@@ -85,7 +85,9 @@
       "ReAppraisal": "重新估价",
       "Progressive": "分阶段",
       "PreAppraisal": "预估价"
-    }
+    },
+    "searchTooShort": "请至少输入 {{count}} 个字符进行搜索",
+    "searchPrefixHint": "从开头匹配。在关键词前加 * 可匹配中间的内容。"
   },
   "appointment": {
     "sectionTitle": "预约信息",
@@ -420,7 +422,10 @@
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
       "priceVerification": "价格核实",
-      "priceVerificationOptions": ["未核实", "已核实"],
+      "priceVerificationOptions": [
+        "未核实",
+        "已核实"
+      ],
       "reviewPrices": "审查价格",
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",

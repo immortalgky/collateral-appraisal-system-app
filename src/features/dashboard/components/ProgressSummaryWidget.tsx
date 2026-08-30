@@ -14,6 +14,7 @@ import WidgetError from './WidgetError';
 import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { useAppraisalStatusSummary, type AppraisalStatusSummaryFilters } from '../api';
 import { useDashboardStore } from '../store';
+import { APPRAISAL_SEARCH_ROUTE } from '@shared/constants/search';
 import {
   getPresetRange,
   toIsoDate,
@@ -225,7 +226,7 @@ function ProgressSummaryWidget() {
     if (status) params.set('status', status);
     params.set('createdFrom', toIsoDate(range.from));
     params.set('createdTo', toIsoDate(range.to));
-    navigate(`/appraisals/list?${params}`);
+    navigate(`${APPRAISAL_SEARCH_ROUTE}?${params}`);
   };
 
   const renderDelta = (delta: number) => {

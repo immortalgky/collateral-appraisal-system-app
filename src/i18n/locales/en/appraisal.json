@@ -85,7 +85,9 @@
       "ReAppraisal": "Re-Appraisal",
       "Progressive": "Progressive",
       "PreAppraisal": "Pre-Appraisal"
-    }
+    },
+    "searchTooShort": "Type at least {{count}} characters to search",
+    "searchPrefixHint": "Matches from the start of a value. Prefix with * to match anywhere."
   },
   "appointment": {
     "sectionTitle": "Appointment Information",
@@ -424,7 +426,10 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": ["Not Verified", "Verified"],
+      "priceVerificationOptions": [
+        "Not Verified",
+        "Verified"
+      ],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",

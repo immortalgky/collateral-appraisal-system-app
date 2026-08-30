@@ -1,4 +1,10 @@
-import { createBrowserRouter, Navigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import Layout from './Layout';
 import AppraisalLayout from './AppraisalLayout';
 import { lazyWithRetry as lazy } from '@shared/utils/lazyWithRetry';
@@ -10,6 +16,7 @@ import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
 import { ProtectedRoute } from '@features/auth/components';
+import { APPRAISAL_SEARCH_ROUTE } from '@shared/constants/search';
 import {
   AppraisalReadOnlyWrapper,
   ReadOnlyPageWrapper,
@@ -89,7 +96,6 @@ const CreateLeaseAgreementLandBuildingPage = lazy(
 const CreateLeaseAgreementCondoPage = lazy(
   () => import('@/features/appraisal/pages/CreateLeaseAgreementCondoPage')
 );
-const AppraisalSearchPage = lazy(() => import('@/features/appraisal/pages/AppraisalSearchPage'));
 const AppraisalListPage = lazy(() => import('@/features/appraisal/pages/AppraisalListPage'));
 const Appraisal360Page = lazy(() => import('@/features/appraisal/pages/Appraisal360Page'));
 const WorkflowBuilderPage = lazy(
@@ -308,13 +314,29 @@ function TaskPageDispatcher() {
 const AppraisalIndexRedirect = () => {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const requestId = useAppraisalRequestId();
+  const location = useLocation();
 
   if (requestId) {
-    return <Navigate to={`/appraisals/${appraisalId}/request/${requestId}`} replace />;
+    // Forward location.state. Entering an appraisal from global search attaches
+    // { fromSearch, returnPath } to this route; without passing it on, the redirect drops it and
+    // AppraisalLayout falls back to the list, so Exit never returns where the user came from.
+    return (
+      <Navigate
+        to={`/appraisals/${appraisalId}/request/${requestId}`}
+        state={location.state}
+        replace
+      />
+    );
   }
 
   // Fallback if no requestId yet (shouldn't happen due to loading state in layout)
   return null;
+};
+
+/** Keeps /appraisals/list working, query string and all. */
+const LegacyAppraisalListRedirect = () => {
+  const location = useLocation();
+  return <Navigate to={`${APPRAISAL_SEARCH_ROUTE}${location.search}`} replace />;
 };
 
 export const router = createBrowserRouter([
@@ -341,20 +363,22 @@ export const router = createBrowserRouter([
         path: 'profile',
         element: <MyProfilePage />,
       },
-      // Appraisal List (enhanced search with filters, smart views, export)
+      // Appraisal search — the filterable list (smart views, facets, export).
+      // Lives at /appraisals/search; /appraisals/list below is the legacy alias.
+      {
+        path: 'appraisals/search',
+        element: <AppraisalListPage />,
+      },
+      // Legacy path. Dashboard widgets still link here with a query string
+      // (e.g. /appraisals/list?status=Pending), so the redirect has to carry it over.
       {
         path: 'appraisals/list',
-        element: <AppraisalListPage />,
+        element: <LegacyAppraisalListRedirect />,
       },
       // Full calendar view (month grid + agenda)
       {
         path: 'calendar',
         element: <CalendarPage />,
-      },
-      // Appraisal Search (global cross-entity search)
-      {
-        path: 'appraisals/search',
-        element: <AppraisalSearchPage />,
       },
       // Request Routes
       {

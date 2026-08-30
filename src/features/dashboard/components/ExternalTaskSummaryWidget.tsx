@@ -24,6 +24,7 @@ import WidgetDateRangeBadge from './WidgetDateRangeBadge';
 import { useCompanyAppraisalSummary } from '../api';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import { useDashboardStore } from '../store';
+import { APPRAISAL_SEARCH_ROUTE } from '@shared/constants/search';
 import {
   getPresetRange,
   toIsoDate,
@@ -265,7 +266,7 @@ function ExternalTaskSummaryWidget() {
       createdFrom: toIsoDate(range.from),
       createdTo: toIsoDate(range.to),
     });
-    navigate(`/appraisals/list?${params}`);
+    navigate(`${APPRAISAL_SEARCH_ROUTE}?${params}`);
   };
 
   const chartHeight = Math.max(200, rows.length * 36);
