@@ -16,6 +16,7 @@ import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { useConstructionWorkGroups } from '../../api/constructionWorkGroups';
 import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
+import { roundBaht } from '../../utils/constructionMoney';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
 import { ConstructionRemarkField } from '../construction/ConstructionRemarkField';
@@ -117,7 +118,9 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   // False for a condo unit, which is bought finished: its value does not step up with the milestone,
   // so the appraised value stands unscaled in every money column and only the percentage moves.
   const hasOwnValueBase = depreciationTotal > 0;
-  const totalValue = hasOwnValueBase ? depreciationTotal : appraisedValue;
+  // Rounded because the server rounds it on save and the payload sends the same rounded
+  // figure, so the rows on screen are derived from the base the database will hold.
+  const totalValue = roundBaht(hasOwnValueBase ? depreciationTotal : appraisedValue);
 
   // Calculations — user inputs proportionPct (%) and currentProgressPct (%)
   // constructionValue = totalValue * (proportionPct / 100)
@@ -126,7 +129,7 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       const proportionPct = Number(item.proportionPct) || 0;
       const previousProgressPct = Number(item.previousProgressPct) || 0;
       const currentProgressPct = Number(item.currentProgressPct) || 0;
-      const constructionValue = totalValue * (proportionPct / 100);
+      const constructionValue = roundBaht(totalValue * (proportionPct / 100));
       const currentProportionPct = proportionPct * (currentProgressPct / 100);
       return {
         ...item,
@@ -134,8 +137,8 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
         constructionValue,
         proportionPct,
         currentProportionPct,
-        previousPropertyValue: constructionValue * (previousProgressPct / 100),
-        currentPropertyValue: constructionValue * (currentProgressPct / 100),
+        previousPropertyValue: roundBaht(constructionValue * (previousProgressPct / 100)),
+        currentPropertyValue: roundBaht(constructionValue * (currentProgressPct / 100)),
       };
     });
   }, [subItems, totalValue]);
@@ -186,19 +189,44 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       (s: number, i: any) => s + i.currentPropertyValue,
       0,
     );
+    const totalProportion = computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0);
+
     return {
       totalConstructionValue,
-      totalProportion: computedSubItems.reduce((s: number, i: any) => s + i.proportionPct, 0),
+      totalProportion,
       totalCurrentProportion: computedSubItems.reduce(
         (s: number, i: any) => s + (Number(i.currentProportionPct) || 0),
         0,
       ),
+      // Weighted off the entered percentages, not divided out of the money. The money columns are
+      // rounded to whole baht (CA-614), so their sum no longer divides back to the base exactly —
+      // a finished building read 99.98%. Dividing by the proportions rather than just summing the
+      // products keeps this a PROGRESS figure on the same 0-100 scale as the column it heads: a job
+      // finished on every item reads 100% even when the proportions only add up to 80, which is
+      // what this column has always meant.
+      //
+      // It is NOT the figure the server reports for the building. That one is Σ(Proportion x
+      // Progress / 100) — the Curr. Proportion cell beside this one — and it is capped by the
+      // proportions, so an inspection whose split only adds up to 80 reads 100 here and 80 there.
+      // Nothing validates that a split reaches 100, so the two can legitimately disagree: this
+      // column answers "how far along is the work that was listed", not "how much of the building
+      // is done".
       weightedPreviousProgress:
-        totalConstructionValue > 0
-          ? (totalPreviousPropertyValue / totalConstructionValue) * 100
+        totalProportion > 0
+          ? computedSubItems.reduce(
+              (s: number, i: any) =>
+                s + (Number(i.proportionPct) || 0) * (Number(i.previousProgressPct) || 0),
+              0,
+            ) / totalProportion
           : 0,
       weightedCurrentProgress:
-        totalConstructionValue > 0 ? (totalCurrentPropertyValue / totalConstructionValue) * 100 : 0,
+        totalProportion > 0
+          ? computedSubItems.reduce(
+              (s: number, i: any) =>
+                s + (Number(i.proportionPct) || 0) * (Number(i.currentProgressPct) || 0),
+              0,
+            ) / totalProportion
+          : 0,
       totalPreviousPropertyValue,
       totalCurrentPropertyValue,
     };
@@ -206,7 +234,9 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
 
   const summaryCurrentValue = useMemo(
     () =>
-      hasOwnValueBase ? totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100) : totalValue,
+      hasOwnValueBase
+        ? roundBaht(totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100))
+        : totalValue,
     [hasOwnValueBase, totalValue, summary?.summaryCurrentProgressPct],
   );
 
@@ -215,28 +245,20 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   // input and does persist — the same reason the server derives its figures from the percentage.
   const summaryPreviousValue = useMemo(
     () =>
-      hasOwnValueBase ? totalValue * ((summary?.summaryPreviousProgressPct ?? 0) / 100) : totalValue,
+      hasOwnValueBase
+        ? roundBaht(totalValue * ((summary?.summaryPreviousProgressPct ?? 0) / 100))
+        : totalValue,
     [hasOwnValueBase, totalValue, summary?.summaryPreviousProgressPct],
   );
 
-  // Progress is read off the mode flag, never off the money: without a value base there is no ratio
-  // to take, and a condo whose appraised value has not been set yet would otherwise report 0%
-  // however much progress the inspector entered.
+  // Read off the entered percentages, never off the money. Dividing the money by the base stopped
+  // being exact once the money was rounded to whole baht (CA-614) — a finished building read
+  // 99.98% — and without a value base there is no ratio to take at all: a condo whose appraised
+  // value has not been set yet would report 0% however much progress the inspector entered.
   const overallProgress = useMemo(() => {
-    if (enterDetail) {
-      return hasOwnValueBase && totalValue > 0
-        ? (grandTotal.totalCurrentPropertyValue / totalValue) * 100
-        : grandTotal.totalCurrentProportion;
-    }
+    if (enterDetail) return grandTotal.totalCurrentProportion;
     return summary?.summaryCurrentProgressPct ?? 0;
-  }, [
-    enterDetail,
-    hasOwnValueBase,
-    grandTotal.totalCurrentProportion,
-    totalValue,
-    grandTotal.totalCurrentPropertyValue,
-    summary?.summaryCurrentProgressPct,
-  ]);
+  }, [enterDetail, grandTotal.totalCurrentProportion, summary?.summaryCurrentProgressPct]);
 
   // Copy from another property
   const [isCopyOpen, setIsCopyOpen] = useState(false);
