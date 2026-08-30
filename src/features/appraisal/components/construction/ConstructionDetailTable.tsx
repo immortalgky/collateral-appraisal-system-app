@@ -248,10 +248,10 @@ export function ConstructionDetailTable({
                 {isOverLimit && ' !'}
               </td>
               <td className="text-right px-3 py-2.5 tabular-nums">
-                {formatNumber(grandTotal.weightedPreviousProgress, 2)} %
+                {formatNumber(grandTotal.weightedPreviousProgress, 2)}
               </td>
               <td className="text-right px-3 py-2.5 tabular-nums">
-                {formatNumber(grandTotal.weightedCurrentProgress, 2)} %
+                {formatNumber(grandTotal.weightedCurrentProgress, 2)}
               </td>
               <td className="text-right px-3 py-2.5 tabular-nums">
                 {formatNumber(grandTotal.totalCurrentProportion, 2)}
@@ -362,7 +362,7 @@ function CategorySection({
           </td>
           {/* Previous Progress — read-only (from API) */}
           <td className="text-right px-3 py-1.5 text-gray-400 tabular-nums bg-gray-50/50">
-            {formatNumber(item.previousProgressPct, 2)} %
+            {formatNumber(item.previousProgressPct, 2)}
           </td>
           {/* Current Progress — EDITABLE (red highlight when below previous) */}
           <td className="px-1 py-0.5">
@@ -416,10 +416,10 @@ function CategorySection({
             {formatNumber(subtotal.totalProportion, 2)}
           </td>
           <td className="text-right px-3 py-2 tabular-nums">
-            {formatNumber(subtotal.averagePreviousProgress, 2)} %
+            {formatNumber(subtotal.averagePreviousProgress, 2)}
           </td>
           <td className="text-right px-3 py-2 tabular-nums">
-            {formatNumber(subtotal.averageCurrentProgress, 2)} %
+            {formatNumber(subtotal.averageCurrentProgress, 2)}
           </td>
           <td className="text-right px-3 py-2 tabular-nums">
             {formatNumber(subtotal.totalCurrentProportion, 2)}

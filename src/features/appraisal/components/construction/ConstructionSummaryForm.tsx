@@ -161,7 +161,7 @@ export function ConstructionSummaryForm({
                 />
               </td>
               <td className="text-center px-3 py-2 text-gray-400 tabular-nums bg-gray-50/50">
-                {formatNumber(summary?.summaryPreviousProgressPct ?? 0, 2)} %
+                {formatNumber(summary?.summaryPreviousProgressPct ?? 0, 2)}
               </td>
               <td className="text-right px-3 py-2 text-gray-400 tabular-nums bg-gray-50/50">
                 {formatNumber(summaryPreviousValue, 2)}
