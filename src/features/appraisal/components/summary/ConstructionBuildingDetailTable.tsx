@@ -63,12 +63,18 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
   // Weighted off the percentages the rows already carry, not off the money. Dividing the summed
   // money by the summed base stopped being exact once the money was rounded to whole baht
   // (CA-614), and it broke outright for a condo unit, whose inspection carries no value base: the
-  // rows show the entered percentages while this row printed 100.00 % or 0.00 %. The server
-  // combines buildings the same way — see ConstructionValueBreakdown.ConstructionProgressPercent.
+  // rows showed the entered percentages while this row printed 100.00 %.
+  //
+  // With no value base there is nothing to weight by, so this falls back to the plain average of
+  // the rows — exactly what ConstructionValueBreakdown.ConstructionProgressPercent does on the
+  // server, and what the card above this table already shows. Returning 0 instead would print
+  // 0.00 % under rows reading 40 % and 60 % and a card reading 50 %.
   const weight = rows.reduce((sum, r) => sum + r.totalValue, 0);
   const weightedPct = (pick: (r: (typeof rows)[number]) => number) => {
     const value =
-      weight > 0 ? rows.reduce((sum, r) => sum + r.totalValue * pick(r), 0) / weight : 0;
+      weight > 0
+        ? rows.reduce((sum, r) => sum + r.totalValue * pick(r), 0) / weight
+        : rows.reduce((sum, r) => sum + pick(r), 0) / rows.length;
     return Math.min(100, Math.max(0, value));
   };
   const previousPct = weightedPct(r => r.previousProgressPct);

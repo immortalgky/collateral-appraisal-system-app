@@ -202,8 +202,15 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       // rounded to whole baht (CA-614), so their sum no longer divides back to the base exactly —
       // a finished building read 99.98%. Dividing by the proportions rather than just summing the
       // products keeps this a PROGRESS figure on the same 0-100 scale as the column it heads: a job
-      // finished on every item reads 100% even when the proportions only add up to 80. The server
-      // combines buildings the same way — see ConstructionValueBreakdown.
+      // finished on every item reads 100% even when the proportions only add up to 80, which is
+      // what this column has always meant.
+      //
+      // It is NOT the figure the server reports for the building. That one is Σ(Proportion x
+      // Progress / 100) — the Curr. Proportion cell beside this one — and it is capped by the
+      // proportions, so an inspection whose split only adds up to 80 reads 100 here and 80 there.
+      // Nothing validates that a split reaches 100, so the two can legitimately disagree: this
+      // column answers "how far along is the work that was listed", not "how much of the building
+      // is done".
       weightedPreviousProgress:
         totalProportion > 0
           ? computedSubItems.reduce(
