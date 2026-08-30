@@ -6,8 +6,8 @@ import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { formatDate } from '@/shared/utils/dateUtils';
-import { useAddressStore } from '@/shared/store';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface AppraisalResultsTableProps {
@@ -46,18 +46,8 @@ function AppraisalResultsTable({
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
   const localizeCompanyName = useLocalizedCompanyName();
-  const titleAddresses = useAddressStore(s => s.titleAddresses);
-  const dopaAddresses = useAddressStore(s => s.dopaAddresses);
-
-  const provinceCodeToName = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const addr of [...titleAddresses, ...dopaAddresses]) {
-      if (!map.has(addr.provinceCode)) {
-        map.set(addr.provinceCode, addr.provinceName);
-      }
-    }
-    return map;
-  }, [titleAddresses, dopaAddresses]);
+  const provinceName = useProvinceName();
+  const propertyTypeLabels = usePropertyTypeLabels();
 
   const bankingSegments = useParametersByGroup('BankingSegment');
   const segmentCodeToLabel = useMemo(
@@ -69,12 +59,6 @@ function AppraisalResultsTable({
   const purposeCodeToLabel = useMemo(
     () => new Map(purposes.map(p => [p.code, p.description])),
     [purposes],
-  );
-
-  const propertyTypes = useParametersByGroup('PropertyType');
-  const propertyTypeCodeToLabel = useMemo(
-    () => new Map(propertyTypes.map(p => [p.code, p.description])),
-    [propertyTypes],
   );
 
   const getCellValue = (item: AppraisalDto, key: string): string => {
@@ -89,7 +73,7 @@ function AppraisalResultsTable({
       return new Date(val as string).toLocaleDateString();
     }
     if (key === 'province') {
-      return provinceCodeToName.get(val as string) ?? String(val);
+      return provinceName(val as string);
     }
     if (key === 'bankingSegment') {
       return segmentCodeToLabel.get(val as string) ?? String(val);
@@ -99,12 +83,7 @@ function AppraisalResultsTable({
     }
     if (key === 'propertyTypes') {
       // Comma-joined codes from the view (e.g. "B, L, LB") — resolve each to its description
-      return String(val)
-        .split(',')
-        .map(code => code.trim())
-        .filter(Boolean)
-        .map(code => propertyTypeCodeToLabel.get(code) ?? code)
-        .join(', ');
+      return propertyTypeLabels(val as string);
     }
     if (key === 'companyName') {
       return localizeCompanyName(val as string, item.companyNameLocal);

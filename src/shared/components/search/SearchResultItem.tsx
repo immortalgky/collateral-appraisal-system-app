@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
 import Icon from '@shared/components/Icon';
 import type { SearchAppraisal } from '@shared/types/search';
 
@@ -29,6 +30,8 @@ export default function SearchResultItem({
   onClick,
 }: Props) {
   const { t } = useTranslation('nav');
+  const provinceName = useProvinceName();
+  const propertyTypeLabels = usePropertyTypeLabels();
 
   // No appraisal number yet means the request has not been turned into an appraisal.
   const isRequestOnly = !item.appraisalNumber;
@@ -39,7 +42,14 @@ export default function SearchResultItem({
 
   const badges = item.matchedOn.filter(m => m.field !== suppressField).slice(0, 3);
 
-  const subtitle = [item.customerName, item.propertyTypes, item.province]
+  // The API returns storage codes here — `propertyTypes` is "B, L" and `province` is a geocode
+  // like "71". Resolve both, so the row reads "Wichian Thirakorn · สิ่งปลูกสร้าง, ที่ดินเปล่า ·
+  // กาญจนบุรี" instead of "Wichian Thirakorn · B, L · 71".
+  const subtitle = [
+    item.customerName,
+    propertyTypeLabels(item.propertyTypes),
+    provinceName(item.province),
+  ]
     .filter(Boolean)
     .join(' · ');
 
