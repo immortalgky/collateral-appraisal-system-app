@@ -125,6 +125,9 @@ const PermissionListPage = lazy(() => import('@features/userManagement/pages/Per
 const RoleListPage = lazy(() => import('@features/userManagement/pages/RoleListPage'));
 const GroupListPage = lazy(() => import('@features/userManagement/pages/GroupListPage'));
 const UserProfilePage = lazy(() => import('@features/userManagement/pages/UserProfilePage'));
+// The signed-in user's own profile (/profile) — not to be confused with UserProfilePage,
+// which is the admin user *list* at /admin/users.
+const MyProfilePage = lazy(() => import('@features/userManagement/pages/MyProfilePage'));
 const TeamListPage = lazy(() => import('@features/userManagement/pages/TeamListPage'));
 const AuditLogPage = lazy(() => import('@features/userManagement/pages/AuditLogPage'));
 const CompanyListPage = lazy(() => import('@features/userManagement/pages/CompanyListPage'));
@@ -332,6 +335,11 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <HomePage />,
+      },
+      // Own profile — every signed-in user can reach it, so no permission guard.
+      {
+        path: 'profile',
+        element: <MyProfilePage />,
       },
       // Appraisal List (enhanced search with filters, smart views, export)
       {

@@ -23,6 +23,7 @@ import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useMenuStore } from '@features/menuManagement/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
+import { userNavigation } from '@shared/config/userNavigation';
 
 const RETURN_PATH_KEY = 'appraisalReturnPath';
 
@@ -48,15 +49,6 @@ function resolveReturnPath(appraisalId: string, locationState: unknown): string 
   } catch { /* ignore */ }
   return '/appraisals/list';
 }
-
-const userNavigation = [
-  { name: 'Your profile', nameKey: 'userMenu.yourProfile', href: '#' },
-  {
-    name: 'Sign out',
-    nameKey: 'userMenu.signOut',
-    href: `${import.meta.env.VITE_API_URL}/connect/logout?client_id=spa&post_logout_redirect_uri=${import.meta.env.VITE_APP_URL}/`,
-  },
-];
 
 // Map route segments to page labels
 const routeLabels: Record<string, { label: string; icon: string }> = {

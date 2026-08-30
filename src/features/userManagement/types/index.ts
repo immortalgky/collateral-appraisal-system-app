@@ -194,19 +194,50 @@ export interface UserTeam {
   scope: TeamScope;
 }
 
+/** A group as returned by /auth/me (note: keyed groupId/groupName, not id/name). */
+export interface MeGroup {
+  groupId: string;
+  groupName: string;
+  scope: string;
+}
+
+/** A team as returned by /auth/me. */
+export interface MeTeam {
+  teamId: string;
+  teamName: string;
+  scope: TeamScope;
+}
+
+/**
+ * The signed-in user's own profile, as returned by GET /auth/me.
+ * Mirrors MeResponse on the backend — keep the two in step.
+ */
 export interface UserProfile {
   id: string;
-  userName: string;
-  email: string;
+  username: string;
+  // The API omits null fields from the payload, so every nullable scalar here is
+  // optional at runtime as well as nullable.
+  email?: string | null;
   firstName: string;
   lastName: string;
-  avatarUrl: string | null;
-  position: string | null;
-  department: string | null;
+  avatarUrl?: string | null;
+  position?: string | null;
+  department?: string | null;
+  aoCode?: string | null;
+  employeeId?: string | null;
+  companyId?: string | null;
+  companyName?: string | null;
+  companyNameLocal?: string | null;
   authSource: 'Local' | 'LDAP';
-  companyId: string | null;
-  roles: UserRole[];
-  groups: UserGroup[];
+  isActive: boolean;
+  lastLoginAt?: string | null;
+  passwordChangedAt?: string | null;
+  /** /auth/me returns role *names* only, unlike the admin endpoints' UserRole objects. */
+  roles: string[];
+  permissions: string[];
+  groups: MeGroup[];
+  teams: MeTeam[];
+  mustChangePassword: boolean;
 }
 
 export interface PasswordPolicy {

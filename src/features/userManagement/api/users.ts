@@ -46,16 +46,28 @@ export const useUpdateProfile = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ME_KEY });
+      // The navbar reads the auth store, which is fed by the separate
+      // ['currentUser'] query — without this the header keeps the old name.
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
   });
 };
 
 /** Change own password */
 export const useChangePassword = (userId: string) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (request: ChangePasswordRequest) => {
       const { data } = await axios.post(`/auth/users/${userId}/change-password`, request);
       return data;
+    },
+    onSuccess: () => {
+      // A successful change moves passwordChangedAt and clears mustChangePassword.
+      // /auth/me is cached under two unrelated keys (['me'] here, ['currentUser'] in
+      // features/auth/api.ts), so both have to be refreshed or the profile page keeps
+      // showing the old "Password last changed" right behind the success toast.
+      queryClient.invalidateQueries({ queryKey: ME_KEY });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
   });
 };
