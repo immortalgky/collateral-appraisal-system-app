@@ -16,6 +16,7 @@ import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { useConstructionWorkGroups } from '../../api/constructionWorkGroups';
 import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
+import { roundBaht } from '../../utils/constructionMoney';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
 import { ConstructionRemarkField } from '../construction/ConstructionRemarkField';
@@ -117,7 +118,9 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   // False for a condo unit, which is bought finished: its value does not step up with the milestone,
   // so the appraised value stands unscaled in every money column and only the percentage moves.
   const hasOwnValueBase = depreciationTotal > 0;
-  const totalValue = hasOwnValueBase ? depreciationTotal : appraisedValue;
+  // Rounded because the server rounds it on save and the payload sends the same rounded
+  // figure, so the rows on screen are derived from the base the database will hold.
+  const totalValue = roundBaht(hasOwnValueBase ? depreciationTotal : appraisedValue);
 
   // Calculations — user inputs proportionPct (%) and currentProgressPct (%)
   // constructionValue = totalValue * (proportionPct / 100)
@@ -126,7 +129,7 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
       const proportionPct = Number(item.proportionPct) || 0;
       const previousProgressPct = Number(item.previousProgressPct) || 0;
       const currentProgressPct = Number(item.currentProgressPct) || 0;
-      const constructionValue = totalValue * (proportionPct / 100);
+      const constructionValue = roundBaht(totalValue * (proportionPct / 100));
       const currentProportionPct = proportionPct * (currentProgressPct / 100);
       return {
         ...item,
@@ -134,8 +137,8 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
         constructionValue,
         proportionPct,
         currentProportionPct,
-        previousPropertyValue: constructionValue * (previousProgressPct / 100),
-        currentPropertyValue: constructionValue * (currentProgressPct / 100),
+        previousPropertyValue: roundBaht(constructionValue * (previousProgressPct / 100)),
+        currentPropertyValue: roundBaht(constructionValue * (currentProgressPct / 100)),
       };
     });
   }, [subItems, totalValue]);
@@ -206,7 +209,9 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
 
   const summaryCurrentValue = useMemo(
     () =>
-      hasOwnValueBase ? totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100) : totalValue,
+      hasOwnValueBase
+        ? roundBaht(totalValue * ((summary?.summaryCurrentProgressPct ?? 0) / 100))
+        : totalValue,
     [hasOwnValueBase, totalValue, summary?.summaryCurrentProgressPct],
   );
 
@@ -215,7 +220,9 @@ export function ConstructionInspectionTab({ readOnly, ciMode }: ConstructionInsp
   // input and does persist — the same reason the server derives its figures from the percentage.
   const summaryPreviousValue = useMemo(
     () =>
-      hasOwnValueBase ? totalValue * ((summary?.summaryPreviousProgressPct ?? 0) / 100) : totalValue,
+      hasOwnValueBase
+        ? roundBaht(totalValue * ((summary?.summaryPreviousProgressPct ?? 0) / 100))
+        : totalValue,
     [hasOwnValueBase, totalValue, summary?.summaryPreviousProgressPct],
   );
 

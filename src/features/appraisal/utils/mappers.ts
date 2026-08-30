@@ -1,3 +1,4 @@
+import { roundBaht } from './constructionMoney';
 import type {
   createCondoPMAFormType,
   createBuildingFormType,
@@ -597,9 +598,14 @@ const mapConstructionInspectionFormToApi = (data: any) => {
 
   if (!isUnderConstruction) return null;
 
-  const totalValue = (depreciationDetails ?? []).reduce(
-    (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
-    0,
+  // Rounded to match what the inspection screen showed while the figures were being entered.
+  // The server rounds this on save anyway, but it rounds decimals and the screen rounds doubles,
+  // so sending the raw sum let the two land a baht apart at half-baht boundaries.
+  const totalValue = roundBaht(
+    (depreciationDetails ?? []).reduce(
+      (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
+      0,
+    ),
   );
 
   const isFullDetail = constructionEnterDetail ?? true;
