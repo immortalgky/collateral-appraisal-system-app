@@ -156,7 +156,9 @@ function AppraisalResultsTable({
           {isLoading ? (
             <TableRowSkeleton
               columns={[{ width: 'w-8' }, ...columns.map(() => ({ width: 'w-32' }))]}
-              rows={8}
+              // Match the rows being replaced so the table keeps its height. A fixed 8 made the
+              // body collapse from a full page down to 8 rows and back on every load.
+              rows={items.length || pageSize || 8}
             />
           ) : items.length === 0 ? (
             <tr>

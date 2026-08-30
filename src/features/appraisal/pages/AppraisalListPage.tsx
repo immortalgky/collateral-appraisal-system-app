@@ -22,6 +22,7 @@ import SavedSearchesDropdown from '../components/search/SavedSearchesDropdown';
 import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
 import DataErrorState from '@/shared/components/DataErrorState';
+import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
 
 const NON_FILTER_KEYS = new Set(['search', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
 
@@ -96,7 +97,7 @@ function AppraisalListPage() {
   ]);
 
   // Data hooks
-  const { data, isFetching, isError, error, refetch } = useAppraisalSearch({
+  const { data, isLoading, isFetching, isError, error, refetch } = useAppraisalSearch({
     search: debouncedSearch || undefined,
     pageNumber,
     pageSize,
@@ -107,6 +108,14 @@ function AppraisalListPage() {
 
   // Loading feedback: true only while a request is in flight (not during typing/debounce)
   const isSearchPending = isFetching;
+
+  // The table skeleton shows immediately on the first load — there is nothing else to put on
+  // screen — but on a refetch it waits until the request has actually been slow. Typical
+  // responses are a few hundred milliseconds, and a skeleton that appears and vanishes inside
+  // that reads as the screen glitching rather than as feedback. `keepPreviousData` holds the
+  // previous page in the meantime, and the search box keeps its own spinner throughout.
+  const isSlowRefetch = useDelayedFlag(isFetching && !isLoading, 250);
+  const showSkeleton = isLoading || isSlowRefetch;
 
   const { data: smartViews = [] } = useSmartViews();
   const { data: savedSearches = [] } = useSavedSearches('appraisal');
@@ -321,7 +330,7 @@ function AppraisalListPage() {
         <AppraisalResultsTable
           columns={appraisalColumns}
           items={items}
-          isLoading={isFetching}
+          isLoading={showSkeleton}
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
