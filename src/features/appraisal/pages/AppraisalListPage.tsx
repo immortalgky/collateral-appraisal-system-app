@@ -24,7 +24,10 @@ import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlid
 import DataErrorState from '@/shared/components/DataErrorState';
 import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
 
-const NON_FILTER_KEYS = new Set(['search', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
+// `q` is accepted as an inbound alias for `search` so a link built by the global search bar works
+// either way. It is normalised to `search` on mount and never written back, so the canonical URL
+// stays single-form.
+const NON_FILTER_KEYS = new Set(['search', 'q', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
 
 function AppraisalListPage() {
   const { t } = useTranslation(['appraisal', 'common']);
@@ -35,7 +38,7 @@ function AppraisalListPage() {
 
   // Read initial state from URL (once on mount)
   const initRef = useRef({
-    search: searchParams.get('search') || '',
+    search: searchParams.get('search') || searchParams.get('q') || '',
     page: Number(searchParams.get('page')) || 0,
     pageSize: Number(searchParams.get('pageSize')) || 25,
     sortBy: searchParams.get('sortBy') || 'CreatedAt',

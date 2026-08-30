@@ -1,92 +1,155 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchQuery } from '@shared/api/search';
-import type { SearchFilter, SearchResultItem } from '@shared/types/search';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { MIN_SEARCH_LENGTH, useSearchQuery } from '@shared/api/search';
+import type { SearchAppraisal, SearchScope } from '@shared/types/search';
 import { addRecentSearch, getRecentSearches } from '@shared/utils/recentSearches';
+import { APPRAISAL_SEARCH_ROUTE, RETURN_PATH_KEY } from '@shared/constants/search';
+import { groupKey, orderGroups } from '@shared/utils/searchGrouping';
 
 export function useGlobalSearch() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<SearchFilter>('all');
+  const [selectedScope, setSelectedScope] = useState<SearchScope>('all');
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [previewItem, setPreviewItem] = useState<SearchResultItem | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>(getRecentSearches);
+  // Opt-in substring search. The server matches by prefix by default (`term%`, seekable); a leading
+  // `*` switches it to `%term%`, which scans. Offered only after a prefix search finds nothing, so
+  // the scan happens when the user asks for it rather than on every half-typed word.
+  const [expandSubstring, setExpandSubstring] = useState(false);
+  // Which groups are folded away. Owned here rather than in the view because keyboard navigation
+  // has to skip the rows a fold hides — otherwise the highlight lands on something invisible.
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Reset highlight when query or filter changes
+  // A new term invalidates the previous "no prefix hits" verdict.
+  useEffect(() => {
+    setExpandSubstring(false);
+  }, [debouncedQuery]);
+
   useEffect(() => {
     setHighlightedIndex(-1);
-  }, [debouncedQuery, selectedFilter]);
+  }, [debouncedQuery, selectedScope, expandSubstring]);
 
-  // React Query
-  const { data, isLoading, isError, refetch } = useSearchQuery(debouncedQuery, selectedFilter);
+  const wireQuery = expandSubstring && debouncedQuery ? `*${debouncedQuery}` : debouncedQuery;
+  const { data, isLoading, isError, refetch } = useSearchQuery(wireQuery, selectedScope);
 
-  // Flatten results for keyboard navigation
-  const flatResults = useMemo(() => {
-    if (!data?.results) return [];
+  const isShowingResults = debouncedQuery.length >= MIN_SEARCH_LENGTH;
 
-    if (selectedFilter === 'all') {
-      const categories = ['requests', 'customers', 'properties'] as const;
-      return categories.flatMap(cat => data.results[cat] ?? []);
+  const groups = useMemo(() => data?.groups ?? [], [data]);
+
+  // A new result set invalidates which groups the user had folded away.
+  useEffect(() => {
+    setCollapsedGroups(new Set());
+  }, [groups]);
+
+  // Exact hits are pinned above the rest, so the flat sequence has to be built from that same
+  // order — the view renders straight from `exact` and `rest` for exactly this reason.
+  const { exact, rest, ordered } = useMemo(
+    () => orderGroups(groups, debouncedQuery),
+    [groups, debouncedQuery],
+  );
+
+  const toggleGroup = useCallback((key: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }, []);
+
+  // Keyboard navigation walks the two-level list as one flat sequence, in render order, skipping
+  // any group the user has folded.
+  const flatResults = useMemo(
+    () =>
+      ordered.flatMap(g => (collapsedGroups.has(groupKey(g)) ? [] : g.appraisals)),
+    [ordered, collapsedGroups],
+  );
+
+  const hasResults = flatResults.length > 0;
+  /** Index of the trailing "see all results" row, so ArrowDown can reach it. */
+  const seeAllIndex = hasResults ? flatResults.length : -1;
+
+  const rememberTerm = useCallback(() => {
+    // Record what actually produced these results, not the in-flight input: clicking a stale row
+    // while still typing used to store a term that never ran.
+    addRecentSearch(debouncedQuery);
+    setRecentSearches(getRecentSearches());
+  }, [debouncedQuery]);
+
+  /**
+   * Where the Exit button on an appraisal should return to. Prefer a return path already parked by
+   * AppraisalLayout so a search made from inside an appraisal does not overwrite the original
+   * origin; keep the query string, or the list's filters are lost on the way back.
+   */
+  const resolveReturnPath = useCallback(() => {
+    try {
+      // AppraisalLayout parks {appraisalId, returnPath} here, not a bare string.
+      const stored = sessionStorage.getItem(RETURN_PATH_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as { returnPath?: string };
+        if (parsed?.returnPath) return parsed.returnPath;
+      }
+    } catch {
+      // Unparseable, or sessionStorage unavailable in private mode — use the current location.
     }
+    return `${location.pathname}${location.search}`;
+  }, [location.pathname, location.search]);
 
-    return data.results[selectedFilter] ?? [];
-  }, [data, selectedFilter]);
+  const openResult = useCallback(
+    (item: SearchAppraisal) => {
+      rememberTerm();
+      setIsFocused(false);
+      navigate(item.navigateTo, {
+        state: { fromSearch: true, returnPath: resolveReturnPath() },
+      });
+    },
+    [navigate, rememberTerm, resolveReturnPath],
+  );
 
-  const isShowingResults = debouncedQuery.length >= 2;
+  const openFullResults = useCallback(() => {
+    if (!debouncedQuery) return;
+    rememberTerm();
+    setIsFocused(false);
+    navigate(`${APPRAISAL_SEARCH_ROUTE}?search=${encodeURIComponent(wireQuery)}`);
+  }, [debouncedQuery, wireQuery, navigate, rememberTerm]);
 
-  // Cmd/Ctrl+K global shortcut
+  const selectRecentSearch = useCallback((term: string) => {
+    setSearchQuery(term);
+    setDebouncedQuery(term);
+    setExpandSubstring(false);
+  }, []);
+
+  const searchSubstring = useCallback(() => {
+    setExpandSubstring(true);
+  }, []);
+
+  const closeDropdown = useCallback(() => {
+    setIsFocused(false);
+    setHighlightedIndex(-1);
+  }, []);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        if (previewItem) {
-          setPreviewItem(null);
-        }
         inputRef.current?.focus();
         setIsFocused(true);
       }
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [previewItem]);
-
-  // Select a result
-  const selectResult = useCallback(
-    (item: SearchResultItem) => {
-      addRecentSearch(searchQuery);
-      setRecentSearches(getRecentSearches());
-      setPreviewItem(item);
-      setIsFocused(false);
-    },
-    [searchQuery],
-  );
-
-  // Select a recent search
-  const selectRecentSearch = useCallback((term: string) => {
-    setSearchQuery(term);
-    setDebouncedQuery(term);
   }, []);
 
-  // Close preview
-  const closePreview = useCallback(() => {
-    setPreviewItem(null);
-  }, []);
-
-  // Close dropdown
-  const closeDropdown = useCallback(() => {
-    setIsFocused(false);
-    setHighlightedIndex(-1);
-  }, []);
-
-  // Keyboard navigation handler (to be attached to the search container)
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -100,49 +163,68 @@ export function useGlobalSearch() {
 
       if (!isFocused) return;
 
+      // The "see all" row sits one past the last result, so the wrap-around length is +1.
+      const stops = hasResults ? flatResults.length + 1 : 0;
+
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setHighlightedIndex(prev => (prev < flatResults.length - 1 ? prev + 1 : 0));
+        if (stops > 0) setHighlightedIndex(prev => (prev < stops - 1 ? prev + 1 : 0));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setHighlightedIndex(prev => (prev > 0 ? prev - 1 : flatResults.length - 1));
+        if (stops > 0) setHighlightedIndex(prev => (prev > 0 ? prev - 1 : stops - 1));
       } else if (e.key === 'Enter') {
         e.preventDefault();
         if (highlightedIndex >= 0 && highlightedIndex < flatResults.length) {
-          selectResult(flatResults[highlightedIndex]);
+          openResult(flatResults[highlightedIndex]);
+        } else {
+          // Enter with nothing highlighted used to do nothing at all.
+          openFullResults();
         }
       }
     },
-    [isFocused, flatResults, highlightedIndex, selectResult, closeDropdown],
+    [
+      isFocused,
+      hasResults,
+      flatResults,
+      highlightedIndex,
+      openResult,
+      openFullResults,
+      closeDropdown,
+    ],
   );
 
   return {
-    // State
     searchQuery,
-    selectedFilter,
+    selectedScope,
+    exactGroups: exact,
+    restGroups: rest,
+    collapsedGroups,
+    toggleGroup,
     isFocused,
     highlightedIndex,
-    previewItem,
     recentSearches,
     isShowingResults,
+    expandSubstring,
 
-    // Data
     data,
+    groups,
     flatResults,
-    isLoading: isLoading && debouncedQuery.length >= 2,
+    seeAllIndex,
+    totalMatched: data?.totalMatchedAppraisals ?? 0,
+    hasMore: data?.hasMore ?? false,
+    isLoading: isLoading && isShowingResults,
     isError,
 
-    // Refs
     inputRef,
 
-    // Actions
     setSearchQuery,
-    setSelectedFilter,
+    setSelectedScope,
     setIsFocused,
     setHighlightedIndex,
-    selectResult,
+    openResult,
+    openFullResults,
     selectRecentSearch,
-    closePreview,
+    searchSubstring,
     closeDropdown,
     handleKeyDown,
     refetch,

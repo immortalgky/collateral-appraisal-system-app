@@ -5,6 +5,7 @@ import { Skeleton } from '@shared/components/Skeleton';
 import WidgetWrapper from './WidgetWrapper';
 import WidgetError from './WidgetError';
 import { useQuotationTaskSummary } from '../api';
+import { APPRAISAL_SEARCH_ROUTE } from '@shared/constants/search';
 
 type KpiCardProps = {
   label: string;
@@ -92,7 +93,7 @@ function QuotationTaskSummaryWidget() {
               iconBg="bg-amber-50"
               cardBg="bg-white"
               openListLabel={t('quotationSummary.openList')}
-              onClick={() => navigate('/appraisals/list?status=Pending')}
+              onClick={() => navigate(`${APPRAISAL_SEARCH_ROUTE}?status=Pending`)}
             />
             <KpiCard
               label={t('quotationSummary.waitingSubmission')}
