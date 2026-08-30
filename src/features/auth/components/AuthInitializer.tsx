@@ -30,6 +30,12 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       });
   }, []);
 
+  // Children must not render until the boot refresh has settled, and this is load-bearing beyond
+  // avoiding a flash of the login screen: /auth/refresh answers a dead session with a cookie-
+  // deleting Set-Cookie header. /callback renders inside this gate, so blocking here serialises
+  // "delete the dead cookie" strictly before "/auth/token issues a fresh one". Render children
+  // optimistically and the deletion can land on the brand-new cookie instead, logging the user
+  // straight back out after a successful sign-in.
   if (!isInitialized) {
     return (
       <div className="flex h-screen w-full items-center justify-center">

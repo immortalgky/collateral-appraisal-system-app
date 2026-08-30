@@ -11,7 +11,7 @@
  */
 
 import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr';
-import { getFreshAccessToken } from '@shared/api/axiosInstance';
+import { getFreshAccessToken, isSessionExpired } from '@shared/api/axiosInstance';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -141,10 +141,18 @@ function buildConnection(): HubConnection {
       // (the default policy stops after ~40s, killing real-time for the session).
       // 0s, 2s, 4s, 8s, 16s, then 30s forever.
       .withAutomaticReconnect({
-        nextRetryDelayInMilliseconds: ctx =>
-          ctx.previousRetryCount === 0
+        nextRetryDelayInMilliseconds: ctx => {
+          // Returning null is the only way out of this loop. Do it once the refresh endpoint has
+          // answered 401: every further attempt re-runs accessTokenFactory, gets null, negotiates
+          // without an Authorization header and 401s — roughly a thousand pointless round trips
+          // across an idle night, per tab. This hands over to scheduleRestart()'s slow poll rather
+          // than ending reconnection for good. Logout stays the axios 401 interceptor's job on the
+          // user's next real API call; this only stops the noise.
+          if (isSessionExpired()) return null;
+          return ctx.previousRetryCount === 0
             ? 0
-            : Math.min(30000, 1000 * 2 ** Math.min(ctx.previousRetryCount, 5)),
+            : Math.min(30000, 1000 * 2 ** Math.min(ctx.previousRetryCount, 5));
+        },
       })
       .configureLogging(signalrLogger)
       .build()
@@ -220,9 +228,21 @@ function attachConnectionHandlers(conn: HubConnection): void {
   });
 }
 
+/** Normal auto-restart cadence after an unexpected close. */
+const RESTART_DELAY_MS = 5000;
+/** Cadence once /auth/refresh has answered 401 — see the reasoning in scheduleRestart(). */
+const EXPIRED_RETRY_DELAY_MS = 5 * 60 * 1000;
+
 /** Schedule a reconnect attempt after an unexpected close. */
 function scheduleRestart(): void {
   if (_restartTimer || _intentionalStop || !_lastUsername) return;
+  // Back off hard rather than stopping outright once the last refresh came back 401. Stopping was
+  // the first instinct — this path re-arms itself every 5s, so a dead session burned thousands of
+  // pointless requests overnight — but a 401 also covers a token-rotation race, and giving up for
+  // good leaves a tab that never fires 'visibilitychange' (second monitor, kiosk) silently
+  // realtime-dead with nothing but a grey status dot to show for it. The slow poll keeps ~98% of
+  // the saving and restores self-healing.
+  const delay = isSessionExpired() ? EXPIRED_RETRY_DELAY_MS : RESTART_DELAY_MS;
   _restartTimer = setTimeout(() => {
     _restartTimer = null;
     if (!_lastUsername) return;
@@ -230,7 +250,7 @@ function scheduleRestart(): void {
       console.warn('[AppHub] auto-restart failed, will retry:', err);
       scheduleRestart();
     });
-  }, 5000);
+  }, delay);
 }
 
 /** Attach window/document wake listeners once — reconnect on network/focus.
@@ -241,6 +261,9 @@ function attachWakeListeners(): void {
   if (_wakeListenersAttached || typeof window === 'undefined') return;
   _wakeListenersAttached = true;
 
+  // Deliberately NOT gated on isSessionExpired(): coming back online or re-focusing the tab is a
+  // user-driven event, it costs exactly one refresh + one negotiate, and it is the fastest way to
+  // recover a session that turned out to be fine. A failure just falls back into the slow poll.
   window.addEventListener('online', () => {
     if (_lastUsername && _status === 'disconnected') {
       start(_lastUsername).catch(() => {});

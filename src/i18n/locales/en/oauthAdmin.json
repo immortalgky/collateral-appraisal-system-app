@@ -46,7 +46,16 @@
       "postLogoutRedirectUris": "Post-Logout Redirect URIs",
       "cancel": "Cancel",
       "create": "Register",
-      "save": "Save"
+      "save": "Save",
+      "tokenLifetimes": "Token lifetimes (minutes)",
+      "tokenLifetimesHint": "Leave a field empty to inherit the server default (access and identity 15 minutes, refresh 7 days). Access and identity accept up to 1440 minutes (24 hours), refresh up to 43200 (30 days). Refresh tokens are rolling, so that one is an idle timeout — how long a session may go unused before the user must sign in again.",
+      "tokenLifetime": {
+        "access": "Access",
+        "identity": "Identity",
+        "refresh": "Refresh (session idle)"
+      },
+      "tokenLifetimeInherit": "Default",
+      "tokenLifetimeInvalid": "Whole number, 1–{{max}}"
     },
     "grant": {
       "authorization_code": "Authorization Code",
