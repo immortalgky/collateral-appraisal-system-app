@@ -63,7 +63,15 @@ const propertiesTableHeader: FormTableHeader[] = [
     name: 'areaDescription',
     className: 'w-full border-r border-neutral-3',
     tooltip: 'Building area description',
-    footer: () => <span className="font-semibold text-gray-700 text-xs">Total</span>,
+    footer: ({ groupLabel }: { rows: any[]; groupLabel?: string }) => {
+      const label =
+        groupLabel === 'Building'
+          ? 'Building Total'
+          : groupLabel === 'Non-Building'
+            ? 'Non-building Total'
+            : 'All Total';
+      return <span className="font-semibold text-gray-700 text-xs">{label}</span>;
+    },
   },
   {
     type: 'derived',
@@ -376,10 +384,12 @@ function SubtotalRow({
   rows,
   subtotalClassName,
   hasActionCol,
+  groupLabel,
 }: {
   rows: any[];
   subtotalClassName?: string;
   hasActionCol: boolean;
+  groupLabel?: string;
 }) {
   return (
     <tr className={clsx('border-t border-neutral-3', subtotalClassName)}>
@@ -393,7 +403,7 @@ function SubtotalRow({
         let content: React.ReactNode;
         switch (header.type) {
           case 'derived':
-            content = footerFn({ rows });
+            content = footerFn({ rows, groupLabel });
             break;
           case 'input-number':
             content = footerFn(rows);
@@ -729,6 +739,7 @@ export function BuildingCostTable({ buildingCost, onChange }: BuildingCostTableP
                               rows={groupRows}
                               subtotalClassName={group.subtotalClassName}
                               hasActionCol={canEdit}
+                              groupLabel={group.label}
                             />
                           </Fragment>
                         );
