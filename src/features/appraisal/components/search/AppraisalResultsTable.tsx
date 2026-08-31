@@ -97,7 +97,7 @@ function AppraisalResultsTable({
   const getCellValue = (item: AppraisalDto, key: string): string => {
     const val = item[key as keyof AppraisalDto];
     if (val === null || val === undefined || val === '') return '—';
-    if (key === 'appointmentDateTime' || key === 'createdAt') {
+    if (key === 'appointmentDateTime' || key === 'createdAt' || key === 'submittedAt') {
       const d = new Date(val as string);
       if (isNaN(d.getTime())) return '—';
       return formatDate(d, 'dd/MM/yyyy HH:mm');

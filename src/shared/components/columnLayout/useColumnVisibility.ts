@@ -147,13 +147,26 @@ export function useColumnVisibility<K extends string>(
   );
 
   const resetToDefault = useCallback(() => {
-    setRaw({ hidden: [], order: [...config.columns] });
-  }, [config.columns, setRaw]);
+    // Restores defaultHidden, not an empty set: on a screen that starts with columns off, clearing
+    // it outright produces a table no default user has ever seen — the opposite of "put it back".
+    setRaw({ hidden: [...(config.defaultHidden ?? [])], order: [...config.columns] });
+  }, [config.columns, config.defaultHidden, setRaw]);
+
+  /**
+   * Columns the user has hidden BEYOND this screen's defaults — what a "you have hidden N" badge
+   * should show. Counting `hidden` outright would greet a first-time visitor with a badge claiming
+   * they hid three columns they have never seen.
+   */
+  const hiddenBeyondDefault = useMemo(() => {
+    const byDefault = new Set<K>(config.defaultHidden ?? []);
+    return [...hidden].filter(k => !byDefault.has(k)).length;
+  }, [hidden, config.defaultHidden]);
 
   return {
     visibleColumns,
     orderedColumns: order,
     hidden,
+    hiddenBeyondDefault,
     alwaysVisible,
     toggleColumn,
     reorderColumns,

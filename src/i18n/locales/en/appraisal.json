@@ -68,7 +68,8 @@
       "toggle": "Filters",
       "collapse": "Hide filters",
       "created": "Created",
-      "slaDue": "SLA due"
+      "slaDue": "SLA due",
+      "assigneeUserId": "Assignee"
     },
     "status": {
       "Pending": "Pending",

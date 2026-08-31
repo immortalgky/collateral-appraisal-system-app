@@ -4,6 +4,14 @@ import axios from '@shared/api/axiosInstance';
 // ── Types ──────────────────────────────────────────────────
 
 export interface AppraisalSearchParams {
+  /**
+   * Scoped search: the free-text box writes ONE of these instead of `search` when the user pins a
+   * column. Declared so a typo in the scope list is a type error rather than a query parameter the
+   * API quietly ignores — which would return an unfiltered list.
+   */
+  appraisalNumber?: string;
+  customerName?: string;
+  requestNumber?: string;
   search?: string;
   status?: string;
   priority?: string;

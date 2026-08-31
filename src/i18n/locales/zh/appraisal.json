@@ -68,7 +68,8 @@
       "toggle": "筛选",
       "collapse": "隐藏筛选",
       "created": "创建日期",
-      "slaDue": "SLA 截止"
+      "slaDue": "SLA 截止",
+      "assigneeUserId": "负责人"
     },
     "status": {
       "Pending": "待处理",

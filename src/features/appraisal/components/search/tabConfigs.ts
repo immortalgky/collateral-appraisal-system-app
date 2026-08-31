@@ -162,6 +162,16 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   //
   // hidden: they belong in the whitelist and want a chip, but nobody types them, so they get no
   // control. Removing them from the array instead would bring the refresh bug straight back.
+  // "My assignments" sets this (GetAppraisalViewsQueryHandler.cs:99). Same reason as the dates
+  // below: without it the view works, writes ?assigneeUserId=… to the URL, and then loses the
+  // filter on refresh while the view chip stays lit — the list silently widens from "my work" to
+  // everything.
+  {
+    key: 'assigneeUserId',
+    label: t('list.filters.assigneeUserId'),
+    type: 'text',
+    hidden: true,
+  },
   {
     key: 'appointmentDateFrom',
     label: t('list.filters.appointmentDateFrom'),

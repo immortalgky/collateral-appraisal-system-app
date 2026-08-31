@@ -68,7 +68,8 @@
       "toggle": "ตัวกรอง",
       "collapse": "ซ่อนตัวกรอง",
       "created": "วันที่สร้าง",
-      "slaDue": "กำหนด SLA"
+      "slaDue": "กำหนด SLA",
+      "assigneeUserId": "ผู้รับผิดชอบ"
     },
     "status": {
       "Pending": "รอดำเนินการ",

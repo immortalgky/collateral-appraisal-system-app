@@ -305,6 +305,7 @@ function AppraisalListPage() {
     visibleColumns,
     orderedColumns,
     hidden,
+    hiddenBeyondDefault,
     alwaysVisible,
     toggleColumn,
     reorderColumns,
@@ -380,10 +381,10 @@ function AppraisalListPage() {
 
     setIsExporting(true);
     try {
-      await exportAppraisals(
-        { search: debouncedSearch || undefined, sortBy, sortDir, ...filters },
-        format,
-      );
+      // searchParam, not `search:` — otherwise pinning the scope to "Appraisal no." showed three
+      // rows on screen and exported every row matching the broad three-column OR. totalCount, which
+      // the truncation warning above is measured against, describes the on-screen set.
+      await exportAppraisals({ ...searchParam, sortBy, sortDir, ...filters }, format);
     } catch {
       // Previously this promise was dropped, so a failed or timed-out export was indistinguishable
       // from a slow one — nothing appeared and nothing said why.
@@ -501,6 +502,7 @@ function AppraisalListPage() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder={t(`list.searchPlaceholderBy.${searchField}`)}
+            describedBy="appraisal-search-hint"
             endAdornment={
               isSearchPending ? (
                 <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
@@ -532,13 +534,15 @@ function AppraisalListPage() {
             hidden={hidden}
             alwaysVisible={alwaysVisible}
             labels={columnLabels}
+            hiddenBeyondDefault={hiddenBeyondDefault}
             onToggle={toggleColumn}
             onReorder={reorderColumns}
             onReset={() => {
-              // Reset must clear widths too: a user who has hidden a column and dragged another
-              // one wide reads "Reset" as "put the table back", not "put half of it back".
+              // Everything the picker can change, or "Reset" is a button that visibly does
+              // nothing when the only thing switched off is the row-number column.
               resetToDefault();
               resetWidths();
+              if (!showRowNumber) toggleRowNumber();
             }}
             extraToggles={[
               {

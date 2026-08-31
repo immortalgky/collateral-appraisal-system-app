@@ -78,7 +78,11 @@ function Pagination({
       {/* Left side: Item count and page size */}
       <div className="flex items-center gap-3 text-gray-600">
         {showItemCount && (
-          <span>{totalCount > 0 ? `${startItem}-${endItem} of ${totalCount}` : '0 results'}</span>
+          <span>
+            {totalCount > 0
+              ? t('pagination.itemRange', { start: startItem, end: endItem, total: totalCount })
+              : t('pagination.noResults')}
+          </span>
         )}
         {showPageSizeSelector && onPageSizeChange && (
           <select

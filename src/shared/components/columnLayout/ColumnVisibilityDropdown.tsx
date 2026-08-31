@@ -18,6 +18,11 @@ interface ColumnVisibilityDropdownProps<K extends string> {
   hidden: Set<K>;
   alwaysVisible: Set<K>;
   /**
+   * How many columns the user has hidden BEYOND the screen's defaults. Drives the badge and
+   * whether Reset is offered; falls back to `hidden.size` for callers with no defaults.
+   */
+  hiddenBeyondDefault?: number;
+  /**
    * Display label per column key. Passed in rather than read from a registry so this component
    * stays independent of any one feature's column definitions — and so the caller can translate.
    */
@@ -126,15 +131,18 @@ export function ColumnVisibilityDropdown<K extends string>({
   hidden,
   alwaysVisible,
   labels,
+  hiddenBeyondDefault,
   onToggle,
   onReorder,
   onReset,
   extraToggles,
 }: ColumnVisibilityDropdownProps<K>) {
   const { t } = useTranslation('common');
-  // Count what the user would see as "off": hidden managed columns plus any extra switch that is
-  // currently unchecked. A badge that ignored the extras would read 0 with the row numbers off.
-  const hiddenCount = hidden.size + (extraToggles?.filter(x => !x.checked).length ?? 0);
+  // What the user would see as "off" relative to how the screen looks out of the box: columns they
+  // hid themselves, plus any extra switch currently unchecked. Using `hidden.size` would put a
+  // count on a screen nobody has customised, for columns that are off by design.
+  const hiddenCount =
+    (hiddenBeyondDefault ?? hidden.size) + (extraToggles?.filter(x => !x.checked).length ?? 0);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 

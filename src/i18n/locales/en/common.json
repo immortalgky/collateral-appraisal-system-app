@@ -114,6 +114,8 @@
     "first": "First page",
     "previous": "Previous page",
     "next": "Next page",
-    "last": "Last page"
+    "last": "Last page",
+    "itemRange": "{{start}}-{{end}} of {{total}}",
+    "noResults": "0 results"
   }
 }

@@ -26,6 +26,11 @@ interface SearchByInputProps {
    * button, that kind of thing. Optional so the callers that predate it are unchanged.
    */
   endAdornment?: ReactNode;
+  /**
+   * Forwarded to the input as aria-describedby. Without it a hint rendered beside this control
+   * (e.g. "type at least 3 characters") is orphaned and never announced.
+   */
+  describedBy?: string;
 }
 
 /**
@@ -42,6 +47,7 @@ function SearchByInput({
   placeholder,
   className,
   endAdornment,
+  describedBy,
 }: SearchByInputProps) {
   const selected = options.find(o => o.value === field);
 
@@ -110,6 +116,7 @@ function SearchByInput({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
+          aria-describedby={describedBy}
           // Inline outline:none — the global `:focus-visible` rule (src/index.css) is unlayered
           // and beats Tailwind's layered outline utilities; an inline style outranks it.
           style={{ outline: 'none' }}

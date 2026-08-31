@@ -76,7 +76,12 @@ function SearchFilterBar({
         // value, finds no option matching the joined string, and falls back to its placeholder —
         // so a filtered list read "All SLA statuses" while quietly showing a subset. Render a
         // read-only summary chip instead of a control that misreports its own state.
-        const multiValues = value.includes(',') ? value.split(',').filter(Boolean) : null;
+        // Only for the option-backed types. A 'text' filter may legitimately contain a comma
+        // ("Smith, John"), and treating that as a multi-select would replace the input with a
+        // read-only chip the user cannot edit out of.
+        const isOptionField = filter.type === 'select' || filter.type === 'parameter-select';
+        const multiValues =
+          isOptionField && value.includes(',') ? value.split(',').filter(Boolean) : null;
         if (multiValues) {
           const labelFor = (v: string) => filter.options?.find(o => o.value === v)?.label ?? v;
           return (
@@ -133,7 +138,10 @@ function SearchFilterBar({
           // page's setFilters uses a functional updater, so the second does not clobber the first.
           case 'date-range':
             return (
-              <div key={filter.key} className={collapsible ? 'col-span-2' : RANGE_FIELD_WIDTH}>
+              <div
+                key={filter.key}
+                className={collapsible ? 'col-span-1 sm:col-span-2' : RANGE_FIELD_WIDTH}
+              >
                 <DateRangeInput
                   from={values[filter.fromKey ?? ''] || ''}
                   to={values[filter.toKey ?? ''] || ''}
