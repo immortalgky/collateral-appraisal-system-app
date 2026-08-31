@@ -106,6 +106,15 @@ export const projectLocationFields: FormField[] = [
   // Single autocomplete that fills sub-district, district, province, postcode codes
   // — and the matching display-name form fields below (mirrors the appraisal-side
   // `LocationSelector` pattern).
+  //
+  // DOPA, not Title: this is where the project physically sits, an administrative address, the
+  // same kind as the request's Location section. The deed addresses belong to the project's land
+  // titles and stay on the Title master (see projectLandInfoFields below).
+  //
+  // The two masters diverged in 2026-07 and 3,715 Title sub-district codes now exist in no DOPA
+  // table, so a code captured here through the Title picker cannot be resolved downstream — which
+  // is why vw_RegulatoryExport reads the developer's request Location for the DOPA code instead of
+  // this field. Title also leaves postcode NULL on those rows, and the form saves postcode.
   {
     type: 'location-selector',
     label: 'Sub District',
@@ -116,7 +125,7 @@ export const projectLocationFields: FormField[] = [
     subDistrictNameField: 'subDistrictName',
     districtNameField: 'districtName',
     provinceNameField: 'provinceName',
-    addressSource: 'title',
+    addressSource: 'dopa',
     wrapperClassName: 'col-span-4',
   },
   {
@@ -133,11 +142,19 @@ export const projectLocationFields: FormField[] = [
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
+  // Postcode is not shown. The selector above still fills and saves it — it is derived from the
+  // sub-district and read-only, so the field only restated a choice the user had already made.
+  // Land Office takes its place and leads the row: it names the office that holds the deeds for
+  // where the project sits, so it belongs with the administrative address above it rather than
+  // after the coordinates, which are a different kind of answer to "where".
+  // Shared by both project types — it used to be declared twice, once in each type-specific
+  // Project Information list.
   {
-    type: 'text-input',
-    label: 'Postcode',
-    name: 'postcode',
-    disabled: true,
+    type: 'parameter-search',
+    label: 'Land Office',
+    name: 'landOffice',
+    group: 'LandOffice',
+    required: true,
     wrapperClassName: 'col-span-4',
   },
   {
@@ -353,14 +370,6 @@ export const condoProjectInfoFields: FormField[] = [
     name: 'builtOnTitleDeedNumber',
     wrapperClassName: 'col-span-6',
     maxLength: 100,
-  },
-  {
-    type: 'parameter-search',
-    label: 'Land Office',
-    name: 'landOffice',
-    group: 'LandOffice',
-    required: true,
-    wrapperClassName: 'col-span-6',
   },
 ];
 
@@ -790,14 +799,6 @@ export const lbProjectInfoFields: FormField[] = [
     name: 'licenseExpirationDate',
     wrapperClassName: 'col-span-4',
   },
-  {
-    type: 'parameter-search',
-    label: 'Land Office',
-    name: 'landOffice',
-    group: 'LandOffice',
-    required: true,
-    wrapperClassName: 'col-span-4',
-  },
 ];
 
 export const lbFacilityFields: FormField[] = [
@@ -1178,8 +1179,8 @@ export { LB_FLOOR_SURFACE_TYPE_OPTIONS, LB_FLOOR_STRUCTURE_TYPE_OPTIONS } from '
  * Land Information section for the project-land form.
  *
  * Differences from appraisal `landInfoField`:
- *   • No `latitude` / `longitude` (captured at the project level on Project Info).
- *   • No `landOffice` (same — single project-level land office on Project Info).
+ *   • No `latitude` / `longitude` (captured at the project level, on Project Location).
+ *   • No `landOffice` (same — single project-level land office, on Project Location).
  */
 export const projectLandInfoFields: FormField[] = [
   {

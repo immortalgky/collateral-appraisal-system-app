@@ -198,7 +198,7 @@
     }
   },
   "unitListing": {
-    "importUnits": "Import Units",
+    "importUnits": "导入单元",
     "uploadHistory": "Upload History",
     "unitListing": "Unit Listing",
     "noUploadHistory": "No upload history",
@@ -209,14 +209,12 @@
       "message": "Uploading a new file will replace all current unit data. This cannot be undone.",
       "confirm": "Replace"
     },
-    "confirmDelete": {
-      "title": "Delete upload?",
-      "confirm": "Delete"
-    },
     "summary": {
       "towers": "Towers:",
       "models": "Models:",
-      "totalUnits": "Total Units:"
+      "totalUnits": "Total Units:",
+      "remainingUnits": "剩余",
+      "soldUnits": "已售"
     },
     "cols": {
       "no": "No",
@@ -236,16 +234,41 @@
       "houseNo": "House No",
       "modelName": "Model Name",
       "numFloors": "No. of Floors",
-      "landAreaSqWa": "Land Area (Sq.Wa)"
+      "landAreaSqWa": "Land Area (Sq.Wa)",
+      "saleStatus": "状态"
     },
     "reappraisal": {
       "title": "Update Units from Revised Excel (Re-match)",
-      "hint": "Upload an updated Excel to re-match seeded units. Rows present in the file stay unsold; rows missing are auto-marked sold. New rows are counted but not added.",
-      "normalUploadNote": "Use this upload to add new unit inventory only.",
-      "resultToast": "Re-match complete: {{matched}} unsold, {{autoSold}} auto-sold, {{added}} new (not added)"
+      "hint": "Upload a revised Excel to re-match the seeded units. Rows present in the file stay unsold; unsold rows missing from it are marked sold. Changed values and new rows are applied only after you confirm them in the review dialog.",
+      "action": "上传 Excel 进行 re-match"
     },
-    "aria": {
-      "deleteUpload": "Delete upload"
+    "aria": {},
+    "saleStatus": {
+      "sold": "已售",
+      "available": "可售"
+    },
+    "importHint": "上传项目单元清单 Excel。该文件将替换当前的单元集合及其计算出的价格。",
+    "uploading": "上传中…",
+    "lastUpload": "最近",
+    "hideHistory": "隐藏历史",
+    "showHistory": "历史 {{count}} 条",
+    "systemBatch": "系统",
+    "searchPlaceholder": "搜索地块号、门牌号或房号",
+    "noMatch": "没有符合条件的单元",
+    "shownOf": "显示 {{shown}} / {{total}}",
+    "filter": {
+      "all": "全部",
+      "available": "可售",
+      "sold": "已售",
+      "allModels": "全部户型"
+    },
+    "outcome": {
+      "imported": "导入 {{count}} 套",
+      "autoSold": "自动标记已售 {{count}}",
+      "updated": "更新 {{count}}",
+      "added": "新增 {{count}}",
+      "noChange": "无变化",
+      "notRecorded": "未记录"
     }
   },
   "unitVerification": {
@@ -257,7 +280,8 @@
       "sold": "已售",
       "newlySold": "新售出",
       "available": "可售",
-      "matchDifference": "数据不匹配"
+      "matchDifference": "数据不匹配",
+      "added": "新增"
     },
     "status": {
       "Sold": "已售",
@@ -268,11 +292,12 @@
     "cols": {
       "status": "状态"
     },
-    "matchDifferenceHint": "发现 {{count}} 处数据不匹配，请修正 Excel 后重新上传。",
     "apply": "应用",
     "applying": "提交中...",
     "cancel": "取消",
-    "applySuccess": "单元更新成功"
+    "applySuccess": "单元更新成功",
+    "addedSectionLabel": "此文件将新增 {{count}} 套",
+    "confirmChanges": "已核对以上变更 — 更新 {{changed}} 套现有单元，新增 {{added}} 套。"
   },
   "towerListing": {
     "grid": "Grid",

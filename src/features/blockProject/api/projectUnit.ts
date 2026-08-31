@@ -18,10 +18,13 @@ export const projectUnitKeys = {
 // ==================== Response Types ====================
 
 interface GetProjectUnitsResponse {
+  /** Every unit of the project, sold ones included — each carries isSold. */
   units: ProjectUnit[];
   towers: string[];
   models: string[];
   totalCount: number;
+  /** The subset still to be sold. */
+  remainingCount: number;
 }
 
 // ==================== Hooks ====================
@@ -120,7 +123,28 @@ export interface ReappraisalPreviewUnit {
   landArea: number | null;
   isSold: boolean;
   status: ReappraisalUnitStatus;
+  /** Field names that differ from the workbook, e.g. ['sellingPrice', 'landArea']. */
   diffFields: string[];
+  /** The workbook's value for each field in diffFields. Empty unless status is MatchDifference. */
+  incomingValues: Record<string, string | number | null>;
+}
+
+/**
+ * A workbook row that matches nothing in the project — what applying the file would ADD.
+ * It has no id or sequence number because it does not exist yet; both are assigned on apply.
+ */
+export interface ReappraisalAddedUnit {
+  modelType: string | null;
+  usableArea: number | null;
+  sellingPrice: number | null;
+  floor: number | null;
+  towerName: string | null;
+  condoRegistrationNumber: string | null;
+  roomNumber: string | null;
+  plotNumber: string | null;
+  houseNumber: string | null;
+  numberOfFloors: number | null;
+  landArea: number | null;
 }
 
 export interface ReappraisalPreviewSummary {
@@ -129,11 +153,13 @@ export interface ReappraisalPreviewSummary {
   newlySold: number;
   available: number;
   matchDifference: number;
+  added: number;
 }
 
 export interface ReappraisalPreviewResult {
   summary: ReappraisalPreviewSummary;
   units: ReappraisalPreviewUnit[];
+  addedUnits: ReappraisalAddedUnit[];
 }
 
 // ── Reappraisal result type ───────────────────────────────────────────────────
@@ -142,6 +168,7 @@ export interface ReappraisalUploadResult {
   matchedUnsold: number;
   autoSold: number;
   added: number;
+  updated: number;
 }
 
 /**
@@ -170,9 +197,14 @@ export const useReappraisalPreview = () => {
  * Re-upload an Excel file for a REAPPRAISAL appraisal.
  * POST /appraisals/{appraisalId}/project/units/reappraisal-upload
  *
- * Matches rows to seeded unsold units: present rows stay UNSOLD, missing rows
- * are auto-marked SOLD, new rows are counted but NOT persisted (v1).
- * Same FormData field name as useUploadProjectUnits.
+ * Matches rows to seeded units: present rows stay UNSOLD, missing unsold rows are
+ * auto-marked SOLD. Attribute changes and new rows are applied too, but ONLY when
+ * confirmUpdates is set — without it the server rejects the file with 400 so the user
+ * reviews the preview first. Same FormData field name as useUploadProjectUnits.
+ *
+ * confirmUpdates travels in the QUERY STRING, not the multipart body: a bare bool? in a
+ * minimal API binds from route and query only, so a form field would be silently ignored
+ * and the request would still come back 400.
  */
 export const useUploadReappraisalUnits = () => {
   const queryClient = useQueryClient();
@@ -181,39 +213,19 @@ export const useUploadReappraisalUnits = () => {
     mutationFn: async (params: {
       appraisalId: string;
       file: File;
+      confirmUpdates?: boolean;
     }): Promise<ReappraisalUploadResult> => {
       const formData = new FormData();
       formData.append('file', params.file);
       const { data } = await axios.post(
         `/appraisals/${params.appraisalId}/project/units/reappraisal-upload`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          params: params.confirmUpdates ? { confirmUpdates: true } : undefined,
+        },
       );
       return data.result ?? data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: projectUnitKeys.all(variables.appraisalId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: projectUnitKeys.uploads(variables.appraisalId),
-      });
-    },
-  });
-};
-
-/**
- * Delete a unit upload batch and its associated units.
- * DELETE /appraisals/{appraisalId}/project/units/uploads/{uploadId}
- */
-export const useDeleteProjectUnitUpload = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: { appraisalId: string; uploadId: string }): Promise<void> => {
-      await axios.delete(
-        `/appraisals/${params.appraisalId}/project/units/uploads/${params.uploadId}`,
-      );
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
