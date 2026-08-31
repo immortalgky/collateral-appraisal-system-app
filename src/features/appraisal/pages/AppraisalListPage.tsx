@@ -1,6 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import { SearchByInput } from '@/shared/components/inputs';
+import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import {
@@ -10,11 +13,25 @@ import {
   useCreateSavedSearch,
   useDeleteSavedSearch,
   exportAppraisals,
+  MAX_EXPORT_ROWS,
   type AppraisalDto,
   type SmartViewDto,
   type SavedSearchDto,
 } from '../api/appraisalSearch';
-import { makeAppraisalFilters, makeAppraisalColumns } from '../components/search/tabConfigs';
+import {
+  makeAppraisalFilters,
+  makeAppraisalColumns,
+  expandFilterKeys,
+  APPRAISAL_DEFAULT_HIDDEN_COLUMNS,
+} from '../components/search/tabConfigs';
+import {
+  ColumnVisibilityDropdown,
+  useColumnAutoFit,
+  useColumnVisibility,
+  useColumnWidths,
+  useRowNumberColumn,
+} from '@/shared/components/columnLayout';
+import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
 import SearchFilterBar from '../components/search/SearchFilterBar';
 import ActiveFilterChips from '../components/search/ActiveFilterChips';
 import SmartViewBar from '../components/search/SmartViewBar';
@@ -28,13 +45,58 @@ import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 // `q` is accepted as an inbound alias for `search` so a link built by the global search bar works
 // either way. It is normalised to `search` on mount and never written back, so the canonical URL
 // stays single-form.
-const NON_FILTER_KEYS = new Set(['search', 'q', 'page', 'pageSize', 'sortBy', 'sortDir', 'view']);
+const NON_FILTER_KEYS = new Set([
+  'search',
+  'q',
+  'searchField',
+  'page',
+  'pageSize',
+  'sortBy',
+  'sortDir',
+  'view',
+]);
+
+/** localStorage namespace for this screen's column layout. */
+const COLUMN_STORAGE_KEY = 'appraisal-list-columns';
+
+/**
+ * Which column the free-text box searches.
+ *
+ * 'all' is the default and keeps today's behaviour exactly: a semi-join across every searchable
+ * field. The narrower options map to the dedicated backend filters, which is dramatically cheaper
+ * — an appraisal-number search resolves off appraisal.Appraisals instead of dragging the whole
+ * query through the view (measured on 105k rows: 1,401 ms for the OR across three columns against
+ * 71 ms for the pinned one).
+ */
+const SEARCH_FIELDS = ['all', 'appraisalNumber', 'customerName', 'requestNumber'] as const;
+type SearchField = (typeof SEARCH_FIELDS)[number];
+
+const SEARCH_FIELD_ICONS: Record<SearchField, string> = {
+  all: 'magnifying-glass',
+  appraisalNumber: 'building',
+  customerName: 'user',
+  requestNumber: 'file-lines',
+};
+
+const isSearchField = (v: string | null): v is SearchField =>
+  v !== null && (SEARCH_FIELDS as readonly string[]).includes(v);
 
 function AppraisalListPage() {
   const { t } = useTranslation(['appraisal', 'common']);
-  const appraisalFilters = makeAppraisalFilters(t);
-  const appraisalColumns = makeAppraisalColumns(t);
-  const VALID_FILTER_KEYS = new Set(appraisalFilters.map(f => f.key));
+  // Memoized because these feed the column-layout hooks: rebuilding the array every render would
+  // hand useColumnVisibility a new config identity each time. Translating 16 labels on every
+  // render is wasted work regardless.
+  const appraisalFilters = useMemo(() => makeAppraisalFilters(t), [t]);
+  const appraisalColumns = useMemo(() => makeAppraisalColumns(t), [t]);
+  /**
+   * The keys the URL and the chips speak. Expanded from the filter list because a date-range
+   * control owns two of them — see expandFilterKeys.
+   */
+  const filterKeys = useMemo(
+    () => expandFilterKeys(appraisalFilters, t('common:range.from'), t('common:range.to')),
+    [appraisalFilters, t],
+  );
+  const VALID_FILTER_KEYS = useMemo(() => new Set(filterKeys.map(f => f.key)), [filterKeys]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read initial state from URL (once on mount)
@@ -42,6 +104,9 @@ function AppraisalListPage() {
     search: searchParams.get('search') || searchParams.get('q') || '',
     page: Number(searchParams.get('page')) || 0,
     pageSize: Number(searchParams.get('pageSize')) || 25,
+    searchField: (isSearchField(searchParams.get('searchField'))
+      ? searchParams.get('searchField')
+      : 'all') as SearchField,
     sortBy: searchParams.get('sortBy') || 'CreatedAt',
     sortDir: searchParams.get('sortDir') || 'desc',
     view: searchParams.get('view') || null,
@@ -55,6 +120,7 @@ function AppraisalListPage() {
   });
   const init = initRef.current;
 
+  const [searchField, setSearchField] = useState<SearchField>(init.searchField);
   const [searchTerm, setSearchTerm] = useState(init.search);
   const [debouncedSearch, setDebouncedSearch] = useState(init.search);
   const [pageNumber, setPageNumber] = useState(init.page);
@@ -71,7 +137,8 @@ function AppraisalListPage() {
   // number shares its first two digits, so a shorter term is not a search — and a request would
   // come back as an ordinary empty page, indistinguishable from "no such appraisal". The hint
   // below the box says so instead.
-  const isSearchTooShort = searchTerm.trim().length > 0 && searchTerm.trim().length < MIN_SEARCH_LENGTH;
+  const isSearchTooShort =
+    searchTerm.trim().length > 0 && searchTerm.trim().length < MIN_SEARCH_LENGTH;
   useEffect(() => {
     const term = searchTerm.trim();
     const next = term.length >= MIN_SEARCH_LENGTH ? searchTerm : '';
@@ -82,12 +149,15 @@ function AppraisalListPage() {
   // Reset page on search/filter/sort change
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, filters, sortBy, sortDir]);
+  }, [debouncedSearch, searchField, filters, sortBy, sortDir]);
 
   // Sync all state to URL
   useEffect(() => {
     const params: Record<string, string> = {};
     if (debouncedSearch) params.search = debouncedSearch;
+    // Only when it is doing something: 'all' is the default, and writing it would put a parameter
+    // in every shared link that means "no change".
+    if (searchField !== 'all') params.searchField = searchField;
     if (pageNumber > 0) params.page = String(pageNumber);
     if (pageSize !== 25) params.pageSize = String(pageSize);
     if (sortBy !== 'CreatedAt') params.sortBy = sortBy;
@@ -99,6 +169,7 @@ function AppraisalListPage() {
     setSearchParams(params, { replace: true });
   }, [
     debouncedSearch,
+    searchField,
     pageNumber,
     pageSize,
     sortBy,
@@ -109,8 +180,16 @@ function AppraisalListPage() {
   ]);
 
   // Data hooks
+  // The term goes to exactly one parameter — either the broad `search` or the pinned column — so
+  // the backend never sees both and cannot AND them together.
+  const searchParam = useMemo(() => {
+    const term = debouncedSearch || undefined;
+    if (!term) return {};
+    return searchField === 'all' ? { search: term } : { [searchField]: term };
+  }, [debouncedSearch, searchField]);
+
   const { data, isLoading, isFetching, isError, error, refetch } = useAppraisalSearch({
-    search: debouncedSearch || undefined,
+    ...searchParam,
     pageNumber,
     pageSize,
     sortBy,
@@ -137,7 +216,6 @@ function AppraisalListPage() {
   const items = data?.result.items ?? [];
   const totalCount = data?.result.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
-  const facets = data?.facets;
 
   // The running row number has to be derived from the response these rows came in, not from the
   // local paging state. `keepPreviousData` means `items` lags one fetch behind, so after clicking
@@ -206,12 +284,113 @@ function AppraisalListPage() {
     });
   };
 
+  // ── Column layout ───────────────────────────────────────────────────────────
+  const tableRef = useRef<HTMLTableElement>(null);
+
+  const columnConfig = useMemo<ColumnLayoutConfig<string>>(
+    () => ({
+      columns: appraisalColumns.map(c => c.key),
+      // The appraisal number is the row's identity and its link target — pinning anything else
+      // would leave a scrolled-right table with no way back to the record.
+      stickyColumn: 'appraisalNumber',
+      defaultWidths: Object.fromEntries(
+        appraisalColumns.filter(c => c.width).map(c => [c.key, c.width!]),
+      ),
+      defaultHidden: APPRAISAL_DEFAULT_HIDDEN_COLUMNS,
+    }),
+    [appraisalColumns],
+  );
+
+  const {
+    visibleColumns,
+    orderedColumns,
+    hidden,
+    alwaysVisible,
+    toggleColumn,
+    reorderColumns,
+    resetToDefault,
+  } = useColumnVisibility(COLUMN_STORAGE_KEY, columnConfig);
+  const { widths, setWidth, resetWidths } = useColumnWidths(COLUMN_STORAGE_KEY, columnConfig);
+  const { showRowNumber, toggleRowNumber } = useRowNumberColumn(COLUMN_STORAGE_KEY);
+  const getAutoFitWidth = useColumnAutoFit(tableRef, { leadingCells: showRowNumber ? 1 : 0 });
+
+  const filterLabels = useMemo(
+    () => Object.fromEntries(filterKeys.map(f => [f.key, f.label])),
+    [filterKeys],
+  );
+
+  const filterValueOptions = useMemo(
+    () =>
+      Object.fromEntries(
+        appraisalFilters.filter(f => f.options?.length).map(f => [f.key, f.options!]),
+      ),
+    [appraisalFilters],
+  );
+
+  /**
+   * Icons follow what the quotation listing already uses for the same concepts, so the two
+   * scoped-search boxes in the product read the same way.
+   */
+  const searchFieldOptions = useMemo(
+    () =>
+      SEARCH_FIELDS.map(f => ({
+        value: f,
+        label: t(`list.searchFieldOptions.${f}`),
+        icon: SEARCH_FIELD_ICONS[f],
+      })),
+    [t],
+  );
+
+  const columnLabels = useMemo(
+    () => Object.fromEntries(appraisalColumns.map(c => [c.key, c.label])),
+    [appraisalColumns],
+  );
+
+  // Only the visible columns reach the table, in user order — the table itself needs no knowledge
+  // of hiding or reordering, and its cell rendering is untouched.
+  const orderedVisibleColumns = useMemo(
+    () =>
+      visibleColumns
+        .map(key => appraisalColumns.find(c => c.key === key))
+        .filter((c): c is NonNullable<typeof c> => c !== undefined),
+    [visibleColumns, appraisalColumns],
+  );
+
   const handleRowClick = (item: AppraisalDto) => {
     setSelectedAppraisalId(item.id);
   };
 
-  const handleExport = (format: 'xlsx' | 'csv') => {
-    exportAppraisals({ search: debouncedSearch || undefined, sortBy, sortDir, ...filters }, format);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (format: 'xlsx' | 'csv') => {
+    // The server caps the file at MAX_EXPORT_ROWS in the current sort order and says nothing about
+    // it. Downloading 10,000 of 105,475 rows without a word is the worst outcome: the file opens,
+    // looks complete, and is wrong.
+    if (
+      totalCount > MAX_EXPORT_ROWS &&
+      !window.confirm(
+        t('list.exportTruncatedWarning', {
+          total: totalCount.toLocaleString(),
+          max: MAX_EXPORT_ROWS.toLocaleString(),
+        }),
+      )
+    ) {
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      await exportAppraisals(
+        { search: debouncedSearch || undefined, sortBy, sortDir, ...filters },
+        format,
+      );
+    } catch {
+      // Previously this promise was dropped, so a failed or timed-out export was indistinguishable
+      // from a slow one — nothing appeared and nothing said why.
+      toast.error(t('list.exportFailed'));
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (isError) {
@@ -224,8 +403,14 @@ function AppraisalListPage() {
     );
   }
 
+  // overflow-x-hidden on the root: the app shell's content area is overflow-y-auto, and CSS
+  // promotes the other axis to auto alongside it — so anything that pokes past this page's width
+  // turns into a scrollbar across the bottom of the whole screen instead of inside the table. The
+  // table has its own horizontal scroll; nothing above it should ever scroll sideways.
+  // Safe for the popovers here: the column picker and the search-scope menu are HeadlessUI
+  // `anchor` panels, so they render in a portal rather than inside this box.
   return (
-    <div className="flex flex-col h-full min-h-0 min-w-0 gap-3">
+    <div className="flex flex-col h-full min-h-0 min-w-0 overflow-x-hidden gap-3">
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
@@ -237,29 +422,51 @@ function AppraisalListPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Export */}
-          <div className="relative group">
-            <button className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300">
-              <Icon style="solid" name="arrow-down-tray" className="size-3" />
+          {/* Export — a real menu rather than `hidden group-hover:block`, which could not be
+              opened from the keyboard at all and vanished the moment the pointer left the button. */}
+          <Popover className="relative">
+            <PopoverButton
+              disabled={isExporting}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300 disabled:opacity-50 disabled:cursor-wait outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              {/* 'arrow-down-tray' is a heroicons name and renders as nothing against this
+                  project's FontAwesome sprite. 'file-export' is what the other Export buttons in
+                  the app use (ValuationDocumentChecklist, GenerateReappraisalTestPage). */}
+              <Icon
+                style="solid"
+                name={isExporting ? 'spinner' : 'file-export'}
+                className={`size-3 ${isExporting ? 'animate-spin text-primary' : 'text-emerald-600'}`}
+              />
               {t('list.export')}
-            </button>
-            <div className="hidden group-hover:block absolute right-0 top-full pt-1 w-36 z-40">
-              <div className="bg-white border border-gray-200 rounded-lg shadow-lg">
-                <button
-                  onClick={() => handleExport('xlsx')}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
-                >
-                  {t('list.exportXlsx')}
-                </button>
-                <button
-                  onClick={() => handleExport('csv')}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
-                >
-                  {t('list.exportCsv')}
-                </button>
-              </div>
-            </div>
-          </div>
+            </PopoverButton>
+            <PopoverPanel
+              anchor="bottom end"
+              className="z-40 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+            >
+              {({ close }) => (
+                <>
+                  <button
+                    onClick={() => {
+                      close();
+                      void handleExport('xlsx');
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                  >
+                    {t('list.exportXlsx')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      close();
+                      void handleExport('csv');
+                    }}
+                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                  >
+                    {t('list.exportCsv')}
+                  </button>
+                </>
+              )}
+            </PopoverPanel>
+          </Popover>
           {/* Saved Searches */}
           <SavedSearchesDropdown
             savedSearches={savedSearches}
@@ -277,85 +484,106 @@ function AppraisalListPage() {
 
       {/* Search + Filters */}
       <div className="shrink-0 flex flex-col gap-2">
-        <div className="relative">
-          <Icon
-            style="solid"
-            name="magnifying-glass"
-            className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder={t('list.searchPlaceholder')}
+        {/* Search + the table's own control, on one row.
+            SearchByInput is the app's existing scoped-search pill (quotation listing, external
+            invitations, monitoring's pending-quotation section all use it) — same field selector
+            with an icon per option and a check on the active one. Reused rather than rebuilt, so
+            this box behaves and looks like every other scoped search in the product. */}
+        {/* items-stretch so the picker matches the search pill's height instead of sitting 2px
+            short of it; pr-1 keeps its count badge, which hangs outside the button, clear of the
+            page's overflow-x-hidden edge. */}
+        <div className="flex items-stretch gap-2 pr-1">
+          <SearchByInput
+            className="flex-1 min-w-0"
+            options={searchFieldOptions}
+            field={searchField}
+            onFieldChange={v => setSearchField(isSearchField(v) ? v : 'all')}
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-            aria-describedby="appraisal-search-hint"
+            onChange={setSearchTerm}
+            placeholder={t(`list.searchPlaceholderBy.${searchField}`)}
+            endAdornment={
+              isSearchPending ? (
+                <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
+              ) : (
+                searchTerm && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setDebouncedSearch('');
+                    }}
+                    aria-label={t('common:actions.clear')}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <Icon style="solid" name="xmark" className="size-4" />
+                  </button>
+                )
+              )
+            }
           />
-          {isSearchPending ? (
-            <Icon
-              style="solid"
-              name="spinner"
-              className="absolute right-3 top-1/2 -translate-y-1/2 size-4 animate-spin text-primary"
-            />
-          ) : (
-            searchTerm && (
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setDebouncedSearch('');
-                }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <Icon style="solid" name="xmark" className="size-4" />
-              </button>
-            )
-          )}
+          <SearchFilterBar
+            collapsible
+            filters={appraisalFilters}
+            values={filters}
+            onChange={handleFilterChange}
+            onClear={handleClearFilters}
+          />
+          <ColumnVisibilityDropdown
+            orderedColumns={orderedColumns}
+            hidden={hidden}
+            alwaysVisible={alwaysVisible}
+            labels={columnLabels}
+            onToggle={toggleColumn}
+            onReorder={reorderColumns}
+            onReset={() => {
+              // Reset must clear widths too: a user who has hidden a column and dragged another
+              // one wide reads "Reset" as "put the table back", not "put half of it back".
+              resetToDefault();
+              resetWidths();
+            }}
+            extraToggles={[
+              {
+                key: 'rowNumber',
+                label: t('common:columns.rowNumber'),
+                checked: showRowNumber,
+                onChange: toggleRowNumber,
+              },
+            ]}
+          />
         </div>
         <p id="appraisal-search-hint" className="text-xs text-gray-400 dark:text-gray-500">
           {isSearchTooShort
             ? t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })
             : t('list.searchPrefixHint')}
         </p>
-        <SearchFilterBar
-          filters={appraisalFilters}
-          values={filters}
-          onChange={handleFilterChange}
-          onClear={handleClearFilters}
-        />
       </div>
 
       {/* Active Filter Chips */}
       <div className="shrink-0">
         <ActiveFilterChips
           filters={filters}
+          labels={filterLabels}
+          valueOptions={filterValueOptions}
           onRemove={handleRemoveFilter}
           onClearAll={handleClearFilters}
         />
       </div>
 
-      {/* Facet Summary */}
-      {facets && facets.status.length > 0 && (
-        <div className="shrink-0 flex items-center gap-2 flex-wrap text-xs">
-          {facets.status.map(f => (
-            <button
-              key={f.value}
-              onClick={() => handleFilterChange('status', f.value)}
-              className={`px-2 py-0.5 rounded-full border transition-colors ${
-                filters.status === f.value
-                  ? 'bg-primary/10 border-primary/30 text-primary'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300'
-              }`}
-            >
-              {f.value} ({f.count})
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Results Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      {/* min-w-0: a flex child defaults to min-width:auto, so without it this card refuses to
+          shrink below the table's own width. With user-set column widths the table is ~2,200px
+          wide, which pushed the card past the viewport and put a scrollbar on the page instead of
+          inside the table. */}
+      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <AppraisalResultsTable
-          columns={appraisalColumns}
+          columns={orderedVisibleColumns}
+          layout={{
+            visibleColumns,
+            widths,
+            setWidth,
+            getAutoFitWidth,
+            showRowNumber,
+            tableRef,
+          }}
           items={items}
           isLoading={showSkeleton}
           sortBy={sortBy}

@@ -5,10 +5,14 @@ import type { Task } from '../types';
 import Badge from '@/shared/components/Badge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import Icon from '@/shared/components/Icon';
-import { SlaStatusBadge, bucketForSlaStatus } from '@features/common/monitoring/components/SlaCells';
+import {
+  SlaStatusBadge,
+  bucketForSlaStatus,
+} from '@features/common/monitoring/components/SlaCells';
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import { DateCell } from '@features/common/monitoring/components/DateCell';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
+import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -51,7 +55,6 @@ function PersonCell({ name }: { name: string | null | undefined }) {
     </div>
   );
 }
-
 
 /**
  * `task.appraiser` is a plain display string covering BOTH internal staff and external
@@ -205,9 +208,14 @@ export type ColumnDef = {
   render: (task: Task) => ReactNode;
 };
 
-export const DEFAULT_COLUMN_WIDTH = 150;
-export const MIN_COLUMN_WIDTH = 60;
-export const MAX_AUTOFIT_WIDTH = 480;
+// Re-exported so the many task modules that already import these keep one import path. The
+// values live in the shared toolkit — a screen must be able to size its columns without importing
+// this feature.
+export {
+  DEFAULT_COLUMN_WIDTH,
+  MAX_AUTOFIT_WIDTH,
+  MIN_COLUMN_WIDTH,
+} from '@/shared/components/columnLayout';
 
 export const columnDefs: Record<ColumnKey, ColumnDef> = {
   appraisalNumber: {
@@ -380,14 +388,29 @@ export const SORTABLE_FIELDS: SortableField[] = (
 
 // ── Activity column config ─────────────────────────────────────────────────
 
-export type ActivityColumnConfig = {
-  /** Columns in display order, default visible set. */
-  columns: ColumnKey[];
-  /** The single left-pinned column (cannot be hidden). */
-  stickyColumn: ColumnKey;
-  /** Additional columns the user cannot toggle off. Sticky is always implicitly always-visible. */
-  alwaysVisible?: ColumnKey[];
-};
+/**
+ * The task screens' column config. An alias of the shared type pinned to this feature's key
+ * union, so existing call sites and their inferred types are unchanged.
+ */
+export type ActivityColumnConfig = ColumnLayoutConfig<ColumnKey>;
+
+/**
+ * Display label per column key, for the column-picker dropdown. Derived from the registry so a
+ * renamed column cannot end up with two different names on screen.
+ */
+export const COLUMN_LABELS: Record<ColumnKey, string> = Object.fromEntries(
+  (Object.entries(columnDefs) as [ColumnKey, ColumnDef][]).map(([key, def]) => [key, def.label]),
+) as Record<ColumnKey, string>;
+
+/**
+ * Per-column default widths, read by useColumnWidths. Derived from the column registry rather
+ * than duplicated, so a width added to a column def is picked up here automatically.
+ */
+export const DEFAULT_WIDTHS: Partial<Record<ColumnKey, number>> = Object.fromEntries(
+  (Object.entries(columnDefs) as [ColumnKey, ColumnDef][])
+    .filter(([, def]) => def.width !== undefined)
+    .map(([key, def]) => [key, def.width!]),
+) as Partial<Record<ColumnKey, number>>;
 
 const DEFAULT_COLUMNS: ColumnKey[] = [
   'appraisalNumber',
@@ -415,11 +438,13 @@ const DEFAULT_COLUMNS: ColumnKey[] = [
 const DEFAULT_CONFIG: ActivityColumnConfig = {
   columns: DEFAULT_COLUMNS,
   stickyColumn: 'appraisalNumber',
+  defaultWidths: DEFAULT_WIDTHS,
 };
 
 const INITIATION_CONFIG: ActivityColumnConfig = {
   columns: [...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],
   stickyColumn: 'requestNumber',
+  defaultWidths: DEFAULT_WIDTHS,
 };
 
 const ACTIVITY_COLUMN_CONFIG: Record<string, ActivityColumnConfig> = {

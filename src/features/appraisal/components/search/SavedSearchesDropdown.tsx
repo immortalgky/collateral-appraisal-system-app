@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { SavedSearchDto } from '../../api/appraisalSearch';
 
@@ -15,6 +16,7 @@ function SavedSearchesDropdown({
   onSave,
   onDelete,
 }: SavedSearchesDropdownProps) {
+  const { t } = useTranslation(['appraisal', 'common']);
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newName, setNewName] = useState('');
@@ -35,8 +37,8 @@ function SavedSearchesDropdown({
         aria-haspopup="true"
         className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
       >
-        <Icon style="solid" name="bookmark" className="size-3" />
-        Saved
+        <Icon style="solid" name="bookmark" className="size-3 text-amber-500" />
+        {t('appraisal:list.saved')}
         {savedSearches.length > 0 && (
           <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full text-[10px]">
             {savedSearches.length}
@@ -70,7 +72,7 @@ function SavedSearchesDropdown({
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSave()}
-                    placeholder="Search name..."
+                    placeholder={t('appraisal:list.searchNamePlaceholder')}
                     className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-primary outline-none"
                     autoFocus
                   />
@@ -78,13 +80,13 @@ function SavedSearchesDropdown({
                     onClick={handleSave}
                     className="text-xs text-primary font-medium hover:underline"
                   >
-                    Save
+                    {t('common:actions.save')}
                   </button>
                   <button
                     onClick={() => setIsSaving(false)}
                     className="text-xs text-gray-400 hover:text-gray-600"
                   >
-                    Cancel
+                    {t('common:actions.cancel')}
                   </button>
                 </div>
               ) : (
@@ -93,13 +95,15 @@ function SavedSearchesDropdown({
                   className="w-full text-left text-xs text-primary font-medium hover:underline flex items-center gap-1"
                 >
                   <Icon style="solid" name="plus" className="size-3" />
-                  Save current search
+                  {t('appraisal:list.saveCurrentSearch')}
                 </button>
               )}
             </div>
             <div className="max-h-48 overflow-y-auto">
               {savedSearches.length === 0 ? (
-                <p className="p-3 text-xs text-gray-400 text-center">No saved searches yet</p>
+                <p className="p-3 text-xs text-gray-400 text-center">
+                  {t('appraisal:list.noSavedSearches')}
+                </p>
               ) : (
                 savedSearches.map(s => (
                   <div

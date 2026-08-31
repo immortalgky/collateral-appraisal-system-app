@@ -31,7 +31,10 @@
       "propertyType": "抵押物类型",
       "company": "公司",
       "appointment": "预约",
-      "created": "创建时间"
+      "created": "创建时间",
+      "slaBusinessDays": "SLA（天）",
+      "submittedAt": "提交日期",
+      "groupTag": "分组"
     },
     "filters": {
       "statusLabel": "状态",
@@ -55,7 +58,17 @@
       "purposeLabel": "评估目的",
       "purposePlaceholder": "所有目的",
       "propertyTypeLabel": "抵押物类型",
-      "propertyTypePlaceholder": "所有类型"
+      "propertyTypePlaceholder": "所有类型",
+      "appointmentDateFrom": "预约日期起",
+      "appointmentDateTo": "预约日期至",
+      "assignedDateFrom": "分配日期起",
+      "assignedDateTo": "分配日期至",
+      "multiSelected": "{{label}}：已选 {{count}} 项",
+      "clearFilters": "清除筛选",
+      "toggle": "筛选",
+      "collapse": "隐藏筛选",
+      "created": "创建日期",
+      "slaDue": "SLA 截止"
     },
     "status": {
       "Pending": "待处理",
@@ -87,7 +100,41 @@
       "PreAppraisal": "预估价"
     },
     "searchTooShort": "请至少输入 {{count}} 个字符进行搜索",
-    "searchPrefixHint": "从开头匹配。在关键词前加 * 可匹配中间的内容。"
+    "searchPrefixHint": "从开头匹配。在关键词前加 * 可匹配中间的内容。",
+    "exportTruncatedWarning": "此搜索匹配 {{total}} 条评估记录，但导出最多包含 {{max}} 行。文件将被截断。是否继续？",
+    "exportFailed": "导出失败，请重试。",
+    "searchFieldLabel": "搜索范围",
+    "searchFieldOptions": {
+      "all": "全部字段",
+      "appraisalNumber": "评估编号",
+      "customerName": "客户",
+      "requestNumber": "申请编号"
+    },
+    "searchPlaceholderBy": {
+      "all": "搜索评估编号、申请编号、客户、地契…",
+      "appraisalNumber": "按评估编号搜索…",
+      "customerName": "按客户名称搜索…",
+      "requestNumber": "按申请编号搜索…"
+    },
+    "quickViews": "快速视图：",
+    "smartViews": {
+      "my-assignments": "我的任务",
+      "sla-at-risk": "SLA 风险",
+      "todays-appointments": "今日预约",
+      "unassigned": "未分配",
+      "high-priority-active": "高优先级",
+      "nearing-deadline": "临近截止",
+      "external-assignments": "外部任务",
+      "my-company-queue": "我司队列"
+    },
+    "saved": "已保存",
+    "saveCurrentSearch": "保存当前搜索",
+    "searchNamePlaceholder": "搜索名称...",
+    "noSavedSearches": "暂无已保存的搜索",
+    "activeFilters": "筛选：",
+    "clearAll": "全部清除",
+    "removeFilter": "移除筛选",
+    "activityTracking": "活动跟踪"
   },
   "appointment": {
     "sectionTitle": "预约信息",

@@ -1,3 +1,10 @@
+import {
+  ColumnResizeHandle,
+  ColumnVisibilityDropdown,
+  useColumnAutoFit,
+  useColumnVisibility,
+  useColumnWidths,
+} from '@/shared/components/columnLayout';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -15,12 +22,8 @@ import { usePoolKanbanRealtime } from '../hooks/usePoolKanbanRealtime';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { columnDefs, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
+import { columnDefs, COLUMN_LABELS, DEFAULT_CONFIG } from '../config/columnDefs';
 import type { ColumnKey } from '../config/columnDefs';
-import { useColumnWidths } from '../hooks/useColumnWidths';
-import { useColumnVisibility } from '../hooks/useColumnVisibility';
-import { ColumnResizeHandle } from '../components/ColumnResizeHandle';
-import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
@@ -231,22 +234,7 @@ function PoolTaskListPage({
     () => visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH,
     [visibleColumns, colWidths],
   );
-  const getAutoFitWidth = useCallback(
-    (_key: string, colIndex: number): (() => number | null) =>
-      () => {
-        const tbl = tableRef.current;
-        if (!tbl) return null;
-        const rows = tbl.querySelectorAll('tr');
-        let max = 0;
-        rows.forEach(row => {
-          const cell = row.children[colIndex] as HTMLElement | undefined;
-          if (cell) max = Math.max(max, cell.scrollWidth);
-        });
-        if (max === 0) return null;
-        return Math.min(Math.max(max + 24, MIN_COLUMN_WIDTH), MAX_AUTOFIT_WIDTH);
-      },
-    [],
-  );
+  const getAutoFitWidth = useColumnAutoFit(tableRef);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -455,6 +443,7 @@ function PoolTaskListPage({
                 parent owns the dropdown — rendering it here would duplicate a non-functional one. */}
             {propVisibleColumns === undefined && (
               <ColumnVisibilityDropdown
+                labels={COLUMN_LABELS}
                 orderedColumns={internalCols.orderedColumns}
                 hidden={internalCols.hidden}
                 alwaysVisible={internalCols.alwaysVisible}
@@ -522,245 +511,253 @@ function PoolTaskListPage({
           />
         </div>
       ) : (
-      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-        <div className="flex-1 min-h-0 overflow-auto">
-          <table
-            ref={tableRef}
-            className="table-fixed text-sm"
-            style={{ width: totalTableWidth }}
-          >
-            <colgroup>
-              {visibleColumns.map(key => (
-                <col key={key} style={{ width: colWidths[key] }} />
-              ))}
-              <col style={{ width: ACTIONS_COL_WIDTH }} />
-            </colgroup>
-            <thead className="sticky top-0 z-20">
-              <tr className="bg-gray-50 border-b border-gray-200">
-                {visibleColumns.map((key, colIndex) => {
-                  const col = columnDefs[key];
-                  const isActive = sortField === col.sortField;
-                  const base =
-                    'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
-                  const isSticky = key === DEFAULT_CONFIG.stickyColumn;
-                  const thClass = isSticky
-                    ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                    : col.sortField
-                      ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
-                      : base;
-                  return (
-                    <th
-                      key={key}
-                      onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
-                      className={thClass}
-                    >
-                      {col.sortField ? (
-                        <div className="flex items-center gap-1">
-                          {col.label}
-                          <SortIcon field={col.sortField} />
-                        </div>
-                      ) : (
-                        col.label
-                      )}
-                      <ColumnResizeHandle
-                        width={colWidths[key]}
-                        onResize={px => setColWidth(key, px)}
-                        getAutoFitWidth={getAutoFitWidth(key, colIndex)}
-                      />
-                    </th>
-                  );
-                })}
-                <th className="w-10 px-4 py-2.5 bg-gray-50" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {isLoading ? (
-                <TableRowSkeleton columns={visibleColumns.map(() => ({ width: 'w-24' }))} rows={8} />
-              ) : tasks.length === 0 ? (
-                <tr>
-                  <td colSpan={visibleColumns.length + 2} className="py-24">
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                        <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
-                      </div>
-                      <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-700">
-                          {hasFilters ? 'No matching tasks' : 'Pool is empty'}
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          {hasFilters
-                            ? 'Try adjusting your search or filters.'
-                            : 'There are no tasks in the pool right now.'}
-                        </p>
-                      </div>
-                      {hasFilters && (
-                        <button
-                          onClick={() => {
-                            setInternalSearchTerm('');
-                            setInternalFilters({});
-                          }}
-                          className="text-xs text-primary hover:underline font-medium"
-                        >
-                          Clear filters
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+          <div className="flex-1 min-h-0 overflow-auto">
+            <table
+              ref={tableRef}
+              className="table-fixed text-sm"
+              style={{ width: totalTableWidth }}
+            >
+              <colgroup>
+                {visibleColumns.map(key => (
+                  <col key={key} style={{ width: colWidths[key] }} />
+                ))}
+                <col style={{ width: ACTIONS_COL_WIDTH }} />
+              </colgroup>
+              <thead className="sticky top-0 z-20">
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  {visibleColumns.map((key, colIndex) => {
+                    const col = columnDefs[key];
+                    const isActive = sortField === col.sortField;
+                    const base =
+                      'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                    const isSticky = key === DEFAULT_CONFIG.stickyColumn;
+                    const thClass = isSticky
+                      ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                      : col.sortField
+                        ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
+                        : base;
+                    return (
+                      <th
+                        key={key}
+                        onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
+                        className={thClass}
+                      >
+                        {col.sortField ? (
+                          <div className="flex items-center gap-1">
+                            {col.label}
+                            <SortIcon field={col.sortField} />
+                          </div>
+                        ) : (
+                          col.label
+                        )}
+                        <ColumnResizeHandle
+                          width={colWidths[key]}
+                          onResize={px => setColWidth(key, px)}
+                          getAutoFitWidth={getAutoFitWidth(key, colIndex)}
+                        />
+                      </th>
+                    );
+                  })}
+                  <th className="w-10 px-4 py-2.5 bg-gray-50" />
                 </tr>
-              ) : (
-                tasks.map(task => {
-                  const isLockedBySelf = task.workingBy === currentUsername;
-                  const isLockedByOther = !!task.workingBy && task.workingBy !== currentUsername;
-                  const isActing =
-                    (isLocking || isClaiming) && pendingTaskIdRef.current === task.id;
-
-                  return (
-                    <tr
-                      key={task.id}
-                      className={`group cursor-pointer transition-colors ${
-                        isLockedBySelf
-                          ? 'bg-blue-50'
-                          : isLockedByOther
-                            ? 'bg-amber-50'
-                            : `hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
-                      }`}
-                    >
-                      {visibleColumns.map(key => {
-                        const col = columnDefs[key];
-                        const isSticky = key === DEFAULT_CONFIG.stickyColumn;
-                        const tdClass = isSticky
-                          ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                          : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap');
-                        return (
-                          <td key={key} className={tdClass}>
-                            {key === 'appraisalNumber' ? (
-                              <>
-                                {/* Lock badge — absolute top-left, straddles the row border */}
-                                {(isLockedBySelf || isLockedByOther) && (
-                                  <div className="absolute top-0 left-2 -translate-y-1/2 z-20">
-                                    {isLockedBySelf && (
-                                      <LockBubble
-                                        label="You're editing"
-                                        color="blue"
-                                        lockedAt={task.lockedAt}
-                                      />
-                                    )}
-                                    {isLockedByOther && (
-                                      <LockBubble
-                                        label={task.workingBy!}
-                                        color="amber"
-                                        lockedAt={task.lockedAt}
-                                      />
-                                    )}
-                                  </div>
-                                )}
-                                <button
-                                  onClick={() => handleEditInPool(task)}
-                                  className={`font-medium text-primary hover:underline ${isLockedBySelf || isLockedByOther ? 'mt-3' : ''}`}
-                                >
-                                  {task.appraisalNumber ?? task.requestNumber ?? '-'}
-                                </button>
-                              </>
-                            ) : (
-                              col.render(task)
-                            )}
-                          </td>
-                        );
-                      })}
-
-                      {/* Actions — ellipsis dropdown */}
-                      <td className="px-3 py-1.5">
-                        <div className="relative">
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {isLoading ? (
+                  <TableRowSkeleton
+                    columns={visibleColumns.map(() => ({ width: 'w-24' }))}
+                    rows={8}
+                  />
+                ) : tasks.length === 0 ? (
+                  <tr>
+                    <td colSpan={visibleColumns.length + 2} className="py-24">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
+                          <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-semibold text-gray-700">
+                            {hasFilters ? 'No matching tasks' : 'Pool is empty'}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {hasFilters
+                              ? 'Try adjusting your search or filters.'
+                              : 'There are no tasks in the pool right now.'}
+                          </p>
+                        </div>
+                        {hasFilters && (
                           <button
-                            disabled={isActing}
-                            onClick={e => {
-                              e.stopPropagation();
-                              setOpenMenuTaskId(prev => (prev === task.id ? null : task.id));
+                            onClick={() => {
+                              setInternalSearchTerm('');
+                              setInternalFilters({});
                             }}
-                            className="inline-flex items-center justify-center size-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-xs text-primary hover:underline font-medium"
                           >
-                            {isActing ? (
-                              <Icon
-                                style="solid"
-                                name="spinner"
-                                className="size-3.5 animate-spin"
-                              />
-                            ) : (
-                              <Icon style="solid" name="ellipsis-vertical" className="size-3.5" />
-                            )}
+                            Clear filters
                           </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  tasks.map(task => {
+                    const isLockedBySelf = task.workingBy === currentUsername;
+                    const isLockedByOther = !!task.workingBy && task.workingBy !== currentUsername;
+                    const isActing =
+                      (isLocking || isClaiming) && pendingTaskIdRef.current === task.id;
 
-                          {openMenuTaskId === task.id && (
-                            <div
-                              onClick={e => e.stopPropagation()}
-                              className="absolute right-0 z-50 mt-1 w-36 bg-white rounded-lg border border-gray-200 shadow-lg py-1 text-sm"
-                            >
-                              {isLockedByOther ? (
-                                <button
-                                  onClick={() => {
-                                    setOpenMenuTaskId(null);
-                                    handleEditInPool(task);
-                                  }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:bg-gray-50 transition-colors"
-                                >
-                                  <Icon style="solid" name="eye" className="size-3 text-gray-400" />
-                                  View
-                                </button>
+                    return (
+                      <tr
+                        key={task.id}
+                        className={`group cursor-pointer transition-colors ${
+                          isLockedBySelf
+                            ? 'bg-blue-50'
+                            : isLockedByOther
+                              ? 'bg-amber-50'
+                              : `hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
+                        }`}
+                      >
+                        {visibleColumns.map(key => {
+                          const col = columnDefs[key];
+                          const isSticky = key === DEFAULT_CONFIG.stickyColumn;
+                          const tdClass = isSticky
+                            ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                            : (col.tdClassName ??
+                              'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap');
+                          return (
+                            <td key={key} className={tdClass}>
+                              {key === 'appraisalNumber' ? (
+                                <>
+                                  {/* Lock badge — absolute top-left, straddles the row border */}
+                                  {(isLockedBySelf || isLockedByOther) && (
+                                    <div className="absolute top-0 left-2 -translate-y-1/2 z-20">
+                                      {isLockedBySelf && (
+                                        <LockBubble
+                                          label="You're editing"
+                                          color="blue"
+                                          lockedAt={task.lockedAt}
+                                        />
+                                      )}
+                                      {isLockedByOther && (
+                                        <LockBubble
+                                          label={task.workingBy!}
+                                          color="amber"
+                                          lockedAt={task.lockedAt}
+                                        />
+                                      )}
+                                    </div>
+                                  )}
+                                  <button
+                                    onClick={() => handleEditInPool(task)}
+                                    className={`font-medium text-primary hover:underline ${isLockedBySelf || isLockedByOther ? 'mt-3' : ''}`}
+                                  >
+                                    {task.appraisalNumber ?? task.requestNumber ?? '-'}
+                                  </button>
+                                </>
                               ) : (
+                                col.render(task)
+                              )}
+                            </td>
+                          );
+                        })}
+
+                        {/* Actions — ellipsis dropdown */}
+                        <td className="px-3 py-1.5">
+                          <div className="relative">
+                            <button
+                              disabled={isActing}
+                              onClick={e => {
+                                e.stopPropagation();
+                                setOpenMenuTaskId(prev => (prev === task.id ? null : task.id));
+                              }}
+                              className="inline-flex items-center justify-center size-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isActing ? (
+                                <Icon
+                                  style="solid"
+                                  name="spinner"
+                                  className="size-3.5 animate-spin"
+                                />
+                              ) : (
+                                <Icon style="solid" name="ellipsis-vertical" className="size-3.5" />
+                              )}
+                            </button>
+
+                            {openMenuTaskId === task.id && (
+                              <div
+                                onClick={e => e.stopPropagation()}
+                                className="absolute right-0 z-50 mt-1 w-36 bg-white rounded-lg border border-gray-200 shadow-lg py-1 text-sm"
+                              >
+                                {isLockedByOther ? (
+                                  <button
+                                    onClick={() => {
+                                      setOpenMenuTaskId(null);
+                                      handleEditInPool(task);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:bg-gray-50 transition-colors"
+                                  >
+                                    <Icon
+                                      style="solid"
+                                      name="eye"
+                                      className="size-3 text-gray-400"
+                                    />
+                                    View
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => {
+                                      setOpenMenuTaskId(null);
+                                      handleEditInPool(task);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
+                                  >
+                                    <Icon
+                                      style="solid"
+                                      name="pencil"
+                                      className="size-3 text-primary"
+                                    />
+                                    {isLockedBySelf ? 'Continue' : 'Edit'}
+                                  </button>
+                                )}
+
                                 <button
                                   onClick={() => {
                                     setOpenMenuTaskId(null);
-                                    handleEditInPool(task);
+                                    handleTakeOut(task);
                                   }}
                                   className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
                                 >
                                   <Icon
                                     style="solid"
-                                    name="pencil"
-                                    className="size-3 text-primary"
+                                    name="arrow-right-from-bracket"
+                                    className="size-3 text-gray-500"
                                   />
-                                  {isLockedBySelf ? 'Continue' : 'Edit'}
+                                  Take Out
                                 </button>
-                              )}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
 
-                              <button
-                                onClick={() => {
-                                  setOpenMenuTaskId(null);
-                                  handleTakeOut(task);
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
-                              >
-                                <Icon
-                                  style="solid"
-                                  name="arrow-right-from-bracket"
-                                  className="size-3 text-gray-500"
-                                />
-                                Take Out
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+          <Pagination
+            currentPage={pageNumber}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={setPageNumber}
+            onPageSizeChange={size => {
+              setPageSize(size);
+              setPageNumber(0);
+            }}
+          />
         </div>
-
-        <Pagination
-          currentPage={pageNumber}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          onPageChange={setPageNumber}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPageNumber(0);
-          }}
-        />
-      </div>
       )}
     </div>
   );

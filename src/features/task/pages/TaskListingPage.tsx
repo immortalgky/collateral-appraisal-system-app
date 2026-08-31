@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ColumnResizeHandle,
+  ColumnVisibilityDropdown,
+  useColumnAutoFit,
+  useColumnVisibility,
+  useColumnWidths,
+} from '@/shared/components/columnLayout';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useGetTaskCounts, useGetTasks } from '../api';
@@ -19,11 +26,7 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { TaskFilterDialog } from '../components/TaskFilterDialog';
-import { columnDefs, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
-import { useColumnVisibility } from '../hooks/useColumnVisibility';
-import { useColumnWidths } from '../hooks/useColumnWidths';
-import { ColumnVisibilityDropdown } from '../components/ColumnVisibilityDropdown';
-import { ColumnResizeHandle } from '../components/ColumnResizeHandle';
+import { columnDefs, COLUMN_LABELS, DEFAULT_CONFIG } from '../config/columnDefs';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import { FavoritesRow } from '@features/menuFavorites';
 
@@ -140,10 +143,11 @@ function TaskListingPage() {
     resetToDefault,
   } = useColumnVisibility('task-columns-all', DEFAULT_CONFIG);
 
-  const { widths: colWidths, setWidth: setColWidth, resetWidths } = useColumnWidths(
-    'task-columns-all',
-    DEFAULT_CONFIG,
-  );
+  const {
+    widths: colWidths,
+    setWidth: setColWidth,
+    resetWidths,
+  } = useColumnWidths('task-columns-all', DEFAULT_CONFIG);
 
   // Pool tab column layout — its own key so it persists independently of My Task, but
   // the dropdown renders inline in the pool toolbar (parity with the personal tab).
@@ -157,22 +161,7 @@ function TaskListingPage() {
   const totalTableWidth =
     visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH;
 
-  const getAutoFitWidth = useCallback(
-    (_key: string, colIndex: number): (() => number | null) =>
-      () => {
-        const tbl = tableRef.current;
-        if (!tbl) return null;
-        const rows = tbl.querySelectorAll('tr');
-        let max = 0;
-        rows.forEach(row => {
-          const cell = row.children[colIndex] as HTMLElement | undefined;
-          if (cell) max = Math.max(max, cell.scrollWidth);
-        });
-        if (max === 0) return null;
-        return Math.min(Math.max(max + 24, MIN_COLUMN_WIDTH), MAX_AUTOFIT_WIDTH);
-      },
-    [],
-  );
+  const getAutoFitWidth = useColumnAutoFit(tableRef);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
   const [poolSearch, setPoolSearch] = useState('');
@@ -295,7 +284,9 @@ function TaskListingPage() {
   const { data: taskCounts } = useGetTaskCounts();
   const poolBaseline = filters.activityId
     ? (taskCounts?.get(filters.activityId)?.poolCount ?? 0)
-    : (taskCounts ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.poolCount, 0) : 0);
+    : taskCounts
+      ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.poolCount, 0)
+      : 0;
   const poolBadge = activeTab === 'pool' && poolTotalCount != null ? poolTotalCount : poolBaseline;
 
   const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
@@ -490,12 +481,16 @@ function TaskListingPage() {
             {poolViewMode === 'list' && (
               <div className="mb-2">
                 <ColumnVisibilityDropdown
+                  labels={COLUMN_LABELS}
                   orderedColumns={poolCols.orderedColumns}
                   hidden={poolCols.hidden}
                   alwaysVisible={poolCols.alwaysVisible}
                   onToggle={poolCols.toggleColumn}
                   onReorder={poolCols.reorderColumns}
-                  onReset={() => { poolCols.resetToDefault(); poolWidths.resetWidths(); }}
+                  onReset={() => {
+                    poolCols.resetToDefault();
+                    poolWidths.resetWidths();
+                  }}
                 />
               </div>
             )}
@@ -604,12 +599,16 @@ function TaskListingPage() {
             {viewMode === 'list' && (
               <div className="mb-2">
                 <ColumnVisibilityDropdown
+                  labels={COLUMN_LABELS}
                   orderedColumns={orderedColumns}
                   hidden={hidden}
                   alwaysVisible={alwaysVisible}
                   onToggle={toggleColumn}
                   onReorder={reorderColumns}
-                  onReset={() => { resetToDefault(); resetWidths(); }}
+                  onReset={() => {
+                    resetToDefault();
+                    resetWidths();
+                  }}
                 />
               </div>
             )}
@@ -753,7 +752,9 @@ function TaskListingPage() {
           {/* Content */}
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-              <div className={`min-h-0 ${isListEmpty ? 'overflow-hidden' : 'flex-1 overflow-auto'}`}>
+              <div
+                className={`min-h-0 ${isListEmpty ? 'overflow-hidden' : 'flex-1 overflow-auto'}`}
+              >
                 <table
                   ref={tableRef}
                   className="table-fixed text-sm"
@@ -834,7 +835,8 @@ function TaskListingPage() {
                                 className={
                                   isSticky
                                     ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                                    : (col.tdClassName ?? 'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap')
+                                    : (col.tdClassName ??
+                                      'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap')
                                 }
                                 onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >

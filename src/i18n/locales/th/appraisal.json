@@ -31,7 +31,10 @@
       "propertyType": "ประเภทหลักประกัน",
       "company": "บริษัท",
       "appointment": "นัดหมาย",
-      "created": "วันที่สร้าง"
+      "created": "วันที่สร้าง",
+      "slaBusinessDays": "SLA (วัน)",
+      "submittedAt": "วันที่ส่งงาน",
+      "groupTag": "กลุ่ม"
     },
     "filters": {
       "statusLabel": "สถานะ",
@@ -55,7 +58,17 @@
       "purposeLabel": "วัตถุประสงค์",
       "purposePlaceholder": "ทุกวัตถุประสงค์",
       "propertyTypeLabel": "ประเภทหลักประกัน",
-      "propertyTypePlaceholder": "ทุกประเภทหลักประกัน"
+      "propertyTypePlaceholder": "ทุกประเภทหลักประกัน",
+      "appointmentDateFrom": "วันนัดตั้งแต่",
+      "appointmentDateTo": "วันนัดถึง",
+      "assignedDateFrom": "วันมอบหมายตั้งแต่",
+      "assignedDateTo": "วันมอบหมายถึง",
+      "multiSelected": "{{label}}: เลือกไว้ {{count}} รายการ",
+      "clearFilters": "ล้างตัวกรอง",
+      "toggle": "ตัวกรอง",
+      "collapse": "ซ่อนตัวกรอง",
+      "created": "วันที่สร้าง",
+      "slaDue": "กำหนด SLA"
     },
     "status": {
       "Pending": "รอดำเนินการ",
@@ -87,7 +100,41 @@
       "PreAppraisal": "ประเมินเบื้องต้น"
     },
     "searchTooShort": "พิมพ์อย่างน้อย {{count}} ตัวอักษรเพื่อค้นหา",
-    "searchPrefixHint": "ค้นจากต้นคำ พิมพ์ * นำหน้าเพื่อค้นแบบมีคำนั้นอยู่ตรงกลาง"
+    "searchPrefixHint": "ค้นจากต้นคำ พิมพ์ * นำหน้าเพื่อค้นแบบมีคำนั้นอยู่ตรงกลาง",
+    "exportTruncatedWarning": "ผลการค้นหามี {{total}} รายการ แต่ไฟล์ส่งออกได้สูงสุด {{max}} แถว ไฟล์จะถูกตัดให้สั้นลง ต้องการดำเนินการต่อหรือไม่",
+    "exportFailed": "ส่งออกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+    "searchFieldLabel": "ค้นหาใน",
+    "searchFieldOptions": {
+      "all": "ทุกฟิลด์",
+      "appraisalNumber": "เลขที่ประเมิน",
+      "customerName": "ชื่อลูกค้า",
+      "requestNumber": "เลขที่คำขอ"
+    },
+    "searchPlaceholderBy": {
+      "all": "ค้นหาเลขที่ประเมิน เลขที่คำขอ ชื่อลูกค้า โฉนด…",
+      "appraisalNumber": "ค้นหาด้วยเลขที่ประเมิน…",
+      "customerName": "ค้นหาด้วยชื่อลูกค้า…",
+      "requestNumber": "ค้นหาด้วยเลขที่คำขอ…"
+    },
+    "quickViews": "มุมมองด่วน:",
+    "smartViews": {
+      "my-assignments": "งานของฉัน",
+      "sla-at-risk": "SLA เสี่ยงเกิน",
+      "todays-appointments": "นัดหมายวันนี้",
+      "unassigned": "ยังไม่มอบหมาย",
+      "high-priority-active": "ความสำคัญสูง",
+      "nearing-deadline": "ใกล้ครบกำหนด",
+      "external-assignments": "งานบริษัทภายนอก",
+      "my-company-queue": "คิวบริษัทของฉัน"
+    },
+    "saved": "ที่บันทึกไว้",
+    "saveCurrentSearch": "บันทึกการค้นหานี้",
+    "searchNamePlaceholder": "ตั้งชื่อการค้นหา...",
+    "noSavedSearches": "ยังไม่มีการค้นหาที่บันทึกไว้",
+    "activeFilters": "ตัวกรอง:",
+    "clearAll": "ล้างทั้งหมด",
+    "removeFilter": "ลบตัวกรอง",
+    "activityTracking": "ติดตามกิจกรรม"
   },
   "appointment": {
     "sectionTitle": "ข้อมูลการนัดหมาย",

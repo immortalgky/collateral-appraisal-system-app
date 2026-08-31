@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
-
-// Manual drag may go much wider than auto-fit so a user can always pull a column
-// open far enough to read very long values; double-click auto-fit stays capped at
-// MAX_AUTOFIT_WIDTH so it never snaps to an absurd width on its own.
-const MAX_DRAG_WIDTH = 960;
+import { MAX_AUTOFIT_WIDTH, MAX_DRAG_WIDTH, MIN_COLUMN_WIDTH } from './constants';
 
 interface ColumnResizeHandleProps {
   width: number;

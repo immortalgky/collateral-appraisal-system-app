@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 
 export interface PaginationProps {
@@ -32,6 +33,7 @@ function Pagination({
   showPageSizeSelector = true,
   showItemCount = true,
 }: PaginationProps) {
+  const { t } = useTranslation('common');
   const safeTotal = totalPages || 1;
 
   // Generate page numbers with ellipsis
@@ -76,9 +78,7 @@ function Pagination({
       {/* Left side: Item count and page size */}
       <div className="flex items-center gap-3 text-gray-600">
         {showItemCount && (
-          <span>
-            {totalCount > 0 ? `${startItem}-${endItem} of ${totalCount}` : '0 results'}
-          </span>
+          <span>{totalCount > 0 ? `${startItem}-${endItem} of ${totalCount}` : '0 results'}</span>
         )}
         {showPageSizeSelector && onPageSizeChange && (
           <select
@@ -102,7 +102,7 @@ function Pagination({
           onClick={() => onPageChange(0)}
           disabled={currentPage === 0}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
-          title="First page"
+          title={t('pagination.first')}
         >
           <Icon style="solid" name="angles-left" className="size-3.5" />
         </button>
@@ -112,7 +112,7 @@ function Pagination({
           onClick={() => onPageChange(Math.max(0, currentPage - 1))}
           disabled={currentPage === 0}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
-          title="Previous page"
+          title={t('pagination.previous')}
         >
           <Icon style="solid" name="chevron-left" className="size-3.5" />
         </button>
@@ -128,14 +128,12 @@ function Pagination({
               key={page}
               onClick={() => onPageChange(page)}
               className={`min-w-[32px] h-8 px-2 rounded text-sm font-medium transition-colors ${
-                page === currentPage
-                  ? 'bg-primary text-white'
-                  : 'text-gray-600 hover:bg-gray-200'
+                page === currentPage ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-200'
               }`}
             >
               {page + 1}
             </button>
-          )
+          ),
         )}
 
         {/* Next button */}
@@ -143,7 +141,7 @@ function Pagination({
           onClick={() => onPageChange(Math.min(safeTotal - 1, currentPage + 1))}
           disabled={currentPage >= safeTotal - 1}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
-          title="Next page"
+          title={t('pagination.next')}
         >
           <Icon style="solid" name="chevron-right" className="size-3.5" />
         </button>
@@ -153,7 +151,7 @@ function Pagination({
           onClick={() => onPageChange(safeTotal - 1)}
           disabled={currentPage >= safeTotal - 1}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
-          title="Last page"
+          title={t('pagination.last')}
         >
           <Icon style="solid" name="angles-right" className="size-3.5" />
         </button>

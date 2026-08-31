@@ -7,36 +7,47 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import {
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { columnDefs } from '../config/columnDefs';
-import type { ColumnKey } from '../config/columnDefs';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import Icon from '@/shared/components/Icon';
 
-interface ColumnVisibilityDropdownProps {
-  orderedColumns: ColumnKey[];
-  hidden: Set<ColumnKey>;
-  alwaysVisible: Set<ColumnKey>;
-  onToggle: (key: ColumnKey) => void;
-  onReorder: (activeId: ColumnKey, overId: ColumnKey) => void;
+interface ColumnVisibilityDropdownProps<K extends string> {
+  orderedColumns: K[];
+  hidden: Set<K>;
+  alwaysVisible: Set<K>;
+  /**
+   * Display label per column key. Passed in rather than read from a registry so this component
+   * stays independent of any one feature's column definitions — and so the caller can translate.
+   */
+  labels: Record<string, string>;
+  onToggle: (key: K) => void;
+  onReorder: (activeId: K, overId: K) => void;
   onReset: () => void;
+  /**
+   * Extra switches rendered below the sortable list, for columns that are toggleable but live
+   * outside the persisted set — a row-number column, for instance, which is neither a field of
+   * the row type nor a sort target and would otherwise squat on a key forever.
+   */
+  extraToggles?: { key: string; label: string; checked: boolean; onChange: () => void }[];
 }
 
 // Individual sortable row
-function SortableColumnRow({
+function SortableColumnRow<K extends string>({
   columnKey,
+  label,
   isVisible,
   alwaysVisible,
   onToggle,
+  t,
 }: {
-  columnKey: ColumnKey;
+  columnKey: K;
+  label: string;
   isVisible: boolean;
   alwaysVisible: boolean;
-  onToggle: (key: ColumnKey) => void;
+  onToggle: (key: K) => void;
+  t: TFunction<'common'>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: columnKey,
@@ -71,7 +82,7 @@ function SortableColumnRow({
           alwaysVisible ? 'invisible' : ''
         }`}
         tabIndex={-1}
-        aria-label="Drag to reorder"
+        aria-label={t('columns.dragToReorder')}
       >
         <Icon style="solid" name="grip-dots-vertical" className="size-3.5" />
       </button>
@@ -82,61 +93,65 @@ function SortableColumnRow({
           isVisible ? 'text-gray-700' : 'text-gray-400 line-through'
         }`}
       >
-        {columnDefs[columnKey].label}
+        {label}
       </span>
 
       {/* Eye toggle / fixed badge */}
       {alwaysVisible ? (
         <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
-          fixed
+          {t('columns.fixed')}
         </span>
       ) : (
         <button
-          onClick={(e) => { e.stopPropagation(); onToggle(columnKey); }}
+          onClick={e => {
+            e.stopPropagation();
+            onToggle(columnKey);
+          }}
           className={`flex-shrink-0 p-0.5 rounded transition-colors ${
             isVisible
               ? 'text-emerald-500 hover:text-emerald-600'
               : 'text-gray-300 hover:text-gray-400'
           }`}
-          aria-label={isVisible ? 'Hide column' : 'Show column'}
+          aria-label={isVisible ? t('columns.hideColumn') : t('columns.showColumn')}
         >
-          <Icon
-            style="solid"
-            name={isVisible ? 'eye' : 'eye-slash'}
-            className="size-3.5"
-          />
+          <Icon style="solid" name={isVisible ? 'eye' : 'eye-slash'} className="size-3.5" />
         </button>
       )}
     </div>
   );
 }
 
-export function ColumnVisibilityDropdown({
+export function ColumnVisibilityDropdown<K extends string>({
   orderedColumns,
   hidden,
   alwaysVisible,
+  labels,
   onToggle,
   onReorder,
   onReset,
-}: ColumnVisibilityDropdownProps) {
-  const hiddenCount = hidden.size;
+  extraToggles,
+}: ColumnVisibilityDropdownProps<K>) {
+  const { t } = useTranslation('common');
+  // Count what the user would see as "off": hidden managed columns plus any extra switch that is
+  // currently unchecked. A badge that ignored the extras would read 0 with the row numbers off.
+  const hiddenCount = hidden.size + (extraToggles?.filter(x => !x.checked).length ?? 0);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      onReorder(active.id as ColumnKey, over.id as ColumnKey);
+      onReorder(active.id as K, over.id as K);
     }
   }
 
   return (
     <Popover className="relative">
+      {/* h-full lets a flex parent with items-stretch size this to match its neighbours; it falls
+          back to the square 36px anywhere else, because size-9 still sets the height. */}
       <PopoverButton
-        title="Toggle Columns"
-        className={`relative flex items-center justify-center size-9 border rounded-lg outline-none transition-all ${
+        title={t('columns.toggleColumns')}
+        className={`relative flex h-full items-center justify-center size-9 border rounded-lg outline-none transition-all ${
           hiddenCount > 0
             ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100'
             : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300'
@@ -157,14 +172,14 @@ export function ColumnVisibilityDropdown({
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
           <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Columns
+            {t('columns.title')}
           </span>
           <button
             onClick={onReset}
             className="text-xs text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-            disabled={hidden.size === 0}
+            disabled={hiddenCount === 0}
           >
-            Reset
+            {t('columns.reset')}
           </button>
         </div>
 
@@ -176,22 +191,61 @@ export function ColumnVisibilityDropdown({
             onDragEnd={handleDragEnd}
           >
             <SortableContext items={orderedColumns} strategy={verticalListSortingStrategy}>
-              {orderedColumns.map((key) => (
+              {orderedColumns.map(key => (
                 <SortableColumnRow
                   key={key}
                   columnKey={key}
+                  label={labels[key] ?? key}
                   isVisible={!hidden.has(key)}
                   alwaysVisible={alwaysVisible.has(key)}
                   onToggle={onToggle}
+                  t={t}
                 />
               ))}
             </SortableContext>
           </DndContext>
         </div>
 
+        {/* Toggles that are not part of the reorderable, persisted set */}
+        {extraToggles && extraToggles.length > 0 && (
+          <div className="border-t border-gray-100 p-1.5">
+            {extraToggles.map(x => (
+              // One <button role="switch"> for the whole row, unlike the sortable rows above:
+              // those need a div because their drag handle is itself a button and nesting buttons
+              // is invalid HTML. These rows have no handle, so they can be focusable and
+              // keyboard-operable without that compromise.
+              <button
+                key={x.key}
+                type="button"
+                role="switch"
+                aria-checked={x.checked}
+                onClick={x.onChange}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 cursor-pointer text-left"
+              >
+                {/* Spacer matching the drag handle above, so the labels line up */}
+                <span className="size-3.5 flex-shrink-0" />
+                <span
+                  className={`text-sm flex-1 select-none ${
+                    x.checked ? 'text-gray-700' : 'text-gray-400 line-through'
+                  }`}
+                >
+                  {x.label}
+                </span>
+                <span
+                  className={`flex-shrink-0 p-0.5 rounded transition-colors ${
+                    x.checked ? 'text-emerald-500' : 'text-gray-300'
+                  }`}
+                >
+                  <Icon style="solid" name={x.checked ? 'eye' : 'eye-slash'} className="size-3.5" />
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Footer hint */}
         <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
-          <p className="text-[11px] text-gray-400">Drag rows to reorder columns</p>
+          <p className="text-[11px] text-gray-400">{t('columns.dragHint')}</p>
         </div>
       </PopoverPanel>
     </Popover>

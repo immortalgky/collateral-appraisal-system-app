@@ -98,5 +98,22 @@
       "collapse": "Collapse",
       "expand": "Expand"
     }
+  },
+  "columns": {
+    "title": "Columns",
+    "toggleColumns": "Toggle columns",
+    "reset": "Reset",
+    "fixed": "fixed",
+    "dragToReorder": "Drag to reorder",
+    "hideColumn": "Hide column",
+    "showColumn": "Show column",
+    "dragHint": "Drag rows to reorder columns",
+    "rowNumber": "Row number"
+  },
+  "pagination": {
+    "first": "First page",
+    "previous": "Previous page",
+    "next": "Next page",
+    "last": "Last page"
   }
 }

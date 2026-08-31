@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useGetCompanyById } from '../../api/administration';
 import { useAddressStore, useCompanyStore } from '@/shared/store';
@@ -9,8 +10,24 @@ interface ActiveFilterChipsProps {
   filters: Record<string, string>;
   onRemove: (key: string) => void;
   onClearAll: () => void;
+  /**
+   * Display label per filter key, from the same list that builds the filter bar. Passed in so a
+   * chip and the control it mirrors always read the same, in the user's language.
+   */
+  labels?: Record<string, string>;
+  /**
+   * Option lists for the enum filters, keyed by filter key — the same lists the dropdowns use.
+   * Without them a status chip printed the wire value ("InProgress") next to a dropdown showing
+   * "In Progress", in whatever language the rest of the page was in.
+   */
+  valueOptions?: Record<string, { value: string; label: string }[]>;
 }
 
+/**
+ * Last-resort label: split a camelCase key into words. Produces English regardless of locale
+ * ("assigneeCompanyId" → "Assignee Company Id"), so it is only reached for a key the filter list
+ * does not describe — which today is none of them.
+ */
 const formatLabel = (key: string): string =>
   key
     .replace(/([A-Z])/g, ' $1')
@@ -113,15 +130,29 @@ function ParameterChip({ label, group, code, onRemove }: ParameterChipProps) {
   );
 }
 
-function ActiveFilterChips({ filters, onRemove, onClearAll }: ActiveFilterChipsProps) {
+function ActiveFilterChips({
+  filters,
+  onRemove,
+  onClearAll,
+  labels,
+  valueOptions,
+}: ActiveFilterChipsProps) {
+  const { t } = useTranslation('appraisal');
   const active = Object.entries(filters).filter(([, v]) => v !== '' && v !== undefined);
   if (active.length === 0) return null;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      <span className="text-xs text-gray-500">Filters:</span>
+      <span className="text-xs text-gray-500">{t('list.activeFilters')}</span>
       {active.map(([key, value]) => {
-        const label = formatLabel(key);
+        const label = labels?.[key] ?? formatLabel(key);
+        // A quick view can set several values at once ("AtRisk,Breached"), so resolve each.
+        const displayValue = valueOptions?.[key]
+          ? value
+              .split(',')
+              .map(v => valueOptions[key].find(o => o.value === v)?.label ?? v)
+              .join(', ')
+          : value;
 
         if (key === 'assigneeCompanyId') {
           return (
@@ -158,10 +189,10 @@ function ActiveFilterChips({ filters, onRemove, onClearAll }: ActiveFilterChipsP
             key={key}
             className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full"
           >
-            <span className="font-medium">{label}:</span> {value}
+            <span className="font-medium">{label}:</span> {displayValue}
             <button
               onClick={() => onRemove(key)}
-              aria-label={`Remove ${label} filter`}
+              aria-label={t('list.removeFilter') + ': ' + label}
               className="hover:text-primary/70 ml-0.5"
             >
               <Icon style="solid" name="xmark" className="size-3" />
@@ -170,7 +201,7 @@ function ActiveFilterChips({ filters, onRemove, onClearAll }: ActiveFilterChipsP
         );
       })}
       <button onClick={onClearAll} className="text-xs text-gray-500 hover:text-gray-700 underline">
-        Clear all
+        {t('list.clearAll')}
       </button>
     </div>
   );

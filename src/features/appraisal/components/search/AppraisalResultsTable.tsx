@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
@@ -9,6 +9,14 @@ import { formatDate } from '@/shared/utils/dateUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { ColumnResizeHandle } from '@/shared/components/columnLayout';
+import type { ColumnTableLayout } from '@/shared/components/columnLayout';
+
+/**
+ * Width of the `#` column. One constant feeds the <col>, so the column and its header cannot drift
+ * apart and leave the sticky offsets wrong.
+ */
+const ROW_NUMBER_WIDTH = 48;
 
 interface AppraisalResultsTableProps {
   columns: AppraisalColumnDef[];
@@ -29,6 +37,15 @@ interface AppraisalResultsTableProps {
    * an appraisal from a result set that is about to be replaced.
    */
   isStale?: boolean;
+  /**
+   * Opt-in user-managed layout: fixed widths, resize handles and a toggleable row-number column.
+   *
+   * Omitted, the table renders exactly as it always has — auto-width columns, always-on row
+   * numbers, no horizontal scroll of its own. SearchAppraisalModal depends on that: it wraps this
+   * table in `max-h-80 overflow-hidden` with no horizontal scroll, so a permanently fixed 13-column
+   * layout would spill outside a frame the user cannot scroll.
+   */
+  layout?: ColumnTableLayout;
 }
 
 function AppraisalResultsTable({
@@ -43,11 +60,27 @@ function AppraisalResultsTable({
   pageNumber = 0,
   pageSize = 0,
   isStale = false,
+  layout,
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
+  const internalTableRef = useRef<HTMLTableElement>(null);
+  const tableRef = layout?.tableRef ?? internalTableRef;
+  // Row numbers stay on unless a layout explicitly turns them off, so the no-layout callers are
+  // unchanged.
+  const showRowNumber = layout?.showRowNumber ?? true;
+  const leadingCells = showRowNumber ? 1 : 0;
   const localizeCompanyName = useLocalizedCompanyName();
   const provinceName = useProvinceName();
   const propertyTypeLabels = usePropertyTypeLabels();
+
+  const totalWidth = useMemo(
+    () =>
+      layout
+        ? columns.reduce((sum, c) => sum + (layout.widths[c.key] ?? 0), 0) +
+          (showRowNumber ? ROW_NUMBER_WIDTH : 0)
+        : undefined,
+    [layout, columns, showRowNumber],
+  );
 
   const bankingSegments = useParametersByGroup('BankingSegment');
   const segmentCodeToLabel = useMemo(
@@ -110,24 +143,40 @@ function AppraisalResultsTable({
 
   return (
     <div
-      className={`flex-1 min-h-0 overflow-auto transition-opacity ${
+      className={`w-full flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-auto transition-opacity ${
         isStale ? 'opacity-60 pointer-events-none' : ''
       }`}
       aria-busy={isStale}
     >
-      <table className="table table-sm min-w-max w-full">
+      <table
+        ref={tableRef}
+        className={`table table-sm ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
+        style={layout ? { width: totalWidth } : undefined}
+      >
+        {/* A <colgroup> is what actually pins the widths under table-fixed; setting them on <th>
+            alone lets the browser redistribute them. */}
+        {layout && (
+          <colgroup>
+            {showRowNumber && <col style={{ width: ROW_NUMBER_WIDTH }} />}
+            {columns.map(col => (
+              <col key={col.key} style={{ width: layout.widths[col.key] }} />
+            ))}
+          </colgroup>
+        )}
         <thead className="sticky top-0 z-20 bg-gray-50">
           <tr className="border-b border-gray-200">
-            <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12">
-              #
-            </th>
-            {columns.map(col => (
+            {showRowNumber && (
+              <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12">
+                #
+              </th>
+            )}
+            {columns.map((col, colIndex) => (
               <th
                 key={col.key}
                 onClick={() => col.sortable && onSort(col.key)}
                 className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap ${
-                  col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''
-                }`}
+                  layout ? 'relative overflow-hidden text-ellipsis' : ''
+                } ${col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''}`}
               >
                 <span className="inline-flex items-center gap-1">
                   {col.label}
@@ -139,6 +188,13 @@ function AppraisalResultsTable({
                     />
                   )}
                 </span>
+                {layout && (
+                  <ColumnResizeHandle
+                    width={layout.widths[col.key]}
+                    onResize={px => layout.setWidth(col.key, px)}
+                    getAutoFitWidth={layout.getAutoFitWidth(col.key, colIndex)}
+                  />
+                )}
               </th>
             ))}
           </tr>
@@ -146,7 +202,10 @@ function AppraisalResultsTable({
         <tbody className="divide-y divide-gray-100">
           {isLoading ? (
             <TableRowSkeleton
-              columns={[{ width: 'w-8' }, ...columns.map(() => ({ width: 'w-32' }))]}
+              columns={[
+                ...(showRowNumber ? [{ width: 'w-8' }] : []),
+                ...columns.map(() => ({ width: 'w-32' })),
+              ]}
               // Match the rows being replaced so the table keeps its height — a fixed 8 made the
               // body collapse from a full page down to 8 rows and back on every load. Clamped at
               // both ends: never fewer than 8 (a short last page would collapse the same way) and
@@ -156,7 +215,7 @@ function AppraisalResultsTable({
             />
           ) : items.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + 1} className="text-center py-16">
+              <td colSpan={columns.length + leadingCells} className="text-center py-16">
                 <div className="flex flex-col items-center gap-2">
                   <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                   <p className="text-gray-500 font-medium">{t('list.empty')}</p>
@@ -184,11 +243,18 @@ function AppraisalResultsTable({
                         : 'hover:bg-gray-50 cursor-pointer'
                   }`}
                 >
-                  <td className="px-3 py-2.5 text-gray-400 text-sm">
-                    {pageNumber * pageSize + index + 1}
-                  </td>
+                  {showRowNumber && (
+                    <td className="px-3 py-2.5 text-gray-400 text-sm">
+                      {pageNumber * pageSize + index + 1}
+                    </td>
+                  )}
                   {columns.map(col => (
-                    <td key={col.key} className="px-3 py-2.5 text-gray-600 text-sm">
+                    <td
+                      key={col.key}
+                      className={`px-3 py-2.5 text-gray-600 text-sm ${
+                        layout ? 'overflow-hidden text-ellipsis whitespace-nowrap' : ''
+                      }`}
+                    >
                       {col.render ? (
                         col.key === 'appraisalNumber' ? (
                           <span className="font-medium text-primary inline-flex items-center gap-1.5">
@@ -205,9 +271,17 @@ function AppraisalResultsTable({
                           col.render(item)
                         )
                       ) : col.key === 'status' ? (
-                        <Badge type="status" value={item.status} size="sm" />
+                        // Badge keeps its own English statusLabelMap and does not go through i18n.
+                        // `children` wins over that map, so the translated text is passed in here
+                        // rather than by changing Badge — which 31 other files render.
+                        // The colour still keys off the raw `value`.
+                        <Badge type="status" value={item.status} size="sm">
+                          {t(`list.status.${item.status}`, { defaultValue: item.status })}
+                        </Badge>
                       ) : col.key === 'priority' ? (
-                        <Badge type="priority" value={item.priority} size="sm" />
+                        <Badge type="priority" value={item.priority} size="sm">
+                          {t(`list.priority.${item.priority}`, { defaultValue: item.priority })}
+                        </Badge>
                       ) : col.key === 'slaStatus' ? (
                         <span
                           className={`text-xs font-medium ${

@@ -1,41 +1,47 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { z } from 'zod';
-import type { ActivityColumnConfig, ColumnKey } from '../config/columnDefs';
+import type { ColumnLayoutConfig } from './types';
 
 // ── Zod schema ────────────────────────────────────────────────────────────────
 
 /**
- * The persisted shape for task column config.
+ * The persisted shape for a screen's column config.
  * We use z.string() for individual column keys since the exact union is
  * runtime-dynamic — invalid keys are filtered out during normalization.
+ *
+ * ⚠️ This schema and normalizeState below are load-bearing for layouts users have already saved.
+ * Changing either can silently discard a stored layout, so treat them as a persisted contract.
  */
-const taskColumnsSchema = z.object({
+const columnLayoutSchema = z.object({
   hidden: z.array(z.string()),
   order: z.array(z.string()),
 });
 
-type PersistedState = z.infer<typeof taskColumnsSchema>;
+type PersistedState = z.infer<typeof columnLayoutSchema>;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function normalizeState(
-  raw: PersistedState,
-  config: ActivityColumnConfig,
-): { hidden: Set<ColumnKey>; order: ColumnKey[] } {
-  const alwaysVisible = new Set<ColumnKey>([config.stickyColumn, ...(config.alwaysVisible ?? [])]);
+function normalizeState<K extends string>(
+  raw: PersistedState | null,
+  config: ColumnLayoutConfig<K>,
+): { hidden: Set<K>; order: K[] } {
+  const alwaysVisible = new Set<K>([config.stickyColumn, ...(config.alwaysVisible ?? [])]);
+
+  // Nothing stored: start from the screen's defaults. Once anything IS stored the user has spoken,
+  // and defaultHidden must not creep back in and re-hide a column they turned on.
+  const effective: PersistedState = raw ?? { hidden: [...(config.defaultHidden ?? [])], order: [] };
 
   // Filter hidden to only valid, non-always-visible column keys
-  const validHidden = raw.hidden.filter(
-    (k): k is ColumnKey =>
-      (config.columns as string[]).includes(k) && !alwaysVisible.has(k as ColumnKey),
+  const validHidden = effective.hidden.filter(
+    (k): k is K => (config.columns as readonly string[]).includes(k) && !alwaysVisible.has(k as K),
   );
 
   // Restore order: saved order filtered to valid, unique keys, then append new columns.
   // Deduping guards against a corrupt/hand-edited stored value producing duplicate cells.
   const savedOrder = [
     ...new Set(
-      raw.order.filter((k): k is ColumnKey => (config.columns as string[]).includes(k)),
+      effective.order.filter((k): k is K => (config.columns as readonly string[]).includes(k)),
     ),
   ];
   const missing = config.columns.filter(k => !savedOrder.includes(k));
@@ -49,34 +55,49 @@ function normalizeState(
   return { hidden: new Set(validHidden), order: ordered };
 }
 
-function defaultPersistedState(config: ActivityColumnConfig): PersistedState {
-  return { hidden: [], order: config.columns };
-}
-
-function readStored(storageKey: string, config: ActivityColumnConfig): PersistedState {
+/**
+ * Returns null when this screen has no usable stored layout — absent, corrupt, or unreadable
+ * storage all mean "never customised", which is what lets normalizeState apply `defaultHidden`
+ * exactly once and never again.
+ *
+ * Deliberately takes no config: see the effect in the hook.
+ */
+function readStored(storageKey: string): PersistedState | null {
   try {
     const item = localStorage.getItem(storageKey);
-    if (!item) return defaultPersistedState(config);
-    const parsed = taskColumnsSchema.safeParse(JSON.parse(item));
-    return parsed.success ? parsed.data : defaultPersistedState(config);
+    if (!item) return null;
+    const parsed = columnLayoutSchema.safeParse(JSON.parse(item));
+    return parsed.success ? parsed.data : null;
   } catch {
-    return defaultPersistedState(config);
+    return null;
   }
 }
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
-export function useColumnVisibility(storageKey: string, config: ActivityColumnConfig) {
-  // Column layout is persisted per-screen in localStorage under the caller's storageKey.
-  // Each screen (All Tasks, each activity view) owns its own key, so the views no longer
-  // clobber each other — and the layout survives a page refresh.
-  const [raw, setRawState] = useState<PersistedState>(() => readStored(storageKey, config));
+/**
+ * Per-screen column visibility and order, persisted in localStorage under `storageKey`.
+ *
+ * Each screen owns its own key, so views do not clobber each other and a layout survives a
+ * refresh.
+ */
+export function useColumnVisibility<K extends string>(
+  storageKey: string,
+  config: ColumnLayoutConfig<K>,
+) {
+  const [raw, setRawState] = useState<PersistedState | null>(() => readStored(storageKey));
 
-  // Re-read when the screen changes: the activity table swaps activityId via the URL query
-  // without remounting, so storageKey/config can change while the hook stays mounted.
+  // Re-read when the screen changes: a table can swap its storageKey via the URL query without
+  // remounting.
+  //
+  // `config` is deliberately NOT a dependency. It is an object literal in most callers, so a new
+  // identity arrives on every render; depending on it would fire this effect every render →
+  // setState → re-render → a hang, not a warning. storageKey already identifies the screen, and
+  // readStored no longer needs config at all. Fixing it here rather than asking callers to memoize
+  // is the point: the trap is invisible from the call site.
   useEffect(() => {
-    setRawState(readStored(storageKey, config));
-  }, [storageKey, config]);
+    setRawState(readStored(storageKey));
+  }, [storageKey]);
 
   const setRaw = useCallback(
     (next: PersistedState) => {
@@ -93,14 +114,14 @@ export function useColumnVisibility(storageKey: string, config: ActivityColumnCo
   const { hidden, order } = useMemo(() => normalizeState(raw, config), [raw, config]);
 
   const alwaysVisible = useMemo(
-    () => new Set<ColumnKey>([config.stickyColumn, ...(config.alwaysVisible ?? [])]),
+    () => new Set<K>([config.stickyColumn, ...(config.alwaysVisible ?? [])]),
     [config.stickyColumn, config.alwaysVisible],
   );
 
   const visibleColumns = useMemo(() => order.filter(k => !hidden.has(k)), [order, hidden]);
 
   const toggleColumn = useCallback(
-    (key: ColumnKey) => {
+    (key: K) => {
       if (alwaysVisible.has(key)) return;
       const nextHidden = new Set(hidden);
       if (nextHidden.has(key)) {
@@ -114,7 +135,7 @@ export function useColumnVisibility(storageKey: string, config: ActivityColumnCo
   );
 
   const reorderColumns = useCallback(
-    (activeId: ColumnKey, overId: ColumnKey) => {
+    (activeId: K, overId: K) => {
       if (activeId === overId) return;
       const oldIndex = order.indexOf(activeId);
       const newIndex = order.indexOf(overId);
@@ -126,8 +147,8 @@ export function useColumnVisibility(storageKey: string, config: ActivityColumnCo
   );
 
   const resetToDefault = useCallback(() => {
-    setRaw(defaultPersistedState(config));
-  }, [config, setRaw]);
+    setRaw({ hidden: [], order: [...config.columns] });
+  }, [config.columns, setRaw]);
 
   return {
     visibleColumns,

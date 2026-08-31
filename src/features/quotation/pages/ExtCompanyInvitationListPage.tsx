@@ -9,7 +9,7 @@ import { DateInput } from '@/shared/components/inputs';
 import MultiSelectDropdown from '@/shared/components/inputs/MultiSelectDropdown';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import MyInvitationStatusBadge from '../components/MyInvitationStatusBadge';
-import SearchByInput from '../components/SearchByInput';
+import SearchByInput from '@/shared/components/inputs/SearchByInput';
 import SortableTh from '@/features/taskMonitor/components/SortableTh';
 import type { SortDir } from '@/features/taskMonitor/types';
 import { useGetMyInvitations } from '../api/quotation';
@@ -327,7 +327,9 @@ const ExtCompanyInvitationListPage = () => {
                         {item.customerName ?? '—'}
                       </span>
                       {item.customerCount > 1 && (
-                        <span className="ml-1 text-xs text-gray-400">+{item.customerCount - 1}</span>
+                        <span className="ml-1 text-xs text-gray-400">
+                          +{item.customerCount - 1}
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-2.5">

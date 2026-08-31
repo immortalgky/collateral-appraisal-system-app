@@ -11,7 +11,7 @@ import CompanyAutocomplete from '@/shared/components/inputs/CompanyAutocomplete'
 import MultiSelectDropdown from '@/shared/components/inputs/MultiSelectDropdown';
 import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
-import SearchByInput from '../components/SearchByInput';
+import SearchByInput from '@/shared/components/inputs/SearchByInput';
 import SortableTh from '@/features/taskMonitor/components/SortableTh';
 import type { SortDir } from '@/features/taskMonitor/types';
 import { useCancelQuotation, useGetQuotations, type QuotationListItem } from '../api/quotation';
@@ -261,9 +261,7 @@ function QuotationListingPage() {
 
         {/* Company */}
         <div className="w-52 flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">
-            {t('filters.company')}
-          </label>
+          <label className="block text-xs font-medium text-gray-700">{t('filters.company')}</label>
           <CompanyAutocomplete
             value={companyFilter}
             onChange={setCompanyFilter}
