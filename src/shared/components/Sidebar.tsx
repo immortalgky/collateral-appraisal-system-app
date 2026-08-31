@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useContext, createContext } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessui/react';
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
@@ -22,6 +22,70 @@ function getTaskActivityId(href: string): string | null {
   return params.get('activityId');
 }
 
+/**
+ * Query-string keys the MENU uses to tell two items at the same path apart, keyed by path.
+ *
+ * Today that is only `activityId`, which splits /tasks into "All tasks" plus 21 per-activity
+ * inboxes. Derived from the tree rather than hard-coded, so a future menu that distinguishes
+ * itself on some other param keeps working without touching this file.
+ */
+function buildSignificantParams(
+  items: NavItem[],
+  map: Map<string, Set<string>> = new Map(),
+): Map<string, Set<string>> {
+  for (const item of items) {
+    const [path, search] = item.href.split('?');
+    if (search) {
+      const keys = map.get(path) ?? new Set<string>();
+      for (const key of new URLSearchParams(search).keys()) keys.add(key);
+      map.set(path, keys);
+    }
+    if (item.children?.length) buildSignificantParams(item.children, map);
+  }
+  return map;
+}
+
+/**
+ * Shared so the recursive MenuItem can read it without every level passing it down. Defaults to
+ * an empty map, which degrades to "compare paths only" rather than throwing.
+ */
+const SignificantParamsContext = createContext<Map<string, Set<string>>>(new Map());
+
+/**
+ * Is `href` the menu entry for where the user currently is?
+ *
+ * Every param the item declares must be present and equal; params it does NOT declare are
+ * ignored. This used to compare the whole query string, so an item went dark the moment the page
+ * put anything in the URL — the appraisal search item unhighlighted as soon as the user typed a
+ * search term or picked a filter, even though that is exactly the screen it opens.
+ *
+ * The one exception is a key another item at the same path uses to identify itself. Without it
+ * "All tasks" (/tasks, no params) would declare nothing, match everything, and light up next to
+ * the per-activity item that actually owns /tasks?activityId=X.
+ *
+ * A plain function, not a hook: isChildActive has to evaluate it inside .some().
+ */
+function isHrefActive(
+  href: string,
+  pathname: string,
+  search: string,
+  significant: Map<string, Set<string>>,
+): boolean {
+  const [path, hrefSearch = ''] = href.split('?');
+  if (pathname !== path) return false;
+
+  const current = new URLSearchParams(search);
+  const declared = new URLSearchParams(hrefSearch);
+
+  for (const [key, value] of declared) {
+    if (current.get(key) !== value) return false;
+  }
+  for (const key of significant.get(path) ?? []) {
+    if (!declared.has(key) && current.has(key)) return false;
+  }
+  return true;
+}
+
 type SidebarProps = {
   navigation: NavItem[];
   logo: string;
@@ -38,9 +102,8 @@ function MenuItem({
 }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
-  const [hrefPath, hrefSearch = ''] = item.href.split('?');
-  const isActive =
-    location.pathname === hrefPath && location.search === (hrefSearch ? `?${hrefSearch}` : '');
+  const significant = useContext(SignificantParamsContext);
+  const isActive = isHrefActive(item.href, location.pathname, location.search, significant);
   const hasChildren = item.children && item.children.length > 0;
   const iconStyle = (item.iconStyle || 'solid') as
     | 'solid'
@@ -77,10 +140,9 @@ function MenuItem({
       );
     }
 
-    const isChildActive = item.children?.some(child => {
-      const [cPath, cSearch = ''] = child.href.split('?');
-      return location.pathname === cPath && location.search === (cSearch ? `?${cSearch}` : '');
-    });
+    const isChildActive = item.children?.some(child =>
+      isHrefActive(child.href, location.pathname, location.search, significant),
+    );
 
     return (
       <li>
@@ -216,6 +278,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
   const { t } = useTranslation('nav');
   const sidebarOpen = useUIStore(state => state.sidebarOpen);
   const setSidebarOpen = useUIStore(state => state.setSidebarOpen);
+  const significantParams = useMemo(() => buildSignificantParams(navigation), [navigation]);
 
   return (
     <Dialog open={sidebarOpen} onClose={setSidebarOpen} className="relative z-50 lg:hidden">
@@ -271,11 +334,13 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                 </span>
               </div>
 
-              <ul className="flex flex-col gap-1">
-                {navigation.map(item => (
-                  <MenuItem key={item.itemKey || item.href} item={item} />
-                ))}
-              </ul>
+              <SignificantParamsContext.Provider value={significantParams}>
+                <ul className="flex flex-col gap-1">
+                  {navigation.map(item => (
+                    <MenuItem key={item.itemKey || item.href} item={item} />
+                  ))}
+                </ul>
+              </SignificantParamsContext.Provider>
 
               <div className="mt-auto pt-4 border-t border-gray-100 dark:border-base-300">
                 <div className="px-3 mb-2">
@@ -313,6 +378,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
   const isSettingsActive = location.pathname === '/settings';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
+  const significantParams = useMemo(() => buildSignificantParams(navigation), [navigation]);
   const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ move: ((e: PointerEvent) => void) | null; up: (() => void) | null }>({
@@ -409,11 +475,17 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
             </div>
           )}
 
-          <ul className="flex flex-col gap-1">
-            {navigation.map(item => (
-              <MenuItem key={item.itemKey || item.href} item={item} collapsed={sidebarCollapsed} />
-            ))}
-          </ul>
+          <SignificantParamsContext.Provider value={significantParams}>
+            <ul className="flex flex-col gap-1">
+              {navigation.map(item => (
+                <MenuItem
+                  key={item.itemKey || item.href}
+                  item={item}
+                  collapsed={sidebarCollapsed}
+                />
+              ))}
+            </ul>
+          </SignificantParamsContext.Provider>
 
           {/* Bottom Section */}
           <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100 dark:border-base-300')}>
