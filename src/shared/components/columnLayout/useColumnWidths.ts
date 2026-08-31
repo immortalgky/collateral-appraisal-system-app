@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
-import {
-  columnDefs,
-  DEFAULT_COLUMN_WIDTH,
-  MIN_COLUMN_WIDTH,
-} from '../config/columnDefs';
-import type { ColumnKey } from '../config/columnDefs';
+import { DEFAULT_COLUMN_WIDTH, MIN_COLUMN_WIDTH } from './constants';
+import type { ColumnLayoutConfig } from './types';
 
 // ── Zod schema ─────────────────────────────────────────────────────────────────
 
@@ -28,14 +24,21 @@ function readStored(storageKey: string): StoredWidths {
 
 // ── Hook ───────────────────────────────────────────────────────────────────────
 
-type ColumnWidthsConfig = { columns: string[] };
-
-export function useColumnWidths(storageKey: string, config: ColumnWidthsConfig) {
+/**
+ * Per-column widths, persisted under `${storageKey}-widths`.
+ *
+ * Defaults come from `config.defaultWidths` rather than from a feature's column registry, so a
+ * screen can size its own columns without this hook knowing anything about that screen.
+ */
+export function useColumnWidths<K extends string>(
+  storageKey: string,
+  config: ColumnLayoutConfig<K>,
+) {
   const widthsKey = `${storageKey}-widths`;
 
   const [stored, setStoredState] = useState<StoredWidths>(() => readStored(widthsKey));
 
-  // Re-read when storageKey changes (ActivityTaskTable swaps activityId without remounting)
+  // Re-read when storageKey changes (a table can swap views without remounting)
   useEffect(() => {
     setStoredState(readStored(widthsKey));
   }, [widthsKey]);
@@ -52,13 +55,19 @@ export function useColumnWidths(storageKey: string, config: ColumnWidthsConfig) 
     [widthsKey],
   );
 
-  /** Resolved widths: stored value → column def default → global default */
-  const widths: Record<string, number> = {};
-  for (const key of config.columns) {
-    widths[key] =
-      stored[key] ??
-      (columnDefs[key as ColumnKey]?.width ?? DEFAULT_COLUMN_WIDTH);
-  }
+  /**
+   * Resolved widths: stored value → per-column default → global default.
+   *
+   * Memoized on the identity of the two inputs it reads. Without this the object is rebuilt on
+   * every render, and a consumer that feeds it into a dependency array re-runs forever.
+   */
+  const widths = useMemo(() => {
+    const resolved: Record<string, number> = {};
+    for (const key of config.columns) {
+      resolved[key] = stored[key] ?? config.defaultWidths?.[key] ?? DEFAULT_COLUMN_WIDTH;
+    }
+    return resolved;
+  }, [stored, config.columns, config.defaultWidths]);
 
   const setWidth = useCallback(
     (key: string, px: number) => {
@@ -72,5 +81,8 @@ export function useColumnWidths(storageKey: string, config: ColumnWidthsConfig) 
     persist({});
   }, [persist]);
 
-  return { widths, setWidth, resetWidths };
+  /** Whether any column has a user-set width, so a caller can enable its own Reset control. */
+  const hasCustomWidths = Object.keys(stored).length > 0;
+
+  return { widths, setWidth, resetWidths, hasCustomWidths };
 }

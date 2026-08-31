@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { format, formatISO, isValid, parse } from 'date-fns';
+import { DayPicker, type DateRange } from 'react-day-picker';
+import { format, formatISO, isSameDay, isValid, parse } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
@@ -69,6 +69,25 @@ interface DatePickerInputProps {
   minDate?: Date | string | null;
   disableDaysBefore?: number;
   disableDaysAfter?: number;
+
+  // ── Range mode ────────────────────────────────────────────────────────────
+  // Kept on separate props rather than widening `value`/`onChange`: those are typed for a single
+  // date and wired into react-hook-form across 29 files. Overloading them would put every one of
+  // those callers on a union type for a feature they never use.
+  /** 'single' (default) is the original behaviour, untouched. */
+  mode?: 'single' | 'range';
+  /** mode='range' only. ISO strings; empty string means unset. */
+  rangeValue?: { from: string; to: string };
+  /** mode='range' only. Fires once, when the user confirms. */
+  onRangeChange?: (from: string, to: string) => void;
+  /**
+   * mode='range' only. Labels for the confirm/clear footer.
+   *
+   * Passed in rather than translated here: every other string this component shows comes from its
+   * caller too, and reaching for a namespace inside a generic input would tie it to one feature's
+   * translation file.
+   */
+  rangeLabels?: { apply: string; clear: string };
 }
 
 const DATE_FORMAT = 'dd/MM/yyyy';
@@ -94,9 +113,14 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       minDate,
       disableDaysBefore,
       disableDaysAfter,
+      mode = 'single',
+      rangeValue,
+      onRangeChange,
+      rangeLabels = { apply: 'Apply', clear: 'Clear' },
     },
     ref,
   ) => {
+    const isRange = mode === 'range';
     const uuid = useId();
     const inputId = uuid;
     const isReadOnly = useFormReadOnly();
@@ -110,6 +134,12 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
     const [align, setAlign] = useState<'left' | 'right'>('left');
     const [constraintError, setConstraintError] = useState<string | null>(null);
+    /**
+     * Range mode: the range being edited in the open calendar, published only when the user
+     * confirms. Held locally so picking the start does not immediately apply a one-day filter and
+     * refetch the list, and so both ends can be adjusted before anything happens.
+     */
+    const [draftRange, setDraftRange] = useState<DateRange | undefined>(undefined);
 
     const disabledMatcher = useMemo(
       () =>
@@ -151,9 +181,70 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
 
     const selectedDate = parseValue(value);
 
+    /**
+     * '∞' rather than '…': an end that has not been chosen yet and an end that is deliberately
+     * open look identical otherwise, and the open end is the normal case here.
+     */
+    const formatRange = (from?: Date, to?: Date): string =>
+      from || to
+        ? `${from ? format(from, DATE_FORMAT) : '∞'} → ${to ? format(to, DATE_FORMAT) : '∞'}`
+        : '';
+
+    const selectedRange = useMemo<DateRange | undefined>(() => {
+      if (!isRange) return undefined;
+      const from = parseValue(rangeValue?.from);
+      const to = parseValue(rangeValue?.to);
+      return from || to ? { from, to } : undefined;
+      // parseValue is a stable local helper over its argument only.
+    }, [isRange, rangeValue?.from, rangeValue?.to]);
+
+    /**
+     * Closes on the SECOND click, so the first one leaves the calendar open to pick the other end.
+     *
+     * Counting clicks rather than reading `range.to`: react-day-picker returns a range whose `to`
+     * is already filled on the very first click, so "close when both ends are set" closed the
+     * calendar immediately and the user could never choose an end date.
+     */
+    /**
+     * Confirms the drafted range.
+     *
+     * An explicit step rather than closing on the second click: react-day-picker fills `to` on the
+     * very first click, so there is no reliable "the range is finished now" signal to close on —
+     * and inferring it from a click count meant the calendar shut before the user had chosen an
+     * end date.
+     */
+    /**
+     * A single click gives react-day-picker `{ from: d, to: d }`. Read that as "from this date
+     * onwards" rather than a one-day window: on a filter bar the open-ended reading is what people
+     * mean by picking one date, and a same-day window is a result set of one day that almost
+     * nobody is after. Clearing `to` is what makes the field publish only `createdFrom`.
+     */
+    const normalizeRange = (range: DateRange | undefined): DateRange | undefined => {
+      if (range?.from && range.to && isSameDay(range.from, range.to)) {
+        return { from: range.from, to: undefined };
+      }
+      return range;
+    };
+
+    const applyRange = () => {
+      onRangeChange?.(
+        draftRange?.from ? formatISO(draftRange.from) : '',
+        draftRange?.to ? formatISO(draftRange.to) : '',
+      );
+      setIsOpen(false);
+      onBlur?.();
+    };
+
     // Sync input value with selected date
     // Use value (not selectedDate) in deps to avoid infinite loop from new Date object references
     useEffect(() => {
+      if (isRange) {
+        const from = parseValue(rangeValue?.from);
+        const to = parseValue(rangeValue?.to);
+        setInputValue(formatRange(from, to));
+        if (from) setMonth(from);
+        return;
+      }
       const date = parseValue(value);
       if (date) {
         setInputValue(format(date, DATE_FORMAT));
@@ -161,8 +252,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       } else {
         setInputValue('');
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [value]);
+    }, [value, isRange, rangeValue?.from, rangeValue?.to]);
 
     // Helper bound
     function getScrollParent(node: HTMLElement | null): HTMLElement | null {
@@ -293,6 +383,13 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const handleInputClick = () => {
       if (!isDisabled) {
         setShowMonths(false);
+        // Seed the draft from what is currently applied, so OPENING the calendar shows the range
+        // in force and Apply without touching anything is a no-op.
+        //
+        // Only on the way open. The field is readOnly, so clicking it again while the calendar is
+        // up is a normal thing to do (and unavoidable if the popover overlaps the field) — reseeding
+        // there would throw away a start date the user had just picked and silently restart them.
+        if (isRange && !isOpen) setDraftRange(selectedRange);
         setIsOpen(true);
       }
     };
@@ -309,7 +406,11 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     return (
       <div className={clsx('relative', fullWidth && 'w-full')}>
         {label && (
-          <label data-field-label htmlFor={inputId} className="block text-xs font-medium text-gray-700 mb-1">
+          <label
+            data-field-label
+            htmlFor={inputId}
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
             {label}
             {required && <span className="text-danger ml-0.5">*</span>}
           </label>
@@ -323,6 +424,10 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             type="text"
             className={clsx(
               'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
+              // The trailing calendar glyph is absolutely positioned over the field. A single date
+              // is short enough to clear it; a range ("11/08/2026 → 15/08/2026") is not, and ran
+              // straight under the icon.
+              isRange && 'pr-9',
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
@@ -343,8 +448,11 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             }
             disabled={isDisabled}
             placeholder={placeholder}
-            value={inputValue}
-            onChange={handleInputChange}
+            // While the calendar is open the field mirrors the DRAFT, so the first click shows
+            // "11/08/2026 → ∞" straight away instead of the value still in force.
+            value={isRange && isOpen ? formatRange(draftRange?.from, draftRange?.to) : inputValue}
+            readOnly={isRange}
+            onChange={isRange ? undefined : handleInputChange}
             onClick={handleInputClick}
             onBlur={handleInputBlur}
             autoComplete="off"
@@ -389,21 +497,42 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
                   expanded={showMonths}
                   className="mb-1 px-1"
                 />
-                <DayPicker
-                  className="react-day-picker text-xs"
-                  style={CALENDAR_RDP_STYLE}
-                  weekStartsOn={1}
-                  formatters={{ formatWeekdayName: formatNarrowWeekday }}
-                  mode="single"
-                  hideNavigation
-                  selected={selectedDate}
-                  onSelect={handleDaySelect}
-                  month={month}
-                  onMonthChange={setMonth}
-                  showOutsideDays
-                  disabled={disabledMatcher}
-                  components={{ MonthCaption: HiddenCaption }}
-                />
+                {/* Two literal blocks rather than a `mode={mode}` variable: react-day-picker's
+                    props are a discriminated union on `mode`, so `selected`/`onSelect` only
+                    typecheck against a literal. */}
+                {isRange ? (
+                  <DayPicker
+                    className="react-day-picker text-xs"
+                    style={CALENDAR_RDP_STYLE}
+                    weekStartsOn={1}
+                    formatters={{ formatWeekdayName: formatNarrowWeekday }}
+                    mode="range"
+                    hideNavigation
+                    selected={draftRange}
+                    onSelect={range => setDraftRange(normalizeRange(range))}
+                    month={month}
+                    onMonthChange={setMonth}
+                    showOutsideDays
+                    disabled={disabledMatcher}
+                    components={{ MonthCaption: HiddenCaption }}
+                  />
+                ) : (
+                  <DayPicker
+                    className="react-day-picker text-xs"
+                    style={CALENDAR_RDP_STYLE}
+                    weekStartsOn={1}
+                    formatters={{ formatWeekdayName: formatNarrowWeekday }}
+                    mode="single"
+                    hideNavigation
+                    selected={selectedDate}
+                    onSelect={handleDaySelect}
+                    month={month}
+                    onMonthChange={setMonth}
+                    showOutsideDays
+                    disabled={disabledMatcher}
+                    components={{ MonthCaption: HiddenCaption }}
+                  />
+                )}
               </div>
               {showMonths && (
                 <div className="w-44 p-2 pl-3 border-l border-gray-200">
@@ -427,6 +556,25 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
                 </div>
               )}
             </div>
+            {isRange && (
+              <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-2 py-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDraftRange(undefined)}
+                  className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+                  disabled={!draftRange?.from}
+                >
+                  {rangeLabels.clear}
+                </button>
+                <button
+                  type="button"
+                  onClick={applyRange}
+                  className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90"
+                >
+                  {rangeLabels.apply}
+                </button>
+              </div>
+            )}
           </div>
         )}
 

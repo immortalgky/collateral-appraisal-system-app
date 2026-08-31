@@ -4,6 +4,14 @@ import axios from '@shared/api/axiosInstance';
 // ── Types ──────────────────────────────────────────────────
 
 export interface AppraisalSearchParams {
+  /**
+   * Scoped search: the free-text box writes ONE of these instead of `search` when the user pins a
+   * column. Declared so a typo in the scope list is a type error rather than a query parameter the
+   * API quietly ignores — which would return an unfiltered list.
+   */
+  appraisalNumber?: string;
+  customerName?: string;
+  requestNumber?: string;
   search?: string;
   status?: string;
   priority?: string;
@@ -69,6 +77,22 @@ export interface AppraisalDto {
   district: string | null;
   subDistrict: string | null;
   appointmentDateTime: string | null;
+  /** Groups appraisals raised together; null for a standalone one. */
+  groupTag: string | null;
+  /** SLA hours expressed in 8-hour working days, computed by the view. */
+  slaBusinessDays: number | null;
+  /** First-submission timestamp — the SLA end-point. */
+  submittedAt: string | null;
+  /**
+   * Present in the API response but NOT surfaced as columns: nothing writes either of them.
+   * Checked against the database — 0 of 105,491 assignments carry an internal appraiser name, and
+   * 0 of the 153 External assignments carry an external appraiser id or name. A column for either
+   * would be permanently empty.
+   */
+  internalAppraiserId: string | null;
+  internalAppraiserName: string | null;
+  externalAppraiserId: string | null;
+  externalAppraiserName: string | null;
   elapsedHours: number | null;
   remainingHours: number | null;
 }
@@ -202,6 +226,16 @@ export function useDeleteSavedSearch() {
   });
 }
 
+/**
+ * Server-side row cap on /appraisals/export (MaxExportRows in ExportAppraisalsQueryHandler).
+ * A larger result set is silently truncated to the first N rows in the current sort order, so the
+ * caller has to warn before downloading a file that only looks complete.
+ */
+export const MAX_EXPORT_ROWS = 10_000;
+
+/** Generous enough for a full-size export; the global axios default of 10s is not. */
+const EXPORT_TIMEOUT_MS = 120_000;
+
 export async function exportAppraisals(
   params: Omit<AppraisalSearchParams, 'pageNumber' | 'pageSize'>,
   format: 'xlsx' | 'csv' = 'xlsx',
@@ -214,6 +248,10 @@ export async function exportAppraisals(
   const { data } = await axios.get('/appraisals/export', {
     params: cleanParams,
     responseType: 'blob',
+    // The global axios timeout is 10s, which a full export blows through routinely — the server
+    // builds up to MAX_EXPORT_ROWS rows off the view. Aborting at 10s looks identical to a failed
+    // download, so the user retries and aborts again.
+    timeout: EXPORT_TIMEOUT_MS,
   });
   const url = URL.createObjectURL(data);
   const link = document.createElement('a');

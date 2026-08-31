@@ -31,7 +31,10 @@
       "propertyType": "Property Type",
       "company": "Company",
       "appointment": "Appointment",
-      "created": "Created"
+      "created": "Created",
+      "slaBusinessDays": "SLA (days)",
+      "submittedAt": "Submitted",
+      "groupTag": "Group"
     },
     "filters": {
       "statusLabel": "Status",
@@ -55,7 +58,18 @@
       "purposeLabel": "Purpose",
       "purposePlaceholder": "All purposes",
       "propertyTypeLabel": "Property Type",
-      "propertyTypePlaceholder": "All property types"
+      "propertyTypePlaceholder": "All property types",
+      "appointmentDateFrom": "Appointment From",
+      "appointmentDateTo": "Appointment To",
+      "assignedDateFrom": "Assigned From",
+      "assignedDateTo": "Assigned To",
+      "multiSelected": "{{label}}: {{count}} selected",
+      "clearFilters": "Clear filters",
+      "toggle": "Filters",
+      "collapse": "Hide filters",
+      "created": "Created",
+      "slaDue": "SLA due",
+      "assigneeUserId": "Assignee"
     },
     "status": {
       "Pending": "Pending",
@@ -87,7 +101,42 @@
       "PreAppraisal": "Pre-Appraisal"
     },
     "searchTooShort": "Type at least {{count}} characters to search",
-    "searchPrefixHint": "Matches from the start of a value. Prefix with * to match anywhere."
+    "searchPrefixHint": "Matches from the start of a value. Prefix with * to match anywhere.",
+    "searchSubstringHint": "Matches anywhere in the value.",
+    "exportTruncatedWarning": "This search matches {{total}} appraisals, but an export contains at most {{max}} rows. The file will be cut short. Continue?",
+    "exportFailed": "Export failed. Please try again.",
+    "searchFieldLabel": "Search in",
+    "searchFieldOptions": {
+      "all": "All fields",
+      "appraisalNumber": "Appraisal no.",
+      "customerName": "Customer",
+      "requestNumber": "Request no."
+    },
+    "searchPlaceholderBy": {
+      "all": "Search appraisal no., request no., customer, title deed…",
+      "appraisalNumber": "Search by appraisal number…",
+      "customerName": "Search by customer name…",
+      "requestNumber": "Search by request number…"
+    },
+    "quickViews": "Quick views:",
+    "smartViews": {
+      "my-assignments": "My assignments",
+      "sla-at-risk": "SLA at risk",
+      "todays-appointments": "Today's appointments",
+      "unassigned": "Unassigned",
+      "high-priority-active": "High priority",
+      "nearing-deadline": "Nearing deadline",
+      "external-assignments": "External assignments",
+      "my-company-queue": "My company queue"
+    },
+    "saved": "Saved",
+    "saveCurrentSearch": "Save current search",
+    "searchNamePlaceholder": "Search name...",
+    "noSavedSearches": "No saved searches yet",
+    "activeFilters": "Filters:",
+    "clearAll": "Clear all",
+    "removeFilter": "Remove filter",
+    "activityTracking": "Activity Tracking"
   },
   "appointment": {
     "sectionTitle": "Appointment Information",

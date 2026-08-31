@@ -98,5 +98,24 @@
       "collapse": "ย่อ",
       "expand": "ขยาย"
     }
+  },
+  "columns": {
+    "title": "คอลัมน์",
+    "toggleColumns": "เลือกคอลัมน์",
+    "reset": "คืนค่าเริ่มต้น",
+    "fixed": "ตรึงไว้",
+    "dragToReorder": "ลากเพื่อจัดลำดับ",
+    "hideColumn": "ซ่อนคอลัมน์",
+    "showColumn": "แสดงคอลัมน์",
+    "dragHint": "ลากแถวเพื่อจัดลำดับคอลัมน์",
+    "rowNumber": "ลำดับที่"
+  },
+  "pagination": {
+    "first": "หน้าแรก",
+    "previous": "หน้าก่อนหน้า",
+    "next": "หน้าถัดไป",
+    "last": "หน้าสุดท้าย",
+    "itemRange": "{{start}}-{{end}} จาก {{total}}",
+    "noResults": "ไม่พบรายการ"
   }
 }

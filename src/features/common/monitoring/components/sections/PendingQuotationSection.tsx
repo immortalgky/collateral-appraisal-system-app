@@ -7,7 +7,7 @@ import Pagination from '@shared/components/Pagination';
 import Icon from '@shared/components/Icon';
 import { useDebounce } from '@shared/hooks/useDebounce';
 import QuotationStatusBadge from '@features/quotation/components/QuotationStatusBadge';
-import SearchByInput from '@features/quotation/components/SearchByInput';
+import SearchByInput from '@/shared/components/inputs/SearchByInput';
 import { DateInput, MultiSelectDropdown } from '@shared/components/inputs';
 import type { ListBoxItem } from '@shared/components/inputs';
 import CompanyAutocomplete from '@shared/components/inputs/CompanyAutocomplete';
@@ -235,14 +235,12 @@ function PendingQuotationSection({ onCountChange }: PendingQuotationSectionProps
       ? [
           {
             key: 'appraisalCompanyId',
-            label: `Company: ${
-              (() => {
-                const match = companies.find(c => c.id === appraisalCompanyFilter);
-                return match
-                  ? localizeCompanyName(match.companyName, match.companyNameLocal)
-                  : appraisalCompanyFilter;
-              })()
-            }`,
+            label: `Company: ${(() => {
+              const match = companies.find(c => c.id === appraisalCompanyFilter);
+              return match
+                ? localizeCompanyName(match.companyName, match.companyNameLocal)
+                : appraisalCompanyFilter;
+            })()}`,
             onClear: () => {
               setAppraisalCompanyFilter('');
               setPage(0);

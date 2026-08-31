@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
@@ -20,6 +21,16 @@ interface SearchByInputProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  /**
+   * Rendered inside the pill, after the input — a spinner while a search is in flight, a clear
+   * button, that kind of thing. Optional so the callers that predate it are unchanged.
+   */
+  endAdornment?: ReactNode;
+  /**
+   * Forwarded to the input as aria-describedby. Without it a hint rendered beside this control
+   * (e.g. "type at least 3 characters") is orphaned and never announced.
+   */
+  describedBy?: string;
 }
 
 /**
@@ -35,6 +46,8 @@ function SearchByInput({
   onChange,
   placeholder,
   className,
+  endAdornment,
+  describedBy,
 }: SearchByInputProps) {
   const selected = options.find(o => o.value === field);
 
@@ -78,7 +91,9 @@ function SearchByInput({
                       className={clsx('size-3.5', isSelected ? 'text-primary' : 'text-gray-400')}
                     />
                   )}
-                  <span className={clsx('flex-1 truncate', isSelected && 'font-medium text-gray-900')}>
+                  <span
+                    className={clsx('flex-1 truncate', isSelected && 'font-medium text-gray-900')}
+                  >
                     {o.label}
                   </span>
                   {isSelected && (
@@ -101,11 +116,13 @@ function SearchByInput({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
+          aria-describedby={describedBy}
           // Inline outline:none — the global `:focus-visible` rule (src/index.css) is unlayered
           // and beats Tailwind's layered outline utilities; an inline style outranks it.
           style={{ outline: 'none' }}
           className="w-full min-w-0 bg-transparent py-2 text-sm placeholder:text-gray-400"
         />
+        {endAdornment && <div className="ml-2 flex shrink-0 items-center">{endAdornment}</div>}
       </div>
     </div>
   );

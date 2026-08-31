@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ColumnResizeHandle,
+  ColumnVisibilityDropdown,
+  useColumnAutoFit,
+  useColumnVisibility,
+  useColumnWidths,
+} from '@/shared/components/columnLayout';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { FavoritesRow } from '@features/menuFavorites';
@@ -10,14 +17,15 @@ import PoolTaskListPage from '../pages/PoolTaskListPage';
 import { useGetTaskCounts, useGetTasks } from '../api';
 import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
-import { columnDefs, getActivityColumnConfig, DEFAULT_CONFIG, MIN_COLUMN_WIDTH, MAX_AUTOFIT_WIDTH } from '../config/columnDefs';
+import {
+  columnDefs,
+  COLUMN_LABELS,
+  getActivityColumnConfig,
+  DEFAULT_CONFIG,
+} from '../config/columnDefs';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { useColumnVisibility } from '../hooks/useColumnVisibility';
-import { useColumnWidths } from '../hooks/useColumnWidths';
-import { ColumnVisibilityDropdown } from './ColumnVisibilityDropdown';
-import { ColumnResizeHandle } from './ColumnResizeHandle';
 import { TaskFilterDialog } from './TaskFilterDialog';
 import { TaskKanbanBoard } from './TaskKanbanBoard';
 
@@ -139,10 +147,11 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     resetToDefault,
   } = useColumnVisibility('task-columns-' + activityId, columnConfig);
 
-  const { widths: colWidths, setWidth: setColWidth, resetWidths } = useColumnWidths(
-    'task-columns-' + activityId,
-    columnConfig,
-  );
+  const {
+    widths: colWidths,
+    setWidth: setColWidth,
+    resetWidths,
+  } = useColumnWidths('task-columns-' + activityId, columnConfig);
 
   // Pool tab column layout — own key so it persists independently, dropdown rendered
   // inline in the pool toolbar (parity with the personal tab).
@@ -158,22 +167,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     [visibleColumns, colWidths],
   );
 
-  const getAutoFitWidth = useCallback(
-    (_key: string, colIndex: number): (() => number | null) =>
-      () => {
-        const tbl = tableRef.current;
-        if (!tbl) return null;
-        const rows = tbl.querySelectorAll('tr');
-        let max = 0;
-        rows.forEach(row => {
-          const cell = row.children[colIndex] as HTMLElement | undefined;
-          if (cell) max = Math.max(max, cell.scrollWidth);
-        });
-        if (max === 0) return null;
-        return Math.min(Math.max(max + 24, MIN_COLUMN_WIDTH), MAX_AUTOFIT_WIDTH);
-      },
-    [],
-  );
+  const getAutoFitWidth = useColumnAutoFit(tableRef);
 
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [groupBy, setGroupBy] = useState<GroupByField>('status');
@@ -353,9 +347,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
           {poolTotalCount > 0 && (
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
-                activeTab === 'pool'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-gray-100 text-gray-500'
+                activeTab === 'pool' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
               }`}
             >
               {poolTotalCount}
@@ -415,12 +407,16 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             {poolViewMode === 'list' && (
               <div className="mb-2">
                 <ColumnVisibilityDropdown
+                  labels={COLUMN_LABELS}
                   orderedColumns={poolCols.orderedColumns}
                   hidden={poolCols.hidden}
                   alwaysVisible={poolCols.alwaysVisible}
                   onToggle={poolCols.toggleColumn}
                   onReorder={poolCols.reorderColumns}
-                  onReset={() => { poolCols.resetToDefault(); poolWidths.resetWidths(); }}
+                  onReset={() => {
+                    poolCols.resetToDefault();
+                    poolWidths.resetWidths();
+                  }}
                 />
               </div>
             )}
@@ -529,12 +525,16 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             {viewMode === 'list' && (
               <div className="mb-2">
                 <ColumnVisibilityDropdown
+                  labels={COLUMN_LABELS}
                   orderedColumns={orderedColumns}
                   hidden={hidden}
                   alwaysVisible={alwaysVisible}
                   onToggle={toggleColumn}
                   onReorder={reorderColumns}
-                  onReset={() => { resetToDefault(); resetWidths(); }}
+                  onReset={() => {
+                    resetToDefault();
+                    resetWidths();
+                  }}
                 />
               </div>
             )}
@@ -694,7 +694,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                       {visibleColumns.map((key, colIndex) => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
-                        const isSticky = key === columnConfig.stickyColumn;
+                        const isSticky = key === columnConfig.pinnedColumn;
                         const thClass = isSticky
                           ? `relative ${stickyThBase}`
                           : col.sortField
@@ -780,14 +780,15 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
-                            const isSticky = key === columnConfig.stickyColumn;
+                            const isSticky = key === columnConfig.pinnedColumn;
                             return (
                               <td
                                 key={key}
                                 className={
                                   isSticky
                                     ? `${stickyTdClass} overflow-hidden whitespace-nowrap`
-                                    : (col.tdClassName ?? `${defaultTdClass} overflow-hidden whitespace-nowrap`)
+                                    : (col.tdClassName ??
+                                      `${defaultTdClass} overflow-hidden whitespace-nowrap`)
                                 }
                                 onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >
