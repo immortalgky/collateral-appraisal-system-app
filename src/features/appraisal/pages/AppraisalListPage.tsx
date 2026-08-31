@@ -63,10 +63,18 @@ const COLUMN_STORAGE_KEY = 'appraisal-list-columns';
  * Which column the free-text box searches.
  *
  * 'all' is the default and keeps today's behaviour exactly: a semi-join across every searchable
- * field. The narrower options map to the dedicated backend filters, which is dramatically cheaper
- * — an appraisal-number search resolves off appraisal.Appraisals instead of dragging the whole
- * query through the view (measured on 105k rows: 1,401 ms for the OR across three columns against
- * 71 ms for the pinned one).
+ * field. The narrower options map to the dedicated backend filters in AppraisalFilterBuilder.
+ *
+ * Only 'appraisalNumber' is dramatically cheaper: it is the one pinned filter that leaves
+ * `requiresView` false, so the count resolves off appraisal.Appraisals instead of dragging the
+ * whole query through the view (measured on 105k rows: 1,401 ms for the OR across three columns
+ * against 71 ms pinned). 'customerName' and 'requestNumber' both set `requiresView = true` and
+ * still run a leading-wildcard LIKE over a column the view's APPLYs compute, so they are narrower
+ * in RESULTS but not necessarily faster — do not sell them to the user as a speed-up.
+ *
+ * All three pinned filters are `LIKE '%' + @x + '%'`, i.e. substring. That differs from 'all',
+ * which goes through the glob helper (prefix by default, leading `*` to widen) — hence the two
+ * hint strings below.
  */
 const SEARCH_FIELDS = ['all', 'appraisalNumber', 'customerName', 'requestNumber'] as const;
 type SearchField = (typeof SEARCH_FIELDS)[number];
@@ -290,9 +298,11 @@ function AppraisalListPage() {
   const columnConfig = useMemo<ColumnLayoutConfig<string>>(
     () => ({
       columns: appraisalColumns.map(c => c.key),
-      // The appraisal number is the row's identity and its link target — pinning anything else
-      // would leave a scrolled-right table with no way back to the record.
-      stickyColumn: 'appraisalNumber',
+      // The appraisal number is the row's identity and its link target, so it is forced to
+      // index 0 and cannot be hidden. Note this is column ORDER only — nothing here renders
+      // `position: sticky`, so it does scroll away like any other column (LandTitleTable's
+      // `stickyColumns` prop is the unrelated thing that actually pins cells).
+      pinnedColumn: 'appraisalNumber',
       defaultWidths: Object.fromEntries(
         appraisalColumns.filter(c => c.width).map(c => [c.key, c.width!]),
       ),
@@ -306,12 +316,16 @@ function AppraisalListPage() {
     orderedColumns,
     hidden,
     hiddenBeyondDefault,
+    isCustomized,
     alwaysVisible,
     toggleColumn,
     reorderColumns,
     resetToDefault,
   } = useColumnVisibility(COLUMN_STORAGE_KEY, columnConfig);
-  const { widths, setWidth, resetWidths } = useColumnWidths(COLUMN_STORAGE_KEY, columnConfig);
+  const { widths, setWidth, resetWidths, hasCustomWidths } = useColumnWidths(
+    COLUMN_STORAGE_KEY,
+    columnConfig,
+  );
   const { showRowNumber, toggleRowNumber } = useRowNumberColumn(COLUMN_STORAGE_KEY);
   const getAutoFitWidth = useColumnAutoFit(tableRef, { leadingCells: showRowNumber ? 1 : 0 });
 
@@ -537,6 +551,9 @@ function AppraisalListPage() {
             hiddenBeyondDefault={hiddenBeyondDefault}
             onToggle={toggleColumn}
             onReorder={reorderColumns}
+            // Reset touches visibility, order, widths and the row-number switch, so it stays live
+            // whenever any of the four differs from the default — not just when a column is hidden.
+            canReset={isCustomized || hasCustomWidths || !showRowNumber}
             onReset={() => {
               // Everything the picker can change, or "Reset" is a button that visibly does
               // nothing when the only thing switched off is the row-number column.
@@ -557,7 +574,9 @@ function AppraisalListPage() {
         <p id="appraisal-search-hint" className="text-xs text-gray-400 dark:text-gray-500">
           {isSearchTooShort
             ? t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })
-            : t('list.searchPrefixHint')}
+            : searchField === 'all'
+              ? t('list.searchPrefixHint')
+              : t('list.searchSubstringHint')}
         </p>
       </div>
 

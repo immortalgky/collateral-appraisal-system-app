@@ -16,8 +16,14 @@ import type { RefObject } from 'react';
 export interface ColumnLayoutConfig<K extends string = string> {
   /** Every column this screen can show, in default order. */
   columns: readonly K[];
-  /** Pinned first and never hideable. Forced to index 0 regardless of stored order. */
-  stickyColumn: K;
+  /**
+   * Forced to index 0 regardless of stored order, and never hideable.
+   *
+   * ORDER and VISIBILITY only — this does not render `position: sticky`, so the column still
+   * scrolls out of view on a wide table. Named `pinnedColumn` rather than `stickyColumn` for
+   * exactly that reason: `LandTitleTable`'s `stickyColumns` prop is the one that pins cells.
+   */
+  pinnedColumn: K;
   /** Additional columns the user may reorder but not hide. */
   alwaysVisible?: readonly K[];
   /**

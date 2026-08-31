@@ -437,13 +437,13 @@ const DEFAULT_COLUMNS: ColumnKey[] = [
 
 const DEFAULT_CONFIG: ActivityColumnConfig = {
   columns: DEFAULT_COLUMNS,
-  stickyColumn: 'appraisalNumber',
+  pinnedColumn: 'appraisalNumber',
   defaultWidths: DEFAULT_WIDTHS,
 };
 
 const INITIATION_CONFIG: ActivityColumnConfig = {
   columns: [...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],
-  stickyColumn: 'requestNumber',
+  pinnedColumn: 'requestNumber',
   defaultWidths: DEFAULT_WIDTHS,
 };
 

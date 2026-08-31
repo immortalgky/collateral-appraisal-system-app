@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 /**
  * The running row-number (`#`) column, toggled and persisted on its own.
  *
- * Kept OUT of the reorderable, persisted column set on purpose. That set forces `stickyColumn` to
+ * Kept OUT of the reorderable, persisted column set on purpose. That set forces `pinnedColumn` to
  * index 0, so putting `#` in it would make it fight the column that genuinely wants to be pinned;
  * and its key is neither a field of the row type nor a sort target, so it would squat in the
  * stored order forever, surviving every future rename of the real columns.

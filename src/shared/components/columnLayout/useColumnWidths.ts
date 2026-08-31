@@ -81,5 +81,8 @@ export function useColumnWidths<K extends string>(
     persist({});
   }, [persist]);
 
-  return { widths, setWidth, resetWidths };
+  /** Whether any column has a user-set width, so a caller can enable its own Reset control. */
+  const hasCustomWidths = Object.keys(stored).length > 0;
+
+  return { widths, setWidth, resetWidths, hasCustomWidths };
 }

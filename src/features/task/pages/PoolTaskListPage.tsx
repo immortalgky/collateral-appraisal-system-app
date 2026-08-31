@@ -531,7 +531,7 @@ function PoolTaskListPage({
                     const isActive = sortField === col.sortField;
                     const base =
                       'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
-                    const isSticky = key === DEFAULT_CONFIG.stickyColumn;
+                    const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
                     const thClass = isSticky
                       ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                       : col.sortField
@@ -619,7 +619,7 @@ function PoolTaskListPage({
                       >
                         {visibleColumns.map(key => {
                           const col = columnDefs[key];
-                          const isSticky = key === DEFAULT_CONFIG.stickyColumn;
+                          const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
                           const tdClass = isSticky
                             ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                             : (col.tdClassName ??

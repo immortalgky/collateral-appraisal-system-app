@@ -26,7 +26,7 @@ function normalizeState<K extends string>(
   raw: PersistedState | null,
   config: ColumnLayoutConfig<K>,
 ): { hidden: Set<K>; order: K[] } {
-  const alwaysVisible = new Set<K>([config.stickyColumn, ...(config.alwaysVisible ?? [])]);
+  const alwaysVisible = new Set<K>([config.pinnedColumn, ...(config.alwaysVisible ?? [])]);
 
   // Nothing stored: start from the screen's defaults. Once anything IS stored the user has spoken,
   // and defaultHidden must not creep back in and re-hide a column they turned on.
@@ -49,7 +49,7 @@ function normalizeState<K extends string>(
 
   // The sticky column must always render first — force it to index 0 so a stale
   // saved order (or a user dragging another column ahead of it) can't unpin it.
-  const sticky = config.stickyColumn;
+  const sticky = config.pinnedColumn;
   const ordered = [sticky, ...order.filter(k => k !== sticky)];
 
   return { hidden: new Set(validHidden), order: ordered };
@@ -114,8 +114,8 @@ export function useColumnVisibility<K extends string>(
   const { hidden, order } = useMemo(() => normalizeState(raw, config), [raw, config]);
 
   const alwaysVisible = useMemo(
-    () => new Set<K>([config.stickyColumn, ...(config.alwaysVisible ?? [])]),
-    [config.stickyColumn, config.alwaysVisible],
+    () => new Set<K>([config.pinnedColumn, ...(config.alwaysVisible ?? [])]),
+    [config.pinnedColumn, config.alwaysVisible],
   );
 
   const visibleColumns = useMemo(() => order.filter(k => !hidden.has(k)), [order, hidden]);
@@ -167,6 +167,12 @@ export function useColumnVisibility<K extends string>(
     orderedColumns: order,
     hidden,
     hiddenBeyondDefault,
+    /**
+     * Whether this screen has ANY stored layout — hidden set or column order. `raw` is null until
+     * the first change, so one flag covers both without the caller diffing arrays. Feeds the
+     * dropdown's `canReset`; `hiddenBeyondDefault` cannot, because reordering hides nothing.
+     */
+    isCustomized: raw !== null,
     alwaysVisible,
     toggleColumn,
     reorderColumns,

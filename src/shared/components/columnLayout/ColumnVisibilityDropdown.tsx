@@ -31,6 +31,11 @@ interface ColumnVisibilityDropdownProps<K extends string> {
   onReorder: (activeId: K, overId: K) => void;
   onReset: () => void;
   /**
+   * Whether Reset has anything to undo. Omit and the button falls back to "some column is hidden",
+   * which is right only when `onReset` restores visibility and nothing else.
+   */
+  canReset?: boolean;
+  /**
    * Extra switches rendered below the sortable list, for columns that are toggleable but live
    * outside the persisted set — a row-number column, for instance, which is neither a field of
    * the row type nor a sort target and would otherwise squat on a key forever.
@@ -135,6 +140,7 @@ export function ColumnVisibilityDropdown<K extends string>({
   onToggle,
   onReorder,
   onReset,
+  canReset,
   extraToggles,
 }: ColumnVisibilityDropdownProps<K>) {
   const { t } = useTranslation('common');
@@ -185,7 +191,11 @@ export function ColumnVisibilityDropdown<K extends string>({
           <button
             onClick={onReset}
             className="text-xs text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
-            disabled={hiddenCount === 0}
+            // The dropdown cannot know what `onReset` restores — on the appraisal list it also
+            // clears column widths and switches the row-number column back on. Callers that reset
+            // more than visibility pass `canReset` so resizing a column without hiding one does
+            // not leave the only control that undoes it greyed out.
+            disabled={canReset === undefined ? hiddenCount === 0 : !canReset}
           >
             {t('columns.reset')}
           </button>

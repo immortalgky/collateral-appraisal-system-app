@@ -383,9 +383,13 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const handleInputClick = () => {
       if (!isDisabled) {
         setShowMonths(false);
-        // Seed the draft from what is currently applied, so opening the calendar shows the range
+        // Seed the draft from what is currently applied, so OPENING the calendar shows the range
         // in force and Apply without touching anything is a no-op.
-        if (isRange) setDraftRange(selectedRange);
+        //
+        // Only on the way open. The field is readOnly, so clicking it again while the calendar is
+        // up is a normal thing to do (and unavoidable if the popover overlaps the field) — reseeding
+        // there would throw away a start date the user had just picked and silently restart them.
+        if (isRange && !isOpen) setDraftRange(selectedRange);
         setIsOpen(true);
       }
     };

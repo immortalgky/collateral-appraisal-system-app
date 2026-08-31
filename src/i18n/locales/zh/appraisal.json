@@ -102,6 +102,7 @@
     },
     "searchTooShort": "请至少输入 {{count}} 个字符进行搜索",
     "searchPrefixHint": "从开头匹配。在关键词前加 * 可匹配中间的内容。",
+    "searchSubstringHint": "匹配值中任意位置的内容。",
     "exportTruncatedWarning": "此搜索匹配 {{total}} 条评估记录，但导出最多包含 {{max}} 行。文件将被截断。是否继续？",
     "exportFailed": "导出失败，请重试。",
     "searchFieldLabel": "搜索范围",

@@ -102,6 +102,7 @@
     },
     "searchTooShort": "Type at least {{count}} characters to search",
     "searchPrefixHint": "Matches from the start of a value. Prefix with * to match anywhere.",
+    "searchSubstringHint": "Matches anywhere in the value.",
     "exportTruncatedWarning": "This search matches {{total}} appraisals, but an export contains at most {{max}} rows. The file will be cut short. Continue?",
     "exportFailed": "Export failed. Please try again.",
     "searchFieldLabel": "Search in",

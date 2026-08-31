@@ -694,7 +694,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                       {visibleColumns.map((key, colIndex) => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
-                        const isSticky = key === columnConfig.stickyColumn;
+                        const isSticky = key === columnConfig.pinnedColumn;
                         const thClass = isSticky
                           ? `relative ${stickyThBase}`
                           : col.sortField
@@ -780,7 +780,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
-                            const isSticky = key === columnConfig.stickyColumn;
+                            const isSticky = key === columnConfig.pinnedColumn;
                             return (
                               <td
                                 key={key}
