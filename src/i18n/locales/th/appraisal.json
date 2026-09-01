@@ -475,10 +475,7 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": [
-        "ยังไม่ตรวจสอบ",
-        "ตรวจสอบแล้ว"
-      ],
+      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
@@ -598,6 +595,7 @@
       "legalSection": "สิทธิและกฎหมาย",
       "legalSubtitle": "กรรมสิทธิ์ ที่ตั้ง และภาระผูกพัน",
       "save": "บันทึก",
+      "saveDraft": "บันทึกร่าง",
       "saved": "บันทึกสรุปเครื่องจักรแล้ว",
       "saveFailed": "บันทึกสรุปเครื่องจักรไม่สำเร็จ",
       "fields": {

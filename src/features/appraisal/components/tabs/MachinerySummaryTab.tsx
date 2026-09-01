@@ -107,6 +107,7 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
+  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetMachinerySummary(appraisalId);
   const saveMutation = useSaveMachinerySummary();
@@ -115,6 +116,8 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
     defaultValues: machinerySummaryFormDefault,
     resolver: zodResolver(machinerySummaryForm),
   });
+
+  const { getValues, reset } = methods;
 
   // Seed the form once the summary loads (null response → empty defaults).
   useEffect(() => {
@@ -135,15 +138,42 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
   );
 
   const onSubmit: SubmitHandler<machinerySummaryFormType> = values => {
+    setSaveAction('submit');
     if (!appraisalId) return;
     saveMutation.mutate(
       { appraisalId, ...values },
       {
         onSuccess: () => {
           toast.success(t('propertyInfo.machinerySummary.saved'));
+          setSaveAction(null);
           onSaved?.();
         },
-        onError: () => toast.error(t('propertyInfo.machinerySummary.saveFailed')),
+        onError: () => {
+          toast.error(t('propertyInfo.machinerySummary.saveFailed'));
+          setSaveAction(null);
+        },
+      },
+    );
+  };
+
+  const handleSaveDraft = () => {
+    setSaveAction('draft');
+    const data = getValues();
+    const payload = mapMachinerySummaryResponseToForm(data);
+    if (!appraisalId) return;
+    saveMutation.mutate(
+      { appraisalId, ...payload },
+      {
+        onSuccess: () => {
+          reset(getValues());
+          toast.success(t('propertyInfo.machinerySummary.saved'));
+          setSaveAction(null);
+          onSaved?.();
+        },
+        onError: () => {
+          toast.error(t('propertyInfo.machinerySummary.saveFailed'));
+          setSaveAction(null);
+        },
       },
     );
   };
@@ -209,6 +239,16 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
               <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
             </ActionBar.Left>
             <ActionBar.Right>
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={handleSaveDraft}
+                isLoading={saveMutation.isPending && saveAction === 'draft'}
+                disabled={saveMutation.isPending}
+              >
+                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                {t('propertyInfo.machinerySummary.saveDraft')}
+              </Button>
               <Button
                 type="submit"
                 isLoading={saveMutation.isPending}
