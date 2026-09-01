@@ -210,9 +210,9 @@
       "confirm": "Replace"
     },
     "summary": {
-      "towers": "Towers:",
-      "models": "Models:",
-      "totalUnits": "Total Units:",
+      "towers": "Towers",
+      "models": "Models",
+      "totalUnits": "Total Units",
       "remainingUnits": "Remaining",
       "soldUnits": "Sold"
     },

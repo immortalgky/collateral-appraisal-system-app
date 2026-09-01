@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { ProjectUnit, ProjectUnitUpload } from '../types';
 import { projectModelKeys } from './projectModel';
+import { projectUnitPriceKeys } from './projectUnitPrice';
 import { projectTowerKeys } from './projectTower';
 import { projectPricingAssumptionKeys } from './projectPricingAssumption';
 
@@ -233,6 +234,16 @@ export const useUploadReappraisalUnits = () => {
       });
       queryClient.invalidateQueries({
         queryKey: projectUnitKeys.uploads(variables.appraisalId),
+      });
+      // A re-match appends units and rewrites sellingPrice / usableArea / landArea, which are the
+      // inputs to unit prices. Without this the sibling Unit Price tab serves its cached list for
+      // the next five minutes: new units missing, prices computed from the superseded figures.
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.all(variables.appraisalId),
+      });
+      // The model list grows when an added or renamed unit names one the project has not seen.
+      queryClient.invalidateQueries({
+        queryKey: projectModelKeys.all(variables.appraisalId),
       });
     },
   });

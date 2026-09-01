@@ -221,7 +221,11 @@ function FieldRenderer({
   globalDisabled,
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
-  const { isVisible, isDisabled: fieldDisabled, isRequired } = useFieldState({ field, namePrefix, index });
+  const {
+    isVisible,
+    isDisabled: fieldDisabled,
+    isRequired,
+  } = useFieldState({ field, namePrefix, index });
   const isDisabled = fieldDisabled || (globalDisabled ?? false);
   const { setValue, getValues } = useFormContext();
 
@@ -556,6 +560,7 @@ function FieldRenderer({
             postcodeField={prefixFieldPath(passedField.postcodeField) ?? ''}
             subDistrictNameField={prefixFieldPath(passedField.subDistrictNameField)}
             addressSource={passedField.addressSource}
+            resolveFromAnySource={passedField.resolveFromAnySource}
             error={error?.message}
             className={passedField.className}
             {...locationProps}

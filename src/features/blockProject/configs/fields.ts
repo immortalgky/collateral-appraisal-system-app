@@ -126,6 +126,10 @@ export const projectLocationFields: FormField[] = [
     districtNameField: 'districtName',
     provinceNameField: 'provinceName',
     addressSource: 'dopa',
+    // Projects saved before this switched to DOPA hold a code the DOPA tables may not carry — 3,715
+    // Title sub-districts exist in neither. Reading from both keeps those records legible instead of
+    // blanking the field on a record nobody edited; only new picks are confined to DOPA.
+    resolveFromAnySource: true,
     wrapperClassName: 'col-span-4',
   },
   {

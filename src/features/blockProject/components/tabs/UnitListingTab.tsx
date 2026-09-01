@@ -146,6 +146,11 @@ function UnitResultTable({
   projectType: ProjectType;
 }) {
   const { t } = useTranslation('blockProject');
+  // Resolved once for the table rather than once per row — the listing now renders every unit of
+  // the project and re-renders on each keystroke in the search box.
+  const soldLabel = t('unitListing.saleStatus.sold');
+  const availableLabel = t('unitListing.saleStatus.available');
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -166,7 +171,7 @@ function UnitResultTable({
 
   if (isCondo(projectType)) {
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-full">
         <table className="w-full text-xs">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
@@ -214,7 +219,10 @@ function UnitResultTable({
                 <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
                 <td className="py-2 px-3">
-                  <SaleStatusBadge isSold={unit.isSold} />
+                  <SaleStatusBadge
+                    isSold={unit.isSold}
+                    label={unit.isSold ? soldLabel : availableLabel}
+                  />
                 </td>
                 <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800 text-right">
@@ -233,7 +241,7 @@ function UnitResultTable({
 
   // LandAndBuilding columns
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-full">
       <table className="w-full text-xs">
         <thead className="bg-gray-50 sticky top-0 z-10">
           <tr>
@@ -279,7 +287,10 @@ function UnitResultTable({
               <td className="py-2 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
               <td className="py-2 px-3">
-                <SaleStatusBadge isSold={unit.isSold} />
+                <SaleStatusBadge
+                  isSold={unit.isSold}
+                  label={unit.isSold ? soldLabel : availableLabel}
+                />
               </td>
               <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
@@ -306,8 +317,7 @@ function UnitResultTable({
  * The listing shows every unit of the project, so each row has to say which side of the line it
  * is on. Without it a re-match upload looks like rows vanishing rather than rows being marked.
  */
-function SaleStatusBadge({ isSold }: { isSold: boolean }) {
-  const { t } = useTranslation('blockProject');
+function SaleStatusBadge({ isSold, label }: { isSold: boolean; label: string }) {
   return (
     <span
       className={clsx(
@@ -318,7 +328,7 @@ function SaleStatusBadge({ isSold }: { isSold: boolean }) {
       <span
         className={clsx('size-1.5 rounded-full shrink-0', isSold ? 'bg-blue-500' : 'bg-amber-500')}
       />
-      {t(isSold ? 'unitListing.saleStatus.sold' : 'unitListing.saleStatus.available')}
+      {label}
     </span>
   );
 }
@@ -441,6 +451,11 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     const file = e.target.files?.[0];
     if (readOnly || !file || !appraisalId) return;
 
+    // Clear the input so picking the same file again fires another change event. The UploadArea
+    // this replaced reset the value on every click; without it, cancelling the replace-confirm
+    // dialog (or hitting a validation toast) leaves the button looking dead for that same file.
+    e.target.value = '';
+
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     let validationError: string | null = null;
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
@@ -527,15 +542,24 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const describeUpload = useUploadOutcome();
 
   const modelOptions = unitsData?.models ?? [];
-  const visibleUnits = units.filter(u => {
-    if (saleFilter !== 'all' && (saleFilter === 'sold') !== u.isSold) return false;
+
+  // Trimmed before the emptiness test: a query of only spaces used to survive it, and matching on
+  // '' then dropped every unit whose plot, house, room and tower are all null.
+  const trimmedQuery = query.trim().toLowerCase();
+
+  // Everything except the sale filter. The status chips count within this so their numbers agree
+  // with the table; the table then applies the sale filter on top.
+  const narrowedUnits = units.filter(u => {
     if (modelFilter && u.modelType !== modelFilter) return false;
-    if (!query) return true;
-    const q = query.trim().toLowerCase();
+    if (!trimmedQuery) return true;
     return [u.plotNumber, u.houseNumber, u.roomNumber, u.towerName].some(v =>
-      v?.toLowerCase().includes(q),
+      v?.toLowerCase().includes(trimmedQuery),
     );
   });
+
+  const visibleUnits = narrowedUnits.filter(
+    u => saleFilter === 'all' || (saleFilter === 'sold') === u.isSold,
+  );
   const isFiltered = visibleUnits.length !== units.length;
 
   const uploadInput = (
@@ -638,10 +662,10 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
                   {t(`unitListing.filter.${key}`)}
                   <span className="ms-1.5 tabular-nums opacity-60">
                     {key === 'all'
-                      ? totalCount
+                      ? narrowedUnits.length
                       : key === 'sold'
-                        ? totalCount - remainingCount
-                        : remainingCount}
+                        ? narrowedUnits.filter(u => u.isSold).length
+                        : narrowedUnits.filter(u => !u.isSold).length}
                   </span>
                 </button>
               ))}

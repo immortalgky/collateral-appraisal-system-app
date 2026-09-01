@@ -210,9 +210,9 @@
       "confirm": "แทนที่"
     },
     "summary": {
-      "towers": "อาคาร:",
-      "models": "แบบ:",
-      "totalUnits": "ยูนิตทั้งหมด:",
+      "towers": "อาคาร",
+      "models": "แบบ",
+      "totalUnits": "ยูนิตทั้งหมด",
       "remainingUnits": "เหลือขาย",
       "soldUnits": "ขายแล้ว"
     },

@@ -210,9 +210,9 @@
       "confirm": "Replace"
     },
     "summary": {
-      "towers": "Towers:",
-      "models": "Models:",
-      "totalUnits": "Total Units:",
+      "towers": "楼栋",
+      "models": "户型",
+      "totalUnits": "单元总数",
       "remainingUnits": "剩余",
       "soldUnits": "已售"
     },
