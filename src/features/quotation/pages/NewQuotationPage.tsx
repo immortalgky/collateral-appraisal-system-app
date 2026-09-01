@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
+import { addHours, formatISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
@@ -80,8 +81,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
     if (!query.trim()) return companies;
     const q = query.toLowerCase();
     return companies.filter(
-      c =>
-        c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
+      c => c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
     );
   }, [companies, query]);
 
@@ -261,7 +261,7 @@ function NewQuotationPage() {
   } = useForm<NewQuotationFormValues>({
     resolver: zodResolver(newQuotationSchema),
     defaultValues: {
-      cutOffTime: '',
+      cutOffTime: formatISO(addHours(new Date(), 1)),
       appraisalIds: [],
       invitedCompanyIds: [],
     },
