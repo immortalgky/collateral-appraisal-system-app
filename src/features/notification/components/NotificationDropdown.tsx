@@ -101,12 +101,12 @@ export default function NotificationDropdown() {
               {recent.map(notification => {
                 const config = notificationTypeConfig[notification.type];
                 return (
-                  <button
+                  <div
                     key={notification.id}
-                    type="button"
+                    role="button"
                     onClick={() => handleNotificationClick(notification.id, notification.actionUrl)}
                     className={clsx(
-                      'w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-base-300 transition-colors',
+                      'w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-base-300 transition-colors cursor-pointer',
                       !notification.isRead && 'bg-blue-50/30',
                     )}
                   >
@@ -141,7 +141,7 @@ export default function NotificationDropdown() {
                         {timeAgo(notification.createdAt, t)}
                       </p>
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
