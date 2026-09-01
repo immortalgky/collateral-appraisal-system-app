@@ -12,6 +12,8 @@ import AddFeeModal from './AddFeeModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export const BANK_ABSORB_FEE_TYPES = ['04'];
+/** Fee types for which the bank absorbs the entire fee amount automatically (not user-editable). */
+export const FULL_BANK_ABSORB_FEE_TYPES = ['05', '06', '07'];
 /** Fee types for which the bank-absorb amount input is shown (required for '04', optional for '99'). */
 const BANK_ABSORB_SHOW_TYPES = ['04', '99'];
 
