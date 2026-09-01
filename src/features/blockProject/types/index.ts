@@ -274,6 +274,8 @@ export interface ProjectUnit {
   houseNumber?: string;
   numberOfFloors?: number;
   landArea?: number;
+  /** Marked sold by a re-match upload or on the Block Unit Maintenance screen. */
+  isSold: boolean;
 }
 
 export interface ProjectUnitUpload {
@@ -283,6 +285,14 @@ export interface ProjectUnitUpload {
   uploadedAt: string;
   isUsed: boolean;
   documentId?: string;
+  /** Seeded by the system (the reappraisal copy of the collateral master), not uploaded. */
+  isSystemGenerated: boolean;
+  /** Units the batch brought in — every kind of batch reports this. */
+  addedUnits: number;
+  /** Re-match only; null for any other batch and for rows written before this was recorded. */
+  matchedUnsoldUnits: number | null;
+  autoSoldUnits: number | null;
+  updatedUnits: number | null;
 }
 
 // ─── ProjectUnitPrice ─────────────────────────────────────────────────────────

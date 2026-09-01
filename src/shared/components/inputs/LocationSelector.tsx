@@ -28,6 +28,17 @@ interface LocationSelectorProps {
   className?: string;
   /** Which address dataset to search: 'title' | 'dopa'. Defaults to searching both. */
   addressSource?: AddressSource;
+  /**
+   * Resolve an ALREADY-STORED code against both masters, while the picker still offers only
+   * `addressSource`.
+   *
+   * For a form whose source has been changed after rows were saved. The two masters diverged in
+   * 2026-07 and 3,715 Title sub-district codes exist in no DOPA table, so resolving a stored code
+   * strictly against the new source leaves the field blank on a record nobody has edited — while
+   * the disabled district and province inputs go on showing their saved names. Reading from both
+   * keeps those records legible; the choice offered for a NEW pick is unaffected.
+   */
+  resolveFromAnySource?: boolean;
 }
 
 const LocationSelector = ({
@@ -45,6 +56,7 @@ const LocationSelector = ({
   error,
   className,
   addressSource,
+  resolveFromAnySource = false,
 }: LocationSelectorProps) => {
   const { setValue, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
@@ -56,6 +68,9 @@ const LocationSelector = ({
 
   const [selectedAddress, setSelectedAddress] = useState<ThaiAddress | null>(null);
 
+  // undefined makes findAddressBySubDistrictCode search both datasets, title first.
+  const resolveSource = resolveFromAnySource ? undefined : addressSource;
+
   // Watch sub-district code for form state
   const subDistrictCode = watch(name);
 
@@ -63,15 +78,15 @@ const LocationSelector = ({
   const displayAddress = useMemo(() => {
     if (selectedAddress) return selectedAddress;
     if (subDistrictCode) {
-      return findAddressBySubDistrictCode(subDistrictCode, addressSource) || null;
+      return findAddressBySubDistrictCode(subDistrictCode, resolveSource) || null;
     }
     return null;
-  }, [selectedAddress, subDistrictCode, addressSource]);
+  }, [selectedAddress, subDistrictCode, resolveSource]);
 
   // Sync selectedAddress when form is reset with API data
   useEffect(() => {
     if (subDistrictCode) {
-      const found = findAddressBySubDistrictCode(subDistrictCode, addressSource);
+      const found = findAddressBySubDistrictCode(subDistrictCode, resolveSource);
       if (found) {
         setSelectedAddress(found);
 
@@ -94,7 +109,7 @@ const LocationSelector = ({
     } else {
       setSelectedAddress(null);
     }
-  }, [subDistrictCode, subDistrictNameField, districtNameField, provinceNameField, addressSource]);
+  }, [subDistrictCode, subDistrictNameField, districtNameField, provinceNameField, resolveSource]);
 
   const handleAddressSelect = (address: ThaiAddress | null) => {
     setSelectedAddress(address);

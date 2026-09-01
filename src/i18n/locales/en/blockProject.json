@@ -209,14 +209,12 @@
       "message": "Uploading a new file will replace all current unit data. This cannot be undone.",
       "confirm": "Replace"
     },
-    "confirmDelete": {
-      "title": "Delete upload?",
-      "confirm": "Delete"
-    },
     "summary": {
-      "towers": "Towers:",
-      "models": "Models:",
-      "totalUnits": "Total Units:"
+      "towers": "Towers",
+      "models": "Models",
+      "totalUnits": "Total Units",
+      "remainingUnits": "Remaining",
+      "soldUnits": "Sold"
     },
     "cols": {
       "no": "No",
@@ -236,16 +234,41 @@
       "houseNo": "House No",
       "modelName": "Model Name",
       "numFloors": "No. of Floors",
-      "landAreaSqWa": "Land Area (Sq.Wa)"
+      "landAreaSqWa": "Land Area (Sq.Wa)",
+      "saleStatus": "Status"
     },
     "reappraisal": {
       "title": "Update Units from Revised Excel (Re-match)",
-      "hint": "Upload an updated Excel to re-match seeded units. Rows present in the file stay unsold; rows missing are auto-marked sold. New rows are counted but not added.",
-      "normalUploadNote": "Use this upload to add new unit inventory only.",
-      "resultToast": "Re-match complete: {{matched}} unsold, {{autoSold}} auto-sold, {{added}} new (not added)"
+      "hint": "Upload a revised Excel to re-match the seeded units. Rows present in the file stay unsold; unsold rows missing from it are marked sold. Changed values and new rows are applied only after you confirm them in the review dialog.",
+      "action": "Upload Excel to re-match"
     },
-    "aria": {
-      "deleteUpload": "Delete upload"
+    "aria": {},
+    "saleStatus": {
+      "sold": "Sold",
+      "available": "Available"
+    },
+    "importHint": "Upload an Excel of the project inventory. It replaces the current set of units and the prices calculated from them.",
+    "uploading": "Uploading…",
+    "lastUpload": "Last",
+    "hideHistory": "Hide history",
+    "showHistory": "History ({{count}})",
+    "systemBatch": "System",
+    "searchPlaceholder": "Search plot, house or room number",
+    "noMatch": "No unit matches these filters",
+    "shownOf": "showing {{shown}} of {{total}}",
+    "filter": {
+      "all": "All",
+      "available": "Available",
+      "sold": "Sold",
+      "allModels": "All models"
+    },
+    "outcome": {
+      "imported": "imported {{count}} unit(s)",
+      "autoSold": "{{count}} auto-sold",
+      "updated": "{{count}} updated",
+      "added": "{{count}} added",
+      "noChange": "no change",
+      "notRecorded": "not recorded"
     }
   },
   "unitVerification": {
@@ -257,7 +280,8 @@
       "sold": "Sold",
       "newlySold": "Newly Sold",
       "available": "Available",
-      "matchDifference": "Match Difference"
+      "matchDifference": "Match Difference",
+      "added": "Added"
     },
     "status": {
       "Sold": "Sold",
@@ -268,11 +292,12 @@
     "cols": {
       "status": "Status"
     },
-    "matchDifferenceHint": "Resolve {{count}} match difference(s): fix the Excel and re-upload.",
     "apply": "Apply",
     "applying": "Applying...",
     "cancel": "Cancel",
-    "applySuccess": "Units updated successfully"
+    "applySuccess": "Units updated successfully",
+    "addedSectionLabel": "{{count}} unit(s) this file would add",
+    "confirmChanges": "I reviewed the changes above — update {{changed}} existing unit(s) and add {{added}} new one(s)."
   },
   "towerListing": {
     "grid": "Grid",

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 
 import { useAppraisalId, useAppraisalContext } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
-import UploadArea from '@/shared/components/inputs/UploadArea';
+import Dropdown from '@/shared/components/inputs/Dropdown';
+import TextInput from '@/shared/components/inputs/TextInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 import {
@@ -15,7 +17,6 @@ import {
   useUploadProjectUnits,
   useUploadReappraisalUnits,
   useReappraisalPreview,
-  useDeleteProjectUnitUpload,
 } from '../../api/projectUnit';
 import type { ReappraisalPreviewResult } from '../../api/projectUnit';
 import UnitVerificationDialog from '../UnitVerificationDialog';
@@ -29,25 +30,58 @@ type AppError = AxiosError & { apiError?: ApiError };
 const ALLOWED_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
-// ── Upload History Table ──────────────────────────────────────────────────────
+// ── Upload history ────────────────────────────────────────────────────────────
 
-function UploadHistoryTable({
+// Read-only on purpose. Deleting a batch used to remove its units, which is a real undo only
+// for the very first upload of a new project — in a reappraisal the units come from the
+// collateral master, and the batch that owns them is the seed. Removing it took the whole
+// inventory with the sale state, prices and AS400 ids that no workbook carries. Deleting a
+// re-match batch was no better: it dropped the rows the file added but left the units it had
+// marked sold and the prices it had overwritten, so the button promised an undo it could not
+// deliver. The history is a record of what happened, nothing more.
+
+/**
+ * One line saying what a batch did to the project.
+ *
+ * The re-match counters are null for anything that is not a re-match, and for rows written
+ * before the server started recording them — "not recorded" and "changed nothing" are different
+ * answers and are not collapsed into one.
+ */
+function useUploadOutcome() {
+  const { t } = useTranslation('blockProject');
+
+  return (upload: ProjectUnitUpload): string => {
+    const isRematch = upload.autoSoldUnits !== null && upload.autoSoldUnits !== undefined;
+
+    if (!isRematch) {
+      if (upload.addedUnits > 0)
+        return t('unitListing.outcome.imported', { count: upload.addedUnits });
+      return t('unitListing.outcome.notRecorded');
+    }
+
+    const parts: string[] = [];
+    if (upload.autoSoldUnits)
+      parts.push(t('unitListing.outcome.autoSold', { count: upload.autoSoldUnits }));
+    if (upload.updatedUnits)
+      parts.push(t('unitListing.outcome.updated', { count: upload.updatedUnits }));
+    if (upload.addedUnits) parts.push(t('unitListing.outcome.added', { count: upload.addedUnits }));
+    return parts.length > 0 ? parts.join(' · ') : t('unitListing.outcome.noChange');
+  };
+}
+
+function UploadHistoryList({
   uploads,
   isLoading,
-  readOnly,
-  onDelete,
-  deletingId,
 }: {
   uploads: ProjectUnitUpload[];
   isLoading: boolean;
-  readOnly: boolean;
-  onDelete: (upload: ProjectUnitUpload) => void;
-  deletingId: string | null;
 }) {
   const { t } = useTranslation('blockProject');
+  const describe = useUploadOutcome();
+
   if (isLoading) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 px-4 py-3">
         {[1, 2, 3].map(i => (
           <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
         ))}
@@ -60,63 +94,40 @@ function UploadHistoryTable({
     );
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">
-              {t('unitListing.cols.no')}
-            </th>
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">
-              {t('unitListing.cols.fileName')}
-            </th>
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">
-              {t('unitListing.cols.dateTime')}
-            </th>
-            <th className="text-left py-2 px-3 text-gray-500 font-medium">
-              {t('unitListing.cols.status')}
-            </th>
-            <th className="py-2 px-3" />
-          </tr>
-        </thead>
-        <tbody>
-          {uploads.map((upload, index) => (
-            <tr key={upload.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-2 px-3 text-gray-600">{index + 1}</td>
-              <td
-                className="py-2 px-3 text-gray-800 max-w-[180px] truncate"
-                title={upload.fileName}
-              >
-                {upload.fileName}
-              </td>
-              <td className="py-2 px-3 text-gray-600 whitespace-nowrap">
-                {new Date(upload.uploadedAt).toLocaleString()}
-              </td>
-              <td className="py-2 px-3">
-                {upload.isUsed && (
-                  <Badge type="status" value="completed">
-                    {t('unitListing.cols.used')}
-                  </Badge>
-                )}
-              </td>
-              <td className="py-2 px-3 text-right">
-                {!readOnly && (
-                  <button
-                    type="button"
-                    onClick={() => onDelete(upload)}
-                    disabled={deletingId === upload.id}
-                    className="text-gray-400 hover:text-danger transition-colors disabled:opacity-50"
-                    title={t('unitListing.aria.deleteUpload')}
-                  >
-                    <Icon style="regular" name="trash" className="size-3.5" />
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <ul className="divide-y divide-gray-100">
+      {uploads.map(upload => (
+        <li
+          key={upload.id}
+          className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto_auto] gap-x-4 gap-y-1 items-center px-4 py-2.5"
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className={clsx(
+                'truncate text-xs',
+                upload.isSystemGenerated ? 'text-gray-500 italic' : 'text-gray-800',
+              )}
+              title={upload.fileName}
+            >
+              {upload.fileName}
+            </span>
+            {upload.isSystemGenerated && (
+              <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                {t('unitListing.systemBatch')}
+              </span>
+            )}
+            {upload.isUsed && (
+              <Badge type="status" value="completed">
+                {t('unitListing.cols.used')}
+              </Badge>
+            )}
+          </div>
+          <span className="text-xs text-gray-500 whitespace-nowrap">{describe(upload)}</span>
+          <span className="text-xs text-gray-400 whitespace-nowrap tabular-nums">
+            {new Date(upload.uploadedAt).toLocaleString()}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -135,6 +146,11 @@ function UnitResultTable({
   projectType: ProjectType;
 }) {
   const { t } = useTranslation('blockProject');
+  // Resolved once for the table rather than once per row — the listing now renders every unit of
+  // the project and re-renders on each keystroke in the search box.
+  const soldLabel = t('unitListing.saleStatus.sold');
+  const availableLabel = t('unitListing.saleStatus.available');
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -155,9 +171,9 @@ function UnitResultTable({
 
   if (isCondo(projectType)) {
     return (
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto max-h-full">
         <table className="w-full text-xs">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                 {t('unitListing.cols.sqNo')}
@@ -175,6 +191,9 @@ function UnitResultTable({
                 {t('unitListing.cols.roomNo')}
               </th>
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.saleStatus')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                 {t('unitListing.cols.modelType')}
               </th>
               <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
@@ -187,12 +206,24 @@ function UnitResultTable({
           </thead>
           <tbody>
             {units.map(unit => (
-              <tr key={unit.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr
+                key={unit.id}
+                className={clsx(
+                  'border-b border-gray-100 hover:bg-gray-50',
+                  unit.isSold && 'text-gray-400 [&>td]:text-gray-400',
+                )}
+              >
                 <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
                 <td className="py-2 px-3 text-gray-800">{unit.floor ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
+                <td className="py-2 px-3">
+                  <SaleStatusBadge
+                    isSold={unit.isSold}
+                    label={unit.isSold ? soldLabel : availableLabel}
+                  />
+                </td>
                 <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
                 <td className="py-2 px-3 text-gray-800 text-right">
                   {unit.usableArea?.toLocaleString() ?? '-'}
@@ -210,9 +241,9 @@ function UnitResultTable({
 
   // LandAndBuilding columns
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-full">
       <table className="w-full text-xs">
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-50 sticky top-0 z-10">
           <tr>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
               {t('unitListing.cols.sqNo')}
@@ -222,6 +253,9 @@ function UnitResultTable({
             </th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
               {t('unitListing.cols.houseNo')}
+            </th>
+            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              {t('unitListing.cols.saleStatus')}
             </th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
               {t('unitListing.cols.modelName')}
@@ -242,10 +276,22 @@ function UnitResultTable({
         </thead>
         <tbody>
           {units.map(unit => (
-            <tr key={unit.id} className="border-b border-gray-100 hover:bg-gray-50">
+            <tr
+              key={unit.id}
+              className={clsx(
+                'border-b border-gray-100 hover:bg-gray-50',
+                unit.isSold && 'text-gray-400 [&>td]:text-gray-400',
+              )}
+            >
               <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
               <td className="py-2 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
+              <td className="py-2 px-3">
+                <SaleStatusBadge
+                  isSold={unit.isSold}
+                  label={unit.isSold ? soldLabel : availableLabel}
+                />
+              </td>
               <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
               <td className="py-2 px-3 text-gray-800 text-right">
@@ -265,15 +311,56 @@ function UnitResultTable({
   );
 }
 
-// ── Summary Footer ────────────────────────────────────────────────────────────
+// ── Sale status ───────────────────────────────────────────────────────────────
 
-function SummaryFooter({
+/**
+ * The listing shows every unit of the project, so each row has to say which side of the line it
+ * is on. Without it a re-match upload looks like rows vanishing rather than rows being marked.
+ */
+function SaleStatusBadge({ isSold, label }: { isSold: boolean; label: string }) {
+  return (
+    <span
+      className={clsx(
+        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap',
+        isSold ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700',
+      )}
+    >
+      <span
+        className={clsx('size-1.5 rounded-full shrink-0', isSold ? 'bg-blue-500' : 'bg-amber-500')}
+      />
+      {label}
+    </span>
+  );
+}
+
+// ── Stat strip ────────────────────────────────────────────────────────────────
+
+function Stat({ label, value, dotColor }: { label: string; value: string; dotColor?: string }) {
+  return (
+    <div className="flex-1 min-w-[7rem] bg-white px-4 py-3 flex flex-col gap-0.5">
+      <span className="text-xs text-gray-500 flex items-center gap-1.5 whitespace-nowrap">
+        {dotColor && <span className={clsx('size-2 rounded-full shrink-0', dotColor)} />}
+        {label}
+      </span>
+      <span className="text-xl font-bold text-gray-900 tabular-nums tracking-tight">{value}</span>
+    </div>
+  );
+}
+
+/**
+ * The counts used to sit under the table, so the shape of the project was only knowable after
+ * scrolling past every row of it. They lead the screen now, and "total" is stated once — the
+ * card header used to repeat it.
+ */
+function StatStrip({
   units,
   totalCount,
+  remainingCount,
   projectType,
 }: {
   units: ProjectUnit[];
   totalCount: number;
+  remainingCount: number;
   projectType: ProjectType;
 }) {
   const { t } = useTranslation('blockProject');
@@ -281,25 +368,22 @@ function SummaryFooter({
   const models = new Set(units.map(u => u.modelType).filter(Boolean)).size;
 
   return (
-    <div className="flex items-center gap-6 py-3 px-4 bg-gray-50 rounded-lg border border-gray-200 text-sm">
+    <div className="flex flex-wrap gap-px bg-gray-200 rounded-xl overflow-hidden border border-gray-200">
+      <Stat label={t('unitListing.summary.totalUnits')} value={totalCount.toLocaleString()} />
+      <Stat
+        label={t('unitListing.summary.remainingUnits')}
+        value={remainingCount.toLocaleString()}
+        dotColor="bg-amber-500"
+      />
+      <Stat
+        label={t('unitListing.summary.soldUnits')}
+        value={(totalCount - remainingCount).toLocaleString()}
+        dotColor="bg-blue-500"
+      />
       {isCondo(projectType) && (
-        <>
-          <div className="flex items-center gap-2">
-            <span className="text-gray-500">{t('unitListing.summary.towers')}</span>
-            <span className="font-semibold text-gray-800">{towers}</span>
-          </div>
-          <div className="h-4 w-px bg-gray-300" />
-        </>
+        <Stat label={t('unitListing.summary.towers')} value={towers.toLocaleString()} />
       )}
-      <div className="flex items-center gap-2">
-        <span className="text-gray-500">{t('unitListing.summary.models')}</span>
-        <span className="font-semibold text-gray-800">{models}</span>
-      </div>
-      <div className="h-4 w-px bg-gray-300" />
-      <div className="flex items-center gap-2">
-        <span className="text-gray-500">{t('unitListing.summary.totalUnits')}</span>
-        <span className="font-semibold text-gray-800">{totalCount.toLocaleString()}</span>
-      </div>
+      <Stat label={t('unitListing.summary.models')} value={models.toLocaleString()} />
     </div>
   );
 }
@@ -315,8 +399,7 @@ interface UnitListingTabProps {
  * Column definitions branch on projectType; upload & history are identical.
  *
  * Divergences from originals:
- * - Uses UploadArea (Condo convention) rather than the custom drop-zone (Village convention).
- * - Accepts both .xlsx, .xls, .csv (Condo convention) — Village only accepted .xlsx.
+ * - Accepts .xlsx, .xls, .csv (Condo convention) — Village only accepted .xlsx.
  */
 export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { t } = useTranslation('blockProject');
@@ -333,14 +416,18 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { mutate: uploadReappraisalUnits, isPending: isReappraisalUploading } =
     useUploadReappraisalUnits();
   const { mutate: previewReappraisal, isPending: isPreviewing } = useReappraisalPreview();
-  const { mutate: deleteUpload, isPending: isDeleting } = useDeleteProjectUnitUpload();
+  const isUploadBusy = isUploading || isPreviewing || isReappraisalUploading;
 
   const units = unitsData?.units ?? [];
   const uploads = uploadsData ?? [];
   const totalCount = unitsData?.totalCount ?? units.length;
+  const remainingCount = unitsData?.remainingCount ?? units.filter(u => !u.isSold).length;
 
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [pendingDeleteUpload, setPendingDeleteUpload] = useState<ProjectUnitUpload | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [saleFilter, setSaleFilter] = useState<'all' | 'available' | 'sold'>('all');
+  const [modelFilter, setModelFilter] = useState('');
+  const [query, setQuery] = useState('');
   const [verificationState, setVerificationState] = useState<{
     file: File;
     result: ReappraisalPreviewResult;
@@ -363,6 +450,11 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (readOnly || !file || !appraisalId) return;
+
+    // Clear the input so picking the same file again fires another change event. The UploadArea
+    // this replaced reset the value on every click; without it, cancelling the replace-confirm
+    // dialog (or hitting a validation toast) leaves the button looking dead for that same file.
+    e.target.value = '';
 
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     let validationError: string | null = null;
@@ -425,10 +517,10 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     );
   };
 
-  const handleVerificationApply = () => {
+  const handleVerificationApply = (confirmUpdates: boolean) => {
     if (!verificationState || !appraisalId) return;
     uploadReappraisalUnits(
-      { appraisalId, file: verificationState.file },
+      { appraisalId, file: verificationState.file, confirmUpdates },
       {
         onSuccess: () => {
           toast.success(t('unitVerification.applySuccess'));
@@ -446,81 +538,180 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     setVerificationState(null);
   };
 
-  const handleConfirmDelete = () => {
-    if (readOnly || !pendingDeleteUpload || !appraisalId) return;
-    deleteUpload(
-      { appraisalId, uploadId: pendingDeleteUpload.id },
-      {
-        onSuccess: () => toast.success(t('toasts.units.deleteSuccess')),
-        onError: () => toast.error(t('toasts.units.deleteFailed')),
-        onSettled: () => setPendingDeleteUpload(null),
-      },
+  const latestUpload = uploads[0];
+  const describeUpload = useUploadOutcome();
+
+  const modelOptions = unitsData?.models ?? [];
+
+  // Trimmed before the emptiness test: a query of only spaces used to survive it, and matching on
+  // '' then dropped every unit whose plot, house, room and tower are all null.
+  const trimmedQuery = query.trim().toLowerCase();
+
+  // Everything except the sale filter. The status chips count within this so their numbers agree
+  // with the table; the table then applies the sale filter on top.
+  const narrowedUnits = units.filter(u => {
+    if (modelFilter && u.modelType !== modelFilter) return false;
+    if (!trimmedQuery) return true;
+    return [u.plotNumber, u.houseNumber, u.roomNumber, u.towerName].some(v =>
+      v?.toLowerCase().includes(trimmedQuery),
     );
-  };
+  });
+
+  const visibleUnits = narrowedUnits.filter(
+    u => saleFilter === 'all' || (saleFilter === 'sold') === u.isSold,
+  );
+  const isFiltered = visibleUnits.length !== units.length;
+
+  const uploadInput = (
+    <input
+      type="file"
+      accept=".xlsx,.xls,.csv"
+      className="sr-only"
+      disabled={readOnly || isUploadBusy}
+      onChange={isReappraisal ? handleReappraisalFileChange : handleFileChange}
+    />
+  );
 
   return (
-    <div className="flex flex-col gap-6 h-full min-h-0 overflow-y-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Reappraisal: the destructive "replace" upload is hidden — only the non-destructive
-            re-match upload is offered, in place of Import Units. */}
-        {isReappraisal ? (
-          <div className="bg-white rounded-xl border border-amber-200 p-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-1">
-              {t('unitListing.reappraisal.title')}
-            </h3>
-            <p className="text-xs text-gray-500 mb-4">{t('unitListing.reappraisal.hint')}</p>
-            <UploadArea
-              onChange={handleReappraisalFileChange}
-              accept=".xlsx,.xls,.csv"
-              isLoading={isPreviewing || isReappraisalUploading}
-              disabled={readOnly}
-              supportedText=".xlsx, .xls, .csv (max 10MB)"
-            />
-          </div>
-        ) : (
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">
-              {t('unitListing.importUnits')}
-            </h3>
-            <UploadArea
-              onChange={handleFileChange}
-              accept=".xlsx,.xls,.csv"
-              isLoading={isUploading}
-              disabled={readOnly}
-              supportedText=".xlsx, .xls, .csv (max 10MB)"
-            />
-          </div>
-        )}
+    <div className="flex flex-col gap-5 h-full min-h-0 overflow-y-auto">
+      <StatStrip
+        units={units}
+        totalCount={totalCount}
+        remainingCount={remainingCount}
+        projectType={projectType}
+      />
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">
-            {t('unitListing.uploadHistory')}
-          </h3>
-          <UploadHistoryTable
-            uploads={uploads}
-            isLoading={uploadsLoading}
-            readOnly={readOnly}
-            onDelete={setPendingDeleteUpload}
-            deletingId={isDeleting ? (pendingDeleteUpload?.id ?? null) : null}
-          />
-        </div>
-      </div>
+      {/* Action bar. The drop zone used to stand ~300px tall for a job done a handful of times per
+          project, pushing the table people actually come here for below the fold. */}
+      <div className="bg-white rounded-xl border border-gray-200">
+        <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+          <label
+            className={clsx(
+              'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
+              readOnly || isUploadBusy
+                ? 'bg-primary/40 text-white cursor-not-allowed'
+                : 'bg-primary text-white hover:bg-primary/90 cursor-pointer',
+            )}
+          >
+            <Icon style="regular" name="file-arrow-up" className="size-4" />
+            {isUploadBusy
+              ? t('unitListing.uploading')
+              : t(isReappraisal ? 'unitListing.reappraisal.action' : 'unitListing.importUnits')}
+            {uploadInput}
+          </label>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-gray-900">{t('unitListing.unitListing')}</h3>
-          {units.length > 0 && (
-            <span className="text-xs text-gray-500">
-              {t('unitListing.unitsCount', { count: totalCount.toLocaleString() })}
-            </span>
+          {latestUpload ? (
+            <p className="text-xs text-gray-500 flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
+              <span>{t('unitListing.lastUpload')}</span>
+              <span className="text-gray-700 font-medium truncate max-w-[16rem]">
+                {latestUpload.fileName}
+              </span>
+              <span>· {describeUpload(latestUpload)}</span>
+              <span className="text-gray-400">
+                · {new Date(latestUpload.uploadedAt).toLocaleString()}
+              </span>
+            </p>
+          ) : (
+            <p className="text-xs text-gray-400">{t('unitListing.noUploadHistory')}</p>
+          )}
+
+          <div className="flex-1" />
+
+          {uploads.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(v => !v)}
+              aria-expanded={historyOpen}
+              className="text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors"
+            >
+              {historyOpen
+                ? t('unitListing.hideHistory')
+                : t('unitListing.showHistory', { count: uploads.length })}
+            </button>
           )}
         </div>
-        <UnitResultTable units={units} isLoading={unitsLoading} projectType={projectType} />
-        {units.length > 0 && (
-          <div className="mt-4">
-            <SummaryFooter units={units} totalCount={totalCount} projectType={projectType} />
+
+        <p className="px-4 pb-3 text-xs text-gray-500">
+          {isReappraisal ? t('unitListing.reappraisal.hint') : t('unitListing.importHint')}
+        </p>
+
+        {historyOpen && (
+          <div className="border-t border-gray-100">
+            <UploadHistoryList uploads={uploads} isLoading={uploadsLoading} />
           </div>
         )}
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        {units.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
+            <div className="inline-flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
+              {(['all', 'available', 'sold'] as const).map(key => (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={saleFilter === key}
+                  onClick={() => setSaleFilter(key)}
+                  className={clsx(
+                    'text-xs px-3 py-1.5 rounded-md transition-colors',
+                    saleFilter === key
+                      ? 'bg-white text-gray-900 font-semibold shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900',
+                  )}
+                >
+                  {t(`unitListing.filter.${key}`)}
+                  <span className="ms-1.5 tabular-nums opacity-60">
+                    {key === 'all'
+                      ? narrowedUnits.length
+                      : key === 'sold'
+                        ? narrowedUnits.filter(u => u.isSold).length
+                        : narrowedUnits.filter(u => !u.isSold).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {modelOptions.length > 1 && (
+              <div className="w-44">
+                <Dropdown
+                  options={modelOptions.map(m => ({ value: m, label: m }))}
+                  value={modelFilter}
+                  onChange={v => setModelFilter(v ?? '')}
+                  placeholder={t('unitListing.filter.allModels')}
+                  // The model name IS the value — "Monaco - Monaco" would be noise
+                  showValuePrefix={false}
+                />
+              </div>
+            )}
+
+            <div className="flex-1 min-w-[12rem] max-w-xs">
+              <TextInput
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder={t('unitListing.searchPlaceholder')}
+                leftIcon={<Icon style="regular" name="magnifying-glass" className="size-3.5" />}
+              />
+            </div>
+
+            {isFiltered && (
+              <span className="text-xs text-gray-400 tabular-nums">
+                {t('unitListing.shownOf', { shown: visibleUnits.length, total: units.length })}
+              </span>
+            )}
+          </div>
+        )}
+
+        <div className="max-h-[60vh] overflow-y-auto">
+          {units.length > 0 && visibleUnits.length === 0 ? (
+            <p className="py-10 text-center text-sm text-gray-400">{t('unitListing.noMatch')}</p>
+          ) : (
+            <UnitResultTable
+              units={visibleUnits}
+              isLoading={unitsLoading}
+              projectType={projectType}
+            />
+          )}
+        </div>
       </div>
 
       <ConfirmDialog
@@ -532,17 +723,6 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         confirmText={t('unitListing.confirmReplace.confirm')}
         variant="warning"
         isLoading={isUploading}
-      />
-
-      <ConfirmDialog
-        isOpen={pendingDeleteUpload !== null}
-        onClose={() => setPendingDeleteUpload(null)}
-        onConfirm={handleConfirmDelete}
-        title={t('unitListing.confirmDelete.title')}
-        message={`This will permanently remove "${pendingDeleteUpload?.fileName}" and all its unit rows.`}
-        confirmText={t('unitListing.confirmDelete.confirm')}
-        variant="danger"
-        isLoading={isDeleting}
       />
 
       {verificationState && (

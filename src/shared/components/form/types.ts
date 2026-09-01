@@ -346,6 +346,11 @@ export interface LocationSelectorField extends BaseFormField {
   subDistrictNameField?: string;
   /** Which address dataset to search: 'title' | 'dopa'. Defaults to searching both. */
   addressSource?: AddressSource;
+  /**
+   * Resolve an already-stored code against both address masters while the picker still offers only
+   * `addressSource`. For a form whose source changed after rows were saved — see LocationSelector.
+   */
+  resolveFromAnySource?: boolean;
 }
 
 // =============================================================================

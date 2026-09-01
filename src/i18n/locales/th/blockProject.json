@@ -198,7 +198,7 @@
     }
   },
   "unitListing": {
-    "importUnits": "นำเข้ายูนิต",
+    "importUnits": "นำเข้ายูนิตจาก Excel",
     "uploadHistory": "ประวัติการอัปโหลด",
     "unitListing": "รายการยูนิต",
     "noUploadHistory": "ไม่มีประวัติการอัปโหลด",
@@ -209,14 +209,12 @@
       "message": "การอัปโหลดไฟล์ใหม่จะแทนที่ข้อมูลยูนิตทั้งหมดที่มีอยู่ ไม่สามารถย้อนกลับได้",
       "confirm": "แทนที่"
     },
-    "confirmDelete": {
-      "title": "ลบการอัปโหลด?",
-      "confirm": "ลบ"
-    },
     "summary": {
-      "towers": "อาคาร:",
-      "models": "แบบ:",
-      "totalUnits": "ยูนิตทั้งหมด:"
+      "towers": "อาคาร",
+      "models": "แบบ",
+      "totalUnits": "ยูนิตทั้งหมด",
+      "remainingUnits": "เหลือขาย",
+      "soldUnits": "ขายแล้ว"
     },
     "cols": {
       "no": "ลำดับ",
@@ -236,16 +234,41 @@
       "houseNo": "เลขที่บ้าน",
       "modelName": "ชื่อแบบ",
       "numFloors": "จำนวนชั้น",
-      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)"
+      "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)",
+      "saleStatus": "สถานะ"
     },
     "reappraisal": {
       "title": "อัปเดตยูนิตจาก Excel ที่แก้ไข (Re-match)",
-      "hint": "อัปโหลด Excel ที่อัปเดตเพื่อ re-match ยูนิตที่ seed ไว้ แถวที่มีในไฟล์จะคงสถานะยังไม่ขาย แถวที่ขาดหายจะถูกทำเครื่องหมายเป็นขายแล้วโดยอัตโนมัติ แถวใหม่จะถูกนับแต่ไม่ถูกเพิ่ม",
-      "normalUploadNote": "ใช้การอัปโหลดนี้เพื่อเพิ่มสินค้าคงคลังยูนิตใหม่เท่านั้น",
-      "resultToast": "Re-match เสร็จสิ้น: {{matched}} ยังไม่ขาย, {{autoSold}} ขายอัตโนมัติ, {{added}} ใหม่ (ไม่ถูกเพิ่ม)"
+      "hint": "อัปโหลด Excel ที่อัปเดตเพื่อ re-match กับยูนิตที่ seed ไว้ แถวที่มีในไฟล์จะคงสถานะยังไม่ขาย แถวที่ขาดหายและยังไม่ขายจะถูกทำเครื่องหมายเป็นขายแล้ว ส่วนค่าที่ต่างจากเดิมและแถวใหม่จะถูกบันทึกก็ต่อเมื่อยืนยันในหน้าตรวจสอบก่อน",
+      "action": "อัปโหลด Excel เพื่อ re-match"
     },
-    "aria": {
-      "deleteUpload": "ลบการอัปโหลด"
+    "aria": {},
+    "saleStatus": {
+      "sold": "ขายแล้ว",
+      "available": "ยังไม่ขาย"
+    },
+    "importHint": "อัปโหลด Excel รายการยูนิตของโครงการ ไฟล์นี้จะแทนที่ชุดยูนิตปัจจุบันและราคาที่คำนวณไว้ทั้งหมด",
+    "uploading": "กำลังอัปโหลด…",
+    "lastUpload": "ล่าสุด",
+    "hideHistory": "ซ่อนประวัติ",
+    "showHistory": "ประวัติ {{count}} รายการ",
+    "systemBatch": "ระบบ",
+    "searchPlaceholder": "ค้นเลขแปลง เลขที่บ้าน หรือเลขห้อง",
+    "noMatch": "ไม่พบยูนิตที่ตรงกับเงื่อนไข",
+    "shownOf": "แสดง {{shown}} จาก {{total}}",
+    "filter": {
+      "all": "ทั้งหมด",
+      "available": "ยังไม่ขาย",
+      "sold": "ขายแล้ว",
+      "allModels": "ทุกแบบ"
+    },
+    "outcome": {
+      "imported": "นำเข้า {{count}} ยูนิต",
+      "autoSold": "ขายอัตโนมัติ {{count}}",
+      "updated": "อัปเดต {{count}}",
+      "added": "เพิ่ม {{count}}",
+      "noChange": "ไม่มีการเปลี่ยนแปลง",
+      "notRecorded": "ไม่ได้บันทึกไว้"
     }
   },
   "unitVerification": {
@@ -257,7 +280,8 @@
       "sold": "ขายแล้ว",
       "newlySold": "ขายใหม่",
       "available": "ยังไม่ขาย",
-      "matchDifference": "ข้อมูลไม่ตรง"
+      "matchDifference": "ข้อมูลไม่ตรง",
+      "added": "เพิ่มใหม่"
     },
     "status": {
       "Sold": "ขายแล้ว",
@@ -268,11 +292,12 @@
     "cols": {
       "status": "สถานะ"
     },
-    "matchDifferenceHint": "พบ {{count}} รายการที่ข้อมูลไม่ตรงกัน: แก้ไข Excel แล้วอัปโหลดใหม่",
     "apply": "ยืนยัน",
     "applying": "กำลังบันทึก...",
     "cancel": "ยกเลิก",
-    "applySuccess": "อัปเดตยูนิตสำเร็จ"
+    "applySuccess": "อัปเดตยูนิตสำเร็จ",
+    "addedSectionLabel": "ไฟล์นี้จะเพิ่ม {{count}} ยูนิต",
+    "confirmChanges": "ตรวจรายการข้างบนแล้ว — อัปเดต {{changed}} ยูนิตเดิม และเพิ่มใหม่ {{added}} ยูนิต"
   },
   "towerListing": {
     "grid": "กริด",
