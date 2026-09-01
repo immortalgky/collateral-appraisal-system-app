@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -212,6 +212,21 @@ export default function AppointmentAndFeePage() {
       toast.error(error.apiError?.detail || t('fee.toasts.feeTypeUpdateFailed'));
     }
   };
+
+  useEffect(() => {
+    if (!currentFee) return;
+    const feePaymentType = currentFee.feePaymentType ?? '';
+    if (!FULL_BANK_ABSORB_FEE_TYPES.includes(feePaymentType)) return;
+    if (updateAppraisalFee.isPending) return;
+    const total = currentFee.totalFeeAfterVAT ?? 0;
+    if ((currentFee.bankAbsorbAmount ?? 0) === total) return;
+    updateAppraisalFee.mutate({
+      appraisalId,
+      feeId: currentFee.id ?? '',
+      feePaymentType,
+      bankAbsorbAmount: total,
+    });
+  }, [currentFee?.id, currentFee?.feePaymentType, currentFee?.totalFeeAfterVAT]);
 
   const handleUpdateBankAbsorbAmount = async (amount: number) => {
     if (!currentFee) return;
