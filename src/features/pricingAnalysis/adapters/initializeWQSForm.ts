@@ -60,7 +60,9 @@ function buildFinalValue(property?: Record<string, unknown>) {
       ? Number(property.totalBuildingArea)
       : property?.usableArea
         ? Number(property.usableArea)
-        : undefined,
+        : property.standardUsableArea
+          ? Number(property.standardUsableArea)
+          : undefined,
     finalValue: 0,
     finalValueRounded: 0,
     coefficientOfDecision: 0,
