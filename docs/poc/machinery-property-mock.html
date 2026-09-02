@@ -1,0 +1,1249 @@
+<title>สถานะเครื่องจักรและการรับรองราคา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Sarabun:wght@400;600;700&display=swap">
+
+<style>
+:root {
+  --ground:      #eef1f3;
+  --surface:     #ffffff;
+  --surface-alt: #f6f8f9;
+  --line:        #dbe1e5;
+  --line-strong: #b9c3ca;
+  --ink:         #161a1d;
+  --ink-2:       #3d464d;
+  --muted:       #6b757d;
+  --accent:      #1f5f8b;
+  --accent-soft: #e2eef6;
+  --warn:        #8d570f;
+  --warn-soft:   #fbf0dd;
+  --alert:       #8c3626;
+  --alert-soft:  #fbe7e2;
+  --ok:          #2c6a4e;
+  --ok-soft:     #e2f1e9;
+  --new:         #5c3d8f;
+  --new-soft:    #ede7f8;
+  --paper:       #ffffff;
+  --paper-ink:   #14181b;
+  --shadow:      0 1px 2px rgba(20,30,38,.06), 0 8px 24px -16px rgba(20,30,38,.35);
+  --radius:      6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #101315;
+    --surface:     #1a1f22;
+    --surface-alt: #21272b;
+    --line:        #2b3237;
+    --line-strong: #3d464c;
+    --ink:         #e3e8ea;
+    --ink-2:       #b6c0c6;
+    --muted:       #87949c;
+    --accent:      #6faed9;
+    --accent-soft: #16303f;
+    --warn:        #d6a05a;
+    --warn-soft:   #33280f;
+    --alert:       #dd8b7c;
+    --alert-soft:  #3a1f19;
+    --ok:          #79bd99;
+    --ok-soft:     #16301f;
+    --new:         #b39ce0;
+    --new-soft:    #262038;
+    --paper:       #f4f2ee;
+    --paper-ink:   #14181b;
+    --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"] {
+  --ground:      #101315;
+  --surface:     #1a1f22;
+  --surface-alt: #21272b;
+  --line:        #2b3237;
+  --line-strong: #3d464c;
+  --ink:         #e3e8ea;
+  --ink-2:       #b6c0c6;
+  --muted:       #87949c;
+  --accent:      #6faed9;
+  --accent-soft: #16303f;
+  --warn:        #d6a05a;
+  --warn-soft:   #33280f;
+  --alert:       #dd8b7c;
+  --alert-soft:  #3a1f19;
+  --ok:          #79bd99;
+  --ok-soft:     #16301f;
+  --new:         #b39ce0;
+  --new-soft:    #262038;
+  --paper:       #f4f2ee;
+  --paper-ink:   #14181b;
+  --shadow:      0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.8);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans Thai', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1240px; margin: 0 auto; padding: 0 20px 72px; }
+
+/* ── masthead ─────────────────────────────────────────── */
+.masthead {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+.masthead .wrap { padding-top: 22px; padding-bottom: 0; }
+.eyebrow {
+  font-size: 11px; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--muted); font-weight: 600; margin: 0 0 6px;
+}
+h1 { font-size: 23px; line-height: 1.25; margin: 0 0 4px; font-weight: 600; text-wrap: balance; }
+.lede { margin: 0 0 4px; color: var(--ink-2); max-width: 66ch; }
+.mock-note {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin: 10px 0 18px; padding: 5px 10px;
+  background: var(--warn-soft); color: var(--warn);
+  border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  border-radius: var(--radius); font-size: 12.5px; font-weight: 500;
+}
+
+/* ── tabs ─────────────────────────────────────────────── */
+.tabs { display: flex; gap: 2px; }
+.tab {
+  appearance: none; border: 1px solid transparent; border-bottom: none;
+  background: none; cursor: pointer; color: var(--muted);
+  font: inherit; font-weight: 500; font-size: 13.5px;
+  padding: 9px 15px; border-radius: var(--radius) var(--radius) 0 0;
+  position: relative; top: 1px;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] {
+  background: var(--ground); border-color: var(--line);
+  color: var(--ink); font-weight: 600;
+}
+.tab .tab-kind {
+  font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); display: block; font-weight: 600;
+}
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── generic panel ────────────────────────────────────── */
+.panel {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.panel-hd {
+  padding: 13px 18px; border-bottom: 1px solid var(--line);
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+.panel-hd h2 { font-size: 14.5px; margin: 0; font-weight: 600; }
+.panel-hd .sub { font-size: 12px; color: var(--muted); }
+.panel-bd { padding: 18px; }
+
+section[hidden] { display: none !important; }
+.layout { display: grid; grid-template-columns: minmax(0,1fr) 340px; gap: 18px; align-items: start; margin-top: 20px; }
+@media (max-width: 1020px) { .layout { grid-template-columns: minmax(0,1fr); } }
+.side { position: sticky; top: 16px; display: grid; gap: 14px; }
+
+/* ── machine switcher ─────────────────────────────────── */
+.switcher { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; }
+.mchip {
+  appearance: none; cursor: pointer; font: inherit; font-size: 12.5px;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--line); border-radius: 100px;
+  padding: 5px 13px 5px 9px; display: inline-flex; align-items: center; gap: 7px;
+}
+.mchip:hover { border-color: var(--line-strong); }
+.mchip[aria-pressed="true"] {
+  background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600;
+}
+.mchip .seq {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11px;
+  background: var(--surface-alt); border-radius: 4px; padding: 1px 5px;
+  border: 1px solid var(--line);
+}
+.mchip[aria-pressed="true"] .seq { background: var(--surface); border-color: var(--accent); }
+.mchip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── form grid ────────────────────────────────────────── */
+.fgrid { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 14px 12px; }
+@media (max-width: 720px) { .fgrid > .fld { grid-column: span 12 !important; } }
+.fld { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.fld > .lbl-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fld label {
+  font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0;
+}
+.fld .gloss { font-weight: 400; color: var(--muted); }
+.fld .req { color: var(--alert); font-weight: 700; }
+.badge-new {
+  font-size: 9.5px; letter-spacing: .09em; text-transform: uppercase; font-weight: 700;
+  background: var(--new-soft); color: var(--new); border-radius: 3px; padding: 1px 5px;
+  border: 1px solid color-mix(in srgb, var(--new) 30%, transparent);
+}
+.fld input[type="text"], .fld input[type="date"], .fld select, .fld textarea {
+  font: inherit; font-size: 13px; width: 100%;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 5px;
+  padding: 6px 9px; min-height: 32px;
+}
+.fld textarea { min-height: 54px; resize: vertical; }
+.fld input:focus-visible, .fld select:focus-visible, .fld textarea:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: -1px; border-color: var(--accent);
+}
+.fld input:disabled, .fld select:disabled {
+  background: var(--surface-alt); color: var(--muted); cursor: not-allowed;
+}
+.fld .num { text-align: right; font-variant-numeric: tabular-nums; }
+.fld.is-new { position: relative; }
+.fld.is-new::before {
+  content: ""; position: absolute; left: -8px; top: 2px; bottom: 2px;
+  width: 2px; background: var(--new); border-radius: 2px;
+}
+.fld .hint { font-size: 11px; color: var(--muted); }
+.fld .err { font-size: 11px; color: var(--alert); font-weight: 500; }
+.fld.invalid input, .fld.invalid select { border-color: var(--alert); }
+
+/* ── help affordance ──────────────────────────────────── */
+.helpbtn {
+  appearance: none; cursor: pointer; flex: none;
+  width: 15px; height: 15px; padding: 0; border-radius: 50%;
+  border: 1px solid var(--line-strong); background: var(--surface);
+  color: var(--muted); font: inherit; font-size: 10px; font-weight: 700;
+  line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+.helpbtn:hover, .helpbtn[aria-expanded="true"] {
+  border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
+}
+.helpbtn.armed { border-color: var(--warn); color: var(--warn); background: var(--warn-soft); }
+.helpbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#help-pop {
+  position: fixed; z-index: 50; width: 296px; max-width: calc(100vw - 24px);
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: var(--radius);
+  box-shadow: 0 4px 8px rgba(20,30,38,.10), 0 18px 40px -20px rgba(20,30,38,.55);
+  padding: 12px 13px; font-size: 12.5px; line-height: 1.55;
+}
+#help-pop[hidden] { display: none; }
+#help-pop .ht { font-weight: 600; font-size: 12.5px; margin: 0 0 6px; }
+#help-pop .hl { margin: 0 0 7px; color: var(--ink-2); }
+#help-pop .hl:last-child { margin-bottom: 0; }
+#help-pop .conds { list-style: none; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+#help-pop .conds li { display: grid; grid-template-columns: 15px minmax(0,1fr); gap: 7px; align-items: start; }
+#help-pop .conds .m { font-weight: 700; line-height: 1.5; }
+#help-pop .conds li.on  { color: var(--ink); }
+#help-pop .conds li.on .m { color: var(--warn); }
+#help-pop .conds li.off { color: var(--muted); }
+#help-pop .outcome {
+  margin-top: 9px; padding: 7px 9px; border-radius: 5px; font-size: 12px;
+  background: var(--surface-alt); border: 1px solid var(--line);
+}
+#help-pop .outcome.fired { background: var(--warn-soft); border-color: color-mix(in srgb, var(--warn) 30%, transparent); color: var(--warn); }
+#help-pop .close {
+  appearance: none; border: none; background: none; cursor: pointer; font: inherit;
+  color: var(--muted); font-size: 11.5px; padding: 0; margin-top: 9px; text-decoration: underline;
+}
+
+/* toggle */
+.toggle { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 5px; overflow: hidden; }
+.toggle button {
+  appearance: none; font: inherit; font-size: 12.5px; cursor: pointer;
+  background: var(--surface); color: var(--muted); border: none;
+  padding: 6px 13px; min-height: 32px;
+}
+.toggle button + button { border-left: 1px solid var(--line-strong); }
+.toggle button[aria-pressed="true"] { background: var(--accent); color: #fff; font-weight: 600; }
+.toggle.locked button { cursor: not-allowed; opacity: .62; }
+.toggle.locked button[aria-pressed="true"] { background: var(--line-strong); color: var(--surface); }
+.toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+/* radio button row */
+.radiorow { display: flex; flex-wrap: wrap; gap: 6px; }
+.radiorow button {
+  appearance: none; font: inherit; font-size: 12.5px; cursor: pointer;
+  background: var(--surface); color: var(--ink-2);
+  border: 1px solid var(--line-strong); border-radius: 5px; padding: 5px 12px;
+}
+.radiorow button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.radiorow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── side panels ──────────────────────────────────────── */
+.rule-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.rule-list li { display: grid; grid-template-columns: 16px minmax(0,1fr); gap: 8px; font-size: 12.5px; line-height: 1.5; }
+.rule-list .mark { font-weight: 700; font-size: 12px; line-height: 1.6; }
+.rule-list .fired { color: var(--alert); }
+.rule-list .idle  { color: var(--muted); }
+.rule-list li.on { color: var(--ink); }
+.rule-list li.off { color: var(--muted); }
+code, .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px; }
+code { background: var(--surface-alt); padding: 1px 4px; border-radius: 3px; }
+pre.payload {
+  margin: 0; padding: 12px; background: var(--surface-alt);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: 11.5px;
+  line-height: 1.65; overflow-x: auto; color: var(--ink-2);
+}
+pre.payload .k { color: var(--accent); }
+pre.payload .co { color: var(--muted); font-style: italic; }
+pre.payload .hl { background: var(--new-soft); border-radius: 2px; }
+.coerce {
+  margin-top: 10px; font-size: 12px; color: var(--warn);
+  background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+  border-radius: var(--radius); padding: 8px 10px;
+}
+.coerce[hidden] { display: none; }
+
+/* ── tab 2: counts ────────────────────────────────────── */
+.counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(184px, 1fr)); gap: 14px; }
+.count {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 11px 12px; background: var(--surface-alt);
+  display: grid; gap: 7px;
+}
+.count > .cl { font-size: 12px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 6px; }
+.count input {
+  font: inherit; font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 17px; font-weight: 500; text-align: right; font-variant-numeric: tabular-nums;
+  width: 100%; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line-strong); border-radius: 5px; padding: 4px 9px;
+}
+.count input:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; }
+.count input.overridden { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; }
+.count .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 22px; }
+.count .derived { font-size: 11.5px; color: var(--muted); }
+.count .derived b { font-family: 'IBM Plex Mono', ui-monospace, monospace; color: var(--ink-2); }
+.count .state { font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; font-weight: 700; }
+.count .state.auto { color: var(--ok); }
+.count .state.manual { color: var(--accent); }
+.mini {
+  appearance: none; font: inherit; font-size: 11px; cursor: pointer;
+  border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink-2);
+  border-radius: 4px; padding: 2px 7px;
+}
+.mini:hover { border-color: var(--accent); color: var(--accent); }
+.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.btn {
+  appearance: none; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+  background: var(--accent); color: #fff; border: 1px solid var(--accent);
+  border-radius: 5px; padding: 7px 15px;
+}
+.btn.ghost { background: var(--surface); color: var(--ink-2); border-color: var(--line-strong); font-weight: 500; }
+.btn:hover { filter: brightness(1.08); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.actions { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+
+/* formula table */
+.tbl-scroll { overflow-x: auto; }
+table.formula { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 520px; }
+table.formula th, table.formula td {
+  text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top;
+}
+table.formula thead th {
+  font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--line-strong);
+}
+table.formula td.n { text-align: right; font-family: 'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+table.formula tbody tr:last-child td { border-bottom: none; }
+.q-flag {
+  margin-top: 14px; padding: 11px 13px; border-radius: var(--radius);
+  border: 1px solid color-mix(in srgb, var(--warn) 32%, transparent);
+  background: var(--warn-soft); color: var(--warn); font-size: 12.5px;
+}
+.q-flag strong { display: block; margin-bottom: 2px; }
+
+/* ── tab 3: report ────────────────────────────────────── */
+.sheet {
+  background: var(--paper); color: var(--paper-ink);
+  border: 1px solid var(--line-strong); border-radius: 3px;
+  padding: 30px 34px; box-shadow: var(--shadow);
+  font-family: 'Sarabun', 'IBM Plex Sans Thai', sans-serif;
+  max-width: 860px; margin: 0 auto;
+}
+.sheet .doc-hd { text-align: center; margin-bottom: 20px; }
+.sheet .doc-hd .t { font-weight: 700; font-size: 16px; }
+.sheet .doc-hd .s { font-size: 13px; color: #4a5157; }
+table.grid { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.grid th, table.grid td { border: 1px solid #98a1a8; padding: 6px 8px; vertical-align: top; }
+table.grid thead th { background: #e8eaec; font-weight: 700; font-size: 12.5px; text-align: center; }
+table.grid td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.grid tr.grp-total td { background: #f0f2f3; }
+.sheet .hdline { margin-bottom: 2px; }
+.sheet .r21 { margin-left: 14px; color: #333a40; }
+.sheet .item { margin-top: 2px; }
+.sheet mark {
+  background: #fdf0d0; color: inherit; padding: 0 2px; border-radius: 2px;
+  box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+.sheet mark.mk-notfound { background: #dfe9f4; }
+.sheet mark.mk-novalue  { background: #e6e0f2; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 16px; font-size: 12px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 22px; height: 11px; border-radius: 2px; display: inline-block; border: 1px solid var(--line); }
+
+.callout {
+  margin-top: 18px; border-left: 3px solid var(--accent);
+  background: var(--surface); border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  border-radius: 0 var(--radius) var(--radius) 0; padding: 13px 16px;
+}
+.callout h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+.callout p { margin: 0 0 6px; font-size: 12.5px; color: var(--ink-2); }
+.callout p:last-child { margin-bottom: 0; }
+.callout ol { margin: 6px 0 0; padding-left: 20px; font-size: 12.5px; color: var(--ink-2); }
+.callout li { margin-bottom: 3px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<header class="masthead">
+  <div class="wrap">
+    <p class="eyebrow">POC · Collateral Appraisal System</p>
+    <h1>สถานะเครื่องจักรและการรับรองราคา</h1>
+    <p class="lede">
+      5 ฟิลด์ใหม่บนหน้าข้อมูลเครื่องจักร ตัวเลขที่คำนวณให้ในแท็บสรุปเครื่องจักร
+      และผลที่ออกไปในรายงานสรุปการประเมิน — ทั้งสามหน้าใช้ข้อมูลชุดเดียวกัน แก้ที่แท็บแรกแล้วดูผลที่แท็บอื่นได้ทันที
+      ทุกช่องที่มีเงื่อนไขมีปุ่ม <b>?</b> กดดูได้ว่าค่ามาจากไหนและตอนนี้เข้าเงื่อนไขข้อไหนอยู่
+    </p>
+    <p class="mock-note">Mock เท่านั้น — ไม่ต่อ API ไม่บันทึกอะไร ปิดหน้าแล้วค่าหาย</p>
+    <div class="tabs" role="tablist" aria-label="มุมมอง">
+      <button class="tab" role="tab" id="tab-form" aria-controls="p-form" aria-selected="true">
+        <span class="tab-kind">หน้าจอ</span>ข้อมูลเครื่องจักร
+      </button>
+      <button class="tab" role="tab" id="tab-summary" aria-controls="p-summary" aria-selected="false">
+        <span class="tab-kind">หน้าจอ</span>สรุปเครื่องจักร
+      </button>
+      <button class="tab" role="tab" id="tab-report" aria-controls="p-report" aria-selected="false">
+        <span class="tab-kind">เอกสาร</span>รายงานสรุปการประเมิน
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ══════════ TAB 1 : FORM ══════════ -->
+  <section id="p-form" role="tabpanel" aria-labelledby="tab-form">
+    <div class="switcher" id="switcher" role="group" aria-label="เลือกเครื่องจักร"></div>
+    <div class="layout">
+      <div class="panel">
+        <div class="panel-hd">
+          <h2>ข้อมูลเครื่องจักร</h2>
+          <span class="sub">Machinery Information · <span id="which-group"></span></span>
+        </div>
+        <div class="panel-bd">
+          <div class="fgrid" id="fgrid"></div>
+        </div>
+      </div>
+
+      <aside class="side">
+        <div class="panel">
+          <div class="panel-hd"><h2>กติกาที่ domain บังคับ</h2></div>
+          <div class="panel-bd">
+            <ul class="rule-list" id="rules"></ul>
+            <div class="coerce" id="coerce" hidden></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-hd">
+            <h2>PUT machinery-detail</h2>
+            <span class="sub">5 ฟิลด์ใหม่</span>
+          </div>
+          <div class="panel-bd"><pre class="payload" id="payload"></pre></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="callout">
+      <h3>สิ่งที่อยากให้ช่วยดูในแท็บนี้</h3>
+      <ol>
+        <li>ปุ่ม <b>?</b> — จุดสีส้มในคำอธิบายคือเงื่อนไขที่กำลังทำงานอยู่ ลองกด ? ที่ Price Certified แล้วสลับ Registration Status ดู คำอธิบายจะอัปเดตตามทันที ข้อความอ่านแล้วเข้าใจไหม สั้นไปหรือยาวไป</li>
+        <li>ลำดับของ 5 ฟิลด์ใหม่ (แทรกต่อจาก Registration No.) และความกว้างที่จัดไว้ อ่านง่ายไหม</li>
+        <li>ข้อความบน toggle — ตอนนี้ทั้งไฟล์เป็น label อังกฤษ hardcode ไม่มี i18n เลย จึงใส่ภาษาอังกฤษไว้ตามแบบเดิม แล้ววงเล็บไทยกำกับในหน้านี้เฉย ๆ</li>
+        <li><b>รับรองราคา = ประเมินมูลค่า เป็นฟิลด์เดียวกัน</b> คอลัมน์ในฐานข้อมูลชื่อ <code>IsPriceCertified</code> แต่รายงานพิมพ์ว่า "ไม่ประเมินมูลค่า" — ป้ายบนหน้าจอควรใช้คำไหนให้ผู้ประเมินไม่งง</li>
+        <li>เครื่องที่ล็อกอยู่ (1.3 กับ 2.3) ไม่มีทางแก้เป็นรับรองราคาได้เลย ถ้าเคสจริงมีเครื่องที่<b>ยังไม่จดทะเบียนแต่ต้องประเมิน</b> ต้องบอกก่อน เพราะ invariant ปัจจุบันปิดทางไว้</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ══════════ TAB 2 : SUMMARY ══════════ -->
+  <section id="p-summary" role="tabpanel" aria-labelledby="tab-summary" hidden>
+    <div class="layout" style="grid-template-columns: minmax(0,1fr);">
+      <div class="panel">
+        <div class="panel-hd">
+          <h2>ข้อมูลเครื่องจักรทั่วไป</h2>
+          <span class="sub">จำนวนและสภาพโดยรวม · ระดับใบประเมิน (ทุกเครื่อง)</span>
+        </div>
+        <div class="panel-bd">
+          <div class="counts" id="counts"></div>
+          <div class="actions">
+            <button class="btn" id="fill-empty">ใช้ค่าที่คำนวณกับช่องที่ยังว่าง</button>
+            <button class="btn ghost" id="fill-all">เขียนทับทุกช่องด้วยค่าที่คำนวณ</button>
+            <button class="btn ghost" id="clear-all">ล้างทุกช่อง</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-hd">
+          <h2>ที่มาของแต่ละตัวเลข</h2>
+          <span class="sub">เงื่อนไขที่ใช้นับแต่ละช่อง</span>
+        </div>
+        <div class="panel-bd">
+          <div class="tbl-scroll">
+            <table class="formula">
+              <thead>
+                <tr><th>ช่อง</th><th>นับเครื่องที่</th><th style="width:74px;">คำนวณได้</th></tr>
+              </thead>
+              <tbody id="formula-body"></tbody>
+            </table>
+          </div>
+          <div class="q-flag">
+            <strong>จุดที่ต้องยืนยัน</strong>
+            "ประเมินตามเอกสาร" กับ "ยังไม่ได้ติดตั้ง" ตอนนี้นับจากเงื่อนไขเดียวกันเป๊ะ ๆ (<code>อยู่ระหว่างการจัดซื้อ</code>)
+            ตัวเลขสองช่องนี้จึงเท่ากันเสมอ — ถ้าธนาคารตั้งใจให้เท่ากันก็จบ แต่ถ้าคนละความหมาย บอกได้เลยว่า
+            "ประเมินตามเอกสาร" ต้องนับจากอะไร แล้วจะแก้สูตรก่อนลงมือเขียนจริง
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ TAB 3 : REPORT ══════════ -->
+  <section id="p-report" role="tabpanel" aria-labelledby="tab-report" hidden>
+    <div style="margin-top:20px;">
+      <div class="sheet">
+        <div class="doc-hd">
+          <div class="t">รายงานสรุปการประเมินมูลค่าทรัพย์สิน</div>
+          <div class="s">ประเภททรัพย์สิน : เครื่องจักรและอุปกรณ์</div>
+        </div>
+        <table class="grid">
+          <thead>
+            <tr>
+              <th style="width:118px;"></th>
+              <th>รายการทรัพย์สิน</th>
+              <th style="width:78px;">พื้นที่ / จำนวน</th>
+              <th style="width:76px;">ราคาต่อหน่วย</th>
+              <th style="width:96px;">ราคาประเมิน</th>
+            </tr>
+          </thead>
+          <tbody id="report-body"></tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span><i style="background:#dfe9f4;"></i> มาจาก Condition Use = Not Found</span>
+        <span><i style="background:#e6e0f2;"></i> มาจาก Price Certified = ไม่รับรอง (= ไม่ประเมินมูลค่า)</span>
+      </div>
+
+      <div class="callout">
+        <h3>สิ่งที่อยากให้ช่วยดูในแท็บนี้</h3>
+        <ol>
+          <li>บรรทัด <b>ร.2/1</b> — ใช้ <code>RegistrationNumber</code> ที่มีอยู่แล้ว เครื่องที่กรอกเลขเดียวกันจะถูกยุบเป็นบรรทัดเดียว เครื่องที่จดทะเบียนแต่ไม่ได้กรอกเลขจะไม่มีบรรทัดย่อย</li>
+          <li>วงเล็บท้ายรายการเหลือ 2 แบบ: <code>(สำรวจไม่พบ)</code> จาก Condition Use และ <code>(ไม่ประเมินมูลค่า)</code> จาก <code>IsPriceCertified = 0</code> — <b>เปลี่ยนจากที่ commit ไว้เดิม</b> ซึ่งพิมพ์ว่า "(ไม่รับรองราคาประเมิน)"</li>
+          <li>หัวข้อกลุ่มจะออกหลายบรรทัดเมื่อเครื่องในกลุ่มมีสถานะจดทะเบียนต่างกัน (กลุ่มที่ 2 เป็นตัวอย่าง)</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div id="help-pop" role="dialog" aria-label="คำอธิบายเงื่อนไขของฟิลด์" hidden></div>
+
+<script>
+/* ═══════════════ mock data ═══════════════
+   ค่าทั้งหมดสะท้อนคอลัมน์จริงบน appraisal.MachineryAppraisalDetails
+   installationStatus / machineType / conditionUse เก็บเป็น "code" ตาม GeneralParameters */
+
+const PARAM = {
+  MachineStatus: [
+    { code: '1', label: 'ติดตั้ง' },
+    { code: '2', label: 'อยู่ระหว่างการจัดซื้อ' },
+  ],
+  MachineType: [
+    { code: '1', label: 'ก่อสร้างและเครื่องจักรกลหนัก' },
+    { code: '2', label: 'อุตสหกรรม / เครื่องจักรการผลิด' },
+    { code: '3', label: 'พลังงาน/ เครื่องจักรสาธารณูปโภค' },
+  ],
+  ConditionUse: [
+    { code: '01', label: 'In Used' },
+    { code: '02', label: 'Not In Used' },
+    { code: '03', label: 'Not Found' },
+  ],
+};
+
+const GROUPS = [
+  { id: 'g1', number: 1, name: 'กลุ่มที่ 1 เครื่องจักรในสายการผลิต', value: 18450000 },
+  { id: 'g2', number: 2, name: 'กลุ่มที่ 2 เครื่องจักรสนับสนุนการผลิต', value: 3310000 },
+];
+
+const machines = [
+  {
+    seq: 1, group: 'g1',
+    propertyName: 'เครื่องฉีดพลาสติก สายการผลิต A',
+    isOwnerVerified: true, ownerName: 'บริษัท สยามโพลิเมอร์ อุตสาหกรรม จำกัด',
+    registrationNumber: '461488',
+    conditionUse: '01', isOperational: true,
+    machineName: 'เครื่องฉีดพลาสติก (Injection Molding Machine)',
+    brand: 'HAITIAN', model: 'MA2500III', series: 'MARS III',
+    yearOfManufacture: 2562, quantity: 1, manufacturer: 'จีน',
+    purchaseDate: '2562-08-14', purchasePrice: 6850000,
+    location: 'อาคารผลิต 1 ชั้น 1 โซน A',
+    machineCondition: 'ดี', machineAge: 7,
+    usagePurpose: 'ฉีดขึ้นรูปชิ้นส่วนพลาสติก', capacity: '250 ตัน',
+    width: 6, length: 3, height: 3, machineDimensions: '6.0 x 3.0 x 3.0 ม.',
+    energyUse: 'ไฟฟ้า 3 เฟส 380V', machineEfficiency: '92%',
+    machineTechnology: 'ระบบไฮดรอลิกควบคุมด้วยเซอร์โว',
+    machineParts: 'ชุดฉีด, ชุดปิดแม่พิมพ์, ชุดควบคุมอุณหภูมิ',
+    other: '', remark: '', appraiserOpinion: 'สภาพใช้งานดี บำรุงรักษาสม่ำเสมอ',
+    /* ── 5 ฟิลด์ใหม่ ── */
+    installationStatus: '1', machineType: '2',
+    registrationStatus: true, invoiceNumber: '',
+    isPriceCertified: true,
+  },
+  {
+    seq: 2, group: 'g1',
+    propertyName: 'เครื่องบดเม็ดพลาสติก',
+    isOwnerVerified: true, ownerName: 'บริษัท สยามโพลิเมอร์ อุตสาหกรรม จำกัด',
+    registrationNumber: '461488',
+    conditionUse: '01', isOperational: true,
+    machineName: 'เครื่องบดเม็ดพลาสติก (Granulator)',
+    brand: 'SHINI', model: 'SG-2460', series: '',
+    yearOfManufacture: 2563, quantity: 2, manufacturer: 'ไต้หวัน',
+    purchaseDate: '2563-02-03', purchasePrice: 480000,
+    location: 'อาคารผลิต 1 ชั้น 1 โซน B',
+    machineCondition: 'ดี', machineAge: 6,
+    usagePurpose: 'บดเศษพลาสติกกลับเข้าสายการผลิต', capacity: '300 กก./ชม.',
+    width: 2, length: 1, height: 2, machineDimensions: '2.0 x 1.4 x 2.1 ม.',
+    energyUse: 'ไฟฟ้า 3 เฟส 380V', machineEfficiency: '88%',
+    machineTechnology: 'ใบมีดเหล็กกล้าชุบแข็ง',
+    machineParts: 'ชุดใบมีด, ตะแกรงคัดขนาด, ชุดดูดลม',
+    other: '', remark: '', appraiserOpinion: '',
+    installationStatus: '1', machineType: '2',
+    registrationStatus: true, invoiceNumber: '',
+    isPriceCertified: true,
+  },
+  {
+    seq: 3, group: 'g1',
+    propertyName: 'เครื่องทำน้ำเย็น (Chiller)',
+    isOwnerVerified: true, ownerName: 'บริษัท สยามโพลิเมอร์ อุตสาหกรรม จำกัด',
+    registrationNumber: '',
+    conditionUse: '03', isOperational: false,
+    machineName: 'เครื่องทำน้ำเย็นระบายความร้อนด้วยน้ำ',
+    brand: 'TRANE', model: 'CGWE-050', series: '',
+    yearOfManufacture: 2558, quantity: 1, manufacturer: 'ไทย',
+    purchaseDate: '', purchasePrice: null,
+    location: 'ดาดฟ้าอาคารผลิต 1',
+    machineCondition: '', machineAge: null,
+    usagePurpose: 'หล่อเย็นแม่พิมพ์', capacity: '50 ตันความเย็น',
+    width: null, length: null, height: null, machineDimensions: '',
+    energyUse: '', machineEfficiency: '', machineTechnology: '',
+    machineParts: '', other: '',
+    remark: 'ไม่พบเครื่องในวันสำรวจ ผู้ประกอบการแจ้งว่าส่งซ่อมภายนอก',
+    appraiserOpinion: '',
+    installationStatus: '1', machineType: '3',
+    registrationStatus: true, invoiceNumber: '',
+    isPriceCertified: false,
+  },
+  {
+    seq: 1, group: 'g2',
+    propertyName: 'สายพานลำเลียงอัตโนมัติ',
+    isOwnerVerified: true, ownerName: 'บริษัท สยามโพลิเมอร์ อุตสาหกรรม จำกัด',
+    registrationNumber: '',
+    conditionUse: '01', isOperational: false,
+    machineName: 'ระบบสายพานลำเลียงอัตโนมัติ',
+    brand: 'INTERROLL', model: 'MCP-1200', series: '',
+    yearOfManufacture: 2569, quantity: 1, manufacturer: 'เยอรมนี',
+    purchaseDate: '', purchasePrice: 2960000,
+    location: 'อาคารผลิต 2 (ระหว่างจัดหา)',
+    machineCondition: 'ใหม่', machineAge: 0,
+    usagePurpose: 'ลำเลียงชิ้นงานเข้าสู่จุดบรรจุ', capacity: '1,200 ชิ้น/ชม.',
+    width: 1, length: 24, height: 1, machineDimensions: '1.2 x 24.0 x 1.1 ม.',
+    energyUse: 'ไฟฟ้า 3 เฟส 380V', machineEfficiency: '', machineTechnology: '',
+    machineParts: '', other: '',
+    remark: 'ตั้งราคาตามใบเสนอราคาผู้ขาย ยังไม่ส่งมอบหน้างาน',
+    appraiserOpinion: '',
+    installationStatus: '2', machineType: '1',
+    registrationStatus: false, invoiceNumber: 'INV-2569/0431',
+    isPriceCertified: false,
+  },
+  {
+    seq: 2, group: 'g2',
+    propertyName: 'เครื่องอัดลมแบบสกรู (เลิกใช้งาน)',
+    isOwnerVerified: true, ownerName: 'บริษัท สยามโพลิเมอร์ อุตสาหกรรม จำกัด',
+    registrationNumber: '',
+    conditionUse: '02', isOperational: false,
+    machineName: 'เครื่องอัดลมแบบสกรู (Air Compressor)',
+    brand: 'ATLAS COPCO', model: 'GA22', series: '',
+    yearOfManufacture: 2551, quantity: 1, manufacturer: 'สวีเดน',
+    purchaseDate: '2551-11-20', purchasePrice: 620000,
+    location: 'ห้องเครื่องอาคารผลิต 1',
+    machineCondition: 'ทรุดโทรม', machineAge: 18,
+    usagePurpose: 'จ่ายลมอัดให้สายการผลิต (เลิกใช้แล้ว)', capacity: '22 kW',
+    width: 1, length: 1, height: 1, machineDimensions: '1.6 x 1.0 x 1.5 ม.',
+    energyUse: 'ไฟฟ้า 3 เฟส 380V', machineEfficiency: '', machineTechnology: '',
+    machineParts: '', other: '',
+    remark: 'หยุดใช้งาน ประเมินราคาซากตามน้ำหนักวัสดุ',
+    appraiserOpinion: 'ประเมินราคาซากตามน้ำหนักวัสดุ',
+    installationStatus: '1', machineType: '3',
+    registrationStatus: true, invoiceNumber: '',
+    isPriceCertified: true,
+  },
+  {
+    seq: 3, group: 'g2',
+    propertyName: 'เครื่องพิมพ์ฉลากอัตโนมัติ',
+    isOwnerVerified: true, ownerName: 'บริษัท สยามโพลิเมอร์ อุตสาหกรรม จำกัด',
+    registrationNumber: '',
+    conditionUse: '01', isOperational: true,
+    machineName: 'เครื่องพิมพ์ฉลากอัตโนมัติ (Label Printer)',
+    brand: 'ZEBRA', model: 'ZT610', series: '',
+    yearOfManufacture: 2566, quantity: 1, manufacturer: 'สหรัฐอเมริกา',
+    purchaseDate: '2566-05-09', purchasePrice: 185000,
+    location: 'อาคารผลิต 2 ชั้น 1 จุดบรรจุ',
+    machineCondition: 'ดี', machineAge: 3,
+    usagePurpose: 'พิมพ์ฉลากบรรจุภัณฑ์', capacity: '300 ดวง/นาที',
+    width: 1, length: 1, height: 1, machineDimensions: '0.5 x 0.6 x 0.4 ม.',
+    energyUse: 'ไฟฟ้า 1 เฟส 220V', machineEfficiency: '', machineTechnology: '',
+    machineParts: '', other: '',
+    remark: 'ติดตั้งใช้งานแล้ว แต่ยังไม่ได้ยื่นจดทะเบียนกรรมสิทธิ์',
+    appraiserOpinion: '',
+    installationStatus: '1', machineType: '2',
+    registrationStatus: false, invoiceNumber: '',
+    isPriceCertified: false,
+  },
+];
+
+/* ═══════════════ field config ═══════════════
+   คัดลอกจาก machineInfoFields (src/features/appraisal/configs/fields.ts)
+   ฟิลด์ที่ isNew = ของใหม่ที่จะเพิ่มในรอบนี้ */
+
+const FIELDS = [
+  { type: 'text',     label: 'Property Name', name: 'propertyName', span: 12, maxLength: 150 },
+  { type: 'toggle',   label: 'Check Owner', name: 'isOwnerVerified', options: ['Can not', 'Can'], span: 12 },
+  { type: 'text',     label: 'Owner', name: 'ownerName', span: 12, maxLength: 100,
+                      disableWhen: { field: 'isOwnerVerified', is: false },
+                      requiredWhen: { field: 'isOwnerVerified', is: true },
+                      disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้' },
+  { type: 'text',     label: 'Registration No.', name: 'registrationNumber', span: 5, maxLength: 50 },
+
+  /* ── 6 ฟิลด์ใหม่ ─────────────────────────────────────── */
+  { type: 'dropdown', label: 'Installation Status', gloss: 'สถานะการติดตั้ง', name: 'installationStatus',
+                      group: 'MachineStatus', span: 4, isNew: true },
+  { type: 'dropdown', label: 'Machine Type', gloss: 'ประเภทเครื่องจักร', name: 'machineType',
+                      group: 'MachineType', span: 3, isNew: true },
+  { type: 'toggle',   label: 'Registration Status', gloss: 'สถานะการจดทะเบียน', name: 'registrationStatus',
+                      options: ['Unregistered', 'Registered'], span: 5, isNew: true },
+  { type: 'text',     label: 'Invoice No.', gloss: 'เลขที่ใบแจ้งหนี้ / ใบเสนอราคา', name: 'invoiceNumber',
+                      span: 4, maxLength: 20, isNew: true,
+                      requiredWhen: { field: 'installationStatus', is: '2' } },
+  { type: 'toggle',   label: 'Price Certified', gloss: 'รับรองราคา = ประเมินมูลค่า (ฟิลด์เดียวกัน)',
+                      name: 'isPriceCertified',
+                      options: ['Not Certified', 'Certified'], span: 8, isNew: true,
+                      disabledValue: false,
+                      disableWhen: { match: 'any', conditions: [
+                        { field: 'registrationStatus', is: false },
+                        { field: 'installationStatus', is: '2' },
+                      ] } },
+  /* ───────────────────────────────────────────────────── */
+
+  { type: 'radio',    label: 'Condition Use', name: 'conditionUse', group: 'ConditionUse', span: 12 },
+  { type: 'toggle',   label: 'Can Use', name: 'isOperational', options: ['Can not', 'Can'], span: 3 },
+  { type: 'text',     label: 'Machinery Name', name: 'machineName', span: 9, maxLength: 300 },
+  { type: 'text',     label: 'Brand', name: 'brand', span: 6, maxLength: 100 },
+  { type: 'text',     label: 'Model', name: 'model', span: 6, maxLength: 100 },
+  { type: 'text',     label: 'Series', name: 'series', span: 4, maxLength: 100 },
+  { type: 'number',   label: 'Year', name: 'yearOfManufacture', span: 4 },
+  { type: 'number',   label: 'Quantity', name: 'quantity', span: 4 },
+  { type: 'text',     label: 'Country of Manufacture', name: 'manufacturer', span: 4 },
+  { type: 'date',     label: 'Purchase Date', name: 'purchaseDate', span: 4 },
+  { type: 'number',   label: 'Purchase Price', name: 'purchasePrice', span: 4 },
+  { type: 'text',     label: 'Location', name: 'location', span: 12, maxLength: 100 },
+  { type: 'text',     label: 'Machinery Condition', name: 'machineCondition', span: 9, maxLength: 50 },
+  { type: 'number',   label: 'Machinery Age', name: 'machineAge', span: 3 },
+  { type: 'text',     label: 'Usage Purpose', name: 'usagePurpose', span: 6, maxLength: 300 },
+  { type: 'text',     label: 'Capacity', name: 'capacity', span: 6, maxLength: 300 },
+  { type: 'number',   label: 'Width', name: 'width', span: 2 },
+  { type: 'number',   label: 'Length', name: 'length', span: 2 },
+  { type: 'number',   label: 'Height', name: 'height', span: 2 },
+  { type: 'text',     label: 'Machine Dimensions', name: 'machineDimensions', span: 6, maxLength: 300 },
+  { type: 'text',     label: 'Energy Use', name: 'energyUse', span: 6, maxLength: 100 },
+  { type: 'text',     label: 'Machinery Efficiency', name: 'machineEfficiency', span: 6, maxLength: 50 },
+  { type: 'text',     label: 'Machinery Technology', name: 'machineTechnology', span: 12, maxLength: 100 },
+  { type: 'textarea', label: 'Machinery Parts', name: 'machineParts', span: 12, maxLength: 4000 },
+  { type: 'textarea', label: 'Other', name: 'other', span: 12, maxLength: 100 },
+  { type: 'textarea', label: 'Remark', name: 'remark', span: 12, maxLength: 4000 },
+  { type: 'textarea', label: 'Appraiser Opinion', name: 'appraiserOpinion', span: 12, maxLength: 4000 },
+];
+
+const NEW_FIELDS = FIELDS.filter(f => f.isNew).map(f => f.name);
+
+/* ═══════════════ คำอธิบายท้ายปุ่ม ? ═══════════════
+   ทุกฟิลด์ที่มีเงื่อนไข ต้องบอกผู้ประเมินได้ว่าค่ามาจากไหนและทำไมถึงล็อก */
+
+const HELP = {
+  ownerName: m => ({
+    title: 'Locks automatically',
+    lines: ['When Check Owner is "Can not" this field locks and is filled with the standard note.'],
+    conds: [{ text: 'Check Owner is "Can not"', on: m.isOwnerVerified === false }],
+    outcome: m.isOwnerVerified === false ? 'Locked. Set Check Owner to "Can" to type here.' : null,
+  }),
+  registrationNumber: () => ({
+    title: 'This is the ร.2/1 booklet number',
+    lines: [
+      'The summary report folds machines carrying the same number into one line: "ตามสำเนาทะเบียนเครื่องจักร (ร.2/1) เลขที่ … จำนวน N เครื่อง".',
+      'A registered machine with no number still counts in the header above that list, it just gets no line of its own.',
+    ],
+  }),
+  installationStatus: m => ({
+    title: 'Carried over from the request',
+    lines: ['The requestor recorded this when the request was opened. Change it here if the site visit says otherwise.'],
+    conds: [{ text: 'Set to "under procurement" — Invoice No. becomes required and Price Certified locks to not appraised', on: m.installationStatus === '2' }],
+    outcome: m.installationStatus === '2' ? 'This rule is in effect right now.' : null,
+  }),
+  machineType: () => ({
+    title: 'Carried over from the request',
+    lines: [
+      'Classification only — nothing else depends on it.',
+      'Appraisals created before this column existed are blank: the value was never stored, so it cannot be filled in retrospectively.',
+    ],
+  }),
+  registrationStatus: m => ({
+    title: 'Carried over from the request',
+    lines: ['Whether ownership of the machine has been registered. The summary report groups machines by this.'],
+    conds: [{ text: 'Unregistered — Price Certified locks to not appraised', on: m.registrationStatus === false }],
+    outcome: m.registrationStatus === false ? 'This rule is in effect right now.' : null,
+  }),
+  invoiceNumber: m => ({
+    title: 'Required while under procurement',
+    lines: ['A machine that has not been delivered is priced from the supplier quotation or invoice, so the document number has to be on record.'],
+    conds: [{ text: 'Installation Status is "under procurement"', on: m.installationStatus === '2' }],
+    outcome: m.installationStatus === '2' ? 'Required right now.' : 'Optional right now.',
+  }),
+  isPriceCertified: m => {
+    const c1 = m.registrationStatus === false;
+    const c2 = m.installationStatus === '2';
+    return {
+      title: 'Certifying the price is appraising the value',
+      lines: [
+        'One decision, not two: this is what the summary report prints as "(ไม่ประเมินมูลค่า)".',
+        'The server forces it to not certified whenever either rule below is in effect.',
+      ],
+      conds: [
+        { text: 'Not registered', on: c1 },
+        { text: 'Under procurement', on: c2 },
+      ],
+      outcome: (c1 || c2)
+        ? 'Locked. Enforced on the server: sending true straight to the API still stores false, without an error.'
+        : 'Your call. For a machine that is registered and installed, the appraiser decides whether to appraise a value.',
+      fired: c1 || c2,
+    };
+  },
+  conditionUse: m => ({
+    title: 'Shows up in the report',
+    lines: ['"Not Found" appends "(สำรวจไม่พบ)" to this machine in the summary report and drops it from the surveyed count.'],
+    conds: [{ text: 'Condition Use is "Not Found"', on: m.conditionUse === '03' }],
+    outcome: m.conditionUse === '03' ? 'This rule is in effect right now.' : null,
+  }),
+};
+
+/* ปุ่ม ? แบบใช้ร่วมกัน — popover ตัวเดียวลอยตามปุ่มที่กด */
+let openHelp = null;
+const pop = () => document.getElementById('help-pop');
+
+function helpButton(key, armed) {
+  return `<button type="button" class="helpbtn${armed ? ' armed' : ''}" data-help="${key}"
+    aria-expanded="${openHelp === key}" aria-label="คำอธิบายเงื่อนไข">?</button>`;
+}
+
+function closeHelp() {
+  openHelp = null;
+  pop().hidden = true;
+  document.querySelectorAll('.helpbtn[aria-expanded="true"]').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+
+function showHelp(btn, data) {
+  const p = pop();
+  p.innerHTML = `<p class="ht">${data.title}</p>`
+    + (data.lines || []).map(l => `<p class="hl">${l}</p>`).join('')
+    + (data.conds && data.conds.length
+        ? `<ul class="conds">` + data.conds.map(c =>
+            `<li class="${c.on ? 'on' : 'off'}"><span class="m">${c.on ? '●' : '○'}</span><span>${c.text}</span></li>`).join('') + `</ul>`
+        : '')
+    + (data.outcome ? `<div class="outcome${data.fired ? ' fired' : ''}">${data.outcome}</div>` : '')
+    + `<button type="button" class="close" data-close-help>ปิด</button>`;
+  p.hidden = false;
+
+  const r = btn.getBoundingClientRect();
+  const w = p.offsetWidth, h = p.offsetHeight;
+  let left = Math.min(Math.max(8, r.left - 8), window.innerWidth - w - 8);
+  let top = r.bottom + 6;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+  p.style.left = left + 'px';
+  p.style.top = top + 'px';
+  p.querySelector('[data-close-help]').addEventListener('click', closeHelp);
+}
+
+function bindHelp(root, resolve) {
+  root.querySelectorAll('.helpbtn').forEach(btn => btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const key = btn.dataset.help;
+    if (openHelp === key) { closeHelp(); return; }
+    closeHelp();
+    openHelp = key;
+    btn.setAttribute('aria-expanded', 'true');
+    showHelp(btn, resolve(key));
+  }));
+}
+
+document.addEventListener('click', e => {
+  if (openHelp && !e.target.closest('#help-pop') && !e.target.closest('.helpbtn')) closeHelp();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && openHelp) closeHelp(); });
+window.addEventListener('resize', () => { if (openHelp) closeHelp(); });
+
+/* ═══════════════ condition engine (มิเรอร์ของจริง) ═══════════════ */
+function testOne(m, c) { return m[c.field] === c.is; }
+function testCond(m, cond) {
+  if (!cond) return false;
+  if (cond.conditions) {
+    return cond.match === 'any'
+      ? cond.conditions.some(c => testOne(m, c))
+      : cond.conditions.every(c => testOne(m, c));
+  }
+  return testOne(m, cond);
+}
+
+/* กติกาเดียวกับ MachineryAppraisalDetail.NormalizePriceCertification() */
+function normalize(m) {
+  if (!m.registrationStatus || m.installationStatus === '2') {
+    m.isPriceCertified = false;
+  }
+}
+
+/* ═══════════════ state ═══════════════ */
+let current = 0;
+const summaryEntered = { surveyedNumber: null, appraisalNumber: null, installedAndUseCount: null,
+                         appraisalScrapCount: null, appraisedByDocumentCount: null, notInstalledCount: null };
+
+const $ = sel => document.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+/* ═══════════════ tabs ═══════════════ */
+const tabs = [...document.querySelectorAll('.tab')];
+tabs.forEach(t => t.addEventListener('click', () => {
+  tabs.forEach(o => {
+    const on = o === t;
+    o.setAttribute('aria-selected', String(on));
+    document.getElementById(o.getAttribute('aria-controls')).hidden = !on;
+  });
+  if (t.id === 'tab-summary') renderCounts();
+  if (t.id === 'tab-report') renderReport();
+}));
+
+/* ═══════════════ tab 1 : switcher + form ═══════════════ */
+function renderSwitcher() {
+  $('#switcher').innerHTML = machines.map((m, i) => {
+    const g = GROUPS.find(x => x.id === m.group);
+    return `<button class="mchip" type="button" aria-pressed="${i === current}" data-i="${i}">
+      <span class="seq">${g.number}.${m.seq}</span>${esc(m.propertyName)}</button>`;
+  }).join('');
+  $('#switcher').querySelectorAll('.mchip').forEach(b =>
+    b.addEventListener('click', () => { current = +b.dataset.i; renderSwitcher(); renderForm(); }));
+}
+
+function fieldValue(m, f) {
+  const disabled = testCond(m, f.disableWhen);
+  const value = disabled && 'disabledValue' in f ? f.disabledValue : m[f.name];
+  return { disabled, value };
+}
+
+function renderForm() {
+  const m = machines[current];
+  const g = GROUPS.find(x => x.id === m.group);
+  const keep = openHelp;
+  $('#which-group').textContent = g.name;
+
+  $('#fgrid').innerHTML = FIELDS.map(f => {
+    const { disabled, value } = fieldValue(m, f);
+    const required = testCond(m, f.requiredWhen);
+    const missing = required && !disabled && (value === '' || value === null || value === undefined);
+    const cls = ['fld', f.isNew ? 'is-new' : '', missing ? 'invalid' : ''].filter(Boolean).join(' ');
+    const help = HELP[f.name] ? HELP[f.name](m) : null;
+    const armed = !!(help && help.conds && help.conds.some(c => c.on));
+    const label = `<div class="lbl-row"><label for="f-${f.name}">${esc(f.label)}`
+      + (f.gloss ? ` <span class="gloss">(${esc(f.gloss)})</span>` : '')
+      + (required ? ' <span class="req" title="จำเป็นต้องกรอก">*</span>' : '')
+      + (f.isNew ? ' <span class="badge-new">ใหม่</span>' : '')
+      + '</label>'
+      + (help ? helpButton(f.name, armed) : '')
+      + '</div>';
+
+    let control = '';
+    if (f.type === 'toggle') {
+      const [offLabel, onLabel] = f.options;
+      control = `<div class="toggle ${disabled ? 'locked' : ''}" role="group" data-name="${f.name}">
+        <button type="button" data-v="false" aria-pressed="${value === false}" ${disabled ? 'disabled' : ''}>${esc(offLabel)}</button>
+        <button type="button" data-v="true" aria-pressed="${value === true}" ${disabled ? 'disabled' : ''}>${esc(onLabel)}</button>
+      </div>`;
+    } else if (f.type === 'radio') {
+      control = `<div class="radiorow" data-name="${f.name}">` + PARAM[f.group].map(o =>
+        `<button type="button" data-v="${o.code}" aria-pressed="${value === o.code}">${esc(o.label)}</button>`).join('') + `</div>`;
+    } else if (f.type === 'dropdown') {
+      control = `<select id="f-${f.name}" data-name="${f.name}" ${disabled ? 'disabled' : ''}>
+        <option value=""${!value ? ' selected' : ''}>— เลือก —</option>` +
+        PARAM[f.group].map(o => `<option value="${o.code}"${value === o.code ? ' selected' : ''}>${esc(o.label)}</option>`).join('') +
+        `</select>`;
+    } else if (f.type === 'textarea') {
+      control = `<textarea id="f-${f.name}" data-name="${f.name}" maxlength="${f.maxLength}" ${disabled ? 'disabled' : ''}>${esc(value ?? '')}</textarea>`;
+    } else if (f.type === 'date') {
+      control = `<input id="f-${f.name}" data-name="${f.name}" type="text" placeholder="ปปปป-ดด-วว" value="${esc(value ?? '')}" ${disabled ? 'disabled' : ''}>`;
+    } else {
+      const numCls = f.type === 'number' ? ' num' : '';
+      control = `<input id="f-${f.name}" data-name="${f.name}" class="${numCls.trim()}" type="text"${f.maxLength ? ` maxlength="${f.maxLength}"` : ''} value="${esc(value ?? '')}" ${disabled ? 'disabled' : ''}>`;
+    }
+
+    const foot = missing
+      ? `<span class="err">จำเป็นต้องกรอก</span>`
+      : (f.hint ? `<span class="hint">${esc(f.hint)}</span>` : '');
+
+    return `<div class="${cls}" style="grid-column: span ${f.span};">${label}${control}${foot}</div>`;
+  }).join('');
+
+  bindForm();
+  renderRules();
+  renderPayload();
+
+  // เปิดคำอธิบายค้างไว้ให้ผู้ใช้เห็นว่าเงื่อนไขเปลี่ยนตามที่เพิ่งกด
+  const back = keep && $('#fgrid').querySelector(`.helpbtn[data-help="${keep}"]`);
+  if (back) {
+    openHelp = keep;
+    back.setAttribute('aria-expanded', 'true');
+    showHelp(back, HELP[keep](machines[current]));
+  } else if (keep) {
+    closeHelp();
+  }
+}
+
+function bindForm() {
+  const m = machines[current];
+  $('#fgrid').querySelectorAll('.toggle button, .radiorow button').forEach(b => {
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      const name = b.parentElement.dataset.name;
+      const raw = b.dataset.v;
+      m[name] = raw === 'true' ? true : raw === 'false' ? false : raw;
+      normalize(m);
+      renderForm();
+    });
+  });
+  $('#fgrid').querySelectorAll('select').forEach(s => {
+    s.addEventListener('change', () => { m[s.dataset.name] = s.value; normalize(m); renderForm(); });
+  });
+  $('#fgrid').querySelectorAll('input[type="text"], textarea').forEach(i => {
+    i.addEventListener('input', () => { m[i.dataset.name] = i.value; renderPayload(); });
+  });
+  bindHelp($('#fgrid'), key => HELP[key](machines[current]));
+}
+
+function renderRules() {
+  const m = machines[current];
+  const rules = [
+    { on: !m.registrationStatus, text: 'ยังไม่จดทะเบียน (<code>RegistrationStatus = 0</code>)' },
+    { on: m.installationStatus === '2', text: 'อยู่ระหว่างการจัดซื้อ (<code>InstallationStatus = \'2\'</code>) — ตั้งราคาจากใบเสนอราคา ยังไม่ถือว่าประเมิน' },
+  ];
+  const fired = rules.some(r => r.on);
+  $('#rules').innerHTML = rules.map(r =>
+    `<li class="${r.on ? 'on' : 'off'}"><span class="mark ${r.on ? 'fired' : 'idle'}">${r.on ? '●' : '○'}</span><span>${r.text}</span></li>`
+  ).join('') + `<li class="${fired ? 'on' : 'off'}"><span class="mark ${fired ? 'fired' : 'idle'}">${fired ? '⇒' : '⇒'}</span>
+      <span>${fired ? 'บังคับ <code>IsPriceCertified = 0</code> (ไม่ประเมินมูลค่า) และล็อก toggle' : 'ครบเงื่อนไข — ผู้ประเมินเลือกรับรอง/ไม่รับรองได้เอง (เคสประเมินซาก)'}</span></li>`;
+
+  const c = $('#coerce');
+  if (fired) {
+    c.hidden = false;
+    c.innerHTML = 'ถ้ายิง <code>isPriceCertified: true</code> เข้ามาตรง ๆ server จะ<b>เก็บเป็น false เงียบ ๆ</b> ไม่ error → หน้าจอต้อง refetch หลัง save ห้าม optimistic update ค่านี้';
+  } else {
+    c.hidden = true;
+  }
+}
+
+function renderPayload() {
+  const m = machines[current];
+  const rows = [
+    ['propertyName', m.propertyName, false],
+    ['registrationNumber', m.registrationNumber, false],
+    ['…', '(ฟิลด์เดิมอีก 29 ตัว)', false],
+    ['installationStatus', m.installationStatus, true],
+    ['machineType', m.machineType, true],
+    ['registrationStatus', m.registrationStatus, true],
+    ['invoiceNumber', m.invoiceNumber, true],
+    ['isPriceCertified', m.isPriceCertified, true],
+  ];
+  const fmt = v => typeof v === 'boolean' ? String(v)
+    : v === '' ? '""  <span class="co">/* ส่ง "" ไม่ใช่ null — Update() มองข้าม null */</span>'
+    : `"${esc(v)}"`;
+  $('#payload').innerHTML = '{\n' + rows.map(([k, v, isNew]) => {
+    if (k === '…') return `  <span class="co">// ${esc(v)}</span>`;
+    const line = `  <span class="k">"${k}"</span>: ${fmt(v)},`;
+    return isNew ? `<span class="hl">${line}</span>` : line;
+  }).join('\n') + '\n}';
+}
+
+/* ═══════════════ tab 2 : derived counts ═══════════════ */
+const COUNT_DEFS = [
+  { key: 'surveyedNumber', label: 'จำนวนที่สำรวจ (เครื่อง)',
+    rule: 'สำรวจพบ — Condition Use ≠ Not Found', fn: m => m.conditionUse !== '03' },
+  { key: 'appraisalNumber', label: 'จำนวนที่ประเมิน (เครื่อง)',
+    rule: 'รับรองราคา / ประเมินมูลค่า', fn: m => m.isPriceCertified },
+  { key: 'installedAndUseCount', label: 'ติดตั้งและใช้งานแล้ว',
+    rule: 'ติดตั้งแล้ว และ Condition Use = In Used', fn: m => m.installationStatus === '1' && m.conditionUse === '01' },
+  { key: 'appraisalScrapCount', label: 'ประเมินเป็นซาก',
+    rule: 'Condition Use = Not In Used และประเมินมูลค่า', fn: m => m.conditionUse === '02' && m.isPriceCertified },
+  { key: 'appraisedByDocumentCount', label: 'ประเมินตามเอกสาร',
+    rule: 'อยู่ระหว่างการจัดซื้อ', fn: m => m.installationStatus === '2' },
+  { key: 'notInstalledCount', label: 'ยังไม่ได้ติดตั้ง',
+    rule: 'อยู่ระหว่างการจัดซื้อ', fn: m => m.installationStatus === '2' },
+];
+
+const derivedFor = def => machines.filter(def.fn);
+
+function renderCounts() {
+  $('#counts').innerHTML = COUNT_DEFS.map(def => {
+    const d = derivedFor(def).length;
+    const entered = summaryEntered[def.key];
+    const overridden = entered !== null && entered !== undefined && entered !== '';
+    return `<div class="count">
+      <span class="cl">${esc(def.label)}${helpButton('count:' + def.key, false)}</span>
+      <input type="text" inputmode="numeric" data-key="${def.key}"
+             class="${overridden ? 'overridden' : ''}"
+             value="${overridden ? esc(entered) : ''}" placeholder="${d}"
+             aria-label="${esc(def.label)}">
+      <span class="foot">
+        <span class="derived">คำนวณได้ <b>${d}</b></span>
+        ${overridden
+          ? `<span class="state manual">กรอกเอง</span>`
+          : `<button class="mini" type="button" data-use="${def.key}">ใช้ค่านี้</button>`}
+      </span>
+    </div>`;
+  }).join('');
+
+  $('#counts').querySelectorAll('input').forEach(i => i.addEventListener('input', () => {
+    const v = i.value.replace(/[^0-9]/g, '');
+    summaryEntered[i.dataset.key] = v === '' ? null : v;
+    renderCounts();
+  }));
+  $('#counts').querySelectorAll('.mini').forEach(b => b.addEventListener('click', () => {
+    const def = COUNT_DEFS.find(d => d.key === b.dataset.use);
+    summaryEntered[def.key] = String(derivedFor(def).length);
+    renderCounts();
+  }));
+  bindHelp($('#counts'), key => {
+    const def = COUNT_DEFS.find(d => 'count:' + d.key === key);
+    return {
+      title: def.label,
+      lines: [`นับเครื่องที่ <b>${def.rule}</b>`,
+              'เป็นค่าตั้งต้นเท่านั้น — ระบบไม่เขียนทับค่าที่กรอกเอง'],
+    };
+  });
+
+  $('#formula-body').innerHTML = COUNT_DEFS.map(def => `<tr>
+      <td><b>${esc(def.label)}</b></td>
+      <td>${esc(def.rule)}</td>
+      <td class="n">${derivedFor(def).length}</td>
+    </tr>`).join('');
+}
+
+$('#fill-empty').addEventListener('click', () => {
+  COUNT_DEFS.forEach(def => {
+    if (summaryEntered[def.key] === null || summaryEntered[def.key] === '')
+      summaryEntered[def.key] = String(derivedFor(def).length);
+  });
+  renderCounts();
+});
+$('#fill-all').addEventListener('click', () => {
+  COUNT_DEFS.forEach(def => { summaryEntered[def.key] = String(derivedFor(def).length); });
+  renderCounts();
+});
+$('#clear-all').addEventListener('click', () => {
+  COUNT_DEFS.forEach(def => { summaryEntered[def.key] = null; });
+  renderCounts();
+});
+
+/* ═══════════════ tab 3 : report ═══════════════
+   มิเรอร์ AppraisalSummaryMachineDataProvider */
+
+function headerLines(rows) {
+  const lines = [];
+  const registered   = rows.filter(m => m.registrationStatus);
+  const unregistered = rows.filter(m => !m.registrationStatus && m.installationStatus !== '2');
+  const procuring    = rows.filter(m => !m.registrationStatus && m.installationStatus === '2');
+
+  if (registered.length) {
+    lines.push({ text: `เครื่องจักรและอุปกรณ์ที่ได้จดทะเบียนกรรมสิทธิ์ จำนวน ${registered.length} เครื่อง` });
+    const byNo = new Map();
+    registered.forEach(m => {
+      const no = (m.registrationNumber || '').trim();
+      if (!no) return;
+      byNo.set(no, (byNo.get(no) || 0) + 1);
+    });
+    [...byNo.entries()].forEach(([no, n]) =>
+      lines.push({ text: `ตามสำเนาทะเบียนเครื่องจักร (ร.2/1) เลขที่ ${no} จำนวน ${n} เครื่อง`, sub: true }));
+  }
+  if (unregistered.length)
+    lines.push({ text: `เครื่องจักรและอุปกรณ์ที่ยังไม่ได้รับการจดทะเบียน จำนวน ${unregistered.length} เครื่อง` });
+  if (procuring.length)
+    lines.push({ text: `เครื่องจักรและอุปกรณ์ที่ไม่จดทะเบียนอยู่ระหว่างการติดตั้ง จำนวน ${procuring.length} เครื่อง` });
+
+  return lines;
+}
+
+function itemLine(m) {
+  const parts = [];
+  if (m.machineName) parts.push(esc(m.machineName));
+  if (m.brand) parts.push(`ยี่ห้อ ${esc(m.brand)}`);
+  if (m.model) parts.push(`รุ่น ${esc(m.model)}`);
+  if (m.registrationNumber) parts.push(`ทะเบียนเลขที่ ${esc(m.registrationNumber)}`);
+  if (m.yearOfManufacture) parts.push(`ปีที่ผลิต ${esc(m.yearOfManufacture)}`);
+  if (m.machineCondition) parts.push(`สภาพ${esc(m.machineCondition)}`);
+
+  if (m.conditionUse === '03') parts.push('<mark class="mk-notfound">(สำรวจไม่พบ)</mark>');
+  if (!m.isPriceCertified) parts.push('<mark class="mk-novalue">(ไม่ประเมินมูลค่า)</mark>');
+
+  return parts.join(' ');
+}
+
+const baht = n => n === null || n === undefined ? '' : n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+function renderReport() {
+  let total = 0;
+  const body = GROUPS.map(g => {
+    const rows = machines.filter(m => m.group === g.id).sort((a, b) => a.seq - b.seq);
+    total += g.value;
+    const heads = headerLines(rows)
+      .map(l => `<div class="hdline${l.sub ? ' r21' : ''}">- ${l.text}</div>`).join('');
+    const items = rows.map((m, i) => `<div class="item">${i + 1}. ${itemLine(m)}</div>`).join('');
+    return `<tr>
+      <td><strong>เครื่องจักร</strong><br><span style="font-size:12px;color:#4a5157;">${esc(g.name)}</span></td>
+      <td>${heads}${items}</td>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+      <td class="num">${baht(g.value)}</td>
+    </tr>`;
+  }).join('');
+
+  $('#report-body').innerHTML = body + `<tr class="grp-total">
+      <td></td><td colspan="3"><strong>รวมมูลค่าเครื่องจักร</strong></td>
+      <td class="num"><strong>${baht(total)}</strong></td>
+    </tr>`;
+}
+
+/* ═══════════════ boot ═══════════════ */
+machines.forEach(normalize);
+renderSwitcher();
+renderForm();
+renderCounts();
+renderReport();
+</script>

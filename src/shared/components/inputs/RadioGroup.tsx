@@ -24,6 +24,8 @@ interface RadioGroupBaseProps {
   defaultValue?: string;
   onChange?: (value: string) => void;
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   error?: string;
   disabled?: boolean;
   className?: string;
@@ -45,6 +47,7 @@ const RadioGroup = ({
   group,
   options,
   label,
+  labelAddon,
   error,
   disabled = false,
   className,
@@ -71,7 +74,16 @@ const RadioGroup = ({
   if (variant !== 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
-        {label && <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
+        {(label || labelAddon) && (
+          <div className="flex items-center gap-1.5 mb-2">
+            {label && (
+              <Label data-field-label className="block text-sm font-medium text-gray-700">
+                {label}
+              </Label>
+            )}
+            {labelAddon}
+          </div>
+        )}
 
         <HeadlessRadioGroup
           value={value}
@@ -119,7 +131,16 @@ const RadioGroup = ({
   if (variant === 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
-        {label && <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
+        {(label || labelAddon) && (
+          <div className="flex items-center gap-1.5 mb-2">
+            {label && (
+              <Label data-field-label className="block text-sm font-medium text-gray-700">
+                {label}
+              </Label>
+            )}
+            {labelAddon}
+          </div>
+        )}
 
         <HeadlessRadioGroup
           value={value}
@@ -181,7 +202,9 @@ const RadioGroup = ({
                   {option.label}
                 </Label>
                 {option.description && (
-                  <Description className="text-xs text-gray-500 mt-0.5">{option.description}</Description>
+                  <Description className="text-xs text-gray-500 mt-0.5">
+                    {option.description}
+                  </Description>
                 )}
               </div>
             </HeadlessRadio>
@@ -196,7 +219,16 @@ const RadioGroup = ({
   // Default variant
   return (
     <Field className={clsx('flex flex-col', className)}>
-      {label && <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">{label}</Label>}
+      {(label || labelAddon) && (
+        <div className="flex items-center gap-1.5 mb-2">
+          {label && (
+            <Label data-field-label className="block text-sm font-medium text-gray-700">
+              {label}
+            </Label>
+          )}
+          {labelAddon}
+        </div>
+      )}
 
       <HeadlessRadioGroup
         value={value}
@@ -250,7 +282,9 @@ const RadioGroup = ({
                 {option.label}
               </Label>
               {option.description && (
-                <Description className="text-xs text-gray-500 mt-0.5">{option.description}</Description>
+                <Description className="text-xs text-gray-500 mt-0.5">
+                  {option.description}
+                </Description>
               )}
             </div>
           </HeadlessRadio>

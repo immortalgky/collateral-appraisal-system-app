@@ -1,11 +1,15 @@
-import type { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, ReactNode } from 'react';
 import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useFormReadOnly } from '../form/context';
 
-interface NumberInputProps
-  extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange' | 'value'> {
+interface NumberInputProps extends Omit<
+  InputHTMLAttributes<HTMLInputElement>,
+  'type' | 'onChange' | 'value'
+> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   helperText?: string;
   error?: string;
   fullWidth?: boolean;
@@ -35,6 +39,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     {
       className,
       label,
+      labelAddon,
       helperText,
       error,
       fullWidth = true,
@@ -270,11 +275,20 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
     return (
       <div className={clsx(fullWidth && 'w-full')}>
-        {label && (
-          <label data-field-label htmlFor={inputId} className="block text-xs font-medium text-gray-700 mb-1">
-            {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
-          </label>
+        {(label || labelAddon) && (
+          <div className="flex items-center gap-1.5 mb-1">
+            {label && (
+              <label
+                data-field-label
+                htmlFor={inputId}
+                className="block text-xs font-medium text-gray-700"
+              >
+                {label}
+                {required && <span className="text-danger ml-0.5">*</span>}
+              </label>
+            )}
+            {labelAddon}
+          </div>
         )}
 
         <div className={clsx('relative', fullWidth && 'w-full')}>

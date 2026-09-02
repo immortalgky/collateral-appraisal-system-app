@@ -1,10 +1,12 @@
 import { Field, Label, Textarea as HeadlessTextarea } from '@headlessui/react';
 import clsx from 'clsx';
-import type { TextareaHTMLAttributes } from 'react';
+import type { ReactNode, TextareaHTMLAttributes } from 'react';
 import { useFormReadOnly } from '../form/context';
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   helperText?: string;
   error?: string;
   fullWidth?: boolean;
@@ -14,6 +16,7 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 
 const Textarea = ({
   label,
+  labelAddon,
   helperText,
   error,
   fullWidth = true,
@@ -33,11 +36,16 @@ const Textarea = ({
 
   return (
     <Field className={clsx(fullWidth && 'w-full', 'flex', 'flex-col')}>
-      {label && (
-        <Label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
-          {label}
-          {required && <span className="text-danger ml-0.5">*</span>}
-        </Label>
+      {(label || labelAddon) && (
+        <div className="flex items-center gap-1.5 mb-1">
+          {label && (
+            <Label data-field-label className="block text-xs font-medium text-gray-700">
+              {label}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </Label>
+          )}
+          {labelAddon}
+        </div>
       )}
       <HeadlessTextarea
         className={clsx(

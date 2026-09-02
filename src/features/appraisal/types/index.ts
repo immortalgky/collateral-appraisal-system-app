@@ -64,6 +64,10 @@ export interface PropertyItem {
   model?: string;
   registrationNumber?: string;
   dimension?: string;
+  /** Machinery only: ownership registered with the authorities. */
+  registrationStatus?: boolean;
+  /** Machinery only: the appraiser appraises a value for this machine (see FieldHelp on the form). */
+  isPriceCertified?: boolean;
 }
 
 export interface PropertyGroup {

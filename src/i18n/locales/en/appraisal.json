@@ -620,6 +620,21 @@
         "longitude": "Longitude",
         "obligation": "Obligation",
         "other": "Other"
+      },
+      "suggested": {
+        "applyEmpty": "Use the derived counts for empty fields",
+        "applyOne": "Use the derived count ({{value}})",
+        "helpTitle": "Derived from the machines on this appraisal",
+        "helpComputed": "Derived count: {{value}}",
+        "helpNote": "A starting value only — what you type is never overwritten.",
+        "rules": {
+          "surveyedNumber": "Machines found on the survey (Condition Use is not \"Not Found\")",
+          "appraisalNumber": "Machines with a certified price, which is the same as an appraised value",
+          "installedAndUseCount": "Machines installed and in use",
+          "appraisalScrapCount": "Machines not in use that are still appraised",
+          "appraisedByDocumentCount": "Machines under procurement, priced from a quotation",
+          "notInstalledCount": "Machines under procurement"
+        }
       }
     }
   },
@@ -633,6 +648,11 @@
       "legendComparables": "Market comparables",
       "pinView": "View on map",
       "pinNoLocation": "No location set"
+    },
+    "machineryChips": {
+      "registered": "Registered",
+      "unregistered": "Unregistered",
+      "notAppraised": "Not appraised"
     },
     "addNewGroup": "Add New Group",
     "noGroups": "No property groups yet",

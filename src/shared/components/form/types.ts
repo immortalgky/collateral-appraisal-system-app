@@ -51,6 +51,37 @@ export type ConditionInput =
   | FieldConditions
   | ((values: Record<string, unknown>) => boolean);
 
+// =============================================================================
+// Field Help Types
+// =============================================================================
+
+/** One rule shown in a field's help panel, evaluated live against the form values */
+export interface FieldHelpCondition {
+  /** Plain-language statement of the rule */
+  text: string;
+  /** When this holds, the rule is marked as currently in effect */
+  when: ConditionInput;
+}
+
+/**
+ * Explanation attached to a field and surfaced by the "?" button beside its label.
+ *
+ * Declare `conditions` with the same shape as `disableWhen`/`requiredWhen` and point them at the
+ * same values, so the explanation cannot drift from the rule it describes.
+ */
+export interface FieldHelpConfig {
+  /** Heading of the help panel — what this field is */
+  title: string;
+  /** Paragraphs explaining where the value comes from */
+  lines?: string[];
+  /** Rules to list, each marked met or not met against the current values */
+  conditions?: FieldHelpCondition[];
+  /** Shown when at least one condition is met (e.g. why the field is locked right now) */
+  whenMet?: string;
+  /** Shown when no condition is met */
+  whenClear?: string;
+}
+
 /**
  * Union type of all supported form field configurations.
  * Used by FormFields component to render the appropriate input.
@@ -114,6 +145,10 @@ interface BaseFormField {
   // Conditional required state
   /** Make field required when condition is met (shows asterisk and validates) */
   requiredWhen?: ConditionInput;
+
+  // Help
+  /** Explanation surfaced by a "?" button beside the label (see FieldHelp) */
+  help?: FieldHelpConfig;
 
   // Format & input helpers
   /** Placeholder text (e.g., "DD/MM/YYYY") */
