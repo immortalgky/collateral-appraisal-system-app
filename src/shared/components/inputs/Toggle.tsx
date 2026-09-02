@@ -55,7 +55,10 @@ const Toggle = ({
   return (
     <div className={clsx('text-sm', className)}>
       <fieldset>
-        {(label || labelAddon) && (
+        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
+            of this component with `display: contents`, so an extra element in between would take
+            the label column and stretch. */}
+        {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-1.5">
             {label && (
               <legend data-field-label className="font-medium text-gray-700">
@@ -65,6 +68,13 @@ const Toggle = ({
             )}
             {labelAddon}
           </div>
+        ) : (
+          label && (
+            <legend data-field-label className="font-medium text-gray-700 mb-1.5">
+              {label}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </legend>
+          )
         )}
         <div
           className={clsx(

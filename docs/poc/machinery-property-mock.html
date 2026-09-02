@@ -410,6 +410,12 @@ table.grid tr.grp-total td { background: #f0f2f3; }
       ทุกช่องที่มีเงื่อนไขมีปุ่ม <b>?</b> กดดูได้ว่าค่ามาจากไหนและตอนนี้เข้าเงื่อนไขข้อไหนอยู่
     </p>
     <p class="mock-note">Mock เท่านั้น — ไม่ต่อ API ไม่บันทึกอะไร ปิดหน้าแล้วค่าหาย</p>
+    <p class="mock-note" style="display:block;max-width:66ch;">
+      อัปเดตหลังรีวิว: ปุ่ม <b>?</b> ถูกถอดออกจากฟอร์มเครื่องจักรของจริงแล้ว —
+      หน้านั้นใช้ grid layout ที่ยก label ออกมาด้วย <code>display: contents</code>
+      การแทรกปุ่มข้าง label เลยทำให้คอลัมน์เพี้ยน ตอนนี้ <b>?</b> เหลืออยู่แค่แท็บสรุปเครื่องจักร
+      ซึ่งไม่ได้ใช้ layout นั้น หน้านี้ยังโชว์ไว้ให้เห็นดีไซน์เดิม
+    </p>
     <div class="tabs" role="tablist" aria-label="มุมมอง">
       <button class="tab" role="tab" id="tab-form" aria-controls="p-form" aria-selected="true">
         <span class="tab-kind">หน้าจอ</span>ข้อมูลเครื่องจักร

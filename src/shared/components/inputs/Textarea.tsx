@@ -36,7 +36,10 @@ const Textarea = ({
 
   return (
     <Field className={clsx(fullWidth && 'w-full', 'flex', 'flex-col')}>
-      {(label || labelAddon) && (
+      {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
+          of this component with `display: contents`, so an extra element in between would take
+          the label column and stretch. */}
+      {labelAddon ? (
         <div className="flex items-center gap-1.5 mb-1">
           {label && (
             <Label data-field-label className="block text-xs font-medium text-gray-700">
@@ -46,6 +49,13 @@ const Textarea = ({
           )}
           {labelAddon}
         </div>
+      ) : (
+        label && (
+          <Label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+            {label}
+            {required && <span className="text-danger ml-0.5">*</span>}
+          </Label>
+        )
       )}
       <HeadlessTextarea
         className={clsx(

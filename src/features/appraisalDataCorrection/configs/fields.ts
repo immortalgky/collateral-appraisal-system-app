@@ -2432,16 +2432,6 @@ export const machineInfoFields: FormField[] = [
     requiredWhen: { field: 'isOwnerVerified', is: true },
     disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
-    help: {
-      title: 'Locks automatically',
-      lines: [
-        'When Check Owner is "Can not" this field locks and is filled with the standard note.',
-      ],
-      conditions: [
-        { text: 'Check Owner is "Can not"', when: { field: 'isOwnerVerified', is: false } },
-      ],
-      whenMet: 'Locked. Set Check Owner to "Can" to type here.',
-    },
   },
 
   {
@@ -2450,13 +2440,6 @@ export const machineInfoFields: FormField[] = [
     name: 'registrationNumber',
     wrapperClassName: 'col-span-5',
     maxLength: 50,
-    help: {
-      title: 'This is the ร.2/1 booklet number',
-      lines: [
-        'The summary report folds machines carrying the same number into one line: "ตามสำเนาทะเบียนเครื่องจักร (ร.2/1) เลขที่ … จำนวน N เครื่อง".',
-        'A registered machine with no number still counts in the header above that list, it just gets no line of its own.',
-      ],
-    },
   },
 
   // Registration & installation, carried over from the request title and editable here.
@@ -2467,19 +2450,6 @@ export const machineInfoFields: FormField[] = [
     name: 'installationStatus',
     wrapperClassName: 'col-span-4',
     group: 'MachineStatus',
-    help: {
-      title: 'Carried over from the request',
-      lines: [
-        'The requestor recorded this when the request was opened. Change it here if the site visit says otherwise.',
-      ],
-      conditions: [
-        {
-          text: 'Set to "under procurement" — Invoice No. appears and is required, Price Certified locks to not appraised',
-          when: { field: 'installationStatus', is: '2' },
-        },
-      ],
-      whenMet: 'This rule is in effect right now.',
-    },
   },
 
   {
@@ -2488,13 +2458,6 @@ export const machineInfoFields: FormField[] = [
     name: 'machineType',
     wrapperClassName: 'col-span-3',
     group: 'MachineType',
-    help: {
-      title: 'Carried over from the request',
-      lines: [
-        'Classification only — nothing else depends on it.',
-        'Appraisals created before this column existed are blank: the value was never stored, so it cannot be filled in retrospectively.',
-      ],
-    },
   },
 
   {
@@ -2503,19 +2466,6 @@ export const machineInfoFields: FormField[] = [
     name: 'registrationStatus',
     options: ['Unregistered', 'Registered'],
     wrapperClassName: 'col-span-5',
-    help: {
-      title: 'Carried over from the request',
-      lines: [
-        'Whether ownership of the machine has been registered. The summary report groups machines by this.',
-      ],
-      conditions: [
-        {
-          text: 'Unregistered — Price Certified locks to not appraised',
-          when: { field: 'registrationStatus', is: false },
-        },
-      ],
-      whenMet: 'This rule is in effect right now.',
-    },
   },
 
   // Only meaningful while the machine is under procurement, so it appears with that status and
@@ -2529,13 +2479,6 @@ export const machineInfoFields: FormField[] = [
     maxLength: 20,
     showWhen: { field: 'installationStatus', is: '2' },
     requiredWhen: { field: 'installationStatus', is: '2' },
-    help: {
-      title: 'Required while under procurement',
-      lines: [
-        'A machine that has not been delivered is priced from the supplier quotation or invoice, so the document number has to be on record.',
-        'The field only appears while Installation Status is "under procurement". A number already saved against the machine is kept, not erased, when it disappears.',
-      ],
-    },
   },
 
   // Certifying the price and appraising a value are one decision, not two: this flag is what the
@@ -2555,21 +2498,6 @@ export const machineInfoFields: FormField[] = [
         { field: 'installationStatus', is: '2' },
       ],
     },
-    help: {
-      title: 'Certifying the price is appraising the value',
-      lines: [
-        'One decision, not two: this is what the summary report prints as "(ไม่ประเมินมูลค่า)".',
-        'The server forces it to not certified whenever either rule below is in effect.',
-      ],
-      conditions: [
-        { text: 'Not registered', when: { field: 'registrationStatus', is: false } },
-        { text: 'Under procurement', when: { field: 'installationStatus', is: '2' } },
-      ],
-      whenMet:
-        'Locked. Enforced on the server: sending true straight to the API still stores false, without an error.',
-      whenClear:
-        'Your call. For a machine that is registered and installed, the appraiser decides whether to appraise a value.',
-    },
   },
 
   {
@@ -2580,16 +2508,6 @@ export const machineInfoFields: FormField[] = [
     group: 'ConditionUse',
     orientation: 'horizontal',
     variant: 'button',
-    help: {
-      title: 'Shows up in the report',
-      lines: [
-        '"Not Found" appends "(สำรวจไม่พบ)" to this machine in the summary report and drops it from the surveyed count.',
-      ],
-      conditions: [
-        { text: 'Condition Use is "Not Found"', when: { field: 'conditionUse', is: '03' } },
-      ],
-      whenMet: 'This rule is in effect right now.',
-    },
   },
 
   {

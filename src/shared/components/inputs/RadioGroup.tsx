@@ -74,7 +74,7 @@ const RadioGroup = ({
   if (variant !== 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
-        {(label || labelAddon) && (
+        {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-2">
             {label && (
               <Label data-field-label className="block text-sm font-medium text-gray-700">
@@ -83,6 +83,12 @@ const RadioGroup = ({
             )}
             {labelAddon}
           </div>
+        ) : (
+          label && (
+            <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">
+              {label}
+            </Label>
+          )
         )}
 
         <HeadlessRadioGroup
@@ -131,7 +137,7 @@ const RadioGroup = ({
   if (variant === 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
-        {(label || labelAddon) && (
+        {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-2">
             {label && (
               <Label data-field-label className="block text-sm font-medium text-gray-700">
@@ -140,6 +146,12 @@ const RadioGroup = ({
             )}
             {labelAddon}
           </div>
+        ) : (
+          label && (
+            <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">
+              {label}
+            </Label>
+          )
         )}
 
         <HeadlessRadioGroup
@@ -219,7 +231,7 @@ const RadioGroup = ({
   // Default variant
   return (
     <Field className={clsx('flex flex-col', className)}>
-      {(label || labelAddon) && (
+      {labelAddon ? (
         <div className="flex items-center gap-1.5 mb-2">
           {label && (
             <Label data-field-label className="block text-sm font-medium text-gray-700">
@@ -228,6 +240,12 @@ const RadioGroup = ({
           )}
           {labelAddon}
         </div>
+      ) : (
+        label && (
+          <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">
+            {label}
+          </Label>
+        )
       )}
 
       <HeadlessRadioGroup
