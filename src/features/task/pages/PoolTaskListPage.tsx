@@ -1,3 +1,4 @@
+import { InboxZeroArt, NoResultsArt } from '@/shared/components/illustrations';
 import {
   ColumnResizeHandle,
   ColumnVisibilityDropdown,
@@ -200,6 +201,8 @@ function PoolTaskListPage({
   });
 
   const tasks = data?.items ?? [];
+  /** Nothing to show, and not because we are still fetching — the table lays itself out differently. */
+  const isEmpty = !isLoading && tasks.length === 0;
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -512,7 +515,9 @@ function PoolTaskListPage({
         </div>
       ) : (
         <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          <div className="flex-1 min-h-0 overflow-auto">
+          {/* Only the rows scroll. With none, this shrinks to the header, its overflow is clipped
+              (nothing to scroll to) and the empty state below gets the rest of the card. */}
+          <div className={isEmpty ? 'shrink-0 overflow-hidden' : 'flex-1 min-h-0 overflow-auto'}>
             <table
               ref={tableRef}
               className="table-fixed text-sm"
@@ -568,37 +573,6 @@ function PoolTaskListPage({
                     columns={visibleColumns.map(() => ({ width: 'w-24' }))}
                     rows={8}
                   />
-                ) : tasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={visibleColumns.length + 2} className="py-24">
-                      <div className="flex flex-col items-center gap-4">
-                        <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                          <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-semibold text-gray-700">
-                            {hasFilters ? 'No matching tasks' : 'Pool is empty'}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {hasFilters
-                              ? 'Try adjusting your search or filters.'
-                              : 'There are no tasks in the pool right now.'}
-                          </p>
-                        </div>
-                        {hasFilters && (
-                          <button
-                            onClick={() => {
-                              setInternalSearchTerm('');
-                              setInternalFilters({});
-                            }}
-                            className="text-xs text-primary hover:underline font-medium"
-                          >
-                            Clear filters
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
                 ) : (
                   tasks.map(task => {
                     const isLockedBySelf = task.workingBy === currentUsername;
@@ -745,6 +719,41 @@ function PoolTaskListPage({
               </tbody>
             </table>
           </div>
+
+          {/* Outside the table on purpose: a cell spanning every column would centre this on
+              the TABLE, which is wider than the screen, leaving it off to the right. */}
+          {isEmpty && (
+            <div className="flex flex-1 min-h-0 items-center justify-center overflow-y-auto p-8">
+              <div className="flex flex-col items-center gap-4">
+                {hasFilters ? (
+                  <NoResultsArt className="h-24 w-28" />
+                ) : (
+                  <InboxZeroArt className="h-24 w-28" />
+                )}
+                <div className="text-center">
+                  <p className="text-sm font-semibold text-gray-700">
+                    {hasFilters ? 'No matching tasks' : 'Pool is empty'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {hasFilters
+                      ? 'Try adjusting your search or filters.'
+                      : 'There are no tasks in the pool right now.'}
+                  </p>
+                </div>
+                {hasFilters && (
+                  <button
+                    onClick={() => {
+                      setInternalSearchTerm('');
+                      setInternalFilters({});
+                    }}
+                    className="text-xs text-primary hover:underline font-medium"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           <Pagination
             currentPage={pageNumber}

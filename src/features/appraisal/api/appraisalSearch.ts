@@ -73,6 +73,13 @@ export interface AppraisalDto {
   companyName: string | null;
   companyNameLocal?: string | null;
   customerName: string | null;
+  /**
+   * How many customers the request carries. `customerName` is only one of them — the view takes a
+   * TOP 1 — while the customer search matches ANY of them, so a row can legitimately answer a
+   * search for a name it does not display. The list shows "+N" so that reads as extra customers
+   * rather than as a wrong result.
+   */
+  customerCount: number;
   province: string | null;
   district: string | null;
   subDistrict: string | null;

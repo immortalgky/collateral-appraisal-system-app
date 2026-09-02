@@ -69,7 +69,21 @@
       "collapse": "Hide filters",
       "created": "Created",
       "slaDue": "SLA due",
-      "assigneeUserId": "Assignee"
+      "assigneeUserId": "Assignee",
+      "add": "Add filter",
+      "searchIn": "Search {{label}}…",
+      "showingOf": "Showing {{shown}} of {{total}}",
+      "typeToFind": "Type to find the rest",
+      "noMatch": "No matching option",
+      "groups": {
+        "work": "Work & status",
+        "kind": "Job type",
+        "owner": "Assignment",
+        "area": "Area",
+        "time": "Dates"
+      },
+      "anyValue": "Any",
+      "optionsUnavailable": "No options available yet"
     },
     "status": {
       "Pending": "Pending",
@@ -88,7 +102,9 @@
       "AtRisk": "At Risk",
       "Breached": "Breached",
       "overdue": "Overdue {{time}}",
-      "left": "{{time}} left"
+      "left": "{{time}} left",
+      "closed": "Closed",
+      "cancelled": "Cancelled"
     },
     "assignmentType": {
       "Internal": "Internal",
@@ -136,7 +152,26 @@
     "activeFilters": "Filters:",
     "clearAll": "Clear all",
     "removeFilter": "Remove filter",
-    "activityTracking": "Activity Tracking"
+    "activityTracking": "Activity Tracking",
+    "searchTips": {
+      "trigger": "Can't find it?",
+      "title": "Not finding it? Try this",
+      "prefix": "Search matches from the start of a value — 691 finds 69105467, 05467 does not",
+      "wildcard": "Prefix with * to match anywhere, e.g. *john",
+      "scoped": "Pick a single field in the selector left of the box to match anywhere in that field",
+      "minLength": "Type at least {{count}} characters before the search runs",
+      "coverageTitle": "What “all fields” looks at",
+      "coverage": {
+        "numbers": "Appraisal no. · request no. · loan application no. · previous appraisal no.",
+        "people": "Customer names (every customer on the request) · customer phone · contact name and phone · requestor",
+        "properties": "Title deed no. · land parcel no. · room no. · licence plate · owner · project · condo name",
+        "places": "Province, district and sub-district names (when the term is an address name)"
+      }
+    },
+    "emptyAll": "No appraisals yet",
+    "emptyAllHint": "New appraisals will show up here",
+    "moreCustomers_one": "{{count}} more customer on this request",
+    "moreCustomers_other": "{{count}} more customers on this request"
   },
   "appointment": {
     "sectionTitle": "Appointment Information",
