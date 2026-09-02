@@ -397,6 +397,7 @@
     "specialRequirements": "ข้อกำหนดพิเศษ",
     "closes": "ปิดรับ",
     "hoursRemaining": "เหลือ {{n}} ชั่วโมง",
+    "viewQuotationHint": "คลิกเพื่อดูรายละเอียดใบเสนอราคา",
     "stats": {
       "companiesInvited": "บริษัทที่เชิญ",
       "responses": "การตอบรับ",

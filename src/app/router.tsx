@@ -23,6 +23,7 @@ import {
 } from '@shared/contexts/PageReadOnlyContext';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
+import { QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
 
 // Page components — lazy-loaded so each route ships as its own on-demand chunk.
 // A <Suspense> boundary wraps the <Outlet/> in each layout (plus a top-level one
@@ -687,7 +688,7 @@ export const router = createBrowserRouter([
       // RequestMaker / Admin selection page
       {
         path: 'quotations',
-        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin', 'IntAdmin']} />,
+        element: <RoleProtectedRoute allowedRoles={QUOTATION_SELECTION_ROLES} />,
         children: [
           { index: true, element: <QuotationListingPage /> },
           { path: 'new', element: <NewQuotationPage /> },

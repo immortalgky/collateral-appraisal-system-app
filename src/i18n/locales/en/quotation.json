@@ -408,7 +408,8 @@
   },
   "appraisalReport": {
     "title": "Appraisal Report Listing",
-    "noAppraisals": "No appraisals linked to this RFQ."
+    "noAppraisals": "No appraisals linked to this RFQ.",
+    "viewAppraisalHint": "Click to view appraisal details"
   },
   "trackingLog": {
     "title": "Quotation Tracking Log",

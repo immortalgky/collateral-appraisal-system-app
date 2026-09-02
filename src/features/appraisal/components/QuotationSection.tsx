@@ -39,6 +39,9 @@ import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
+import { Link } from 'react-router-dom';
+import { QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
+import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -493,6 +496,27 @@ const EditDraftForm = ({
   );
 };
 
+const NavToQuotationScreen = ({
+  canNavigate,
+  quotationId,
+  children,
+}: {
+  canNavigate: boolean;
+  quotationId: string | null;
+  children: React.ReactNode;
+}) => {
+  const { t } = useTranslation('appraisal');
+  const id = quotationId ?? '';
+
+  if (!canNavigate || !id) return <>{children}</>;
+
+  return (
+    <Link to={`/quotations/${id}`} className="group" title={t('quotation.viewQuotationHint')}>
+      {children}
+    </Link>
+  );
+};
+
 // ─── QuotationSection ─────────────────────────────────────────────────────────
 
 interface QuotationSectionProps {
@@ -509,6 +533,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { t, i18n } = useTranslation('appraisal');
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
+  const canOpenQuotation = hasRoleOrPermission(currentUser, QUOTATION_SELECTION_ROLES);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
   /** appraisalId → { documentId → { level } }; outer key tracks per-appraisal coverage */
   const [shareSelections, setShareSelections] = useState<ShareSelections>({});
@@ -767,6 +792,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   const status = (quotationDetail?.status ?? activeQuotation.status) as QuotationStatus | string;
 
+  /** Quotation-number label, wrapped in the nav-to-quotation link when permitted.
+      Every status branch below renders this with the same canNavigate/quotationId. */
+  const renderQuotationNumber = (className: string) => (
+    <NavToQuotationScreen canNavigate={canOpenQuotation} quotationId={activeQuotation.id}>
+      <span className={clsx(className, 'group-hover:text-blue-400 transition-colors')}>
+        {activeQuotation.quotationNumber}
+      </span>
+    </NavToQuotationScreen>
+  );
+
   /** Cancel Quotation footer + modal — rendered in every non-terminal, non-Draft branch.
       Draft auto-cancels via last-appraisal-removal so it gets the Remove button instead;
       Finalized/Cancelled are terminal so the action is hidden. */
@@ -878,9 +913,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 <Icon name="clock" style="solid" className="size-4 text-purple-700" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {activeQuotation.quotationNumber}
-                </span>
+                {renderQuotationNumber('text-sm font-semibold text-gray-900')}
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
@@ -1189,9 +1222,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 <Icon name="file-pen" style="solid" className="size-4 text-purple-700" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {activeQuotation.quotationNumber}
-                </span>
+                {renderQuotationNumber('text-sm font-semibold text-gray-900')}
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
@@ -1336,9 +1367,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div>
-                  <div className="text-xs text-gray-500">
-                    {t('quotation.specialRequirements')}
-                  </div>
+                  <div className="text-xs text-gray-500">{t('quotation.specialRequirements')}</div>
                   <div className="font-medium text-gray-900 whitespace-pre-wrap">
                     {draftDetail?.specialRequirements?.trim() || t('quotation.notSet')}
                   </div>
@@ -1464,9 +1493,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">
-              {activeQuotation.quotationNumber}
-            </span>
+            {renderQuotationNumber('text-sm font-semibold text-gray-700')}
             <QuotationStatusBadge status={status} />
           </div>
         </div>
@@ -1486,9 +1513,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">
-            {activeQuotation.quotationNumber}
-          </span>
+          {renderQuotationNumber('text-sm font-semibold text-gray-700')}
           <QuotationStatusBadge status={status} />
         </div>
         <ShortlistSentPanel quotation={quotationDetail} />
@@ -1508,9 +1533,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-700">
-                {activeQuotation.quotationNumber}
-              </span>
+              {renderQuotationNumber('text-sm font-semibold text-gray-700')}
               <QuotationStatusBadge status={status} />
             </div>
             {winner && !readOnly && (
@@ -1593,9 +1616,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">
-            {activeQuotation.quotationNumber}
-          </span>
+          {renderQuotationNumber('text-sm font-semibold text-gray-700')}
           <QuotationStatusBadge status={status} />
         </div>
         <NegotiationPanel quotation={quotationDetail} />
@@ -1634,16 +1655,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <Icon name="circle-check" style="solid" className="size-4 text-green-700" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-900">
-              {activeQuotation.quotationNumber}
-            </span>
+            {renderQuotationNumber('text-sm font-semibold text-gray-900')}
             <QuotationStatusBadge status={status} className="ml-2" />
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-600">
           <p>
             {t('quotation.finalizedWith', {
-              company: winner ? localizeCompanyName(winner.companyName, winner.companyNameLocal) : '—',
+              company: winner
+                ? localizeCompanyName(winner.companyName, winner.companyNameLocal)
+                : '—',
             })}
           </p>
           {finalPrice != null && (
@@ -1672,9 +1693,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               <Icon name="ban" style="solid" className="size-4 text-red-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">
-                {activeQuotation.quotationNumber}
-              </span>
+              {renderQuotationNumber('text-sm font-semibold text-gray-900')}
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
@@ -1709,9 +1728,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       </div>
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-purple-600">
-            {activeQuotation.quotationNumber}
-          </span>
+          {renderQuotationNumber('text-sm font-medium text-purple-600')}
           <QuotationStatusBadge status={status} />
         </div>
       </div>

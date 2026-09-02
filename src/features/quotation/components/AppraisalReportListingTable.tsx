@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import type { AppraisalSummaryDto } from '../schemas/quotation';
+import { Link } from 'react-router-dom';
 
 interface AppraisalReportListingTableProps {
   appraisals: AppraisalSummaryDto[];
@@ -17,6 +18,7 @@ interface AppraisalRowProps {
 }
 
 const AppraisalRow = ({ ap, index, rmUserName, rmUserFullName }: AppraisalRowProps) => {
+  const { t } = useTranslation('quotation');
   const propertyTypeDescription = useParameterDescription('PropertyType', ap.propertyType ?? '');
 
   return (
@@ -25,7 +27,17 @@ const AppraisalRow = ({ ap, index, rmUserName, rmUserFullName }: AppraisalRowPro
         <span className="text-sm text-gray-400 tabular-nums">{index}</span>
       </td>
       <td className="px-4 py-2">
-        <span className="text-sm font-medium text-gray-900">{ap.appraisalNumber ?? '—'}</span>
+        {ap.appraisalNumber != null ? (
+          <Link
+            to={`/appraisals/${ap.appraisalId}/administration`}
+            className="text-sm font-medium text-gray-900 hover:text-blue-400"
+            title={t('appraisalReport.viewAppraisalHint')}
+          >
+            {ap.appraisalNumber}
+          </Link>
+        ) : (
+          <span className="text-sm font-medium text-gray-900">{'—'}</span>
+        )}
       </td>
       <td className="px-4 py-2">
         <span className="text-sm text-gray-600">{ap.customerName ?? '—'}</span>
