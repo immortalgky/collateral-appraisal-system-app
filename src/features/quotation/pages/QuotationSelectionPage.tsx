@@ -587,7 +587,10 @@ const QuotationSelectionPage = () => {
                 __html: t('shared.quotationAwarded', {
                   company: `<strong class="text-gray-900">${
                     finalizedWinner
-                      ? localizeCompanyName(finalizedWinner.companyName, finalizedWinner.companyNameLocal)
+                      ? localizeCompanyName(
+                          finalizedWinner.companyName,
+                          finalizedWinner.companyNameLocal,
+                        )
                       : '—'
                   }</strong>`,
                 }),
@@ -686,7 +689,10 @@ const QuotationSelectionPage = () => {
                   {t('negotiation.rmRequestsNegotiation')}{' '}
                   <strong>
                     {tentativeWinner &&
-                      localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+                      localizeCompanyName(
+                        tentativeWinner.companyName,
+                        tentativeWinner.companyNameLocal,
+                      )}
                   </strong>
                 </p>
                 {quotation.rmNegotiationNote && (
@@ -865,7 +871,10 @@ const QuotationSelectionPage = () => {
                 __html: t('selectWinner.body', {
                   company: `<strong>${
                     pickedCompany
-                      ? localizeCompanyName(pickedCompany.companyName, pickedCompany.companyNameLocal)
+                      ? localizeCompanyName(
+                          pickedCompany.companyName,
+                          pickedCompany.companyNameLocal,
+                        )
                       : ''
                   }</strong>`,
                 }),
@@ -1008,7 +1017,10 @@ const QuotationSelectionPage = () => {
           }}
           quotationId={quotation.id}
           companyQuotationId={finalizeTarget.id}
-          companyName={localizeCompanyName(finalizeTarget.companyName, finalizeTarget.companyNameLocal)}
+          companyName={localizeCompanyName(
+            finalizeTarget.companyName,
+            finalizeTarget.companyNameLocal,
+          )}
           winnerItems={finalizeTarget.items ?? []}
           appraisals={quotation.appraisals ?? []}
         />
@@ -1021,7 +1033,10 @@ const QuotationSelectionPage = () => {
           onClose={() => setIsNegotiationOpen(false)}
           quotationId={quotation.id}
           companyQuotationId={tentativeWinner.id}
-          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+          companyName={localizeCompanyName(
+            tentativeWinner.companyName,
+            tentativeWinner.companyNameLocal,
+          )}
           currentRounds={tentativeWinner.negotiationRounds ?? 0}
         />
       )}
@@ -1032,7 +1047,10 @@ const QuotationSelectionPage = () => {
           isOpen={isRejectOpen}
           onClose={() => setIsRejectOpen(false)}
           quotationId={quotation.id}
-          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+          companyName={localizeCompanyName(
+            tentativeWinner.companyName,
+            tentativeWinner.companyNameLocal,
+          )}
         />
       )}
 

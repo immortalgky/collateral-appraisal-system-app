@@ -393,6 +393,7 @@
     "specialRequirements": "特殊要求",
     "closes": "截止时间",
     "hoursRemaining": "剩余 {{n}} 小时",
+    "viewQuotationHint": "点击查看报价详情",
     "stats": {
       "companiesInvited": "受邀公司",
       "responses": "回复",

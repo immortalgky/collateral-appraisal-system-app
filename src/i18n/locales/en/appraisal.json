@@ -397,6 +397,7 @@
     "specialRequirements": "Special Requirements",
     "closes": "Closes",
     "hoursRemaining": "{{n}}h remaining",
+    "viewQuotationHint": "Click to view quotation details",
     "stats": {
       "companiesInvited": "Invited Companies",
       "responses": "Responses",
