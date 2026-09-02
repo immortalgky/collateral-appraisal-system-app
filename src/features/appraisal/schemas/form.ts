@@ -893,6 +893,12 @@ export const createMachineryFormDefault: createMachineryFormType = {
   isOwnerVerified: true,
   ownerName: null,
   registrationNumber: null,
+  // Sent as '' rather than null when cleared: the API's Update treats null as "leave unchanged".
+  installationStatus: '',
+  machineType: '',
+  registrationStatus: false,
+  invoiceNumber: null,
+  isPriceCertified: true,
   isOperational: true,
   machineName: null,
   brand: null,

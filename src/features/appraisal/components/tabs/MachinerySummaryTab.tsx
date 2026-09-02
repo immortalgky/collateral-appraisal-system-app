@@ -12,7 +12,11 @@ import { FormFields, type FormField } from '@/shared/components/form';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
-import { useGetMachinerySummary, useSaveMachinerySummary } from '@features/appraisal/api';
+import {
+  useGetMachinerySummary,
+  useGetMachinerySummarySuggestedCounts,
+  useSaveMachinerySummary,
+} from '@features/appraisal/api';
 import {
   machinerySummaryForm,
   machinerySummaryFormDefault,
@@ -47,6 +51,40 @@ const FIELD_LABEL_KEYS = {
   obligation: 'propertyInfo.machinerySummary.fields.obligation',
   other: 'propertyInfo.machinerySummary.fields.other',
 } as const;
+
+// The Section 3.1 counts every machine on the appraisal already answers. The backend derives them
+// (GET .../machinery-summary/suggested-counts); the rule each one applies is spelled out in the
+// field's "?" panel so the appraiser can tell whether the number is the one they mean.
+const SUGGESTED_COUNT_RULE_KEYS = {
+  surveyedNumber: 'propertyInfo.machinerySummary.suggested.rules.surveyedNumber',
+  appraisalNumber: 'propertyInfo.machinerySummary.suggested.rules.appraisalNumber',
+  installedAndUseCount: 'propertyInfo.machinerySummary.suggested.rules.installedAndUseCount',
+  appraisalScrapCount: 'propertyInfo.machinerySummary.suggested.rules.appraisalScrapCount',
+  appraisedByDocumentCount:
+    'propertyInfo.machinerySummary.suggested.rules.appraisedByDocumentCount',
+  notInstalledCount: 'propertyInfo.machinerySummary.suggested.rules.notInstalledCount',
+} as const;
+
+type SuggestedCountName = keyof typeof SUGGESTED_COUNT_RULE_KEYS;
+
+const SUGGESTED_COUNT_NAMES = Object.keys(SUGGESTED_COUNT_RULE_KEYS) as SuggestedCountName[];
+
+/**
+ * Fills one count with its derived value. Rendered as the number input's `rightIcon`, which the
+ * wrapper makes non-interactive by default — see MapPickerTriggerIcon for the same opt-back-in.
+ */
+const ApplySuggestionIcon = ({ label, onApply }: { label: string; onApply: () => void }) => (
+  <button
+    type="button"
+    onClick={onApply}
+    onMouseDown={e => e.preventDefault()}
+    title={label}
+    aria-label={label}
+    className="pointer-events-auto p-1 -m-1 text-gray-400 hover:text-primary-600 transition-colors cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+  >
+    <Icon name="wand-magic-sparkles" style="solid" className="size-3.5" />
+  </button>
+);
 
 const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
   const { t } = useTranslation('appraisal');
@@ -109,6 +147,7 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
   const appraisalId = useAppraisalId();
 
   const { data, isLoading, isError, error, refetch } = useGetMachinerySummary(appraisalId);
+  const { data: suggestedCounts } = useGetMachinerySummarySuggestedCounts(appraisalId);
   const saveMutation = useSaveMachinerySummary();
 
   const methods = useForm<machinerySummaryFormType>({
@@ -124,14 +163,60 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, isLoading]);
 
-  // Translate the general-section field labels (FormFields renders labels verbatim).
+  const applyCount = (name: SuggestedCountName, value: number) =>
+    methods.setValue(name, value, { shouldDirty: true, shouldValidate: true });
+
+  /** Fills only the counts still blank, so a number the appraiser typed is never replaced. */
+  const applySuggestedToEmpty = () => {
+    if (!suggestedCounts) return;
+    SUGGESTED_COUNT_NAMES.forEach(name => {
+      const current = methods.getValues(name);
+      if (current === null || current === undefined || current === ('' as unknown)) {
+        applyCount(name, suggestedCounts[name]);
+      }
+    });
+  };
+
+  // Translate the general-section field labels (FormFields renders labels verbatim) and, for the
+  // six counts, hang the derived value off them as a placeholder, a "?" explanation and a fill button.
   const generalFields = useMemo<FormField[]>(
     () =>
       machinerySummaryGeneralFields.map(field => {
         const key = FIELD_LABEL_KEYS[field.name as keyof typeof FIELD_LABEL_KEYS];
-        return key ? { ...field, label: t(key) } : field;
+        const translated = key ? { ...field, label: t(key) } : field;
+
+        const ruleKey = SUGGESTED_COUNT_RULE_KEYS[field.name as SuggestedCountName];
+        if (!ruleKey || !suggestedCounts) return translated;
+
+        const name = field.name as SuggestedCountName;
+        const value = suggestedCounts[name];
+
+        return {
+          ...translated,
+          placeholder: String(value),
+          help: {
+            title: t('propertyInfo.machinerySummary.suggested.helpTitle'),
+            lines: [
+              t(ruleKey),
+              t('propertyInfo.machinerySummary.suggested.helpComputed', { value }),
+              t('propertyInfo.machinerySummary.suggested.helpNote'),
+            ],
+          },
+          ...(readOnly || field.type !== 'number-input'
+            ? {}
+            : {
+                rightIcon: (
+                  <ApplySuggestionIcon
+                    label={t('propertyInfo.machinerySummary.suggested.applyOne', { value })}
+                    onApply={() => applyCount(name, value)}
+                  />
+                ),
+              }),
+        } as FormField;
       }),
-    [t],
+    // applyCount closes over the stable `methods` object from useForm
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, suggestedCounts, readOnly],
   );
 
   const onSubmit: SubmitHandler<machinerySummaryFormType> = values => {
@@ -187,6 +272,14 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
           icon="gears"
           iconColor="blue"
         >
+          {!readOnly && suggestedCounts && (
+            <div className="mb-4 flex justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={applySuggestedToEmpty}>
+                <Icon name="wand-magic-sparkles" style="solid" className="size-3.5 mr-2" />
+                {t('propertyInfo.machinerySummary.suggested.applyEmpty')}
+              </Button>
+            </div>
+          )}
           <div className="grid grid-cols-12 gap-4">
             <FormFields fields={generalFields} disabled={readOnly} showCharCount />
           </div>

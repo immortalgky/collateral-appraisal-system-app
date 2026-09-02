@@ -28,6 +28,7 @@ import LocationSelector from '../inputs/LocationSelector';
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
+import FieldHelp from './FieldHelp';
 import type { FormField } from './types';
 import { useFilterWatchValues } from '@/shared/hooks/useFilterWatchValues';
 import ParameterSearchInput from '../inputs/ParameterSearchInput';
@@ -315,10 +316,17 @@ function FieldRenderer({
     hiddenValue: _hv,
     formatPattern: _fp,
     formatPatternMessage: _fpm,
+    help: _help,
     inputMask,
     placeholder: fieldPlaceholder,
     ...passedField
   } = field;
+
+  // The "?" beside the label. Rendered next to the label rather than inside it, so the button is
+  // not swallowed by the label's click target.
+  const labelAddon = field.help ? (
+    <FieldHelp config={field.help} namePrefix={namePrefix} index={index} />
+  ) : undefined;
 
   // Render the appropriate field component
   const renderFieldComponent = () => {
@@ -339,6 +347,7 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...textProps}
+            labelAddon={labelAddon}
             inputMask={inputMask}
             error={error?.message}
           />
@@ -352,9 +361,16 @@ function FieldRenderer({
           max: passedField.max ?? schemaProps.max,
           required: isRequired,
           disabled: isDisabled,
+          ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
         return (
-          <NumberInput {...fieldProps} {...passedField} {...numberProps} error={error?.message} />
+          <NumberInput
+            {...fieldProps}
+            {...passedField}
+            {...numberProps}
+            labelAddon={labelAddon}
+            error={error?.message}
+          />
         );
       }
 
@@ -364,7 +380,15 @@ function FieldRenderer({
           disabled: isDisabled,
           ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
-        return <DateInput {...fieldProps} {...passedField} {...dateProps} error={error?.message} />;
+        return (
+          <DateInput
+            {...fieldProps}
+            {...passedField}
+            {...dateProps}
+            labelAddon={labelAddon}
+            error={error?.message}
+          />
+        );
       }
 
       case 'datetime-input': {
@@ -403,6 +427,7 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...dropdownProps}
+            labelAddon={labelAddon}
             error={error?.message}
             filterWatchValues={filterWatchValues}
           />
@@ -411,7 +436,14 @@ function FieldRenderer({
 
       case 'boolean-toggle': {
         const { type: _bt, name: _bn, key: _bk, ...boolToggleRest } = passedField;
-        return <FormBooleanToggle {...boolToggleRest} name={name} disabled={isDisabled} />;
+        return (
+          <FormBooleanToggle
+            {...boolToggleRest}
+            name={name}
+            disabled={isDisabled}
+            labelAddon={labelAddon}
+          />
+        );
       }
 
       case 'string-toggle': {
@@ -429,7 +461,13 @@ function FieldRenderer({
           ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
         return (
-          <Textarea {...fieldProps} {...passedField} {...textareaProps} error={error?.message} />
+          <Textarea
+            {...fieldProps}
+            {...passedField}
+            {...textareaProps}
+            labelAddon={labelAddon}
+            error={error?.message}
+          />
         );
       }
 
@@ -488,6 +526,7 @@ function FieldRenderer({
           <FormRadioGroup
             name={name}
             label={rgLabel}
+            labelAddon={labelAddon}
             disabled={isDisabled}
             className={rgClass}
             size={rgSize}
@@ -574,6 +613,7 @@ function FieldRenderer({
             group={(passedField as any).group ?? ''}
             options={(passedField as any).options}
             label={passedField.label}
+            labelAddon={labelAddon}
             {...{ required: isRequired, disabled: isDisabled }}
             error={error?.message}
           />

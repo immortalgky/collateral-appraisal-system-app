@@ -2442,6 +2442,64 @@ export const machineInfoFields: FormField[] = [
     maxLength: 50,
   },
 
+  // Registration & installation, carried over from the request title and editable here.
+  // The appraiser sees the machine; the requestor only described it.
+  {
+    type: 'dropdown',
+    label: 'Installation Status',
+    name: 'installationStatus',
+    wrapperClassName: 'col-span-4',
+    group: 'MachineStatus',
+  },
+
+  {
+    type: 'dropdown',
+    label: 'Machine Type',
+    name: 'machineType',
+    wrapperClassName: 'col-span-3',
+    group: 'MachineType',
+  },
+
+  {
+    type: 'boolean-toggle',
+    label: 'Registration Status',
+    name: 'registrationStatus',
+    options: ['Unregistered', 'Registered'],
+    wrapperClassName: 'col-span-5',
+  },
+
+  // Only meaningful while the machine is under procurement, so it appears with that status and
+  // goes away with it. Hiding clears the field to null, which the API reads as "leave unchanged",
+  // so the invoice a since-delivered machine was priced from stays on the record.
+  {
+    type: 'text-input',
+    label: 'Invoice No.',
+    name: 'invoiceNumber',
+    wrapperClassName: 'col-span-5',
+    maxLength: 20,
+    showWhen: { field: 'installationStatus', is: '2' },
+    requiredWhen: { field: 'installationStatus', is: '2' },
+  },
+
+  // Certifying the price and appraising a value are one decision, not two: this flag is what the
+  // summary report prints as "(ไม่ประเมินมูลค่า)". The server enforces the same two rules in
+  // MachineryAppraisalDetail.NormalizePriceCertification, so the toggle only mirrors them.
+  {
+    type: 'boolean-toggle',
+    label: 'Price Certified',
+    name: 'isPriceCertified',
+    options: ['Not Certified', 'Certified'],
+    wrapperClassName: 'col-span-7',
+    disabledValue: false,
+    disableWhen: {
+      match: 'any',
+      conditions: [
+        { field: 'registrationStatus', is: false },
+        { field: 'installationStatus', is: '2' },
+      ],
+    },
+  },
+
   {
     type: 'radio-group',
     label: 'Condition Use ',

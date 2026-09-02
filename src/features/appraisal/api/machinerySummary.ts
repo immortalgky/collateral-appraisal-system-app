@@ -44,9 +44,21 @@ export interface MachinerySummaryResponse extends MachinerySummaryFields {
   appraisalId: string;
 }
 
+/** The six Section 3.1 head-counts, derived from the machines on the appraisal. */
+export interface MachinerySummarySuggestedCounts {
+  surveyedNumber: number;
+  appraisalNumber: number;
+  installedAndUseCount: number;
+  appraisalScrapCount: number;
+  appraisedByDocumentCount: number;
+  notInstalledCount: number;
+}
+
 export const machinerySummaryKeys = {
   detail: (appraisalId: string | undefined) =>
     ['appraisal', appraisalId, 'machinery-summary'] as const,
+  suggestedCounts: (appraisalId: string | undefined) =>
+    ['appraisal', appraisalId, 'machinery-summary', 'suggested-counts'] as const,
 };
 
 /**
@@ -94,5 +106,25 @@ export const useSaveMachinerySummary = () => {
         queryKey: machinerySummaryKeys.detail(variables.appraisalId),
       });
     },
+  });
+};
+
+/**
+ * Head-counts derived from the machines recorded on the appraisal.
+ * GET /appraisals/{appraisalId}/machinery-summary/suggested-counts
+ *
+ * Offered as a starting value for the Section 3.1 counts. Nothing is stored: the saved summary
+ * keeps whatever the appraiser typed, and an appraisal with no machinery returns zeroes.
+ */
+export const useGetMachinerySummarySuggestedCounts = (appraisalId: string | undefined) => {
+  return useQuery({
+    queryKey: machinerySummaryKeys.suggestedCounts(appraisalId),
+    queryFn: async (): Promise<MachinerySummarySuggestedCounts> => {
+      const { data } = await axios.get(
+        `/appraisals/${appraisalId}/machinery-summary/suggested-counts`,
+      );
+      return data;
+    },
+    enabled: !!appraisalId,
   });
 };

@@ -69,6 +69,8 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
           model: item.model ?? undefined,
           registrationNumber: item.registrationNumber ?? undefined,
           dimension: item.dimension ?? undefined,
+          registrationStatus: item.registrationStatus ?? undefined,
+          isPriceCertified: item.isPriceCertified ?? undefined,
         }
       : {}),
   };

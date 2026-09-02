@@ -132,14 +132,22 @@ export function PropertyCardContent({
                 className={`absolute bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all ${pinPosition}`}
                 title={t('properties.map.pinView')}
               >
-                <Icon name="location-dot" className={`text-green-500 ${pinIconSize}`} style="solid" />
+                <Icon
+                  name="location-dot"
+                  className={`text-green-500 ${pinIconSize}`}
+                  style="solid"
+                />
               </button>
             ) : (
               <span
                 className={`absolute bg-white/80 rounded-full shadow-sm cursor-not-allowed ${pinPosition}`}
                 title={t('properties.map.pinNoLocation')}
               >
-                <Icon name="location-dot" className={`text-gray-300 ${pinIconSize}`} style="solid" />
+                <Icon
+                  name="location-dot"
+                  className={`text-gray-300 ${pinIconSize}`}
+                  style="solid"
+                />
               </span>
             )
           ) : (
@@ -228,6 +236,30 @@ export function PropertyCardContent({
                       <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
                         <Icon name="hashtag" className="text-[9px] text-gray-400" style="solid" />
                         {property.registrationNumber}
+                      </span>
+                    )}
+                    {property.registrationStatus !== undefined && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
+                        <Icon
+                          name="certificate"
+                          className="text-[9px] text-gray-400"
+                          style="solid"
+                        />
+                        {t(
+                          property.registrationStatus
+                            ? 'properties.machineryChips.registered'
+                            : 'properties.machineryChips.unregistered',
+                        )}
+                      </span>
+                    )}
+                    {property.isPriceCertified === false && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-warning-content bg-warning/10 border border-warning/30 rounded-full px-2 py-0.5">
+                        <Icon
+                          name="triangle-exclamation"
+                          className="text-[9px] text-warning"
+                          style="solid"
+                        />
+                        {t('properties.machineryChips.notAppraised')}
                       </span>
                     )}
                     {property.dimension && (

@@ -70,6 +70,8 @@ function applyOptionFilters(
 
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   placeholder?: string;
   onChange?: (value: any) => void;
   error?: string;
@@ -129,6 +131,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       value,
       onChange,
       label,
+      labelAddon,
       placeholder = 'Please select',
       error,
       required,
@@ -175,11 +178,26 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 
     return (
       <div className={clsx('w-full', props.className)}>
-        {label && (
-          <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
-            {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
+            of this component with `display: contents`, so an extra element in between would take
+            the label column and stretch. */}
+        {labelAddon ? (
+          <div className="flex items-center gap-1.5 mb-1">
+            {label && (
+              <div data-field-label className="block text-xs font-medium text-gray-700">
+                {label}
+                {required && <span className="text-danger ml-0.5">*</span>}
+              </div>
+            )}
+            {labelAddon}
           </div>
+        ) : (
+          label && (
+            <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+              {label}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </div>
+          )
         )}
         <ListBox
           ref={ref}

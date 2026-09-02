@@ -645,6 +645,21 @@
         "longitude": "经度",
         "obligation": "义务负担",
         "other": "其他"
+      },
+      "suggested": {
+        "applyEmpty": "将计算值填入空白栏",
+        "applyOne": "使用计算值（{{value}}）",
+        "helpTitle": "根据本次评估的机器计算",
+        "helpComputed": "计算值：{{value}}",
+        "helpNote": "仅为初始值，不会覆盖您填写的内容。",
+        "rules": {
+          "surveyedNumber": "勘查中找到的机器（使用状况不是\"未找到\"）",
+          "appraisalNumber": "已认证价格的机器，与已评估价值相同",
+          "installedAndUseCount": "已安装并在使用中的机器",
+          "appraisalScrapCount": "未在使用但仍进行评估的机器",
+          "appraisedByDocumentCount": "采购中、按报价单定价的机器",
+          "notInstalledCount": "采购中的机器"
+        }
       }
     }
   },
@@ -658,6 +673,11 @@
       "legendComparables": "市场比较对象",
       "pinView": "在地图上查看",
       "pinNoLocation": "未设置位置"
+    },
+    "machineryChips": {
+      "registered": "已登记",
+      "unregistered": "未登记",
+      "notAppraised": "不评估价值"
     },
     "addNewGroup": "添加新组",
     "noGroups": "暂无房产组",
