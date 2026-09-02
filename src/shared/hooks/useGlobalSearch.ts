@@ -45,7 +45,11 @@ export function useGlobalSearch() {
     selectedScope,
   );
 
-  const isShowingResults = debouncedQuery.length >= MIN_SEARCH_LENGTH;
+  // Both trimmed, and both on the same basis as the server: QuickSearchEndpoint rejects a term
+  // shorter than MinTermLength AFTER trimming, so counting raw spaces here made the panel claim it
+  // was showing results for "   " while the spinner — which did trim — stayed off, for a request
+  // that comes back 400.
+  const isShowingResults = debouncedQuery.trim().length >= MIN_SEARCH_LENGTH;
 
   const termIsSearchable = searchQuery.trim().length >= MIN_SEARCH_LENGTH;
 
