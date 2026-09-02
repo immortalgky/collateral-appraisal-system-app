@@ -32,8 +32,9 @@ import {
   useRowNumberColumn,
 } from '@/shared/components/columnLayout';
 import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
-import SearchFilterBar from '../components/search/SearchFilterBar';
-import ActiveFilterChips from '../components/search/ActiveFilterChips';
+import FilterChipBar from '../components/search/FilterChipBar';
+import SearchTipsButton from '../components/search/SearchTipsButton';
+import AppraisalEmptyState from '../components/search/AppraisalEmptyState';
 import SmartViewBar from '../components/search/SmartViewBar';
 import SavedSearchesDropdown from '../components/search/SavedSearchesDropdown';
 import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
@@ -89,6 +90,22 @@ const SEARCH_FIELD_ICONS: Record<SearchField, string> = {
 const isSearchField = (v: string | null): v is SearchField =>
   v !== null && (SEARCH_FIELDS as readonly string[]).includes(v);
 
+/**
+ * Reads a stored sort that predates the "unsorted" state.
+ *
+ * Before sorting had an off position, an ascending CreatedAt sort was stored as
+ * `{sortBy: undefined, sortDir: 'asc'}` — which now reads as unsorted and would quietly return
+ * newest-first, the opposite of what was saved. A direction with no field means CreatedAt in that
+ * direction. Written once because two copies of this rule, in the URL reader and the saved-search
+ * loader, would eventually disagree.
+ */
+const restoreSort = (sortBy: string | null | undefined, sortDir: string | null | undefined) =>
+  sortBy
+    ? { sortBy, sortDir: sortDir || 'desc' }
+    : sortDir
+      ? { sortBy: 'CreatedAt', sortDir }
+      : { sortBy: '', sortDir: 'desc' };
+
 function AppraisalListPage() {
   const { t } = useTranslation(['appraisal', 'common']);
   // Memoized because these feed the column-layout hooks: rebuilding the array every render would
@@ -115,8 +132,10 @@ function AppraisalListPage() {
     searchField: (isSearchField(searchParams.get('searchField'))
       ? searchParams.get('searchField')
       : 'all') as SearchField,
-    sortBy: searchParams.get('sortBy') || 'CreatedAt',
-    sortDir: searchParams.get('sortDir') || 'desc',
+    // '' is the unsorted state — the server falls back to CreatedAt DESC. Held as empty rather
+    // than as 'CreatedAt' so the header can tell "newest first because nobody chose" apart from
+    // "newest first because the user clicked Created", and show a neutral arrow for the first.
+    ...restoreSort(searchParams.get('sortBy'), searchParams.get('sortDir')),
     view: searchParams.get('view') || null,
     filters: (() => {
       const f: Record<string, string> = {};
@@ -168,8 +187,8 @@ function AppraisalListPage() {
     if (searchField !== 'all') params.searchField = searchField;
     if (pageNumber > 0) params.page = String(pageNumber);
     if (pageSize !== 25) params.pageSize = String(pageSize);
-    if (sortBy !== 'CreatedAt') params.sortBy = sortBy;
-    if (sortDir !== 'desc') params.sortDir = sortDir;
+    if (sortBy) params.sortBy = sortBy;
+    if (sortBy && sortDir !== 'desc') params.sortDir = sortDir;
     if (activeViewKey) params.view = activeViewKey;
     Object.entries(filters).forEach(([k, v]) => {
       if (v) params[k] = v;
@@ -196,13 +215,26 @@ function AppraisalListPage() {
     return searchField === 'all' ? { search: term } : { [searchField]: term };
   }, [debouncedSearch, searchField]);
 
+  /**
+   * Filters minus the ones that hold nothing.
+   *
+   * A chip whose values were all unticked stays on screen (so its panel does not close under the
+   * cursor) by keeping its key with an empty value — which has no business travelling to the API
+   * as `?status=`.
+   */
+  const activeFilters = useMemo(
+    () => Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')),
+    [filters],
+  );
+
   const { data, isLoading, isFetching, isError, error, refetch } = useAppraisalSearch({
     ...searchParam,
     pageNumber,
     pageSize,
-    sortBy,
-    sortDir,
-    ...filters,
+    // Unsorted sends neither: the API orders by CreatedAt DESC when SortBy is missing.
+    sortBy: sortBy || undefined,
+    sortDir: sortBy ? sortDir : undefined,
+    ...activeFilters,
   });
 
   // Loading feedback: true only while a request is in flight (not during typing/debounce)
@@ -235,13 +267,24 @@ function AppraisalListPage() {
   const servedPageSize = data?.result.pageSize ?? pageSize;
 
   // Handlers
+  /**
+   * Three states per column, cycled by clicking: ascending → descending → off.
+   *
+   * "Off" is not "sort by Created again" — it clears the choice, so the list goes back to whatever
+   * order the server gives by default and the header stops claiming a column is in charge.
+   */
   const handleSort = (field: string) => {
-    if (sortBy === field) {
-      setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
-    } else {
+    if (sortBy !== field) {
       setSortBy(field);
       setSortDir('asc');
+      return;
     }
+    if (sortDir === 'asc') {
+      setSortDir('desc');
+      return;
+    }
+    setSortBy('');
+    setSortDir('desc');
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -272,10 +315,25 @@ function AppraisalListPage() {
 
   const handleLoadSavedSearch = (search: SavedSearchDto) => {
     try {
-      const parsed = JSON.parse(search.filtersJson);
-      setFilters(parsed);
-      if (search.sortBy) setSortBy(search.sortBy);
-      if (search.sortDir) setSortDir(search.sortDir);
+      const parsed = JSON.parse(search.filtersJson) as Record<string, string>;
+      // Through the same whitelist the URL uses. The chip bar draws from the FilterField list, so a
+      // stored key with no field (a renamed filter, or backend-valid ones like district/channel
+      // that this screen never offered) would reach the API while drawing no chip — a filter the
+      // user cannot see, let alone remove.
+      setFilters(
+        Object.fromEntries(
+          Object.entries(parsed).filter(([k, v]) => v !== '' && VALID_FILTER_KEYS.has(k)),
+        ),
+      );
+      // Assigned unconditionally: a search saved while unsorted carries no sortBy, and skipping
+      // the call left whatever the user happened to be sorting by still applied.
+      //
+      // The migration guards searches written before sorting had an "off" state: back then an
+      // ascending CreatedAt sort was stored as {sortBy: undefined, sortDir: 'asc'}, which now reads
+      // as unsorted and would quietly return newest-first — the opposite of what was saved.
+      const sort = restoreSort(search.sortBy, search.sortDir);
+      setSortBy(sort.sortBy);
+      setSortDir(sort.sortDir);
       setActiveViewKey(null);
     } catch {
       /* ignore invalid JSON */
@@ -286,9 +344,12 @@ function AppraisalListPage() {
     createSavedSearch.mutate({
       name,
       entityType: 'appraisal',
-      filtersJson: JSON.stringify(filters),
-      sortBy: sortBy !== 'CreatedAt' ? sortBy : undefined,
-      sortDir: sortDir !== 'desc' ? sortDir : undefined,
+      // activeFilters, not filters: a chip whose values were all unticked is a live UI state, not
+      // a filter. Stored, it came back on every load as a "Status: Any" chip that filtered nothing
+      // and could not be explained.
+      filtersJson: JSON.stringify(activeFilters),
+      sortBy: sortBy || undefined,
+      sortDir: sortBy && sortDir !== 'desc' ? sortDir : undefined,
     });
   };
 
@@ -328,19 +389,6 @@ function AppraisalListPage() {
   );
   const { showRowNumber, toggleRowNumber } = useRowNumberColumn(COLUMN_STORAGE_KEY);
   const getAutoFitWidth = useColumnAutoFit(tableRef, { leadingCells: showRowNumber ? 1 : 0 });
-
-  const filterLabels = useMemo(
-    () => Object.fromEntries(filterKeys.map(f => [f.key, f.label])),
-    [filterKeys],
-  );
-
-  const filterValueOptions = useMemo(
-    () =>
-      Object.fromEntries(
-        appraisalFilters.filter(f => f.options?.length).map(f => [f.key, f.options!]),
-      ),
-    [appraisalFilters],
-  );
 
   /**
    * Icons follow what the quotation listing already uses for the same concepts, so the two
@@ -398,7 +446,15 @@ function AppraisalListPage() {
       // searchParam, not `search:` — otherwise pinning the scope to "Appraisal no." showed three
       // rows on screen and exported every row matching the broad three-column OR. totalCount, which
       // the truncation warning above is measured against, describes the on-screen set.
-      await exportAppraisals({ ...searchParam, sortBy, sortDir, ...filters }, format);
+      await exportAppraisals(
+        {
+          ...searchParam,
+          sortBy: sortBy || undefined,
+          sortDir: sortBy ? sortDir : undefined,
+          ...activeFilters,
+        },
+        format,
+      );
     } catch {
       // Previously this promise was dropped, so a failed or timed-out export was indistinguishable
       // from a slow one — nothing appeared and nothing said why.
@@ -516,7 +572,14 @@ function AppraisalListPage() {
             value={searchTerm}
             onChange={setSearchTerm}
             placeholder={t(`list.searchPlaceholderBy.${searchField}`)}
-            describedBy="appraisal-search-hint"
+            // Both: the static syntax sentence (sr-only, inside SearchTipsButton) and, when it is
+            // on screen, the reason nothing is happening. Without the second, a screen-reader user
+            // typing two characters is told the syntax and never told why the list did not move.
+            describedBy={
+              isSearchTooShort
+                ? 'appraisal-search-hint appraisal-search-too-short'
+                : 'appraisal-search-hint'
+            }
             endAdornment={
               isSearchPending ? (
                 <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
@@ -536,12 +599,12 @@ function AppraisalListPage() {
               )
             }
           />
-          <SearchFilterBar
-            collapsible
-            filters={appraisalFilters}
-            values={filters}
-            onChange={handleFilterChange}
-            onClear={handleClearFilters}
+          <SearchTipsButton
+            minLength={MIN_SEARCH_LENGTH}
+            hintId="appraisal-search-hint"
+            hint={
+              searchField === 'all' ? t('list.searchPrefixHint') : t('list.searchSubstringHint')
+            }
           />
           <ColumnVisibilityDropdown
             orderedColumns={orderedColumns}
@@ -571,23 +634,23 @@ function AppraisalListPage() {
             ]}
           />
         </div>
-        <p id="appraisal-search-hint" className="text-xs text-gray-400 dark:text-gray-500">
-          {isSearchTooShort
-            ? t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })
-            : searchField === 'all'
-              ? t('list.searchPrefixHint')
-              : t('list.searchSubstringHint')}
-        </p>
+        {isSearchTooShort && (
+          <p id="appraisal-search-too-short" aria-live="polite" className="text-xs text-amber-600">
+            {t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })}
+          </p>
+        )}
       </div>
 
-      {/* Active Filter Chips */}
+      {/* Filters. The chips ARE the filter bar: each one opens the value list it summarises, and
+          "Add filter" offers the fields that are not in use yet — so a filter is drawn once
+          instead of three times (panel, chip row, count badge). */}
       <div className="shrink-0">
-        <ActiveFilterChips
-          filters={filters}
-          labels={filterLabels}
-          valueOptions={filterValueOptions}
+        <FilterChipBar
+          filters={appraisalFilters}
+          values={filters}
+          onChange={handleFilterChange}
           onRemove={handleRemoveFilter}
-          onClearAll={handleClearFilters}
+          onClear={handleClearFilters}
         />
       </div>
 
@@ -616,6 +679,11 @@ function AppraisalListPage() {
           pageNumber={servedPageNumber}
           pageSize={servedPageSize}
           isStale={isFetching && !showSkeleton}
+          emptyState={
+            <AppraisalEmptyState
+              isFiltered={Boolean(debouncedSearch) || Object.keys(activeFilters).length > 0}
+            />
+          }
         />
         <Pagination
           currentPage={pageNumber}

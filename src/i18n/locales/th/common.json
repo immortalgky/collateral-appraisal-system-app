@@ -116,6 +116,7 @@
     "next": "หน้าถัดไป",
     "last": "หน้าสุดท้าย",
     "itemRange": "{{start}}-{{end}} จาก {{total}}",
-    "noResults": "ไม่พบรายการ"
+    "noResults": "ไม่พบรายการ",
+    "pageSize": "จำนวนต่อหน้า"
   }
 }

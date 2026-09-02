@@ -69,7 +69,21 @@
       "collapse": "隐藏筛选",
       "created": "创建日期",
       "slaDue": "SLA 截止",
-      "assigneeUserId": "负责人"
+      "assigneeUserId": "负责人",
+      "add": "添加筛选",
+      "searchIn": "搜索{{label}}…",
+      "showingOf": "显示 {{shown}} / {{total}}",
+      "typeToFind": "输入以查找其余项",
+      "noMatch": "没有匹配的选项",
+      "groups": {
+        "work": "工作与状态",
+        "kind": "业务类型",
+        "owner": "负责人",
+        "area": "区域",
+        "time": "日期"
+      },
+      "anyValue": "全部",
+      "optionsUnavailable": "暂无可选项"
     },
     "status": {
       "Pending": "待处理",
@@ -88,7 +102,9 @@
       "AtRisk": "有风险",
       "Breached": "已超期",
       "overdue": "超期 {{time}}",
-      "left": "剩余 {{time}}"
+      "left": "剩余 {{time}}",
+      "closed": "已结案",
+      "cancelled": "已取消"
     },
     "assignmentType": {
       "Internal": "内部",
@@ -136,7 +152,25 @@
     "activeFilters": "筛选：",
     "clearAll": "全部清除",
     "removeFilter": "移除筛选",
-    "activityTracking": "活动跟踪"
+    "activityTracking": "活动跟踪",
+    "searchTips": {
+      "trigger": "找不到？",
+      "title": "找不到？可以这样试试",
+      "prefix": "默认从值的开头匹配 — 输入 691 可找到 69105467，输入 05467 则不行",
+      "wildcard": "以 * 开头可匹配值中间的内容，例如 *john",
+      "scoped": "在搜索框左侧选择单个字段，即可匹配该字段中的任意位置",
+      "minLength": "至少输入 {{count}} 个字符才会开始搜索",
+      "coverageTitle": "“全部字段”会搜索哪些内容",
+      "coverage": {
+        "numbers": "估价单号 · 申请单号 · 贷款申请号 · 上次估价单号",
+        "people": "客户姓名（申请中的所有客户）· 客户电话 · 联系人姓名与电话 · 申请人",
+        "properties": "地契号 · 地块号 · 房号 · 车牌 · 所有人 · 项目名称 · 公寓名称",
+        "places": "府、县、区名称（当输入的是地址名称时）"
+      }
+    },
+    "emptyAll": "暂无估价单",
+    "emptyAllHint": "有新的估价单时会显示在这里",
+    "moreCustomers_other": "该申请还有 {{count}} 位客户"
   },
   "appointment": {
     "sectionTitle": "预约信息",

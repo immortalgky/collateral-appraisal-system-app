@@ -116,6 +116,7 @@
     "next": "Next page",
     "last": "Last page",
     "itemRange": "{{start}}-{{end}} of {{total}}",
-    "noResults": "0 results"
+    "noResults": "0 results",
+    "pageSize": "Rows per page"
   }
 }

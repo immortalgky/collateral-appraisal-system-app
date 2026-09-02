@@ -184,9 +184,18 @@ export default function Navbar({
                   <Icon name="chevron-down" style="solid" className="size-2.5 opacity-60" />
                 </button>
 
-                {/* Search Icon */}
+                {/* Search icon, or a spinner while a request is actually on the wire — not while
+                    the debounce is still counting down, or it would spin on every keystroke. The
+                    panel below covers that window with skeletons instead. */}
                 <div className="pointer-events-none flex items-center pl-2">
-                  <Icon name="magnifying-glass" style="regular" className="size-4 text-gray-400" />
+                  <Icon
+                    name={search.isSearching ? 'spinner' : 'magnifying-glass'}
+                    style={search.isSearching ? 'solid' : 'regular'}
+                    className={clsx(
+                      'size-4',
+                      search.isSearching ? 'animate-spin text-primary' : 'text-gray-400',
+                    )}
+                  />
                 </div>
 
                 {/* Input */}
@@ -269,7 +278,7 @@ export default function Navbar({
                     restGroups={search.restGroups}
                     collapsedGroups={search.collapsedGroups}
                     onToggleGroup={search.toggleGroup}
-                    isLoading={search.isLoading}
+                    isSearching={search.isLoading || search.isSearching || search.hasPendingTerm}
                     isError={search.isError}
                     isShowingResults={search.isShowingResults}
                     expandSubstring={search.expandSubstring}

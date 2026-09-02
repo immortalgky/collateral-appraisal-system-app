@@ -40,9 +40,35 @@ export function useGlobalSearch() {
   }, [debouncedQuery, selectedScope, expandSubstring]);
 
   const wireQuery = expandSubstring && debouncedQuery ? `*${debouncedQuery}` : debouncedQuery;
-  const { data, isLoading, isError, refetch } = useSearchQuery(wireQuery, selectedScope);
+  const { data, isLoading, isFetching, isPlaceholderData, isError, refetch } = useSearchQuery(
+    wireQuery,
+    selectedScope,
+  );
 
   const isShowingResults = debouncedQuery.length >= MIN_SEARCH_LENGTH;
+
+  const termIsSearchable = searchQuery.trim().length >= MIN_SEARCH_LENGTH;
+
+  /**
+   * A request for what is typed is actually on the wire.
+   *
+   * `isLoading` cannot say this: the query keeps the previous term's data
+   * (`placeholderData: keepPreviousData`), so from the second term onwards it stays false while a
+   * request runs. `isFetching` alone says too much — it also fires for the background refetch on
+   * window focus, which would blank a result list the user is looking at and spin the icon for an
+   * answer already on screen. `isPlaceholderData` is the exact question: what is displayed belongs
+   * to a DIFFERENT term than the one being fetched.
+   */
+  const isSearching =
+    termIsSearchable && searchQuery === debouncedQuery && isFetching && isPlaceholderData;
+
+  /**
+   * Typed, but the 300ms debounce has not handed it to the query yet — so anything on screen is an
+   * answer to an OLDER term. Deliberately separate from `isSearching`: nothing is being fetched
+   * during this window, so the spinner in the box stays off, while the panel still has to stop
+   * claiming "no results" for a term the search has not seen.
+   */
+  const hasPendingTerm = termIsSearchable && searchQuery !== debouncedQuery;
 
   const groups = useMemo(() => data?.groups ?? [], [data]);
 
@@ -216,6 +242,8 @@ export function useGlobalSearch() {
     totalMatched: data?.totalMatchedAppraisals ?? 0,
     hasMore: data?.hasMore ?? false,
     isLoading: isLoading && isShowingResults,
+    isSearching,
+    hasPendingTerm,
     isError,
 
     inputRef,
