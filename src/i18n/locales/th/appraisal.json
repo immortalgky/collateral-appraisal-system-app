@@ -170,6 +170,7 @@
     },
     "emptyAll": "ยังไม่มีรายการประเมิน",
     "emptyAllHint": "เมื่อมีงานเข้ามา รายการจะแสดงที่นี่",
+    "moreCustomers_one": "มีลูกค้าในคำขอนี้อีก {{count}} คน",
     "moreCustomers_other": "มีลูกค้าในคำขอนี้อีก {{count}} คน"
   },
   "appointment": {

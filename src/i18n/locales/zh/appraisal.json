@@ -170,6 +170,7 @@
     },
     "emptyAll": "暂无估价单",
     "emptyAllHint": "有新的估价单时会显示在这里",
+    "moreCustomers_one": "该申请还有 {{count}} 位客户",
     "moreCustomers_other": "该申请还有 {{count}} 位客户"
   },
   "appointment": {
