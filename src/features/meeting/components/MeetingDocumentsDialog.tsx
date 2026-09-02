@@ -8,12 +8,14 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import FileInput from '@/shared/components/inputs/FileInput';
 import { fileTypeIcon } from '@/shared/utils/fileTypeIcon';
+import { useHasPermission } from '@/shared/hooks/useHasPermission';
 import { useDownloadDocument, useViewDocument } from '@/features/request/api/documents';
 import {
   useGetMeetingDocuments,
   useGenerateMeetingDocument,
   useRemoveMeetingDocument,
 } from '../api/meetings';
+import { MEETING_PERMISSIONS } from '../constants';
 import { useMeetingDocumentUpload } from '../hooks/useMeetingDocumentUpload';
 import type { MeetingDocumentDto } from '../api/types';
 
@@ -54,6 +56,9 @@ const MeetingDocumentsDialog = ({
   onConfirm,
 }: MeetingDocumentsDialogProps) => {
   const { t } = useTranslation('meeting');
+  // Only meeting admins may generate / upload / remove documents; secretary and
+  // committee get a view + download-only dialog (mirrors the backend policies).
+  const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
   const { data: documents = [], isLoading } = useGetMeetingDocuments(isOpen ? meetingId : undefined);
   const generate = useGenerateMeetingDocument();
   const removeDocument = useRemoveMeetingDocument();
@@ -151,7 +156,8 @@ const MeetingDocumentsDialog = ({
       size="2xl"
     >
       <div className="flex flex-col gap-4">
-        {/* Generate / upload actions */}
+        {/* Generate / upload actions — admin only */}
+        {hasAdmin && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-medium text-gray-600">{t('documents.generate')}:</span>
           <Button
@@ -203,6 +209,7 @@ const MeetingDocumentsDialog = ({
             </FileInput>
           </div>
         </div>
+        )}
 
         {selectable && <p className="-mt-1 text-sm text-gray-500">{t('documents.pickerHint')}</p>}
 
@@ -311,15 +318,17 @@ const MeetingDocumentsDialog = ({
                           >
                             <Icon name="download" style="solid" className="size-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemove(doc)}
-                            disabled={removeDocument.isPending}
-                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
-                            title={t('documents.remove')}
-                          >
-                            <Icon name="trash" style="solid" className="size-3.5" />
-                          </button>
+                          {hasAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemove(doc)}
+                              disabled={removeDocument.isPending}
+                              className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                              title={t('documents.remove')}
+                            >
+                              <Icon name="trash" style="solid" className="size-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
