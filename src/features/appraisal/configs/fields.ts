@@ -2498,7 +2498,7 @@ export const machineInfoFields: FormField[] = [
       ],
       conditions: [
         {
-          text: 'Set to "under procurement" — Invoice No. becomes required and Price Certified locks to not appraised',
+          text: 'Set to "under procurement" — Invoice No. appears and is required, Price Certified locks to not appraised',
           when: { field: 'installationStatus', is: '2' },
         },
       ],
@@ -2526,7 +2526,7 @@ export const machineInfoFields: FormField[] = [
     label: 'Registration Status',
     name: 'registrationStatus',
     options: ['Unregistered', 'Registered'],
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-5',
     help: {
       title: 'Carried over from the request',
       lines: [
@@ -2542,26 +2542,23 @@ export const machineInfoFields: FormField[] = [
     },
   },
 
+  // Only meaningful while the machine is under procurement, so it appears with that status and
+  // goes away with it. Hiding clears the field to null, which the API reads as "leave unchanged",
+  // so the invoice a since-delivered machine was priced from stays on the record.
   {
     type: 'text-input',
     label: 'Invoice No.',
     name: 'invoiceNumber',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-5',
     maxLength: 20,
+    showWhen: { field: 'installationStatus', is: '2' },
     requiredWhen: { field: 'installationStatus', is: '2' },
     help: {
       title: 'Required while under procurement',
       lines: [
         'A machine that has not been delivered is priced from the supplier quotation or invoice, so the document number has to be on record.',
+        'The field only appears while Installation Status is "under procurement". A number already saved against the machine is kept, not erased, when it disappears.',
       ],
-      conditions: [
-        {
-          text: 'Installation Status is "under procurement"',
-          when: { field: 'installationStatus', is: '2' },
-        },
-      ],
-      whenMet: 'Required right now.',
-      whenClear: 'Optional right now.',
     },
   },
 
@@ -2573,7 +2570,7 @@ export const machineInfoFields: FormField[] = [
     label: 'Price Certified',
     name: 'isPriceCertified',
     options: ['Not Certified', 'Certified'],
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-7',
     disabledValue: false,
     disableWhen: {
       match: 'any',

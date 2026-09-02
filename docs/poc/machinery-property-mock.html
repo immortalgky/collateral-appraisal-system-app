@@ -463,6 +463,7 @@ table.grid tr.grp-total td { background: #f0f2f3; }
       <ol>
         <li>ปุ่ม <b>?</b> — จุดสีส้มในคำอธิบายคือเงื่อนไขที่กำลังทำงานอยู่ ลองกด ? ที่ Price Certified แล้วสลับ Registration Status ดู คำอธิบายจะอัปเดตตามทันที ข้อความอ่านแล้วเข้าใจไหม สั้นไปหรือยาวไป</li>
         <li>ลำดับของ 5 ฟิลด์ใหม่ (แทรกต่อจาก Registration No.) และความกว้างที่จัดไว้ อ่านง่ายไหม</li>
+        <li><b>Invoice No. โผล่เฉพาะตอนอยู่ระหว่างการจัดซื้อ</b> — ลองสลับ Installation Status ไปมาดู ช่องจะหาย/โผล่ แต่เลขที่บันทึกไว้ในฐานข้อมูลแล้วไม่ถูกลบ (ส่ง null = ไม่แก้)</li>
         <li>ข้อความบน toggle — ตอนนี้ทั้งไฟล์เป็น label อังกฤษ hardcode ไม่มี i18n เลย จึงใส่ภาษาอังกฤษไว้ตามแบบเดิม แล้ววงเล็บไทยกำกับในหน้านี้เฉย ๆ</li>
         <li><b>รับรองราคา = ประเมินมูลค่า เป็นฟิลด์เดียวกัน</b> คอลัมน์ในฐานข้อมูลชื่อ <code>IsPriceCertified</code> แต่รายงานพิมพ์ว่า "ไม่ประเมินมูลค่า" — ป้ายบนหน้าจอควรใช้คำไหนให้ผู้ประเมินไม่งง</li>
         <li>เครื่องที่ล็อกอยู่ (1.3 กับ 2.3) ไม่มีทางแก้เป็นรับรองราคาได้เลย ถ้าเคสจริงมีเครื่องที่<b>ยังไม่จดทะเบียนแต่ต้องประเมิน</b> ต้องบอกก่อน เพราะ invariant ปัจจุบันปิดทางไว้</li>
@@ -738,11 +739,12 @@ const FIELDS = [
   { type: 'toggle',   label: 'Registration Status', gloss: 'สถานะการจดทะเบียน', name: 'registrationStatus',
                       options: ['Unregistered', 'Registered'], span: 5, isNew: true },
   { type: 'text',     label: 'Invoice No.', gloss: 'เลขที่ใบแจ้งหนี้ / ใบเสนอราคา', name: 'invoiceNumber',
-                      span: 4, maxLength: 20, isNew: true,
+                      span: 5, maxLength: 20, isNew: true,
+                      showWhen: { field: 'installationStatus', is: '2' },
                       requiredWhen: { field: 'installationStatus', is: '2' } },
   { type: 'toggle',   label: 'Price Certified', gloss: 'รับรองราคา = ประเมินมูลค่า (ฟิลด์เดียวกัน)',
                       name: 'isPriceCertified',
-                      options: ['Not Certified', 'Certified'], span: 8, isNew: true,
+                      options: ['Not Certified', 'Certified'], span: 7, isNew: true,
                       disabledValue: false,
                       disableWhen: { match: 'any', conditions: [
                         { field: 'registrationStatus', is: false },
@@ -801,7 +803,7 @@ const HELP = {
   installationStatus: m => ({
     title: 'Carried over from the request',
     lines: ['The requestor recorded this when the request was opened. Change it here if the site visit says otherwise.'],
-    conds: [{ text: 'Set to "under procurement" — Invoice No. becomes required and Price Certified locks to not appraised', on: m.installationStatus === '2' }],
+    conds: [{ text: 'Set to "under procurement" — Invoice No. appears and is required, Price Certified locks to not appraised', on: m.installationStatus === '2' }],
     outcome: m.installationStatus === '2' ? 'This rule is in effect right now.' : null,
   }),
   machineType: () => ({
@@ -817,11 +819,12 @@ const HELP = {
     conds: [{ text: 'Unregistered — Price Certified locks to not appraised', on: m.registrationStatus === false }],
     outcome: m.registrationStatus === false ? 'This rule is in effect right now.' : null,
   }),
-  invoiceNumber: m => ({
+  invoiceNumber: () => ({
     title: 'Required while under procurement',
-    lines: ['A machine that has not been delivered is priced from the supplier quotation or invoice, so the document number has to be on record.'],
-    conds: [{ text: 'Installation Status is "under procurement"', on: m.installationStatus === '2' }],
-    outcome: m.installationStatus === '2' ? 'Required right now.' : 'Optional right now.',
+    lines: [
+      'A machine that has not been delivered is priced from the supplier quotation or invoice, so the document number has to be on record.',
+      'The field only appears while Installation Status is "under procurement". A number already saved against the machine is kept, not erased, when it disappears.',
+    ],
   }),
   isPriceCertified: m => {
     const c1 = m.registrationStatus === false;
@@ -967,7 +970,7 @@ function renderForm() {
   const keep = openHelp;
   $('#which-group').textContent = g.name;
 
-  $('#fgrid').innerHTML = FIELDS.map(f => {
+  $('#fgrid').innerHTML = FIELDS.filter(f => !f.showWhen || testCond(m, f.showWhen)).map(f => {
     const { disabled, value } = fieldValue(m, f);
     const required = testCond(m, f.requiredWhen);
     const missing = required && !disabled && (value === '' || value === null || value === undefined);
