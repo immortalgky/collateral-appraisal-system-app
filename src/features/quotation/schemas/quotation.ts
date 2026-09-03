@@ -62,6 +62,7 @@ export const CompanyQuotationItemDtoSchema = z.object({
   estimatedDays: z.number().int(),
   proposedCompletionDate: z.string().nullable().optional(),
   itemNotes: z.string().nullable().optional(),
+  itemNegotiationReason: z.string().nullable().optional(),
 });
 
 export type CompanyQuotationItemDto = z.infer<typeof CompanyQuotationItemDtoSchema>;
@@ -334,6 +335,8 @@ export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
       negotiatedDiscount: z.number().nonnegative().nullable().optional(),
       vatPercent: z.number().nonnegative().nullable().optional(),
       itemNotes: z.string().nullable().optional(),
+      /** Required when negotiatedDiscount resolves to 0/null on a Counter response. */
+      itemNegotiationReason: z.string().max(500, t('validation.reasonMax')).nullable().optional(),
     })
     .superRefine((item, ctx) => {
       if (item.feeAmount === undefined) return;
@@ -372,6 +375,12 @@ export const submitQuotationItemSchema = z
     vatPercent: z.number().nonnegative().nullable().optional(),
     /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
     itemNotes: z.string().nullable().optional(),
+    /** Required when negotiatedDiscount resolves to 0/null on a Counter response. */
+    itemNegotiationReason: z
+      .string()
+      .max(500, 'Must be 500 characters or fewer')
+      .nullable()
+      .optional(),
   })
   .superRefine((item, ctx) => {
     if (item.feeAmount === undefined) return;
