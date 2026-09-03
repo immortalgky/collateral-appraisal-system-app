@@ -1249,7 +1249,12 @@
       "sectionTitle": "Rental Information"
     },
     "marketComparable": {
-      "sectionTitle": "Market Comparable"
+      "sectionTitle": "Market Comparable",
+      "duplicateDialog": {
+        "title": "Duplicate Market Comparable",
+        "message": "Are you sure you want to duplicate this market comparable? A new comparable will be created with the same details.",
+        "confirm": "Duplicate"
+      }
     }
   },
   "validation": {
