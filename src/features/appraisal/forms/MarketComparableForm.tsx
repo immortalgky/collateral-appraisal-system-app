@@ -301,17 +301,17 @@ const MarketComparableForm = () => {
       fields: staticFields.filter(f => f.name === 'sourceInfo'),
     },
     {
-      label: 'Offer Price',
+      label: 'Offering Price',
       icon: 'money-bill',
       fields: staticFields.filter(f => f.name === 'offerPrice' || f.name === 'offerPriceUnit'),
     },
     {
-      label: 'Sale Price',
+      label: 'Selling Price',
       icon: 'money-bill',
       fields: staticFields.filter(f => f.name === 'salePrice' || f.name === 'salePriceUnit'),
     },
     {
-      label: 'Sale Date',
+      label: 'Selling Date',
       icon: 'calendar',
       fields: staticFields.filter(f => f.name === 'saleDate'),
     },
