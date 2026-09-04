@@ -365,7 +365,9 @@ function StatStrip({
 }) {
   const { t } = useTranslation('blockProject');
   const towers = new Set(units.map(u => u.towerName).filter(Boolean)).size;
-  const models = new Set(units.map(u => u.modelType).filter(Boolean)).size;
+  const models = isCondo(projectType)
+    ? new Set(units.filter(u => u.modelType).map(u => `${u.towerName ?? ''}.${u.modelType}`)).size
+    : new Set(units.map(u => u.modelType).filter(Boolean)).size;
 
   return (
     <div className="flex flex-wrap gap-px bg-gray-200 rounded-xl overflow-hidden border border-gray-200">
