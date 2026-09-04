@@ -51,6 +51,7 @@ interface PricingAnalysisApproachMethodSelectorProps {
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
+  onToggleMethodCalcMode?: (arg: { approachType: string; methodType: string }) => void;
 
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
@@ -62,6 +63,14 @@ interface PricingAnalysisApproachMethodSelectorProps {
     value: number;
     methodId?: string;
   }) => void;
+  toggleCalcModeConfirm?: {
+    isOpen: boolean;
+    pending: { approachType: string; methodType: string } | null;
+    message: string;
+    confirmToggle: () => void;
+    cancelToggle: () => void;
+    isToggling: boolean;
+  };
   /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
@@ -85,6 +94,7 @@ export const PricingAnalysisApproachMethodSelector = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
+  onToggleMethodCalcMode,
   onSummaryModeSave,
   isSummarySaving = false,
 
@@ -93,6 +103,7 @@ export const PricingAnalysisApproachMethodSelector = ({
   pricingConfiguration,
   deleteConfirm,
   onManualValueSync,
+  toggleCalcModeConfirm,
   manualCostBreakdown,
   onRequestRemoveDocument,
   removeDocumentConfirm,
@@ -125,6 +136,11 @@ export const PricingAnalysisApproachMethodSelector = ({
   const isEditing = state.viewMode === 'editing';
 
   const isManualMode = isSystemCalculation !== 'System';
+
+  const hasManualMethod = (state.summarySelected ?? []).some(appr =>
+    appr.methods.some(m => m.isIncluded && !m.useSystemCalc),
+  );
+  const requiresManualEvidence = isManualMode || hasManualMethod;
 
   return (
     <div className="flex flex-col overflow-hidden gap-4 h-full">
@@ -167,9 +183,7 @@ export const PricingAnalysisApproachMethodSelector = ({
             disabled={isSummarySaving}
             className={clsx(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
-              isSummarySaving
-                ? 'cursor-not-allowed opacity-60'
-                : 'cursor-pointer',
+              isSummarySaving ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
               isEditing
                 ? 'bg-primary text-white hover:bg-primary/90'
                 : 'text-primary border border-primary/30 hover:bg-primary/5',
@@ -249,15 +263,17 @@ export const PricingAnalysisApproachMethodSelector = ({
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onViewLayoutChange={handleViewLayoutChange}
                 isManualMode={isManualMode}
-                onManualValueSync={isManualMode ? onManualValueSync : undefined}
-                manualCostBreakdown={isManualMode ? manualCostBreakdown : undefined}
+                onManualValueSync={onManualValueSync}
+                onToggleMethodCalcMode={onToggleMethodCalcMode}
+                manualCostBreakdown={manualCostBreakdown}
                 disabled={isSummarySaving}
               />
             ))}
           </div>
 
-          {/* Manual mode: attached documents, PDF uploader & Remark */}
-          {isManualMode && (
+          {/* Manual evidence: shown when the analysis is Manual, or when any individual
+              method has been overridden to manual. */}
+          {requiresManualEvidence && (
             <div className="flex flex-col gap-4">
               {/* Attached documents — already persisted (state.documents, loaded on INIT).
                   Visible read-only even when the page is read-only; removal is not. */}
@@ -373,7 +389,9 @@ export const PricingAnalysisApproachMethodSelector = ({
                               disabled={isSummarySaving}
                               className={clsx(
                                 'text-gray-400 hover:text-red-500',
-                                isSummarySaving ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
+                                isSummarySaving
+                                  ? 'cursor-not-allowed opacity-60'
+                                  : 'cursor-pointer',
                               )}
                               onClick={() => setPdfFiles(prev => prev.filter((_, i) => i !== idx))}
                             >
@@ -437,6 +455,18 @@ export const PricingAnalysisApproachMethodSelector = ({
           confirmText={t('confirm.confirmText')}
           variant="danger"
           isLoading={removeDocumentConfirm.isRemoving}
+        />
+      )}
+
+      {toggleCalcModeConfirm && (
+        <ConfirmDialog
+          isOpen={toggleCalcModeConfirm.isOpen}
+          onClose={toggleCalcModeConfirm.cancelToggle}
+          onConfirm={toggleCalcModeConfirm.confirmToggle}
+          message={toggleCalcModeConfirm.message}
+          confirmText={t('confirm.confirmText')}
+          variant="warning"
+          isLoading={toggleCalcModeConfirm.isToggling}
         />
       )}
     </div>
