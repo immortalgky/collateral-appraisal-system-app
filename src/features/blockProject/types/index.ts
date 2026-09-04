@@ -309,6 +309,7 @@ export interface ProjectUnitPrice {
   projectUnitId: string;
   sequenceNumber: number;
   // Common unit fields (denormalized)
+  projectModelId?: string;
   modelType?: string;
   usableArea?: number;
   sellingPrice?: number;
@@ -375,6 +376,8 @@ export interface ProjectModelAssumption {
   standardLandPrice?: number;
   coverageAmount?: number;
   fireInsuranceCondition?: string;
+  /** Condo-only */
+  towerName?: string;
 }
 
 /**

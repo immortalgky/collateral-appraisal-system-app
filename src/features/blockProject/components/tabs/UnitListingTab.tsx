@@ -426,6 +426,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [saleFilter, setSaleFilter] = useState<'all' | 'available' | 'sold'>('all');
+  const [towerFilter, setTowerFilter] = useState('');
   const [modelFilter, setModelFilter] = useState('');
   const [query, setQuery] = useState('');
   const [verificationState, setVerificationState] = useState<{
@@ -541,7 +542,20 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const latestUpload = uploads[0];
   const describeUpload = useUploadOutcome();
 
-  const modelOptions = unitsData?.models ?? [];
+  const towerOptions = isCondo(projectType)
+    ? Array.from(new Set(units.map(u => u.towerName).filter((v): v is string => Boolean(v)))).sort()
+    : [];
+
+  const modelOptions = towerFilter
+    ? Array.from(
+        new Set(
+          units
+            .filter(u => u.towerName === towerFilter)
+            .map(u => u.modelType)
+            .filter((v): v is string => Boolean(v)),
+        ),
+      ).sort()
+    : (unitsData?.models ?? []);
 
   // Trimmed before the emptiness test: a query of only spaces used to survive it, and matching on
   // '' then dropped every unit whose plot, house, room and tower are all null.
@@ -550,6 +564,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   // Everything except the sale filter. The status chips count within this so their numbers agree
   // with the table; the table then applies the sale filter on top.
   const narrowedUnits = units.filter(u => {
+    if (towerFilter && u.towerName !== towerFilter) return false;
     if (modelFilter && u.modelType !== modelFilter) return false;
     if (!trimmedQuery) return true;
     return [u.plotNumber, u.houseNumber, u.roomNumber, u.towerName].some(v =>
@@ -670,6 +685,23 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
                 </button>
               ))}
             </div>
+
+            {towerOptions.length > 1 && (
+              <div className="w-44">
+                <Dropdown
+                  options={towerOptions.map(tower => ({ value: tower, label: tower }))}
+                  value={towerFilter}
+                  onChange={v => {
+                    setTowerFilter(v ?? '');
+                    // Model options are about to be re-scoped to the new tower — a model chosen
+                    // under the old tower (or "all towers") may no longer be valid.
+                    setModelFilter('');
+                  }}
+                  placeholder={t('unitListing.filter.allTowers')}
+                  showValuePrefix={false}
+                />
+              </div>
+            )}
 
             {modelOptions.length > 1 && (
               <div className="w-44">

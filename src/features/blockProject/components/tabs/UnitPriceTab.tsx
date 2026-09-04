@@ -84,6 +84,11 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
       <table className="w-full text-xs">
         <thead className="bg-gray-50">
           <tr>
+            {isCondo(projectType) && (
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[100px]">
+                {t('unitPrice.cols.towerName')}
+              </th>
+            )}
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[160px]">
               {t('unitPrice.cols.model')}
             </th>
@@ -112,6 +117,9 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
         <tbody>
           {assumptions.map(m => (
             <tr key={m.projectModelId} className="border-b border-gray-100 hover:bg-gray-50">
+              {isCondo(projectType) && (
+                <td className="py-2 px-3 text-gray-600">{m.towerName ?? '-'}</td>
+              )}
               <td className="py-2 px-3 font-medium text-gray-800">{m.modelType ?? '-'}</td>
               <td className="py-2 px-3 text-gray-600">{m.modelDescription ?? '-'}</td>
               <td className="py-2 px-3 text-right text-gray-800 whitespace-nowrap">
@@ -786,12 +794,16 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
   const modelAssumptions = pricingAssumption?.modelAssumptions ?? [];
 
-  // Lookup: modelType → model assumption fields needed for LB preview enrichment.
+  // Lookup: projectModelId → model assumption fields needed for the live preview.
+  // Keyed by id, not modelType — for Condo a model's identity is (Tower, ModelName), so the same
+  // model name can legitimately repeat across towers with different standard price/coverage.
+  // Keying by name alone would collapse those into one entry and misprice every unit whose model
+  // name repeats in another tower.
   const modelLookup = useMemo(
     () =>
       new Map(
         modelAssumptions.map(m => [
-          m.modelType ?? '',
+          m.projectModelId,
           {
             standardPrice: m.finalAppraisedValue,
             coverageAmount: m.coverageAmount,
@@ -808,7 +820,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const displayedUnitPrices = useMemo(
     () =>
       localUnitPrices.map(up => {
-        const lookup = modelLookup.get(up.modelType ?? '');
+        const lookup = modelLookup.get(up.projectModelId ?? '');
         // For LB: compute land area diff and land +/- live from model standard land area.
         // Always recompute so it responds to rate / assumption changes in the form.
         const landAreaDifference =
