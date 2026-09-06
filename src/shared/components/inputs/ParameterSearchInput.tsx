@@ -1,4 +1,5 @@
 import { forwardRef, type ReactNode, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { useParameterOptions } from '../../utils/parameterUtils';
 import type { ListBoxItem } from './Dropdown';
@@ -32,7 +33,7 @@ const ParameterSearchInput = forwardRef<HTMLInputElement, ParameterSearchInputPr
       options: staticOptions,
       label,
       labelAddon,
-      placeholder = 'Search...',
+      placeholder,
       required,
       disabled,
       error,
@@ -46,6 +47,9 @@ const ParameterSearchInput = forwardRef<HTMLInputElement, ParameterSearchInputPr
   ) => {
     const uuid = useId();
     const inputId = uuid;
+    const { t } = useTranslation('common');
+    const resolvedPlaceholder =
+      placeholder ?? t('select.searchPlaceholder', { defaultValue: 'Search...' });
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
 
@@ -235,7 +239,11 @@ const ParameterSearchInput = forwardRef<HTMLInputElement, ParameterSearchInputPr
             }
             aria-invalid={error ? 'true' : 'false'}
             disabled={isDisabled}
-            placeholder={isOpen ? 'Type to search...' : placeholder}
+            placeholder={
+              isOpen
+                ? t('select.typeToSearch', { defaultValue: 'Type to search...' })
+                : resolvedPlaceholder
+            }
             value={inputDisplayValue}
             onChange={handleInputChange}
             onClick={openDropdown}

@@ -475,10 +475,7 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": [
-        "Not Verified",
-        "Verified"
-      ],
+      "priceVerificationOptions": ["Not Verified", "Verified"],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
@@ -622,7 +619,7 @@
         "other": "Other"
       },
       "suggested": {
-        "applyEmpty": "Use the derived counts for empty fields",
+        "applyEmpty": "Fill blanks",
         "applyOne": "Use the derived count ({{value}})",
         "helpTitle": "Derived from the machines on this appraisal",
         "helpComputed": "Derived count: {{value}}",
@@ -635,6 +632,84 @@
           "appraisedByDocumentCount": "Machines under procurement, priced from a quotation",
           "notInstalledCount": "Machines under procurement"
         }
+      },
+      "groups": {
+        "counts": "MACHINE COUNTS",
+        "condition": "CONDITION AND MARKET",
+        "ownership": "OWNERSHIP",
+        "location": "LOCATION",
+        "obligation": "OBLIGATIONS AND NOTES"
+      },
+      "table": {
+        "item": "Item",
+        "entered": "Entered",
+        "derived": "Derived",
+        "source": "Source",
+        "use": "use",
+        "ungrouped": "Ungrouped",
+        "sourceSentence": "{{list}}",
+        "sourcePart_one": "{{count}} machine from {{group}}",
+        "sourcePart_other": "{{count}} machines from {{group}}",
+        "sourceJoin": " and ",
+        "sourceUngrouped": "the ungrouped ones",
+        "sourceNone": "No machines match this",
+        "sourceGroupNumber": "Group {{number}}"
+      },
+      "checks": {
+        "title": "The counts do not reconcile.",
+        "appraisedOverSurveyed": "appraised {{appraised}} exceeds surveyed {{surveyed}}",
+        "splitOverSurveyed": "installed + not installed = {{split}}, more than the {{surveyed}} surveyed",
+        "note": "a warning only; saving is not blocked."
+      }
+    },
+    "machineryInfo": {
+      "sectionTitle": "Machinery Information",
+      "fields": {
+        "propertyName": "Machinery Name",
+        "machineType": "Machine Type",
+        "brand": "Brand",
+        "model": "Model",
+        "series": "Series",
+        "quantity": "Quantity",
+        "manufacturer": "Country of Manufacture",
+        "yearOfManufacture": "Year",
+        "purchaseDate": "Purchase Date",
+        "purchasePrice": "Purchase Price",
+        "isOwnerVerified": "Check Owner",
+        "ownerName": "Owner",
+        "registrationStatus": "Registration Status",
+        "registrationNumber": "Registration No.",
+        "installationStatus": "Installation Status",
+        "invoiceNumber": "Invoice No.",
+        "isPriceCertified": "Price Certified",
+        "conditionUse": "Condition Use",
+        "isOperational": "Can Use",
+        "machineCondition": "Machinery Condition",
+        "machineAge": "Machinery Age",
+        "machineEfficiency": "Machinery Efficiency",
+        "usagePurpose": "Usage Purpose",
+        "capacity": "Capacity",
+        "location": "Location",
+        "width": "Width",
+        "length": "Length",
+        "height": "Height",
+        "machineDimensions": "Machine Dimensions",
+        "energyUse": "Energy Use",
+        "machineTechnology": "Machinery Technology",
+        "other": "Other",
+        "machineParts": "Machinery Parts",
+        "remark": "Remark",
+        "appraiserOpinion": "Appraiser Opinion"
+      },
+      "options": {
+        "cannot": "Can not",
+        "can": "Can",
+        "unregistered": "Unregistered",
+        "registered": "Registered",
+        "notCertified": "Not Certified",
+        "certified": "Certified",
+        "cannotUse": "Can not",
+        "canUse": "Can"
       }
     }
   },

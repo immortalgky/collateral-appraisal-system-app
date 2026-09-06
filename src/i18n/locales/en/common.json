@@ -29,7 +29,9 @@
     "clearAll": "Clear all"
   },
   "select": {
-    "placeholder": "Please select"
+    "placeholder": "Please select",
+    "searchPlaceholder": "Search...",
+    "typeToSearch": "Type to search..."
   },
   "range": {
     "from": "From",

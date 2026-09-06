@@ -5,6 +5,7 @@ import {
   ListboxOptions as HeadlessListboxOptions,
 } from '@headlessui/react';
 import { forwardRef, type ReactNode, type SelectHTMLAttributes, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useParameterOptions } from '../../utils/parameterUtils';
@@ -120,7 +121,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       onChange,
       label,
       labelAddon,
-      placeholder = 'Please select',
+      placeholder,
       error,
       required,
       disabled,
@@ -131,6 +132,11 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     },
     ref,
   ) => {
+    const { t } = useTranslation('common');
+    // Default lives in the locale files, not in this signature — the old 'Please select' literal
+    // was the last English string left on a fully translated form.
+    const resolvedPlaceholder =
+      placeholder ?? t('select.placeholder', { defaultValue: 'Please select' });
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');
@@ -148,8 +154,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     }, [allOptions, filters, filterWatchValues]);
 
     const dropdownOptions = useMemo(() => {
-      return [{ value: null, label: placeholder, id: '' }, ...filteredOptions];
-    }, [filteredOptions, placeholder]);
+      return [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions];
+    }, [filteredOptions, resolvedPlaceholder]);
 
     const selectedOption = useMemo(
       () => allOptions.find(opt => opt.value === value) ?? null,
@@ -186,7 +192,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
           ref={ref}
           value={selectedOption}
           onChange={selectedOnChange}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           //selectedLabel={selectedOption?.label}
           selected={selectedOption}
           disabled={isDisabled}

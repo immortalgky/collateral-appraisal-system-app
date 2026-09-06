@@ -475,10 +475,7 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": [
-        "ยังไม่ตรวจสอบ",
-        "ตรวจสอบแล้ว"
-      ],
+      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
@@ -622,7 +619,7 @@
         "other": "อื่นๆ"
       },
       "suggested": {
-        "applyEmpty": "ใช้ค่าที่คำนวณกับช่องที่ยังว่าง",
+        "applyEmpty": "เติมช่องที่ว่าง",
         "applyOne": "ใช้ค่าที่คำนวณ ({{value}})",
         "helpTitle": "คำนวณจากเครื่องจักรในใบประเมินนี้",
         "helpComputed": "คำนวณได้ {{value}} เครื่อง",
@@ -635,6 +632,84 @@
           "appraisedByDocumentCount": "นับเครื่องที่อยู่ระหว่างการจัดซื้อ ซึ่งตั้งราคาจากใบเสนอราคา",
           "notInstalledCount": "นับเครื่องที่อยู่ระหว่างการจัดซื้อ"
         }
+      },
+      "groups": {
+        "counts": "จำนวนเครื่องจักร",
+        "condition": "สภาพโดยรวมและตลาด",
+        "ownership": "กรรมสิทธิ์",
+        "location": "ที่ตั้ง",
+        "obligation": "ภาระผูกพันและหมายเหตุ"
+      },
+      "table": {
+        "item": "รายการ",
+        "entered": "ค่าที่กรอก",
+        "derived": "คำนวณได้",
+        "source": "ที่มา",
+        "use": "ใช้",
+        "ungrouped": "ยังไม่จัดกลุ่ม",
+        "sourceSentence": "มาจาก {{list}}",
+        "sourcePart_other": "{{group}} {{count}} เครื่อง",
+        "sourceJoin": " และ ",
+        "sourceUngrouped": "ที่ยังไม่จัดกลุ่ม",
+        "sourceNone": "ไม่มีเครื่องจักรเข้าเงื่อนไขนี้",
+        "sourcePart_one": "{{group}} {{count}} เครื่อง",
+        "sourceGroupNumber": "กลุ่ม {{number}}"
+      },
+      "checks": {
+        "title": "ตัวเลขยังไม่ลงรอยกัน",
+        "appraisedOverSurveyed": "ประเมิน {{appraised}} มากกว่าสำรวจ {{surveyed}}",
+        "splitOverSurveyed": "ติดตั้งแล้ว + ยังไม่ติดตั้ง = {{split}} มากกว่าจำนวนที่สำรวจ {{surveyed}}",
+        "note": "เป็นคำเตือนเท่านั้น บันทึกได้ตามปกติ"
+      }
+    },
+    "machineryInfo": {
+      "sectionTitle": "ข้อมูลเครื่องจักร",
+      "fields": {
+        "propertyName": "ชื่อเครื่องจักร",
+        "machineType": "ประเภทเครื่องจักร",
+        "brand": "ยี่ห้อ",
+        "model": "รุ่น",
+        "series": "แบบ",
+        "quantity": "จำนวน",
+        "manufacturer": "ผู้ผลิต",
+        "yearOfManufacture": "ปีที่ผลิต",
+        "purchaseDate": "วันที่ซื้อ",
+        "purchasePrice": "ราคาซื้อ",
+        "isOwnerVerified": "ตรวจสอบกรรมสิทธิ์",
+        "ownerName": "ผู้ถือกรรมสิทธิ์",
+        "registrationStatus": "สถานะการจดทะเบียน",
+        "registrationNumber": "หมายเลขทะเบียน",
+        "installationStatus": "สถานะเครื่องจักร",
+        "invoiceNumber": "เลขที่ใบเสนอราคา",
+        "isPriceCertified": "รับรองราคาประเมิน",
+        "conditionUse": "สภาพการใช้งาน",
+        "isOperational": "ใช้งานได้",
+        "machineCondition": "สภาพเครื่องจักร",
+        "machineAge": "อายุเครื่องจักร",
+        "machineEfficiency": "ประสิทธิภาพเครื่องจักร",
+        "usagePurpose": "ใช้ในการ",
+        "capacity": "ขนาดความสามารถ",
+        "location": "ตำแหน่งที่ตั้ง",
+        "width": "ความกว้าง",
+        "length": "ความยาว",
+        "height": "ความสูง",
+        "machineDimensions": "ขนาดเครื่อง",
+        "energyUse": "พลังงานที่ใช้",
+        "machineTechnology": "เทคโนโลยีเครื่องจักร",
+        "other": "อื่น ๆ",
+        "machineParts": "ส่วนประกอบของเครื่องจักร",
+        "remark": "หมายเหตุ",
+        "appraiserOpinion": "ความเห็นผู้ประเมิน"
+      },
+      "options": {
+        "cannot": "ตรวจสอบไม่ได้",
+        "can": "ตรวจสอบได้",
+        "unregistered": "ไม่ได้จดทะเบียน",
+        "registered": "จดทะเบียนแล้ว",
+        "notCertified": "ไม่รับรอง",
+        "certified": "รับรอง",
+        "cannotUse": "ใช้ไม่ได้",
+        "canUse": "ใช้ได้"
       }
     }
   },

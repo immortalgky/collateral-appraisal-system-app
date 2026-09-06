@@ -29,7 +29,9 @@
     "clearAll": "ล้างทั้งหมด"
   },
   "select": {
-    "placeholder": "กรุณาเลือก"
+    "placeholder": "กรุณาเลือก",
+    "searchPlaceholder": "ค้นหา...",
+    "typeToSearch": "พิมพ์เพื่อค้นหา..."
   },
   "range": {
     "from": "ตั้งแต่",
