@@ -123,7 +123,13 @@ function ReferenceRow({
   let itemLabel: string;
   if (isMachinery) {
     const prop = groupProperties.find(p => p.propertyId === ref_.anchorId);
-    itemLabel = prop?.machineName ?? prop?.propertyName ?? t('groupReferences.subjects.machineryCostRef');
+    // PropertyName first: it is what the machinery form writes, so a machine renamed there would
+    // otherwise keep showing its old MachineName here while every other surface shows the new one.
+    // Blank counts as absent — the form can write PropertyName = ''.
+    itemLabel =
+      prop?.propertyName?.trim() ||
+      prop?.machineName?.trim() ||
+      t('groupReferences.subjects.machineryCostRef');
   } else if (isRoom) {
     itemLabel = ref_.anchorRefKey ?? t('groupReferences.subjects.roomIncomeRef');
   } else {

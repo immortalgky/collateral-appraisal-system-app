@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MACHINE_TYPES } from './PropertyCardContent';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -365,8 +366,13 @@ export const GroupContainer = React.memo(
                                 .map(p => p.address)
                                 .filter(Boolean)
                                 .slice(0, 3);
-                              // Sum up areas
-                              const areas = items.map(p => p.area).filter(Boolean);
+                              // For machinery `area` holds the machine's dimensions, so collapsing
+                              // six of them produced "1.00 x 1.00 x 1.00, 1.00 x 1.00 x 1.00, …" —
+                              // a row of numbers that says nothing about the group. The names chip
+                              // and the count in the header already describe it.
+                              const areas = MACHINE_TYPES.has(property.type)
+                                ? []
+                                : items.map(p => p.area).filter(Boolean);
                               return (
                                 <div key={property.id}>
                                   {/* Stack placeholder card */}

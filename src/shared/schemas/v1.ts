@@ -2602,6 +2602,7 @@ const PropertyGroupItemDto = z
     registrationNumber: z.string().nullable(),
     registrationStatus: z.boolean().nullable(),
     isPriceCertified: z.boolean().nullable(),
+    conditionUse: z.string().nullable(),
     dimension: z.string().nullable(),
     location: z.string().nullable(),
     latitude: z.number().nullable(),

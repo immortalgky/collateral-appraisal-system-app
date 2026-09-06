@@ -5,7 +5,13 @@ import Badge from '@shared/components/Badge';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { isWithinThailand } from '@/shared/constants/mapConfig';
 
-const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
+/** Property type codes that mean machinery. Exported so the grouped card asks the same
+ * question rather than keeping a second copy that can drift. */
+export const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
+
+/** ConditionUse codes: the everyday case, and the one that needs the loudest chip. */
+const IN_USE_CONDITION = '01';
+const NOT_FOUND_CONDITION = '03';
 
 type CardSize = 'xs' | 'compact' | 'sm' | 'md';
 
@@ -220,12 +226,6 @@ export function PropertyCardContent({
               >
                 {MACHINE_TYPES.has(property.type) ? (
                   <>
-                    {property.machineName && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
-                        <Icon name="gear" className="text-[9px] text-gray-400" style="solid" />
-                        {property.machineName}
-                      </span>
-                    )}
                     {(property.brand || property.model) && (
                       <span className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-full px-2 py-0.5">
                         <Icon name="tag" className="text-[9px] text-gray-400" style="solid" />
@@ -250,6 +250,37 @@ export function PropertyCardContent({
                             ? 'properties.machineryChips.registered'
                             : 'properties.machineryChips.unregistered',
                         )}
+                      </span>
+                    )}
+                    {/* Only the exceptions. "ใช้งานอยู่" is the normal case and would just repeat
+                        itself down a list of machines; not-found and out-of-use are what the
+                        appraiser needs to spot while grouping. */}
+                    {property.conditionUse && property.conditionUse !== IN_USE_CONDITION && (
+                      <span
+                        className={
+                          property.conditionUse === NOT_FOUND_CONDITION
+                            ? 'inline-flex items-center gap-1 text-[11px] text-danger bg-danger-50 border border-danger-300 rounded-full px-2 py-0.5'
+                            : 'inline-flex items-center gap-1 text-[11px] text-warning-content bg-warning/10 border border-warning/30 rounded-full px-2 py-0.5'
+                        }
+                      >
+                        <Icon
+                          name={
+                            property.conditionUse === NOT_FOUND_CONDITION
+                              ? 'magnifying-glass'
+                              : 'circle-pause'
+                          }
+                          className={
+                            property.conditionUse === NOT_FOUND_CONDITION
+                              ? 'text-[9px] text-danger'
+                              : 'text-[9px] text-warning'
+                          }
+                          style="solid"
+                        />
+                        <ParameterDisplay
+                          group="ConditionUse"
+                          code={property.conditionUse}
+                          fallback={property.conditionUse}
+                        />
                       </span>
                     )}
                     {property.isPriceCertified === false && (
