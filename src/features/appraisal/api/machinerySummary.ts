@@ -44,14 +44,30 @@ export interface MachinerySummaryResponse extends MachinerySummaryFields {
   appraisalId: string;
 }
 
-/** The six Section 3.1 head-counts, derived from the machines on the appraisal. */
-export interface MachinerySummarySuggestedCounts {
+/** The six Section 3.1 head-counts. */
+export interface MachineryCountSet {
   surveyedNumber: number;
   appraisalNumber: number;
   installedAndUseCount: number;
   appraisalScrapCount: number;
   appraisedByDocumentCount: number;
   notInstalledCount: number;
+}
+
+/** One property group's contribution to the totals. `groupId` is null for ungrouped machines. */
+export interface MachineryCountsByGroup extends MachineryCountSet {
+  groupId: string | null;
+  groupNumber: number | null;
+  groupName: string | null;
+}
+
+/**
+ * The counts derived from the machines on the appraisal — totals, plus the same six split by
+ * property group. The summary is appraisal-level while the machines are organised into groups, so
+ * the split is what lets the appraiser see which group a total came from.
+ */
+export interface MachinerySummarySuggestedCounts extends MachineryCountSet {
+  groups: MachineryCountsByGroup[];
 }
 
 export const machinerySummaryKeys = {

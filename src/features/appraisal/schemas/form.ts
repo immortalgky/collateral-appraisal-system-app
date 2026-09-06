@@ -889,45 +889,50 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
 };
 
 export const createMachineryFormDefault: createMachineryFormType = {
-  propertyName: null,
+  // Empty is '' for anything a text, textarea, radio or search control edits, and null only for
+  // the number and date controls. Those controls emit '' when cleared while NumberInput and
+  // DatePickerInput emit null, and react-hook-form decides `isDirty` by comparing straight against
+  // these defaults — seeding null for a text field meant '' !== null kept it dirty forever, so the
+  // "unsaved changes" indicator never went out once anything had been typed and deleted.
+  // The land, building and condo forms have always done it this way; machinery was the odd one.
+  // '' is also what this API wants on the wire: Update() reads null as "leave unchanged".
+  propertyName: '',
   isOwnerVerified: true,
-  ownerName: null,
-  registrationNumber: null,
-  // Sent as '' rather than null when cleared: the API's Update treats null as "leave unchanged".
+  ownerName: '',
+  registrationNumber: '',
   installationStatus: '',
   machineType: '',
   registrationStatus: false,
-  invoiceNumber: null,
+  invoiceNumber: '',
   isPriceCertified: true,
   isOperational: true,
-  machineName: null,
-  brand: null,
-  model: null,
-  series: null,
+  brand: '',
+  model: '',
+  series: '',
   yearOfManufacture: null,
-  manufacturer: null,
+  manufacturer: '',
   purchaseDate: null,
   purchasePrice: null,
   quantity: null,
-  capacity: null,
+  capacity: '',
   width: null,
   length: null,
   height: null,
-  machineDimensions: null,
-  energyUse: null,
-  location: null,
-  conditionUse: null,
-  machineCondition: null,
+  machineDimensions: '',
+  energyUse: '',
+  location: '',
+  conditionUse: '',
+  machineCondition: '',
   machineAge: null,
-  machineEfficiency: null,
-  machineTechnology: null,
-  usagePurpose: null,
-  machineParts: null,
+  machineEfficiency: '',
+  machineTechnology: '',
+  usagePurpose: '',
+  machineParts: '',
   replacementValue: null,
   conditionValue: null,
-  other: null,
-  remark: null,
-  appraiserOpinion: null,
+  other: '',
+  remark: '',
+  appraiserOpinion: '',
 };
 
 export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormType = {
