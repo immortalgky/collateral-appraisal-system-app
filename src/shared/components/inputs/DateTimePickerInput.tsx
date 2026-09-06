@@ -496,37 +496,54 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
               )}
             </div>
 
-            {/* Today + Time + Done footer. Today only navigates — it jumps the calendar to
-                this month without picking a date. */}
-            <div className="px-2 pb-2 pt-2 border-t border-gray-200">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMonth(new Date());
-                    setShowMonths(false);
-                  }}
-                  className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
-                >
-                  {todayLabel}
-                </button>
-                <label htmlFor={`${inputId}-time`} className="text-xs font-medium text-gray-700">
-                  Time
-                </label>
-                <TimeInput24
-                  id={`${inputId}-time`}
-                  value={timeValue}
-                  onChange={handleTimeChange}
-                  className="flex-1"
+            {/* Today gets a band of its own. Sharing one line with the time controls made the
+                footer wider than the seven-column grid, and since the popover takes the width of
+                its widest child, the whole calendar was stretched to fit it. Today only navigates —
+                it jumps the calendar to this month without picking a date. */}
+            <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setMonth(new Date());
+                  setShowMonths(false);
+                }}
+                className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
+              >
+                {todayLabel}
+              </button>
+              {selectedDate && (
+                <span className="ml-auto text-xs text-gray-400">
+                  {format(selectedDate, 'd MMM yyyy')}
+                </span>
+              )}
+            </div>
+
+            {/* The clock icon stands in for a "Time" label: the two boxes either side of a colon
+                already read as a time, and the word cost more width than the row had. The selects
+                carry their own aria-labels, so nothing is lost to a screen reader. */}
+            <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
+              <svg
+                className="w-4 h-4 text-gray-400 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
-                <button
-                  type="button"
-                  onClick={handleDone}
-                  className="px-3 py-1 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
-                >
-                  Done
-                </button>
-              </div>
+              </svg>
+              <TimeInput24 id={`${inputId}-time`} value={timeValue} onChange={handleTimeChange} />
+              <button
+                type="button"
+                onClick={handleDone}
+                className="ml-auto px-3 py-1 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
+              >
+                Done
+              </button>
             </div>
           </div>
         )}
