@@ -100,20 +100,33 @@ const FieldHelp = ({ config, namePrefix = '', index }: FieldHelpProps) => {
       setPosition(null);
       return;
     }
-    const anchor = buttonRef.current?.getBoundingClientRect();
-    const panel = panelRef.current?.getBoundingClientRect();
-    if (!anchor) return;
 
-    const width = panel?.width ?? PANEL_WIDTH;
-    const height = panel?.height ?? 0;
-    const left = Math.min(Math.max(MARGIN, anchor.left - 8), window.innerWidth - width - MARGIN);
-    const below = anchor.bottom + 6;
-    const top =
-      height > 0 && below + height > window.innerHeight - MARGIN
-        ? Math.max(MARGIN, anchor.top - height - 6)
-        : below;
+    const place = () => {
+      const anchor = buttonRef.current?.getBoundingClientRect();
+      const panel = panelRef.current?.getBoundingClientRect();
+      if (!anchor) return;
 
-    setPosition({ top, left });
+      const width = panel?.width ?? PANEL_WIDTH;
+      const height = panel?.height ?? 0;
+      const left = Math.min(Math.max(MARGIN, anchor.left - 8), window.innerWidth - width - MARGIN);
+      const below = anchor.bottom + 6;
+      const top =
+        height > 0 && below + height > window.innerHeight - MARGIN
+          ? Math.max(MARGIN, anchor.top - height - 6)
+          : below;
+
+      setPosition({ top, left });
+    };
+
+    place();
+
+    // Placing once is not enough: the first pass runs before the panel has been measured, and its
+    // height can change while it is open — a rule that starts being met swaps the line describing
+    // it. A panel that grew after being placed near the bottom of the window would hang off it.
+    if (typeof ResizeObserver === 'undefined' || !panelRef.current) return;
+    const observer = new ResizeObserver(place);
+    observer.observe(panelRef.current);
+    return () => observer.disconnect();
   }, [open]);
 
   return (
