@@ -7,6 +7,7 @@ export { default as DateRangeInput } from './DateRangeInput';
 export { default as SearchByInput } from './SearchByInput';
 export type { SearchByOption } from './SearchByInput';
 export { default as DateTimeInput } from './DateTimeInput';
+export type { HolidayInfo } from './dateConstraints';
 export { default as CalendarNavHeader } from './CalendarNavHeader';
 export { default as MonthYearPanel } from './MonthYearPanel';
 export { default as Dropdown } from './Dropdown';

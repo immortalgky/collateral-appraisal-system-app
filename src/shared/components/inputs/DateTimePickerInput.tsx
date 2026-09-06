@@ -1,13 +1,21 @@
-import { forwardRef, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
-import { format, formatISO, isValid, parse, setHours, setMinutes } from 'date-fns';
+import { format, formatISO, isValid, setHours, setMinutes } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
-import { buildDisabledMatcher, validateDateConstraints } from './dateConstraints';
+import {
+  buildDisabledMatcher,
+  buildHolidayMap,
+  toDateKey,
+  validateDateConstraints,
+  type HolidayInfo,
+} from './dateConstraints';
 import { ScrollableSelect } from './ScrollableSelect';
 import { CalendarNavHeader } from './CalendarNavHeader';
 import { MonthYearPanel } from './MonthYearPanel';
+import { createHolidayDayButton } from './HolidayDayButton';
+import { useDateSegmentInput } from './useDateSegmentInput';
 
 const MONTH_LABELS_SHORT = [
   'Jan',
@@ -70,9 +78,16 @@ interface DateTimePickerInputProps {
   minDate?: Date | string | null;
   disableDaysBefore?: number;
   disableDaysAfter?: number;
+  /**
+   * Public holidays to mark on the calendar (`date` as `yyyy-MM-dd`). Marking never blocks a
+   * date — a holiday stays selectable unless the field also passes `disableHolidays`.
+   */
+  holidays?: HolidayInfo[];
+  /** Refuse the dates in `holidays`, for fields that genuinely cannot fall on one. */
+  disableHolidays?: boolean;
+  /** Label for the calendar's Today button. */
+  todayLabel?: string;
 }
-
-const DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => {
   const v = i.toString().padStart(2, '0');
@@ -143,6 +158,9 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       minDate,
       disableDaysBefore,
       disableDaysAfter,
+      holidays,
+      disableHolidays,
+      todayLabel = 'Today',
     },
     ref,
   ) => {
@@ -152,24 +170,27 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     const isDisabled = disabled || isReadOnly;
     const popoverRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    // The toggle button is neither the input nor the popover, so the outside-click handler has to
+    // know about it — otherwise mousedown closes the calendar and the click reopens it, and the
+    // icon can never shut what it opened.
+    const calendarButtonRef = useRef<HTMLButtonElement>(null);
     const [isOpen, setIsOpen] = useState(false);
-    const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
     const [showMonths, setShowMonths] = useState(false);
     const [timeValue, setTimeValue] = useState('00:00');
     const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
-    const [constraintError, setConstraintError] = useState<string | null>(null);
 
-    const disabledMatcher = useMemo(
-      () =>
-        buildDisabledMatcher({
-          disablePastDates,
-          disableFutureDates,
-          disableToday,
-          minDate,
-          disableDaysBefore,
-          disableDaysAfter,
-        }),
+    const constraints = useMemo(
+      () => ({
+        disablePastDates,
+        disableFutureDates,
+        disableToday,
+        minDate,
+        disableDaysBefore,
+        disableDaysAfter,
+        holidays,
+        disableHolidays,
+      }),
       [
         disablePastDates,
         disableFutureDates,
@@ -177,7 +198,19 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
         minDate,
         disableDaysBefore,
         disableDaysAfter,
+        holidays,
+        disableHolidays,
       ],
+    );
+
+    const disabledMatcher = useMemo(() => buildDisabledMatcher(constraints), [constraints]);
+
+    const holidayMap = useMemo(() => buildHolidayMap(holidays), [holidays]);
+    // Memoised: a fresh component identity on every render remounts the grid and drops focus.
+    const holidayDayButton = useMemo(() => createHolidayDayButton(holidayMap), [holidayMap]);
+    const holidayMatcher = useMemo(
+      () => (date: Date) => holidayMap.has(toDateKey(date)),
+      [holidayMap],
     );
 
     // Combine refs
@@ -203,15 +236,12 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     // Sync input value and time with selected date
     // Use value (not selectedDate) in deps to avoid infinite loop from new Date object references
     useEffect(() => {
+      // The text lives in useDateSegmentInput now; the visible month and the time footer are ours.
       const date = parseValue(value);
       if (date) {
-        setInputValue(format(date, DATETIME_FORMAT));
         setMonth(date);
         setTimeValue(format(date, 'HH:mm'));
-      } else {
-        setInputValue('');
       }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [value]);
 
     // Calculate position when opening (flip to top if not enough space below)
@@ -236,75 +266,54 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
           popoverRef.current &&
           !popoverRef.current.contains(event.target as Node) &&
           inputRef.current &&
-          !inputRef.current.contains(event.target as Node)
+          !inputRef.current.contains(event.target as Node) &&
+          !calendarButtonRef.current?.contains(event.target as Node)
         ) {
           setIsOpen(false);
         }
       };
 
+      const handleEscape = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') setIsOpen(false);
+      };
+
       if (isOpen) {
         document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
       }
 
       return () => {
         document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
       };
     }, [isOpen]);
 
-    // Apply datetime mask: dd/mm/yyyy hh:mm
-    const applyDateTimeMask = (value: string): string => {
-      // Remove all non-digits
-      const digits = value.replace(/\D/g, '');
+    /**
+     * Date and time are typed one segment at a time — day, month, year, hour, minute — so a
+     * single wrong part can be corrected on its own, and the separators are never editable.
+     * Nothing reaches the form until every segment is filled with a real, allowed value.
+     */
+    const segmentInput = useDateSegmentInput({
+      value: selectedDate ?? null,
+      withTime: true,
+      inputRef,
+      disabled: isDisabled,
+      onCommit: useCallback(
+        (date: Date | null) => {
+          if (date) setTimeValue(format(date, 'HH:mm'));
+          onChange?.(date ? formatISO(date) : null);
+        },
+        [onChange],
+      ),
+      validate: useCallback(
+        (date: Date) => validateDateConstraints(date, constraints),
+        [constraints],
+      ),
+      onNavigate: setMonth,
+    });
 
-      // Build masked value: dd/mm/yyyy hh:mm
-      let masked = '';
-      for (let i = 0; i < digits.length && i < 12; i++) {
-        if (i === 2 || i === 4) {
-          masked += '/';
-        } else if (i === 8) {
-          masked += ' ';
-        } else if (i === 10) {
-          masked += ':';
-        }
-        masked += digits[i];
-      }
-
-      return masked;
-    };
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const rawValue = e.target.value;
-      const maskedValue = applyDateTimeMask(rawValue);
-      setInputValue(maskedValue);
-
-      // Clear stale constraint error while user is editing
-      if (maskedValue.length < 16 && maskedValue !== '') {
-        setConstraintError(null);
-      }
-
-      // Try to parse the input when complete (16 chars: dd/mm/yyyy hh:mm)
-      if (maskedValue.length === 16) {
-        const parsed = parse(maskedValue, DATETIME_FORMAT, new Date());
-        if (isValid(parsed)) {
-          const violation = validateDateConstraints(parsed, {
-            disablePastDates,
-            disableFutureDates,
-            disableToday,
-          });
-          if (violation) {
-            setConstraintError(violation);
-            return;
-          }
-          setConstraintError(null);
-          setMonth(parsed);
-          setTimeValue(format(parsed, 'HH:mm'));
-          onChange?.(formatISO(parsed));
-        }
-      } else if (maskedValue === '') {
-        setConstraintError(null);
-        onChange?.(null);
-      }
-    };
+    /** The typed-value message, e.g. "Cannot select a past date". */
+    const constraintError = segmentInput.error;
 
     const applyTimeToDate = (date: Date, time: string): Date => {
       const [hours, minutes] = time.split(':').map(s => parseInt(s, 10));
@@ -312,35 +321,30 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     };
 
     const handleDaySelect = (date: Date | undefined) => {
-      setConstraintError(null);
-      if (date) {
-        const dateWithTime = applyTimeToDate(date, timeValue);
-        setInputValue(format(dateWithTime, DATETIME_FORMAT));
-        onChange?.(formatISO(dateWithTime));
-      } else {
-        setInputValue('');
-        onChange?.(null);
-      }
+      const next = date ? applyTimeToDate(date, timeValue) : null;
+      onChange?.(next ? formatISO(next) : null);
+      // See DatePickerInput: choosing what is already in force emits nothing, so the field has to
+      // be told directly or a rejected value stays on screen with its message.
+      segmentInput.showValue(next);
     };
 
     const handleTimeChange = (newTime: string) => {
       setTimeValue(newTime);
-
-      if (selectedDate) {
-        const dateWithTime = applyTimeToDate(selectedDate, newTime);
-        setInputValue(format(dateWithTime, DATETIME_FORMAT));
-        onChange?.(formatISO(dateWithTime));
-      }
+      if (!selectedDate) return;
+      const next = applyTimeToDate(selectedDate, newTime);
+      onChange?.(formatISO(next));
+      segmentInput.showValue(next);
     };
 
-    const handleInputClick = () => {
-      if (!isDisabled) {
-        setShowMonths(false);
-        setIsOpen(true);
-      }
+    const toggleCalendar = () => {
+      if (isDisabled) return;
+      setShowMonths(false);
+      setIsOpen(open => !open);
     };
 
     const handleInputBlur = () => {
+      // Roll a half-typed value back to whatever the form holds, then report the blur.
+      segmentInput.inputProps.onBlur();
       // Small delay to allow calendar click to register
       setTimeout(() => {
         if (!popoverRef.current?.contains(document.activeElement)) {
@@ -357,7 +361,11 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     return (
       <div className={clsx('relative', fullWidth && 'w-full')}>
         {label && (
-          <label data-field-label htmlFor={inputId} className="block text-xs font-medium text-gray-700 mb-1">
+          <label
+            data-field-label
+            htmlFor={inputId}
+            className="block text-xs font-medium text-gray-700 mb-1"
+          >
             {label}
             {required && <span className="text-danger ml-0.5">*</span>}
           </label>
@@ -370,14 +378,18 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             name={name}
             type="text"
             className={clsx(
-              'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
+              // pr-9: the calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is
+              // long enough to run under it in a narrow column.
+              'block px-3 py-2 pr-9 border rounded-lg text-sm transition-colors duration-200',
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
                 : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
               isDisabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : 'bg-white hover:border-gray-300 cursor-pointer',
+                : 'bg-white hover:border-gray-300 cursor-text',
+              // A value still being typed reads as a draft rather than as a date.
+              !error && !constraintError && segmentInput.isIncomplete && 'text-gray-400',
               fullWidth && 'w-full',
               className,
             )}
@@ -391,15 +403,25 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             }
             disabled={isDisabled}
             placeholder={placeholder}
-            value={inputValue}
-            onChange={handleInputChange}
-            onClick={handleInputClick}
-            onBlur={handleInputBlur}
             autoComplete="off"
+            {...segmentInput.inputProps}
+            onBlur={handleInputBlur}
           />
 
-          {/* Calendar Icon */}
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+          {/* Calendar icon — the only way to open the calendar, so clicking into the text just
+              puts the caret where the user aimed. */}
+          <button
+            ref={calendarButtonRef}
+            type="button"
+            aria-label="Open calendar"
+            aria-expanded={isOpen}
+            disabled={isDisabled}
+            onClick={toggleCalendar}
+            className={clsx(
+              'absolute inset-y-0 right-0 flex items-center pr-3 pl-2 text-gray-400',
+              isDisabled ? 'cursor-not-allowed' : 'hover:text-gray-600',
+            )}
+          >
             <svg
               className="w-4 h-4"
               fill="none"
@@ -414,7 +436,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
               />
             </svg>
-          </div>
+          </button>
         </div>
 
         {/* Calendar Popover with Time */}
@@ -422,7 +444,9 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
           <div
             ref={popoverRef}
             className={clsx(
-              'absolute z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200',
+              // right-0: hangs off the input's right edge, under the icon that opened it, rather
+              // than a long way left of it on a wide field.
+              'absolute right-0 z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200',
               position === 'bottom' ? 'mt-1' : 'bottom-full mb-1',
             )}
           >
@@ -449,7 +473,8 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                   onMonthChange={setMonth}
                   showOutsideDays
                   disabled={disabledMatcher}
-                  components={{ MonthCaption: HiddenCaption }}
+                  modifiers={{ holiday: holidayMatcher }}
+                  components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
                 />
               </div>
               {showMonths && (
@@ -466,18 +491,25 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                       setMonth(new Date(month.getFullYear() + delta, month.getMonth(), 1))
                     }
                     onSelectYear={y => setMonth(new Date(y, month.getMonth(), 1))}
-                    onToday={() => {
-                      setMonth(new Date());
-                      setShowMonths(false);
-                    }}
                   />
                 </div>
               )}
             </div>
 
-            {/* Time + Done footer */}
+            {/* Today + Time + Done footer. Today only navigates — it jumps the calendar to
+                this month without picking a date. */}
             <div className="px-2 pb-2 pt-2 border-t border-gray-200">
               <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMonth(new Date());
+                    setShowMonths(false);
+                  }}
+                  className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                >
+                  {todayLabel}
+                </button>
                 <label htmlFor={`${inputId}-time`} className="text-xs font-medium text-gray-700">
                   Time
                 </label>
