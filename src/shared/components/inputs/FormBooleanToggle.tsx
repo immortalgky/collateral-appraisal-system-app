@@ -2,7 +2,7 @@ import Toggle from './Toggle';
 import { useController, useFormContext } from 'react-hook-form';
 import { useParametersByGroup } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 type FormBooleanToggleProps = FormBooleanToggleBaseProps &
   AtLeastOne<{ group: string; options: [string, string] }>;
@@ -10,13 +10,24 @@ type FormBooleanToggleProps = FormBooleanToggleBaseProps &
 interface FormBooleanToggleBaseProps {
   name: string;
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   /** Size variant */
   size?: 'sm' | 'md';
   disabled?: boolean;
   className?: string;
 }
 
-const FormBooleanToggle = ({ name, label, group, options, size, disabled, className }: FormBooleanToggleProps) => {
+const FormBooleanToggle = ({
+  name,
+  label,
+  labelAddon,
+  group,
+  options,
+  size,
+  disabled,
+  className,
+}: FormBooleanToggleProps) => {
   const { control } = useFormContext();
   const {
     field,
@@ -34,6 +45,7 @@ const FormBooleanToggle = ({ name, label, group, options, size, disabled, classN
   return (
     <Toggle
       label={label}
+      labelAddon={labelAddon}
       options={resolvedOptions}
       size={size}
       disabled={disabled}

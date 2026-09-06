@@ -3,6 +3,8 @@ import Input from '../Input';
 
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: React.ReactNode;
   readonly?: boolean;
   error?: string;
   /** Show character count when maxLength is set */
@@ -45,10 +47,7 @@ function applyMask(raw: string, mask: string): string {
 }
 
 function maskToPlaceholder(mask: string): string {
-  return mask
-    .replace(/9/g, '_')
-    .replace(/a/g, '_')
-    .replace(/\*/g, '_');
+  return mask.replace(/9/g, '_').replace(/a/g, '_').replace(/\*/g, '_');
 }
 
 const TextInput = ({ error, showCharCount, inputMask, ...props }: TextInputProps) => {
@@ -58,7 +57,10 @@ const TextInput = ({ error, showCharCount, inputMask, ...props }: TextInputProps
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const masked = applyMask(e.target.value, inputMask);
-    props.onChange?.({ ...e, target: { ...e.target, value: masked } } as React.ChangeEvent<HTMLInputElement>);
+    props.onChange?.({
+      ...e,
+      target: { ...e.target, value: masked },
+    } as React.ChangeEvent<HTMLInputElement>);
   };
 
   return (

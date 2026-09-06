@@ -2430,66 +2430,30 @@ export const bathroomFloorFields: FormField[] = [
 // Machine fields (from MachineDetailForm.tsx)
 // =============================================================================
 
+// Ordered the way an appraiser fills the form in: what the machine is, where it came from, who
+// owns it and whether it may be valued, what condition it is in, where it sits and how big it is,
+// then free text. Fields that are read together share a row; everything else gets its own.
 export const machineInfoFields: FormField[] = [
-  {
-    type: 'text-input',
-    label: 'Property Name',
-    name: 'propertyName',
-    wrapperClassName: 'col-span-12',
-    maxLength: 150,
-  },
-
-  {
-    type: 'boolean-toggle',
-    label: 'Check Owner',
-    name: 'isOwnerVerified',
-    options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-12',
-  },
-
-  {
-    type: 'text-input',
-    label: 'Owner',
-    name: 'ownerName',
-    wrapperClassName: 'col-span-12',
-    disableWhen: { field: 'isOwnerVerified', is: false },
-    requiredWhen: { field: 'isOwnerVerified', is: true },
-    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
-    maxLength: 100,
-  },
-
-  {
-    type: 'text-input',
-    label: 'Registration No.',
-    name: 'registrationNumber',
-    wrapperClassName: 'col-span-5',
-    maxLength: 50,
-  },
-
-  {
-    type: 'radio-group',
-    label: 'Condition Use ',
-    name: 'conditionUse',
-    wrapperClassName: 'col-span-12',
-    group: 'ConditionUse',
-    orientation: 'horizontal',
-    variant: 'button',
-  },
-
-  {
-    type: 'boolean-toggle',
-    label: 'Can Use',
-    name: 'isOperational',
-    options: ['Can not', 'Can'],
-    wrapperClassName: 'col-span-3',
-  },
-
+  // ── The machine itself ──────────────────────────────────────────────────
+  // One name, not two. `propertyName` and `machineName` are separate columns but held the same
+  // text on every row that had both, and the form asked for it twice. `propertyName` is the one
+  // kept: every property type has it, and the group cards, the property list and the pricing
+  // analysis already read it first. maxLength matches the column — the old machineName field
+  // allowed 300 into an nvarchar(200).
   {
     type: 'text-input',
     label: 'Machinery Name',
-    name: 'machineName',
-    wrapperClassName: 'col-span-9',
-    maxLength: 300,
+    name: 'propertyName',
+    wrapperClassName: 'col-span-12',
+    maxLength: 200,
+  },
+
+  {
+    type: 'dropdown',
+    label: 'Machine Type',
+    name: 'machineType',
+    wrapperClassName: 'col-span-12',
+    group: 'MachineType',
   },
 
   {
@@ -2512,42 +2476,43 @@ export const machineInfoFields: FormField[] = [
     type: 'text-input',
     label: 'Series',
     name: 'series',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     maxLength: 100,
-  },
-
-  {
-    type: 'number-input',
-    label: 'Year',
-    name: 'yearOfManufacture',
-    wrapperClassName: 'col-span-4',
-    decimalPlaces: 0,
-    maxIntegerDigits: 4,
-    thousandSeparator: false,
   },
 
   {
     type: 'number-input',
     label: 'Quantity',
     name: 'quantity',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
     maxIntegerDigits: 6,
   },
 
+  // ── Where it came from ──────────────────────────────────────────────────
   {
     type: 'parameter-search',
     label: 'Country of Manufacture',
     name: 'manufacturer',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     group: 'Country',
+  },
+
+  {
+    type: 'number-input',
+    label: 'Year',
+    name: 'yearOfManufacture',
+    wrapperClassName: 'col-span-6',
+    decimalPlaces: 0,
+    maxIntegerDigits: 4,
+    thousandSeparator: false,
   },
 
   {
     type: 'date-input',
     label: 'Purchase Date',
     name: 'purchaseDate',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     disableFutureDates: true,
   },
 
@@ -2555,24 +2520,121 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Purchase Price',
     name: 'purchasePrice',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     maxIntegerDigits: 15,
     decimalPlaces: 2,
   },
 
+  // ── Ownership, registration, and whether a value may be appraised ───────
+  {
+    type: 'boolean-toggle',
+    label: 'Check Owner',
+    name: 'isOwnerVerified',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-12',
+  },
+
+  // Thai reads "ผู้ถือกรรมสิทธิ์" — the party that holds title, which is what the Check Owner
+  // toggle above verifies. English stays "Owner", matching the OwnerName column.
   {
     type: 'text-input',
-    label: 'Location ',
-    name: 'location',
+    label: 'Owner',
+    name: 'ownerName',
     wrapperClassName: 'col-span-12',
+    disableWhen: { field: 'isOwnerVerified', is: false },
+    requiredWhen: { field: 'isOwnerVerified', is: true },
+    disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
     maxLength: 100,
+  },
+
+  // The status and the number it refers to, side by side. Both are carried over from the request
+  // title and editable here: the appraiser sees the machine, the requestor only described it.
+  {
+    type: 'boolean-toggle',
+    label: 'Registration Status',
+    name: 'registrationStatus',
+    options: ['Unregistered', 'Registered'],
+    wrapperClassName: 'col-span-6',
+  },
+
+  {
+    type: 'text-input',
+    label: 'Registration No.',
+    name: 'registrationNumber',
+    wrapperClassName: 'col-span-6',
+    maxLength: 50,
+    // An unregistered machine has no registration number, so the field empties as well as greying
+    // out. Without this the old number stayed in the box — and went on printing as
+    // "ทะเบียนเลขที่ …" against a machine the report has just called unregistered.
+    disableWhen: { field: 'registrationStatus', is: false },
+    disabledValue: '',
+  },
+
+  // Same pairing: the invoice number only applies while the machine is under procurement, so it
+  // sits beside the status that governs it, and empties with it. Disabled rather than hidden — the
+  // field keeps its place in the layout instead of the row jumping as the status changes.
+  //
+  // English stays "Invoice No.", matching the InvoiceNumber column; Thai reads "เลขที่ใบเสนอราคา"
+  // because the document a machine still being procured is priced from is a supplier quotation.
+  // The two are meant to differ — do not "fix" one to match the other.
+  {
+    type: 'dropdown',
+    label: 'Installation Status',
+    name: 'installationStatus',
+    wrapperClassName: 'col-span-6',
+    group: 'MachineStatus',
+  },
+
+  {
+    type: 'text-input',
+    label: 'Invoice No.',
+    name: 'invoiceNumber',
+    wrapperClassName: 'col-span-6',
+    maxLength: 20,
+    disableWhen: { field: 'installationStatus', operator: 'notEquals', is: '2' },
+    // Cleared, not preserved: a machine that is no longer under procurement has no quotation to
+    // point at, so the column is emptied rather than left holding a number the record contradicts.
+    // The domain enforces the same rule on every write (MachineryAppraisalDetail
+    // .ClearInapplicableFields), so this only keeps the screen honest about what is stored.
+    disabledValue: '',
+    requiredWhen: { field: 'installationStatus', is: '2' },
+  },
+
+  // Certifying the price and appraising a value are one decision, not two: this flag is what the
+  // summary report prints as "(ไม่ประเมินมูลค่า)". Always editable — the appraiser decides, and the
+  // form does not infer it from the registration or installation status.
+  {
+    type: 'boolean-toggle',
+    label: 'Price Certified',
+    name: 'isPriceCertified',
+    options: ['Not Certified', 'Certified'],
+    wrapperClassName: 'col-span-12',
+  },
+
+  // ── Condition and use ───────────────────────────────────────────────────
+  {
+    type: 'radio-group',
+    label: 'Condition Use ',
+    name: 'conditionUse',
+    wrapperClassName: 'col-span-12',
+    group: 'ConditionUse',
+    orientation: 'horizontal',
+    variant: 'button',
+  },
+
+  {
+    type: 'boolean-toggle',
+    label: 'Can Use',
+    name: 'isOperational',
+    options: ['Can not', 'Can'],
+    wrapperClassName: 'col-span-6',
   },
 
   {
     type: 'text-input',
     label: 'Machinery Condition ',
     name: 'machineCondition',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     maxLength: 50,
   },
 
@@ -2580,9 +2642,17 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Machinery Age ',
     name: 'machineAge',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-6',
     decimalPlaces: 0,
     maxIntegerDigits: 3,
+  },
+
+  {
+    type: 'text-input',
+    label: 'Machinery Efficiency ',
+    name: 'machineEfficiency',
+    wrapperClassName: 'col-span-6',
+    maxLength: 50,
   },
 
   {
@@ -2601,11 +2671,21 @@ export const machineInfoFields: FormField[] = [
     maxLength: 300,
   },
 
+  // ── Where it sits, and how big it is ────────────────────────────────────
+  {
+    type: 'text-input',
+    label: 'Location ',
+    name: 'location',
+    wrapperClassName: 'col-span-12',
+    maxLength: 100,
+  },
+
+  // The three measurements are one reading, so they stay on one row.
   {
     type: 'number-input',
     label: 'Width',
     name: 'width',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
   },
 
@@ -2613,7 +2693,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Length',
     name: 'length',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
   },
 
@@ -2621,7 +2701,7 @@ export const machineInfoFields: FormField[] = [
     type: 'number-input',
     label: 'Height',
     name: 'height',
-    wrapperClassName: 'col-span-2',
+    wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
   },
 
@@ -2629,7 +2709,7 @@ export const machineInfoFields: FormField[] = [
     type: 'text-input',
     label: 'Machine Dimensions',
     name: 'machineDimensions',
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-12',
     maxLength: 300,
   },
 
@@ -2643,18 +2723,23 @@ export const machineInfoFields: FormField[] = [
 
   {
     type: 'text-input',
-    label: 'Machinery Efficiency ',
-    name: 'machineEfficiency',
-    wrapperClassName: 'col-span-6',
-    maxLength: 50,
-  },
-
-  {
-    type: 'text-input',
     label: 'Machinery Technology ',
     name: 'machineTechnology',
+    wrapperClassName: 'col-span-6',
+    maxLength: 100,
+  },
+
+  // ── Free text ───────────────────────────────────────────────────────────
+  // Same order the appraisal book prints them in (partials/section-machine.html): อื่นๆ,
+  // ส่วนประกอบของเครื่องจักร, หมายเหตุ, ความเห็นผู้ประเมิน — so what the appraiser types top to
+  // bottom comes out top to bottom.
+  {
+    type: 'textarea',
+    label: 'Other',
+    name: 'other',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: true,
   },
 
   {
@@ -2663,15 +2748,6 @@ export const machineInfoFields: FormField[] = [
     name: 'machineParts',
     wrapperClassName: 'col-span-12',
     maxLength: 4000,
-    showCharCount: true,
-  },
-
-  {
-    type: 'textarea',
-    label: 'Other',
-    name: 'other',
-    wrapperClassName: 'col-span-12',
-    maxLength: 100,
     showCharCount: true,
   },
 
@@ -3575,7 +3651,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
   },
 
   {
-    type: 'textarea',
+    type: 'text-input',
     label: 'Maintenance',
     name: 'maintenance',
     wrapperClassName: 'col-span-12',
@@ -3584,7 +3660,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
   },
 
   {
-    type: 'textarea',
+    type: 'text-input',
     label: 'Exterior',
     name: 'exterior',
     wrapperClassName: 'col-span-12',
@@ -3593,7 +3669,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
   },
 
   {
-    type: 'textarea',
+    type: 'text-input',
     label: 'Performance',
     name: 'performance',
     wrapperClassName: 'col-span-12',
@@ -3610,8 +3686,11 @@ export const machinerySummaryGeneralFields: FormField[] = [
   },
 
   {
-    // FSD = MAX (no cap) — no `maxLength`, intentionally unbounded.
+    // FSD = MAX (no cap) — no `maxLength` here, so Textarea's own 4000-character default
+    // applies. That makes this the roomiest box on the tab, and it is sized to match.
+    // `!` beats Textarea's own min-h utility.
     type: 'textarea',
+    className: '!min-h-[180px]',
     label: 'Market Demand',
     name: 'marketDemand',
     wrapperClassName: 'col-span-12',
@@ -3643,6 +3722,7 @@ export const machinerySummaryLegalFields: FormField[] = [
 
   {
     type: 'textarea',
+    className: '!min-h-[180px]',
     label: 'Machine Address',
     name: 'machineAddress',
     wrapperClassName: 'col-span-12',
@@ -3683,7 +3763,7 @@ export const machinerySummaryLegalFields: FormField[] = [
   },
 
   {
-    type: 'textarea',
+    type: 'text-input',
     label: 'Obligation',
     name: 'obligation',
     wrapperClassName: 'col-span-12',
@@ -3692,7 +3772,7 @@ export const machinerySummaryLegalFields: FormField[] = [
   },
 
   {
-    type: 'textarea',
+    type: 'text-input',
     label: 'Other',
     name: 'other',
     wrapperClassName: 'col-span-12',

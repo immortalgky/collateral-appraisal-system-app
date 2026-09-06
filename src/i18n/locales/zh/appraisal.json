@@ -506,10 +506,7 @@
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
       "priceVerification": "价格核实",
-      "priceVerificationOptions": [
-        "未核实",
-        "已核实"
-      ],
+      "priceVerificationOptions": ["未核实", "已核实"],
       "reviewPrices": "审查价格",
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",
@@ -645,6 +642,99 @@
         "longitude": "经度",
         "obligation": "义务负担",
         "other": "其他"
+      },
+      "suggested": {
+        "applyEmpty": "填入空白栏",
+        "applyOne": "使用计算值（{{value}}）",
+        "helpTitle": "根据本次评估的机器计算",
+        "helpComputed": "计算值：{{value}}",
+        "helpNote": "仅为初始值，不会覆盖您填写的内容。",
+        "rules": {
+          "surveyedNumber": "勘查中找到的机器（使用状况不是\"未找到\"）",
+          "appraisalNumber": "已认证价格的机器，与已评估价值相同",
+          "installedAndUseCount": "已安装并在使用中的机器",
+          "appraisalScrapCount": "未在使用但仍进行评估的机器",
+          "appraisedByDocumentCount": "采购中、按报价单定价的机器",
+          "notInstalledCount": "采购中的机器"
+        }
+      },
+      "groups": {
+        "counts": "机器数量",
+        "condition": "整体状况与市场",
+        "ownership": "产权",
+        "location": "位置",
+        "obligation": "义务与备注"
+      },
+      "table": {
+        "item": "项目",
+        "entered": "填写值",
+        "derived": "计算值",
+        "source": "来源",
+        "use": "使用",
+        "ungrouped": "未分组",
+        "sourceSentence": "来自 {{list}}",
+        "sourcePart_other": "{{group}} {{count}} 台",
+        "sourceJoin": "，",
+        "sourceUngrouped": "未分组的机器",
+        "sourceNone": "没有符合条件的机器",
+        "sourcePart_one": "{{group}} {{count}} 台",
+        "sourceGroupNumber": "第 {{number}} 组"
+      },
+      "checks": {
+        "title": "数字不一致",
+        "appraisedOverSurveyed": "评估 {{appraised}} 超过勘查 {{surveyed}}",
+        "splitOverSurveyed": "已安装 + 未安装 = {{split}}，超过勘查的 {{surveyed}}",
+        "note": "仅为提示，不影响保存。"
+      }
+    },
+    "machineryInfo": {
+      "sectionTitle": "机器信息",
+      "fields": {
+        "propertyName": "机器名称",
+        "machineType": "机器类型",
+        "brand": "品牌",
+        "model": "型号",
+        "series": "系列",
+        "quantity": "数量",
+        "manufacturer": "制造国",
+        "yearOfManufacture": "制造年份",
+        "purchaseDate": "购买日期",
+        "purchasePrice": "购买价格",
+        "isOwnerVerified": "核查所有权",
+        "ownerName": "产权持有人",
+        "registrationStatus": "登记状态",
+        "registrationNumber": "登记号",
+        "installationStatus": "安装状态",
+        "invoiceNumber": "报价单号",
+        "isPriceCertified": "价格认证",
+        "conditionUse": "使用状况",
+        "isOperational": "可使用",
+        "machineCondition": "机器状况",
+        "machineAge": "机器年限",
+        "machineEfficiency": "机器效率",
+        "usagePurpose": "用途",
+        "capacity": "生产能力",
+        "location": "位置",
+        "width": "宽度",
+        "length": "长度",
+        "height": "高度",
+        "machineDimensions": "机器尺寸",
+        "energyUse": "能源使用",
+        "machineTechnology": "机器技术",
+        "other": "其他",
+        "machineParts": "机器部件",
+        "remark": "备注",
+        "appraiserOpinion": "评估师意见"
+      },
+      "options": {
+        "cannot": "不能",
+        "can": "能",
+        "unregistered": "未登记",
+        "registered": "已登记",
+        "notCertified": "不认证",
+        "certified": "认证",
+        "cannotUse": "不可用",
+        "canUse": "可用"
       }
     }
   },
@@ -658,6 +748,11 @@
       "legendComparables": "市场比较对象",
       "pinView": "在地图上查看",
       "pinNoLocation": "未设置位置"
+    },
+    "machineryChips": {
+      "registered": "已登记",
+      "unregistered": "未登记",
+      "notAppraised": "不评估价值"
     },
     "addNewGroup": "添加新组",
     "noGroups": "暂无房产组",

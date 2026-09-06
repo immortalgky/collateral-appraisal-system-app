@@ -602,7 +602,8 @@ const machinerySections = (t: T): SectionDef[] => [
   {
     title: t('view360.sections.identification'),
     fields: [
-      { key: 'machineName', label: t('view360.fields.machineName') },
+      // No name row here: the machinery-information section above already shows propertyName,
+      // and this row used to carry machineName, which the form no longer writes.
       { key: 'brand', label: t('view360.fields.brand') },
       { key: 'model', label: t('view360.fields.model') },
       { key: 'series', label: t('view360.fields.series') },

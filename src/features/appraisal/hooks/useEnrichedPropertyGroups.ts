@@ -64,11 +64,13 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     detailId: item.appraisalDetailId ?? undefined,
     ...(isMachine
       ? {
-          machineName: item.machineName ?? undefined,
           brand: item.brand ?? undefined,
           model: item.model ?? undefined,
           registrationNumber: item.registrationNumber ?? undefined,
           dimension: item.dimension ?? undefined,
+          registrationStatus: item.registrationStatus ?? undefined,
+          isPriceCertified: item.isPriceCertified ?? undefined,
+          conditionUse: item.conditionUse ?? undefined,
         }
       : {}),
   };

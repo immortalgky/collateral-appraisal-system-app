@@ -41,6 +41,16 @@ interface CostMachinePanelProps {
   onCancelCalculationMethod: () => void;
 }
 
+/** First of the candidates that has actual text in it. */
+const firstNonBlank = (...values: unknown[]): string | null => {
+  for (const value of values) {
+    if (value == null) continue;
+    const text = String(value).trim();
+    if (text !== '') return text;
+  }
+  return null;
+};
+
 export function CostMachinePanel({
   activeMethod,
   propertiesMap,
@@ -76,7 +86,12 @@ export function CostMachinePanel({
         return {
           appraisalPropertyId: String(d.propertyId ?? propertyId),
           quantity: d.quantity != null ? Number(d.quantity) : null,
-          machineName: d.machineName != null ? String(d.machineName) : null,
+          // The machinery form writes PropertyName now; MachineName only survives on rows created
+          // before that. Emptiness decides, not nullness: saving a legacy row through the new form
+          // writes PropertyName = '', and a null test would let that blank hide the name still
+          // sitting in MachineName. Same rule as the report's
+          // COALESCE(NULLIF(PropertyName,''), NULLIF(MachineName,'')).
+          machineName: firstNonBlank(d.propertyName, d.machineName),
           registrationNumber: d.registrationNumber != null ? String(d.registrationNumber) : null,
           manufacturer: d.manufacturer != null ? String(d.manufacturer) : null,
           conditionUse: d.conditionUse != null ? String(d.conditionUse) : null,

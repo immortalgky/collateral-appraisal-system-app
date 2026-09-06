@@ -5,6 +5,7 @@ import {
   ListboxOptions as HeadlessListboxOptions,
 } from '@headlessui/react';
 import { forwardRef, type ReactNode, type SelectHTMLAttributes, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useParameterOptions } from '../../utils/parameterUtils';
@@ -70,6 +71,8 @@ function applyOptionFilters(
 
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   placeholder?: string;
   onChange?: (value: any) => void;
   error?: string;
@@ -129,7 +132,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       value,
       onChange,
       label,
-      placeholder = 'Please select',
+      labelAddon,
+      placeholder,
       error,
       required,
       disabled,
@@ -145,6 +149,11 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     },
     ref,
   ) => {
+    const { t } = useTranslation('common');
+    // Default lives in the locale files, not in this signature — the old 'Please select' literal
+    // was the last English string left on a fully translated form.
+    const resolvedPlaceholder =
+      placeholder ?? t('select.placeholder', { defaultValue: 'Please select' });
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');
@@ -162,8 +171,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     }, [allOptions, filters, filterWatchValues]);
 
     const dropdownOptions = useMemo(() => {
-      return [{ value: null, label: placeholder, id: '' }, ...filteredOptions];
-    }, [filteredOptions, placeholder]);
+      return [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions];
+    }, [filteredOptions, resolvedPlaceholder]);
 
     const selectedOption = useMemo(
       () => allOptions.find(opt => opt.value === value) ?? null,
@@ -175,17 +184,32 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 
     return (
       <div className={clsx('w-full', props.className)}>
-        {label && (
-          <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
-            {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
+            of this component with `display: contents`, so an extra element in between would take
+            the label column and stretch. */}
+        {labelAddon ? (
+          <div className="flex items-center gap-1.5 mb-1">
+            {label && (
+              <div data-field-label className="block text-xs font-medium text-gray-700">
+                {label}
+                {required && <span className="text-danger ml-0.5">*</span>}
+              </div>
+            )}
+            {labelAddon}
           </div>
+        ) : (
+          label && (
+            <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+              {label}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </div>
+          )
         )}
         <ListBox
           ref={ref}
           value={selectedOption}
           onChange={selectedOnChange}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           //selectedLabel={selectedOption?.label}
           selected={selectedOption}
           disabled={isDisabled}

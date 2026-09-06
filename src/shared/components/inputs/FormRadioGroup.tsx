@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
 import RadioGroup, { type RadioOption } from './RadioGroup';
 import { useFormReadOnly } from '../form/context';
@@ -10,6 +11,8 @@ type FormRadioGroupProps = FormRadioGroupBaseProps & GroupOrOptions;
 interface FormRadioGroupBaseProps {
   name: string;
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   disabled?: boolean;
   className?: string;
   size?: 'sm' | 'md' | 'lg';
@@ -20,6 +23,7 @@ interface FormRadioGroupBaseProps {
 const FormRadioGroup = ({
   name,
   label,
+  labelAddon,
   disabled: disabledProp,
   className,
   size,
@@ -40,6 +44,7 @@ const FormRadioGroup = ({
       value={field.value}
       onChange={field.onChange}
       label={label}
+      labelAddon={labelAddon}
       error={error?.message}
       disabled={disabled}
       className={className}

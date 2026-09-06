@@ -59,11 +59,16 @@ export interface PropertyItem {
   titles?: LandTitleInfo[];
   sequenceNumber?: number;
   detailId?: string;
-  machineName?: string;
   brand?: string;
   model?: string;
   registrationNumber?: string;
   dimension?: string;
+  /** Machinery only: ownership registered with the authorities. */
+  registrationStatus?: boolean;
+  /** Machinery only: the appraiser appraises a value for this machine (see FieldHelp on the form). */
+  isPriceCertified?: boolean;
+  /** Machinery only: ConditionUse parameter code — '01' in use, '02' not in use, '03' not found. */
+  conditionUse?: string;
 }
 
 export interface PropertyGroup {

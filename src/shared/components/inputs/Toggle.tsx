@@ -1,8 +1,11 @@
+import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { useFormReadOnly } from '../form/context';
 
 interface ToggleProps {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   options: [string, string];
   error?: string;
   required?: boolean;
@@ -16,6 +19,7 @@ interface ToggleProps {
 
 const Toggle = ({
   label,
+  labelAddon,
   options,
   error,
   required,
@@ -51,10 +55,21 @@ const Toggle = ({
   return (
     <div className={clsx('text-sm', className)}>
       <fieldset>
+        {/* The addon goes INSIDE the legend, never in a wrapper around it: <legend> must be a
+            direct child of <fieldset> or assistive technology loses the group's name. The grid
+            form layout also hoists [data-field-label] out of this component with
+            `display: contents`, so an element in between would take the label column and stretch. */}
         {label && (
-          <legend data-field-label className="font-medium text-gray-700 mb-1.5">
+          <legend
+            data-field-label
+            className={clsx(
+              'font-medium text-gray-700 mb-1.5',
+              labelAddon && 'flex items-center gap-1.5',
+            )}
+          >
             {label}
             {required && <span className="text-danger ml-0.5">*</span>}
+            {labelAddon}
           </legend>
         )}
         <div
