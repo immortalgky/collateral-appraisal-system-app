@@ -513,7 +513,10 @@ export const mapMachineryPropertyResponseToForm = (
     // old form may carry its name in MachineName only. Reading that here also migrates it —
     // the next save writes it into PropertyName, where everything else looks.
     propertyName: response.propertyName?.trim() || response.machineName?.trim() || '',
-    isOwnerVerified: response.isOwnerVerified ?? true,
+    // GetMachineryPropertyResponse calls it verifiableOwner — reading isOwnerVerified here got
+    // undefined and fell through to `true`, so the toggle claimed every machine's ownership had
+    // been verified, and saving wrote that back.
+    isOwnerVerified: response.verifiableOwner ?? true,
     ownerName: response.ownerName ?? '',
     registrationNumber: response.registrationNumber ?? '',
     installationStatus: response.installationStatus ?? '',

@@ -55,26 +55,22 @@ const Toggle = ({
   return (
     <div className={clsx('text-sm', className)}>
       <fieldset>
-        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
-            of this component with `display: contents`, so an extra element in between would take
-            the label column and stretch. */}
-        {labelAddon ? (
-          <div className="flex items-center gap-1.5 mb-1.5">
-            {label && (
-              <legend data-field-label className="font-medium text-gray-700">
-                {label}
-                {required && <span className="text-danger ml-0.5">*</span>}
-              </legend>
+        {/* The addon goes INSIDE the legend, never in a wrapper around it: <legend> must be a
+            direct child of <fieldset> or assistive technology loses the group's name. The grid
+            form layout also hoists [data-field-label] out of this component with
+            `display: contents`, so an element in between would take the label column and stretch. */}
+        {label && (
+          <legend
+            data-field-label
+            className={clsx(
+              'font-medium text-gray-700 mb-1.5',
+              labelAddon && 'flex items-center gap-1.5',
             )}
+          >
+            {label}
+            {required && <span className="text-danger ml-0.5">*</span>}
             {labelAddon}
-          </div>
-        ) : (
-          label && (
-            <legend data-field-label className="font-medium text-gray-700 mb-1.5">
-              {label}
-              {required && <span className="text-danger ml-0.5">*</span>}
-            </legend>
-          )
+          </legend>
         )}
         <div
           className={clsx(

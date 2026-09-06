@@ -122,8 +122,11 @@ const FieldHelp = ({ config, namePrefix = '', index }: FieldHelpProps) => {
         ref={buttonRef}
         type="button"
         aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
-        aria-label={`คำอธิบาย: ${config.title}`}
+        // The panel describes the field rather than being something this button owns, and the
+        // accessible name is the help's own title, which is already translated — a Thai literal
+        // was announced in Thai to a screen reader set to en or zh.
+        aria-describedby={open ? panelId : undefined}
+        aria-label={config.title}
         onClick={() => setOpen(o => !o)}
         className={clsx(
           'shrink-0 inline-flex items-center justify-center size-4 rounded-full border text-[10px] font-bold leading-none transition-colors',
