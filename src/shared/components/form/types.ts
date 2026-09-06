@@ -121,6 +121,10 @@ interface BaseFormField {
   disabled?: boolean;
   /** Value to set when field is disabled */
   disabledValue?: unknown;
+  /** Reset the field when it becomes editable again, clearing `disabledValue` (default: true) */
+  clearOnEnable?: boolean;
+  /** Value to reset to when the field becomes editable again (default: null) */
+  enabledValue?: unknown;
   /** Mark as required (shows asterisk, overrides schema) */
   required?: boolean;
   /** Unconditionally hide the field (excluded from rendering and schema) */

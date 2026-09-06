@@ -109,7 +109,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             }
             disabled={isDisabled}
             maxLength={maxLength}
-            value={value}
+            // `null` is a legitimate form value — "not applicable", or a field the API must leave
+            // alone — but React reads it as "uncontrolled" and stops managing the box, leaving
+            // whatever text was last in the DOM on screen. An empty string is the controlled way
+            // to say the same thing.
+            value={value ?? ''}
             {...props}
           />
 
