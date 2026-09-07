@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -24,6 +24,7 @@ import { isCondo } from '../../types';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
 import type { AxiosError } from 'axios';
 import type { ApiError } from '@/shared/types/api';
+import Pagination from '@/shared/components/Pagination';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -140,10 +141,22 @@ function UnitResultTable({
   units,
   isLoading,
   projectType,
+  pageNumber,
+  pageSize,
+  totalCount,
+  totalPages,
+  handlePageChange,
+  handlePageSizeChange,
 }: {
   units: ProjectUnit[];
   isLoading: boolean;
   projectType: ProjectType;
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  handlePageChange: (pageNumber: number) => void;
+  handlePageSizeChange: (size: number) => void;
 }) {
   const { t } = useTranslation('blockProject');
   // Resolved once for the table rather than once per row — the listing now renders every unit of
@@ -171,30 +184,112 @@ function UnitResultTable({
 
   if (isCondo(projectType)) {
     return (
-      <div className="overflow-x-auto max-h-full">
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-auto">
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50 sticky top-0 z-10">
+              <tr>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.sqNo')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  {t('unitListing.cols.floor')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.towerName')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.regNumber')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.roomNo')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.saleStatus')}
+                </th>
+                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.modelType')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.usableAreaSqm')}
+                </th>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitListing.cols.sellingPriceBaht')}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {units.map(unit => (
+                <tr
+                  key={unit.id}
+                  className={clsx(
+                    'border-b border-gray-100 hover:bg-gray-50',
+                    unit.isSold && 'text-gray-400 [&>td]:text-gray-400',
+                  )}
+                >
+                  <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
+                  <td className="py-2 px-3 text-gray-800">{unit.floor ?? '-'}</td>
+                  <td className="py-2 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
+                  <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
+                  <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
+                  <td className="py-2 px-3">
+                    <SaleStatusBadge
+                      isSold={unit.isSold}
+                      label={unit.isSold ? soldLabel : availableLabel}
+                    />
+                  </td>
+                  <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
+                  <td className="py-2 px-3 text-gray-800 text-right">
+                    {unit.usableArea?.toLocaleString() ?? '-'}
+                  </td>
+                  <td className="py-2 px-3 text-gray-800 text-right">
+                    {unit.sellingPrice?.toLocaleString() ?? '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Pagination
+          currentPage={pageNumber}
+          totalPages={totalPages}
+          totalCount={totalCount}
+          pageSize={pageSize}
+          pageSizeOptions={[5, 10, 25, 50, 75, 100]}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      </div>
+    );
+  }
+
+  // LandAndBuilding columns
+  return (
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-auto">
         <table className="w-full text-xs">
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                 {t('unitListing.cols.sqNo')}
               </th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                {t('unitListing.cols.floor')}
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.plotNo')}
               </th>
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                {t('unitListing.cols.towerName')}
-              </th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                {t('unitListing.cols.regNumber')}
-              </th>
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                {t('unitListing.cols.roomNo')}
+                {t('unitListing.cols.houseNo')}
               </th>
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                 {t('unitListing.cols.saleStatus')}
               </th>
               <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                {t('unitListing.cols.modelType')}
+                {t('unitListing.cols.modelName')}
+              </th>
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.numFloors')}
+              </th>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitListing.cols.landAreaSqWa')}
               </th>
               <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                 {t('unitListing.cols.usableAreaSqm')}
@@ -214,10 +309,8 @@ function UnitResultTable({
                 )}
               >
                 <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
-                <td className="py-2 px-3 text-gray-800">{unit.floor ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
+                <td className="py-2 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
+                <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
                 <td className="py-2 px-3">
                   <SaleStatusBadge
                     isSold={unit.isSold}
@@ -225,6 +318,10 @@ function UnitResultTable({
                   />
                 </td>
                 <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
+                <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
+                <td className="py-2 px-3 text-gray-800 text-right">
+                  {unit.landArea?.toLocaleString() ?? '-'}
+                </td>
                 <td className="py-2 px-3 text-gray-800 text-right">
                   {unit.usableArea?.toLocaleString() ?? '-'}
                 </td>
@@ -236,77 +333,15 @@ function UnitResultTable({
           </tbody>
         </table>
       </div>
-    );
-  }
-
-  // LandAndBuilding columns
-  return (
-    <div className="overflow-x-auto max-h-full">
-      <table className="w-full text-xs">
-        <thead className="bg-gray-50 sticky top-0 z-10">
-          <tr>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.sqNo')}
-            </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.plotNo')}
-            </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.houseNo')}
-            </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.saleStatus')}
-            </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.modelName')}
-            </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.numFloors')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.landAreaSqWa')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.usableAreaSqm')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitListing.cols.sellingPriceBaht')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {units.map(unit => (
-            <tr
-              key={unit.id}
-              className={clsx(
-                'border-b border-gray-100 hover:bg-gray-50',
-                unit.isSold && 'text-gray-400 [&>td]:text-gray-400',
-              )}
-            >
-              <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
-              <td className="py-2 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
-              <td className="py-2 px-3">
-                <SaleStatusBadge
-                  isSold={unit.isSold}
-                  label={unit.isSold ? soldLabel : availableLabel}
-                />
-              </td>
-              <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-800 text-right">
-                {unit.landArea?.toLocaleString() ?? '-'}
-              </td>
-              <td className="py-2 px-3 text-gray-800 text-right">
-                {unit.usableArea?.toLocaleString() ?? '-'}
-              </td>
-              <td className="py-2 px-3 text-gray-800 text-right">
-                {unit.sellingPrice?.toLocaleString() ?? '-'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Pagination
+        currentPage={pageNumber}
+        totalPages={totalPages}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        pageSizeOptions={[50, 75, 100]}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 }
@@ -365,6 +400,10 @@ function StatStrip({
 }) {
   const { t } = useTranslation('blockProject');
   const towers = new Set(units.map(u => u.towerName).filter(Boolean)).size;
+  // A Model's identity is (Tower, ModelName) for Condo but ModelName alone for
+  // LandAndBuilding/Land — see CONTEXT.md "Model identity". The compound key gets both right in
+  // one pass; LB/Land units all carry a null towerName, so it degenerates to a plain distinct
+  // count for them.
   const models = isCondo(projectType)
     ? new Set(units.filter(u => u.modelType).map(u => `${u.towerName ?? ''}.${u.modelType}`)).size
     : new Set(units.map(u => u.modelType).filter(Boolean)).size;
@@ -410,6 +449,13 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { appraisal } = useAppraisalContext();
   const isReappraisal = appraisal?.appraisalType === 'ReAppraisal';
 
+  const [pageNumber, setPageNumber] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const [saleFilter, setSaleFilter] = useState<'all' | 'available' | 'sold'>('all');
+  const [towerFilter, setTowerFilter] = useState('');
+  const [modelFilter, setModelFilter] = useState('');
+  const [query, setQuery] = useState('');
+
   const { data: unitsData, isLoading: unitsLoading } = useGetProjectUnits(appraisalId ?? '');
   const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(
     appraisalId ?? '',
@@ -425,12 +471,44 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const totalCount = unitsData?.totalCount ?? units.length;
   const remainingCount = unitsData?.remainingCount ?? units.filter(u => !u.isSold).length;
 
+  useEffect(() => {
+    setPageNumber(0);
+  }, [unitsData]);
+
+  const handlePageChange = (pageNumber: number) => {
+    setPageNumber(pageNumber);
+  };
+
+  const handlePageSizeChange = (pageSize: number) => {
+    setPageSize(pageSize);
+    setPageNumber(0);
+  };
+
+  const handleSaleFilterChange = (key: 'all' | 'available' | 'sold') => {
+    setSaleFilter(key);
+    setPageNumber(0);
+  };
+
+  const handleTowerFilterChange = (v: string) => {
+    setTowerFilter(v);
+    // Model options are about to be re-scoped to the new tower — a model chosen under the old
+    // tower (or "all towers") may no longer be valid.
+    setModelFilter('');
+    setPageNumber(0);
+  };
+
+  const handleModelFilterChange = (v: string) => {
+    setModelFilter(v);
+    setPageNumber(0);
+  };
+
+  const handleQueryChange = (v: string) => {
+    setQuery(v);
+    setPageNumber(0);
+  };
+
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [saleFilter, setSaleFilter] = useState<'all' | 'available' | 'sold'>('all');
-  const [towerFilter, setTowerFilter] = useState('');
-  const [modelFilter, setModelFilter] = useState('');
-  const [query, setQuery] = useState('');
   const [verificationState, setVerificationState] = useState<{
     file: File;
     result: ReappraisalPreviewResult;
@@ -579,6 +657,11 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   );
   const isFiltered = visibleUnits.length !== units.length;
 
+  // Client-side pagination over the filtered result — the table only ever renders this page's
+  // slice, regardless of how many units the project has.
+  const pagedUnits = visibleUnits.slice(pageNumber * pageSize, pageNumber * pageSize + pageSize);
+  const totalPages = Math.ceil(visibleUnits.length / pageSize);
+
   const uploadInput = (
     <input
       type="file"
@@ -659,16 +742,16 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col flex-1 min-h-0">
         {units.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
             <div className="inline-flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
               {(['all', 'available', 'sold'] as const).map(key => (
                 <button
                   key={key}
                   type="button"
                   aria-pressed={saleFilter === key}
-                  onClick={() => setSaleFilter(key)}
+                  onClick={() => handleSaleFilterChange(key)}
                   className={clsx(
                     'text-xs px-3 py-1.5 rounded-md transition-colors',
                     saleFilter === key
@@ -693,12 +776,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
                 <Dropdown
                   options={towerOptions.map(tower => ({ value: tower, label: tower }))}
                   value={towerFilter}
-                  onChange={v => {
-                    setTowerFilter(v ?? '');
-                    // Model options are about to be re-scoped to the new tower — a model chosen
-                    // under the old tower (or "all towers") may no longer be valid.
-                    setModelFilter('');
-                  }}
+                  onChange={v => handleTowerFilterChange(v ?? '')}
                   placeholder={t('unitListing.filter.allTowers')}
                   showValuePrefix={false}
                 />
@@ -710,7 +788,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
                 <Dropdown
                   options={modelOptions.map(m => ({ value: m, label: m }))}
                   value={modelFilter}
-                  onChange={v => setModelFilter(v ?? '')}
+                  onChange={v => handleModelFilterChange(v ?? '')}
                   placeholder={t('unitListing.filter.allModels')}
                   // The model name IS the value — "Monaco - Monaco" would be noise
                   showValuePrefix={false}
@@ -721,7 +799,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
             <div className="flex-1 min-w-[12rem] max-w-xs">
               <TextInput
                 value={query}
-                onChange={e => setQuery(e.target.value)}
+                onChange={e => handleQueryChange(e.target.value)}
                 placeholder={t('unitListing.searchPlaceholder')}
                 leftIcon={<Icon style="regular" name="magnifying-glass" className="size-3.5" />}
               />
@@ -735,14 +813,20 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           </div>
         )}
 
-        <div className="max-h-[60vh] overflow-y-auto">
+        <div className="flex-1 min-h-0 flex flex-col">
           {units.length > 0 && visibleUnits.length === 0 ? (
             <p className="py-10 text-center text-sm text-gray-400">{t('unitListing.noMatch')}</p>
           ) : (
             <UnitResultTable
-              units={visibleUnits}
+              units={pagedUnits}
               isLoading={unitsLoading}
               projectType={projectType}
+              pageNumber={pageNumber}
+              pageSize={pageSize}
+              totalCount={visibleUnits.length}
+              totalPages={totalPages}
+              handlePageChange={handlePageChange}
+              handlePageSizeChange={handlePageSizeChange}
             />
           )}
         </div>
