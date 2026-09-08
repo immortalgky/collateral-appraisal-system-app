@@ -232,7 +232,7 @@ function MachineryRow({
         )}
       </td>
       <td className={clsx(tdBase, 'text-center')}>
-        {(machine.yearOfManufacture ?? 0 > 0) ? machine.yearOfManufacture : '-'}
+        {(machine.yearOfManufacture ?? 0) > 0 ? machine.yearOfManufacture : '-'}
       </td>
 
       {/* RCN */}
