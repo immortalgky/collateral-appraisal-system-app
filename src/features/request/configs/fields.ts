@@ -62,6 +62,7 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       valueField: 'detail.prevAppraisalValue',
       dateField: 'detail.prevAppraisalDate',
       wrapperClassName: 'col-span-1',
+      requiredWhen: { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
     },
     {
       type: 'number-input',
@@ -1948,6 +1949,7 @@ export const requestFields: FormField[] = [
     valueField: 'detail.prevAppraisalValue',
     dateField: 'detail.prevAppraisalDate',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
   },
   {
     type: 'number-input',

@@ -651,6 +651,7 @@ function FieldRenderer({
             valueField={passedField.valueField}
             dateField={passedField.dateField}
             disabled={isDisabled}
+            required={isRequired}
             error={error?.message}
             className={passedField.className}
           />
