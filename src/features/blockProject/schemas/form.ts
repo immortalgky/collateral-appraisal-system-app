@@ -6,6 +6,8 @@ import type { ProjectType } from '../types';
 import { isValidPartialDate } from '../utils/partialDate';
 import {
   projectInformationFields,
+  projectCountFields,
+  constructionProgressFields,
   projectLocationFields,
   projectDetailFields,
   condoProjectInfoFields,
@@ -50,6 +52,8 @@ const projectInfoBase = z.object({
 const condoProjectInfoAllFields = [
   ...projectInformationFields,
   ...condoProjectInfoFields,
+  ...projectCountFields,
+  ...constructionProgressFields,
   ...projectLocationFields,
   ...projectDetailFields,
   ...condoFacilityFields,
@@ -98,6 +102,10 @@ export const condoProjectInfoFormDefaults: CondoProjectInfoFormType = {
   landAreaSquareWa: null,
   unitForSaleCount: null,
   numberOfPhase: null,
+  // null, not false: an untouched checkbox has not answered the question, and the result API
+  // reads a deliberate false as "finished, 100%" whatever the appraisal's status.
+  isUnderConstruction: null,
+  constructionProgressPercent: null,
   landOffice: '',
   projectType: '',
   houseNumber: null,
@@ -123,6 +131,8 @@ export const condoProjectInfoFormDefaults: CondoProjectInfoFormType = {
 const lbProjectInfoAllFields = [
   ...projectInformationFields,
   ...lbProjectInfoFields,
+  ...projectCountFields,
+  ...constructionProgressFields,
   ...projectLocationFields,
   ...projectDetailFields,
   ...lbFacilityFields,
@@ -144,6 +154,10 @@ export const lbProjectInfoFormDefaults: LbProjectInfoFormType = {
   landAreaSquareWa: null,
   unitForSaleCount: null,
   numberOfPhase: null,
+  // null, not false: an untouched checkbox has not answered the question, and the result API
+  // reads a deliberate false as "finished, 100%" whatever the appraisal's status.
+  isUnderConstruction: null,
+  constructionProgressPercent: null,
   landOffice: '',
   projectType: '',
   houseNumber: null,

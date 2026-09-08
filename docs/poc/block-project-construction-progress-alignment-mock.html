@@ -1,0 +1,171 @@
+<meta charset="utf-8" />
+<title>Project Info Layout</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  /* Deliberately single-theme: this mock reproduces the app's light-only UI, so every
+     surface and text colour is painted explicitly rather than inherited from the host. */
+  :root {
+    --ink: #111827;
+    --ink-2: #374151;
+    --ink-3: #6b7280;
+    --ink-4: #9ca3af;
+    --line: #e5e7eb;
+    --line-2: #d1d5db;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --primary: #0f766e;
+    --primary-50: #f0fdfa;
+    --danger: #dc2626;
+    --disabled: #f9fafb;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Sarabun', 'Roboto', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 24px 16px 64px;
+  }
+
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .sub { color: var(--ink-3); margin: 0 0 24px; font-size: 13px; }
+
+  .opt { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 20px; overflow: hidden; }
+  .opt > header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .opt > header .tag { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--primary); background: var(--primary-50); padding: 3px 8px; border-radius: 999px; }
+  .opt > header h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .opt > header p { margin: 0; color: var(--ink-3); font-size: 12.5px; flex-basis: 100%; }
+  .opt > .body { padding: 20px; overflow-x: auto; }
+
+  /* ── replica of SectionRow's inner grid: grid-cols-12 gap-4 ───────────── */
+  .grid12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 16px; min-width: 760px; }
+  .c2 { grid-column: span 2; }
+  .c4 { grid-column: span 4; }
+  .c6 { grid-column: span 6; }
+  .c8 { grid-column: span 8; }
+  .c12 { grid-column: span 12; }
+  .selfmid { align-self: center; }
+
+  label.f { display: block; font-size: 12.5px; color: var(--ink-2); margin-bottom: 4px; font-weight: 500; }
+  label.f .req { color: var(--danger); }
+  label.f .hint { color: var(--ink-4); font-weight: 400; font-size: 10px; margin-left: 4px; }
+  .inp {
+    height: 42px; border: 1px solid var(--line-2); border-radius: 8px; background: #fff;
+    display: flex; align-items: center; padding: 0 12px; color: var(--ink); font-size: 14px;
+  }
+  .inp.num { justify-content: flex-end; }
+  .inp.ph { color: var(--ink-4); }
+  .inp.off { background: var(--disabled); color: var(--ink-4); border-color: var(--line); }
+  .seg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+
+  /* ── replica of Checkbox.tsx: px-4 py-3 rounded-lg border-2 ───────────── */
+  .chk {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 8px; border: 2px solid var(--line);
+    background: #fff; font-size: 14px; font-weight: 500; color: var(--ink);
+  }
+  .chk.on { border-color: var(--primary); background: rgba(15, 118, 110, .05); }
+  .chk .box {
+    width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--line-2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .chk.on .box { background: var(--primary); border-color: var(--primary); }
+  .chk .box svg { width: 12px; height: 12px; color: #fff; }
+
+  .ta {
+    min-height: 76px; border: 1px solid var(--line-2); border-radius: 8px; background: #fff;
+    padding: 10px 12px; color: var(--ink); font-size: 14px;
+  }
+  .cc { text-align: right; font-size: 11.5px; color: var(--ink-4); margin-top: 4px; }
+  .pill { height: 42px; border: 1px solid var(--line-2); border-radius: 8px; background: #fff; display: flex; align-items: center; padding: 0 12px; color: var(--ink); }
+
+  .note { margin: 14px 20px 18px; padding: 10px 14px; border-left: 3px solid var(--line-2); color: var(--ink-3); font-size: 12.5px; }
+  .note b { color: var(--ink-2); font-weight: 600; }
+  .warn { border-left-color: #f59e0b; }
+</style>
+
+<div class="wrap">
+  <h1>Project Info — ผังหลังจัดใหม่</h1>
+  <p class="sub">
+    ส่วน “Project Information” ของแท็บ Project Info · จำลอง grid 12 คอลัมน์ gap-4 ตาม
+    <code>SectionRow</code> และสไตล์ <code>Checkbox.tsx</code> ของจริง
+  </p>
+
+  <section class="opt">
+    <header>
+      <span class="tag">ผังที่ใช้อยู่</span>
+      <h2>Developer / Launch Date เต็มแถว · Title Number ใต้เนื้อที่ · ก่อสร้างแถวเดียวกับ counts</h2>
+      <p>
+        แถวสุดท้ายรวมเป็น 12 พอดี — Unit For Sale 2 + Number of Phase 2 + Under Construction 4 + Construction Progress 4
+      </p>
+    </header>
+    <div class="body">
+      <div class="grid12">
+        <div class="c8"><label class="f">Project Name <span class="req">*</span></label><div class="inp">โครงการศุภาลัย ปาร์ค เอกมัย-พัฒนาการ (3079)</div></div>
+        <div class="c4"><label class="f">Project Type</label><div class="pill">คอนโดมิเนียม</div></div>
+
+        <div class="c12"><label class="f">Project Description</label><div class="ta">โครงการศุภาลัย ปาร์ค เอกมัย-พัฒนาการ (3079)</div><div class="cc">44/200</div></div>
+
+        <div class="c12"><label class="f">Developer</label><div class="inp">บริษัท ศุภาลัย จำกัด (มหาชน)</div></div>
+
+        <div class="c12">
+          <label class="f">Project Sale Launch Date <span class="hint">(พ.ศ.)</span></label>
+          <div class="seg">
+            <div class="inp">2569</div><div class="inp">July</div><div class="inp ph">Day</div>
+          </div>
+        </div>
+
+        <div class="c4"><label class="f">Rai</label><div class="inp num">13</div></div>
+        <div class="c4"><label class="f">Ngan</label><div class="inp num">0</div></div>
+        <div class="c4"><label class="f">Square Wa</label><div class="inp num">97.00</div></div>
+
+        <div class="c12"><label class="f">Title Number</label><div class="ta">24159,24160,24161</div><div class="cc">17/500</div></div>
+
+        <div class="c2"><label class="f">Unit For Sale</label><div class="inp num">1,614</div></div>
+        <div class="c2"><label class="f">Number of Phase</label><div class="inp num">1</div></div>
+        <div class="c4 selfmid">
+          <div class="chk on"><span class="box"><svg viewBox="0 0 12 12" fill="none"><path d="M1.5 6.5L4.5 9.5L10.5 2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Under Construction</div>
+        </div>
+        <div class="c4"><label class="f">Construction Progress (%) <span class="req">*</span></label><div class="inp num ph">0.00</div></div>
+      </div>
+    </div>
+    <p class="note">
+      <b>ช่อง % แสดงตลอด</b> ไม่ซ่อนแล้ว — ติ๊ก = แก้ได้และบังคับกรอก · ไม่ติ๊ก = เทาและล็อก
+      (<code>disableWhen</code> + <code>disabledValue: null</code>) ตัวเลขจะถูกล้างเฉพาะตอน
+      “คนกดเอาติ๊กออก” เท่านั้น ตอนโหลดใบเดิมไม่ล้าง
+    </p>
+  </section>
+
+  <!-- ── unchecked state ─────────────────────────────────────────────────── -->
+  <section class="opt">
+    <header>
+      <span class="tag" style="color:#6b7280;background:#f3f4f6">สถานะไม่ติ๊ก</span>
+      <h2>ช่อง % ยังอยู่ แต่เทาและกดไม่ได้</h2>
+      <p>คนอ่านเห็นว่ามีฟิลด์นี้อยู่และรู้ว่าทำไมกรอกไม่ได้ — ต่างจากตอนซ่อนที่ฟิลด์หายไปเฉย ๆ</p>
+    </header>
+    <div class="body">
+      <div class="grid12">
+        <div class="c2"><label class="f">Unit For Sale</label><div class="inp num">1,614</div></div>
+        <div class="c2"><label class="f">Number of Phase</label><div class="inp num">1</div></div>
+        <div class="c4 selfmid">
+          <div class="chk"><span class="box"></span>Under Construction</div>
+        </div>
+        <div class="c4"><label class="f">Construction Progress (%)</label><div class="inp num off">—</div></div>
+      </div>
+    </div>
+    <p class="note warn">
+      <b>ความกว้าง:</b> Unit For Sale / Number of Phase ลดเหลืออย่างละ 2 คอลัมน์ — ตัวเลขสั้น
+      (1,614 / 1) และ label สั้น ที่ที่คืนมาไปให้คู่ก่อสร้างอย่างละ 4 คอลัมน์ ซึ่งพอดีกับที่
+      “Under Construction” ต้องการราว 195px ก่อนจะตัดบรรทัด · <code>self-center</code>
+      จัดการ์ดให้อยู่กึ่งกลางความสูงของแถว เพราะเพื่อนบ้านมี label กินที่ด้านบนไปหนึ่งบรรทัด
+    </p>
+  </section>
+</div>
