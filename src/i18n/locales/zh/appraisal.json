@@ -752,7 +752,7 @@
     "machineryChips": {
       "registered": "已登记",
       "unregistered": "未登记",
-      "notAppraised": "不评估价值"
+      "notPriceCertified": "价格未认证"
     },
     "addNewGroup": "添加新组",
     "noGroups": "暂无房产组",

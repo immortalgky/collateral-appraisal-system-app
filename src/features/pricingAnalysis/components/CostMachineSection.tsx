@@ -1,4 +1,6 @@
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { isMachineRowLocked, NOT_FOUND_CONDITION_CODE } from '../schemas/costMachineForm';
 import clsx from 'clsx';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { RHFInputCell } from './table/RHFInputCell';
@@ -22,6 +24,11 @@ export interface MachineryItem {
   manufacturer: string | null;
   conditionUse: string | null;
   yearOfManufacture: number | null;
+  /**
+   * The appraiser's "รับรองราคาประเมิน" decision on this machine. False means they declined to
+   * put a value on it, so the cost workings for the row are not theirs to fill in.
+   */
+  isPriceCertified: boolean | null;
 }
 
 export interface MachineryRowFormValue {
@@ -56,9 +63,8 @@ const costMachinePath = {
   notes: (r: number) => `machineryCosts.${r}.notes`,
   conditionUse: (r: number) => `machineryCosts.${r}.machine.conditionUse`,
   yearOfManufacture: (r: number) => `machineryCosts.${r}.machine.yearOfManufacture`,
+  isPriceCertified: (r: number) => `machineryCosts.${r}.machine.isPriceCertified`,
 };
-
-const DISABLED_CONDITION_CODE = '03';
 
 function useRowComputedValues(rowIndex: number) {
   const { control } = useFormContext();
@@ -66,6 +72,9 @@ function useRowComputedValues(rowIndex: number) {
   const currentYear = new Date().getFullYear() + 543; // พ.ศ.
 
   const conditionUse = useWatch({ name: costMachinePath.conditionUse(rowIndex) }) as string;
+  const isPriceCertified = useWatch({
+    name: costMachinePath.isPriceCertified(rowIndex),
+  }) as boolean | null;
   const yearOfManufacture = useWatch({
     name: costMachinePath.yearOfManufacture(rowIndex),
   }) as number;
@@ -87,7 +96,7 @@ function useRowComputedValues(rowIndex: number) {
   const diffResidualLifeSpan = (lifeSpan ?? 0) - durationInUse;
   const isResidualBelowMin = diffResidualLifeSpan < 5;
   const residualLifeSpan =
-    isResidualBelowMin && conditionUse !== DISABLED_CONDITION_CODE ? 5 : diffResidualLifeSpan;
+    isResidualBelowMin && conditionUse !== NOT_FOUND_CONDITION_CODE ? 5 : diffResidualLifeSpan;
 
   // P = ((1 - (N - R) / N) * C)
   const physicalDeterioration =
@@ -96,15 +105,30 @@ function useRowComputedValues(rowIndex: number) {
       : 0;
 
   // FMV = (RCN * P) * F * E
-  const fmv =
+  const computedFmv =
     (rcn ?? 0) *
     physicalDeterioration *
     (functionalObsolescence ?? 0) *
     (economicObsolescence ?? 0);
 
+  const isRowLocked = isMachineRowLocked({ conditionUse, isPriceCertified });
+
+  // A locked row is worth nothing, and it has to SAY nothing — locking only stops new typing, it
+  // never cleared what a machine was worth before the appraiser withdrew the price certification
+  // (or before the survey came back "not found"). Left alone, the old RCN keeps recomputing an FMV
+  // that rolls into the group's value with every Save, and no one can clear it because every input
+  // in the row is disabled. Worse for '03': that code skips the residual-life floor, so an old RCN
+  // recomputes a NEGATIVE figure and quietly subtracts from the group.
+  // Zero here, null in the payload; the machine's own RCN and life span stay in the database, so
+  // re-certifying the price brings the row back exactly as it was.
+  const fmv = isRowLocked ? 0 : computedFmv;
+
   const marketDemand: 'Y' | 'N' = fmv > 0 ? 'Y' : 'N';
 
-  const isDisabled = conditionUse === DISABLED_CONDITION_CODE;
+  // isDisabled is what the CONDITION says, and only the ConditionUse chip is coloured from it —
+  // folding the certification decision in would grey out the chip on a machine that is plainly
+  // ใช้งานอยู่. isRowLocked (above) is the separate question of what the row's inputs obey.
+  const isDisabled = conditionUse === NOT_FOUND_CONDITION_CODE;
 
   return {
     durationInUse,
@@ -114,6 +138,7 @@ function useRowComputedValues(rowIndex: number) {
     fmv,
     marketDemand,
     isDisabled,
+    isRowLocked,
   };
 }
 
@@ -131,6 +156,7 @@ function MachineryRow({
   templateList?: TemplateDtoType[] | undefined;
 }) {
   const { getValues } = useFormContext();
+  const { t } = useTranslation('pricingAnalysis');
   const {
     durationInUse,
     residualLifeSpan,
@@ -139,6 +165,7 @@ function MachineryRow({
     fmv,
     marketDemand,
     isDisabled,
+    isRowLocked,
   } = useRowComputedValues(rowIndex);
 
   const { setValue } = useFormContext();
@@ -148,7 +175,7 @@ function MachineryRow({
 
   const machine: MachineryItem = getValues(`machineryCosts.${rowIndex}.machine`) ?? {};
   const appraisalPropertyId: string | undefined = getValues(`machineryCosts.${rowIndex}.appraisalPropertyId`);
-  const inputDisabled = isDisabled || isReadOnly;
+  const inputDisabled = isRowLocked || isReadOnly;
 
   // Fetch this row's machinery detail for the subject-property column of the reference panel.
   // Mirrors the pattern in LeaseholdPanel — enabled only when both ids are available.
@@ -177,7 +204,12 @@ function MachineryRow({
         {machine.machineName}
       </td>
       <td className={clsx(tdBase)}>{machine.registrationNumber}</td>
-      <td className={clsx(tdBase)}>{machine.manufacturer}</td>
+      {/* "Country of Manufacturer" holds a Country parameter code (TH, JP, …). Print the code
+          alongside its description so the cell still matches what the form stores while reading
+          as a country — same store the ConditionUse chip below uses. */}
+      <td className={clsx(tdBase)}>
+        <ParameterDisplay group="Country" code={machine.manufacturer} format="code-description" />
+      </td>
       <td className={clsx(tdBase, 'text-center')}>
         <span
           className={clsx(
@@ -187,9 +219,20 @@ function MachineryRow({
         >
           <ParameterDisplay group="ConditionUse" code={machine.conditionUse} />
         </span>
+        {/* A '03' row explains itself — the chip above goes grey. A row locked because the price
+            is not certified would otherwise show a perfectly normal "ใช้งานอยู่" beside five dead
+            inputs, which reads as a broken screen rather than a decision someone made. Same
+            wording as the property card's chip for the same flag, translated the same way — this
+            table is the one place a hardcoded string would have gone unnoticed, since every other
+            label in it is an English literal. */}
+        {isRowLocked && !isDisabled && (
+          <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+            {t('costMachine.notPriceCertified')}
+          </span>
+        )}
       </td>
       <td className={clsx(tdBase, 'text-center')}>
-        {(machine.yearOfManufacture ?? 0 > 0) ? machine.yearOfManufacture : '-'}
+        {(machine.yearOfManufacture ?? 0) > 0 ? machine.yearOfManufacture : '-'}
       </td>
 
       {/* RCN */}
@@ -291,6 +334,11 @@ function MachineryRow({
       </td>
 
       <td className="border-b border-r border-gray-300">
+        {/* Deliberately NOT locked with the rest of the row. The lock says "this machine is not
+            being valued", which is a statement about money, not about whether anyone may write
+            down why. An appraiser still needs to record what they found on a machine they are not
+            certifying a price for. (Page-level read-only still disables it: Input.tsx reads
+            FormReadOnlyContext on its own.) */}
         <RHFInputCell fieldName={costMachinePath.notes(rowIndex)} inputType="text" />
       </td>
     </tr>
@@ -317,6 +365,13 @@ export function CostMachineSection({
     (useWatch({ control, name: costMachinePath.rows() }) as MachineryRowFormValue[]) ?? [];
 
   const totalQuantity = allRows.reduce((sum, row) => sum + (row?.machine?.quantity ?? 0), 0);
+  // Every total sums every row, because a column total has to equal the sum of what THAT column
+  // shows. A locked row still displays its stored RCN, so dropping it from Total RCN would leave
+  // a column that visibly does not add up. FMV needs no filter: a locked row displays 0 and
+  // therefore contributes 0 — which is also exactly what the server totals, since the payload
+  // sends that row's fair market value as null and the calculation service sums only the items
+  // that have one. RCN 500,000 against FMV 0 on the same row is not an error to hide; it is the
+  // machine saying it has a replacement cost that nobody is turning into a valuation.
   const totalRcn = allRows.reduce((sum, row) => sum + (row?.rcn ?? 0), 0);
   const totalFmv = allRows.reduce((sum, row) => sum + (row?.fmv ?? 0), 0);
   const th =

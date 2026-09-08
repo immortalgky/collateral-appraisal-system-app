@@ -762,7 +762,7 @@
     "machineryChips": {
       "registered": "Registered",
       "unregistered": "Unregistered",
-      "notAppraised": "Not appraised"
+      "notPriceCertified": "Price not certified"
     },
     "addNewGroup": "Add New Group",
     "noGroups": "No property groups yet",

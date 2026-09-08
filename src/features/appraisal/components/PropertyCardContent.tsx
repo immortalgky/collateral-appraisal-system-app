@@ -290,7 +290,7 @@ export function PropertyCardContent({
                           className="text-[9px] text-warning"
                           style="solid"
                         />
-                        {t('properties.machineryChips.notAppraised')}
+                        {t('properties.machineryChips.notPriceCertified')}
                       </span>
                     )}
                     {property.dimension && (

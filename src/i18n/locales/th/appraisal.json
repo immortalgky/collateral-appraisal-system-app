@@ -762,7 +762,7 @@
     "machineryChips": {
       "registered": "จดทะเบียนแล้ว",
       "unregistered": "ไม่ได้จดทะเบียน",
-      "notAppraised": "ไม่ประเมินมูลค่า"
+      "notPriceCertified": "ไม่รับรองราคา"
     },
     "addNewGroup": "เพิ่มกลุ่มใหม่",
     "noGroups": "ยังไม่มีกลุ่มทรัพย์สิน",
