@@ -14,12 +14,21 @@ import {
   lbProjectInfoFields,
   projectDetailFields,
   projectInformationFields,
+  projectCountFields,
+  constructionProgressFields,
   projectLocationFields,
 } from '../configs/fields';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 
 interface ProjectInfoFormProps {
   projectType: ProjectType;
+  /**
+   * The type the project actually holds, as loaded from the API — which is not always
+   * `projectType`. That prop comes from the route, and there is no route for Land: the
+   * change-type dialog offers "L" but sends it to block-village, which the router renders as
+   * `projectType="LB"`. Anything that must be right for a Land project has to read this instead.
+   */
+  storedProjectType?: ProjectType;
   pendingType: ProjectType | null;
   hasExistingProject: boolean;
   onProjectTypeChange: (newType: ProjectType | null) => void;
@@ -37,6 +46,7 @@ interface ProjectInfoFormProps {
  */
 const ProjectInfoForm = ({
   projectType,
+  storedProjectType,
   pendingType,
   hasExistingProject,
   onProjectTypeChange,
@@ -110,7 +120,7 @@ const ProjectInfoForm = ({
             />
           </div>
           <FormFields fields={beforeLaunchDate} />
-          <div className="col-span-6">
+          <div className="col-span-12">
             <Controller
               control={control}
               name="projectSaleLaunchDate"
@@ -125,8 +135,23 @@ const ProjectInfoForm = ({
             />
           </div>
           <FormFields fields={afterLaunchDate} />
-          {/* Type-specific: Condo adds builtOnTitleDeedNumber; LB adds licenseExpirationDate */}
+          {/* Type-specific sits directly under the land area: Condo's Title Number describes the
+              deeds that land is registered on, LB's license date belongs with it too. */}
           <FormFields fields={typeSpecificInfoFields} />
+          <FormFields fields={projectCountFields} />
+          {/* Last row of the section — see constructionProgressFields for the layout rationale.
+              Hidden for bare Land: a subdivision of empty plots has nothing under construction,
+              and the aggregate discards both fields for that type, so showing them would let an
+              appraiser tick a box that silently does nothing on save.
+
+              Unmounting leaves the values in form state (RHF keeps them, shouldUnregister is
+              false) and they are still posted — which is harmless here, because a Land project
+              can only ever hold nulls: Project.Create and Project.Update both drop the pair for a
+              type without structures, and the columns are new enough that no stored row predates
+              that rule. So what gets posted for Land is null, which the aggregate ignores. */}
+          {(storedProjectType ?? projectType) !== 'L' && (
+            <FormFields fields={constructionProgressFields} />
+          )}
         </SectionRow>
 
         <SectionRow title={t('projectInfo.sections.projectLocation')} icon="location-dot">

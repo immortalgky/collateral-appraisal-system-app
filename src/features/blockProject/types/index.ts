@@ -54,6 +54,9 @@ export interface Project {
   facilitiesOther?: string;
   // Other
   remark?: string;
+  // Construction Progress (project-wide; every unit reports this figure to LOS)
+  isUnderConstruction?: boolean | null;
+  constructionProgressPercent?: number | null;
   // Type-specific (null for opposing type)
   /** Condo only — null for LandAndBuilding */
   builtOnTitleDeedNumber?: string;

@@ -91,6 +91,8 @@ export default function ProjectInfoTab({
           landOffice: project.landOffice ?? '',
           projectType: '', // placeholder; stamped from the route prop at submit (see line ~144)
           numberOfPhase: project.numberOfPhase ?? null,
+          isUnderConstruction: project.isUnderConstruction ?? null,
+          constructionProgressPercent: project.constructionProgressPercent ?? null,
           houseNumber: project.houseNumber ?? null,
           road: project.road ?? null,
           soi: project.soi ?? null,
@@ -120,6 +122,8 @@ export default function ProjectInfoTab({
           landOffice: project.landOffice ?? '',
           projectType: '', // placeholder; stamped from the route prop at submit (see line ~144)
           numberOfPhase: project.numberOfPhase ?? null,
+          isUnderConstruction: project.isUnderConstruction ?? null,
+          constructionProgressPercent: project.constructionProgressPercent ?? null,
           houseNumber: project.houseNumber ?? null,
           road: project.road ?? null,
           soi: project.soi ?? null,
@@ -183,6 +187,7 @@ export default function ProjectInfoTab({
           <div className="flex-1 min-h-0 overflow-y-auto pb-4">
             <ProjectInfoForm
               projectType={projectType}
+              storedProjectType={project?.projectType}
               pendingType={pendingType}
               hasExistingProject={hasExistingProject}
               onProjectTypeChange={setPendingType}
