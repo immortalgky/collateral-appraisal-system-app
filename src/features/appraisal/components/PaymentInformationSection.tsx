@@ -62,6 +62,7 @@ export default function PaymentInformationSection({
 
   const effectiveBankAbsorbAmount = bankAbsorbAmount;
   const effectiveRemaining = remaining;
+  const isFullyBankAbsorbed = totalFee > 0 && bankAbsorbAmount >= totalFee;
   const paymentPercentage = totalFee > 0 ? Math.min((totalPaid / totalFee) * 100, 100) : 0;
 
   // Determine payment status from the backend value.
@@ -334,7 +335,7 @@ export default function PaymentInformationSection({
               )}
 
               {/* Add Payment Button */}
-              {!readOnly && (
+              {!readOnly && !isFullyBankAbsorbed && (
                 <button
                   type="button"
                   onClick={() => setIsAddPaymentModalOpen(true)}
