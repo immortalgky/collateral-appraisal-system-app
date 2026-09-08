@@ -9,8 +9,10 @@ import { emailFormSchema, type EmailFormValues } from '@/shared/schemas/email';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MeetingDocumentsDialog from '@/features/meeting/components/MeetingDocumentsDialog';
 import type { PickedDocument } from '@/features/meeting/components/MeetingDocumentsDialog';
+import FileInput from '@/shared/components/inputs/FileInput';
 import { useViewDocument } from '@/features/request/api/documents';
 import { fileTypeIcon } from '@/shared/utils/fileTypeIcon';
+import RichTextEditor from './RichTextEditor';
 
 /**
  * When provided, replaces the free-text attachment chip input with a document
@@ -34,10 +36,13 @@ interface EmailCompositionModalProps {
   showAttachments?: boolean;
   /** When set, replaces the free-text input with a document picker for the given meeting. */
   attachmentPicker?: AttachmentPickerConfig;
+  onUploadAttachment?: (file: File) => Promise<{ id: string; name: string } | null>;
   /** When true, at least one attachment is required to submit. */
   requireAttachment?: boolean;
   subjectLabel?: string;
   isPending?: boolean;
+  /** When true, Content is a rich-text/HTML editor (e.g. quotation tables) instead of a plain textarea. */
+  richTextContent?: boolean;
   onSubmit: (values: EmailFormValues) => void;
 }
 
@@ -56,9 +61,11 @@ const EmailCompositionModal = ({
   showBcc = false,
   showAttachments = false,
   attachmentPicker,
+  onUploadAttachment,
   requireAttachment = false,
   subjectLabel = 'Subject',
   isPending = false,
+  richTextContent = false,
   onSubmit,
 }: EmailCompositionModalProps) => {
   const {
@@ -86,10 +93,11 @@ const EmailCompositionModal = ({
   const [attachmentInput, setAttachmentInput] = useState('');
   const attachmentInputRef = useRef<HTMLInputElement>(null);
 
-  // Single source of truth for picker mode: docs the user has selected
+  // Single source of truth for picker mode and upload mode: docs the user has selected/uploaded
   const [pickedDocs, setPickedDocs] = useState<PickedDocument[]>([]);
   const pickerDisclosure = useDisclosure();
   const [attachmentError, setAttachmentError] = useState(false);
+  const [uploadingAttachment, setUploadingAttachment] = useState(false);
 
   const viewDocument = useViewDocument();
 
@@ -149,6 +157,26 @@ const EmailCompositionModal = ({
     const next = pickedDocs.filter(d => d.id !== id);
     setPickedDocs(next);
     setValue('attachments', next.map(d => d.id));
+
+  const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !onUploadAttachment) return;
+
+    setUploadingAttachment(true);
+    try {
+      const uploaded = await onUploadAttachment(file);
+      if (uploaded) {
+        const next = [...pickedDocs, uploaded];
+        setPickedDocs(next);
+        setValue(
+          'attachments',
+          next.map(d => d.id),
+        );
+      }
+    } finally {
+      setUploadingAttachment(false);
+    }
   };
 
   const handleClose = () => {
@@ -229,8 +257,9 @@ const EmailCompositionModal = ({
         {showAttachments && (
           <div>
             <label className={labelClass}>Attachments</label>
-            {attachmentPicker ? (
-              /* ── Picker mode: document chips (name opens the file, × removes it) ── */
+            {attachmentPicker || onUploadAttachment ? (
+              /* ── Document chips (name opens the file, × removes it) + a single trigger that
+                  either opens the picker dialog (meeting) or uploads directly (quotation) ── */
               <div className="flex flex-col gap-2.5">
                 {pickedDocs.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2">
@@ -268,19 +297,48 @@ const EmailCompositionModal = ({
                     })}
                   </div>
                 )}
-                <button
-                  type="button"
-                  onClick={pickerDisclosure.onOpen}
-                  className={clsx(
-                    'inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed px-3 py-1.5 text-sm font-medium transition',
-                    attachmentError
-                      ? 'border-red-400 text-red-600 hover:border-red-500'
-                      : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary',
-                  )}
-                >
-                  <Icon name="paperclip" style="solid" className="size-3.5" />
-                  Add attachment
-                </button>
+                {attachmentPicker ? (
+                  <button
+                    type="button"
+                    onClick={pickerDisclosure.onOpen}
+                    className={clsx(
+                      'inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed px-3 py-1.5 text-sm font-medium transition',
+                      attachmentError
+                        ? 'border-red-400 text-red-600 hover:border-red-500'
+                        : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary',
+                    )}
+                  >
+                    <Icon name="paperclip" style="solid" className="size-3.5" />
+                    Add attachment
+                  </button>
+                ) : (
+                  <div className="mr-auto">
+                    <FileInput
+                      onChange={handleUploadAttachment}
+                      disabled={uploadingAttachment}
+                      multiple={false}
+                    >
+                      {isDragging => (
+                        <span
+                          className={clsx(
+                            'inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed px-3 py-1.5 text-sm font-medium transition',
+                            isDragging && 'border-primary text-primary',
+                            attachmentError
+                              ? 'border-red-400 text-red-600 hover:border-red-500'
+                              : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary',
+                          )}
+                        >
+                          {uploadingAttachment ? (
+                            <Icon name="spinner" style="solid" className="size-3.5 animate-spin" />
+                          ) : (
+                            <Icon name="paperclip" style="solid" className="size-3.5" />
+                          )}
+                          Add attachment
+                        </span>
+                      )}
+                    </FileInput>
+                  </div>
+                )}
                 {attachmentError && (
                   <p className="text-xs text-red-500">Please attach at least one file.</p>
                 )}
@@ -321,14 +379,19 @@ const EmailCompositionModal = ({
         {/* Content */}
         <div>
           <label className={labelClass}>Content</label>
-          <textarea
-            {...register('content')}
-            rows={12}
-            className={clsx(fieldClass, 'min-h-[10rem] resize-y leading-relaxed')}
-          />
-          {errors.content && (
-            <p className="mt-1 text-xs text-red-500">{errors.content.message}</p>
+          {richTextContent ? (
+            <RichTextEditor
+              value={watch('content') ?? ''}
+              onChange={html => setValue('content', html, { shouldDirty: true })}
+            />
+          ) : (
+            <textarea
+              {...register('content')}
+              rows={12}
+              className={clsx(fieldClass, 'min-h-40 resize-y leading-relaxed')}
+            />
           )}
+          {errors.content && <p className="mt-1 text-xs text-red-500">{errors.content.message}</p>}
         </div>
 
         {/* Footer — full-bleed bar (counteracts the Modal's px-6 py-4 padding) */}
