@@ -28,6 +28,12 @@ import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
+import { useQuotationAttachmentUpload } from '../hooks/useQuotationAttachmentUpload';
+import {
+  buildQuotationEmailHtml,
+  formatQuotationSubjectAppraisalNumbersLabel,
+  formatQuotationSubjectCustomerLabel,
+} from '../utils/quotationEmailTemplate';
 import { useAuthStore } from '@/features/auth/store';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetailPage';
@@ -53,6 +59,7 @@ const QuotationSelectionPage = () => {
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
+  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
 
   // Breadcrumb: Home › Quotations › QTN-...
   useBreadcrumb(quotation?.quotationNumber, 'file-invoice-dollar');
@@ -162,6 +169,8 @@ const QuotationSelectionPage = () => {
 
   // PropertyType code → locale description (e.g. "LB" → "ที่ดินพร้อมสิ่งปลูกสร้าง").
   const propertyTypeParams = useParametersByGroup('PropertyType');
+  const buildingTypeParams = useParametersByGroup('BuildingType', 'th', 'th');
+  const machineStatusParams = useParametersByGroup('MachineStatus', 'th', 'th');
 
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotation?.appraisals ?? [];
@@ -170,14 +179,20 @@ const QuotationSelectionPage = () => {
       if (!code) return '';
       return propertyTypeParams.find(p => p.code === code)?.description ?? code;
     };
+    const buildingTypeDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return buildingTypeParams.find(p => p.code === code)?.description ?? code;
+    };
+    const machineStatusDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return machineStatusParams.find(p => p.code === code)?.description ?? code;
+    };
 
     const distinctCustomerNames = [
-      ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
-    ].join(', ');
-    const appraisalNumbers = appraisals
-      .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean)
-      .join(',');
+      ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
+    ];
+
+    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean);
 
     const targetTime = dueDate
       ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -190,13 +205,6 @@ const QuotationSelectionPage = () => {
         })
       : '';
 
-    const appraisalList = appraisals
-      .map(
-        (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${propertyTypeDescription(a.propertyType)}`,
-      )
-      .join('\n');
-
     const adminFullName = `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
 
     const bccEmails = (quotation?.invitedCompanies ?? [])
@@ -208,10 +216,18 @@ const QuotationSelectionPage = () => {
       from: currentUser?.email ?? '',
       cc: 'appraisal.team@lhbank.com',
       bcc: bccEmails,
-      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
-      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+      subject: `Quotation ${formatQuotationSubjectCustomerLabel(distinctCustomerNames)} (${formatQuotationSubjectAppraisalNumbersLabel(appraisalNumbers)})`,
+      content: buildQuotationEmailHtml({
+        appraisals,
+        targetTime,
+        targetDate,
+        adminFullName,
+        propertyTypeDescription,
+        buildingTypeDescription,
+        machineStatusDescription,
+      }),
     };
-  }, [quotation, currentUser, propertyTypeParams]);
+  }, [quotation, currentUser, propertyTypeParams, buildingTypeParams, machineStatusParams]);
 
   if (isLoading) {
     return (
@@ -292,6 +308,7 @@ const QuotationSelectionPage = () => {
     bcc?: string;
     subject: string;
     content?: string;
+    attachments?: string[];
   }) => {
     sendQuotation(emailData, {
       onSuccess: () => {
@@ -1056,9 +1073,11 @@ const QuotationSelectionPage = () => {
         showFrom={false}
         showCc={true}
         showBcc={true}
-        showAttachments={false}
+        showAttachments={true}
+        onUploadAttachment={uploadQuotationAttachment}
         subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
+        richTextContent
         onSubmit={handleSendConfirm}
       />
 
