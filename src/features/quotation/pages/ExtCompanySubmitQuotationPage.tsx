@@ -308,6 +308,7 @@ const ExtCompanySubmitQuotationPage = () => {
         negotiatedDiscount: existingItem?.negotiatedDiscount ?? undefined,
         vatPercent: existingItem?.vatPercent ?? 7,
         itemNotes: existingItem?.itemNotes ?? null,
+        itemNegotiationReason: existingItem?.itemNegotiationReason ?? null,
       };
     });
 
@@ -351,6 +352,16 @@ const ExtCompanySubmitQuotationPage = () => {
     [netAmountsPerItem],
   );
 
+  // ─── Item Negotiation Reason (selected appraisal) ──────────────────────────
+  // No further discount offered this round on the selected item — a reason is required
+  // while negotiating. Auto-clears once a real discount is entered (mirrors the backend).
+  const selectedItemNegotiatedDiscount = watchedItems?.[selectedIndex]?.negotiatedDiscount;
+  const needsReason = !(
+    selectedItemNegotiatedDiscount != null && Number(selectedItemNegotiatedDiscount) > 0
+  );
+  const selectedItemNegotiationReason = watchedItems?.[selectedIndex]?.itemNegotiationReason;
+  const showReasonReadOnly = !openNegotiation && !!selectedItemNegotiationReason;
+
   // ─── Action handlers ──────────────────────────────────────────────────────
 
   /**
@@ -367,7 +378,7 @@ const ExtCompanySubmitQuotationPage = () => {
     const values = getValues();
     const effectiveNotParticipating = overrides?.notParticipating ?? notParticipating;
     const effectiveDeclineReason = effectiveNotParticipating
-      ? ((overrides?.declineReason ?? declineReason) || null)
+      ? (overrides?.declineReason ?? declineReason) || null
       : null;
     return {
       quotationRequestId: id ?? '',
@@ -633,13 +644,22 @@ const ExtCompanySubmitQuotationPage = () => {
       return;
     }
 
-    const items = values.items.map(item => ({
-      appraisalId: item.appraisalId,
-      negotiatedDiscount:
+    const items = values.items.map(item => {
+      const negotiatedDiscount =
         item.negotiatedDiscount == null || isNaN(Number(item.negotiatedDiscount))
           ? null
-          : Number(item.negotiatedDiscount),
-    }));
+          : Number(item.negotiatedDiscount);
+      return {
+        appraisalId: item.appraisalId,
+        negotiatedDiscount,
+        // Reason only applies when there's no real discount this round — auto-clear
+        // client-side mirrors the server-side rule in CompanyQuotationItem.SetNegotiatedDiscount.
+        itemNegotiationReason:
+          negotiatedDiscount != null && negotiatedDiscount > 0
+            ? null
+            : item.itemNegotiationReason?.trim() || null,
+      };
+    });
 
     // Per-item over-cap check (defensive; the schema's superRefine also catches this,
     // but a hidden tab's error would be silent without an explicit pre-flight).
@@ -657,11 +677,21 @@ const ExtCompanySubmitQuotationPage = () => {
       return;
     }
 
-    const hasAnyDiscount = items.some(
-      i => i.negotiatedDiscount != null && i.negotiatedDiscount > 0,
+    // Every item negotiated with $0 (or no) discount must carry a reason.
+    const missingReasonItems = items.filter(
+      item =>
+        (item.negotiatedDiscount == null || item.negotiatedDiscount <= 0) &&
+        !item.itemNegotiationReason,
     );
-    if (!hasAnyDiscount) {
-      toast.error(t('toasts.enterNegotiatedDiscount'));
+    if (missingReasonItems.length > 0) {
+      const list = missingReasonItems
+        .map(
+          item =>
+            appraisals.find(a => a.appraisalId === item.appraisalId)?.appraisalNumber?.trim() ||
+            item.appraisalId.slice(0, 8),
+        )
+        .join(', ');
+      toast.error(t('toasts.enterNegotiationReason', { list }));
       return;
     }
 
@@ -695,7 +725,9 @@ const ExtCompanySubmitQuotationPage = () => {
     submitQuotation(payload, {
       onSuccess: async () => {
         await advanceWorkflowStage(payload.notParticipating ? 'Decline' : 'Submit');
-        toast.success(payload.notParticipating ? t('toasts.declined') : t('toasts.quotationSubmitted'));
+        toast.success(
+          payload.notParticipating ? t('toasts.declined') : t('toasts.quotationSubmitted'),
+        );
         navigateAfterSubmit();
       },
       onError: (err: unknown) => {
@@ -1200,7 +1232,10 @@ const ExtCompanySubmitQuotationPage = () => {
                           </h2>
 
                           {/* Hidden appraisalId binding */}
-                          <input type="hidden" {...register(`items.${selectedIndex}.appraisalId`)} />
+                          <input
+                            type="hidden"
+                            {...register(`items.${selectedIndex}.appraisalId`)}
+                          />
 
                           <QuotationFeeBreakdown
                             control={control}
@@ -1232,7 +1267,8 @@ const ExtCompanySubmitQuotationPage = () => {
                                 htmlFor={`est-mandays-${selectedIndex}`}
                                 className="block text-sm text-gray-600 mb-1"
                               >
-                                {t('fields.estimatedMandays')} <span className="text-danger">*</span>
+                                {t('fields.estimatedMandays')}{' '}
+                                <span className="text-danger">*</span>
                               </label>
                               <Controller
                                 control={control}
@@ -1287,6 +1323,54 @@ const ExtCompanySubmitQuotationPage = () => {
                             )}
                           />
                         </section>
+
+                        {/* ─── Item Negotiation Reason ──────────────────────────────────────
+          Deliberately separated from the dense numeric grid above — it's a distinct
+          "why", not another number to scan. Stays mounted for the whole negotiating
+          session (never pops in/out as the user types a discount) so only its
+          required/disabled state changes; avoids layout jumping on every keystroke. */}
+                        {!!openNegotiation && needsReason && (
+                          <section aria-label={t('sections.itemNegotiationReason')}>
+                            <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
+                              <div className="flex items-center gap-2 mb-3 pb-1.5 border-b border-indigo-200">
+                                <h2 className="text-sm font-semibold text-indigo-900">
+                                  {t('sections.itemNegotiationReason')}
+                                </h2>
+                                {!!openNegotiation && (
+                                  <span
+                                    className={`text-[11px] ${needsReason ? 'font-medium text-danger-600' : 'text-gray-400'}`}
+                                  >
+                                    {t('shared.reasonRequiredHint')}
+                                  </span>
+                                )}
+                              </div>
+                              {openNegotiation ? (
+                                <Controller
+                                  control={control}
+                                  name={`items.${selectedIndex}.itemNegotiationReason`}
+                                  render={({ field, fieldState }) => (
+                                    <Textarea
+                                      {...field}
+                                      value={field.value ?? ''}
+                                      aria-label={t('fields.itemNegotiationReason')}
+                                      required={needsReason}
+                                      disabled={!needsReason}
+                                      placeholder={t('placeholders.itemNegotiationReason')}
+                                      maxLength={500}
+                                      showCharCount
+                                      error={fieldState.error?.message}
+                                      className="min-h-[72px] bg-white"
+                                    />
+                                  )}
+                                />
+                              ) : (
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {selectedItemNegotiationReason}
+                                </p>
+                              )}
+                            </div>
+                          </section>
+                        )}
                       </>
                     )}
                   </div>

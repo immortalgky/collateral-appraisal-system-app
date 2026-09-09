@@ -86,6 +86,21 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
         <ValueBox value={fmtCurrency(item.negotiatedDiscount)} />
       </div>
 
+      {/* Item Negotiation Reason — the company's explanation for a $0 negotiated discount.
+          Separated below the totals (not crammed into the numeric grid above) and given
+          the same indigo "negotiation" treatment used elsewhere in this feature, so it
+          reads as context, not a warning. Only rendered when the company actually gave one. */}
+      {item.itemNegotiationReason && (
+        <div className="rounded-lg border border-orange-200 bg-orange-50/60 p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-semibold text-orange-900">
+              {t('sections.itemNegotiationReason')}
+            </span>
+          </div>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.itemNegotiationReason}</p>
+        </div>
+      )}
+
       {/* ─── Totals block ─────────────────────────────────────────────── */}
       <div className="mt-3 border-t border-gray-200 pt-2 space-y-1">
         {/* Fee After Discount */}
@@ -344,8 +359,11 @@ export const AdminCompanyQuotationDetailContent = ({
               </span>
               <span>·</span>
               <span className="font-medium text-gray-700">
-            {localizeCompanyName(companyQuotation.companyName, companyQuotation.companyNameLocal)}
-          </span>
+                {localizeCompanyName(
+                  companyQuotation.companyName,
+                  companyQuotation.companyNameLocal,
+                )}
+              </span>
               <QuotationStatusBadge status={companyQuotation.status} />
             </div>
           </div>
