@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/store';
+import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 
 interface RoleProtectedRouteProps {
   /** Roles allowed to access the wrapped routes. Match on any. */
@@ -21,11 +22,7 @@ const RoleProtectedRoute = ({
   fallbackPath = '/',
 }: RoleProtectedRouteProps) => {
   const user = useAuthStore(s => s.user);
-  const hasAccess = (() => {
-    if (!user) return false;
-    if (requiredPermission && user.permissions?.includes(requiredPermission)) return true;
-    return user.roles?.some(role => allowedRoles.includes(role)) ?? false;
-  })();
+  const hasAccess = hasRoleOrPermission(user, allowedRoles, requiredPermission);
   if (!hasAccess) {
     return <Navigate to={fallbackPath} replace />;
   }
