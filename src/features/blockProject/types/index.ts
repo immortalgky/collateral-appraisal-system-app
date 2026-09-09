@@ -342,6 +342,7 @@ export interface ProjectUnitPrice {
   forceSellingPrice?: number;
   coverageAmount?: number;
   // Condo-only calculated
+  standardPriceUnit?: string; // '01' = Baht/sq.m  |  '02' = Baht
   priceIncrementPerFloor?: number;
   // LB-only calculated
   landIncreaseDecreaseAmount?: number;
@@ -373,11 +374,14 @@ export interface ProjectModelAssumption {
   usableAreaTo?: number;
   pricingAnalysisId?: string;
   pricingAnalysisStatus?: string;
-  finalAppraisedValue?: number;
+  /** Standard appraisal value */
+  finalValueAdjusted?: number;
+  appraisalPrice?: number;
   /** LandAndBuilding-only */
   standardLandPrice?: number;
   coverageAmount?: number;
   fireInsuranceCondition?: string;
+  standardPriceUnit?: string;
 }
 
 /**
