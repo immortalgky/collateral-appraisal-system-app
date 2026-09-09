@@ -28,6 +28,7 @@ import {
   useUpdateMethodValue,
   useUpdatePricingAnalysis,
   useUpdateRemark,
+  useSetPricingAnalysisSystemCalc,
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type {
@@ -67,6 +68,14 @@ export function useSelectionActions({
   // Deselect confirmation dialog
   const { isOpen: isConfirmOpen, onOpen: openConfirm, onClose: closeConfirm } = useDisclosure();
   const [pendingDeselect, setPendingDeselect] = useState<MethodKey | null>(null);
+
+  // Per-method calc-mode toggle confirmation dialog
+  const {
+    isOpen: isToggleCalcModeConfirmOpen,
+    onOpen: openToggleCalcModeConfirm,
+    onClose: closeToggleCalcModeConfirm,
+  } = useDisclosure();
+  const [pendingToggleCalcMode, setPendingToggleCalcMode] = useState<MethodKey | null>(null);
 
   const enterEdit = () => dispatch({ type: 'EDIT_ENTER' });
   const cancelEdit = () => dispatch({ type: 'EDIT_CANCEL' });
@@ -162,6 +171,7 @@ export function useSelectionActions({
   const manualCostBreakdownMutation = useSetManualCostBreakdown();
   const uploadDocumentMutation = useUploadDocument();
   const updateRemarkMutation = useUpdateRemark();
+  const setSystemCalcMutation = useSetPricingAnalysisSystemCalc();
   const updatePricingAnalysisMutation = useUpdatePricingAnalysis();
   const attachDocumentMutation = useAttachPricingAnalysisDocument();
   const removeDocumentMutation = useRemovePricingAnalysisDocument();
@@ -281,10 +291,15 @@ export function useSelectionActions({
       return { success: false, failedFileNames: getFailedFileNames() };
     }
 
-    // Manual mode requires at least one supporting document — existing docs already
-    // attached to the analysis plus any new PDFs picked in this save, combined.
-    const isManualMode = state.systemCalculationMode !== 'System';
-    if (isManualMode) {
+    // Supporting documents are required whenever a value is entered by hand — either the
+    // whole analysis is Manual, or at least one included method has been individually
+    // overridden to manual (useSystemCalc === false). Existing docs + new PDFs are combined.
+    const requiresManualEvidence =
+      state.systemCalculationMode !== 'System' ||
+      state.summarySelected.some((a: Approach) =>
+        a.methods.some((m: Method) => m.isIncluded && !m.useSystemCalc),
+      );
+    if (requiresManualEvidence) {
       const totalDocuments = (state.documents?.length ?? 0) + pdfFiles.length;
       if (totalDocuments === 0) {
         toast.error(tp('toasts.documentRequired'));
@@ -446,7 +461,7 @@ export function useSelectionActions({
           marketValue: null,
           appraisedValue: null,
           forcedSaleValue: null,
-          useSystemCalc: !isManualMode,
+          useSystemCalc: state.systemCalculationMode === 'System',
         } as UpdatePricingAnalysisRequestType,
       });
 
@@ -472,11 +487,137 @@ export function useSelectionActions({
     navigate(returnTo ?? `${basePath}/property`);
   };
 
-  const changeSystemCalculation = (method: boolean) => {
+  const changeSystemCalculation = async (method: boolean) => {
     dispatch({
       type: 'CHANGE_CALCULATION_METHOD',
       payload: { systemCalculationMethodType: method ? 'System' : 'FillIn' },
     });
+
+    try {
+      await setSystemCalcMutation.mutateAsync({
+        pricingAnalysisId,
+        useSystemCalc: method,
+      });
+      await qc.invalidateQueries({
+        queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
+      });
+    } catch (err) {
+      dispatch({
+        type: 'CHANGE_CALCULATION_METHOD',
+        payload: { systemCalculationMethodType: method ? 'FillIn' : 'System' },
+      });
+      throw err;
+    }
+  };
+
+  // Toggling a method's calc mode clears its value (and land value, if it has one) on either
+  // direction — same reset the backend now applies (UpdateMethodCommandHandler). Always confirm
+  // first, matching the existing analysis-wide toggle's unconditional-confirm behavior.
+  const requestToggleMethodCalcMode = (arg: MethodKey) => {
+    const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
+    const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
+    if (!method?.id || !isServerId(method.id)) return;
+
+    setPendingToggleCalcMode(arg);
+    openToggleCalcModeConfirm();
+  };
+
+  // True when this specific toggle is the one that will trip UpdateMethodCommandHandler's
+  // ClearDocuments() guard: toggling manual → system, the analysis is already System mode, and
+  // no *other* method is still manual — i.e. this is the last one. Mirrors the backend check so
+  // the confirm text only warns about document loss when it's actually about to happen.
+  const willClearDocuments = (() => {
+    if (!pendingToggleCalcMode) return false;
+    if (state.systemCalculationMode !== 'System') return false;
+    if ((state.documents?.length ?? 0) === 0) return false;
+
+    const appr = state.summarySelected.find(
+      (a: Approach) => a.approachType === pendingToggleCalcMode.approachType,
+    );
+    const method = appr?.methods.find(
+      (m: Method) => m.methodType === pendingToggleCalcMode.methodType,
+    );
+    if (!method || method.useSystemCalc) return false;
+
+    return state.summarySelected.every((a: Approach) =>
+      a.methods.every(
+        (m: Method) =>
+          (a.approachType === pendingToggleCalcMode!.approachType &&
+            m.methodType === pendingToggleCalcMode!.methodType) ||
+          m.useSystemCalc,
+      ),
+    );
+  })();
+
+  const toggleCalcModeConfirmMessage: string = (() => {
+    if (!pendingToggleCalcMode) return '';
+    const appr = state.summarySelected.find(
+      (a: Approach) => a.approachType === pendingToggleCalcMode.approachType,
+    );
+    const method = appr?.methods.find(
+      (m: Method) => m.methodType === pendingToggleCalcMode.methodType,
+    );
+    const hasLandValue = method?.landRatePerSqWa != null;
+    const key = hasLandValue
+      ? willClearDocuments
+        ? 'confirm.toggleMethodCalcModeValueAndLandDocuments'
+        : 'confirm.toggleMethodCalcModeValueAndLand'
+      : willClearDocuments
+        ? 'confirm.toggleMethodCalcModeValueDocuments'
+        : 'confirm.toggleMethodCalcModeValue';
+    return String(tp(key));
+  })();
+
+  const confirmToggleMethodCalcMode = async () => {
+    const arg = pendingToggleCalcMode;
+    if (!arg) return;
+
+    const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
+    const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
+    if (!method?.id || !isServerId(method.id)) {
+      setPendingToggleCalcMode(null);
+      closeToggleCalcModeConfirm();
+      return;
+    }
+
+    const prevUseSystemCalc = method.useSystemCalc;
+    const nextUseSystemCalc = !prevUseSystemCalc;
+
+    dispatch({
+      type: 'SUMMARY_SET_METHOD_CALC_MODE',
+      payload: {
+        approachType: arg.approachType,
+        methodType: arg.methodType,
+        useSystemCalc: nextUseSystemCalc,
+      },
+    });
+
+    try {
+      await updateMethodMutation.mutateAsync({
+        id: pricingAnalysisId,
+        methodId: method.id,
+        request: { useSystemCalc: nextUseSystemCalc } as UpdateMethodRequestType,
+      });
+    } catch (err: any) {
+      // Revert on failure.
+      dispatch({
+        type: 'SUMMARY_SET_METHOD_CALC_MODE',
+        payload: {
+          approachType: arg.approachType,
+          methodType: arg.methodType,
+          useSystemCalc: prevUseSystemCalc,
+        },
+      });
+      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+    } finally {
+      setPendingToggleCalcMode(null);
+      closeToggleCalcModeConfirm();
+    }
+  };
+
+  const cancelToggleMethodCalcMode = () => {
+    setPendingToggleCalcMode(null);
+    closeToggleCalcModeConfirm();
   };
 
   // ==================== Add Method ====================
@@ -576,6 +717,8 @@ export function useSelectionActions({
     isSavingSummary: isSaving,
     cancelPricingAccordion,
     changeSystemCalculation,
+    isChangingSystemCalc: setSystemCalcMutation.isPending,
+    requestToggleMethodCalcMode,
     addMethod,
     requestDeleteMethod,
     requestRemoveDocument,
@@ -585,6 +728,15 @@ export function useSelectionActions({
       pending: pendingDeselect,
       confirmDeselect,
       cancelDeselect,
+    },
+
+    toggleCalcModeConfirm: {
+      isOpen: isToggleCalcModeConfirmOpen,
+      pending: pendingToggleCalcMode,
+      message: toggleCalcModeConfirmMessage,
+      confirmToggle: confirmToggleMethodCalcMode,
+      cancelToggle: cancelToggleMethodCalcMode,
+      isToggling: updateMethodMutation.isPending,
     },
 
     deleteConfirm: {

@@ -1,6 +1,14 @@
 import type { GetPricingAnalysisResponseType, PricingAnalysisConfigType } from '../schemas';
 import type { Approach, Method } from '../types/selection';
 
+// TODO: drop this augmentation once src/shared/schemas/v1.ts is regenerated against the API's
+// updated OpenAPI spec — UseSystemCalc is already live on the server's MethodDto, the generated
+// client just hasn't been refreshed to know about it yet.
+type ApiMethodWithLandValue =
+  GetPricingAnalysisResponseType['approaches'][number]['methods'][number] & {
+    useSystemCalc?: boolean;
+  };
+
 // Reverse mapping: server types → config types
 // (forward mapping lives in saveEditingSelection.ts)
 const SERVER_TO_CONFIG_APPROACH: Record<string, string> = {
@@ -63,7 +71,7 @@ export function createInitialState(
   return pricingAnalysisConfig.map((confAppr: PricingAnalysisConfigType) => {
     const apiAppr = apiApproachByType.get(confAppr.approachType);
 
-    const apiMethods = apiAppr?.methods ?? [];
+    const apiMethods = (apiAppr?.methods ?? []) as ApiMethodWithLandValue[];
     const apiMethodByType = new Map(
       apiMethods.map(m => [normalizeMethodType(m.methodType, confAppr.approachType), m]),
     );
@@ -82,6 +90,7 @@ export function createInitialState(
         isIncluded: !!apiMethod,
         isSelected: apiMethod?.isSelected ?? false,
         appraisalValue: apiMethod?.methodValue ?? confMethod.appraisalValue ?? 0,
+        useSystemCalc: apiMethod?.useSystemCalc ?? true,
 
         // valuePerUnit doubles as the calculated land rate, so only read it back as a manual
         // entry when the unit says it prices land by area. A PerUnit lumpsum carries no rate.

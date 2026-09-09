@@ -2,7 +2,7 @@ import { Icon } from '@/shared/components';
 import Badge from '@/shared/components/Badge';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ManualCostBreakdownContext, Method } from '../../types/selection';
 import { ManualCostBreakdown } from './ManualCostBreakdown';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -22,6 +22,7 @@ interface PricingAnalysisMethodCardProps {
   onToggleMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCalculationMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
+  onToggleMethodCalcMode?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   isManualMode?: boolean;
   onManualValueSync?: (arg: {
@@ -50,6 +51,7 @@ export const PricingAnalysisMethodCard = ({
   method,
   onSelectCalculationMethod,
   onSelectCandidateMethod,
+  onToggleMethodCalcMode,
   onDeleteMethod,
   isManualMode,
   onManualValueSync,
@@ -60,32 +62,49 @@ export const PricingAnalysisMethodCard = ({
   const { t } = useTranslation('pricingAnalysis');
   const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue ?? null);
   const debouncedManualInput = useDebounce(manualInput, MANUAL_VALUE_DEBOUNCE_MS);
+  const appraisalValueRef = useRef(method.appraisalValue);
+  appraisalValueRef.current = method.appraisalValue;
+  // Mirrored into refs so the sync-out effect below can read their latest values without
+  // taking them as dependencies — see the effect's comment for why that distinction matters.
+  const isManualModeRef = useRef(isManualMode);
+  isManualModeRef.current = isManualMode;
+  const onManualValueSyncRef = useRef(onManualValueSync);
+  onManualValueSyncRef.current = onManualValueSync;
 
   // Local-only sync: 1s after the user stops typing, push the value into the reducer
   // so anything reading state.summarySelected mid-edit (approach totals, the
   // SUMMARY_SELECT_METHOD "must have value" guard) sees it without waiting for blur.
-  // The equality check against method.appraisalValue is what stops this from looping:
-  // once the dispatch lands, method.appraisalValue catches up and the effect no-ops.
+  //
+  // Deliberately depends on debouncedManualInput ALONE (plus the stable per-instance
+  // identifiers) — not on isManualMode/onManualValueSync directly. A per-method calc-mode
+  // toggle flips isManualMode in the very same update that resets method.appraisalValue to 0;
+  // if isManualMode were a dependency, that flip would re-run this effect immediately, while
+  // debouncedManualInput is still mid-debounce holding the pre-toggle typed value — the guard
+  // below would then see "debounced input != current value" and read that as "the user typed
+  // something new", re-pushing the stale value straight back over the reset it was fighting.
+  // Reading both through refs means the effect only ever fires because debouncedManualInput
+  // itself changed, i.e. because the user actually typed something.
   useEffect(() => {
-    if (!isManualMode || !onManualValueSync) return;
+    if (!isManualModeRef.current || !onManualValueSyncRef.current) return;
     if (debouncedManualInput == null || debouncedManualInput < 0) return;
-    if (debouncedManualInput === method.appraisalValue) return;
+    if (debouncedManualInput === appraisalValueRef.current) return;
 
-    onManualValueSync({
+    onManualValueSyncRef.current({
       approachType,
       methodType: method.methodType,
       value: debouncedManualInput,
       methodId: method.id,
     });
-  }, [
-    debouncedManualInput,
-    isManualMode,
-    onManualValueSync,
-    approachType,
-    method.methodType,
-    method.id,
-    method.appraisalValue,
-  ]);
+  }, [debouncedManualInput, approachType, method.methodType, method.id]);
+
+  // Adopt external changes to the committed value back into the local input — a calc-mode
+  // toggle (per-method or analysis-wide) resets method.appraisalValue without this component
+  // unmounting, so without this the NumberInput would keep showing whatever was locally typed
+  // before the toggle until a full page refresh.
+  useEffect(() => {
+    const external = method.appraisalValue ?? null;
+    setManualInput(prev => (prev === external ? prev : external && external > 0 ? external : null));
+  }, [method.appraisalValue]);
 
   const handleManualChange = (e: { target: { name?: string; value: number | null } }) => {
     setManualInput(e.target.value);
@@ -207,6 +226,28 @@ export const PricingAnalysisMethodCard = ({
           >
             {method.label}
           </span>
+          {!isReadOnly && onToggleMethodCalcMode && (
+            <button
+              type="button"
+              disabled={disabled}
+              aria-pressed={isManualMode}
+              title={t('calculationMode.manual')}
+              onClick={e => {
+                e.stopPropagation();
+                onToggleMethodCalcMode({ approachType, methodType: method.methodType });
+              }}
+              className={clsx(
+                'shrink-0 inline-flex items-center h-6 px-1.5 text-[9px] rounded-full border-2 font-medium transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:ring-offset-1',
+                isManualMode
+                  ? 'border-orange-600 bg-orange-600 text-white'
+                  : 'border-gray-300 bg-white text-gray-600 hover:border-orange-600/50 hover:bg-orange-600/50 hover:text-white',
+                disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+              )}
+            >
+              <span>m</span>
+            </button>
+          )}
           {isReadOnly ? (
             <div
               className={clsx(
@@ -385,6 +426,28 @@ export const PricingAnalysisMethodCard = ({
       >
         {method.label}
       </span>
+      {!isReadOnly && onToggleMethodCalcMode && (
+        <button
+          type="button"
+          disabled={disabled}
+          aria-pressed={isManualMode}
+          title={t('calculationMode.manual')}
+          onClick={e => {
+            e.stopPropagation();
+            onToggleMethodCalcMode({ approachType, methodType: method.methodType });
+          }}
+          className={clsx(
+            'shrink-0 inline-flex items-center h-6 px-1.5 text-[9px] rounded-full border-2 font-medium transition-all duration-200',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40 focus-visible:ring-offset-1',
+            isManualMode
+              ? 'border-orange-600 bg-orange-600 text-white'
+              : 'border-gray-300 bg-white text-gray-600 hover:border-orange-600/50 hover:bg-orange-600/50 hover:text-white',
+            disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+          )}
+        >
+          <span>m</span>
+        </button>
+      )}
       {isManualMode ? (
         isReadOnly ? (
           <div className="flex items-center gap-1 text-sm font-semibold text-gray-600">

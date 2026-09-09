@@ -15,10 +15,20 @@
   "confirm": {
     "changeCalculationTitle": "Change Calculation Mode",
     "changeCalculationMessage": "Switch to {{mode}} calculation? This will affect existing results.",
+    "changeCalculationMessageWithDocuments": "Switch to {{mode}} calculation? This will affect existing results and delete all uploaded documents.",
     "confirmText": "Confirm",
     "deselectMethod": "Are you sure? If you confirm the appraisal value of this method will be removed.",
+    "toggleMethodCalcModeValue": "Are you sure? Switching calculation mode will clear this method's value.",
+    "toggleMethodCalcModeValueAndLand": "Are you sure? Switching calculation mode will clear this method's value and land value.",
+    "toggleMethodCalcModeValueDocuments": "Are you sure? Switching calculation mode will clear this method's value and delete all uploaded documents.",
+    "toggleMethodCalcModeValueAndLandDocuments": "Are you sure? Switching calculation mode will clear this method's value and land value, and delete all uploaded documents.",
     "resetMethod": "Are you sure you want to reset this method? All calculation data will be cleared.",
     "resetAnalysis": "Reset this analysis? All data including uploads, cost items, and summary will be permanently deleted."
+  },
+  "costApproach": {
+    "landValue": "+ Land Value",
+    "buildingCost": "+ Building cost",
+    "total": "= Total"
   },
   "accordion": {
     "group": "Group:",

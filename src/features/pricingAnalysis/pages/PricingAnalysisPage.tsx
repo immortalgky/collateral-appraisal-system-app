@@ -474,8 +474,7 @@ function PricingAnalysisContent({
   const handleConfirmChangeCalculation = async () => {
     if (pendingSystemCalcMode === null) return;
     try {
-      // await onChangechangeSystemCalculation();
-      selectionActions.changeSystemCalculation(pendingSystemCalcMode);
+      await selectionActions.changeSystemCalculation(pendingSystemCalcMode);
       toast.success(t('toasts.changed'));
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('toasts.saveFailed'));
@@ -523,6 +522,7 @@ function PricingAnalysisContent({
                         onCancelEditMode={selectionActions.cancelEdit}
                         onSelectCandidateMethod={selectionActions.selectCandidateMethod}
                         onSelectCandidateApproach={selectionActions.selectCandidateApproach}
+                        onToggleMethodCalcMode={selectionActions.requestToggleMethodCalcMode}
                         onAddMethod={selectionActions.addMethod}
                         onDeleteMethod={selectionActions.requestDeleteMethod}
                         pricingConfiguration={pricingConfiguration}
@@ -532,6 +532,7 @@ function PricingAnalysisContent({
                         modelThumbnailSrc={modelThumbnailSrc}
                         deleteConfirm={selectionActions.deleteConfirm}
                         onManualValueSync={handleManualValueSync}
+                        toggleCalcModeConfirm={selectionActions.toggleCalcModeConfirm}
                         manualCostBreakdown={manualCostBreakdown}
                         onRequestRemoveDocument={selectionActions.requestRemoveDocument}
                         removeDocumentConfirm={selectionActions.removeDocumentConfirm}
@@ -608,13 +609,21 @@ function PricingAnalysisContent({
         onClose={() => setPendingSystemCalcMode(null)}
         onConfirm={handleConfirmChangeCalculation}
         title={t('confirm.changeCalculationTitle')}
-        message={t('confirm.changeCalculationMessage', {
-          mode: pendingSystemCalcMode
-            ? t('calculationMode.systemToggle')
-            : t('calculationMode.manualToggle'),
-        })}
+        message={t(
+          // Only switching TO System clears manual-evidence documents
+          // (SetSystemCalcCommandHandler.ClearDocuments) — matches the backend guard.
+          pendingSystemCalcMode && (state.documents?.length ?? 0) > 0
+            ? 'confirm.changeCalculationMessageWithDocuments'
+            : 'confirm.changeCalculationMessage',
+          {
+            mode: pendingSystemCalcMode
+              ? t('calculationMode.systemToggle')
+              : t('calculationMode.manualToggle'),
+          },
+        )}
         confirmText={t('confirm.confirmText')}
         variant="warning"
+        isLoading={selectionActions.isChangingSystemCalc}
       />
     </div>
   );
