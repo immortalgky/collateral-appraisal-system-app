@@ -13,6 +13,7 @@ import Button from '@/shared/components/Button';
 import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Checkbox from '@/shared/components/inputs/Checkbox';
+import Pagination from '@/shared/components/Pagination';
 import type { ApiError } from '@/shared/types/api';
 
 import {
@@ -84,6 +85,11 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
       <table className="w-full text-xs">
         <thead className="bg-gray-50">
           <tr>
+            {isCondo(projectType) && (
+              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[100px]">
+                {t('unitPrice.cols.towerName')}
+              </th>
+            )}
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[160px]">
               {t('unitPrice.cols.model')}
             </th>
@@ -112,6 +118,9 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
         <tbody>
           {assumptions.map(m => (
             <tr key={m.projectModelId} className="border-b border-gray-100 hover:bg-gray-50">
+              {isCondo(projectType) && (
+                <td className="py-2 px-3 text-gray-600">{m.towerName ?? '-'}</td>
+              )}
               <td className="py-2 px-3 font-medium text-gray-800">{m.modelType ?? '-'}</td>
               <td className="py-2 px-3 text-gray-600">{m.modelDescription ?? '-'}</td>
               <td className="py-2 px-3 text-right text-gray-800 whitespace-nowrap">
@@ -203,6 +212,10 @@ interface UnitPriceResultTableProps {
     | undefined;
   onToggleFlag: (unitId: string, flag: CondoFlag, value: boolean) => void;
   isDisabled: boolean;
+  pageNumber: number;
+  pageSize: number;
+  onPageChange: (pageNumber: number) => void;
+  onPageSizeChange: (size: number) => void;
 }
 
 function UnitPriceResultTable({
@@ -212,8 +225,17 @@ function UnitPriceResultTable({
   pricingAssumption,
   onToggleFlag,
   isDisabled,
+  pageNumber,
+  pageSize,
+  onPageChange,
+  onPageSizeChange,
 }: UnitPriceResultTableProps) {
   const { t } = useTranslation('blockProject');
+  const pagedUnitPrices = useMemo(
+    () => unitPrices.slice(pageNumber * pageSize, pageNumber * pageSize + pageSize),
+    [unitPrices, pageNumber, pageSize],
+  );
+  const totalPages = Math.ceil(unitPrices.length / pageSize);
   const totals = useMemo(() => {
     const sum = (fn: (up: ProjectUnitPrice) => number | null | undefined): number =>
       unitPrices.reduce((acc, up) => {
@@ -279,372 +301,385 @@ function UnitPriceResultTable({
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.seqNo')}
-            </th>
-            {isCondo(projectType) && (
-              <>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.floor')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.towerName')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.regNumber')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.roomNo')}
-                </th>
-              </>
-            )}
-            {isLandAndBuildingLike(projectType) && (
-              <>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.plotNo')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.houseNo')}
-                </th>
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="overflow-x-auto">
+        <table className="w-full text-xs">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.seqNo')}
+              </th>
+              {isCondo(projectType) && (
+                <>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.floor')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.towerName')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.regNumber')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.roomNo')}
+                  </th>
+                </>
+              )}
+              {isLandAndBuildingLike(projectType) && (
+                <>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.plotNo')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.houseNo')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.model')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.numberOfFloors')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.landAreaSqWa')}
+                  </th>
+                </>
+              )}
+              {isCondo(projectType) && (
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                   {t('unitPrice.cols.model')}
                 </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.numberOfFloors')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.landAreaSqWa')}
-                </th>
-              </>
-            )}
-            {isCondo(projectType) && (
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                {t('unitPrice.cols.model')}
+              )}
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.usableAreaSqm')}
               </th>
-            )}
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.usableAreaSqm')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.sellingPrice')}
-            </th>
-            {/* Common flags */}
-            {isCondo(projectType) ? (
-              <>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.corner')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.edge')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.poolView')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.south')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.other')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.adjustPriceLocation')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.standardPrice')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.priceIncrementFloor')}
-                </th>
-              </>
-            ) : (
-              <>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.corner')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.edge')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.nearGardenClubhouse')}
-                </th>
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
-                  {t('unitPrice.cols.other')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.landDiffSqWa')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.landPlusMinus')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.locationAdj')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.standardPrice')}
-                </th>
-              </>
-            )}
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.appraisalValue')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.roundedValue')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.forceSalePrice')}
-            </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.coverageAmount')}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {unitPrices.map(up => (
-            <tr key={up.projectUnitId} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-2 px-3 text-center text-gray-700">{up.sequenceNumber}</td>
-              {isCondo(projectType) && (
-                <>
-                  <td className="py-2 px-3 text-right text-gray-700">{up.floor ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-700">{up.towerName ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-700">{up.condoRegistrationNumber ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-700">{up.roomNumber ?? '-'}</td>
-                </>
-              )}
-              {isLandAndBuildingLike(projectType) && (
-                <>
-                  <td className="py-2 px-3 text-gray-700">{up.plotNumber ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-700">{up.houseNumber ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
-                  <td className="py-2 px-3 text-right text-gray-700">{up.numberOfFloors ?? '-'}</td>
-                  <td className="py-2 px-3 text-right text-gray-700">{fmt(up.landArea)}</td>
-                </>
-              )}
-              {isCondo(projectType) && (
-                <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
-              )}
-              <td className="py-2 px-3 text-right text-gray-700">{fmt(up.usableArea)}</td>
-              <td className="py-2 px-3 text-right text-gray-700">{fmt(up.sellingPrice)}</td>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.sellingPrice')}
+              </th>
+              {/* Common flags */}
               {isCondo(projectType) ? (
                 <>
-                  <FlagCell
-                    checked={up.isCorner}
-                    amount={pricingAssumption?.cornerAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isCorner', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isEdge}
-                    amount={pricingAssumption?.edgeAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isEdge', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isPoolView}
-                    amount={pricingAssumption?.poolViewAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isPoolView', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isSouth}
-                    amount={pricingAssumption?.southAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isSouth', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isOther}
-                    amount={pricingAssumption?.otherAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
-                    disabled={isDisabled}
-                  />
-                  <td className="py-2 px-3 text-right text-gray-800">
-                    {fmt(up.adjustPriceLocation)}
-                  </td>
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
-                  <td className="py-2 px-3 text-right text-gray-800">
-                    {fmt(up.priceIncrementPerFloor)}
-                  </td>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.corner')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.edge')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.poolView')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.south')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.other')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.adjustPriceLocation')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.standardPrice')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.priceIncrementFloor')}
+                  </th>
                 </>
               ) : (
                 <>
-                  <FlagCell
-                    checked={up.isCorner}
-                    amount={pricingAssumption?.cornerAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isCorner', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isEdge}
-                    amount={pricingAssumption?.edgeAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isEdge', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isNearGarden}
-                    amount={pricingAssumption?.nearGardenAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isNearGarden', v)}
-                    disabled={isDisabled}
-                  />
-                  <FlagCell
-                    checked={up.isOther}
-                    amount={pricingAssumption?.otherAdjustment}
-                    onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
-                    disabled={isDisabled}
-                  />
-                  <td className="py-2 px-3 text-right text-gray-800">
-                    {up.landAreaDifference != null ? fmt(up.landAreaDifference) : '-'}
-                  </td>
-                  <td className="py-2 px-3 text-right text-gray-800">
-                    {up.landIncreaseDecreaseAmount?.toLocaleString() ?? '-'}
-                  </td>
-                  <td className="py-2 px-3 text-right text-gray-800">
-                    {fmt(up.adjustPriceLocation)}
-                  </td>
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.corner')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.edge')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.nearGardenClubhouse')}
+                  </th>
+                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                    {t('unitPrice.cols.other')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.landDiffSqWa')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.landPlusMinus')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.locationAdj')}
+                  </th>
+                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                    {t('unitPrice.cols.standardPrice')}
+                  </th>
                 </>
               )}
-              <td className="py-2 px-3 text-right font-medium text-gray-900">
-                {fmt(up.totalAppraisalValue)}
-              </td>
-              <td className="py-2 px-3 text-right font-medium text-gray-900">
-                {fmt(up.totalAppraisalValueRounded)}
-              </td>
-              <td className="py-2 px-3 text-right text-gray-800">{fmt(up.forceSellingPrice)}</td>
-              <td className="py-2 px-3 text-right text-gray-800">
-                {fmt(
-                  up.coverageAmount != null && up.usableArea != null
-                    ? up.coverageAmount * up.usableArea
-                    : null,
-                )}
-              </td>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.appraisalValue')}
+              </th>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.roundedValue')}
+              </th>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.forceSalePrice')}
+              </th>
+              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                {t('unitPrice.cols.coverageAmount')}
+              </th>
             </tr>
-          ))}
-        </tbody>
-        {unitPrices.length > 0 && (
-          <tfoot>
-            <tr className="bg-primary/5 border-t-2 border-primary/20">
-              {isCondo(projectType) ? (
-                <td
-                  colSpan={6}
-                  className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
-                >
-                  {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
+          </thead>
+          <tbody>
+            {pagedUnitPrices.map(up => (
+              <tr key={up.projectUnitId} className="border-b border-gray-100 hover:bg-gray-50">
+                <td className="py-2 px-3 text-center text-gray-700">{up.sequenceNumber}</td>
+                {isCondo(projectType) && (
+                  <>
+                    <td className="py-2 px-3 text-right text-gray-700">{up.floor ?? '-'}</td>
+                    <td className="py-2 px-3 text-gray-700">{up.towerName ?? '-'}</td>
+                    <td className="py-2 px-3 text-gray-700">{up.condoRegistrationNumber ?? '-'}</td>
+                    <td className="py-2 px-3 text-gray-700">{up.roomNumber ?? '-'}</td>
+                  </>
+                )}
+                {isLandAndBuildingLike(projectType) && (
+                  <>
+                    <td className="py-2 px-3 text-gray-700">{up.plotNumber ?? '-'}</td>
+                    <td className="py-2 px-3 text-gray-700">{up.houseNumber ?? '-'}</td>
+                    <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
+                    <td className="py-2 px-3 text-right text-gray-700">
+                      {up.numberOfFloors ?? '-'}
+                    </td>
+                    <td className="py-2 px-3 text-right text-gray-700">{fmt(up.landArea)}</td>
+                  </>
+                )}
+                {isCondo(projectType) && (
+                  <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
+                )}
+                <td className="py-2 px-3 text-right text-gray-700">{fmt(up.usableArea)}</td>
+                <td className="py-2 px-3 text-right text-gray-700">{fmt(up.sellingPrice)}</td>
+                {isCondo(projectType) ? (
+                  <>
+                    <FlagCell
+                      checked={up.isCorner}
+                      amount={pricingAssumption?.cornerAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isCorner', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isEdge}
+                      amount={pricingAssumption?.edgeAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isEdge', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isPoolView}
+                      amount={pricingAssumption?.poolViewAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isPoolView', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isSouth}
+                      amount={pricingAssumption?.southAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isSouth', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isOther}
+                      amount={pricingAssumption?.otherAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
+                      disabled={isDisabled}
+                    />
+                    <td className="py-2 px-3 text-right text-gray-800">
+                      {fmt(up.adjustPriceLocation)}
+                    </td>
+                    <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
+                    <td className="py-2 px-3 text-right text-gray-800">
+                      {fmt(up.priceIncrementPerFloor)}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <FlagCell
+                      checked={up.isCorner}
+                      amount={pricingAssumption?.cornerAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isCorner', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isEdge}
+                      amount={pricingAssumption?.edgeAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isEdge', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isNearGarden}
+                      amount={pricingAssumption?.nearGardenAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isNearGarden', v)}
+                      disabled={isDisabled}
+                    />
+                    <FlagCell
+                      checked={up.isOther}
+                      amount={pricingAssumption?.otherAdjustment}
+                      onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
+                      disabled={isDisabled}
+                    />
+                    <td className="py-2 px-3 text-right text-gray-800">
+                      {up.landAreaDifference != null ? fmt(up.landAreaDifference) : '-'}
+                    </td>
+                    <td className="py-2 px-3 text-right text-gray-800">
+                      {up.landIncreaseDecreaseAmount?.toLocaleString() ?? '-'}
+                    </td>
+                    <td className="py-2 px-3 text-right text-gray-800">
+                      {fmt(up.adjustPriceLocation)}
+                    </td>
+                    <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
+                  </>
+                )}
+                <td className="py-2 px-3 text-right font-medium text-gray-900">
+                  {fmt(up.totalAppraisalValue)}
                 </td>
-              ) : (
-                <td
-                  colSpan={5}
-                  className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
-                >
-                  {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
+                <td className="py-2 px-3 text-right font-medium text-gray-900">
+                  {fmt(up.totalAppraisalValueRounded)}
                 </td>
-              )}
-              {isLandAndBuildingLike(projectType) && (
+                <td className="py-2 px-3 text-right text-gray-800">{fmt(up.forceSellingPrice)}</td>
+                <td className="py-2 px-3 text-right text-gray-800">
+                  {fmt(
+                    up.coverageAmount != null && up.usableArea != null
+                      ? up.coverageAmount * up.usableArea
+                      : null,
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          {unitPrices.length > 0 && (
+            <tfoot>
+              <tr className="bg-primary/5 border-t-2 border-primary/20">
+                {isCondo(projectType) ? (
+                  <td
+                    colSpan={6}
+                    className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
+                  >
+                    {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
+                  </td>
+                ) : (
+                  <td
+                    colSpan={5}
+                    className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
+                  >
+                    {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
+                  </td>
+                )}
+                {isLandAndBuildingLike(projectType) && (
+                  <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                    {fmt(totals.landArea)}
+                  </td>
+                )}
+                <td className="py-2.5 px-3" />
                 <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                  {fmt(totals.landArea)}
+                  {fmt(totals.sellingPrice)}
                 </td>
-              )}
-              <td className="py-2.5 px-3" />
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                {fmt(totals.sellingPrice)}
-              </td>
-              {/* Flag totals */}
-              <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                {totals.cornerCount > 0 ? (
-                  <>
-                    {totals.cornerCount} · {fmt(totals.cornerAmount)}
-                  </>
-                ) : (
-                  <span className="text-gray-400">-</span>
-                )}
-              </td>
-              <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                {totals.edgeCount > 0 ? (
-                  <>
-                    {totals.edgeCount} · {fmt(totals.edgeAmount)}
-                  </>
-                ) : (
-                  <span className="text-gray-400">-</span>
-                )}
-              </td>
-              {isCondo(projectType) ? (
-                <>
-                  <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                    {totals.poolViewCount > 0 ? (
-                      <>
-                        {totals.poolViewCount} · {fmt(totals.poolViewAmount)}
-                      </>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                    {totals.southCount > 0 ? (
-                      <>
-                        {totals.southCount} · {fmt(totals.southAmount)}
-                      </>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                </>
-              ) : (
+                {/* Flag totals */}
                 <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                  {totals.nearGardenCount > 0 ? (
+                  {totals.cornerCount > 0 ? (
                     <>
-                      {totals.nearGardenCount} · {fmt(totals.nearGardenAmount)}
+                      {totals.cornerCount} · {fmt(totals.cornerAmount)}
                     </>
                   ) : (
                     <span className="text-gray-400">-</span>
                   )}
                 </td>
-              )}
-              <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                {totals.otherCount > 0 ? (
+                <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
+                  {totals.edgeCount > 0 ? (
+                    <>
+                      {totals.edgeCount} · {fmt(totals.edgeAmount)}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </td>
+                {isCondo(projectType) ? (
                   <>
-                    {totals.otherCount} · {fmt(totals.otherAmount)}
+                    <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
+                      {totals.poolViewCount > 0 ? (
+                        <>
+                          {totals.poolViewCount} · {fmt(totals.poolViewAmount)}
+                        </>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
+                      {totals.southCount > 0 ? (
+                        <>
+                          {totals.southCount} · {fmt(totals.southAmount)}
+                        </>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
                   </>
                 ) : (
-                  <span className="text-gray-400">-</span>
+                  <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
+                    {totals.nearGardenCount > 0 ? (
+                      <>
+                        {totals.nearGardenCount} · {fmt(totals.nearGardenAmount)}
+                      </>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
                 )}
-              </td>
-              {isLandAndBuildingLike(projectType) && (
-                <>
-                  <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
-                    {fmt(totals.landAreaDifference)}
-                  </td>
-                  <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
-                    {fmt(totals.landIncreaseDecreaseAmount)}
-                  </td>
-                </>
-              )}
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                {fmt(totals.adjustPriceLocation)}
-              </td>
-              {/* Standard Price — skip (per-sqm rate, not summable) */}
-              <td className="py-2.5 px-3" />
-              {isCondo(projectType) && (
-                /* Price Increment/Floor — not summable */
+                <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
+                  {totals.otherCount > 0 ? (
+                    <>
+                      {totals.otherCount} · {fmt(totals.otherAmount)}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </td>
+                {isLandAndBuildingLike(projectType) && (
+                  <>
+                    <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
+                      {fmt(totals.landAreaDifference)}
+                    </td>
+                    <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
+                      {fmt(totals.landIncreaseDecreaseAmount)}
+                    </td>
+                  </>
+                )}
+                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                  {fmt(totals.adjustPriceLocation)}
+                </td>
+                {/* Standard Price — skip (per-sqm rate, not summable) */}
                 <td className="py-2.5 px-3" />
-              )}
-              <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
-                {fmt(totals.totalAppraisalValue)}
-              </td>
-              <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
-                {fmt(totals.totalAppraisalValueRounded)}
-              </td>
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                {fmt(totals.forceSellingPrice)}
-              </td>
-              <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                {fmt(totals.coverageAmount)}
-              </td>
-            </tr>
-          </tfoot>
-        )}
-      </table>
+                {isCondo(projectType) && (
+                  /* Price Increment/Floor — not summable */
+                  <td className="py-2.5 px-3" />
+                )}
+                <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
+                  {fmt(totals.totalAppraisalValue)}
+                </td>
+                <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
+                  {fmt(totals.totalAppraisalValueRounded)}
+                </td>
+                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                  {fmt(totals.forceSellingPrice)}
+                </td>
+                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
+                  {fmt(totals.coverageAmount)}
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+      <Pagination
+        currentPage={pageNumber}
+        totalPages={totalPages}
+        totalCount={unitPrices.length}
+        pageSize={pageSize}
+        pageSizeOptions={[5, 10, 25, 50, 75, 100]}
+        onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+      />
     </div>
   );
 }
@@ -680,10 +715,19 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const [localUnitPrices, setLocalUnitPrices] = useState<ProjectUnitPrice[]>([]);
   const [flagsDirty, setFlagsDirty] = useState(false);
   const [saveIntent, setSaveIntent] = useState<'draft' | 'full' | null>(null);
+  const [pageNumber, setPageNumber] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
   useEffect(() => {
     setLocalUnitPrices(unitPricesData ?? []);
     setFlagsDirty(false);
+    setPageNumber(0);
   }, [unitPricesData]);
+
+  const handlePageChange = (page: number) => setPageNumber(page);
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setPageNumber(0);
+  };
 
   const { mutateAsync: saveAssumptionAsync, isPending: isSaving } =
     useSaveProjectPricingAssumptions();
@@ -786,12 +830,16 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
 
   const modelAssumptions = pricingAssumption?.modelAssumptions ?? [];
 
-  // Lookup: modelType → model assumption fields needed for LB preview enrichment.
+  // Lookup: projectModelId → model assumption fields needed for the live preview.
+  // Keyed by id, not modelType — for Condo a model's identity is (Tower, ModelName), so the same
+  // model name can legitimately repeat across towers with different standard price/coverage.
+  // Keying by name alone would collapse those into one entry and misprice every unit whose model
+  // name repeats in another tower.
   const modelLookup = useMemo(
     () =>
       new Map(
         modelAssumptions.map(m => [
-          m.modelType ?? '',
+          m.projectModelId,
           {
             standardPrice: m.finalAppraisedValue,
             coverageAmount: m.coverageAmount,
@@ -808,7 +856,7 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const displayedUnitPrices = useMemo(
     () =>
       localUnitPrices.map(up => {
-        const lookup = modelLookup.get(up.modelType ?? '');
+        const lookup = modelLookup.get(up.projectModelId ?? '');
         // For LB: compute land area diff and land +/- live from model standard land area.
         // Always recompute so it responds to rate / assumption changes in the form.
         const landAreaDifference =
@@ -890,6 +938,10 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
                 pricingAssumption={watchedAssumption}
                 onToggleFlag={handleToggleFlag}
                 isDisabled={isReadOnly || isBusy}
+                pageNumber={pageNumber}
+                pageSize={pageSize}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
               />
             </div>
           </div>

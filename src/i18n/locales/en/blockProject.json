@@ -260,7 +260,8 @@
       "all": "All",
       "available": "Available",
       "sold": "Sold",
-      "allModels": "All models"
+      "allModels": "All models",
+      "allTowers": "All towers"
     },
     "outcome": {
       "imported": "imported {{count}} unit(s)",
