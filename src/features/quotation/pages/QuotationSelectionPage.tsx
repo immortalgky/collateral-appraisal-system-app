@@ -690,7 +690,7 @@ const QuotationSelectionPage = () => {
                   </strong>
                 </p>
                 {quotation.rmNegotiationNote && (
-                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
+                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xl text-amber-800 italic">
                     {quotation.rmNegotiationNote}
                   </blockquote>
                 )}
