@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
@@ -13,23 +13,33 @@ import SearchByInput from '@/shared/components/inputs/SearchByInput';
 import SortableTh from '@/features/taskMonitor/components/SortableTh';
 import type { SortDir } from '@/features/taskMonitor/types';
 import { useGetMyInvitations } from '../api/quotation';
+import { useAuthStore } from '@/features/auth/store';
 
 /** Slice a DatePickerInput ISO value down to the `yyyy-MM-dd` slug the backend's
     `DateOnly?` query binder expects. */
 const toDateOnly = (iso: string | null | undefined) => (iso ? iso.slice(0, 10) : undefined);
 
-// Vendor-relevant status filter options (backend code values — labels are translated via t())
-const VENDOR_STATUS_CODES = [
-  'Pending',
-  'Draft',
-  'PendingCheckerReview',
-  'Submitted',
-  'UnderReview',
-  'Tentative',
-  'Negotiating',
-  'Declined',
-  'Cancelled',
-] as const;
+type VendorStatusCode =
+  | 'Pending'
+  | 'Draft'
+  | 'PendingCheckerReview'
+  | 'Submitted'
+  | 'UnderReview'
+  | 'Tentative'
+  | 'Negotiating'
+  | 'Declined'
+  | 'Cancelled';
+
+const STATUS_FILTER_GROUPS: { key: string; codes: VendorStatusCode[] }[] = [
+  { key: 'PendingSubmission', codes: ['Pending', 'Draft'] },
+  { key: 'PendingCheckerReview', codes: ['PendingCheckerReview'] },
+  { key: 'Submitted', codes: ['Submitted'] },
+  { key: 'UnderReview', codes: ['UnderReview'] },
+  { key: 'Tentative', codes: ['Tentative'] },
+  { key: 'Negotiating', codes: ['Negotiating'] },
+  { key: 'Declined', codes: ['Declined'] },
+  { key: 'Cancelled', codes: ['Cancelled'] },
+];
 
 // Single search box + a "search by" selector: only the chosen field is sent to the backend.
 type SearchField = 'quotationNo' | 'appraisalNo' | 'customerName';
@@ -55,10 +65,23 @@ const ExtCompanyInvitationListPage = () => {
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
+  const currentUser = useAuthStore(state => state.user);
+  const isChecker = currentUser?.roles.includes('ExtAppraisalChecker') ?? false;
+  const isAdmin = currentUser?.roles.includes('ExtAdmin') ?? false;
+  const defaultStatusGroups = isChecker
+    ? ['PendingCheckerReview']
+    : isAdmin
+      ? ['PendingSubmission']
+      : [];
+
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
   const [searchField, setSearchField] = useState<SearchField>('quotationNo');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statuses, setStatuses] = useState<string[]>([]);
+  const [statusGroups, setStatusGroups] = useState<string[]>(() => defaultStatusGroups);
+  const statuses = useMemo(
+    () => statusGroups.flatMap(key => STATUS_FILTER_GROUPS.find(g => g.key === key)?.codes ?? []),
+    [statusGroups],
+  );
   const [cutOffTimeFrom, setCutOffTimeFrom] = useState<string | null>(null);
   const [cutOffTimeTo, setCutOffTimeTo] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<string | undefined>(undefined);
@@ -73,9 +96,9 @@ const ExtCompanyInvitationListPage = () => {
   // Debounced search term — only the value is debounced; switching field applies immediately.
   const [debouncedTerm, setDebouncedTerm] = useState('');
 
-  const statusOptions = VENDOR_STATUS_CODES.map(code => ({
-    value: code,
-    label: t(`vendorStatus.${code}` as `vendorStatus.${(typeof VENDOR_STATUS_CODES)[number]}`),
+  const statusOptions = STATUS_FILTER_GROUPS.map(group => ({
+    value: group.key,
+    label: t(`vendorStatus.${group.codes[0]}` as `vendorStatus.${VendorStatusCode}`),
   }));
   const searchFieldOptions = [
     { value: 'quotationNo', label: t('filters.quotationNoPlaceholder'), icon: 'file-invoice' },
@@ -92,7 +115,7 @@ const ExtCompanyInvitationListPage = () => {
 
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedTerm, searchField, statuses, cutOffTimeFrom, cutOffTimeTo]);
+  }, [debouncedTerm, searchField, statusGroups, cutOffTimeFrom, cutOffTimeTo]);
 
   const term = debouncedTerm || undefined;
   const { data, isLoading, isFetching, isError, error } = useGetMyInvitations({
@@ -115,11 +138,11 @@ const ExtCompanyInvitationListPage = () => {
   const isFirstLoad = isLoading && items.length === 0;
   const isRefetching = isFetching && !isFirstLoad;
 
-  const hasFilters = searchTerm || statuses.length || cutOffTimeFrom || cutOffTimeTo;
+  const hasFilters = searchTerm || statusGroups.length || cutOffTimeFrom || cutOffTimeTo;
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatuses([]);
+    setStatusGroups([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
   };
@@ -170,8 +193,8 @@ const ExtCompanyInvitationListPage = () => {
           <label className="block text-xs font-medium text-gray-700">{t('columns.status')}</label>
           <MultiSelectDropdown
             options={statusOptions}
-            value={statuses}
-            onChange={setStatuses}
+            value={statusGroups}
+            onChange={setStatusGroups}
             placeholder={t('filters.allStatuses')}
             showValuePrefix={false}
             className="min-w-40"
