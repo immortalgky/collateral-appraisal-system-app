@@ -255,6 +255,7 @@ const CompanyRoundRobinConfigPage = lazy(
   () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
 );
 const JobSchedulesPage = lazy(() => import('@features/jobSchedules/pages/JobSchedulesPage'));
+const HangfireDashboardPage = lazy(() => import('@features/hangfire/pages/HangfireDashboardPage'));
 const AddressMasterPage = lazy(
   () => import('@features/addressMaster/pages/AddressMasterPage')
 );
@@ -644,6 +645,16 @@ export const router = createBrowserRouter([
               <RoleProtectedRoute allowedRoles={[]} requiredPermission="JOB_SCHEDULE_MANAGE" />
             ),
             children: [{ index: true, element: <JobSchedulesPage /> }],
+          },
+          // Hangfire's own dashboard, embedded in an iframe. Same permission as the schedules
+          // screen, and the server gates /hangfire on that same permission (resolved from the
+          // database against the login cookie), so this guard mirrors the real check.
+          {
+            path: 'hangfire',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="JOB_SCHEDULE_MANAGE" />
+            ),
+            children: [{ index: true, element: <HangfireDashboardPage /> }],
           },
           // Collateral master admin — gated by COLLATERAL_ADMIN permission
           {
