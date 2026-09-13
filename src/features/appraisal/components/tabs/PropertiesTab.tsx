@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
@@ -14,7 +14,6 @@ import {
   useSensors,
 } from '@dnd-kit/core';
 import toast from 'react-hot-toast';
-import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import { PropertyCardContent } from '../PropertyCardContent';
 import { usePropertyClipboardStore } from '../../store';
@@ -29,11 +28,16 @@ import {
 } from '../../api/propertyGroup';
 import { useDeleteProperty } from '../../api/property';
 import { GroupContainer } from '../GroupContainer';
+import { PropertiesViewSwitcher } from '../PropertiesViewSwitcher';
+import { PropertySplitView } from '../PropertySplitView';
+import { MachinerySummaryStrip } from '../MachinerySummaryStrip';
+import { useMachinerySummaryStatus } from '../../hooks/useMachinerySummaryStatus';
 import { PropertiesMapModal } from '../PropertiesMapModal';
 import { MoveToGroupModal } from '../MoveToGroupModal';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import { PropertyContextMenu } from '../PropertyContextMenu';
 import type { PropertyItem } from '../../types';
+import type { PropertiesViewMode } from '@shared/types';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { getRouteSegment as getRouteSegmentFromConfig } from '../../utils/propertyTypeConfig';
@@ -48,8 +52,6 @@ const MEASURING_CONFIG = {
   droppable: { strategy: MeasuringStrategy.BeforeDragging },
 };
 
-type ViewMode = 'grid' | 'list';
-
 interface ContextMenuState {
   visible: boolean;
   x: number;
@@ -59,11 +61,16 @@ interface ContextMenuState {
 }
 
 interface PropertiesTabProps {
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
+  viewMode: PropertiesViewMode;
+  onViewModeChange: (mode: PropertiesViewMode) => void;
+  /**
+   * The property editor, when the URL has one open and the split view can hold it. Passed
+   * straight through — this tab does not decide whether an editor exists, only where it sits.
+   */
+  editorSlot?: ReactNode;
 }
 
-export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps) => {
+export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: PropertiesTabProps) => {
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
@@ -77,6 +84,20 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   // API data
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
+
+  // The machinery summary lives here now, as a strip above the groups (or a pinned rail entry in
+  // the split view) — shown, as the old tab was, only when the appraisal holds machinery.
+  const machineCount = useMemo(
+    () =>
+      groups.reduce(
+        (n, group) => n + group.items.filter(item => (item.type as string) === 'MAC').length,
+        0,
+      ),
+    [groups],
+  );
+  const hasMachinery = machineCount > 0 && !isPma;
+  const machinerySummary = useMachinerySummaryStatus(hasMachinery ? appraisalId : undefined);
+  const openMachinerySummary = () => navigate(`${basePath}/property/machinery-summary`);
 
   // Keep a stable ref to groups so DndContext callbacks don't change when groups change.
   // Changing onDragEnd/onDragStart triggers DndContext context updates which re-render
@@ -101,6 +122,8 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
 
   // Properties map modal — holds the id of the property whose pin was clicked.
   const [mapSelectedId, setMapSelectedId] = useState<string | null>(null);
+  /** Which property the split view is showing. Lives here so switching views keeps the choice. */
+  const [splitSelectedId, setSplitSelectedId] = useState<string | null>(null);
   const handleShowOnMap = useCallback((propertyId: string) => setMapSelectedId(propertyId), []);
   const allProperties = useMemo(() => groups.flatMap(g => g.items), [groups]);
 
@@ -464,35 +487,35 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
       ? // PMA mode: only Edit (opens the PMA editor); Move/Copy/Paste/Delete are hidden.
         [{ label: t('properties.contextMenu.edit'), icon: 'pen-to-square', onClick: handleEdit }]
       : [
-        {
-          label: t('properties.contextMenu.edit'),
-          icon: 'pen-to-square',
-          onClick: handleEdit,
-        },
-        {
-          label: t('properties.contextMenu.moveTo'),
-          icon: 'arrow-right-arrow-left',
-          onClick: handleMoveTo,
-          disabled: groups.length <= 1,
-        },
-        {
-          label: t('properties.contextMenu.copy'),
-          icon: 'copy',
-          onClick: handleCopy,
-        },
-        {
-          label: t('properties.contextMenu.paste'),
-          icon: 'paste',
-          onClick: handlePaste,
-          disabled: !clipboard,
-        },
-        {
-          label: t('properties.contextMenu.delete'),
-          icon: 'trash',
-          onClick: handleDelete,
-          danger: true,
-        },
-      ];
+          {
+            label: t('properties.contextMenu.edit'),
+            icon: 'pen-to-square',
+            onClick: handleEdit,
+          },
+          {
+            label: t('properties.contextMenu.moveTo'),
+            icon: 'arrow-right-arrow-left',
+            onClick: handleMoveTo,
+            disabled: groups.length <= 1,
+          },
+          {
+            label: t('properties.contextMenu.copy'),
+            icon: 'copy',
+            onClick: handleCopy,
+          },
+          {
+            label: t('properties.contextMenu.paste'),
+            icon: 'paste',
+            onClick: handlePaste,
+            disabled: !clipboard,
+          },
+          {
+            label: t('properties.contextMenu.delete'),
+            icon: 'trash',
+            onClick: handleDelete,
+            danger: true,
+          },
+        ];
 
   // ==================== Loading & Error States ====================
 
@@ -537,105 +560,154 @@ export const PropertiesTab = ({ viewMode, onViewModeChange }: PropertiesTabProps
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-4">
-        {/* View Mode Toggle */}
-        <div className="flex items-center gap-2 border border-gray-200 rounded-lg p-1 bg-gray-50">
-          <button
-            type="button"
-            onClick={() => onViewModeChange('grid')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors text-sm font-medium ${
-              viewMode === 'grid'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-            }`}
-          >
-            <Icon name="grid-2" style="solid" />
-            <span>{t('properties.viewGrid')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => onViewModeChange('list')}
-            className={`px-3 py-1.5 rounded-md flex items-center gap-2 transition-colors text-sm font-medium ${
-              viewMode === 'list'
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-            }`}
-          >
-            <Icon name="list" style="solid" />
-            <span>{t('properties.viewList')}</span>
-          </button>
-        </div>
+      <div className="flex items-center gap-3 mb-3">
+        <span className="text-xs text-gray-500">
+          <b className="font-semibold text-gray-700 tabular-nums">{groups.length}</b>{' '}
+          {t('properties.toolbar.groups')}
+          <span className="mx-1.5 text-gray-400">·</span>
+          <b className="font-semibold text-gray-700 tabular-nums">{allProperties.length}</b>{' '}
+          {t('properties.toolbar.properties')}
+        </span>
 
-        {/* Add New Group Button */}
-        {!readOnly && !isPma && (
-          <Button
-            variant="primary"
-            onClick={handleAddGroup}
-            className="flex items-center gap-2"
-            disabled={createGroupMutation.isPending}
-          >
-            {createGroupMutation.isPending ? (
-              <Icon name="spinner" className="animate-spin" />
-            ) : (
-              <Icon name="plus" />
-            )}
-            {t('properties.addNewGroup')}
-          </Button>
-        )}
-      </div>
+        <div className="ml-auto flex items-center gap-2">
+          <PropertiesViewSwitcher value={viewMode} onChange={onViewModeChange} />
 
-      {/* Groups with Drag and Drop (only active for grid view) */}
-      <DndContext
-        sensors={readOnly ? [] : sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        measuring={MEASURING_CONFIG}
-      >
-        <div className="space-y-2 flex-1 overflow-y-auto">
-          {groups.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-              <Icon name="layer-group" className="text-4xl mb-3" />
-              <p className="text-sm font-medium text-gray-500">{t('properties.noGroups')}</p>
-              <p className="text-xs text-gray-400 mt-1">{t('properties.noGroupsHint')}</p>
-            </div>
-          ) : (
-            groups.map(group => (
-              <GroupContainer
-                key={group.id}
-                group={group}
-                viewMode={viewMode}
-                isPma={isPma}
-                onDeleteGroup={handleDeleteGroup}
-                onRenameGroup={handleRenameGroup}
-                onContextMenu={handleContextMenu}
-                onEdit={handleEditProperty}
-                onMoveTo={handleMoveToProperty}
-                onCopy={handleCopyProperty}
-                onPaste={handlePasteProperty}
-                onDelete={handleDeleteProperty}
-                onGoToPricingAnalysis={handleGoToPricingAnalysis}
-                onShowOnMap={handleShowOnMap}
-                hasClipboard={!!clipboard}
-                isDeletingGroup={deletingGroupId === group.id}
-              />
-            ))
+          {/* Primary, to match the rest of the toolbar. Adding a property is the more frequent
+              action, but it lives on every group's own footer rather than up here. */}
+          {!readOnly && !isPma && (
+            <button
+              type="button"
+              onClick={handleAddGroup}
+              disabled={createGroupMutation.isPending}
+              className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+            >
+              {createGroupMutation.isPending ? (
+                <Icon name="spinner" className="animate-spin text-[11px]" />
+              ) : (
+                <Icon name="plus" className="text-[11px]" />
+              )}
+              {t('properties.addNewGroup')}
+            </button>
           )}
         </div>
+      </div>
 
-        {/* Drag Overlay (for grid view) */}
-        <DragOverlay dropAnimation={null}>
-          {activeProperty ? (
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-xl ring-2 ring-primary scale-[1.02] cursor-grabbing flex opacity-95">
-              {/* Drag Handle */}
-              <div className="flex items-center justify-center w-10 bg-gray-50 border-r border-gray-200 flex-shrink-0">
-                <Icon name="grip-vertical" className="text-gray-400" />
+      {/* The split view gets the same drag context as the other layouts: its rail is a list of
+          every property in the appraisal, which is the most natural place of all to reorder
+          them. The handlers below only read `active`/`over` data, so they work unchanged. */}
+      {viewMode === 'split' && groups.length > 0 ? (
+        <DndContext
+          sensors={readOnly ? [] : sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          measuring={MEASURING_CONFIG}
+        >
+          <div className="flex-1 min-h-0">
+            <PropertySplitView
+              groups={groups}
+              selectedId={splitSelectedId}
+              onSelect={setSplitSelectedId}
+              onEdit={handleEditProperty}
+              onMoveTo={handleMoveToProperty}
+              onCopy={handleCopyProperty}
+              onPaste={handlePasteProperty}
+              onDelete={handleDeleteProperty}
+              onShowOnMap={handleShowOnMap}
+              onGoToPricingAnalysis={handleGoToPricingAnalysis}
+              onContextMenu={handleContextMenu}
+              onRenameGroup={handleRenameGroup}
+              onDeleteGroup={handleDeleteGroup}
+              deletingGroupId={deletingGroupId}
+              hasClipboard={!!clipboard}
+              editorSlot={editorSlot}
+              machinerySummary={
+                hasMachinery
+                  ? { status: machinerySummary.status, onOpen: openMachinerySummary }
+                  : undefined
+              }
+            />
+          </div>
+
+          {/* The rail's rows are one line tall, so the floating preview is too — a full card
+              hovering over a 14rem column would hide the drop target it is aiming at. */}
+          <DragOverlay dropAnimation={null}>
+            {activeProperty ? (
+              <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs shadow-lg ring-2 ring-primary">
+                <Icon name="grip-vertical" className="text-[10px] text-gray-400" />
+                <span className="truncate">{activeProperty.address}</span>
               </div>
-              <PropertyCardContent property={activeProperty} showArrow={false} size="md" />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      ) : (
+        <DndContext
+          sensors={readOnly ? [] : sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          measuring={MEASURING_CONFIG}
+        >
+          <div className="space-y-2 flex-1 overflow-y-auto">
+            {/* First in the scrolling list rather than above it: it scrolls away with the groups
+                instead of holding a strip of the screen once it has been read. */}
+            {hasMachinery && (
+              <MachinerySummaryStrip
+                state={machinerySummary}
+                machineCount={machineCount}
+                readOnly={readOnly}
+                onOpen={openMachinerySummary}
+              />
+            )}
+            {groups.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                <Icon name="layer-group" className="text-4xl mb-3" />
+                <p className="text-sm font-medium text-gray-500">{t('properties.noGroups')}</p>
+                <p className="text-xs text-gray-400 mt-1">{t('properties.noGroupsHint')}</p>
+              </div>
+            ) : (
+              groups.map(group => (
+                <GroupContainer
+                  key={group.id}
+                  group={group}
+                  viewMode={viewMode}
+                  isPma={isPma}
+                  onDeleteGroup={handleDeleteGroup}
+                  onRenameGroup={handleRenameGroup}
+                  onContextMenu={handleContextMenu}
+                  onEdit={handleEditProperty}
+                  onMoveTo={handleMoveToProperty}
+                  onCopy={handleCopyProperty}
+                  onPaste={handlePasteProperty}
+                  onDelete={handleDeleteProperty}
+                  onGoToPricingAnalysis={handleGoToPricingAnalysis}
+                  onShowOnMap={handleShowOnMap}
+                  hasClipboard={!!clipboard}
+                  isDeletingGroup={deletingGroupId === group.id}
+                />
+              ))
+            )}
+          </div>
+
+          {/* Drag Overlay (list and card views) */}
+          <DragOverlay dropAnimation={null}>
+            {activeProperty ? (
+              <div
+                className={`bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xl ring-2 ring-primary cursor-grabbing flex items-stretch opacity-95 ${
+                  // A full-width row floating over a grid of 200 px cards reads as the wrong
+                  // object; cap it so the preview stays about the size of what is being dragged.
+                  viewMode === 'cards' ? 'max-w-[20rem]' : ''
+                }`}
+              >
+                <div className="flex items-center justify-center w-5 flex-shrink-0 text-gray-400">
+                  <Icon name="grip-vertical" className="text-[11px]" />
+                </div>
+                <PropertyCardContent property={activeProperty} showArrow={false} size="compact" />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
 
       {/* Modals */}
       <MoveToGroupModal

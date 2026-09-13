@@ -2,6 +2,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
+import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createMachineryForm,
@@ -22,8 +23,6 @@ import Button from '@/shared/components/Button';
 import Section from '@/shared/components/sections/Section';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
-import PropertyPhotoSection from '../components/PropertyPhotoSection';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import {
   useCreateMachineryProperty,
   useGetMachineryPropertyById,
@@ -189,17 +188,6 @@ const CreateMachineryPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
-            { label: t('createPage.navMachinery'), id: 'properties-section', icon: 'tractor' },
-          ]}
-        />
-      </div>
-
       <FormProvider methods={methods} schema={createMachineryForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -207,6 +195,12 @@ const CreateMachineryPage = () => {
             id="form-scroll-container"
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
           >
+            <PropertyEditorHeader
+              appraisalId={appraisalId}
+              propertyId={propertyId}
+              typeCode="MAC"
+              photoSectionRef={photoSectionRef}
+            />
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -215,39 +209,6 @@ const CreateMachineryPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section */}
-                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    {appraisalId && (
-                      <PropertyPhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        propertyId={propertyId}
-                      />
-                    )}
-                  </Section>
-
-                  {/* Land Information Header */}
-                  <Section id="properties-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon
-                          name="mountain-sun"
-                          style="solid"
-                          className="w-5 h-5 text-amber-600"
-                        />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">{t('createPage.machinerySection')}</h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                  </Section>
-
                   {/* Machinery Forms */}
                   <Section
                     id="machinery"

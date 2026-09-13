@@ -8,6 +8,9 @@ const ActionBar = ({ children }: ActionBarProps) => (
   <div
     role="toolbar"
     aria-label="Page actions"
+    // The layouts drop their bottom padding when this is on the page, so the bar sits on the
+    // bottom edge of the screen instead of floating above a strip of empty space.
+    data-page-actions=""
     className="shrink-0 sticky bottom-0 z-40 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
   >
     <div className="flex justify-between items-center">{children}</div>

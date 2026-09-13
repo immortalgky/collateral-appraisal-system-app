@@ -1,9 +1,18 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import {
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useMutation } from '@tanstack/react-query';
 import type { UseMutationResult } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import PhotoGallery, { type Photo } from './PhotoGallery';
+import type { PhotoSectionView } from './PropertyPhotoSection';
 import PhotoPreviewModal, { type PreviewablePhoto } from './PhotoPreviewModal';
 import PhotoSourceModal from './PhotoSourceModal';
 import GallerySelectionModal from './GallerySelectionModal';
@@ -51,6 +60,8 @@ export interface EntityPhotoSectionProps {
   >;
   useSetThumbnail?: () => UseMutationResult<unknown, unknown, ThumbnailMutationVars>;
   useUnsetThumbnail?: () => UseMutationResult<unknown, unknown, ThumbnailMutationVars>;
+  /** Draws the photos instead of the default strip, e.g. inside an editor's header. */
+  renderGallery?: (view: PhotoSectionView) => ReactNode;
 }
 
 interface DeleteTarget {
@@ -88,6 +99,7 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
       useRemoveImage,
       useSetThumbnail,
       useUnsetThumbnail,
+      renderGallery,
     },
     ref,
   ) => {
@@ -480,15 +492,25 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
 
     return (
       <>
-        <PhotoGallery
-          photos={photos}
-          onAddClick={() => !readOnly && setShowPhotoSourceModal(true)}
-          onDelete={handleDeleteRequest}
-          onSetThumbnail={hasThumbnailSupport ? handleSetThumbnail : () => {}}
-          onPreview={handlePreview}
-          thumbnailId={thumbnailGalleryPhotoId}
-          disabled={readOnly}
-        />
+        {renderGallery ? (
+          renderGallery({
+            photos,
+            thumbnailId: thumbnailGalleryPhotoId ?? null,
+            readOnly,
+            onAdd: () => setShowPhotoSourceModal(true),
+            onPreview: handlePreview,
+          })
+        ) : (
+          <PhotoGallery
+            photos={photos}
+            onAddClick={() => !readOnly && setShowPhotoSourceModal(true)}
+            onDelete={handleDeleteRequest}
+            onSetThumbnail={hasThumbnailSupport ? handleSetThumbnail : () => {}}
+            onPreview={handlePreview}
+            thumbnailId={thumbnailGalleryPhotoId}
+            disabled={readOnly}
+          />
+        )}
 
         <PhotoSourceModal
           isOpen={showPhotoSourceModal}

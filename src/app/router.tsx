@@ -32,100 +32,101 @@ const CalendarPage = lazy(() => import('../features/dashboard/pages/CalendarPage
 const RequestListingPage = lazy(() => import('@/features/request/pages/RequestListingPage'));
 const RequestPage = lazy(() => import('@/features/request/pages/RequestPage'));
 const PropertyInformationPage = lazy(
-  () => import('@/features/appraisal/pages/PropertyInformationPage')
+  () => import('@/features/appraisal/pages/PropertyInformationPage'),
 );
 const DocumentChecklistPage = lazy(
-  () => import('@/features/appraisal/pages/DocumentChecklistPage')
+  () => import('@/features/appraisal/pages/DocumentChecklistPage'),
 );
 const AdministrationPage = lazy(() => import('@/features/appraisal/pages/AdministrationPage'));
 const AppointmentAndFeePage = lazy(
-  () => import('@/features/appraisal/pages/AppointmentAndFeePage')
+  () => import('@/features/appraisal/pages/AppointmentAndFeePage'),
 );
 const TaskListingPage = lazy(() => import('@/features/task/pages/TaskListingPage'));
 const ActivityTaskListPage = lazy(() => import('@/features/task/pages/ActivityTaskListPage'));
 const NotificationPage = lazy(() => import('@/features/notification/pages/NotificationPage'));
 const CreateMarketComparablePage = lazy(
-  () => import('@/features/appraisal/pages/CreateMarketComparablePage')
+  () => import('@/features/appraisal/pages/CreateMarketComparablePage'),
 );
 const MarketComparableListingPage = lazy(
-  () => import('@/features/appraisal/pages/MarketComparableListingPage')
+  () => import('@/features/appraisal/pages/MarketComparableListingPage'),
 );
 const CreateLandPage = lazy(() => import('../features/appraisal/pages/CreateLandPage'));
+const MachinerySummaryPage = lazy(
+  () => import('../features/appraisal/pages/MachinerySummaryPage'),
+);
 const CreateBuildingPage = lazy(() => import('../features/appraisal/pages/CreateBuildingPage'));
 const CreateCondoPage = lazy(() => import('@/features/appraisal/pages/CreateCondoPage'));
 const CreateLandBuildingPage = lazy(
-  () => import('@/features/appraisal/pages/CreateLandBuildingPage')
+  () => import('@/features/appraisal/pages/CreateLandBuildingPage'),
 );
 const CreateLawAndRegulationPage = lazy(
-  () => import('@/features/appraisal/pages/CreateLawAndRegulationPage')
+  () => import('@/features/appraisal/pages/CreateLawAndRegulationPage'),
 );
 const LandBuildingPMAPage = lazy(() => import('@/features/appraisal/pages/LandBuildingPMAPage'));
 const CondoPMAPage = lazy(() => import('@/features/appraisal/pages/CondoPMAPage'));
 const PricingAnalysisPage = lazy(
-  () => import('@features/pricingAnalysis/pages/PricingAnalysisPage')
+  () => import('@features/pricingAnalysis/pages/PricingAnalysisPage'),
 );
 const MarketComparableFactorListPage = lazy(
-  () => import('@features/templateManagement/pages/MarketComparableFactorListPage')
+  () => import('@features/templateManagement/pages/MarketComparableFactorListPage'),
 );
 const MarketComparableTemplateListPage = lazy(
-  () => import('@features/templateManagement/pages/MarketComparableTemplateListPage')
+  () => import('@features/templateManagement/pages/MarketComparableTemplateListPage'),
 );
 const MarketComparableTemplateDetailPage = lazy(
-  () => import('@features/templateManagement/pages/MarketComparableTemplateDetailPage')
+  () => import('@features/templateManagement/pages/MarketComparableTemplateDetailPage'),
 );
 const ComparativeTemplateListPage = lazy(
-  () => import('@features/templateManagement/pages/ComparativeTemplateListPage')
+  () => import('@features/templateManagement/pages/ComparativeTemplateListPage'),
 );
 const ComparativeTemplateDetailPage = lazy(
-  () => import('@features/templateManagement/pages/ComparativeTemplateDetailPage')
+  () => import('@features/templateManagement/pages/ComparativeTemplateDetailPage'),
 );
 const DecisionSummaryPage = lazy(() => import('@/features/appraisal/pages/DecisionSummaryPage'));
-const ActivityTrackingPage = lazy(
-  () => import('@/features/appraisal/pages/ActivityTrackingPage')
-);
+const ActivityTrackingPage = lazy(() => import('@/features/appraisal/pages/ActivityTrackingPage'));
 const CreateMachineryPage = lazy(() => import('@/features/appraisal/pages/CreateMachineryPage'));
 const CreateLeaseAgreementLandPage = lazy(
-  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandPage')
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandPage'),
 );
 const CreateLeaseAgreementBuildingPage = lazy(
-  () => import('@/features/appraisal/pages/CreateLeaseAgreementBuildingPage')
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementBuildingPage'),
 );
 const CreateLeaseAgreementLandBuildingPage = lazy(
-  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage')
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementLandBuildingPage'),
 );
 const CreateLeaseAgreementCondoPage = lazy(
-  () => import('@/features/appraisal/pages/CreateLeaseAgreementCondoPage')
+  () => import('@/features/appraisal/pages/CreateLeaseAgreementCondoPage'),
 );
 const AppraisalListPage = lazy(() => import('@/features/appraisal/pages/AppraisalListPage'));
 const Appraisal360Page = lazy(() => import('@/features/appraisal/pages/Appraisal360Page'));
 const WorkflowBuilderPage = lazy(
-  () => import('@features/workflowBuilder/pages/WorkflowBuilderPage')
+  () => import('@features/workflowBuilder/pages/WorkflowBuilderPage'),
 );
 const ProvideDocumentsTaskPage = lazy(
-  () => import('@/features/document-followup/pages/ProvideDocumentsTaskPage')
+  () => import('@/features/document-followup/pages/ProvideDocumentsTaskPage'),
 );
 const FeeAppointmentApprovalTaskPage = lazy(
-  () => import('@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage')
+  () => import('@/features/feeAppointmentApproval/pages/FeeAppointmentApprovalTaskPage'),
 );
 const FeeApprovalTierPage = lazy(
-  () => import('@/features/feeApprovalConfig/pages/FeeApprovalTierPage')
+  () => import('@/features/feeApprovalConfig/pages/FeeApprovalTierPage'),
 );
 const AppointmentApprovalRulePage = lazy(
-  () => import('@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage')
+  () => import('@/features/feeApprovalConfig/pages/AppointmentApprovalRulePage'),
 );
 const FeeStructurePage = lazy(
-  () => import('@/features/feeStructureMaintenance/pages/FeeStructurePage')
+  () => import('@/features/feeStructureMaintenance/pages/FeeStructurePage'),
 );
 const PasswordPolicyConfigPage = lazy(
-  () => import('@/features/userManagement/admin/pages/PasswordPolicyConfigPage')
+  () => import('@/features/userManagement/admin/pages/PasswordPolicyConfigPage'),
 );
 const EvaluationConfigPage = lazy(
-  () => import('@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage')
+  () => import('@/features/serviceQualityEvaluation/admin/pages/EvaluationConfigPage'),
 );
 const SlaConfigPage = lazy(() => import('@/features/slaConfig/pages/SlaConfigPage'));
 const WorkflowListPage = lazy(() => import('@features/workflowBuilder/pages/WorkflowListPage'));
 const MigrateInstancesPage = lazy(
-  () => import('@features/workflowBuilder/pages/MigrateInstancesPage')
+  () => import('@features/workflowBuilder/pages/MigrateInstancesPage'),
 );
 const PermissionListPage = lazy(() => import('@features/userManagement/pages/PermissionListPage'));
 const RoleListPage = lazy(() => import('@features/userManagement/pages/RoleListPage'));
@@ -149,39 +150,39 @@ const CommitteeAdminPage = lazy(() => import('@/features/committee/pages/Committ
 const MenuListPage = lazy(() => import('@features/menuManagement/pages/MenuListPage'));
 const MenuEditPage = lazy(() => import('@features/menuManagement/pages/MenuEditPage'));
 const CollateralCatalogPage = lazy(
-  () => import('@/features/collateralMaster/pages/CollateralCatalogPage')
+  () => import('@/features/collateralMaster/pages/CollateralCatalogPage'),
 );
 const CollateralMasterDetailPage = lazy(
-  () => import('@/features/collateralMaster/pages/CollateralMasterDetailPage')
+  () => import('@/features/collateralMaster/pages/CollateralMasterDetailPage'),
 );
 const BackfillReportPage = lazy(
-  () => import('@/features/collateralMaster/pages/BackfillReportPage')
+  () => import('@/features/collateralMaster/pages/BackfillReportPage'),
 );
 const BackfillHostCollateralIdPage = lazy(
-  () => import('@/features/collateralMaster/pages/BackfillHostCollateralIdPage')
+  () => import('@/features/collateralMaster/pages/BackfillHostCollateralIdPage'),
 );
 const QuotationSelectionPage = lazy(
-  () => import('@/features/quotation/pages/QuotationSelectionPage')
+  () => import('@/features/quotation/pages/QuotationSelectionPage'),
 );
 const QuotationListingPage = lazy(() => import('@/features/quotation/pages/QuotationListingPage'));
 const NewQuotationPage = lazy(() => import('@/features/quotation/pages/NewQuotationPage'));
 const ExtCompanyInvitationListPage = lazy(
-  () => import('@/features/quotation/pages/ExtCompanyInvitationListPage')
+  () => import('@/features/quotation/pages/ExtCompanyInvitationListPage'),
 );
 const ExtCompanySubmitQuotationPage = lazy(
-  () => import('@/features/quotation/pages/ExtCompanySubmitQuotationPage')
+  () => import('@/features/quotation/pages/ExtCompanySubmitQuotationPage'),
 );
 const AdminQuotationTaskPage = lazy(
-  () => import('@/features/quotation/pages/AdminQuotationTaskPage')
+  () => import('@/features/quotation/pages/AdminQuotationTaskPage'),
 );
 const AdminCompanyQuotationDetailPage = lazy(
-  () => import('@/features/quotation/pages/AdminCompanyQuotationDetailPage')
+  () => import('@/features/quotation/pages/AdminCompanyQuotationDetailPage'),
 );
 const ServiceQualityEvaluationListPage = lazy(
-  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage')
+  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationListPage'),
 );
 const ServiceQualityEvaluationDetailPage = lazy(
-  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage')
+  () => import('@/features/serviceQualityEvaluation/pages/ServiceQualityEvaluationDetailPage'),
 );
 const ExtInvoiceListPage = lazy(() => import('@/features/invoice/pages/ExtInvoiceListPage'));
 const ExtCreateInvoicePage = lazy(() => import('@/features/invoice/pages/ExtCreateInvoicePage'));
@@ -190,10 +191,10 @@ const IntInvoiceListPage = lazy(() => import('@/features/invoice/pages/IntInvoic
 const IntInvoiceDetailPage = lazy(() => import('@/features/invoice/pages/IntInvoiceDetailPage'));
 const IntBulkPaymentPage = lazy(() => import('@/features/invoice/pages/IntBulkPaymentPage'));
 const WebhookDeliveryListPage = lazy(
-  () => import('@features/webhookAdmin/pages/WebhookDeliveryListPage')
+  () => import('@features/webhookAdmin/pages/WebhookDeliveryListPage'),
 );
 const WebhookSubscriptionListPage = lazy(
-  () => import('@features/webhookAdmin/pages/WebhookSubscriptionListPage')
+  () => import('@features/webhookAdmin/pages/WebhookSubscriptionListPage'),
 );
 const OAuthClientListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthClientListPage'));
 const OAuthScopeListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthScopeListPage'));
@@ -201,76 +202,76 @@ const OAuthTokenListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthTo
 const LogViewerPage = lazy(() => import('@features/common/logViewer/pages/LogViewerPage'));
 const SupportingDataMaintenanceDetailListPage = lazy(() =>
   import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceDetailListPage').then(
-    m => ({ default: m.SupportingDataMaintenanceDetailListPage })
-  )
+    m => ({ default: m.SupportingDataMaintenanceDetailListPage }),
+  ),
 );
 const ReappraisalListPage = lazy(() => import('@/features/reappraisal/pages/ReappraisalListPage'));
 const ReappraisalDetailPage = lazy(
-  () => import('@/features/reappraisal/pages/ReappraisalDetailPage')
+  () => import('@/features/reappraisal/pages/ReappraisalDetailPage'),
 );
 const GenerateReappraisalTestPage = lazy(
-  () => import('@/features/reappraisal/pages/GenerateReappraisalTestPage')
+  () => import('@/features/reappraisal/pages/GenerateReappraisalTestPage'),
 );
 const TaskMonitorPage = lazy(() => import('@/features/taskMonitor/pages/TaskMonitorPage'));
 const PersonTasksPage = lazy(() => import('@/features/taskMonitor/pages/PersonTasksPage'));
 const MonitoringPage = lazy(() => import('@/features/common/monitoring/pages/MonitoringPage'));
 const HistorySearchPage = lazy(
-  () => import('@/features/common/historySearch/pages/HistorySearchPage')
+  () => import('@/features/common/historySearch/pages/HistorySearchPage'),
 );
 const BlockUnitMaintenancePage = lazy(
-  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage')
+  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenancePage'),
 );
 const BlockUnitMaintenanceDetailPage = lazy(
-  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage')
+  () => import('@/features/blockUnitMaintenance/pages/BlockUnitMaintenanceDetailPage'),
 );
 const BlockReappraisalListPage = lazy(
-  () => import('@/features/blockReappraisal/pages/BlockReappraisalListPage')
+  () => import('@/features/blockReappraisal/pages/BlockReappraisalListPage'),
 );
 const BlockReappraisalDetailPage = lazy(
-  () => import('@/features/blockReappraisal/pages/BlockReappraisalDetailPage')
+  () => import('@/features/blockReappraisal/pages/BlockReappraisalDetailPage'),
 );
 const AppraisalDataCorrectionSearchPage = lazy(
-  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionSearchPage')
+  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionSearchPage'),
 );
 const AppraisalDataCorrectionDetailPage = lazy(
-  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionDetailPage')
+  () => import('@/features/appraisalDataCorrection/pages/AppraisalDataCorrectionDetailPage'),
 );
 const SupportingDataMaintenanceListPage = lazy(() =>
-  import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(m => ({
-    default: m.SupportingDataMaintenanceListPage,
-  }))
+  import('@/features/supportingDataMaintenance/pages/SupportingDataMaintenanceListPage').then(
+    m => ({
+      default: m.SupportingDataMaintenanceListPage,
+    }),
+  ),
 );
 const CreateSupportingDataPage = lazy(() =>
   import('@/features/supportingDataMaintenance/pages/CreateSupportingDataPage').then(m => ({
     default: m.CreateSupportingDataPage,
-  }))
+  })),
 );
 const StepValidationRulesPage = lazy(
-  () => import('@features/workflowAdmin/pages/StepValidationRulesPage')
+  () => import('@features/workflowAdmin/pages/StepValidationRulesPage'),
 );
 const TaskAssignmentConfigPage = lazy(
-  () => import('@features/workflowAssignmentConfig/pages/TaskAssignmentConfigPage')
+  () => import('@features/workflowAssignmentConfig/pages/TaskAssignmentConfigPage'),
 );
 const CompanyRoundRobinConfigPage = lazy(
-  () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage')
+  () => import('@features/companyRoundRobinConfig/pages/CompanyRoundRobinConfigPage'),
 );
 const JobSchedulesPage = lazy(() => import('@features/jobSchedules/pages/JobSchedulesPage'));
 const HangfireDashboardPage = lazy(() => import('@features/hangfire/pages/HangfireDashboardPage'));
-const AddressMasterPage = lazy(
-  () => import('@features/addressMaster/pages/AddressMasterPage')
-);
+const AddressMasterPage = lazy(() => import('@features/addressMaster/pages/AddressMasterPage'));
 const ReportTestPage = lazy(() => import('@features/reportGeneration/pages/ReportTestPage'));
 const OperationalReportRoute = lazy(
-  () => import('@features/common/operationalReports/pages/OperationalReportRoute')
+  () => import('@features/common/operationalReports/pages/OperationalReportRoute'),
 );
 const ParameterMaintenancePage = lazy(
-  () => import('@/features/parameterMaintenance/pages/ParameterMaintenancePage')
+  () => import('@/features/parameterMaintenance/pages/ParameterMaintenancePage'),
 );
 const ParameterDetailPage = lazy(
-  () => import('@/features/parameterMaintenance/pages/ParameterDetailPage')
+  () => import('@/features/parameterMaintenance/pages/ParameterDetailPage'),
 );
 const DocumentRequirementsPage = lazy(
-  () => import('@/features/documentRequirementsMaintenance/pages/DocumentRequirementsPage')
+  () => import('@/features/documentRequirementsMaintenance/pages/DocumentRequirementsPage'),
 );
 
 /**
@@ -617,17 +618,13 @@ export const router = createBrowserRouter([
           // Task assignment overrides — gated by WORKFLOW_ADMIN permission
           {
             path: 'workflow-assignment-config',
-            element: (
-              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
-            ),
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />,
             children: [{ index: true, element: <TaskAssignmentConfigPage /> }],
           },
           // External-company round-robin pools — gated by WORKFLOW_ADMIN permission
           {
             path: 'workflow-roundrobin-config',
-            element: (
-              <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />
-            ),
+            element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="WORKFLOW_ADMIN" />,
             children: [{ index: true, element: <CompanyRoundRobinConfigPage /> }],
           },
           // Title (Land Dept) and DOPA geocode hierarchies
@@ -841,15 +838,13 @@ export const router = createBrowserRouter([
       },
       {
         path: 'property-pma',
+        // Same shape as 'property' above, so the PMA screen behaves the same way.
+        element: (
+          <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
+            <PropertyInformationPage />
+          </AppraisalReadOnlyWrapper>
+        ),
         children: [
-          {
-            index: true,
-            element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
-                <PropertyInformationPage />
-              </AppraisalReadOnlyWrapper>
-            ),
-          },
           {
             path: 'condo/:propertyId',
             element: (
@@ -870,12 +865,23 @@ export const router = createBrowserRouter([
       },
       {
         path: 'property',
+        // The tab page is the parent, not a sibling: every property editor below renders into
+        // its <Outlet/>, which is what lets the split view keep its list on the left while a
+        // form is open on the right. On the index path the outlet is empty and the page looks
+        // exactly as it did; in the other view modes the page hands the whole area to the
+        // outlet, so nothing about those changes either.
+        element: (
+          <AppraisalReadOnlyWrapper pageName="Property Information">
+            <PropertyInformationPage />
+          </AppraisalReadOnlyWrapper>
+        ),
         children: [
           {
-            index: true,
+            // The appraisal-level machinery summary, opened from the strip on the Properties tab.
+            path: 'machinery-summary',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <PropertyInformationPage />
+                <MachinerySummaryPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
@@ -1327,15 +1333,14 @@ export const router = createBrowserRouter([
       },
       {
         path: 'property-pma',
+        // Same shape as 'property' below: the tab page is the parent, the editors are its
+        // children, so the split view can host a form without losing its list.
+        element: (
+          <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
+            <PropertyInformationPage />
+          </AppraisalReadOnlyWrapper>
+        ),
         children: [
-          {
-            index: true,
-            element: (
-              <AppraisalReadOnlyWrapper pageName="Property Information (PMA)">
-                <PropertyInformationPage />
-              </AppraisalReadOnlyWrapper>
-            ),
-          },
           {
             path: 'condo/new',
             element: (
@@ -1372,12 +1377,19 @@ export const router = createBrowserRouter([
       },
       {
         path: 'property',
+        // The tab page is the parent; every editor below renders into its <Outlet/>.
+        element: (
+          <AppraisalReadOnlyWrapper pageName="Property Information">
+            <PropertyInformationPage />
+          </AppraisalReadOnlyWrapper>
+        ),
         children: [
           {
-            index: true,
+            // The appraisal-level machinery summary, opened from the strip on the Properties tab.
+            path: 'machinery-summary',
             element: (
               <AppraisalReadOnlyWrapper pageName="Property Information">
-                <PropertyInformationPage />
+                <MachinerySummaryPage />
               </AppraisalReadOnlyWrapper>
             ),
           },
