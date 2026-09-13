@@ -147,7 +147,7 @@ function Layout() {
 
           <div className="flex-1 flex min-h-0 min-w-0">
             {/* Main Content */}
-            <main className="py-4 flex-1 flex flex-col min-h-0 min-w-0 pr-4">
+            <main className="py-4 has-[[data-page-actions]]:pb-0 flex-1 flex flex-col min-h-0 min-w-0 pr-4">
               <div className="px-4 sm:px-6 lg:px-6 flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
                 <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
                 <div className="flex-1 min-h-0 min-w-0 overflow-y-auto">

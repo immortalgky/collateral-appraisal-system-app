@@ -2605,6 +2605,9 @@ const PropertyGroupItemDto = z
     conditionUse: z.string().nullable(),
     dimension: z.string().nullable(),
     location: z.string().nullable(),
+    buildingType: z.string().nullable(),
+    buildingTypeOther: z.string().nullable(),
+    numberOfFloors: z.number().nullable(),
     latitude: z.number().nullable(),
     longitude: z.number().nullable(),
     isRentedOut: z.boolean().nullable(),
@@ -3813,6 +3816,12 @@ const AppraisalComparableDto = z
     comparableSaleDate: z.string().datetime({ offset: true }).nullable(),
     comparableOfferPriceUnit: z.string().nullable(),
     comparableSalePriceUnit: z.string().nullable(),
+    comparableLatitude: z.number().nullable(),
+    comparableLongitude: z.number().nullable(),
+    comparableLandAreaSqWa: z.number().nullable(),
+    comparablePlotLocation: z.string().nullable(),
+    comparableThumbnailDocumentId: z.string().uuid().nullable(),
+    usedInMethods: z.string().nullable(),
     adjustments: z.array(ComparableAdjustmentDto),
   })
   .partial()

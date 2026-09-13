@@ -769,8 +769,76 @@
     "noGroupsHint": "Click \"Add New Group\" to create your first group",
     "loadError": "Failed to load property groups",
     "loadErrorHint": "Please try refreshing the page",
-    "viewGrid": "Grid",
-    "viewList": "List",
+    "stackColumns": {
+      "machine": "Machine",
+      "registrationNumber": "Registration no.",
+      "registrationStatus": "Registration",
+      "brandModel": "Brand / model"
+    },
+    "registeredCount": "Registered {{registered}}/{{total}}",
+    "itemCount": "{{n}} items",
+    "splitView": {
+      "openEditor": "Open editor",
+      "selectHint": "Pick a property from the list",
+      "photoCount": "{{n}} photos",
+      "noPhotos": "No photos yet",
+      "rowHint": "Double-click to edit · right-click for more",
+      "emptyHint": "No properties yet — add one from a group on the left.",
+      "emptyReadOnly": "No properties yet."
+    },
+    "toolbar": {
+      "groups": "groups",
+      "properties": "properties"
+    },
+    "picker": {
+      "title": "Pick a property type",
+      "own": "Freehold",
+      "lease": "Leasehold",
+      "other": "Other",
+      "soon": "Coming soon",
+      "addShort": "Add",
+      "leaseSuffix": "(lease)"
+    },
+    "units": {
+      "sqm": "Sq.M",
+      "sqwa": "Sq.Wa",
+      "raiNganWa": "Rai"
+    },
+    "viewModes": {
+      "rows": "List",
+      "cards": "Cards",
+      "table": "Table",
+      "split": "Split"
+    },
+    "notSet": "Location not set",
+    "coordsNotSet": "Coordinates not set",
+    "openInGoogleMaps": "Open in Google Maps",
+    "addToGroup": "Add property to group",
+    "dropHere": "Drop properties here, or add one below",
+    "renameHint": "Click to rename",
+    "groupActions": "Group actions",
+    "renameGroup": "Rename group",
+    "deleteGroup": "Delete group",
+    "pricingAnalysis": "Pricing Analysis",
+    "dragToReorder": "Drag to reorder within the group, or drop on another group to move",
+    "pricing": {
+      "done": "Priced",
+      "todo": "Not priced",
+      "inProgress": "In progress"
+    },
+    "stack": {
+      "collapse": "Collapse"
+    },
+    "table": {
+      "image": "Image",
+      "property": "Property",
+      "type": "Type",
+      "area": "Area",
+      "location": "Location",
+      "coordinates": "Coordinates",
+      "actions": "Actions",
+      "buildingType": "Building type"
+    },
     "contextMenu": {
       "view": "View",
       "edit": "Edit",
@@ -797,6 +865,32 @@
       "propertyMoveFailed": "Failed to move property",
       "propertyPasteFailed": "Failed to paste property",
       "reorderFailed": "Failed to reorder properties"
+    },
+    "floorCount": "{{n}} fl.",
+    "machinerySummary": {
+      "title": "Machinery summary",
+      "status": {
+        "none": "Not saved yet",
+        "done": "Saved",
+        "drift": "Counts out of date"
+      },
+      "hint": {
+        "none": "This appraisal has {{n}} machines — save a summary",
+        "drift": "Saved → counted from the machine list now"
+      },
+      "actions": {
+        "start": "Start summary",
+        "open": "Open summary",
+        "review": "Review summary"
+      },
+      "counts": {
+        "surveyedNumber": "Surveyed",
+        "appraisalNumber": "Appraised",
+        "installedAndUseCount": "Installed",
+        "appraisalScrapCount": "Scrap",
+        "appraisedByDocumentCount": "By document",
+        "notInstalledCount": "Not installed"
+      }
     }
   },
   "view360": {
@@ -1241,7 +1335,93 @@
       "deleted": "Photo deleted",
       "deleteFailed": "Failed to delete photo",
       "updated": "Photo updated",
-      "updateFailed": "Failed to update photo"
+      "updateFailed": "Failed to update photo",
+      "addedToTopic": "Added {{n}} photos to “{{topic}}”"
+    },
+    "summary": "{{total}} photos · {{used}} used in the report",
+    "filters": {
+      "all": "All",
+      "used": "Used",
+      "unused": "Not used"
+    },
+    "searchPlaceholder": "Search captions or file names",
+    "upload": "Upload photos",
+    "layout": {
+      "label": "Arrange",
+      "type": "By type",
+      "flat": "All together"
+    },
+    "sort": {
+      "label": "Sort by",
+      "newest": "Newest upload",
+      "oldest": "Oldest upload",
+      "name": "File name"
+    },
+    "view": {
+      "grid": "Grid",
+      "list": "List"
+    },
+    "selectAll": "Select all",
+    "types": {
+      "property": "Property photos",
+      "general": "General photos",
+      "law_regulation": "Laws & documents",
+      "other": "Other"
+    },
+    "typeCount": "{{n}} photos",
+    "uploading": "Uploading {{n}} files…",
+    "processing": "Processing…",
+    "drop": {
+      "title": "Drop photos here",
+      "hint": "Release to upload"
+    },
+    "uploadTile": {
+      "title": "Upload",
+      "hint": "or drop photos anywhere on this page"
+    },
+    "empty": {
+      "title": "No photos yet",
+      "hint": "Upload photos from your device or drop them here."
+    },
+    "noResults": {
+      "title": "No photos match",
+      "hint": "Try another search or filter",
+      "clear": "Clear filters"
+    },
+    "showing": "Showing {{shown}} of {{total}}",
+    "bulk": {
+      "selected": "{{n}} selected",
+      "addToTopic": "Add to topic",
+      "linkToProperty": "Link to property",
+      "delete": "Delete",
+      "clear": "Clear selection",
+      "noTopics": "No topics yet — create one on the Photos tab"
+    },
+    "deleteOne": {
+      "title": "Delete photo",
+      "message": "Delete this photo? This can't be undone."
+    },
+    "deleteMany": {
+      "title": "Delete selected photos",
+      "message": "Delete {{n}} selected photos? This can't be undone."
+    },
+    "confirmDelete": "Delete",
+    "cancel": "Cancel",
+    "link": {
+      "title": "Link to property",
+      "hint": "Choose the property these photos show",
+      "none": "No properties yet",
+      "confirm": "Link photos"
+    },
+    "grid": {
+      "used": "Used",
+      "unused": "Not used",
+      "noCaption": "No caption yet",
+      "select": "Select photo",
+      "deselect": "Deselect photo",
+      "edit": "Edit",
+      "delete": "Delete",
+      "empty": "No photos"
     }
   },
   "search": {
@@ -1268,6 +1448,43 @@
       "saveFailed": "Failed to save record",
       "deleted": "Record deleted",
       "deleteFailed": "Failed to delete record"
+    },
+    "count": "{{n}} items for this property",
+    "noImages": "No images",
+    "actions": {
+      "menu": "Actions",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "deleteConfirm": {
+      "title": "Delete item",
+      "message": "Delete this item? This can't be undone."
+    },
+    "loadError": "Couldn't load laws and regulations",
+    "editor": {
+      "headerLabel": "Header",
+      "remarkLabel": "Details",
+      "images": "Images",
+      "photoCount": "{{n}} photos",
+      "missingCount": "{{n}} missing",
+      "dragHint": "Drag to reorder",
+      "captionPlaceholder": "Caption for this item…",
+      "captionLabel": "Caption of photo {{n}}",
+      "noCaption": "No caption",
+      "missingTitle": "Removed from the gallery",
+      "missingHint": "This item still points to it",
+      "missingNoImage": "Nothing to show",
+      "remove": "Remove",
+      "removeAria": "Remove from this item",
+      "upload": "Upload",
+      "fromGallery": "Choose from gallery",
+      "dropHere": "Drop files here, or",
+      "emptyTitle": "No images yet",
+      "emptyHint": "e.g. a zoning map, an announcement, or a related photo",
+      "emptyReadOnly": "This item has no images",
+      "dropTitle": "Drop to add as images",
+      "dropSub": "They also go into this appraisal's gallery",
+      "saved": "Saved"
     }
   },
   "markets": {
@@ -1288,6 +1505,82 @@
       "saveFailed": "Failed to save market comparable",
       "deleted": "Market comparable deleted",
       "deleteFailed": "Failed to delete market comparable"
+    },
+    "count": "{{n}} in this appraisal",
+    "findOnMap": "Find on map",
+    "create": "New comparable",
+    "viewModes": {
+      "list": "List",
+      "map": "Map"
+    },
+    "summary": {
+      "median": "Median",
+      "nearest": "Nearest to subject",
+      "latest": "Latest data",
+      "used": "Used in pricing",
+      "usedValue": "{{used}} of {{total}}",
+      "count": "{{n}} items",
+      "noUnit": "No unit",
+      "medianValue": "med {{price}}"
+    },
+    "meta": {
+      "distance": "{{d}} away"
+    },
+    "flags": {
+      "stale": "Data {{age}} old",
+      "noLocation": "No coordinates"
+    },
+    "price": {
+      "saleOnly": "Sale price",
+      "offerOnly": "Asking price",
+      "offer": "Asking {{price}}"
+    },
+    "usedIn": "In {{method}}",
+    "methods": {
+      "WQS": "WQS",
+      "SaleGrid": "Sale Grid",
+      "DirectComparison": "Direct Comparison"
+    },
+    "units": {
+      "01": "THB/sq.wa",
+      "02": "THB/sq.m",
+      "03": "THB/unit",
+      "04": "THB/day",
+      "05": "THB/month",
+      "06": "THB/year"
+    },
+    "age": {
+      "today": "today",
+      "days": "{{n}} days",
+      "weeks": "{{n}} weeks",
+      "months": "{{n}} months",
+      "years": "{{n}} years"
+    },
+    "ago": "{{age}} ago",
+    "distance": {
+      "m": "{{n}} m",
+      "km": "{{n}} km"
+    },
+    "actions": {
+      "menu": "Actions",
+      "open": "Open",
+      "copy": "Duplicate",
+      "delete": "Delete"
+    },
+    "deleteConfirm": {
+      "title": "Remove comparable",
+      "message": "Remove this comparable from the appraisal?",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "loadError": "Couldn't load market comparables",
+    "loadErrorHint": "Please try again",
+    "map": {
+      "subject": "Property being appraised",
+      "comparable": "Comparable",
+      "noLocation": "{{n}} without coordinates are not on the map",
+      "rings": "Distance from subject",
+      "unavailable": "Map unavailable"
     }
   },
   "constructionInspection": {
@@ -1467,7 +1760,9 @@
     "marketComparableDeleted": "Market comparable deleted successfully",
     "marketComparableDeleteFailed": "Failed to delete market comparable",
     "appraisalReportNotAvailable": "No appraisal report is attached to this appraisal yet.",
-    "appraisalSummaryNotAvailable": "No appraisal summary is attached to this appraisal yet."
+    "appraisalSummaryNotAvailable": "No appraisal summary is attached to this appraisal yet.",
+    "topicReorderFailed": "Couldn't save the whole topic order — please check it.",
+    "topicUpdateFailed": "Couldn't save the topic — please check it."
   },
   "common": {
     "unsavedChanges": "Unsaved changes",
@@ -1886,5 +2181,157 @@
     "blockedOnSubmit": "Record the external appraisal company and the appraisal date from its book before submitting.",
     "outstandingBoth": "Record appraisal company & date",
     "outstandingDate": "Record appraisal date"
+  },
+  "photoTopics": {
+    "title": "Report photo topics",
+    "summary": "{{topics}} topics · {{photos}} photos",
+    "dragHint": "Drag to reorder in the report",
+    "photoCount": "{{n}} photos",
+    "columnsShort": "{{n}} col",
+    "add": "Add topic",
+    "namePlaceholder": "Topic name…",
+    "save": "Add",
+    "cancel": "Cancel",
+    "rename": "Rename topic",
+    "delete": "Delete topic",
+    "unplaced": "{{n}} photos aren't in any topic",
+    "unplacedAction": "Add",
+    "columnsLabel": "Columns in the report",
+    "fromGallery": "Add from gallery",
+    "upload": "Upload",
+    "pagePreview": "Report page · {{n}} columns",
+    "empty": {
+      "title": "No topics yet",
+      "hint": "Create topics to arrange photos for the report"
+    },
+    "selectTopic": {
+      "title": "Pick a topic",
+      "hint": "Choose a topic on the left to see its photos"
+    },
+    "topicEmpty": "No photos in this topic yet",
+    "drop": {
+      "title": "Drop photos here",
+      "hint": "They will be added to “{{topic}}”"
+    },
+    "loading": "Loading photos…",
+    "loadError": "Couldn't load photos",
+    "loadTopicsError": "Couldn't load topics",
+    "loadGalleryError": "Couldn't load gallery photos",
+    "deleteTopic": {
+      "title": "Delete topic",
+      "message": "Delete “{{name}}”? Its photos stay in the gallery but leave this topic."
+    },
+    "removePhoto": {
+      "title": "Remove photo",
+      "message": "Remove “{{name}}” from this topic?"
+    },
+    "confirmDelete": "Delete",
+    "confirmRemove": "Remove",
+    "preview": "Preview",
+    "previewShow": "Show the report page preview",
+    "previewHide": "Hide the report page preview"
+  },
+  "editorHeader": {
+    "tabsLabel": "Property sections",
+    "cover": "Cover",
+    "addPhoto": "Add photo",
+    "addFirstPhoto": "Add the first photo",
+    "firstIsCover": "The first photo becomes the cover",
+    "noPhotos": "No photos yet",
+    "viewAll": "View all {{n}}",
+    "newProperty": "New property",
+    "untitled": "No name yet",
+    "newHint": "Key details show here once saved",
+    "position": "{{group}} · item {{n}}",
+    "titleCount": "{{n}} title documents",
+    "titleNo": "Title {{no}}"
+  },
+  "breadcrumb": {
+    "tasks": "Tasks",
+    "appraisalSearch": "Appraisal search",
+    "appraisalList": "Appraisals",
+    "pricingAnalysis": "Pricing analysis",
+    "new": "New {{what}}",
+    "pages": {
+      "request": "Request Information",
+      "administration": "Administration",
+      "appointment": "Appointment & Fee",
+      "feeAppointmentApproval": "Fee & Appointment Approval",
+      "quotation": "Quotation",
+      "property": "Property Information",
+      "propertyPma": "Property Information (PMA)",
+      "blockCondo": "Property Information (Condo)",
+      "blockVillage": "Property Information (Village)",
+      "documents": "Document Checklist",
+      "provideDocuments": "Provide Documents",
+      "summary": "Summary & Decision",
+      "activityTracking": "Activity Tracking",
+      "summary360": "360 Summary"
+    },
+    "types": {
+      "land": "Land",
+      "building": "Building",
+      "condo": "Condominium",
+      "landBuilding": "Land & building",
+      "machinery": "Machinery",
+      "leaseLand": "Leasehold land",
+      "leaseBuilding": "Leasehold building",
+      "leaseLandBuilding": "Leasehold land & building",
+      "leaseCondo": "Leasehold condominium"
+    },
+    "things": {
+      "comparable": "market comparable",
+      "law": "law & regulation",
+      "tower": "tower",
+      "model": "model"
+    }
+  },
+  "marketEditor": {
+    "sectionsLabel": "Sections of the comparable",
+    "sections": {
+      "source": "Source",
+      "price": "Price",
+      "location": "Location",
+      "factors": "Survey factors",
+      "remark": "Remark"
+    },
+    "fields": {
+      "template": "Survey template",
+      "surveyName": "Comparable name",
+      "infoDateTime": "Information date / time",
+      "sourceInfo": "Source of information",
+      "sourcePlaceholder": "e.g. sale sign, agent, website",
+      "priceUnit": "Price unit",
+      "saleDate": "Sale date",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "other": "Other"
+    },
+    "price": {
+      "label": "Price",
+      "sale": "Sale price",
+      "offer": "Offer price",
+      "notSaved": "Not saved yet"
+    },
+    "location": {
+      "nearest": "The nearest appraised property is {{d}} away",
+      "noCoords": "No coordinates yet — it will not appear on the Markets map."
+    },
+    "factors": {
+      "count": "{{n}} items",
+      "empty": "Choose a survey template to show its factors."
+    },
+    "header": {
+      "newComparable": "New comparable",
+      "untitled": "Untitled",
+      "numberPending": "Number is assigned on save",
+      "copiedFrom": "Copied from {{number}} — saving creates a new number",
+      "position": "{{n}} of {{total}} in this appraisal"
+    },
+    "toasts": {
+      "updateFailed": "Could not update the market comparable. Please try again.",
+      "createFailed": "Could not create the market comparable. Please try again.",
+      "linkFailed": "The comparable was created but could not be linked to this appraisal."
+    }
   }
 }

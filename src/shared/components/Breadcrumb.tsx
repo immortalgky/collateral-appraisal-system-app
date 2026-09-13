@@ -30,7 +30,7 @@ function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode
           const isLast = index === items.length - 1;
 
           return (
-            <li key={item.href} className="flex items-center">
+            <li key={`${index}:${item.href}`} className="flex items-center">
               <Icon
                 name="chevron-right"
                 style="solid"
@@ -46,7 +46,10 @@ function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode
                   aria-current="page"
                 >
                   {item.icon && <Icon name={item.icon} style="solid" className="size-3.5" />}
-                  {item.label}
+                  {/* Names can be long (a property's address): cut, and shown whole on hover. */}
+                  <span className="max-w-[16rem] truncate" title={item.label}>
+                    {item.label}
+                  </span>
                 </span>
               ) : (
                 <Link
@@ -57,7 +60,10 @@ function Breadcrumb({ items, className = '' }: BreadcrumbProps): React.ReactNode
                   )}
                 >
                   {item.icon && <Icon name={item.icon} style="regular" className="size-3.5" />}
-                  {item.label}
+                  {/* Names can be long (a property's address): cut, and shown whole on hover. */}
+                  <span className="max-w-[16rem] truncate" title={item.label}>
+                    {item.label}
+                  </span>
                 </Link>
               )}
             </li>

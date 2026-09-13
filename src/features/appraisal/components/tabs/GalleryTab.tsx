@@ -1,12 +1,14 @@
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
-import ViewModeToggle, { type GalleryViewMode } from '../ViewModeToggle';
+import { SegmentedControl } from '@shared/components/SegmentedControl';
+import { useUIStore } from '@shared/store';
+import type { GallerySort } from '@shared/types';
 import { PhotoGridView, PhotoListView } from '../gallery';
 import PhotoPreviewModal from '../PhotoPreviewModal';
 import type { GalleryImage } from '../../types/gallery';
@@ -18,148 +20,125 @@ import {
   useLinkPhotoToProperty,
   useUpdateGalleryPhoto,
 } from '../../api/gallery';
+import { useAssignPhotoToTopic, useGetPhotoTopics } from '../../api/photo';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import PhotoEditModal from '../gallery/PhotoEditModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAuthStore } from '@features/auth/store';
+import type { PhotoTopicDtoType } from '@shared/schemas/v1';
 
-type SortOption = 'newest' | 'oldest' | 'name';
 type FilterStatus = 'all' | 'used' | 'unused';
 
-// Statistics Card Component
-const StatCard = ({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: number;
-  icon: string;
-  color: 'blue' | 'green' | 'orange' | 'gray';
-}) => {
-  const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    orange: 'bg-orange-50 text-orange-600',
-    gray: 'bg-gray-50 text-gray-600',
-  };
+/** The photo types the gallery groups by, in the order the report reads them. */
+const TYPE_ORDER = ['property', 'general', 'law_regulation'] as const;
+type TypeKey = (typeof TYPE_ORDER)[number] | 'other';
+const typeKeyOf = (photoType: string): TypeKey =>
+  (TYPE_ORDER as readonly string[]).includes(photoType) ? (photoType as TypeKey) : 'other';
 
-  return (
-    <div className="flex items-center gap-3 px-4 py-3 bg-white rounded-xl border border-gray-100">
-      <div
-        className={clsx(
-          'w-10 h-10 rounded-lg flex items-center justify-center',
-          colorClasses[color],
-        )}
-      >
-        <Icon name={icon} className="text-lg" />
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        <p className="text-xs text-gray-500">{label}</p>
-      </div>
-    </div>
-  );
-};
-
-// Filter Chip Component
-const FilterChip = ({
-  label,
-  isActive,
-  count,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  count?: number;
-  onClick: () => void;
-}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className={clsx(
-      'px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2',
-      isActive ? 'bg-primary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
-    )}
-  >
-    {label}
-    {count !== undefined && (
-      <span
-        className={clsx(
-          'px-1.5 py-0.5 rounded-full text-xs',
-          isActive ? 'bg-white/20' : 'bg-gray-200',
-        )}
-      >
-        {count}
-      </span>
-    )}
-  </button>
-);
+const LOCALES: Record<string, string> = { th: 'th-TH', zh: 'zh-CN', en: 'en-GB' };
 
 // Bulk Action Toolbar Component
 const BulkActionToolbar = ({
   selectedCount,
+  topics,
+  onAddToTopic,
   onDelete,
   onLinkToProperty,
   onDeselect,
 }: {
   selectedCount: number;
+  topics: PhotoTopicDtoType[];
+  onAddToTopic: (topic: PhotoTopicDtoType) => void;
   onDelete: () => void;
   onLinkToProperty: () => void;
   onDeselect: () => void;
-}) => (
-  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
-    <div className="flex items-center gap-4 px-6 py-3 bg-gray-900 text-white rounded-full shadow-xl">
-      <span className="text-sm font-medium">
-        {selectedCount} {selectedCount === 1 ? 'photo' : 'photos'} selected
-      </span>
-      <div className="w-px h-5 bg-gray-700" />
-      <button
-        type="button"
-        onClick={onLinkToProperty}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 transition-colors text-sm font-medium"
-      >
-        <Icon name="link" className="text-xs" />
-        Link to Property
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 transition-colors text-sm font-medium"
-      >
-        <Icon name="trash" className="text-xs" />
-        Delete
-      </button>
-      <button
-        type="button"
-        onClick={onDeselect}
-        className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
-      >
-        <Icon name="xmark" className="text-sm" />
-      </button>
+}) => {
+  const { t } = useTranslation('appraisal');
+  const action =
+    'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors hover:bg-white/10';
+  return (
+    <div className="fixed bottom-6 left-1/2 z-40 -translate-x-1/2">
+      <div className="flex items-center gap-1 rounded-xl bg-gray-900 py-1.5 pl-4 pr-1.5 text-white shadow-xl">
+        <span className="mr-2 text-sm font-medium tabular-nums">
+          {t('gallery.bulk.selected', { n: selectedCount })}
+        </span>
+        {/* Arranging the report's photos starts here as often as on the Photos tab — picking
+            them out of the whole gallery is easier than picking them out of a modal. */}
+        <Menu as="div" className="relative">
+          <MenuButton className={action}>
+            <Icon name="layer-group" style="solid" className="text-xs" />
+            {t('gallery.bulk.addToTopic')}
+            <Icon name="chevron-up" style="solid" className="text-[9px] opacity-70" />
+          </MenuButton>
+          <MenuItems
+            anchor={{ to: 'top start', gap: 8 }}
+            className="z-50 w-60 rounded-md bg-white py-1 text-gray-700 shadow-lg ring-1 ring-black/5 focus:outline-none"
+          >
+            {topics.length === 0 ? (
+              <div className="px-3 py-2 text-xs text-gray-400">{t('gallery.bulk.noTopics')}</div>
+            ) : (
+              topics.map(topic => (
+                <MenuItem key={topic.id}>
+                  {({ focus }) => (
+                    <button
+                      type="button"
+                      onClick={() => onAddToTopic(topic)}
+                      className={clsx(
+                        'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm',
+                        focus && 'bg-gray-50',
+                      )}
+                    >
+                      <span className="truncate">{topic.topicName}</span>
+                      <span className="shrink-0 text-xs tabular-nums text-gray-400">
+                        {topic.photoCount}
+                      </span>
+                    </button>
+                  )}
+                </MenuItem>
+              ))
+            )}
+          </MenuItems>
+        </Menu>
+        <button type="button" onClick={onLinkToProperty} className={action}>
+          <Icon name="link" className="text-xs" />
+          {t('gallery.bulk.linkToProperty')}
+        </button>
+        <button type="button" onClick={onDelete} className={clsx(action, 'text-red-300')}>
+          <Icon name="trash" className="text-xs" />
+          {t('gallery.bulk.delete')}
+        </button>
+        <button
+          type="button"
+          onClick={onDeselect}
+          aria-label={t('gallery.bulk.clear')}
+          className="rounded-lg p-2 transition-colors hover:bg-white/10"
+        >
+          <Icon name="xmark" className="text-sm" />
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Empty State Component
-const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => (
-  <div className="flex flex-col items-center justify-center py-16">
-    <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-      <Icon name="image" className="text-3xl text-gray-400" />
+const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => {
+  const { t } = useTranslation('appraisal');
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 py-14">
+      <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
+        <Icon name="image" className="text-2xl text-gray-400" />
+      </div>
+      <h3 className="mb-1 text-sm font-semibold text-gray-700">{t('gallery.empty.title')}</h3>
+      <p className="mb-5 max-w-sm text-center text-xs text-gray-500">{t('gallery.empty.hint')}</p>
+      <Button variant="primary" size="sm" onClick={onUpload}>
+        <Icon name="cloud-arrow-up" className="mr-2" />
+        {t('gallery.upload')}
+      </Button>
     </div>
-    <h3 className="text-lg font-semibold text-gray-900 mb-2">No photos yet</h3>
-    <p className="text-sm text-gray-500 mb-6 text-center max-w-sm">
-      Upload photos from your device or drag and drop them here to get started.
-    </p>
-    <Button variant="primary" onClick={onUpload}>
-      <Icon name="cloud-arrow-up" className="mr-2" />
-      Upload Photos
-    </Button>
-  </div>
-);
+  );
+};
 
 // Link to Property Modal
 const LinkToPropertyModal = ({
@@ -182,6 +161,7 @@ const LinkToPropertyModal = ({
     image?: string;
   }[];
 }) => {
+  const { t } = useTranslation('appraisal');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -190,13 +170,16 @@ const LinkToPropertyModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <button
+        type="button"
+        aria-label={t('gallery.cancel')}
+        className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Link to Property</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Select a property to use this photo as thumbnail
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900">{t('gallery.link.title')}</h3>
+          <p className="text-sm text-gray-500 mt-1">{t('gallery.link.hint')}</p>
         </div>
         <div className="p-6 max-h-96 overflow-y-auto">
           {properties.length === 0 ? (
@@ -204,7 +187,7 @@ const LinkToPropertyModal = ({
               <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                 <Icon name="building" className="text-2xl text-gray-400" />
               </div>
-              <p className="text-sm text-gray-500">No properties available</p>
+              <p className="text-sm text-gray-500">{t('gallery.link.none')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -259,7 +242,7 @@ const LinkToPropertyModal = ({
         </div>
         <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
+            {t('gallery.cancel')}
           </Button>
           <Button
             variant="primary"
@@ -272,7 +255,7 @@ const LinkToPropertyModal = ({
             isLoading={isLoading}
           >
             <Icon name="link" className="mr-2" />
-            Link Photo
+            {t('gallery.link.confirm')}
           </Button>
         </div>
       </div>
@@ -280,18 +263,26 @@ const LinkToPropertyModal = ({
   );
 };
 
+/**
+ * Every photo on the appraisal.
+ *
+ * One toolbar where there used to be three rows — statistics cards, a search row and a filter
+ * row — before the first photo. The filter carries the counts the cards used to show. Photos group
+ * by their type (property / general / law) or lie in one grid as before, in the same three sort
+ * orders as before; the choice is remembered with the rest of the UI preferences.
+ */
 export const GalleryTab = () => {
   const readOnly = usePageReadOnly();
-  const { t } = useTranslation('appraisal');
+  const { t, i18n } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
   const currentUser = useAuthStore(state => state.user);
   const { data: galleryData, isLoading } = useGetGalleryPhotos(appraisalId);
-  const [viewMode, setViewMode] = useState<GalleryViewMode>('grid');
+  const galleryPrefs = useUIStore(s => s.galleryPrefs);
+  const setGalleryPrefs = useUIStore(s => s.setGalleryPrefs);
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
   const [selectedImageIds, setSelectedImageIds] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [uploadingPhotos, setUploadingPhotos] = useState<
     Map<string, { file: File; progress: number }>
@@ -310,10 +301,20 @@ export const GalleryTab = () => {
   // API hooks
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
-  const { mutate: removeGalleryPhoto, isPending: isDeleting } = useRemoveGalleryPhoto();
-  const { mutate: linkPhotoToProperty, isPending: isLinking } = useLinkPhotoToProperty();
+  const {
+    mutate: removeGalleryPhoto,
+    mutateAsync: removeGalleryPhotoAsync,
+    isPending: isDeleting,
+  } = useRemoveGalleryPhoto();
+  const { mutateAsync: linkPhotoToProperty, isPending: isLinking } = useLinkPhotoToProperty();
   const { mutateAsync: updateGalleryPhoto, isPending: isUpdating } = useUpdateGalleryPhoto();
+  const { mutateAsync: assignPhotoToTopic } = useAssignPhotoToTopic();
   const { groups } = useEnrichedPropertyGroups(appraisalId);
+  const { data: topicsData } = useGetPhotoTopics(appraisalId);
+  const topics = useMemo(
+    () => [...(topicsData?.topics ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
+    [topicsData],
+  );
 
   /**
    * Get or create an upload session for photo uploads.
@@ -347,6 +348,12 @@ export const GalleryTab = () => {
     [galleryData],
   );
 
+  /** Topics each photo already belongs to — adding to one more must not drop the others. */
+  const topicIdsByPhoto = useMemo(
+    () => new Map((galleryData?.photos ?? []).map(p => [p.id, p.photoTopicIds ?? []])),
+    [galleryData],
+  );
+
   // Filter and sort images
   const filteredImages = useMemo(() => {
     let result = [...allImages];
@@ -370,7 +377,7 @@ export const GalleryTab = () => {
     }
 
     // Sort
-    switch (sortBy) {
+    switch (galleryPrefs.sort) {
       case 'newest':
         result.sort((a, b) => (b.uploadedAt?.getTime() || 0) - (a.uploadedAt?.getTime() || 0));
         break;
@@ -383,7 +390,22 @@ export const GalleryTab = () => {
     }
 
     return result;
-  }, [allImages, searchQuery, filterStatus, sortBy]);
+  }, [allImages, searchQuery, filterStatus, galleryPrefs.sort]);
+
+  /** One section per photo type, or a single untitled one when laid out together. */
+  const sections = useMemo(() => {
+    if (galleryPrefs.group === 'flat') {
+      return [{ key: 'all' as const, images: filteredImages }];
+    }
+    const byType = new Map<TypeKey, GalleryImage[]>();
+    for (const img of filteredImages) {
+      const key = typeKeyOf(img.photoType);
+      byType.set(key, [...(byType.get(key) ?? []), img]);
+    }
+    return [...TYPE_ORDER, 'other' as const]
+      .filter(key => byType.has(key))
+      .map(key => ({ key, images: byType.get(key) ?? [] }));
+  }, [filteredImages, galleryPrefs.group]);
 
   // Statistics
   const stats = useMemo(
@@ -393,6 +415,17 @@ export const GalleryTab = () => {
       unused: allImages.filter(img => !img.isInUse).length,
     }),
     [allImages],
+  );
+
+  /** The line under each caption: whatever the list is sorted by, so the order explains itself. */
+  const locale = LOCALES[i18n.resolvedLanguage ?? 'th'] ?? 'th-TH';
+  const metaText = useCallback(
+    (image: GalleryImage): string | null => {
+      if (galleryPrefs.sort === 'name') return image.fileName ?? null;
+      if (!image.uploadedAt) return null;
+      return `${image.uploadedAt.toLocaleDateString(locale, { day: 'numeric', month: 'short' })} ${image.uploadedAt.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}`;
+    },
+    [galleryPrefs.sort, locale],
   );
 
   const handleImageClick = (image: GalleryImage) => {
@@ -456,49 +489,55 @@ export const GalleryTab = () => {
     setBulkDeleteConfirm(true);
   };
 
-  const confirmBulkDelete = () => {
+  /**
+   * Deletes every selected photo, then reports once and closes the dialog.
+   *
+   * mutateAsync, not mutate: when several mutate() calls are in flight, TanStack Query runs the
+   * per-call callbacks of the last one only. The old version counted completions in those
+   * callbacks, so with three photos it counted one, never reached three, and left the dialog open
+   * after the photos were already gone.
+   */
+  const confirmBulkDelete = async () => {
     if (!appraisalId) return;
-    const idsToDelete = Array.from(selectedImageIds);
-    let deletedCount = 0;
-    let failedCount = 0;
+    const ids = Array.from(selectedImageIds);
+    const results = await Promise.allSettled(
+      ids.map(photoId => removeGalleryPhotoAsync({ appraisalId, photoId })),
+    );
+    const deleted = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - deleted;
+    if (failed === 0) {
+      toast.success(t('toasts.galleryPhotoDeletedCount', { count: deleted }));
+    } else {
+      toast.error(t('toasts.galleryPhotoDeletedPartial', { deleted, failed }));
+    }
+    setSelectedImageIds(new Set());
+    setBulkDeleteConfirm(false);
+  };
 
-    idsToDelete.forEach(id => {
-      removeGalleryPhoto(
-        { appraisalId, photoId: id },
-        {
-          onSuccess: () => {
-            deletedCount++;
-            if (deletedCount + failedCount === idsToDelete.length) {
-              if (failedCount === 0) {
-                toast.success(t('toasts.galleryPhotoDeletedCount', { count: deletedCount }));
-              } else {
-                toast.error(
-                  t('toasts.galleryPhotoDeletedPartial', {
-                    deleted: deletedCount,
-                    failed: failedCount,
-                  }),
-                );
-              }
-              setSelectedImageIds(new Set());
-              setBulkDeleteConfirm(false);
-            }
-          },
-          onError: () => {
-            failedCount++;
-            if (deletedCount + failedCount === idsToDelete.length) {
-              toast.error(
-                t('toasts.galleryPhotoDeletedPartial', {
-                  deleted: deletedCount,
-                  failed: failedCount,
-                }),
-              );
-              setSelectedImageIds(new Set());
-              setBulkDeleteConfirm(false);
-            }
-          },
-        },
-      );
-    });
+  /**
+   * Adds the selected photos to a topic, keeping whatever topics they were already in — adding
+   * is not moving. Photos already in the topic are counted and left alone.
+   */
+  const handleAddToTopic = async (topic: PhotoTopicDtoType) => {
+    if (!appraisalId) return;
+    let added = 0;
+    for (const photoId of selectedImageIds) {
+      const current = topicIdsByPhoto.get(photoId) ?? [];
+      if (current.includes(topic.id)) {
+        added++;
+        continue;
+      }
+      try {
+        await assignPhotoToTopic({ appraisalId, photoId, photoTopicIds: [...current, topic.id] });
+        added++;
+      } catch {
+        toast.error(t('toasts.photoAssignFailed'));
+      }
+    }
+    if (added > 0) {
+      toast.success(t('gallery.toasts.addedToTopic', { n: added, topic: topic.topicName }));
+    }
+    setSelectedImageIds(new Set());
   };
 
   // Flatten properties from groups for the link-to-property modal
@@ -525,44 +564,31 @@ export const GalleryTab = () => {
     setLinkToPropertyOpen(true);
   };
 
-  const confirmLinkToProperty = (propertyId: string) => {
+  /** Links every selected photo to the property — same all-settled shape as the bulk delete. */
+  const confirmLinkToProperty = async (propertyId: string) => {
     if (!appraisalId) return;
     const ids = Array.from(selectedImageIds);
-    let successCount = 0;
-    let failCount = 0;
-
-    ids.forEach(photoId => {
-      linkPhotoToProperty(
-        {
+    const results = await Promise.allSettled(
+      ids.map(photoId =>
+        linkPhotoToProperty({
           appraisalId,
           photoId,
           appraisalPropertyId: propertyId,
           photoPurpose: 'thumbnail',
           sectionReference: null,
           linkedBy: currentUser?.username ?? '',
-        },
-        {
-          onSuccess: () => {
-            successCount++;
-            if (successCount + failCount === ids.length) {
-              toast.success(t('toasts.photosLinkedToProperty', { count: successCount }));
-              setSelectedImageIds(new Set());
-              setLinkToPropertyOpen(false);
-            }
-          },
-          onError: () => {
-            failCount++;
-            if (successCount + failCount === ids.length) {
-              toast.error(
-                t('toasts.photosLinkedPartial', { success: successCount, failed: failCount }),
-              );
-              setSelectedImageIds(new Set());
-              setLinkToPropertyOpen(false);
-            }
-          },
-        },
-      );
-    });
+        }),
+      ),
+    );
+    const linked = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.length - linked;
+    if (failed === 0) {
+      toast.success(t('toasts.photosLinkedToProperty', { count: linked }));
+    } else {
+      toast.error(t('toasts.photosLinkedPartial', { success: linked, failed }));
+    }
+    setSelectedImageIds(new Set());
+    setLinkToPropertyOpen(false);
   };
 
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -730,174 +756,189 @@ export const GalleryTab = () => {
     );
   }
 
+  const allSelected = selectedImageIds.size === filteredImages.length && filteredImages.length > 0;
+  const uploadTile = readOnly ? undefined : (
+    <button
+      type="button"
+      onClick={() => fileInputRef.current?.click()}
+      className="flex aspect-[4/3] flex-col items-center justify-center gap-0.5 rounded-lg border-[1.5px] border-dashed border-gray-300 px-2 text-center text-[11px] text-gray-400 transition-colors hover:border-primary/50 hover:bg-primary-50/40"
+    >
+      <span className="text-xs font-semibold text-primary-700">
+        + {t('gallery.uploadTile.title')}
+      </span>
+      {t('gallery.uploadTile.hint')}
+    </button>
+  );
+
   return (
-    <div ref={dropZoneRef} className="flex flex-col gap-6 relative">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">Photo Gallery</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Manage all photos for this appraisal</p>
+    <div ref={dropZoneRef} className="relative flex flex-col gap-3">
+      {/* Both toolbar rows stay pinned while the photos scroll under them — filtering and
+          uploading are reached for from anywhere down a long gallery. Sticky rather than a
+          nested scroll box, so the page keeps its one scrollbar. */}
+      <div className="sticky top-0 z-20 flex flex-col gap-3 bg-white pb-2">
+        {/* Toolbar: title, filter-with-counts, search, upload */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="min-w-0">
+            <h3 className="text-sm font-semibold text-gray-900">{t('gallery.sectionTitle')}</h3>
+            <p className="text-xs text-gray-500">
+              {t('gallery.summary', { total: stats.total, used: stats.used })}
+            </p>
+          </div>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <SegmentedControl
+              options={[
+                {
+                  value: 'all',
+                  label: `${t('gallery.filters.all')} ${stats.total}`,
+                  icon: 'images',
+                },
+                {
+                  value: 'used',
+                  label: `${t('gallery.filters.used')} ${stats.used}`,
+                  icon: 'check',
+                },
+                {
+                  value: 'unused',
+                  label: `${t('gallery.filters.unused')} ${stats.unused}`,
+                  icon: 'clock',
+                },
+              ]}
+              value={filterStatus}
+              onChange={setFilterStatus}
+            />
+            <div className="relative">
+              <Icon
+                name="magnifying-glass"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-gray-400"
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={t('gallery.searchPlaceholder')}
+                className="w-56 rounded-lg border border-gray-200 bg-white py-1.5 pl-7 pr-7 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  aria-label={t('gallery.noResults.clear')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <Icon name="xmark" className="text-[11px]" />
+                </button>
+              )}
+            </div>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+              >
+                <Icon name="cloud-arrow-up" className="text-[11px]" />
+                {t('gallery.upload')}
+              </button>
+            )}
+            {!readOnly && (
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            )}
+          </div>
         </div>
 
-        {!readOnly && (
-          <Button variant="primary" size="sm" onClick={() => fileInputRef.current?.click()}>
-            <Icon name="cloud-arrow-up" className="mr-2" />
-            Upload Photos
-          </Button>
-        )}
-
-        {!readOnly && (
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".jpg,.jpeg,.png"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
+        {/* Arrangement: group or not, sort order, select all, grid or list */}
+        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <span>{t('gallery.layout.label')}</span>
+          <SegmentedControl
+            options={[
+              { value: 'type', label: t('gallery.layout.type'), icon: 'layer-group' },
+              { value: 'flat', label: t('gallery.layout.flat'), icon: 'table-cells' },
+            ]}
+            value={galleryPrefs.group}
+            onChange={group => setGalleryPrefs({ group })}
           />
-        )}
-      </div>
-
-      {/* Statistics */}
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Total Photos" value={stats.total} icon="image" color="blue" />
-        <StatCard label="In Use" value={stats.used} icon="check-circle" color="green" />
-        <StatCard label="Not Used" value={stats.unused} icon="clock" color="orange" />
+          <span className="ml-2">{t('gallery.sort.label')}</span>
+          <select
+            value={galleryPrefs.sort}
+            onChange={e => setGalleryPrefs({ sort: e.target.value as GallerySort })}
+            aria-label={t('gallery.sort.label')}
+            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <option value="newest">{t('gallery.sort.newest')}</option>
+            <option value="oldest">{t('gallery.sort.oldest')}</option>
+            <option value="name">{t('gallery.sort.name')}</option>
+          </select>
+          {filteredImages.length > 0 && !readOnly && (
+            <button
+              type="button"
+              onClick={handleSelectAll}
+              className="ml-2 flex items-center gap-1.5 text-gray-600 transition-colors hover:text-gray-900"
+            >
+              <span
+                className={clsx(
+                  'flex size-4 items-center justify-center rounded border-2 transition-colors',
+                  allSelected ? 'border-primary bg-primary' : 'border-gray-300',
+                )}
+              >
+                {allSelected && <Icon name="check" className="text-[9px] text-white" />}
+              </span>
+              {t('gallery.selectAll')}
+            </button>
+          )}
+          <SegmentedControl
+            className="ml-auto"
+            options={[
+              { value: 'grid', label: t('gallery.view.grid'), icon: 'grid-2' },
+              { value: 'list', label: t('gallery.view.list'), icon: 'list' },
+            ]}
+            value={galleryPrefs.view}
+            onChange={view => setGalleryPrefs({ view })}
+          />
+        </div>
       </div>
 
       {/* Upload Progress */}
       {uploadingPhotos.size > 0 && (
-        <div className="p-4 bg-blue-50 border border-blue-100 rounded-xl">
-          <div className="flex items-center gap-3 mb-3">
-            <Icon name="spinner" style="solid" className="text-blue-600 animate-spin" />
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Icon name="spinner" style="solid" className="animate-spin text-blue-600" />
             <span className="text-sm font-medium text-blue-900">
-              Uploading {uploadingPhotos.size} file{uploadingPhotos.size !== 1 ? 's' : ''}...
+              {t('gallery.uploading', { n: uploadingPhotos.size })}
             </span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {Array.from(uploadingPhotos.entries()).map(([id, { file }]) => (
-              <div key={id} className="flex items-center gap-3 text-sm text-blue-700">
+              <div key={id} className="flex items-center gap-3 text-xs text-blue-700">
                 <Icon name="file-image" className="text-blue-500" />
-                <span className="truncate flex-1">{file.name}</span>
-                <span className="text-xs text-blue-500">Processing...</span>
+                <span className="flex-1 truncate">{file.name}</span>
+                <span className="text-blue-500">{t('gallery.processing')}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Filters and Search */}
-      <div className="flex flex-col gap-4 p-4 bg-gray-50 rounded-xl">
-        {/* Top Row: Search and View Toggle */}
-        <div className="flex items-center justify-between gap-4">
-          {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <Icon
-              name="magnifying-glass"
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search photos..."
-              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <Icon name="xmark" />
-              </button>
-            )}
-          </div>
-
-          {/* View Mode and Sort */}
-          <div className="flex items-center gap-3">
-            <ViewModeToggle mode={viewMode} onChange={setViewMode} />
-
-            <div className="w-px h-6 bg-gray-200" />
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={e => setSortBy(e.target.value as SortOption)}
-                className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="name">Name</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Row: Filter Chips */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FilterChip
-              label="All"
-              isActive={filterStatus === 'all'}
-              count={stats.total}
-              onClick={() => setFilterStatus('all')}
-            />
-            <FilterChip
-              label="In Use"
-              isActive={filterStatus === 'used'}
-              count={stats.used}
-              onClick={() => setFilterStatus('used')}
-            />
-            <FilterChip
-              label="Not Used"
-              isActive={filterStatus === 'unused'}
-              count={stats.unused}
-              onClick={() => setFilterStatus('unused')}
-            />
-          </div>
-
-          {/* Select All */}
-          {filteredImages.length > 0 && !readOnly && (
-            <button
-              type="button"
-              onClick={handleSelectAll}
-              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <div
-                className={clsx(
-                  'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
-                  selectedImageIds.size === filteredImages.length && filteredImages.length > 0
-                    ? 'bg-primary border-primary'
-                    : 'border-gray-300 hover:border-primary',
-                )}
-              >
-                {selectedImageIds.size === filteredImages.length && filteredImages.length > 0 && (
-                  <Icon name="check" className="text-xs text-white" />
-                )}
-              </div>
-              Select All
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Drop Zone Overlay (always rendered, visibility toggled) */}
       <div
         className={clsx(
-          'absolute inset-0 z-40 flex items-center justify-center border-2 border-dashed rounded-2xl transition-opacity pointer-events-none',
+          'pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-2xl border-2 border-dashed transition-opacity',
           isDragging
-            ? 'opacity-100 border-emerald-400 bg-emerald-50/50'
-            : 'opacity-0 border-transparent',
+            ? 'border-primary bg-primary-50/60 opacity-100'
+            : 'border-transparent opacity-0',
         )}
       >
         <div className="text-center">
-          <div className="w-20 h-20 rounded-2xl bg-emerald-100 flex items-center justify-center mx-auto mb-4 animate-bounce">
-            <Icon name="cloud-arrow-down" className="text-3xl text-emerald-600" />
+          <div className="mx-auto mb-3 flex size-16 animate-bounce items-center justify-center rounded-2xl bg-primary-100">
+            <Icon name="cloud-arrow-down" className="text-2xl text-primary" />
           </div>
-          <p className="text-xl font-semibold text-emerald-700">Drop photos here</p>
-          <p className="text-sm text-emerald-500 mt-1">Release to upload</p>
+          <p className="text-lg font-semibold text-primary-700">{t('gallery.drop.title')}</p>
+          <p className="mt-1 text-sm text-primary/80">{t('gallery.drop.hint')}</p>
         </div>
       </div>
 
@@ -906,13 +947,13 @@ export const GalleryTab = () => {
         {filteredImages.length === 0 ? (
           searchQuery || filterStatus !== 'all' ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Icon name="magnifying-glass" className="text-2xl text-gray-400" />
+              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
+                <Icon name="magnifying-glass" className="text-xl text-gray-400" />
               </div>
-              <p className="text-lg font-medium text-gray-900 mb-2">No results found</p>
-              <p className="text-sm text-gray-500 mb-4">
-                Try adjusting your search or filter criteria
+              <p className="mb-1 text-sm font-medium text-gray-800">
+                {t('gallery.noResults.title')}
               </p>
+              <p className="mb-4 text-xs text-gray-500">{t('gallery.noResults.hint')}</p>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -920,62 +961,74 @@ export const GalleryTab = () => {
                   setFilterStatus('all');
                 }}
               >
-                Clear filters
+                {t('gallery.noResults.clear')}
               </Button>
             </div>
           ) : readOnly ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Icon name="image" className="text-3xl text-gray-400" />
+              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
+                <Icon name="image" className="text-2xl text-gray-400" />
               </div>
-              <p className="text-sm text-gray-500">No photos</p>
+              <p className="text-sm text-gray-500">{t('gallery.empty.title')}</p>
             </div>
           ) : (
             <EmptyGalleryState onUpload={() => fileInputRef.current?.click()} />
           )
         ) : (
-          <>
-            {viewMode === 'grid' && (
-              <PhotoGridView
-                images={filteredImages}
-                onImageClick={handleImageClick}
-                onImageDelete={readOnly ? undefined : handleImageDelete}
-                onImageEdit={readOnly ? undefined : handleImageEdit}
-                selectedImageIds={selectedImageIds}
-                onSelectionChange={readOnly ? undefined : setSelectedImageIds}
-                showUsedBadge
-              />
-            )}
-
-            {viewMode === 'list' && (
-              <PhotoListView
-                images={filteredImages}
-                onImageClick={handleImageClick}
-                onImageDelete={readOnly ? undefined : handleImageDelete}
-                onImageEdit={readOnly ? undefined : handleImageEdit}
-                selectedImageIds={selectedImageIds}
-                onSelectionChange={readOnly ? undefined : setSelectedImageIds}
-                showUsedBadge
-              />
-            )}
-          </>
+          <div className="flex flex-col gap-5">
+            {sections.map((section, index) => (
+              <section key={section.key}>
+                {section.key !== 'all' && (
+                  <h4 className="mb-2 flex items-baseline gap-2 text-xs font-semibold text-gray-600">
+                    {t(`gallery.types.${section.key}`)}
+                    <span className="font-normal text-gray-400">
+                      {t('gallery.typeCount', { n: section.images.length })}
+                    </span>
+                  </h4>
+                )}
+                {galleryPrefs.view === 'grid' ? (
+                  <PhotoGridView
+                    layout="dense"
+                    images={section.images}
+                    metaText={metaText}
+                    prepend={index === 0 ? uploadTile : undefined}
+                    onImageClick={handleImageClick}
+                    onImageDelete={readOnly ? undefined : handleImageDelete}
+                    onImageEdit={readOnly ? undefined : handleImageEdit}
+                    selectedImageIds={selectedImageIds}
+                    onSelectionChange={readOnly ? undefined : setSelectedImageIds}
+                    showUsedBadge
+                  />
+                ) : (
+                  <PhotoListView
+                    images={section.images}
+                    onImageClick={handleImageClick}
+                    onImageDelete={readOnly ? undefined : handleImageDelete}
+                    onImageEdit={readOnly ? undefined : handleImageEdit}
+                    selectedImageIds={selectedImageIds}
+                    onSelectionChange={readOnly ? undefined : setSelectedImageIds}
+                    showUsedBadge
+                  />
+                )}
+              </section>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* Results Count */}
-      {filteredImages.length > 0 && (
-        <div className="flex items-center justify-between text-sm text-gray-500 pt-4 border-t border-gray-100">
-          <p>
-            Showing {filteredImages.length} of {allImages.length} photos
-          </p>
-          {searchQuery && <p>Results for "{searchQuery}"</p>}
-        </div>
+      {/* Results Count — only when something is filtering the set */}
+      {filteredImages.length > 0 && (searchQuery || filterStatus !== 'all') && (
+        <p className="text-xs text-gray-400">
+          {t('gallery.showing', { shown: filteredImages.length, total: allImages.length })}
+        </p>
       )}
 
       {/* Bulk Action Toolbar */}
       {selectedImageIds.size > 0 && !readOnly && (
         <BulkActionToolbar
           selectedCount={selectedImageIds.size}
+          topics={topics}
+          onAddToTopic={handleAddToTopic}
           onDelete={handleBulkDelete}
           onLinkToProperty={handleBulkLinkToProperty}
           onDeselect={() => setSelectedImageIds(new Set())}
@@ -1032,10 +1085,10 @@ export const GalleryTab = () => {
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, photoId: null })}
         onConfirm={confirmSingleDelete}
-        title="Delete Photo"
-        message="Are you sure you want to delete this photo? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title={t('gallery.deleteOne.title')}
+        message={t('gallery.deleteOne.message')}
+        confirmText={t('gallery.confirmDelete')}
+        cancelText={t('gallery.cancel')}
         variant="danger"
         isLoading={isDeleting}
       />
@@ -1045,10 +1098,10 @@ export const GalleryTab = () => {
         isOpen={bulkDeleteConfirm}
         onClose={() => setBulkDeleteConfirm(false)}
         onConfirm={confirmBulkDelete}
-        title="Delete Selected Photos"
-        message={`Are you sure you want to delete ${selectedImageIds.size} selected photo(s)? This action cannot be undone.`}
-        confirmText="Delete All"
-        cancelText="Cancel"
+        title={t('gallery.deleteMany.title')}
+        message={t('gallery.deleteMany.message', { n: selectedImageIds.size })}
+        confirmText={t('gallery.confirmDelete')}
+        cancelText={t('gallery.cancel')}
         variant="danger"
         isLoading={isDeleting}
       />

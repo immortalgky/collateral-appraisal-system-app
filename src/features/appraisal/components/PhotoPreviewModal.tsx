@@ -20,6 +20,8 @@ interface PhotoPreviewModalProps<T extends PreviewablePhoto> {
   onNavigate: (photo: T) => void;
   onSetThumbnail?: () => void;
   onSaveDescription?: (caption: string) => void;
+  /** The longest caption the caller can store; unset means no limit. */
+  captionMaxLength?: number;
   isSavingDescription?: boolean;
   onDelete?: () => void;
   showInUseStatus?: boolean;
@@ -33,6 +35,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
   onNavigate,
   onSetThumbnail,
   onSaveDescription,
+  captionMaxLength,
   isSavingDescription = false,
   onDelete,
   showInUseStatus = true,
@@ -248,6 +251,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                       type="text"
                       value={draft}
                       onChange={e => setDraft(e.target.value)}
+                      maxLength={captionMaxLength}
                       placeholder="Enter description..."
                       className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-white/40"
                       disabled={isSavingDescription}

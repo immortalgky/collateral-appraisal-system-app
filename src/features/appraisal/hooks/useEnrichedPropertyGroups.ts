@@ -5,33 +5,13 @@ import { schemas } from '@shared/schemas/v1';
 import type { z } from 'zod';
 import { propertyGroupKeys, useGetPropertyGroups } from '../api/propertyGroup';
 import type { PropertyGroup, PropertyItem, PropertyPhoto, PropertyType } from '../types';
+import { areaUnitFor, formatArea } from '../utils/areaFormat';
 
 type GetPropertyGroupByIdResponse = z.infer<typeof schemas.GetPropertyGroupByIdResponse>;
+type GetPricingAnalysisResponse = z.infer<typeof schemas.GetPricingAnalysisResponse>;
 type PropertyGroupItem = z.infer<typeof schemas.PropertyGroupItemDto>;
 
 // ==================== Helpers ====================
-
-const LAND_TYPES = new Set([
-  'L',
-  'LB',
-  'Lands',
-  'Land and building',
-  'Lease Agreement Lands',
-  'Lease Agreement Land and building',
-]);
-
-function formatWaToRaiNganWa(totalWa: number): string {
-  const rai = Math.floor(totalWa / 400);
-  const ngan = Math.floor((totalWa % 400) / 100);
-  const wa = (totalWa % 100).toFixed(2);
-  return `${rai}-${ngan}-${wa} (${totalWa} Sq.Wa)`;
-}
-
-function formatArea(area: number | null | undefined, propertyType: string | undefined): string {
-  if (area == null) return '-';
-  if (propertyType && LAND_TYPES.has(propertyType)) return formatWaToRaiNganWa(area);
-  return `${area} Sq.M`;
-}
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -44,6 +24,7 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
   const thumbnailId = photos.find(p => p.isThumbnail)?.documentId ?? photos[0]?.documentId;
 
   const isMachine = item.propertyType === 'MAC';
+  const isBuilding = item.propertyType === 'B' || item.propertyType === 'LSB';
 
   return {
     id: item.propertyId!,
@@ -54,6 +35,10 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     photos,
     address: item.propertyName || '-',
     area: isMachine ? item.dimension || '-' : formatArea(item.area, item.propertyType ?? undefined),
+    // Raw figures beside the formatted string: group totals add these up rather than parsing
+    // the display text back out again. Machines have no area — `area` holds their dimensions.
+    areaValue: isMachine ? undefined : ((item.area as number | null | undefined) ?? undefined),
+    areaUnit: isMachine ? undefined : areaUnitFor(item.propertyType ?? undefined),
     latitude: (item.latitude as number | null | undefined) ?? undefined,
     longitude: (item.longitude as number | null | undefined) ?? undefined,
     priceRange: '-',
@@ -71,6 +56,13 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
           registrationStatus: item.registrationStatus ?? undefined,
           isPriceCertified: item.isPriceCertified ?? undefined,
           conditionUse: item.conditionUse ?? undefined,
+        }
+      : {}),
+    ...(isBuilding
+      ? {
+          buildingType: item.buildingType ?? undefined,
+          buildingTypeOther: item.buildingTypeOther ?? undefined,
+          numberOfFloors: item.numberOfFloors ?? undefined,
         }
       : {}),
   };
@@ -100,6 +92,47 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
       enabled: !!appraisalId && groupIds.length > 0,
       retry: 1,
     })),
+  });
+
+  /**
+   * Step 3: what the group's pricing analysis actually contains.
+   *
+   * Fetched by id rather than by group, because the by-group endpoint returns the final value
+   * but not the approaches — and the existence of an analysis says nothing on its own. One is
+   * created the moment anyone opens the pricing screen, so on the development database half of
+   * them hold no approach, no method and no value at all. "Someone is working on this" means
+   * at least one method exists.
+   *
+   * Only groups that have an analysis are fetched; the id arrives with the detail above, so a
+   * group nobody has touched costs no request.
+   */
+  const pricedGroups = groupIds
+    .map(id => ({
+      groupId: id,
+      pricingAnalysisId: groupDetailQueries.find(q => q.data?.id === id)?.data?.pricingAnalysisId,
+    }))
+    .filter((g): g is { groupId: string; pricingAnalysisId: string } => !!g.pricingAnalysisId);
+
+  const pricingQueries = useQueries({
+    queries: pricedGroups.map(({ groupId, pricingAnalysisId }) => ({
+      queryKey: [...propertyGroupKeys.detail(appraisalId!, groupId), 'pricing'] as const,
+      queryFn: async (): Promise<GetPricingAnalysisResponse> => {
+        const { data } = await axios.get(`/pricing-analysis/${pricingAnalysisId}`);
+        return data;
+      },
+      enabled: !!appraisalId,
+      retry: 1,
+      staleTime: 60_000,
+    })),
+  });
+
+  const pricingByGroup = new Map<string, { value: number | null; hasMethods: boolean }>();
+  pricedGroups.forEach(({ groupId }, i) => {
+    const data = pricingQueries[i]?.data;
+    pricingByGroup.set(groupId, {
+      value: data?.finalAppraisedValue ?? null,
+      hasMethods: (data?.approaches ?? []).some(a => (a.methods ?? []).length > 0),
+    });
   });
 
   const isLoadingDetails = groupDetailQueries.some(r => r.isLoading);
@@ -142,9 +175,13 @@ export function useEnrichedPropertyGroups(appraisalId: string | undefined) {
           description: apiGroup.description,
           groupNumber: apiGroup.groupNumber,
           pricingAnalysisId: groupDetail?.pricingAnalysisId ?? null,
+          appraisedValue: pricingByGroup.get(apiGroup.id)?.value ?? null,
+          hasPricingMethods: pricingByGroup.get(apiGroup.id)?.hasMethods ?? false,
         };
       }),
-    [groupsData, groupDetailData],
+
+    // render from pricingQueries; keying the memo on the serialised values keeps it stable.
+    [groupsData, groupDetailData, JSON.stringify([...pricingByGroup])],
   );
 
   const isFetching = isFetchingGroups || isFetchingDetails;

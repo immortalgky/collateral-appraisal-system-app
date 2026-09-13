@@ -1,0 +1,538 @@
+<title>ฟอร์มข้อมูลตลาดเปรียบเทียบ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap"
+/>
+<style>
+  /* Same tokens as the property-header mock: the app's teal on Roboto + Sarabun. */
+  :root {
+    --f-sans: 'Roboto', 'Sarabun', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --ground: #f4f6f6; --surface: #ffffff; --surface-2: #f8fafa; --surface-3: #edf1f1;
+    --line: #e3e9e8; --line-soft: #eef2f2; --line-strong: #cbd5d3;
+    --ink: #1f2937; --ink-2: #55636f; --ink-3: #8a96a0;
+    --accent: #0d9488; --accent-ink: #0f766e; --accent-wash: #f0fdfa; --accent-line: #99f6e4;
+    --cover: #b45309; --t-land: #15803d;
+    --danger: #dc2626; --danger-wash: #fef2f2;
+    --old-orange: #ea580c; --old-orange-wash: #ffedd5; --old-blue: #2563eb; --old-blue-wash: #dbeafe;
+    --shadow: 0 1px 2px rgba(16, 24, 32, 0.05), 0 1px 3px rgba(16, 24, 32, 0.04);
+    --shadow-lift: 0 2px 4px rgba(16, 24, 32, 0.06), 0 8px 24px rgba(16, 24, 32, 0.07);
+    --r-card: 14px; --r-field: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+      --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+      --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+      --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+      --cover: #fbbf24; --t-land: #4ade80; --danger: #f87171; --danger-wash: #3a1616;
+      --old-orange: #fb923c; --old-orange-wash: #3a2210; --old-blue: #93c5fd; --old-blue-wash: #172a45;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4); --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+    --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+    --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+    --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+    --cover: #fbbf24; --t-land: #4ade80; --danger: #f87171; --danger-wash: #3a1616;
+    --old-orange: #fb923c; --old-orange-wash: #3a2210; --old-blue: #93c5fd; --old-blue-wash: #172a45;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4); --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/1.5 var(--f-sans); }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  code { font-size: 12px; background: var(--surface-3); padding: 0 4px; border-radius: 4px; }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; display: grid; gap: 20px; }
+  .intro h1 { margin: 0 0 4px; font-size: 20px; font-weight: 700; text-wrap: balance; }
+  .intro p { margin: 0; color: var(--ink-2); max-width: 72ch; }
+
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card);
+    padding: 12px 14px; box-shadow: var(--shadow);
+  }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl > span { font-size: 12px; color: var(--ink-3); letter-spacing: 0.02em; }
+  .seg { display: inline-flex; background: var(--surface-3); border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+  .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+  /* ── app frame ── */
+  .stage { overflow-x: auto; }
+  .app {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card);
+    box-shadow: var(--shadow-lift); overflow: hidden; margin: 0 auto; max-width: 1080px; min-width: 760px;
+    display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; height: 700px;
+  }
+  .crumbs { display: flex; gap: 8px; align-items: center; padding: 10px 16px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line-soft); }
+  .crumbs b { color: var(--accent-ink); font-weight: 600; background: var(--accent-wash); padding: 2px 8px; border-radius: 6px; }
+  .editor-top:empty { display: none; }
+  .editor-top { padding: 12px 16px 0; }
+  .scroll { overflow: auto; padding: 0 16px 20px; min-height: 0; position: relative; }
+  .actionbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; border-top: 1px solid var(--line); background: var(--surface); }
+  .actionbar .l { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--ink-2); }
+  .dirty { display: inline-flex; align-items: center; gap: 6px; color: var(--cover); font-size: 12px; }
+  .dirty::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .btn { border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-field); padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+  .btn.sm { padding: 4px 9px; font-size: 12px; }
+
+  /* sample photos, CSS only */
+  .ph1 { background: linear-gradient(180deg, #8fb8de 0 42%, #cfe0c3 42% 48%, #6d8f4e 48% 100%); }
+  .ph2 { background: radial-gradient(circle at 70% 30%, #fde68a 0 12%, transparent 13%), linear-gradient(180deg, #7dd3fc 0 50%, #65a30d 50% 100%); }
+  .ph3 { background: linear-gradient(160deg, #a7c7a1 0 55%, #8b7355 55% 100%); }
+  .ph4 { background: linear-gradient(180deg, #dbe7f3 0 30%, #e8dcc8 30% 100%); }
+  .ph5 { background: repeating-linear-gradient(90deg, #d6d3c4 0 18px, #bfb9a3 18px 20px), linear-gradient(#e5e1d3, #cfc9b3); }
+
+  /* ── CURRENT ── */
+  .old-nav { display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 9px; padding: 2px; width: max-content; }
+  .old-nav a { font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 7px; color: var(--ink-2); }
+  .old-nav a.on { background: var(--surface); color: var(--accent-ink); box-shadow: var(--shadow); outline: 1px solid var(--accent-line); }
+  .old-h { display: flex; gap: 10px; align-items: center; margin: 18px 0 12px; }
+  .old-h span { width: 34px; height: 34px; border-radius: 9px; background: var(--old-blue-wash); display: grid; place-items: center; color: var(--old-blue); font-size: 15px; }
+  .old-h.cmp span { background: var(--old-orange-wash); color: var(--old-orange); }
+  .old-h h3 { margin: 0; font-size: 17px; font-weight: 600; }
+  .old-rule { height: 1px; background: var(--line); margin-bottom: 14px; }
+  .old-strip { display: flex; gap: 8px; }
+  .old-add { width: 148px; height: 92px; flex: none; border: 1px dashed var(--line-strong); border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--ink-3); }
+  .old-tile { width: 118px; height: 92px; flex: none; border-radius: 8px; }
+
+  /* field rows — the current label-with-icon | input layout */
+  .rows { display: grid; gap: 12px; }
+  .row { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; align-items: center; }
+  .row .lab { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--ink-2); }
+  .row .lab i { width: 26px; height: 26px; border-radius: 7px; background: var(--accent-wash); color: var(--accent); display: grid; place-items: center; font-style: normal; font-size: 12px; flex: none; }
+  .row .ins { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+  .row .ins.one { grid-template-columns: 1fr; }
+
+  /* inputs */
+  .in { border: 1px solid var(--line); border-radius: var(--r-field); padding: 6px 10px; font-size: 13px; background: var(--surface); min-height: 34px; display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .in.num { justify-content: flex-end; font-variant-numeric: tabular-nums; }
+  .in.dd::after { content: '▾'; margin-left: auto; color: var(--ink-3); }
+  .in.off { background: var(--surface-3); color: var(--ink-3); }
+  .in.ph { color: var(--ink-3); }
+  .in.err { border-color: var(--danger); background: var(--danger-wash); }
+  .in.area { min-height: 72px; align-items: flex-start; color: var(--ink-3); }
+  .in .lock { margin-left: auto; font-size: 11px; color: var(--ink-3); }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-2); }
+  .pill.on { border-color: var(--accent); background: var(--accent-wash); color: var(--accent-ink); font-weight: 500; }
+  .pills.err .pill { border-color: var(--danger); }
+
+  /* ── NEW: identity header (same shape as the property header) ── */
+  .idcard { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 16px; border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px; background: var(--surface); margin-top: 14px; }
+  .cover { width: 176px; aspect-ratio: 4 / 3; border-radius: 10px; position: relative; overflow: hidden; }
+  .cover .tag { position: absolute; left: 6px; bottom: 6px; font-size: 10.5px; font-weight: 600; background: rgba(17, 24, 39, 0.72); color: #fff; padding: 1px 7px; border-radius: 999px; }
+  .cover.empty { border: 1.5px dashed var(--line-strong); background: var(--surface-2); display: grid; place-items: center; text-align: center; color: var(--ink-3); font-size: 11.5px; padding: 8px; }
+  .cover.empty b { display: block; color: var(--accent-ink); font-weight: 600; font-size: 12.5px; }
+  .id-main { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+  .id-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12px; }
+  .chip { font-size: 11px; font-weight: 600; padding: 0 8px; border-radius: 999px; border: 1px solid currentColor; line-height: 18px; color: var(--t-land); }
+  .no { color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .no.todo { font-style: italic; }
+  .where { color: var(--ink-3); }
+  .id-main h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; text-wrap: balance; }
+  .id-main h2.todo { color: var(--ink-3); font-style: italic; }
+  .facts { display: flex; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+  .facts span + span::before { content: '·'; margin: 0 8px; color: var(--ink-3); }
+  .facts .hint { color: var(--ink-3); }
+  .flags { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; }
+  .used { color: var(--accent-ink); background: var(--accent-wash); border: 1px solid var(--accent-line); padding: 0 8px; border-radius: 999px; font-weight: 500; }
+  .flag { color: var(--cover); }
+  .thumbs { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 6px; flex-wrap: wrap; }
+  .thumb { width: 56px; height: 42px; border-radius: 6px; flex: none; }
+  .thumb.first { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--cover); }
+  .add-wrap { position: relative; }
+  .menu { position: absolute; top: calc(100% + 4px); left: 0; z-index: 5; min-width: 200px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow-lift); padding: 4px; }
+  .menu div { padding: 7px 10px; border-radius: 7px; font-size: 13px; }
+  .menu div:hover { background: var(--surface-2); }
+  .price { text-align: right; min-width: 150px; border-left: 1px solid var(--line-soft); padding-left: 16px; display: flex; flex-direction: column; gap: 2px; }
+  .price small { font-size: 11px; color: var(--ink-3); letter-spacing: 0.02em; }
+  .price b { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .price .u { font-size: 12px; color: var(--ink-3); }
+  .price .sub { font-size: 11.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; margin-top: 4px; }
+  .price .none { font-size: 13px; color: var(--ink-3); font-style: italic; margin-top: 6px; }
+
+  .tabs { position: sticky; top: 0; z-index: 3; background: var(--surface); display: flex; gap: 2px; border-bottom: 1px solid var(--line); padding-top: 12px; margin-bottom: 16px; }
+  .tabs button { border: 0; background: none; padding: 8px 12px; margin-bottom: -1px; font-size: 13px; font-weight: 500; color: var(--ink-3); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+  .tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+  .tabs .n { font-size: 11px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+  .tabs .bad { font-size: 10.5px; font-weight: 700; color: #fff; background: var(--danger); border-radius: 999px; min-width: 17px; height: 17px; display: inline-grid; place-items: center; padding: 0 5px; }
+  .tabs .mode { margin-left: auto; align-self: center; font-size: 11.5px; color: var(--ink-3); }
+
+  /* regrouped body */
+  .card { border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 16px 16px; margin-bottom: 14px; background: var(--surface); scroll-margin-top: 56px; }
+  .card h3 { margin: 0 0 12px; font-size: 14px; font-weight: 600; display: flex; align-items: baseline; gap: 8px; }
+  .card h3 small { font-size: 12px; font-weight: 400; color: var(--ink-3); }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .grid2 .wide { grid-column: 1 / -1; }
+  .fld label { display: block; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .fld label em { color: var(--danger); font-style: normal; margin-left: 2px; }
+  .fld .msg { font-size: 11.5px; color: var(--danger); margin-top: 3px; }
+  .price-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; margin-top: 12px; }
+  .toggle { display: inline-flex; background: var(--surface-3); border-radius: 9px; padding: 2px; }
+  .toggle span { padding: 5px 14px; border-radius: 7px; font-size: 12.5px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+  .toggle span.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+  .aside { font-size: 12px; color: var(--ink-3); margin-top: 10px; }
+  .loc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 12px 16px; align-items: end; }
+  .loc-note { font-size: 12.5px; color: var(--ink-2); margin-top: 10px; display: flex; gap: 6px; align-items: center; }
+  .sec-anchor { scroll-margin-top: 56px; }
+  .sub-h { font-size: 13px; font-weight: 600; margin: 22px 0 12px; color: var(--ink); }
+
+  /* ── below the stage ── */
+  .cmp { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); }
+  .cmp table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 680px; }
+  .cmp th, .cmp td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  .cmp th { font-size: 12px; color: var(--ink-3); font-weight: 500; background: var(--surface-2); }
+  .cmp td.num { font-variant-numeric: tabular-nums; }
+  .cmp tr:last-child td { border-bottom: 0; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 16px; }
+  .note h3 { margin: 0 0 6px; font-size: 14px; }
+  .note ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+  .note li + li { margin-top: 4px; }
+  .note .rec { color: var(--accent-ink); font-weight: 600; }
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <h1>ฟอร์มข้อมูลตลาดเปรียบเทียบ: หัวแบบเดียวกับทรัพย์สิน</h1>
+    <p>
+      หน้าที่เปิดจากแท็บ ตลาด → ข้อมูลเปรียบเทียบหนึ่งรายการ กดสลับด้านบนเพื่อเทียบแบบ สถานะ และการจัดส่วนเนื้อหา —
+      ข้อมูลและรูปในนี้เป็นตัวอย่าง (รูปวาดด้วย CSS) เลื่อนในกรอบได้จริง
+    </p>
+  </header>
+
+  <div class="controls" id="controls"></div>
+  <div class="stage"><div class="app" id="app"></div></div>
+
+  <div class="cmp">
+    <table>
+      <thead><tr><th></th><th>ปัจจุบัน</th><th>ใหม่ · เปลี่ยนแค่หัว</th><th>ใหม่ · หัว + จัดฟอร์ม</th></tr></thead>
+      <tbody>
+        <tr><td>พื้นที่ก่อนถึงช่องกรอกแรก (ประมาณ)</td><td class="num">≈ 300 px</td><td class="num">≈ 230 px</td><td class="num">≈ 230 px</td></tr>
+        <tr><td>บอกว่ากำลังเปิดข้อมูลตลาดชิ้นไหน</td><td>เลขที่ใน breadcrumb เท่านั้น</td><td colspan="2">ภาพหน้าปก · ประเภท · เลขที่ · ชื่อ · ราคา · ใช้ในวิธีไหน · ข้อมูลเก่า/ไม่มีพิกัด</td></tr>
+        <tr><td>ข้อความบนหน้า</td><td>อังกฤษ hardcode ~20 จุด (Photos, Comparable Information, Sale Price, Save…)</td><td colspan="2">แปลผ่าน i18n ครบ ไทย / อังกฤษ / จีน</td></tr>
+        <tr><td>ช่องกรอก</td><td>ช่องละแถว มีไอคอนประจำทุกช่อง ปัจจัยทุกตัวใช้ไอคอนเดียวกัน</td><td>คงเดิม (แค่แปลป้าย)</td><td>จัดเป็นกลุ่ม: ที่มาของข้อมูล · ราคา · ตำแหน่ง · ปัจจัยสำรวจ · หมายเหตุ ป้ายอยู่เหนือช่อง 2 คอลัมน์</td></tr>
+        <tr><td>ขนาดงาน</td><td>—</td><td>หัว + <code>renderGallery</code> ใน EntityPhotoSection + i18n</td><td>เท่าซ้าย + เขียน layout ของ <code>MarketComparableForm</code> ใหม่ (logic ฟอร์มเดิม)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h3>หัวใช้ของเดิม ไม่แก้ BE</h3>
+      <ul>
+        <li>ส่วนรูปยังเป็น <code>MarketComparablePhotoSection</code> ตัวเดิม (อัปโหลด · เลือกจากแกลเลอรี · ดูรูปใหญ่ · ลบ) — เพิ่ม <code>renderGallery</code> ให้ <code>EntityPhotoSection</code> แบบที่ทำให้ทรัพย์สินไปแล้ว หน้า Tower/Model ที่ใช้ร่วมไม่กระทบ</li>
+        <li>ภาพหน้าปก = รูปแรก เพราะ comparable ไม่มีปุ่มตั้งหน้าปก (ไม่มีคอลัมน์ในตาราง) และแถวในแท็บตลาดก็หยิบรูปแรกเหมือนกัน — หัวกับแถวจึงโชว์รูปเดียวกันเสมอ</li>
+        <li>ราคา · ใช้ในวิธีไหน · ข้อมูลเก่า · ไม่มีพิกัด · ระยะห่าง มาจากแถวเดียวกับที่แท็บตลาดแสดง → ตัวเลขตรงกันทุกที่ และเปลี่ยนเมื่อบันทึก ไม่ใช่ตอนพิมพ์ (เหมือนหัวทรัพย์สิน)</li>
+        <li>เปิดจากนอกใบประเมิน (<code>/market-comparable/detail</code>) ไม่มีส่วนรูปอยู่แล้ว → หัวแสดงข้อมูลอย่างเดียว ไม่มีแถวรูป</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>แก้ของค้างไปด้วย</h3>
+      <ul>
+        <li>ข้อความอังกฤษทั้งหน้า รวม toast ตอนบันทึกไม่สำเร็จ ("Failed to update market comparable…")</li>
+        <li>แถบ Photos / Comparable / Survey Factors ที่อยู่นอกกล่องเลื่อน — ย้ายเข้าไปติดใต้หัวแบบหน้าทรัพย์สิน</li>
+        <li>หัว "Comparable Information" ที่ไม่มีเนื้อหาของตัวเอง (เป็น section ว่างคั่นไว้เฉย ๆ) ตัดออก</li>
+        <li>โหมดคัดลอก (<code>?copyFrom=</code>) หัวขึ้นเป็น "ข้อมูลตลาดใหม่" พร้อมบรรทัด "คัดลอกจาก MKC-…"</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>อยากให้ตัดสินใจ</h3>
+      <ul>
+        <li><b>ขอบเขต:</b> เปลี่ยนแค่หัว หรือจัดฟอร์มใหม่ด้วย — <span class="rec">แนะนำจัดใหม่</span> แถวละช่องพร้อมไอคอนทำให้หน้ายาวเกินเนื้อหา</li>
+        <li><b>ส่วนเนื้อหา:</b> แท็บสลับเนื้อหา (แบบหน้าทรัพย์สิน) หรือหน้าเดียวแล้วแถบพาเลื่อนไป — <span class="rec">แนะนำหน้าเดียว</span> ปัจจัยสำรวจมีช่องบังคับ ถ้าซ่อนในอีกแท็บ กดบันทึกแล้วไม่เห็นว่าผิดตรงไหน (ลองสลับ "ตัวอย่าง: ช่องบังคับว่าง")</li>
+        <li><b>ราคา:</b> ปุ่มสลับ ขายจริง / เสนอขาย แทนสองแถวที่ปิดกันเอง — logic เดิมบังคับให้กรอกได้อย่างเดียวอยู่แล้ว ปุ่มสลับแค่พูดตรง ๆ</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const C = {
+    number: 'MKC-000128-2569', name: 'ที่ดินเปล่าติดถนนติวานนท์ ซอย 12', typeLabel: 'L · ที่ดินเปล่า',
+    template: 'LAND_TEMPLATE — แบบสำรวจที่ดิน', info: '23/08/2026 10:30', infoShort: '23 ส.ค. 2569',
+    source: 'ป้ายประกาศขาย', sale: '70,000.00', offer: '75,000.00', unit: '01 — บาท/ตร.ว.',
+    saleDate: '06/08/2026', lat: '13.884512', lng: '100.498731', area: '1-1-30 ไร่',
+    plot: 'ติดถนนสาธารณะ', distance: 'ห่าง 850 ม.', pos: 'รายการที่ 3 จาก 8 ในใบนี้', photos: 5,
+  };
+  // [label, value, kind, required, options]
+  const FACTORS = [
+    ['เนื้อที่ดินรวม (ตร.ว.)', '530.00', 'num', true],
+    ['รูปแปลงที่ดิน', 'สี่เหลี่ยมผืนผ้า', 'dd', true],
+    ['ที่ตั้งแปลง', ['ติดถนนสาธารณะ', 'หัวมุม', 'ในซอย', 'ไม่มีทางเข้าออก'], 'chips', false, [0, 1]],
+    ['หน้ากว้างติดถนน (ม.)', '24.00', 'num', false],
+    ['ถนนผ่านหน้า', ['ลาดยาง', 'คอนกรีต', 'ลูกรัง'], 'radio', true, [0]],
+    ['ความกว้างถนน (ม.)', '12.00', 'num', false],
+    ['สภาพที่ดิน', ['ถมแล้ว', 'ยังไม่ถม', 'ถมบางส่วน'], 'radio', true, [0]],
+    ['ระดับเทียบถนน', 'เสมอถนน', 'dd', false],
+    ['สาธารณูปโภค', ['ไฟฟ้า', 'ประปา', 'ท่อระบายน้ำ', 'โทรศัพท์'], 'chips', false, [0, 1]],
+    ['ผังเมือง', 'สีเหลือง (ย.3)', 'dd', true],
+    ['สภาพแวดล้อม', 'ที่อยู่อาศัย', 'dd', false],
+    ['ภาระผูกพัน', 'ไม่มี', 'dd', false],
+  ];
+  const MISSING = new Set([4, 9]);
+  const PH = ['ph1', 'ph2', 'ph3', 'ph4', 'ph5'];
+
+  const S = { variant: 'full', mode: 'edit', photos: true, nav: 'scroll', missing: false, tab: 0, price: 'sale', addOpen: false };
+  const CONTROLS = [
+    ['แบบ', 'variant', [['old', 'ปัจจุบัน'], ['head', 'ใหม่ · เปลี่ยนแค่หัว'], ['full', 'ใหม่ · หัว + จัดฟอร์ม']]],
+    ['สถานะ', 'mode', [['edit', 'เปิดของเดิม'], ['new', 'สร้างใหม่'], ['copy', 'คัดลอก']]],
+    ['รูป', 'photos', [[true, 'มีรูป'], [false, 'ยังไม่มีรูป']]],
+    ['ส่วนเนื้อหา', 'nav', [['scroll', 'หน้าเดียว · แถบพาเลื่อน'], ['tabs', 'แท็บสลับเนื้อหา']]],
+    ['ตัวอย่าง', 'missing', [[false, 'กรอกครบ'], [true, 'ช่องบังคับว่าง 2 ช่อง']]],
+  ];
+
+  const isNew = () => S.mode !== 'edit';
+  const hasData = () => S.mode !== 'new'; // copy mode arrives pre-filled
+  const val = v => (hasData() ? v : '');
+
+  function renderControls() {
+    document.getElementById('controls').innerHTML = CONTROLS.map(([label, key, opts]) =>
+      `<div class="ctl"><span>${label}</span><div class="seg">${opts.map(([v, t]) =>
+        `<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${String(S[key]) === String(v)}">${t}</button>`).join('')}</div></div>`).join('');
+  }
+
+  /* ── inputs ── */
+  function input(v, kind = 'text', opts = {}) {
+    const empty = v === '' || v == null;
+    const cls = ['in', kind === 'num' ? 'num' : '', kind === 'dd' ? 'dd' : '', opts.off ? 'off' : '', empty ? 'ph' : '', opts.err ? 'err' : ''].join(' ');
+    return `<div class="${cls}">${empty ? (opts.placeholder ?? (kind === 'dd' ? 'กรุณาเลือก' : '')) : v}${opts.lock ? '<span class="lock">🔒 ล็อกตามแบบสำรวจ</span>' : ''}</div>`;
+  }
+  function factorInput(f, i) {
+    const [, v, kind, , sel] = f;
+    const err = S.missing && MISSING.has(i);
+    if (kind === 'chips' || kind === 'radio') {
+      const on = err || !hasData() ? [] : sel;
+      return `<div class="pills ${err ? 'err' : ''}">${v.map((o, j) => `<span class="pill ${on.includes(j) ? 'on' : ''}">${kind === 'chips' ? (on.includes(j) ? '☑ ' : '☐ ') : ''}${o}</span>`).join('')}</div>`;
+    }
+    return input(err ? '' : val(v), kind, { err });
+  }
+
+  /* ── CURRENT ── */
+  function oldTop() {
+    return `<nav class="old-nav"><a class="on">Photos</a><a>Comparable</a><a>Survey Factors</a></nav>`;
+  }
+  function oldBody() {
+    const n = S.photos ? C.photos : 0;
+    const tiles = Array.from({ length: Math.min(n, 5) }, (_, i) => `<div class="old-tile ${PH[i]}"></div>`).join('');
+    const row = (icon, label, ins, one = true) =>
+      `<div class="row"><div class="lab"><i>${icon}</i>${label}</div><div class="ins ${one ? 'one' : ''}">${ins}</div></div>`;
+    const sale = S.price === 'sale';
+    return `
+      <div class="old-h"><span>▣</span><h3>Photos</h3></div><div class="old-rule"></div>
+      <div class="old-strip"><div class="old-add">＋<br/>Click to add picture</div>${tiles}</div>
+      <div class="old-h cmp"><span>⌕</span><h3>Comparable Information</h3></div><div class="old-rule"></div>
+      <div class="rows">
+        ${row('▦', 'Property Type', input(C.typeLabel, 'dd', { off: true }))}
+        ${row('▤', 'Template', input(val(C.template), 'dd'))}
+        ${row('◈', 'Comparable Name', input(val(C.name)))}
+        ${row('▣', 'Information Date / Time', input(val(C.info)))}
+        ${row('ⓘ', 'Source of Information', input(val(C.source)))}
+        ${row('฿', 'Offer Price', input(sale && hasData() ? '0.00' : val(C.offer), 'num', { off: sale && hasData() }) + input(sale ? '' : val(C.unit), 'dd', { off: sale && hasData() }), false)}
+        ${row('฿', 'Sale Price', input(sale ? val(C.sale) : '', 'num', { off: !sale }) + input(sale ? val(C.unit) : '', 'dd', { off: !sale }), false)}
+        ${row('▣', 'Sale Date', input(sale ? val(C.saleDate) : '', 'text', { off: !sale }))}
+        ${row('⌖', 'Location', input(val(C.lat), 'num', { placeholder: 'Latitude' }) + input(val(C.lng), 'num', { placeholder: 'Longitude' }), false)}
+      </div>
+      <div class="rows" style="margin-top:22px">
+        ${FACTORS.map((f, i) => row('⚟', f[0], factorInput(f, i))).join('')}
+        ${row('▭', 'Remark', '<div class="in area">&nbsp;</div>')}
+      </div>`;
+  }
+
+  /* ── NEW: header ── */
+  function header() {
+    const n = S.photos ? C.photos : 0;
+    const cover = n
+      ? `<div class="cover ${PH[0]}"><span class="tag">ภาพหน้าปก</span></div>`
+      : `<div class="cover empty"><div><b>＋ เพิ่มรูปแรก</b>รูปแรกจะเป็นภาพหน้าปก</div></div>`;
+    const top = isNew()
+      ? `<span class="chip">${C.typeLabel}</span><span class="no todo">เลขที่จะออกให้เมื่อบันทึก</span>`
+      : `<span class="chip">${C.typeLabel}</span><span class="no">${C.number}</span><span class="where" style="margin-left:auto">${C.pos}</span>`;
+    const title = isNew()
+      ? `<h2 class="todo">ข้อมูลตลาดใหม่</h2>`
+      : `<h2>${C.name}</h2>`;
+    let facts;
+    if (S.mode === 'edit') facts = `<div class="facts"><span>${C.area}</span><span>${C.plot}</span><span>${C.distance}</span><span>${C.source}</span><span>${C.infoShort}</span></div>
+      <div class="flags"><span class="used">ใช้ใน WQS</span></div>`;
+    else if (S.mode === 'copy') facts = `<div class="facts"><span class="hint">คัดลอกจาก ${C.number} — บันทึกแล้วจะได้เลขที่ใหม่</span></div>`;
+    else facts = `<div class="facts"><span class="hint">บันทึกแล้วข้อมูลหลักจะแสดงที่นี่</span></div>`;
+    const thumbs = n
+      ? Array.from({ length: n }, (_, i) => `<div class="thumb ${PH[i]} ${i === 0 ? 'first' : ''}"></div>`).join('')
+      : '';
+    const add = `<span class="add-wrap"><button type="button" class="btn sm" data-add>＋ เพิ่มรูป</button>${S.addOpen
+      ? '<div class="menu"><div>⤒ อัปโหลดจากเครื่อง</div><div>▦ เลือกจากแกลเลอรีของใบนี้</div></div>' : ''}</span>`;
+    const viewAll = n ? `<button type="button" class="btn ghost sm">ดูทั้งหมด ${n} รูป</button>` : '';
+    const sale = S.price === 'sale';
+    const price = S.mode === 'edit'
+      ? `<small>${sale ? 'ราคาขายจริง' : 'ราคาเสนอขาย'}</small><b>${sale ? '70,000' : '75,000'}</b><span class="u">บาท/ตร.ว.</span>`
+      : `<small>ราคา</small><span class="none">ยังไม่บันทึก</span>`;
+    return `<div class="idcard">${cover}
+      <div class="id-main"><div class="id-top">${top}</div>${title}${facts}
+        <div class="thumbs">${thumbs}${add}${viewAll}</div></div>
+      <div class="price">${price}</div></div>`;
+  }
+
+  function tabBar(items) {
+    const active = S.nav === 'tabs' ? S.tab : S.spy ?? 0;
+    return `<div class="tabs" role="tablist">${items.map(([label, n, bad], i) =>
+      `<button type="button" data-tab="${i}" class="${i === active ? 'on' : ''}">${label}${n ? `<span class="n">${n}</span>` : ''}${bad ? `<span class="bad">${bad}</span>` : ''}</button>`).join('')}
+      <span class="mode">${S.nav === 'tabs' ? 'สลับเนื้อหา' : 'พาเลื่อนไปยังส่วน'}</span></div>`;
+  }
+
+  /* ── NEW: bodies ── */
+  const bad = () => (S.missing ? 2 : 0);
+
+  function headOnlyMain() {
+    const row = (icon, label, ins, one = true) =>
+      `<div class="row"><div class="lab"><i>${icon}</i>${label}</div><div class="ins ${one ? 'one' : ''}">${ins}</div></div>`;
+    const sale = S.price === 'sale';
+    return `<div class="rows">
+      ${row('▦', 'ประเภททรัพย์สิน', input(C.typeLabel, 'dd', { off: true }))}
+      ${row('▤', 'แบบสำรวจ', input(val(C.template), 'dd'))}
+      ${row('◈', 'ชื่อข้อมูลเปรียบเทียบ', input(val(C.name)))}
+      ${row('▣', 'วันที่ / เวลาที่ได้ข้อมูล', input(val(C.info)))}
+      ${row('ⓘ', 'แหล่งที่มา', input(val(C.source)))}
+      ${row('฿', 'ราคาเสนอขาย', input(sale ? '' : val(C.offer), 'num', { off: sale }) + input(sale ? '' : val(C.unit), 'dd', { off: sale }), false)}
+      ${row('฿', 'ราคาขายจริง', input(sale ? val(C.sale) : '', 'num', { off: !sale }) + input(sale ? val(C.unit) : '', 'dd', { off: !sale }), false)}
+      ${row('▣', 'วันที่ขาย', input(sale ? val(C.saleDate) : '', 'text', { off: !sale }))}
+      ${row('⌖', 'ตำแหน่ง', input(val(C.lat), 'num', { placeholder: 'ละติจูด' }) + input(val(C.lng), 'num', { placeholder: 'ลองจิจูด' }), false)}
+    </div>`;
+  }
+  function headOnlyFactors() {
+    const row = (label, ins) => `<div class="row"><div class="lab"><i>⚟</i>${label}</div><div class="ins one">${ins}</div></div>`;
+    return `<div class="rows">${FACTORS.map((f, i) => row(f[0], factorInput(f, i))).join('')}</div>`;
+  }
+  const remarkBlock = () => `<div class="fld"><div class="in area">&nbsp;</div><div class="aside" style="text-align:right">0 / 4,000</div></div>`;
+
+  function fullSource() {
+    return `<section class="card" data-sec><h3>ที่มาของข้อมูล</h3><div class="grid2">
+      <div class="fld"><label>ประเภททรัพย์สิน</label>${input(C.typeLabel, 'dd', { off: true })}</div>
+      <div class="fld"><label>แบบสำรวจ<em>*</em></label>${input(val(C.template), 'dd')}</div>
+      <div class="fld wide"><label>ชื่อข้อมูลเปรียบเทียบ<em>*</em></label>${input(val(C.name))}</div>
+      <div class="fld"><label>วันที่ / เวลาที่ได้ข้อมูล</label>${input(val(C.info))}</div>
+      <div class="fld"><label>แหล่งที่มา</label>${input(val(C.source), 'text', { placeholder: 'เช่น ป้ายประกาศขาย, นายหน้า, เว็บไซต์' })}</div>
+    </div></section>`;
+  }
+  function fullPrice() {
+    const sale = S.price === 'sale';
+    return `<section class="card" data-sec><h3>ราคา</h3>
+      <div class="toggle"><span data-price="sale" class="${sale ? 'on' : ''}">ราคาขายจริง</span><span data-price="offer" class="${sale ? '' : 'on'}">ราคาเสนอขาย</span></div>
+      <div class="price-grid">
+        <div class="fld"><label>${sale ? 'ราคาขายจริง' : 'ราคาเสนอขาย'}</label>${input(val(sale ? C.sale : C.offer), 'num')}</div>
+        <div class="fld"><label>หน่วย</label>${input(val(C.unit), 'dd')}</div>
+        ${sale ? `<div class="fld"><label>วันที่ขาย<em>*</em></label>${input(val(C.saleDate))}</div>` : '<div></div>'}
+      </div>
+      <div class="aside">กรอกได้อย่างเดียว — สลับแล้วราคาอีกแบบจะถูกล้าง ${sale ? '' : '· ราคาเสนอขายไม่มีวันที่ขาย'}</div>
+    </section>`;
+  }
+  function fullLocation() {
+    const has = hasData();
+    return `<section class="card" data-sec><h3>ตำแหน่ง</h3><div class="loc">
+      <div class="fld"><label>ละติจูด</label>${input(val(C.lat), 'num')}</div>
+      <div class="fld"><label>ลองจิจูด</label>${input(val(C.lng), 'num')}</div>
+      <button type="button" class="btn">⌖ ปักหมุดบนแผนที่</button></div>
+      <div class="loc-note">${has && S.mode === 'edit' ? `ห่างทรัพย์ที่ประเมินที่ใกล้ที่สุด <b>850 ม.</b>` : has ? 'บันทึกแล้วจะคำนวณระยะห่างจากทรัพย์ที่ประเมิน' : '<span style="color:var(--cover)">ยังไม่มีพิกัด — จะไม่ขึ้นบนแผนที่ในแท็บตลาด</span>'}</div>
+    </section>`;
+  }
+  function fullFactors() {
+    return `<section class="card" data-sec><h3>ปัจจัยสำรวจ <small>ตามแบบสำรวจ LAND_TEMPLATE · ${FACTORS.length} รายการ</small></h3><div class="grid2">
+      ${FACTORS.map((f, i) => {
+        const err = S.missing && MISSING.has(i);
+        const wide = f[2] === 'chips' ? 'wide' : '';
+        return `<div class="fld ${wide}"><label>${f[0]}${f[3] ? '<em>*</em>' : ''}</label>${factorInput(f, i)}${err ? '<div class="msg">ต้องกรอก</div>' : ''}</div>`;
+      }).join('')}
+    </div></section>`;
+  }
+  const fullRemark = () => `<section class="card" data-sec><h3>หมายเหตุ</h3>${remarkBlock()}</section>`;
+
+  function newBody() {
+    const full = S.variant === 'full';
+    if (S.nav === 'tabs') {
+      const items = [['ข้อมูลตลาด'], ['ปัจจัยสำรวจ', FACTORS.length, bad()]];
+      let body;
+      if (S.tab === 0) body = full ? fullSource() + fullPrice() + fullLocation() + fullRemark()
+        : headOnlyMain() + `<div class="sub-h">หมายเหตุ</div>` + remarkBlock();
+      else body = full ? fullFactors() : headOnlyFactors();
+      return header() + tabBar(items) + body;
+    }
+    // One page: the bar jumps to a section and follows the scroll.
+    const items = full
+      ? [['ที่มาของข้อมูล'], ['ราคา'], ['ตำแหน่ง'], ['ปัจจัยสำรวจ', FACTORS.length, bad()], ['หมายเหตุ']]
+      : [['ข้อมูลตลาด'], ['ปัจจัยสำรวจ', FACTORS.length, bad()], ['หมายเหตุ']];
+    const body = full
+      ? fullSource() + fullPrice() + fullLocation() + fullFactors() + fullRemark()
+      : `<div data-sec class="sec-anchor">${headOnlyMain()}</div>
+         <div data-sec class="sec-anchor"><div class="sub-h">ปัจจัยสำรวจ</div>${headOnlyFactors()}</div>
+         <div data-sec class="sec-anchor"><div class="sub-h">หมายเหตุ</div>${remarkBlock()}</div>`;
+    return header() + tabBar(items) + body;
+  }
+
+  function render() {
+    const old = S.variant === 'old';
+    const leaf = isNew() ? 'ใหม่' : C.number;
+    document.getElementById('app').innerHTML = `
+      <div class="crumbs">⌂ › งาน › 69000170 › ข้อมูลทรัพย์สิน › ตลาด › <b>${leaf}</b></div>
+      <div class="editor-top">${old ? oldTop() : ''}</div>
+      <div class="scroll" id="scroll">${old ? oldBody() : newBody()}</div>
+      <div class="actionbar"><div class="l"><button type="button" class="btn ghost">${old ? 'ยกเลิก' : 'ยกเลิก'}</button>${S.missing ? '<span class="dirty">มีการแก้ไขที่ยังไม่บันทึก</span>' : ''}</div>
+        <button type="button" class="btn primary">✓ ${old ? 'Save' : 'บันทึก'}</button></div>`;
+    renderControls();
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-k]');
+    if (b) {
+      const raw = b.dataset.v;
+      S[b.dataset.k] = raw === 'true' ? true : raw === 'false' ? false : raw;
+      S.tab = 0; S.spy = 0; S.addOpen = false;
+      return render();
+    }
+    if (e.target.closest('[data-add]')) { S.addOpen = !S.addOpen; return render(); }
+    const p = e.target.closest('[data-price]');
+    if (p) { S.price = p.dataset.price; return render(); }
+    const tab = e.target.closest('[data-tab]');
+    if (tab) {
+      const i = Number(tab.dataset.tab);
+      const scroller = document.getElementById('scroll');
+      if (S.nav === 'tabs') {
+        S.tab = i; render();
+        const card = document.querySelector('.idcard');
+        const s = document.getElementById('scroll');
+        if (card && s.scrollTop > card.offsetHeight) s.scrollTop = card.offsetHeight;
+      } else {
+        const sec = scroller.querySelectorAll('[data-sec]')[i];
+        const bar = scroller.querySelector('.tabs');
+        if (sec) scroller.scrollTo({ top: sec.offsetTop - bar.offsetHeight - 4, behavior: 'smooth' });
+      }
+      return;
+    }
+    if (S.addOpen && !e.target.closest('.menu')) { S.addOpen = false; render(); }
+  });
+
+  // Scroll-spy for the one-page layout.
+  document.addEventListener('scroll', e => {
+    if (e.target.id !== 'scroll' || S.nav !== 'scroll' || S.variant === 'old') return;
+    const scroller = e.target;
+    const bar = scroller.querySelector('.tabs');
+    const secs = [...scroller.querySelectorAll('[data-sec]')];
+    const line = scroller.scrollTop + bar.offsetHeight + 12;
+    let idx = 0;
+    secs.forEach((s, i) => { if (s.offsetTop <= line) idx = i; });
+    if (scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 2) idx = secs.length - 1;
+    if (idx !== S.spy) {
+      S.spy = idx;
+      bar.querySelectorAll('[data-tab]').forEach((t, i) => t.classList.toggle('on', i === idx));
+    }
+  }, true);
+
+  render();
+</script>

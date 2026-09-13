@@ -8,6 +8,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import FormCard from '@shared/components/sections/FormCard';
 import ActionBar from '@/shared/components/ActionBar';
+import CancelButton from '@/shared/components/buttons/CancelButton';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { FormFields, type FormField } from '@/shared/components/form';
 import FieldHelp from '@/shared/components/form/FieldHelp';
@@ -378,7 +379,14 @@ const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
  * machines" (not tied to any single machine). Shown as a tab in the Property
  * Information page when the appraisal contains machinery.
  */
-export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) => {
+export const MachinerySummaryTab = ({
+  onSaved,
+  cancelPath,
+}: {
+  onSaved?: () => void;
+  /** Where Cancel goes. Without one it steps back in history, like the property forms. */
+  cancelPath?: string;
+} = {}) => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
@@ -505,12 +513,19 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
           <MachinerySummaryLegalForm readOnly={readOnly} />
         </FormCard>
 
-        {/* Sticky footer actions — pinned to the bottom of the scroll area */}
-        {!readOnly && (
-          <ActionBar>
-            <ActionBar.Left>
-              <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
-            </ActionBar.Left>
+        {/* Sticky footer actions — pinned to the bottom of the scroll area. Cancel is there even
+            when read-only, the same as the property forms: it is the way back to the list. */}
+        <ActionBar>
+          <ActionBar.Left>
+            <CancelButton fallbackPath={cancelPath} />
+            {!readOnly && (
+              <>
+                <ActionBar.Divider />
+                <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
+              </>
+            )}
+          </ActionBar.Left>
+          {!readOnly && (
             <ActionBar.Right>
               <Button
                 type="submit"
@@ -521,8 +536,8 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
                 {t('propertyInfo.machinerySummary.save')}
               </Button>
             </ActionBar.Right>
-          </ActionBar>
-        )}
+          )}
+        </ActionBar>
       </form>
     </FormProvider>
   );
