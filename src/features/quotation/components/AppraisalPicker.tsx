@@ -438,6 +438,8 @@ export interface AppraisalPickerProps {
   onUndoRemoval?: (id: string) => void;
   /** When true, the picker omits its own selected-list panel — the caller renders one. */
   hideSelectedPanel?: boolean;
+  /** Filter values the caller fixes; overrides the matching user-editable filter in the query regardless of what's selected in that filter's control. */
+  fixedFilters?: Partial<AppraisalFilters>;
   error?: string;
 }
 
@@ -453,6 +455,7 @@ export function AppraisalPicker({
   markedForRemovalIds,
   onUndoRemoval,
   hideSelectedPanel = false,
+  fixedFilters,
   error,
 }: AppraisalPickerProps) {
   const { t } = useTranslation(['quotation', 'common']);
@@ -493,27 +496,30 @@ export function AppraisalPicker({
   const PAGE_SIZE = 10;
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
-  const debouncedCustomerName = useDebounced(filters.customerName, 300).trim();
-  const debouncedAppraisalNumber = useDebounced(filters.appraisalNumber, 300).trim();
-  const debouncedSubDistrict = useDebounced(filters.subDistrict, 300).trim();
-  const debouncedDistrict = useDebounced(filters.district, 300).trim();
+  // Fixed values always win over whatever the user has selected in the corresponding control.
+  const effectiveFilters: AppraisalFilters = { ...filters, ...fixedFilters };
+
+  const debouncedCustomerName = useDebounced(effectiveFilters.customerName, 300).trim();
+  const debouncedAppraisalNumber = useDebounced(effectiveFilters.appraisalNumber, 300).trim();
+  const debouncedSubDistrict = useDebounced(effectiveFilters.subDistrict, 300).trim();
+  const debouncedDistrict = useDebounced(effectiveFilters.district, 300).trim();
 
   const queryParams: EligibleAppraisalsParams = {
     pageNumber,
     pageSize: PAGE_SIZE,
     ...(debouncedCustomerName && { customerName: debouncedCustomerName }),
     ...(debouncedAppraisalNumber && { appraisalNumber: debouncedAppraisalNumber }),
-    ...(filters.purpose && { purpose: filters.purpose }),
-    ...(filters.requestedAt && {
-      requestedAtFrom: filters.requestedAt,
-      requestedAtTo: filters.requestedAt,
+    ...(effectiveFilters.purpose && { purpose: effectiveFilters.purpose }),
+    ...(effectiveFilters.requestedAt && {
+      requestedAtFrom: effectiveFilters.requestedAt,
+      requestedAtTo: effectiveFilters.requestedAt,
     }),
-    ...(filters.channel && { channel: filters.channel }),
-    ...(filters.status && { status: filters.status }),
-    ...(filters.bankingSegment && { bankingSegment: filters.bankingSegment }),
+    ...(effectiveFilters.channel && { channel: effectiveFilters.channel }),
+    ...(effectiveFilters.status && { status: effectiveFilters.status }),
+    ...(effectiveFilters.bankingSegment && { bankingSegment: effectiveFilters.bankingSegment }),
     ...(debouncedSubDistrict && { subDistrict: debouncedSubDistrict }),
     ...(debouncedDistrict && { district: debouncedDistrict }),
-    ...(filters.province && { province: filters.province }),
+    ...(effectiveFilters.province && { province: effectiveFilters.province }),
     ...(excludeQuotationRequestId && { excludeQuotationRequestId }),
   };
 
@@ -692,12 +698,17 @@ export function AppraisalPicker({
               {t('picker.status')}
             </label>
             <select
-              value={filters.status}
+              value={effectiveFilters.status}
               onChange={e => handleFilterChange('status', e.target.value)}
               className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
             >
-              <option value="">{t('picker.statusAll')}</option>
-              {APPRAISAL_STATUS_OPTIONS.map(opt => (
+              {fixedFilters?.status === undefined && (
+                <option value="">{t('picker.statusAll')}</option>
+              )}
+              {(fixedFilters?.status === undefined
+                ? APPRAISAL_STATUS_OPTIONS
+                : APPRAISAL_STATUS_OPTIONS.filter(opt => opt.value === fixedFilters.status)
+              ).map(opt => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
