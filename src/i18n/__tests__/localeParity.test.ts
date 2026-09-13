@@ -31,6 +31,7 @@ const ZH_ENGLISH_FALLBACK = new Set([
   // a shipped zh file unchecked forever. (The th case above has no opt-out on
   // purpose and stays red until th/oauthAdmin.json exists.)
   'oauthAdmin',
+  'hangfire',
 ]);
 
 function flattenKeys(obj: Record<string, unknown>, prefix = ''): string[] {
