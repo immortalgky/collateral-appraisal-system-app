@@ -22,13 +22,12 @@ import Icon from '@/shared/components/Icon';
 import TitleDeedForm from '@/features/appraisal/forms/TitleDeedForm';
 import BlockLandDetailForm from './BlockLandDetailForm';
 import {
-  createLandForm,
   createLandFormDefault,
   createProjectLandForm,
   type createLandFormType,
   type createProjectLandFormType,
 } from '@/features/appraisal/schemas/form';
-import { mapLandPropertyResponseToForm } from '@/features/appraisal/utils/mappers';
+import { mapProjectLandPropertyResponseToForm } from '@/features/appraisal/utils/mappers';
 import type { ApiError } from '@/shared/types/api';
 
 type AppError = AxiosError & { apiError?: ApiError };
@@ -57,9 +56,9 @@ export default function ProjectLandForm() {
   const formDefaults = useMemo(() => {
     if (landData) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return mapLandPropertyResponseToForm(landData as any);
+      return mapProjectLandPropertyResponseToForm(landData as any);
     }
-    return createLandFormDefault;
+    return { ...createLandFormDefault, ownerName: '', isOwnerVerified: true };
   }, [landData]);
 
   const methods = useForm<createProjectLandFormType>({
@@ -79,7 +78,7 @@ export default function ProjectLandForm() {
   useEffect(() => {
     if (landData) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      reset(mapLandPropertyResponseToForm(landData as any));
+      reset(mapProjectLandPropertyResponseToForm(landData as any));
     }
   }, [landData, reset]);
 
@@ -131,7 +130,7 @@ export default function ProjectLandForm() {
         />
       </div>
 
-      <FormProvider methods={methods} schema={createLandForm}>
+      <FormProvider methods={methods} schema={createProjectLandForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
           <div
