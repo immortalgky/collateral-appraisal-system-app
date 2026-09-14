@@ -77,10 +77,12 @@ interface TaskFilterDialogProps {
 
 export function TaskFilterDialog({ open, initialValues, onApply, onClose }: TaskFilterDialogProps) {
   const [values, setValues] = useState<TaskFilterParams>(initialValues);
-  const PURPOSE_TYPE_OPTIONS = useParameterOptions('AppraisalPurpose').map(o => ({
-    value: o.value ?? '',
-    label: o.label,
-  }));
+  const PURPOSE_TYPE_OPTIONS = useParameterOptions('AppraisalPurpose')
+    .filter(o => !!o.isActive)
+    .map(o => ({
+      value: o.value ?? '',
+      label: o.label,
+    }));
   const CHANNEL_OPTIONS = useParameterOptions('Channel').map(o => ({
     value: o.value ?? '',
     label: o.label,
