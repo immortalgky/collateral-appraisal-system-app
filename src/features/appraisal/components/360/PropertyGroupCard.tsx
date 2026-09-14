@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
-import { getTypeIconName } from '../../utils/propertyTypeConfig';
+import { getPropertyIcon } from '../../utils/propertyTypeConfig';
 import type { PropertyGroup, PropertyType } from '../../types';
 import PhotoPreviewModal, { type PreviewablePhoto } from '../PhotoPreviewModal';
 
@@ -197,8 +197,10 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
   );
 };
 
-const PropertyTypeIcon = ({ type }: { type: string }) => (
-  <Icon name={getTypeIconName(type)} style="solid" className="w-3 h-3 text-gray-400" />
-);
+/** The same drawing the Property Information tab uses for this type. */
+const PropertyTypeIcon = ({ type }: { type: string }) => {
+  const icon = getPropertyIcon(type);
+  return <Icon name={icon.name} style={icon.style} className="w-3 h-3 text-gray-400" />;
+};
 
 export default PropertyGroupCard;

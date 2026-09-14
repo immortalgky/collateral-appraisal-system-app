@@ -1,5 +1,6 @@
 import Icon from '@/shared/components/Icon';
-import { collateralIcon } from '@/shared/config/collateralIcon';
+import { collateralPropertyType } from '@/shared/config/collateralIcon';
+import { getPropertyIcon } from '../utils/propertyTypeConfig';
 import { useRef, useState, useLayoutEffect } from 'react';
 
 interface CollateralSelectModalProps {
@@ -50,7 +51,8 @@ const CollateralSelectModal = ({
         onClick={e => e.stopPropagation()}
       >
         {items.map(item => {
-          const icon = collateralIcon[item.code] ?? 'circle-question';
+          const type = collateralPropertyType[item.code];
+          const icon = type ? getPropertyIcon(type) : { style: 'light', name: 'circle-question' };
 
           return (
             <li
@@ -58,7 +60,7 @@ const CollateralSelectModal = ({
               onClick={() => onSelect(item)}
               className="flex items-center p-2 hover:bg-neutral-3 rounded-lg cursor-pointer"
             >
-              <Icon style="light" name={icon} className="size-3 text-neutral-4" />
+              <Icon style={icon.style} name={icon.name} className="size-3 text-neutral-4" />
               <p className="ml-2">{item.description}</p>
             </li>
           );
