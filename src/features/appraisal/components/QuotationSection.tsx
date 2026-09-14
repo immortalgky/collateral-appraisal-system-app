@@ -39,6 +39,7 @@ import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
+import { sortCompanyResponses } from '@/features/quotation/utils/sortCompanyResponses';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -866,7 +867,14 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
     };
 
-    const invitedCompanies = quotationDetail?.invitedCompanies ?? [];
+    const invitedCompanies = sortCompanyResponses(quotationDetail?.invitedCompanies ?? [], inv => {
+      const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
+      return {
+        status: cq?.status ?? 'Pending',
+        totalNetAmount: cq?.totalQuotedPrice,
+        companyName: inv.companyName,
+      };
+    });
 
     return (
       <div className="flex flex-col gap-2">

@@ -14,6 +14,7 @@ import {
   useUnshortlistQuotation,
 } from '../api/quotation';
 import type { AppraisalSummaryDto, CompanyQuotationDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import SendToRmModal from './SendToRmModal';
 import { AdminCompanyQuotationDetailContent } from '../pages/AdminCompanyQuotationDetailPage';
@@ -56,6 +57,11 @@ const AdminShortlistPanel = ({
     ? companyQuotations.find(cq => cq.id === drawerCompanyQuotationId)
     : null;
 
+  const sortedCompanyQuotations = sortCompanyResponses(companyQuotations, cq => ({
+    status: cq.status,
+    totalNetAmount: cq.totalQuotedPrice,
+    companyName: cq.companyName,
+  }));
   const shortlistedQuotations = companyQuotations.filter(q => q.isShortlisted);
   const shortlistedCount = shortlistedQuotations.length;
   const isPending = isShortlisting || isUnshortlisting;
@@ -203,7 +209,7 @@ const AdminShortlistPanel = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {companyQuotations.map(cq => {
+                {sortedCompanyQuotations.map(cq => {
                   const items = cq.items ?? [];
                   const hasItems = items.length > 0;
                   const totalFeeAmount = items.reduce(

@@ -27,6 +27,7 @@ import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 import { useAuthStore } from '@/features/auth/store';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
@@ -89,7 +90,14 @@ const QuotationSelectionPage = () => {
   const [isDraftCancelOpen, setIsDraftCancelOpen] = useState(false);
   const [viewingCqId, setViewingCqId] = useState<string | null>(null);
 
-  const shortlisted = (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted);
+  const shortlisted = sortCompanyResponses(
+    (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted),
+    cq => ({
+      status: cq.status,
+      totalNetAmount: cq.totalQuotedPrice,
+      companyName: cq.companyName,
+    }),
+  );
   const tentativeWinner = quotation?.tentativeWinnerQuotationId
     ? shortlisted.find(q => q.id === quotation.tentativeWinnerQuotationId)
     : null;
@@ -486,10 +494,19 @@ const QuotationSelectionPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {(quotation.invitedCompanies ?? []).map(inv => {
-                    const cq = (quotation.companyQuotations ?? []).find(
-                      q => q.companyId === inv.companyId,
-                    );
+                  {sortCompanyResponses(
+                    (quotation.invitedCompanies ?? []).map(inv => ({
+                      inv,
+                      cq: (quotation.companyQuotations ?? []).find(
+                        q => q.companyId === inv.companyId,
+                      ),
+                    })),
+                    ({ inv, cq }) => ({
+                      status: cq?.status ?? 'Pending',
+                      totalNetAmount: cq?.totalQuotedPrice,
+                      companyName: inv.companyName,
+                    }),
+                  ).map(({ inv, cq }) => {
                     const items = cq?.items ?? [];
                     const hasItems = items.length > 0;
                     const totalFeeAmount = items.reduce(

@@ -8,6 +8,7 @@ import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useRecallShortlist } from '../api/quotation';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { QuotationRequestDetailDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import { AdminCompanyQuotationDetailContent } from '../pages/AdminCompanyQuotationDetailPage';
 
@@ -46,7 +47,14 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
       ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
       : '—';
 
-  const shortlisted = (quotation.companyQuotations ?? []).filter(q => q.isShortlisted);
+  const shortlisted = sortCompanyResponses(
+    (quotation.companyQuotations ?? []).filter(q => q.isShortlisted),
+    cq => ({
+      status: cq.status,
+      totalNetAmount: cq.totalQuotedPrice,
+      companyName: cq.companyName,
+    }),
+  );
 
   return (
     <>
