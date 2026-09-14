@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
@@ -60,8 +60,7 @@ const ACTION_TONE: Record<ActionTone, string> = {
   gray: 'text-gray-700 hover:bg-gray-50',
 };
 
-const MENU_PANEL_CLASS =
-  'bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[168px]';
+const MENU_PANEL_CLASS = 'bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[168px]';
 
 interface ActionMenuItemsProps {
   actions: RowAction[];
@@ -287,11 +286,27 @@ const MeetingListPage = () => {
   const { t } = useTranslation(['meeting', 'common']);
   const navigate = useNavigate();
   const hasAdmin = useHasPermission(MEETING_PERMISSIONS.ADMIN);
-  const [tab, setTab] = useState<MeetingTab>('active');
-  const [searchInput, setSearchInput] = useState('');
-  const [fromDate, setFromDate] = useState<string | undefined>(undefined);
-  const [toDate, setToDate] = useState<string | undefined>(undefined);
-  const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>('');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initRef = useRef<{
+    tab: MeetingTab;
+    search: string;
+    fromDate: string | undefined;
+    toDate: string | undefined;
+    status: MeetingStatus | '';
+  }>({
+    tab: (searchParams.get('tab') as MeetingTab | null) ?? 'active',
+    search: searchParams.get('search') ?? '',
+    fromDate: searchParams.get('fromDate') ?? undefined,
+    toDate: searchParams.get('toDate') ?? undefined,
+    status: (searchParams.get('status') as MeetingStatus | null) ?? '',
+  });
+
+  const [tab, setTab] = useState<MeetingTab>(initRef.current.tab);
+  const [searchInput, setSearchInput] = useState(initRef.current.search);
+  const [fromDate, setFromDate] = useState<string | undefined>(initRef.current.fromDate);
+  const [toDate, setToDate] = useState<string | undefined>(initRef.current.toDate);
+  const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>(initRef.current.status);
   const debouncedSearch = useDebounce(searchInput, 400);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -313,6 +328,18 @@ const MeetingListPage = () => {
   useEffect(() => {
     setPageNumber(0);
   }, [debouncedSearch, fromDate, toDate, statusFilter, tab, sortField, sortDir]);
+
+  useEffect(() => {
+    const next = new URLSearchParams();
+    next.set('tab', tab);
+    if (debouncedSearch) next.set('search', debouncedSearch);
+    if (fromDate) next.set('fromDate', fromDate);
+    if (toDate) next.set('toDate', toDate);
+    if (statusFilter) next.set('status', statusFilter);
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [tab, debouncedSearch, fromDate, toDate, statusFilter, searchParams, setSearchParams]);
 
   const { data, isLoading, isError, refetch } = useGetMeetings({
     status: statusFilter || undefined,
