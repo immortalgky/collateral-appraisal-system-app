@@ -572,13 +572,43 @@ export function useUpdateRemark() {
 
 // ==================== Calculation Mode Hooks ====================
 /**
+ * Set the analysis-wide system-calculation mode immediately on toggle.
+ * PUT /pricing-analysis/{id}/system-calc
+ * Only touches useSystemCalc — does not modify final values. Kept as a dedicated, immediate-write
+ * endpoint (rather than folding into useUpdatePricingAnalysis below) because switching modes is
+ * destructive server-side — it cascades a reset across every approach/method and, going
+ * manual→system, clears manual-evidence documents (SetSystemCalcCommandHandler) — so it must not
+ * wait for the batched Save Summary click the way the rest of the toggle's persistence does.
+ */
+export function useSetPricingAnalysisSystemCalc() {
+  return useMutation({
+    mutationFn: async ({
+      pricingAnalysisId,
+      useSystemCalc,
+    }: {
+      pricingAnalysisId: string;
+      useSystemCalc: boolean;
+    }): Promise<{ id: string; useSystemCalc: boolean }> => {
+      const { data: response } = await axios.put(
+        `/pricing-analysis/${pricingAnalysisId}/system-calc`,
+        { useSystemCalc },
+      );
+      return response;
+    },
+  });
+}
+
+/**
  * Update the analysis-level fields. Every value in the body is optional server-side and only
  * what is sent gets written, so the summary screen uses it to persist the Manual/System toggle
  * alone (all value fields null) without disturbing the final values the rollup just computed.
  * PUT /pricing-analysis/{id}
  *
  * Not invalidated here — only called from saveSummary (useSelectionActions), which does a
- * single consolidated invalidate after the whole batch lands.
+ * single consolidated invalidate after the whole batch lands. Acts as an idempotent resync of
+ * useSystemCalc at save time — a safety net in case an earlier step in the same save
+ * (SetFinalValue/UpdateFinalValue/SetManualCostBreakdown/SaveComparativeAnalysis) flipped the
+ * flag as a side effect after the immediate useSetPricingAnalysisSystemCalc call above landed.
  */
 export function useUpdatePricingAnalysis() {
   return useMutation({

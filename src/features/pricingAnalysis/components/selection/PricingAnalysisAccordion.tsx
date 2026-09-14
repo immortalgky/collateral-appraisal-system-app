@@ -51,7 +51,7 @@ interface PricingAnalysisAccordionProps {
 
   onSelectCandidateMethod: (arg: { approachType: string; methodType: string }) => void;
   onSelectCandidateApproach: (approachType: string) => void;
-
+  onToggleMethodCalcMode?: (arg: { approachType: string; methodType: string }) => void;
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   pricingConfiguration?: PricingAnalysisConfigType[];
@@ -74,6 +74,14 @@ interface PricingAnalysisAccordionProps {
     value: number;
     methodId?: string;
   }) => void;
+  toggleCalcModeConfirm?: {
+    isOpen: boolean;
+    pending: { approachType: string; methodType: string } | null;
+    message: string;
+    confirmToggle: () => void;
+    cancelToggle: () => void;
+    isToggling: boolean;
+  };
   /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
@@ -108,7 +116,7 @@ export const PricingAnalysisAccordion = ({
 
   onSelectCandidateMethod,
   onSelectCandidateApproach,
-
+  onToggleMethodCalcMode,
   onAddMethod,
   onDeleteMethod,
   pricingConfiguration,
@@ -118,6 +126,7 @@ export const PricingAnalysisAccordion = ({
   modelThumbnailSrc,
   deleteConfirm,
   onManualValueSync,
+  toggleCalcModeConfirm,
   manualCostBreakdown,
   onRequestRemoveDocument,
   removeDocumentConfirm,
@@ -298,11 +307,13 @@ export const PricingAnalysisAccordion = ({
                 onCancelEditMode={onCancelEditMode}
                 onSelectCandidateMethod={onSelectCandidateMethod}
                 onSelectCandidateApproach={onSelectCandidateApproach}
+                onToggleMethodCalcMode={onToggleMethodCalcMode}
                 onAddMethod={onAddMethod}
                 onDeleteMethod={onDeleteMethod}
                 pricingConfiguration={pricingConfiguration}
                 deleteConfirm={deleteConfirm}
                 onManualValueSync={onManualValueSync}
+                toggleCalcModeConfirm={toggleCalcModeConfirm}
                 manualCostBreakdown={manualCostBreakdown}
                 onRequestRemoveDocument={onRequestRemoveDocument}
                 removeDocumentConfirm={removeDocumentConfirm}

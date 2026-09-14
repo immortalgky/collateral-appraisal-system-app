@@ -6,6 +6,7 @@ export const projectModelPricingContextKeys = {
 
 export const pricingAnalysisKeys = {
   all: ['price-analysis'] as const,
+  pricingParameters: () => [...pricingAnalysisKeys.all, 'pricing-parameters'] as const,
   detail: (id: string) => ['price-analysis', id] as const,
   comparativeFactors: (pricingAnalysisId: string, methodId: string) =>
     ['price-analysis', pricingAnalysisId, 'comparative-factors', methodId] as const,

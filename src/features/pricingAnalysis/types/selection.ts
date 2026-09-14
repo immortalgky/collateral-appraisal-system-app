@@ -35,6 +35,7 @@ export interface Method {
   appraisalValue: number;
   isIncluded: boolean;
   isSelected: boolean;
+  useSystemCalc: boolean;
   /**
    * Land price per square wa, typed by the appraiser when pricing a Cost-approach group by hand.
    * Its presence is what lets the appraisal summary print ที่ดิน and สิ่งปลูกสร้าง on separate
