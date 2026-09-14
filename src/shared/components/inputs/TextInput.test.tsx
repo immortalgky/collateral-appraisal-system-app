@@ -129,6 +129,31 @@ describe('TextInput', () => {
 
       expect(handleChange).toHaveBeenCalled();
     });
+
+    // ------------------------------------------
+    // Scenario 8a: Uncontrolled (no value prop, as `{...register()}` renders) still types
+    // ------------------------------------------
+    it('should allow typing when no value prop is passed', async () => {
+      const { user } = render(<TextInput label="Name" onChange={() => {}} />);
+
+      const input = screen.getByLabelText('Name');
+      await user.type(input, 'John');
+
+      expect(input).toHaveValue('John');
+    });
+
+    // ------------------------------------------
+    // Scenario 8b: A controlled value that becomes null clears the box
+    // ------------------------------------------
+    it('should clear the box when a controlled value becomes null', () => {
+      const { rerender } = render(<TextInput label="Name" value="Old" onChange={() => {}} />);
+
+      rerender(
+        <TextInput label="Name" value={null as unknown as string} onChange={() => {}} />
+      );
+
+      expect(screen.getByLabelText('Name')).toHaveValue('');
+    });
   });
 
   // ============================================

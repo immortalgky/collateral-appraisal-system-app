@@ -17,8 +17,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
+  (allProps, ref) => {
+    const {
       className,
       label,
       labelAddon,
@@ -34,9 +34,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       maxLength,
       value,
       ...props
-    },
-    ref,
-  ) => {
+    } = allProps;
     // Generate a unique ID if not provided
     const uuid = useId();
     const inputId = id || uuid;
@@ -112,8 +110,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             // `null` is a legitimate form value — "not applicable", or a field the API must leave
             // alone — but React reads it as "uncontrolled" and stops managing the box, leaving
             // whatever text was last in the DOM on screen. An empty string is the controlled way
-            // to say the same thing.
-            value={value ?? ''}
+            // to say the same thing. Only coerce when the caller passed `value` at all:
+            // `{...register('x')}` passes none and keeps its text in the DOM, so forcing '' on it
+            // would freeze the box.
+            value={'value' in allProps ? (value ?? '') : undefined}
             {...props}
           />
 
