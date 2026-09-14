@@ -74,6 +74,7 @@ export interface EligibleAssignment {
   appraisalNumber: string | null;
   customerName: string | null;
   productType: string | null;
+  costCenter: string | null;
   feePaymentType: string | null;
   feeBeforeVAT: number;
   vatRate: number;
