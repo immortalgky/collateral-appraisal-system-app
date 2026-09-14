@@ -1,8 +1,8 @@
-import { Fragment, type ReactNode, type Ref, useMemo, useRef } from 'react';
+import { Fragment, type ReactNode, type Ref, useEffect, useMemo, useRef } from 'react';
 import { useFormState } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { type FlatFormError, flattenFormErrors } from '@/shared/components/form';
+import { type FlatFormError, flattenFormErrors, scrollToField } from '@/shared/components/form';
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyItem } from '../types';
@@ -73,12 +73,46 @@ export const PropertyEditorHeader = ({
 
   // Failed fields per tab, so an error on a tab out of view still shows. Panels stay mounted
   // (hidden, not removed), so a failed field on any tab can be found by its `data-field`.
-  const { errors } = useFormState();
+  const { errors, submitCount } = useFormState();
   const failed = flattenFormErrors(errors);
   const tabsWithErrors = tabs.map(tab => ({
     ...tab,
     errorCount: failed.length > 0 ? countFailedIn(`${tab.id}-section`, failed) : 0,
   }));
+
+  // After a failed save, bring a failed field into view. The form's own scroll aims at the first
+  // error overall, and when that field sits on a hidden tab (`display: none`) it goes nowhere.
+  // So: stay on this tab if it has a failed field and go to the first one; otherwise open the tab
+  // holding the first error that is on any tab, and scroll once that tab is showing.
+  const pendingScroll = useRef<string | null>(null);
+  useEffect(() => {
+    if (!submitCount || failed.length === 0 || tabs.length < 2) return;
+    const onThisTab = activeTab
+      ? failed.find(f => panelHasField(`${activeTab}-section`, f.path))
+      : undefined;
+    if (onThisTab) {
+      requestAnimationFrame(() => scrollToField(onThisTab.path));
+      return;
+    }
+    // The first error that sits on a tab: one outside every panel (a field this form does not
+    // render, say) must not stop the search for one the user can actually get to.
+    for (const f of failed) {
+      const target = tabs.find(tab => panelHasField(`${tab.id}-section`, f.path));
+      if (!target) continue;
+      pendingScroll.current = f.path;
+      onTabChange?.(target.id);
+      return;
+    }
+    // Only on the submit that produced the errors, not on every keystroke that clears one.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitCount]);
+  useEffect(() => {
+    const path = pendingScroll.current;
+    if (!path) return;
+    pendingScroll.current = null;
+    const frame = requestAnimationFrame(() => scrollToField(path));
+    return () => cancelAnimationFrame(frame);
+  }, [activeTab]);
 
   const selectTab = (id: string) => {
     onTabChange?.(id);
@@ -130,12 +164,15 @@ export const PropertyEditorHeader = ({
  * that every property page wraps each tab's content in. Array errors (`titles`) match their first cell.
  */
 function countFailedIn(panelId: string, failed: FlatFormError[]): number {
+  return failed.filter(({ path }) => panelHasField(panelId, path)).length;
+}
+
+/** Is the field at `path` inside the element with this id? Array errors match their first cell. */
+function panelHasField(panelId: string, path: string): boolean {
   const panel = document.getElementById(panelId);
-  if (!panel) return 0;
-  return failed.filter(({ path }) => {
-    const escaped = CSS.escape(path);
-    return panel.querySelector(`[data-field="${escaped}"], [data-field^="${escaped}."]`) !== null;
-  }).length;
+  if (!panel) return false;
+  const escaped = CSS.escape(path);
+  return panel.querySelector(`[data-field="${escaped}"], [data-field^="${escaped}."]`) !== null;
 }
 
 interface IdentityCardProps {
