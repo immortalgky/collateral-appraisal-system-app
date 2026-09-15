@@ -335,6 +335,9 @@ function UnitPriceResultTable({
             {/* Common flags */}
             {isCondo(projectType) ? (
               <>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.standardPrice')}
+                </th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
                   {t('unitPrice.cols.corner')}
                 </th>
@@ -354,14 +357,14 @@ function UnitPriceResultTable({
                   {t('unitPrice.cols.adjustPriceLocation')}
                 </th>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.standardPrice')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                   {t('unitPrice.cols.priceIncrementFloor')}
                 </th>
               </>
             ) : (
               <>
+                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  {t('unitPrice.cols.standardPrice')}
+                </th>
                 <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
                   {t('unitPrice.cols.corner')}
                 </th>
@@ -382,9 +385,6 @@ function UnitPriceResultTable({
                 </th>
                 <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
                   {t('unitPrice.cols.locationAdj')}
-                </th>
-                <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-                  {t('unitPrice.cols.standardPrice')}
                 </th>
               </>
             )}
@@ -430,6 +430,7 @@ function UnitPriceResultTable({
               <td className="py-2 px-3 text-right text-gray-700">{fmt(up.sellingPrice)}</td>
               {isCondo(projectType) ? (
                 <>
+                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
                   <FlagCell
                     checked={up.isCorner}
                     amount={pricingAssumption?.cornerAdjustment}
@@ -463,13 +464,13 @@ function UnitPriceResultTable({
                   <td className="py-2 px-3 text-right text-gray-800">
                     {fmt(up.adjustPriceLocation)}
                   </td>
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
                   <td className="py-2 px-3 text-right text-gray-800">
                     {fmt(up.priceIncrementPerFloor)}
                   </td>
                 </>
               ) : (
                 <>
+                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
                   <FlagCell
                     checked={up.isCorner}
                     amount={pricingAssumption?.cornerAdjustment}
@@ -503,7 +504,6 @@ function UnitPriceResultTable({
                   <td className="py-2 px-3 text-right text-gray-800">
                     {fmt(up.adjustPriceLocation)}
                   </td>
-                  <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
                 </>
               )}
               <td className="py-2 px-3 text-right font-medium text-gray-900">
