@@ -143,7 +143,7 @@ export const landInfoFieldTail: FormField[] = [
     name: 'landDescription',
     wrapperClassName: 'col-span-12',
     required: true,
-    maxLength: 100,
+    maxLength: 4000,
     showCharCount: true,
   },
 
