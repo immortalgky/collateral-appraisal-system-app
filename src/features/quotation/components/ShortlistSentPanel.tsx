@@ -165,10 +165,15 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                   (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                   0,
                 );
-                const totalEstimateManday = items.reduce(
-                  (sum, item) => sum + (item.estimatedDays ?? 0),
-                  0,
-                );
+                const validEstimatedDays = items
+                  .map(item => item.estimatedDays)
+                  .filter((d): d is number => typeof d === 'number' && d > 0);
+                const minEstimateManday = validEstimatedDays.length
+                  ? Math.min(...validEstimatedDays)
+                  : undefined;
+                const maxEstimateManday = validEstimatedDays.length
+                  ? Math.max(...validEstimatedDays)
+                  : undefined;
                 return (
                   <tr
                     key={cq.id}
@@ -207,7 +212,11 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="text-sm text-gray-600">
-                        {hasItems ? totalEstimateManday : '—'}
+                        {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                          ? minEstimateManday === maxEstimateManday
+                            ? minEstimateManday
+                            : `${minEstimateManday} - ${maxEstimateManday}`
+                          : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">

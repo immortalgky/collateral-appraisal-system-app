@@ -987,10 +987,15 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -1015,7 +1020,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -1344,9 +1353,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div>
-                  <div className="text-xs text-gray-500">
-                    {t('quotation.specialRequirements')}
-                  </div>
+                  <div className="text-xs text-gray-500">{t('quotation.specialRequirements')}</div>
                   <div className="font-medium text-gray-900 whitespace-pre-wrap">
                     {draftDetail?.specialRequirements?.trim() || t('quotation.notSet')}
                   </div>
@@ -1651,7 +1658,9 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         <div className="px-4 py-3 text-sm text-gray-600">
           <p>
             {t('quotation.finalizedWith', {
-              company: winner ? localizeCompanyName(winner.companyName, winner.companyNameLocal) : '—',
+              company: winner
+                ? localizeCompanyName(winner.companyName, winner.companyNameLocal)
+                : '—',
             })}
           </p>
           {finalPrice != null && (

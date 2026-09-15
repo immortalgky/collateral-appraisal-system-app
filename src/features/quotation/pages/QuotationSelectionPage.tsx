@@ -517,10 +517,15 @@ const QuotationSelectionPage = () => {
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -545,7 +550,11 @@ const QuotationSelectionPage = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -604,7 +613,10 @@ const QuotationSelectionPage = () => {
                 __html: t('shared.quotationAwarded', {
                   company: `<strong class="text-gray-900">${
                     finalizedWinner
-                      ? localizeCompanyName(finalizedWinner.companyName, finalizedWinner.companyNameLocal)
+                      ? localizeCompanyName(
+                          finalizedWinner.companyName,
+                          finalizedWinner.companyNameLocal,
+                        )
                       : '—'
                   }</strong>`,
                 }),
@@ -703,7 +715,10 @@ const QuotationSelectionPage = () => {
                   {t('negotiation.rmRequestsNegotiation')}{' '}
                   <strong>
                     {tentativeWinner &&
-                      localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+                      localizeCompanyName(
+                        tentativeWinner.companyName,
+                        tentativeWinner.companyNameLocal,
+                      )}
                   </strong>
                 </p>
                 {quotation.rmNegotiationNote && (
@@ -768,10 +783,15 @@ const QuotationSelectionPage = () => {
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     const submittedAt = (() => {
                       if (!cq.submittedAt) return '—';
                       const d = new Date(cq.submittedAt);
@@ -814,7 +834,11 @@ const QuotationSelectionPage = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -882,7 +906,10 @@ const QuotationSelectionPage = () => {
                 __html: t('selectWinner.body', {
                   company: `<strong>${
                     pickedCompany
-                      ? localizeCompanyName(pickedCompany.companyName, pickedCompany.companyNameLocal)
+                      ? localizeCompanyName(
+                          pickedCompany.companyName,
+                          pickedCompany.companyNameLocal,
+                        )
                       : ''
                   }</strong>`,
                 }),
@@ -1025,7 +1052,10 @@ const QuotationSelectionPage = () => {
           }}
           quotationId={quotation.id}
           companyQuotationId={finalizeTarget.id}
-          companyName={localizeCompanyName(finalizeTarget.companyName, finalizeTarget.companyNameLocal)}
+          companyName={localizeCompanyName(
+            finalizeTarget.companyName,
+            finalizeTarget.companyNameLocal,
+          )}
           winnerItems={finalizeTarget.items ?? []}
           appraisals={quotation.appraisals ?? []}
         />
@@ -1038,7 +1068,10 @@ const QuotationSelectionPage = () => {
           onClose={() => setIsNegotiationOpen(false)}
           quotationId={quotation.id}
           companyQuotationId={tentativeWinner.id}
-          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+          companyName={localizeCompanyName(
+            tentativeWinner.companyName,
+            tentativeWinner.companyNameLocal,
+          )}
           currentRounds={tentativeWinner.negotiationRounds ?? 0}
         />
       )}
@@ -1049,7 +1082,10 @@ const QuotationSelectionPage = () => {
           isOpen={isRejectOpen}
           onClose={() => setIsRejectOpen(false)}
           quotationId={quotation.id}
-          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+          companyName={localizeCompanyName(
+            tentativeWinner.companyName,
+            tentativeWinner.companyNameLocal,
+          )}
         />
       )}
 
