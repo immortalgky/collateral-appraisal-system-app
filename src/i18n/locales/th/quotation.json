@@ -455,6 +455,8 @@
     "clearFilters": "ล้างตัวกรองทั้งหมด",
     "clear": "ล้าง",
     "selectAll": "เลือกทั้งหมด",
+    "selectAllDocuments": "เลือกเอกสารทั้งหมด",
+    "selectedCount": "เลือกแล้ว {{selected}}/{{total}} รายการ",
     "clearAll": "ล้างทั้งหมด",
     "matchingCount": "({{count}} รายการที่ตรงกัน)",
     "appraisalNo": "เลขที่การประเมิน",
