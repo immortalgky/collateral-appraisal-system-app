@@ -11,7 +11,6 @@ import {
   toFiniteNumber,
   toNumberArray,
 } from '@features/pricingAnalysis/domain/calculateWQS';
-import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
 import { wqsFieldPath } from './wqsFieldPath';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
@@ -332,13 +331,10 @@ export function buildWQSFinalValueDerivedRules(args: {
             return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
           }),
         );
-        const forecastResult =
-          forecast({
-            x: collateralScore,
-            known_ys: surveyCalculate,
-            known_xs: surveyScores,
-          }) ?? 0;
-        return round2(toFiniteNumber(forecastResult));
+        const slope = SLOPE(surveyCalculate, surveyScores) ?? 0;
+        const intercept = INTERCEPT(surveyCalculate, surveyScores) ?? 0;
+        const finalValue = intercept + slope * collateralScore;
+        return round2(toFiniteNumber(finalValue));
       },
     },
     {
