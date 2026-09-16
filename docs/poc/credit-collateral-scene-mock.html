@@ -1,0 +1,749 @@
+<title>Collateral Scene</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  /* ------------------------------------------------------------------
+     POC ONLY - standalone mock, no build step, no app code touched.
+     Continues the language of property-scene-3d-mock.html: CSS 3D boxes,
+     no WebGL, no library. Scaled down for the credit tracking panel,
+     where the job is "roughly what collateral is on this application",
+     not "inspect the site".
+     ------------------------------------------------------------------ */
+  :root {
+    --primary: #0d9488;
+    --primary-700: #0f766e;
+    --accent: #d97706;
+    --ink: #1f2937;
+    --ink-soft: #6b7280;
+    --line: #e5e7eb;
+    --base-200: #f6f8f8;
+
+    /* One fixed camera: every application is drawn from the same viewpoint, so
+       two of them can be compared at a glance. `--zoom` is the only one JS
+       touches — fitWorld() sizes each scene to its stage. No rotate, no zoom
+       control: this is a summary, not a site survey. */
+    --tilt: 58deg;
+    --spin: -42deg;
+    --zoom: 1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 20px 60px;
+    font-family: Sarabun, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    background: #f1f5f5;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  .lede { font-size: 13px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.6; }
+
+  .scenarios { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .scenarios button {
+    font: inherit; font-size: 12.5px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; color: var(--ink-soft);
+  }
+  .scenarios button[aria-pressed='true'] {
+    background: var(--primary); border-color: var(--primary); color: #fff;
+  }
+
+  /* ---------------- the section, as it sits in the panel ---------------- */
+  .section { background: #fff; border-radius: 14px; padding: 16px 18px 18px; box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+  .sec-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 8px; }
+  .sec-h h2 {
+    margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: #b45309;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sec-h h2::before {
+    content: ''; width: 4px; height: 14px; border-radius: 999px;
+    background: linear-gradient(to bottom, #fcd34d, #f97316);
+  }
+  .sec-h .count { font-size: 12px; color: var(--ink-soft); }
+  .rule { height: 1px; background: linear-gradient(to right, rgba(252,211,77,.7), transparent); }
+
+  /* ---------------- 3D stage ---------------- */
+  .stage {
+    position: relative; height: 290px; margin: 14px 0 4px;
+    border-radius: 12px; overflow: hidden;
+    background: radial-gradient(120% 100% at 50% 10%, #ffffff 0%, #f2f6f6 60%, #e8eff0 100%);
+    perspective: 1400px;
+    perspective-origin: 50% 44%;
+  }
+  .world {
+    /* `top` and `--zoom` are set by fitWorld(). Fixed values cannot work: the
+       headroom and the scale a scene needs both depend on its tallest object
+       and how wide its plot is, and a 35-floor tower pushed its pin outside
+       the stage, which is `overflow: hidden`. */
+    position: absolute; left: 50%; top: 52%;
+    width: 0; height: 0;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--tilt)) rotateZ(var(--spin)) scale3d(var(--zoom), var(--zoom), var(--zoom));
+    /* Only ever changes when the scenario does, so it can afford to settle. */
+    transition: transform .22s ease, top .22s ease;
+  }
+  .gridplane {
+    position: absolute; left: -700px; top: -700px;
+    width: 1400px; height: 1400px;
+    transform: translateZ(-2px);
+    background:
+      linear-gradient(rgba(13,148,136,.09) 1px, transparent 1px) 0 0 / 44px 44px,
+      linear-gradient(90deg, rgba(13,148,136,.09) 1px, transparent 1px) 0 0 / 44px 44px;
+    -webkit-mask-image: radial-gradient(closest-side, #000 35%, transparent 80%);
+    mask-image: radial-gradient(closest-side, #000 35%, transparent 80%);
+    pointer-events: none;
+  }
+
+  .obj {
+    position: absolute; left: 0; top: 0;
+    width: var(--w); height: var(--d);
+    margin-left: calc(var(--w) / -2);
+    margin-top: calc(var(--d) / -2);
+    transform: translate3d(var(--x), var(--y), var(--z));
+    transform-style: preserve-3d;
+  }
+  .face { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+  .f-top { width: var(--w); height: var(--d); background: var(--ct); transform: translateZ(var(--h)); }
+  .f-n { width: var(--w); height: var(--h); background: var(--cf); transform: rotateX(90deg); }
+  .f-s { width: var(--w); height: var(--h); background: var(--cf); transform: translateY(var(--d)) rotateX(90deg); }
+  .f-w { width: var(--d); height: var(--h); background: var(--cs); transform: rotateZ(90deg) rotateX(90deg); }
+  .f-e { width: var(--d); height: var(--h); background: var(--cs); transform: translateX(var(--w)) rotateZ(90deg) rotateX(90deg); }
+
+  .obj.storeys .f-n, .obj.storeys .f-s, .obj.storeys .f-w, .obj.storeys .f-e {
+    background-image: repeating-linear-gradient(
+      to top,
+      rgba(255,255,255,0) 0, rgba(255,255,255,0) calc(var(--fl) - 1.5px),
+      rgba(255,255,255,.34) calc(var(--fl) - 1.5px), rgba(255,255,255,.34) var(--fl));
+  }
+  /* The floor the unit actually sits on, drawn as a band round the tower.
+     Four thin divs rather than a gradient stop, because it has to line up on
+     every visible face and a viewer can see two of them at this angle. */
+  .face.banded { overflow: hidden; }
+  .face i {
+    position: absolute; left: 0; right: 0;
+    height: var(--bh); bottom: var(--bb);
+    background: var(--accent);
+    box-shadow: inset 0 0 0 1px rgba(180,83,9,.5);
+  }
+
+  /* The stand-in surface for an application with no land parcel of its own.
+     Desaturated and dashed so it never reads as a plot the bank is valuing. */
+  .obj.apron .f-top { background: #e9eef0; outline: 1px dashed #cbd5e1; outline-offset: -3px; }
+  .obj.apron .f-n, .obj.apron .f-s, .obj.apron .f-w, .obj.apron .f-e { background: #dbe3e6; }
+  .obj.apron .shadow { display: none; }
+
+  .obj.plate .f-top {
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,.3) 0 5px, rgba(255,255,255,0) 5px 12px);
+  }
+
+  /* A flat ellipse, NOT filter: blur(). A blurred shadow forces its own
+     composited layer and a GPU blur pass per object; at one object nobody
+     would notice, but this panel has to stay cheap on a bank laptop where
+     GPU acceleration may be off entirely. */
+  .shadow {
+    position: absolute; left: 0; top: 0;
+    width: var(--w); height: var(--d);
+    background: rgba(15,23,42,.13);
+    transform: translate3d(6px, 7px, 0.4px);
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  /* ---------------- callouts (2D overlay, not in the world) ----------------
+     Pins used to float above each object inside the 3D scene, which meant they
+     collided with one another the moment two objects sat near each other in
+     screen space — and the closer the camera got to side-on, the worse it got.
+     They are now laid out in the flat overlay: anchored to the object's
+     projected position, pushed just clear of the SCENE on whichever side it is
+     already nearer, and stacked so they can never overlap. Leader lines keep
+     the link explicit.
+     ---------------------------------------------------------------------- */
+  .overlay { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+  .leads { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .leads path { fill: none; stroke: #94a3b8; stroke-width: 1; stroke-dasharray: 3 3; }
+  .leads circle { fill: #fff; stroke: #64748b; stroke-width: 1.5; }
+
+  .callout {
+    position: absolute; width: max-content; max-width: 190px;
+    background: rgba(255,255,255,.97); border: 1px solid var(--line);
+    border-radius: 9px; padding: 4px 9px 5px; font-size: 11px;
+    box-shadow: 0 2px 8px rgba(15,23,42,.14);
+  }
+  /* Both are positioned by `left`. On the left-hand side that value is the
+     card's RIGHT edge, because of the -100% — see layoutCallouts(). */
+  .callout.right { transform: translateY(-50%); }
+  .callout.left { transform: translate(-100%, -50%); }
+  .callout .t { display: flex; align-items: center; gap: 6px; font-weight: 700; }
+  .callout .d {
+    display: block; margin-top: 1px; padding-left: 13px;
+    font-size: 10.5px; font-weight: 400; color: var(--ink-soft);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .callout .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .callout .xn {
+    font-size: 10.5px; font-weight: 700; color: #fff;
+    background: var(--accent); border-radius: 999px; padding: 0 6px;
+  }
+  .callout small { font-weight: 400; color: var(--ink-soft); }
+
+
+  /* ---------------- the summary rows, unchanged ---------------- */
+  .rows { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    background: var(--base-200); border: 1px solid var(--line);
+    border-radius: 10px; padding: 9px 12px;
+  }
+  .row .l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .row .sw { width: 26px; height: 26px; border-radius: 7px; flex: none; border: 1px solid rgba(15,23,42,.08); }
+  .row b { font-size: 13.5px; font-weight: 600; display: block; }
+  .row span { font-size: 11.5px; color: var(--ink-soft); display: block; }
+  .row .n {
+    flex: none; font-size: 11.5px; font-weight: 600; color: var(--ink-soft);
+    background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+  }
+
+  .note {
+    margin-top: 16px; font-size: 12px; color: var(--ink-soft); line-height: 1.7;
+    background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--primary);
+    border-radius: 8px; padding: 12px 14px;
+  }
+  .note b { color: var(--ink); }
+</style>
+
+<div class="wrap">
+  <h1>หลักประกันในคำขอ — ฉากสรุปแบบ 3D</h1>
+  <p class="lede">
+    ต่อยอดจาก <code>property-scene-3d-mock.html</code> — CSS 3D ล้วน ไม่มี WebGL ไม่มี library
+    กติกาคือ <b>เครื่องจักรวาดก้อนเดียวเสมอ</b> แล้วติดป้ายบอกจำนวน
+    ส่วน <b>อาคาร/ที่ดิน วาดจริงถ้าไม่เยอะ</b> เกินกว่านั้นวาดเท่าที่กำหนดแล้วบอก “และอีก N”
+  </p>
+
+  <div class="scenarios" id="scenarios"></div>
+
+  <div class="section">
+    <div class="sec-h">
+      <h2>หลักประกันในคำขอ</h2>
+      <span class="count" id="total"></span>
+    </div>
+    <div class="rule"></div>
+
+    <div class="stage">
+      <div class="world" id="world"><div class="gridplane"></div></div>
+      <div class="overlay" id="overlay"><svg class="leads" id="leads"></svg></div>
+    </div>
+
+    <div class="rows" id="rows"></div>
+  </div>
+
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+  // ── palette per collateral kind ────────────────────────────────────────────
+  // top / front / side, so every face of one kind reads as the same material.
+  const KIND = {
+    land:     { ct: '#a7d7cf', cf: '#7fc0b6', cs: '#6cb2a8', label: 'ที่ดิน' },
+    building: { ct: '#cbd5e1', cf: '#a9b6c7', cs: '#97a6ba', label: 'สิ่งปลูกสร้าง' },
+    condo:    { ct: '#bcd0e8', cf: '#9ab4d4', cs: '#88a4c8', label: 'คอนโด' },
+    machine:  { ct: '#f5cf9a', cf: '#e6b06a', cs: '#d79f57', label: 'เครื่องจักร' },
+  };
+
+  // How many of a kind are drawn before the rest collapse into "และอีก N".
+  // Machines are 1 by design: twenty-eight identical boxes say nothing that
+  // the badge does not, and they would be the only thing on the stage.
+  // Condos are 1 for a different reason — several units are several floors of
+  // ONE tower, and a second tower would claim a second building.
+  const CAP = { machine: 1, building: 4, land: 3, condo: 1 };
+
+  // `note` is the row under the scene; `detail` is the second line of the pin.
+  // They are deliberately different lengths — the row has the width for a full
+  // sentence, the pin has about 190px before it starts to truncate.
+  const SCENARIOS = {
+    'ที่ดิน 1 แปลง': [
+      { kind: 'land', n: 1, note: 'โฉนด 12345 · 1-0-0 ไร่ · กรุงเทพมหานคร', detail: '1-0-0 ไร่ · กรุงเทพฯ' },
+    ],
+    'ที่ดินพร้อมสิ่งปลูกสร้าง': [
+      { kind: 'land', n: 1, note: 'โฉนด 55012 · 1-2-30 ไร่ · นนทบุรี', detail: '1-2-30 ไร่ · นนทบุรี' },
+      { kind: 'building', n: 1, note: 'บ้านเดี่ยว 2 ชั้น · 240 ตร.ม.', detail: 'บ้านเดี่ยว 2 ชั้น', storeys: 2 },
+    ],
+    'อาคารหลายหลัง': [
+      { kind: 'land', n: 1, note: '5-0-0 ไร่ · ชลบุรี', detail: '5-0-0 ไร่ · ชลบุรี' },
+      {
+        kind: 'building', n: 7, storeys: 1,
+        note: 'โรงงาน 1 ชั้น ×5, โกดัง 1 ชั้น ×2 · รวม 4,800 ตร.ม.',
+        detail: 'โรงงาน/โกดัง 1 ชั้น',
+      },
+    ],
+    'เครื่องจักรจำนวนมาก': [
+      { kind: 'building', n: 1, storeys: 1, note: 'โรงงาน 1 ชั้น · 2,100 ตร.ม.', detail: 'โรงงาน 1 ชั้น' },
+      {
+        kind: 'machine', n: 28,
+        note: 'เครื่องผลิตเม็ดพลาสติก · ติดตั้งในโรงงาน',
+        detail: 'เครื่องผลิตเม็ดพลาสติก',
+      },
+    ],
+    'ผสม (เคสในภาพ)': [
+      { kind: 'land', n: 2, note: 'สิทธิการเช่าที่ดิน + ที่ดินเปล่า · รวม 1-1-1 ไร่ · กรุงเทพมหานคร', detail: 'รวม 1-1-1 ไร่ · กรุงเทพฯ' },
+      {
+        kind: 'building', n: 3, storeys: 1,
+        note: 'บ้านเดี่ยว 1 ชั้น, โรงงานร้าง 1 ชั้น, ที่ดินและสิ่งปลูกสร้าง',
+        detail: 'บ้านเดี่ยว, โรงงานร้าง +1',
+      },
+      { kind: 'machine', n: 28, note: 'เครื่องผลิตเม็ดพลาสติก', detail: 'เครื่องผลิตเม็ดพลาสติก' },
+    ],
+    'คอนโด ชั้น 12 จาก 35': [
+      {
+        kind: 'condo', n: 1, floors: 35, occupied: [12],
+        note: 'ห้อง 1205 · ชั้น 12 จาก 35 ชั้น · 58 ตร.ม.',
+        detail: 'ห้อง 1205 · ชั้น 12/35',
+      },
+    ],
+    'คอนโด 3 ห้อง คนละชั้น': [
+      {
+        kind: 'condo', n: 3, floors: 30, occupied: [4, 11, 27],
+        note: 'ห้อง 0412, 1108, 2703 · อาคาร 30 ชั้น',
+        detail: 'ชั้น 4, 11, 27 จาก 30',
+      },
+    ],
+  };
+
+  const px = n => n + 'px';
+
+  /**
+   * The ground plot's tile size. Module scope, not local to renderScene:
+   * fitWorld() sizes the camera from PLATE_D, and while these lived inside
+   * renderScene that reference threw a ReferenceError — which aborted the
+   * render half-way, after the plates and before anything standing on them.
+   * The land still drew, so the scene looked deliberate rather than broken.
+   */
+  const PLATE_W = 122, PLATE_D = 96, PLATE_H = 3;
+
+  /** Tallest a tower is allowed to be drawn, in px. */
+  const TOWER_PX = 92;
+  /** The dashed stem under a pin, and the pin card itself — both fixed in CSS. */
+  const STEM_PX = 12;
+  const PIN_PX = 50;
+
+  /**
+   * How tall an object is drawn. One function so the layout that reserves
+   * headroom and the code that draws the box can never disagree.
+   */
+  function objectHeight(g) {
+    if (g.kind === 'machine') return 22;
+    if (g.kind === 'condo') {
+      const storeys = Math.max(1, g.floors || 1);
+      return Math.max(2.6, Math.min(9, TOWER_PX / storeys)) * storeys;
+    }
+    return 26 * (g.storeys || 1);
+  }
+
+  /** One box. Five faces plus a flat shadow — six nodes, no blur, no canvas. */
+  function box({ w, d, h, x, y, z = 0, kind, storeys, occupied }) {
+    const c = KIND[kind];
+    const el = document.createElement('div');
+    el.className = 'obj' + (storeys > 1 ? ' storeys' : '') + (h <= 4 ? ' plate' : '');
+    el.style.cssText =
+      `--w:${px(w)};--d:${px(d)};--h:${px(h)};--x:${px(x)};--y:${px(y)};--z:${px(z)};` +
+      `--ct:${c.ct};--cf:${c.cf};--cs:${c.cs};--fl:${px(storeys > 1 ? h / storeys : h)}`;
+    el.innerHTML =
+      '<div class="shadow"></div>' +
+      ['f-top', 'f-n', 'f-s', 'f-w', 'f-e'].map(f => `<div class="face ${f}"></div>`).join('');
+
+    // Mark the floors the units are on. The band is positioned from the BOTTOM
+    // of the wall in floor units, so it lands on the same storey the banding
+    // draws — floor 1 is the lowest band, not the ground.
+    if (occupied && occupied.length && storeys > 1) {
+      const fl = h / storeys;
+      occupied.forEach(n => {
+        if (!(n >= 1 && n <= storeys)) return;
+        ['f-n', 'f-s', 'f-w', 'f-e'].forEach(f => {
+          const face = el.querySelector('.' + f);
+          const band = document.createElement('i');
+          band.style.cssText = `--bh:${px(Math.max(2, fl - 1))};--bb:${px((n - 1) * fl)}`;
+          band.className = '';
+          face.appendChild(band);
+          face.classList.add('banded');
+        });
+      });
+    }
+
+    return el;
+  }
+
+  /**
+   * Where a world-space point lands on the stage, in px.
+   *
+   * Mirrors what the browser does to `.world`, in the same order the CSS
+   * declares it — `rotateX(tilt) rotateZ(spin) scale3d(zoom)` applies scale
+   * first, then Z, then X — and then the stage's own `perspective`, which
+   * divides by distance about `perspective-origin`. Doing it by hand rather
+   * than reading getBoundingClientRect() keeps it exact for a point that has no
+   * element of its own (the top centre of a box), and costs one call per label.
+   */
+  function project(x, y, z) {
+    const rad = a => (a * Math.PI) / 180;
+    const t = rad(view.tilt);
+    const sp = rad(view.spin);
+    const k = view.zoom;
+
+    const sx = x * k, sy = y * k, sz = z * k;
+    const rx = sx * Math.cos(sp) - sy * Math.sin(sp);
+    const ry = sx * Math.sin(sp) + sy * Math.cos(sp);
+    const px2 = rx;
+    const py2 = ry * Math.cos(t) - sz * Math.sin(t);
+    const pz2 = ry * Math.sin(t) + sz * Math.cos(t);
+
+    const stageW = stage.clientWidth || 900;
+    const stageH = stage.clientHeight || 290;
+    const originX = stageW / 2;
+    const originY = parseFloat(world.style.top) || stageH * 0.52;
+
+    // CSS perspective divides about perspective-origin, not about the element.
+    const P = 1400;
+    const ox = stageW * 0.5, oy = stageH * 0.44;
+    const f = P / (P - pz2);
+    return { x: ox + (originX + px2 - ox) * f, y: oy + (originY + py2 - oy) * f };
+  }
+
+  /**
+   * Lay the labels out in the gutters, not over the scene.
+   *
+   * Each goes to the side its object is already nearer, keeping the leader
+   * short and the line unambiguous. Within a side they are sorted by height and
+   * then pushed apart to a minimum gap, so two objects that overlap on screen
+   * still get two readable labels — which is the whole reason these moved out
+   * of the 3D world.
+   */
+  function layoutCallouts(pins) {
+    const overlay = document.getElementById('overlay');
+    const leads = document.getElementById('leads');
+    overlay.querySelectorAll('.callout').forEach(n => n.remove());
+    leads.innerHTML = '';
+
+    const stageW = stage.clientWidth || 900;
+    const stageH = stage.clientHeight || 290;
+    const GAP = 46;
+    const INSET = 10;
+    /** How far a card stands off the edge of the scene. */
+    const LEADER = 34;
+
+    const placed = pins.map(p => ({ ...p, at: project(p.x, p.y, p.h) }));
+    const sides = { left: [], right: [] };
+    placed.forEach(p => sides[p.at.x < stageW / 2 ? 'left' : 'right'].push(p));
+
+    /**
+     * Callouts sit just outside the SCENE, not at the stage edge.
+     *
+     * Anchoring them to the stage put them as far apart as the panel is wide,
+     * with the leader lines crossing empty background to reach a small cluster
+     * of boxes in the middle. Measuring the drawn extent instead keeps the
+     * leaders short, which is what makes the link readable at a glance.
+     */
+    const xs = placed.map(p => p.at.x);
+    const sceneL = Math.min(...xs);
+    const sceneR = Math.max(...xs);
+
+    Object.entries(sides).forEach(([side, list]) => {
+      list.sort((a, b) => a.at.y - b.at.y);
+      let cursor = -Infinity;
+      list.forEach(p => {
+        const y = Math.min(stageH - 24, Math.max(24, Math.max(p.at.y, cursor + GAP)));
+        cursor = y;
+
+        const card = document.createElement('div');
+        card.className = 'callout ' + side;
+        card.style.top = px(Math.round(y));
+        overlay.appendChild(card);
+        card.innerHTML =
+          `<span class="t"><i class="dot" style="background:${KIND[p.kind].cf}"></i>${p.label}` +
+          (p.count > 1 ? `<span class="xn">×${p.count}</span>` : '') +
+          `</span>` +
+          (p.detail ? `<span class="d">${p.detail}</span>` : '');
+
+        /* Both sides are positioned by `left`; the left card carries
+           translate(-100%) so that value is its RIGHT edge. Setting `right` on
+           it as well as translating by -100% — which is what this did — pushed
+           it a full card width off the stage, leaving the sliver in the corner. */
+        const w = card.offsetWidth;
+        const edgeX =
+          side === 'left'
+            ? Math.max(w + INSET, sceneL - LEADER)
+            : Math.min(stageW - w - INSET, sceneR + LEADER);
+        card.style.left = px(Math.round(edgeX));
+
+        // Elbow: out sideways from the object, then up or down to the card, so
+        // the line never cuts diagonally across another object.
+        const midX = (p.at.x + edgeX) / 2;
+        leads.insertAdjacentHTML(
+          'beforeend',
+          `<path d="M ${p.at.x} ${p.at.y} L ${midX} ${p.at.y} L ${midX} ${y} L ${edgeX} ${y}"/>` +
+            `<circle cx="${p.at.x}" cy="${p.at.y}" r="2.5"/>`,
+        );
+      });
+    });
+  }
+
+  function renderScene(groups) {
+    const world = document.getElementById('world');
+    world.querySelectorAll('.obj').forEach(o => o.remove());
+
+    // Split the application into the GROUND and what STANDS ON IT. Laying every
+    // kind out in one row read as a shop display; collateral is a site, and a
+    // building belongs on its parcel. So land is tiled into a contiguous plot
+    // first, then structures are placed on the surface of that plot.
+    const ground = [];
+    const onTop = [];
+    groups.forEach(g => {
+      const cap = CAP[g.kind] ?? 3;
+      const shown = Math.min(g.n, cap);
+      const target = g.kind === 'land' ? ground : onTop;
+      for (let i = 0; i < shown; i++) {
+        target.push({ ...g, first: i === 0, hidden: g.n - shown });
+      }
+    });
+
+    // A parcel-less application (a building on land the bank is not valuing, a
+    // block of machines in a rented plant) still needs a surface, or its
+    // structures float. One faint apron stands in, and it carries no label
+    // because it is not collateral — inventing a parcel would be a lie.
+    const plateCount = Math.max(ground.length, 1);
+    const groundSpan = (plateCount - 1) * PLATE_W;
+
+    const pins = [];
+
+    for (let i = 0; i < plateCount; i++) {
+      const g = ground[i];
+      const x = -groundSpan / 2 + i * PLATE_W;
+      const el = box({ w: PLATE_W, d: PLATE_D, h: PLATE_H, x, y: 0, kind: 'land', storeys: 1 });
+      if (!g) el.classList.add('apron');
+      world.appendChild(el);
+
+      if (g && g.first) {
+        pins.push({
+          x, y: 0, h: PLATE_H,
+          kind: 'land',
+          label: KIND.land.label + (g.hidden > 0 ? ` <small>และอีก ${g.hidden}</small>` : ''),
+          detail: g.detail,
+          count: g.n,
+        });
+      }
+    }
+
+    // Structures sit ON the plot: z = the plate's own height, so their base
+    // rests on its surface rather than sinking through it.
+    /**
+     * Drop the horizon far enough that the tallest pin still lands inside the
+     * stage.
+     *
+     * This was a fixed `top: 52%`, and the condo scenes lost their labels to
+     * it: at rotateX(58°) a tower of height h lifts its pin by h·sin(58°), and
+     * the pin is anchored by its own BOTTOM edge (translate(-50%,-100%)), so
+     * the whole two-line card plus its stem sits above that. A 92px tower
+     * needed 78 + 12 + 50 = 140px of headroom against the 130px it had. The
+     * numbers are derived here rather than tuned by eye so that changing the
+     * tower cap, the camera angle or the pin's height cannot silently
+     * reintroduce it.
+     */
+    const tallest = Math.max(0, ...onTop.map(g => objectHeight(g)));
+    const plotW = groundSpan + PLATE_W;
+    fitWorld(tallest, plotW);
+
+    const usable = groundSpan + PLATE_W * 0.58;
+    const step = onTop.length > 1 ? usable / (onTop.length - 1) : 0;
+
+    onTop.forEach((g, i) => {
+      const isMachine = g.kind === 'machine';
+      const isCondo = g.kind === 'condo';
+
+      /**
+       * A condo is ONE tower however many units are on the application: the
+       * units are inside the same building, so drawing three towers would say
+       * the bank is holding three buildings. Total floors sets the height and
+       * the unit floors are marked on it — which is the whole point, since a
+       * unit on 27 of 30 and one on 2 of 30 are not the same security.
+       *
+       * The height is compressed above a dozen floors (35 storeys at a true
+       * 26px each is taller than the stage), but the BANDING stays per floor
+       * so the marked storey still lands in the right place proportionally.
+       *
+       * TOWER_PX is capped at 92, not at the 150 it started as, because the
+       * PIN has to fit above the roof. At rotateX(58°) a tower of height h
+       * lifts its label by h·sin(58°) ≈ 0.85h on screen, plus 12px of stem and
+       * ~36px for the pin itself; the world's origin sits 130px below the top
+       * of a 250px stage, so 150px of tower put the label at roughly -33px —
+       * outside the stage, which is `overflow: hidden`. That is why the condo
+       * scenes looked like they had no label at all: it was drawn, then clipped.
+       * 92 leaves about 16px of headroom.
+       */
+      const storeys = isCondo ? Math.max(1, g.floors || 1) : g.storeys || 1;
+      const h = objectHeight(g);
+      const w = isMachine ? 38 : isCondo ? 44 : 54;
+      const d = isMachine ? 32 : isCondo ? 40 : 44;
+
+      const x = onTop.length > 1 ? -usable / 2 + i * step : 0;
+      // Machines to the front of the plot, buildings to the back, so a plant
+      // and its equipment do not overlap at this camera angle.
+      const y = isMachine ? 22 : -16;
+
+      world.appendChild(
+        box({
+          w, d, h, x, y,
+          z: PLATE_H,
+          kind: g.kind,
+          storeys,
+          occupied: isCondo ? g.occupied : null,
+        }),
+      );
+
+      if (g.first) {
+        pins.push({
+          x, y, h: h + PLATE_H,
+          kind: g.kind,
+          label:
+            KIND[g.kind].label +
+            (g.hidden > 0 && !isMachine && !isCondo ? ` <small>และอีก ${g.hidden}</small>` : ''),
+          detail: g.detail,
+          count: g.n,
+        });
+      }
+    });
+
+    // Last: project() reads `world.style.top` and `--zoom`, which fitWorld has
+    // already written, so the anchors line up with where the boxes really are.
+    layoutCallouts(pins);
+  }
+
+  function renderRows(groups) {
+    const c = KIND;
+    document.getElementById('rows').innerHTML = groups
+      .map(
+        g => `<div class="row">
+            <div class="l">
+              <i class="sw" style="background:${c[g.kind].cf}"></i>
+              <span><b>${c[g.kind].label}</b><span>${g.note}</span></span>
+            </div>
+            <span class="n">${g.n} รายการ</span>
+          </div>`,
+      )
+      .join('');
+    document.getElementById('total').textContent =
+      groups.reduce((s, g) => s + g.n, 0) + ' รายการ';
+  }
+
+  function describe(groups) {
+    const parts = groups.map(g => {
+      const cap = CAP[g.kind] ?? 3;
+      const shown = Math.min(g.n, cap);
+      return `${KIND[g.kind].label} ${g.n} ชิ้น → วาด ${shown}` +
+        (g.n > shown ? ` แล้วบอก "และอีก ${g.n - shown}"` : '');
+    });
+    const boxes = groups.reduce((s, g) => s + Math.min(g.n, CAP[g.kind] ?? 3), 0);
+    document.getElementById('note').innerHTML =
+      parts.join(' · ') +
+      `<br><b>รวมกล่องที่วาดจริง ${boxes} ก้อน</b> = ${boxes * 6} DOM nodes ` +
+      `(กล่องละ 5 หน้า + เงา 1) ไม่มี blur ไม่มี rAF ไม่มี WebGL`;
+  }
+
+  function select(name) {
+    const groups = SCENARIOS[name];
+    renderScene(groups);
+    renderRows(groups);
+    describe(groups);
+    document
+      .querySelectorAll('#scenarios button')
+      .forEach(b => b.setAttribute('aria-pressed', String(b.textContent === name)));
+  }
+
+  /**
+   * The camera is fixed.
+   *
+   * Drag-to-rotate and an auto-spin were both tried and removed: this block
+   * answers "what collateral is on this application", and turning it round
+   * adds nothing to that answer while costing the one thing the CSS-3D
+   * approach was chosen for — an auto-spin keeps the compositor busy for as
+   * long as the panel is open, which is exactly when nobody is looking at it.
+   *
+   * The values stay in an object because fitWorld() does trigonometry with
+   * them; they are simply never written to.
+   */
+  const stage = document.querySelector('.stage');
+  const world = document.getElementById('world');
+  const view = { spin: -42, tilt: 58, zoom: 1 };
+
+  function applyView() {
+    world.style.setProperty('--spin', view.spin + 'deg');
+    world.style.setProperty('--tilt', view.tilt + 'deg');
+    world.style.setProperty('--zoom', String(view.zoom));
+  }
+
+  /**
+   * Scale and centre the scene so all of it — including the pins — lands inside
+   * the stage.
+   *
+   * Two separate problems, both of which were being solved by hand-tuned
+   * constants and both of which broke the moment anything changed:
+   *
+   * 1. HEADROOM. At rotateX(tilt) a tower of height h lifts its pin by
+   *    h·sin(tilt), and the pin is anchored by its bottom edge, so the card and
+   *    its stem sit above that again. The horizon has to drop by that much.
+   * 2. WIDTH. Rotating a plot of side s about Z makes its projected width
+   *    s·(|cos spin| + |sin spin|) — up to 1.41x at 45°, which is roughly where
+   *    this camera sits. Seven buildings in a row overflowed sideways.
+   */
+  function fitWorld(tallest, plotW) {
+    const rad = a => (a * Math.PI) / 180;
+    const stageW = stage.clientWidth || 900;
+    const stageH = stage.clientHeight || 290;
+
+    /* The callouts live in gutters down both edges, so the scene only gets the
+       middle. Proportional rather than a fixed 190px: in a narrow panel a fixed
+       gutter would leave the plot no room at all. */
+    const gutter = Math.min(200, stageW * 0.24);
+
+    const spread = Math.abs(Math.cos(rad(view.spin))) + Math.abs(Math.sin(rad(view.spin)));
+    const side = Math.max(plotW, PLATE_D);
+    const projW = side * spread;
+    const projH = side * spread * Math.cos(rad(view.tilt)) + tallest * Math.sin(rad(view.tilt));
+
+    /**
+     * Fit to 82% of the space, not 100%. A scene that exactly fills its frame
+     * reads as cropped even when nothing is cut off — the eye wants to see that
+     * the plot ends. 0.55 is the floor: below that the boxes stop reading as
+     * objects at all, and the summary rows are doing the work anyway.
+     */
+    const FIT = 0.82;
+    /* Scaled UP as well as down. The cap used to be 1x, so a single parcel —
+       which is the average application — drew at about 140px in the middle of a
+       1100px stage and left the callouts stranded at the edges with a metre of
+       leader line between. 2.4x is where the plate's own hatching starts to
+       look coarse. */
+    view.zoom = Math.max(
+      0.55,
+      Math.min(2.4, FIT * Math.min((stageW - gutter * 2 - 24) / projW, (stageH - 40) / projH)),
+    );
+
+    /* Headroom no longer has to clear a pin — the labels are out in the gutters
+       now — so the horizon can sit near the middle and the plot gets the space
+       that the stacked pins used to need. */
+    const headroom = tallest * Math.sin(rad(view.tilt)) * view.zoom + 16;
+    world.style.top = px(Math.round(Math.min(Math.max(headroom, stageH * 0.42), stageH * 0.72)));
+    applyView();
+  }
+
+  const bar = document.getElementById('scenarios');
+  Object.keys(SCENARIOS).forEach(name => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = name;
+    b.addEventListener('click', () => select(name));
+    bar.appendChild(b);
+  });
+  select('ผสม (เคสในภาพ)');
+</script>

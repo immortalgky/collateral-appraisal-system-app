@@ -152,7 +152,7 @@
     "activeFilters": "筛选：",
     "clearAll": "全部清除",
     "removeFilter": "移除筛选",
-    "activityTracking": "活动跟踪",
+    "activityTracking": "评估进度跟踪",
     "searchTips": {
       "trigger": "找不到？",
       "title": "找不到？可以这样试试",
@@ -511,6 +511,9 @@
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",
       "buildingInsuranceReview": "建筑保险（审查）",
+      "verifiedStaleTitle": "核实后价格已变动",
+      "verifiedStaleHint": "报告与 AS400 仍使用已核实的数值，直至重新核实。",
+      "verifiedStaleAction": "使用当前价格",
       "condition": "条件",
       "conditionType": "条件类型",
       "conditionTypePlaceholder": "选择条件类型...",
@@ -1188,7 +1191,7 @@
     }
   },
   "activityTracking": {
-    "pageTitle": "活动追踪",
+    "pageTitle": "评估进度跟踪",
     "tabs": {
       "timeline": "时间线",
       "log": "日志"
@@ -1213,6 +1216,136 @@
       "dueAt": "到期",
       "slaStatus": "SLA 状态",
       "hoursShort": "{{hours}} 小时"
+    },
+    "sections": {
+      "progress": "评估进度",
+      "request": "申请信息",
+      "collateral": "本次申请的抵押物",
+      "documents": "评估文件",
+      "log": "活动记录",
+      "route": "处理路线",
+      "noCollateral": "本次申请没有抵押物",
+      "itemsCount": "共 {{count}} 项"
+    },
+    "brief": {
+      "customer": "客户",
+      "coBorrowers": "及其他 {{count}} 位共同借款人",
+      "appraisedValue": "评估价值",
+      "forcedSaleValue": "强制变现价值",
+      "insuranceValue": "保险价值",
+      "baht": "泰铢",
+      "notReleased": "尚未公布",
+      "cancelledValue": "申请已取消",
+      "dueDate": "应完成日期",
+      "completedOn": "完成日期",
+      "overdue": "（已逾期）",
+      "dueDateHint": "标准应完成日期 = 受理日期 + 该类型工作的标准处理时长，仅按工作时间计算。该日期在受理时即已确定，不随实际进度变动。",
+      "fields": {
+        "prevAppraisalNumber": "上次评估编号",
+        "appointment": "预约时间",
+        "appraiser": "评估人",
+        "propertyLocation": "资产位置",
+        "loanLimit": "申请额度"
+      },
+      "holder": {
+        "currentLabel": "当前处理人",
+        "statusLabel": "状态",
+        "unassigned": "尚未分配",
+        "step": "步骤",
+        "sinceToday": "今日接收",
+        "heldFor": "已处理 {{count}} 天",
+        "committeeReviewers": "由 {{count}} 位委员共同审核中",
+        "teamsChat": "通过 Teams 联系",
+        "coordinator": "联络人：{{name}}",
+        "contactPerson": "联系人：{{name}}",
+        "externalFirm": "外部评估公司",
+        "closedCancelled": "申请已取消",
+        "closedCompleted": "评估已完成",
+        "appraisalDesk": "评估部门"
+      },
+      "phases": {
+        "Initiation": "受理申请",
+        "Assignment": "分派工作",
+        "Execution": "实地查勘／评估",
+        "Staff": "报告接收",
+        "Checker": "复核",
+        "Verification": "审核",
+        "Approval": "价格审批",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "inProgress": "进行中",
+        "notReached": "尚未开始"
+      },
+      "committee": {
+        "sub": "小组委员会",
+        "subFull": "抵押物及资产评估小组委员会",
+        "full": "委员会",
+        "fullFull": "抵押物及资产评估委员会"
+      },
+      "collateral": {
+        "unspecifiedType": "未指定类型",
+        "morePlaces": "及其他 {{count}} 个府",
+        "floors": "{{count}} 层",
+        "totalArea": "合计 {{area}}",
+        "rai": "莱",
+        "ngan": "颜",
+        "wa": "平方哇",
+        "kinds": {
+          "land": "土地",
+          "building": "建筑物",
+          "condo": "公寓",
+          "machine": "机器设备"
+        },
+        "condoFloors": "第 {{floors}} 层／共 {{total}} 层",
+        "project": "项目",
+        "units": "{{count}} 套",
+        "phases": "{{count}} 期",
+        "developer": "开发商：{{name}}",
+        "towers": "{{count}} 栋",
+        "towerFloors": "{{towers}} 栋 · {{floors}} 层",
+        "houses": "{{count}} 栋",
+        "houseStoreys": "{{count}} 栋 · {{floors}} 层",
+        "condoUnit": "{{room}} 室，{{floor}} 层",
+        "condoUnitNoRoom": "{{floor}} 层",
+        "condoUnitNoFloor": "{{room}} 室",
+        "unitsOrHouses_house": "{{count}} 栋",
+        "unitsOrHouses_unit": "{{count}} 套"
+      },
+      "documents": {
+        "lockedTitle": "文件尚未提供",
+        "lockedCancelled": "本次申请在出具价格前已取消，因此没有文件。",
+        "lockedPending": "评估部门审批价格后，所有文件将一并开放。",
+        "empty": "价格已审批，但此评估档案中尚未附上任何文件。",
+        "others": "档案中的其他文件",
+        "othersHint": "{{count}} 个文件 · 均可查看",
+        "view": "查看",
+        "download": "下载",
+        "downloadFailed": "无法下载该文件"
+      },
+      "lockedTitle": "评估价值尚未公布",
+      "lockedHint": "委员会审批价格后，评估价值、强制变现价值、保险价值及文件将一并开放。",
+      "cancelledTitle": "本次申请已取消",
+      "cancelledHint": "在出具价格前即已结案，因此没有评估价值或文件可供显示。",
+      "log": {
+        "forwarded": "送交下一步",
+        "returned": "退回修改",
+        "assigned": "已分派",
+        "reassigned": "重新分派",
+        "cancelled": "已取消",
+        "empty": "尚无活动记录",
+        "showAll": "显示全部 {{count}} 条",
+        "showLess": "收起",
+        "steps": "{{count}} 个步骤",
+        "externalLeg": "工作已送交外部评估公司",
+        "assignedInternal": "分派给内部团队",
+        "assignedExternal": "送交外部评估公司"
+      },
+      "noAccessTitle": "您无权查看此评估单",
+      "noAccessHint": "您的账号没有查看评估资料的权限。",
+      "notFoundTitle": "未找到该评估单",
+      "notFoundHint": "可能已被删除，或链接指向的评估单已不存在。",
+      "loadFailedTitle": "无法加载详细信息",
+      "loadFailedHint": "请重试。若持续失败，请联系 IT。"
     }
   },
   "documentChecklist": {
@@ -1606,7 +1739,8 @@
       "pma": "PMA 信息",
       "buildingInsuranceSectionTitle": "建筑保险",
       "fireInsuranceCondition": "火灾保险条件",
-      "buildingInsurancePrice": "公寓单位保险保额"
+      "buildingInsurancePrice": "公寓单位保险保额",
+      "buildingInsurancePriceOverride": "公寓单位保险保额（手动填写）"
     },
     "machinery": {
       "sectionTitle": "机械详情"

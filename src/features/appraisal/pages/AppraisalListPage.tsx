@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useHasPermission } from '@/shared/hooks/useHasPermission';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { SearchByInput } from '@/shared/components/inputs';
 import toast from 'react-hot-toast';
@@ -55,6 +56,12 @@ const NON_FILTER_KEYS = new Set([
   'sortBy',
   'sortDir',
   'view',
+  // Deep-links straight into the activity slide-over. The global search bar sends a credit user
+  // here rather than to /appraisals/{id}: they have no access to the workspace, so that route
+  // would only bounce them to '/'. Read on mount, then stripped from the URL — it is a one-shot
+  // instruction, not a piece of view state, and leaving it behind would re-open the panel on
+  // every refresh after the user had closed it.
+  'appraisal',
 ]);
 
 /** localStorage namespace for this screen's column layout. */
@@ -111,6 +118,14 @@ function AppraisalListPage() {
   // Memoized because these feed the column-layout hooks: rebuilding the array every render would
   // hand useColumnVisibility a new config identity each time. Translating 16 labels on every
   // render is wasted work regardless.
+  // The column set is the SAME for everyone. Trimming it for credit-side users was tried and
+  // reverted: this is one shared screen, and a reader who knows the table is worse off when
+  // columns silently move. Whatever those users must not receive is withheld by the server
+  // (AppraisalFieldScope), so the affected cells simply render as "—".
+  //
+  // Export below is the exception, and it is a real control rather than presentation.
+  const canExport = useHasPermission('APPRAISAL_VIEW');
+
   const appraisalFilters = useMemo(() => makeAppraisalFilters(t), [t]);
   const appraisalColumns = useMemo(() => makeAppraisalColumns(t), [t]);
   /**
@@ -158,6 +173,41 @@ function AppraisalListPage() {
   const [activeViewKey, setActiveViewKey] = useState<string | null>(init.view);
   const [selectedAppraisalId, setSelectedAppraisalId] = useState<string | null>(null);
 
+  /**
+   * Open the activity panel for `?appraisal=`, then strip it from the URL.
+   *
+   * An EFFECT, not a mount-time read of initRef. The global search bar sends a caller who cannot
+   * open the workspace here, and that caller is very often ALREADY on this page — clicking a
+   * result then changes the query string without remounting the route, so anything read once at
+   * mount never runs and the click appears to do nothing at all.
+   *
+   * The parameter must not survive: it is a one-shot instruction, not view state. Left in the URL
+   * it re-opens the panel on every reload after the user has closed it, and the same appraisal
+   * cannot be opened from search twice in a row because the URL never changes the second time.
+   *
+   * The invariant that removes it: the sync effect below is the ONLY writer of this query string,
+   * and it re-runs on this navigation because `setSearchParams` is in its dependency array and
+   * react-router gives that callback a new identity on every `location.search` change. It then
+   * rebuilds the string from state, in which `appraisal` has no place — so it is dropped.
+   *
+   * ⚠ That is load-bearing. Anyone who stabilises `setSearchParams` — a ref wrapper, a useEvent
+   * shim, or a react-router version that memoises on a ref rather than on `searchParams` — breaks
+   * the strip and brings both symptoms back. If that happens, remove the parameter explicitly
+   * here rather than adding a second writer, which is what caused the fight this replaced.
+   */
+  useEffect(() => {
+    const deepLinked = searchParams.get('appraisal');
+    if (!deepLinked) return;
+    setSelectedAppraisalId(deepLinked);
+    // Reads the parameter; does NOT remove it. The sync effect below owns this query string and
+    // rebuilds it from state, which drops `appraisal` on its own. Having both write the URL made
+    // them fight: react-router rebuilds `setSearchParams` whenever `location.search` changes, so
+    // the sync effect — which depends on it — re-ran on this very navigation and put the parameter
+    // straight back. The panel then reopened on every refresh, and clicking the same search result
+    // a second time did nothing, because the URL never changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams.get('appraisal')]);
+
   // Debounce search input.
   //
   // Terms below the minimum are never sent. The server matches nothing on them — every appraisal
@@ -193,6 +243,10 @@ function AppraisalListPage() {
     Object.entries(filters).forEach(([k, v]) => {
       if (v) params[k] = v;
     });
+    // Rebuilt from state, wholesale. Safe for the filters — they live in state, seeded from the
+    // URL at mount — and it is what strips the one-shot `?appraisal=` the global search bar
+    // arrives with. A merge that preserved `appraisal` put it back on every sync and left the
+    // panel reopening on refresh.
     setSearchParams(params, { replace: true });
   }, [
     debouncedSearch,
@@ -455,10 +509,22 @@ function AppraisalListPage() {
         },
         format,
       );
-    } catch {
+    } catch (error) {
       // Previously this promise was dropped, so a failed or timed-out export was indistinguishable
       // from a slow one — nothing appeared and nothing said why.
-      toast.error(t('list.exportFailed'));
+      //
+      // The server's own line wins when there is one. blobTransfer.recoverProblemDetails parses the
+      // ProblemDetails out of the error Blob into `apiError.detail` precisely so a refusal can say
+      // why — the export answers a caller without the workspace permission with a sentence written
+      // for them — and swallowing it here left that message unreachable on every path.
+      // Only a 403. CustomExceptionHandler's catch-all arm puts `exception.Message` verbatim into
+      // ProblemDetails.detail for anything it does not map, and this export builds a workbook over
+      // the whole result set — a SqlException or an OutOfMemoryException would otherwise put table
+      // and column names in a toast. A 403 is the one status whose message is written for the
+      // caller (ForbiddenException), so that is the only one trusted here.
+      const apiError = (error as { apiError?: { status?: number; detail?: string } })?.apiError;
+      const detail = apiError?.status === 403 ? apiError.detail : undefined;
+      toast.error(detail || t('list.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -494,50 +560,56 @@ function AppraisalListPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* Export — a real menu rather than `hidden group-hover:block`, which could not be
-              opened from the keyboard at all and vanished the moment the pointer left the button. */}
-          <Popover className="relative">
-            <PopoverButton
-              disabled={isExporting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300 disabled:opacity-50 disabled:cursor-wait outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              {/* 'arrow-down-tray' is a heroicons name and renders as nothing against this
+              opened from the keyboard at all and vanished the moment the pointer left the button.
+
+              Hidden for tracking-only users: they can see every appraisal in the bank, so an
+              unrestricted 10,000-row spreadsheet is the collateral book leaving in one click.
+              The server refuses the call as well — this only removes the dead button. */}
+          {canExport && (
+            <Popover className="relative">
+              <PopoverButton
+                disabled={isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300 disabled:opacity-50 disabled:cursor-wait outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {/* 'arrow-down-tray' is a heroicons name and renders as nothing against this
                   project's FontAwesome sprite. 'file-export' is what the other Export buttons in
                   the app use (ValuationDocumentChecklist, GenerateReappraisalTestPage). */}
-              <Icon
-                style="solid"
-                name={isExporting ? 'spinner' : 'file-export'}
-                className={`size-3 ${isExporting ? 'animate-spin text-primary' : 'text-emerald-600'}`}
-              />
-              {t('list.export')}
-            </PopoverButton>
-            <PopoverPanel
-              anchor="bottom end"
-              className="z-40 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
-            >
-              {({ close }) => (
-                <>
-                  <button
-                    onClick={() => {
-                      close();
-                      void handleExport('xlsx');
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
-                  >
-                    {t('list.exportXlsx')}
-                  </button>
-                  <button
-                    onClick={() => {
-                      close();
-                      void handleExport('csv');
-                    }}
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
-                  >
-                    {t('list.exportCsv')}
-                  </button>
-                </>
-              )}
-            </PopoverPanel>
-          </Popover>
+                <Icon
+                  style="solid"
+                  name={isExporting ? 'spinner' : 'file-export'}
+                  className={`size-3 ${isExporting ? 'animate-spin text-primary' : 'text-emerald-600'}`}
+                />
+                {t('list.export')}
+              </PopoverButton>
+              <PopoverPanel
+                anchor="bottom end"
+                className="z-40 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+              >
+                {({ close }) => (
+                  <>
+                    <button
+                      onClick={() => {
+                        close();
+                        void handleExport('xlsx');
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                    >
+                      {t('list.exportXlsx')}
+                    </button>
+                    <button
+                      onClick={() => {
+                        close();
+                        void handleExport('csv');
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                    >
+                      {t('list.exportCsv')}
+                    </button>
+                  </>
+                )}
+              </PopoverPanel>
+            </Popover>
+          )}
           {/* Saved Searches */}
           <SavedSearchesDropdown
             savedSearches={savedSearches}

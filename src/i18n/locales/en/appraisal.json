@@ -152,7 +152,7 @@
     "activeFilters": "Filters:",
     "clearAll": "Clear all",
     "removeFilter": "Remove filter",
-    "activityTracking": "Activity Tracking",
+    "activityTracking": "Appraisal Tracking",
     "searchTips": {
       "trigger": "Can't find it?",
       "title": "Not finding it? Try this",
@@ -515,6 +515,9 @@
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
       "buildingInsuranceReview": "Building Insurance (Review)",
+      "verifiedStaleTitle": "Prices changed after verification",
+      "verifiedStaleHint": "The report and AS400 keep the verified figures until you verify again.",
+      "verifiedStaleAction": "Use current prices",
       "condition": "Condition",
       "conditionType": "Condition Type",
       "conditionTypePlaceholder": "Select condition type...",
@@ -1198,7 +1201,7 @@
     }
   },
   "activityTracking": {
-    "pageTitle": "Activity Tracking",
+    "pageTitle": "Appraisal Tracking",
     "tabs": {
       "timeline": "Timeline",
       "log": "Log"
@@ -1223,6 +1226,136 @@
       "dueAt": "Due",
       "slaStatus": "SLA",
       "hoursShort": "{{hours}}h"
+    },
+    "sections": {
+      "progress": "Appraisal Progress",
+      "request": "Request Information",
+      "collateral": "Collateral in this Request",
+      "documents": "Appraisal Documents",
+      "log": "Activity Log",
+      "route": "Route",
+      "noCollateral": "No collateral items on this request",
+      "itemsCount": "{{count}} item(s)"
+    },
+    "brief": {
+      "customer": "Customer",
+      "coBorrowers": "and {{count}} co-borrower(s)",
+      "appraisedValue": "Appraised Value",
+      "forcedSaleValue": "Forced Sale Value",
+      "insuranceValue": "Insurance Value",
+      "baht": "THB",
+      "notReleased": "Not yet released",
+      "cancelledValue": "Request cancelled",
+      "dueDate": "Due",
+      "completedOn": "Completed",
+      "overdue": "(overdue)",
+      "dueDateHint": "The standard due date = date received + the standard turnaround for this type of work, counted in business hours only. It is a target fixed at intake and does not move with actual progress.",
+      "fields": {
+        "prevAppraisalNumber": "Previous Appraisal No.",
+        "appointment": "Appointment",
+        "appraiser": "Appraiser",
+        "propertyLocation": "Property Location",
+        "loanLimit": "Loan Limit"
+      },
+      "holder": {
+        "currentLabel": "Currently With",
+        "statusLabel": "Status",
+        "unassigned": "Not yet assigned",
+        "step": "Step",
+        "sinceToday": "Since today",
+        "heldFor": "Held for {{count}} day(s)",
+        "committeeReviewers": "Under joint review by {{count}} member(s)",
+        "teamsChat": "Chat on Teams",
+        "coordinator": "Coordinator: {{name}}",
+        "contactPerson": "Contact: {{name}}",
+        "externalFirm": "External valuation firm",
+        "closedCancelled": "Request has been cancelled",
+        "closedCompleted": "Appraisal has been completed",
+        "appraisalDesk": "Appraisal Department"
+      },
+      "phases": {
+        "Initiation": "Request Received",
+        "Assignment": "Assignment",
+        "Execution": "Inspection / Appraisal",
+        "Staff": "Report Acceptance",
+        "Checker": "Checking",
+        "Verification": "Verification",
+        "Approval": "Price Approval",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "inProgress": "In progress",
+        "notReached": "Not yet reached"
+      },
+      "committee": {
+        "sub": "Sub-Committee",
+        "subFull": "Collateral and Asset Valuation Sub-Committee",
+        "full": "Committee",
+        "fullFull": "Collateral and Asset Valuation Committee"
+      },
+      "collateral": {
+        "unspecifiedType": "Unspecified type",
+        "morePlaces": "and {{count}} more province(s)",
+        "floors": "{{count}} floor(s)",
+        "totalArea": "Total {{area}}",
+        "rai": "rai",
+        "ngan": "ngan",
+        "wa": "sq.wa",
+        "kinds": {
+          "land": "Land",
+          "building": "Building",
+          "condo": "Condominium",
+          "machine": "Machinery"
+        },
+        "condoFloors": "Floor {{floors}} of {{total}}",
+        "project": "Project",
+        "units": "{{count}} unit(s)",
+        "phases": "{{count}} phase(s)",
+        "developer": "Developer: {{name}}",
+        "towers": "{{count}} tower(s)",
+        "towerFloors": "{{towers}} tower(s) · {{floors}} storeys",
+        "houses": "{{count}} house(s)",
+        "houseStoreys": "{{count}} house(s) · {{floors}} storeys",
+        "condoUnit": "Unit {{room}}, floor {{floor}}",
+        "condoUnitNoRoom": "Floor {{floor}}",
+        "condoUnitNoFloor": "Unit {{room}}",
+        "unitsOrHouses_house": "{{count}} house(s)",
+        "unitsOrHouses_unit": "{{count}} unit(s)"
+      },
+      "documents": {
+        "lockedTitle": "Documents not yet available",
+        "lockedCancelled": "This request was cancelled before a price was issued, so there are no documents.",
+        "lockedPending": "All documents are released together once the appraisal team approves the price.",
+        "empty": "The price is approved, but no files are attached to this appraisal folder yet.",
+        "others": "Other documents in the folder",
+        "othersHint": "{{count}} file(s) · all viewable",
+        "view": "View",
+        "download": "Download",
+        "downloadFailed": "Could not download the document"
+      },
+      "lockedTitle": "Appraised value not yet released",
+      "lockedHint": "The appraised value, forced sale value, insurance value and documents are all released together once the committee approves the price.",
+      "cancelledTitle": "This request was cancelled",
+      "cancelledHint": "It was closed before a price was issued, so there is no appraised value or document to show.",
+      "log": {
+        "forwarded": "Forwarded",
+        "returned": "Returned for revision",
+        "assigned": "Assigned",
+        "reassigned": "Reassigned",
+        "cancelled": "Cancelled",
+        "empty": "No activity recorded yet",
+        "showAll": "Show all {{count}} entries",
+        "showLess": "Show less",
+        "steps": "{{count}} steps",
+        "externalLeg": "Work sent to the external firm",
+        "assignedInternal": "Assigned to the in-house team",
+        "assignedExternal": "Sent to an external firm"
+      },
+      "noAccessTitle": "You cannot view this appraisal",
+      "noAccessHint": "Your account does not have permission to open appraisal records.",
+      "notFoundTitle": "Appraisal not found",
+      "notFoundHint": "It may have been deleted, or the link points at an appraisal that no longer exists.",
+      "loadFailedTitle": "Could not load the details",
+      "loadFailedHint": "Try again. If it keeps failing, contact IT."
     }
   },
   "documentChecklist": {
@@ -1622,7 +1755,8 @@
       "pma": "PMA Information",
       "buildingInsuranceSectionTitle": "Building Insurance",
       "fireInsuranceCondition": "Fire Insurance Condition",
-      "buildingInsurancePrice": "Building Insurance Coverage"
+      "buildingInsurancePrice": "Building Insurance Coverage",
+      "buildingInsurancePriceOverride": "Building Insurance Coverage (Keyed)"
     },
     "machinery": {
       "sectionTitle": "Machinery Details"
