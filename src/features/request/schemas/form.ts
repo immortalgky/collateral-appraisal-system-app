@@ -36,7 +36,7 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     loanDetail: z.object({
       bankingSegment: z.string().min(1, t('validation.bankingSegmentRequired')),
       loanApplicationNumber: z.string().max(10).nullable(),
-      facilityLimit: z.coerce.number().min(1, t('validation.facilityLimitRequired')),
+      facilityLimit: z.coerce.number().nullable(),
       additionalFacilityLimit: z.number().nullable(),
       previousFacilityLimit: z.number().nullable(),
       totalSellingPrice: z.number().nullable(),
@@ -330,6 +330,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   registrationStatus: false,
   registrationNumber: '',
   machineType: '',
+  vehicleRegistrationNumber: '',
   installationStatus: '',
   invoiceNumber: '',
   numberOfMachine: 0,

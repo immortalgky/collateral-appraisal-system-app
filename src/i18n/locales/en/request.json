@@ -144,6 +144,7 @@
     "condoName": "Condo Name",
     "usageAreaSqM": "Usage Area (Sq.M)",
     "vehicleType": "Vehicle Type",
+    "vehicleRegistrationNumber": "Vehicle Registration Number",
     "licensePlateNumber": "License Plate Number",
     "appointmentLocationVehicle": "Appointment Location",
     "chassisNumber": "Chassis Number",
