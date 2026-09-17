@@ -84,6 +84,7 @@ export interface AppraisalDto {
   district: string | null;
   subDistrict: string | null;
   appointmentDateTime: string | null;
+  inspectionNumber: number | null;
   /** Groups appraisals raised together; null for a standalone one. */
   groupTag: string | null;
   /** SLA hours expressed in 8-hour working days, computed by the view. */

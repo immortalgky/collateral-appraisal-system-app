@@ -297,6 +297,7 @@
     "columnFacilityLimit": "Facility Limit",
     "columnAppraisalValue": "Appraisal Value",
     "columnAppraisalDate": "Appraisal Date",
+    "columnInspectionNumber": "Inspection No.",
     "dateFilterFrom": "Appraisal date from",
     "dateFilterTo": "Appraisal date to"
   },
