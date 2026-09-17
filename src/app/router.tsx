@@ -749,11 +749,11 @@ export const router = createBrowserRouter([
       // ─── Service Quality Evaluation Routes ──────────────────────────────────
       {
         path: 'standalone/service-quality-evaluation',
-        element: <ServiceQualityEvaluationListPage />,
-      },
-      {
-        path: 'standalone/service-quality-evaluation/:appraisalId',
-        element: <ServiceQualityEvaluationDetailPage />,
+        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_EVALUATION_VIEW" />,
+        children: [
+          { index: true, element: <ServiceQualityEvaluationListPage /> },
+          { path: ':appraisalId', element: <ServiceQualityEvaluationDetailPage /> },
+        ],
       },
       // support data maintenance
       {
