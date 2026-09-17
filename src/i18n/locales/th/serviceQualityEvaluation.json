@@ -21,6 +21,7 @@
       "appraisalNumber": "เลขที่รายงานประเมิน",
       "appraiser": "ผู้ประเมิน",
       "customerName": "ชื่อลูกค้า",
+      "internalFollowupStaffName": "เจ้าหน้าที่ติดตามภายใน",
       "reportReceivedDate": "วันที่ได้รับรายงาน",
       "status": "สถานะ",
       "evaluationStatus": "สถานะการประเมิน",
