@@ -83,6 +83,7 @@ export const mapRequestResponseToForm = (
     properties: (response.properties ?? []).map(p => ({
       propertyType: p.propertyType ?? '',
       buildingType: p.buildingType ?? null,
+      buildingTypeOther: p.buildingTypeOther ?? null,
       sellingPrice: p.sellingPrice ?? null,
     })),
     // Type assertions needed due to complex Zod type inference differences
@@ -163,6 +164,7 @@ export const mapCopyTemplateToForm = (
     properties: (template.properties ?? []).map(p => ({
       propertyType: p.propertyType ?? '',
       buildingType: p.buildingType ?? null,
+      buildingTypeOther: p.buildingTypeOther ?? null,
       sellingPrice: p.sellingPrice ?? null,
     })),
     titles: (template.titles ?? []) as createRequestFormType['titles'],

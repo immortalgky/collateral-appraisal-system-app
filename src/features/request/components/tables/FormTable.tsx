@@ -25,7 +25,7 @@ interface FormTableProps {
   sequenceField?: string;
 }
 
-type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
+export type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
 
 interface FormTableRegularColumn {
   name: string;
@@ -39,6 +39,9 @@ interface FormTableRegularColumn {
   maxLength?: number;
   options?: ListBoxItem[];
   group?: string;
+  otherField?: boolean;
+  otherFieldName?: string;
+  otherTriggerValue?: string;
 }
 
 interface FormTableRowNumberColumn {
@@ -193,6 +196,45 @@ const SequenceCell = ({
   );
 };
 
+// --- DropdownOtherCell: dropdown + inline "Other" text field ---
+
+const DropdownOtherCell = ({
+  name,
+  index,
+  column,
+  control,
+  field,
+}: {
+  name: string;
+  index: number;
+  column: FormTableRegularColumn;
+  control: Control<FieldValues, any, FieldValues>;
+  field: ReturnType<typeof useController>['field'];
+}) => {
+  const {
+    field: otherField,
+    fieldState: { error: otherError },
+  } = useController({
+    name: `${name}.${index}.${column.otherFieldName}`,
+    control,
+  });
+
+  if (!column.group) return null;
+
+  return (
+    <Dropdown
+      {...field}
+      group={column.group}
+      otherField
+      otherTriggerValue={column.otherTriggerValue}
+      otherText={otherField.value}
+      onOtherTextChange={otherField.onChange}
+      otherMaxLength={column.maxLength}
+      error={otherError?.message}
+    />
+  );
+};
+
 // --- TableCell ---
 
 const TableCell = ({
@@ -228,7 +270,20 @@ const TableCell = ({
     // Split branches because Dropdown takes `group` or `options`, and the column type has both optional.
     if (column.inputType === 'dropdown') {
       if (column.options) return <Dropdown {...field} options={column.options} />;
-      if (column.group) return <Dropdown {...field} group={column.group} />;
+      if (column.group) {
+        if (column.otherField && column.otherFieldName) {
+          return (
+            <DropdownOtherCell
+              name={name}
+              index={index}
+              column={column}
+              control={control}
+              field={field}
+            />
+          );
+        }
+        return <Dropdown {...field} group={column.group} />;
+      }
     }
     return <Input type={column.inputType} {...field} maxLength={column.maxLength} />;
   };
@@ -276,7 +331,11 @@ const FormTable = ({
 
   const handleAddRow = () => {
     const newRow: Record<string, any> = {};
-    for (const col of columns) if (isRegular(col)) newRow[col.name] = '';
+    for (const col of columns) {
+      if (!isRegular(col)) continue;
+      newRow[col.name] = '';
+      if (col.otherFieldName) newRow[col.otherFieldName] = '';
+    }
     if (sequenceField) {
       const maxSeq = rowList.reduce((m, r) => Math.max(m, Number(r?.[sequenceField]) || 0), 0);
       newRow[sequenceField] = maxSeq + 1;
@@ -388,7 +447,13 @@ const FormTable = ({
                             }
                           >
                             {col.inputType === 'dropdown' && col.group ? (
-                              <ParameterDisplay group={col.group} code={field[col.name]} />
+                              <>
+                                <ParameterDisplay group={col.group} code={field[col.name]} />
+                                {col.otherField &&
+                                  col.otherFieldName &&
+                                  field[col.name] === (col.otherTriggerValue ?? '99') &&
+                                  field[col.otherFieldName] && <> — {field[col.otherFieldName]}</>}
+                              </>
                             ) : col.inputType === 'number' ? (
                               (() => {
                                 const n = parseFloat(field[col.name]);

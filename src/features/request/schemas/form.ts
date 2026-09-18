@@ -89,6 +89,7 @@ function makeRequestPropertyDto(t: TFunction<'request'>) {
   return z.object({
     propertyType: z.string().min(1, t('validation.propertyTypeRequired')),
     buildingType: z.string().nullable(),
+    buildingTypeOther: z.string().nullable(),
     sellingPrice: z.number().nullable(),
   });
 }
