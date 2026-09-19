@@ -394,10 +394,8 @@
     "provinceRequired": "กรุณาระบุจังหวัด",
     "contactPersonNameRequired": "กรุณาระบุชื่อผู้ติดต่อ",
     "contactPersonPhoneRequired": "กรุณาระบุเบอร์โทรผู้ติดต่อ",
-    "appointmentLocationRequired": "กรุณาระบุสถานที่นัดหมาย",
     "feePaymentTypeRequired": "กรุณาระบุประเภทการชำระค่าธรรมเนียม",
     "customerNameRequired": "กรุณาระบุชื่อลูกค้า",
-    "contactNumberRequired": "กรุณาระบุหมายเลขโทรศัพท์",
     "propertyTypeRequired": "กรุณาระบุประเภททรัพย์สิน",
     "commentRequired": "กรุณาระบุความคิดเห็น",
     "titleMinItems": "ข้อมูลกรรมสิทธิ์ต้องมีอย่างน้อย 1 รายการ"

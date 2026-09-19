@@ -409,10 +409,8 @@
     "provinceRequired": "Province is required.",
     "contactPersonNameRequired": "Contact person name is required.",
     "contactPersonPhoneRequired": "Contact person phone number is required.",
-    "appointmentLocationRequired": "Appointment location is required.",
     "feePaymentTypeRequired": "Fee payment type is required.",
     "customerNameRequired": "Customer name is required.",
-    "contactNumberRequired": "Contact number is required.",
     "propertyTypeRequired": "Property type is required.",
     "commentRequired": "Comment is required",
     "titleMinItems": "Title Information must have at least 1 item(s)"
