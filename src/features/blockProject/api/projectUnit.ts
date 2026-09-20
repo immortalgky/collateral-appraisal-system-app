@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { uploadForm } from '@shared/api/blobTransfer';
 import type { ProjectUnit, ProjectUnitUpload } from '../types';
 import { projectModelKeys } from './projectModel';
 import { projectUnitPriceKeys } from './projectUnitPrice';
@@ -77,10 +78,10 @@ export const useUploadProjectUnits = () => {
     }): Promise<{ uploadId: string; unitCount: number }> => {
       const formData = new FormData();
       formData.append('file', params.file);
-      const { data } = await axios.post(
+      const { data } = await uploadForm<{ uploadId: string; unitCount: number }>(
         `/appraisals/${params.appraisalId}/project/units/upload`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        { label: params.file.name },
       );
       return data;
     },
@@ -184,11 +185,11 @@ export const useReappraisalPreview = () => {
     }): Promise<ReappraisalPreviewResult> => {
       const formData = new FormData();
       formData.append('file', params.file);
-      const { data } = await axios.post(
-        `/appraisals/${params.appraisalId}/project/units/reappraisal-preview`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      );
+      const { data } = await uploadForm<
+        ReappraisalPreviewResult & { result?: ReappraisalPreviewResult }
+      >(`/appraisals/${params.appraisalId}/project/units/reappraisal-preview`, formData, {
+        label: params.file.name,
+      });
       return data.result ?? data;
     },
   });
@@ -218,14 +219,12 @@ export const useUploadReappraisalUnits = () => {
     }): Promise<ReappraisalUploadResult> => {
       const formData = new FormData();
       formData.append('file', params.file);
-      const { data } = await axios.post(
-        `/appraisals/${params.appraisalId}/project/units/reappraisal-upload`,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          params: params.confirmUpdates ? { confirmUpdates: true } : undefined,
-        },
-      );
+      const { data } = await uploadForm<
+        ReappraisalUploadResult & { result?: ReappraisalUploadResult }
+      >(`/appraisals/${params.appraisalId}/project/units/reappraisal-upload`, formData, {
+        params: params.confirmUpdates ? { confirmUpdates: true } : undefined,
+        label: params.file.name,
+      });
       return data.result ?? data;
     },
     onSuccess: (_, variables) => {

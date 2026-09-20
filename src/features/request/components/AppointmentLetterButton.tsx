@@ -7,6 +7,7 @@ import Icon from '@/shared/components/Icon';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAuthStore } from '@/features/auth/store';
+import { useBlobViewerTab } from '@/shared/hooks/useBlobViewerTab';
 import { fetchReportPdf } from '@/features/reportGeneration/api/reports';
 import { useUploadDocument } from '../api/documents';
 import { getDocumentCategory, type UploadedDocument } from '../types/document';
@@ -25,17 +26,30 @@ interface AppointmentLetterButtonProps {
  * Icon button (tooltip) above the document checklist. Clicking opens a small menu to either
  * just generate/view the Appointment Letter PDF, or generate it AND attach it as an
  * application-level document (added to the form's `documents` array; persisted on save).
- * In read-only mode the menu is skipped — clicking just opens the PDF.
+ *
+ * Read-only (form or page) disables the button outright, so neither action is reachable — worth
+ * revisiting, since viewing the letter is harmless and a reviewer may well want it, but that is a
+ * product call rather than something to change quietly here.
  */
-const AppointmentLetterButton = ({ requestId, getOrCreateSession }: AppointmentLetterButtonProps) => {
+const AppointmentLetterButton = ({
+  requestId,
+  getOrCreateSession,
+}: AppointmentLetterButtonProps) => {
   const { t } = useTranslation('request');
-  // Read-only when the form OR the page is read-only → view-only, no attach.
-  const isReadOnly = useFormReadOnly() || usePageReadOnly();
+  // Read-only when the form OR the page is read-only → view-only, no attach. Both hooks are
+  // called unconditionally: `||` would short-circuit past usePageReadOnly (a useContext) whenever
+  // the form is read-only, and the hook list after it — now longer — would shift on a toggle.
+  const formReadOnly = useFormReadOnly();
+  const pageReadOnly = usePageReadOnly();
+  const isReadOnly = formReadOnly || pageReadOnly;
   const { watch, setValue } = useFormContext();
   const currentUser = useAuthStore(state => state.user);
   const { mutateAsync: uploadDocument } = useUploadDocument();
+  // Above the early return below: hooks cannot be called conditionally.
+  const openInTab = useBlobViewerTab();
 
-  const [busy, setBusy] = useState<null | 'view' | 'attach'>(null);
+  // Only the attach path has a busy state to show. Viewing reports itself in the tab it opens.
+  const [busy, setBusy] = useState<null | 'attach'>(null);
   const [menuOpen, setMenuOpen] = useState(false);
 
   if (!requestId) return null;
@@ -44,20 +58,17 @@ const AppointmentLetterButton = ({ requestId, getOrCreateSession }: AppointmentL
 
   const generateBlob = () => fetchReportPdf('appointment-letter', requestId);
 
-  const handleView = async () => {
+  /**
+   * No busy state and no toast here on purpose: the tab opens inside this click — which is the
+   * only moment Safari allows it — and from then on it owns the feedback, showing the wait, the
+   * progress and any failure in the place the user is already looking.
+   */
+  const handleView = () => {
     setMenuOpen(false);
-    if (busy) return;
-    setBusy('view');
-    try {
-      const blob = await generateBlob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank', 'noopener');
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      toast.error(t('appointmentLetter.error', 'Failed to generate the appointment letter.'));
-    } finally {
-      setBusy(null);
-    }
+    // Deliberately not gated on `busy`: that guard belongs to the attach path, and using it here
+    // made the click do nothing at all — no tab, no message — while an attach was running. Each
+    // click is a request for its own tab, and each tab carries its own progress and cancel.
+    openInTab(options => fetchReportPdf('appointment-letter', requestId, options));
   };
 
   const handleGenerateAndAttach = async () => {
@@ -99,10 +110,19 @@ const AppointmentLetterButton = ({ requestId, getOrCreateSession }: AppointmentL
       setValue('documents', [...deduped, newDoc], { shouldDirty: true });
 
       toast.success(
-        t('appointmentLetter.attached', 'Appointment letter attached. Save the request to keep it.'),
+        t(
+          'appointmentLetter.attached',
+          'Appointment letter attached. Save the request to keep it.',
+        ),
       );
-    } catch {
-      toast.error(t('appointmentLetter.error', 'Failed to generate the appointment letter.'));
+    } catch (error) {
+      // blobTransfer fills apiError.detail for both a ProblemDetails body and a stalled transfer
+      // ("the connection stopped…"), and a stall is now a likelier outcome than a failed render —
+      // reporting it as "could not generate the letter" sends the user after the wrong problem.
+      const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
+      toast.error(
+        detail || t('appointmentLetter.error', 'Failed to generate the appointment letter.'),
+      );
     } finally {
       setBusy(null);
     }
