@@ -66,7 +66,9 @@
     "failed": "无法打开文件，请关闭此标签页后重试",
     "popupBlocked": "浏览器阻止了新标签页，请允许本网站的弹出窗口",
     "close": "关闭此标签页",
-    "cancel": "取消"
+    "cancel": "取消",
+    "downloadStarted": "正在下载 {{name}} — 请查看浏览器的下载列表",
+    "downloadStartedUnnamed": "正在下载 — 请查看浏览器的下载列表"
   },
   "transfer": {
     "serverTooSlow": "服务器准备文件耗时过长，请重试",
