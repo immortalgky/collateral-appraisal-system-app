@@ -99,6 +99,7 @@
   .progress-indeterminate {
     width: 40%;
   }
+}
 
 /* Skeleton shimmer for loading placeholders */
 @keyframes shimmer {
