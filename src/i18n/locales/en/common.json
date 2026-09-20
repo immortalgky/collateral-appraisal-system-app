@@ -75,7 +75,17 @@
     "uploading": "Uploading…",
     "processing": "Processing on the server…",
     "uploadStalled": "The connection stopped during the upload. Please try again.",
-    "downloadStalled": "The connection stopped during the download. Please try again."
+    "downloadStalled": "The connection stopped during the download. Please try again.",
+    "failed": "Upload failed",
+    "resume": "Carry on",
+    "cancel": "Cancel",
+    "dismiss": "Dismiss",
+    "secondsLeft": "{{count}}s left",
+    "minutesLeft": "{{count}} min left",
+    "fileTooLarge": "This file is larger than the {{limit}} limit (it is {{size}}).",
+    "uploadCancelled": "Upload cancelled",
+    "uploadAbandoned": "The upload stopped when you left the screen. Please upload the file again.",
+    "downloadCancelled": "Download cancelled"
   },
   "confirm": {
     "deleteTitle": "Confirm Delete",
