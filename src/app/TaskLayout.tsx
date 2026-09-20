@@ -13,6 +13,7 @@ import { useParametersQuery } from '@shared/api/parameters';
 import { useDealersQuery } from '@shared/api/dealers';
 import { useAddressesQuery } from '@shared/api/addresses';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
+import UploadProgressPanel from '@shared/components/UploadProgressPanel';
 import { AppraisalProvider } from '@features/appraisal/context/AppraisalContext';
 import { ActivityMenuSync } from '@features/menuManagement/ActivityMenuSync';
 import { useMenuStore } from '@features/menuManagement/store';
@@ -388,6 +389,7 @@ function TaskLayout() {
         </div>
 
         <LoadingOverlay />
+        <UploadProgressPanel />
       </div>
     );
   }

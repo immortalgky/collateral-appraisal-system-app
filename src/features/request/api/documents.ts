@@ -1,6 +1,10 @@
+import { useCallback } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { z } from 'zod';
 import axios from '@shared/api/axiosInstance';
+import { downloadBlob, uploadForm } from '@shared/api/blobTransfer';
+import type { TransferOptions } from '@shared/api/blobTransfer';
+import { useBlobViewerTab } from '@shared/hooks/useBlobViewerTab';
 import type {
   CreateUploadSessionResponse,
   UploadDocumentParams,
@@ -43,10 +47,9 @@ export const useUploadDocument = () => {
       formData.append('documentType', documentType);
       formData.append('documentCategory', documentCategory);
 
-      const { data } = await axios.post<UploadDocumentResult>('/documents', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const { data } = await uploadForm<UploadDocumentResult>('/documents', formData, {
+        onProgress: params.onProgress,
+        label: file.name,
       });
       return data;
     },
@@ -88,51 +91,53 @@ export interface DownloadDocumentResult {
   fileName: string | null;
 }
 
+const parseFileName = (disposition: string | undefined): string | null => {
+  if (!disposition) return null;
+  const match = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
+  return match ? decodeURIComponent(match[1].replace(/"/g, '')) : null;
+};
+
+/**
+ * Downloads a document as a blob, reporting progress as the bytes arrive.
+ *
+ * `total` is null when the response carries no usable Content-Length (a compressing proxy in
+ * front of the API, say) — callers should show an indeterminate indicator rather than a
+ * percentage they cannot compute.
+ */
+export const fetchDocumentBlob = async (
+  documentId: string,
+  options: TransferOptions = {},
+): Promise<DownloadDocumentResult> => {
+  const response = await downloadBlob(`/documents/${documentId}/download`, {
+    ...options,
+    params: { ...options.params, download: false },
+  });
+
+  return {
+    blob: response.data,
+    fileName: parseFileName(response.headers?.['content-disposition'] as string | undefined),
+  };
+};
+
 export const useDownloadDocument = () => {
   return useMutation({
-    mutationFn: async (documentId: string): Promise<DownloadDocumentResult> => {
-      const response = await axios.get(`/documents/${documentId}/download`, {
-        responseType: 'blob',
-        params: { download: false },
-      });
-
-      // Extract filename from Content-Disposition header if available
-      const disposition = response.headers?.['content-disposition'] as string | undefined;
-      let fileName: string | null = null;
-      if (disposition) {
-        const match = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
-        if (match) {
-          fileName = decodeURIComponent(match[1].replace(/"/g, ''));
-        }
-      }
-
-      return { blob: response.data, fileName };
-    },
+    mutationFn: (documentId: string): Promise<DownloadDocumentResult> =>
+      fetchDocumentBlob(documentId),
   });
 };
 
 /**
- * Returns a function that opens a document inline in a new browser tab. The tab is
- * opened synchronously within the click gesture (so Safari doesn't block it), then
- * pointed at the blob URL once the download resolves.
+ * Returns a function that opens a stored document inline in a new browser tab, with the loading
+ * page, progress and cancellation that useBlobViewerTab provides.
  */
 export const useViewDocument = () => {
-  const download = useDownloadDocument();
-  return (documentId: string) => {
-    const win = window.open('', '_blank');
-    // Sever the opener link so the viewed document (e.g. HTML blob) can't reach window.opener.
-    if (win) win.opener = null;
-    download.mutate(documentId, {
-      onSuccess: ({ blob }) => {
-        const url = URL.createObjectURL(blob);
-        if (win) win.location.href = url;
-        else window.open(url, '_blank', 'noopener');
-        // Revoke after a delay so the tab has time to load the blob (repo convention).
-        setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      },
-      onError: () => win?.close(),
-    });
-  };
+  const openInTab = useBlobViewerTab();
+  // Memoised for the same reason the hook it wraps is: this ends up in callers' dependency arrays.
+  return useCallback(
+    (documentId: string) =>
+      openInTab(options => fetchDocumentBlob(documentId, options).then(result => result.blob)),
+    [openInTab],
+  );
 };
 
 // ─── v7: GET /requests/{requestId}/documents ─────────────────────────────────

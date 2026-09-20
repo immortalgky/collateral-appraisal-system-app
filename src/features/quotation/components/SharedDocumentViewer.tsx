@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
-import axiosInstance from '@shared/api/axiosInstance';
+import { downloadBlob } from '@shared/api/blobTransfer';
 import Icon from '@/shared/components/Icon';
 
 interface SharedDocumentViewerProps {
@@ -52,13 +52,18 @@ const SharedDocumentViewer = ({
     }
 
     let cancelled = false;
+    // `cancelled` only stops us touching state after unmount; the request itself has to be
+    // aborted. Without a total deadline any more, a dialog opened and closed a few times would
+    // otherwise leave that many full downloads running with nowhere to go.
+    const controller = new AbortController();
 
     const load = async () => {
       setState({ status: 'loading' });
       try {
-        const response = await axiosInstance.get(
+        const response = await downloadBlob(
           `/quotations/${quotationRequestId}/shared-documents/${documentId}/content`,
-          { responseType: 'blob' },
+          // silent: the dialog shows its own loading state for this fetch.
+          { signal: controller.signal, silent: true },
         );
         if (cancelled) return;
         const blob: Blob = response.data;
@@ -71,7 +76,10 @@ const SharedDocumentViewer = ({
         if (isAxiosError(err) && (err.response?.status === 403 || err.response?.status === 404)) {
           setState({ status: 'forbidden' });
         } else {
-          setState({ status: 'error', message: t('errors.failedToLoadQuotation') });
+          // blobTransfer fills apiError.detail for a stalled transfer and for a ProblemDetails
+          // body — without this, five minutes of waiting end in a message that says nothing.
+          const detail = (err as { apiError?: { detail?: string } })?.apiError?.detail;
+          setState({ status: 'error', message: detail || t('errors.failedToLoadQuotation') });
         }
       }
     };
@@ -80,6 +88,7 @@ const SharedDocumentViewer = ({
 
     return () => {
       cancelled = true;
+      controller.abort();
       if (objectUrlRef.current) {
         URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = null;
