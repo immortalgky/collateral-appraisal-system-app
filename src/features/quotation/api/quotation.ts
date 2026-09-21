@@ -412,7 +412,11 @@ export const useRespondNegotiation = (quotationId: string) => {
       verb: 'Accept' | 'Counter' | 'Reject';
       counterPrice?: number | null;
       message?: string | null;
-      items?: { appraisalId: string; negotiatedDiscount: number | null }[];
+      items?: {
+        appraisalId: string;
+        negotiatedDiscount: number | null;
+        itemNegotiationReason: string | null;
+      }[];
     }) => {
       const { negotiationId, ...body } = payload;
       const { data } = await axios.post(
