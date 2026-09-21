@@ -133,6 +133,7 @@
     "condoName": "ชื่อคอนโด",
     "usageAreaSqM": "พื้นที่ใช้สอย (ตร.ม.)",
     "vehicleType": "ประเภทยานพาหนะ",
+    "vehicleRegistrationNumber": "เลขเล่มทะเบียนรถ",
     "licensePlateNumber": "ทะเบียนรถ",
     "appointmentLocationVehicle": "สถานที่นัดหมาย",
     "chassisNumber": "หมายเลขตัวถัง",
