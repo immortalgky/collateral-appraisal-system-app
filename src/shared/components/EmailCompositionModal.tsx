@@ -157,6 +157,7 @@ const EmailCompositionModal = ({
     const next = pickedDocs.filter(d => d.id !== id);
     setPickedDocs(next);
     setValue('attachments', next.map(d => d.id));
+  };
 
   const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
