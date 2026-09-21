@@ -4,7 +4,7 @@ import { PageReadOnlyContext, usePageReadOnly } from '@/shared/contexts/PageRead
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useAppraisalId, useBasePath, useIsCiAppraisal } from '../context/AppraisalContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
-import PropertyPhotoSection from '../components/PropertyPhotoSection';
+import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { mapCondoFormDataToApiPayload, mapCondoPropertyResponseToForm } from '../utils/mappers';
 import {
@@ -17,7 +17,6 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import Icon from '@/shared/components/Icon';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import Section from '@/shared/components/sections/Section';
@@ -255,46 +254,18 @@ const CreateLeaseAgreementCondoPage = () => {
     );
   }
 
+  // The header's tabs; construction appears only when it applies.
+  const editorTabs = [
+    { id: 'condo', label: t('createPage.navCondo') },
+    ...(isUnderConstruction || isCiAppraisal
+      ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
+      : []),
+    { id: 'lease-agreement', label: t('createPage.navLeaseAgreement') },
+    { id: 'rental-info', label: t('createPage.navRentalInfo') },
+  ];
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors with Condo/Lease tabs */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: 'Photos', id: 'photos', icon: 'images' },
-            {
-              label: 'Condo',
-              id: 'properties-section',
-              icon: 'building',
-              onClick: () => setActiveTab('condo'),
-            },
-            ...(isUnderConstruction || isCiAppraisal
-              ? [
-                  {
-                    label: t('createPage.navConstructionInspection'),
-                    id: 'construction-section',
-                    icon: 'helmet-safety',
-                    onClick: () => setActiveTab('construction'),
-                  },
-                ]
-              : []),
-            {
-              label: 'Lease Agreement',
-              id: 'lease-agreement-section',
-              icon: 'file-contract',
-              onClick: () => setActiveTab('lease-agreement'),
-            },
-            {
-              label: 'Rental Info',
-              id: 'rental-info-section',
-              icon: 'calendar-days',
-              onClick: () => setActiveTab('rental-info'),
-            },
-          ]}
-        />
-      </div>
-
       <PageReadOnlyContext.Provider value={isReadOnly}>
         <FormProvider methods={methods} schema={createLeaseAgreementCondoForm}>
           <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
@@ -303,6 +274,15 @@ const CreateLeaseAgreementCondoPage = () => {
               id="form-scroll-container"
               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
+              <PropertyEditorHeader
+                appraisalId={appraisalId}
+                propertyId={propertyId}
+                typeCode="LSU"
+                photoSectionRef={photoSectionRef}
+                tabs={editorTabs}
+                activeTab={activeTab}
+                onTabChange={id => setActiveTab(id as typeof activeTab)}
+              />
               <ResizableSidebar
                 isOpen={isOpen}
                 onToggle={onToggle}
@@ -311,45 +291,11 @@ const CreateLeaseAgreementCondoPage = () => {
               >
                 <ResizableSidebar.Main>
                   <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    {/* Photos Section */}
-                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <Icon
-                            name="images"
-                            style="solid"
-                            className="w-5 h-5 text-indigo-600"
-                          />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                      </div>
-                      <div className="h-px bg-gray-200 mb-4" />
-                      {appraisalId && (
-                        <PropertyPhotoSection
-                          ref={photoSectionRef}
-                          appraisalId={appraisalId}
-                          propertyId={propertyId}
-                        />
-                      )}
-                    </Section>
-
                     {/* Condo Tab Content */}
                     <div
                       id="condo-section"
                       className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'condo' ? 'hidden' : ''}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <Icon
-                            name="mountain-sun"
-                            style="solid"
-                            className="w-5 h-5 text-amber-600"
-                          />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Condo Information</h2>
-                      </div>
-                      <div className="h-px bg-gray-200" />
-
                       <Section
                         id="condo-info"
                         anchor
@@ -365,19 +311,6 @@ const CreateLeaseAgreementCondoPage = () => {
                         id="construction-section"
                         className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                            <Icon
-                              name="helmet-safety"
-                              style="solid"
-                              className="w-5 h-5 text-amber-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            Construction Inspection
-                          </h2>
-                        </div>
-                        <div className="h-px bg-gray-200" />
                         <Section id="construction-info" anchor className="flex flex-col gap-6">
                           <ConstructionInspectionTab
                             readOnly={isReadOnly}
@@ -393,17 +326,6 @@ const CreateLeaseAgreementCondoPage = () => {
                       className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <Icon
-                              name="file-contract"
-                              style="solid"
-                              className="w-5 h-5 text-purple-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">Lease Agreement</h2>
-                        </div>
-                        <div className="h-px bg-gray-200 mb-6" />
                         <LeaseAgreementForm namePrefix="leaseAgreement" />
                       </Section>
                     </div>
@@ -414,17 +336,6 @@ const CreateLeaseAgreementCondoPage = () => {
                       className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                            <Icon
-                              name="calendar-days"
-                              style="solid"
-                              className="w-5 h-5 text-teal-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">Rental Info</h2>
-                        </div>
-                        <div className="h-px bg-gray-200 mb-6" />
                         <RentalInfoForm namePrefix="rentalInfo" />
                       </Section>
                     </div>

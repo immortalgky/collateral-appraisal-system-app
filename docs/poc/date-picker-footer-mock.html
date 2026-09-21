@@ -1,0 +1,388 @@
+<meta charset="utf-8" />
+<title>Date Picker Footer Study</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap" />
+<style>
+  :root {
+    --color-primary: #0d9488;
+    --color-primary-50: #f0fdfa;
+    --color-primary-700: #0f766e;
+    --gray-200: #e5e7eb;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px 28px 80px;
+    background: #f8fafc;
+    color: #111827;
+    font-family: 'Inter', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+  }
+
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  h2 { font-size: 14px; margin: 0; }
+  .lede { color: #4b5563; max-width: 900px; line-height: 1.7; margin: 0 0 4px; }
+  .lede code { background: #eef2f7; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+
+  .toolbar {
+    margin: 18px 0 22px; padding: 10px 14px; background: #fff;
+    border: 1px solid var(--gray-200); border-radius: 10px;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .toolbar label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #374151; }
+
+  .cards { display: flex; gap: 22px; align-items: flex-start; flex-wrap: wrap; }
+
+  .card {
+    background: #fff; border: 1px solid var(--gray-200); border-radius: 12px;
+    padding: 14px; width: 320px;
+  }
+  .card.bad { border-color: #fca5a5; background: #fff7f7; }
+  .card.pick { border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-50); }
+
+  .card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .tag {
+    font-size: 11px; font-weight: 700; letter-spacing: .04em;
+    padding: 2px 7px; border-radius: 999px; background: #eef2f7; color: #475569;
+  }
+  .card.bad .tag { background: #fee2e2; color: #b91c1c; }
+  .card.pick .tag { background: var(--color-primary); color: #fff; }
+  .card .note { font-size: 12px; color: #6b7280; line-height: 1.65; margin: 6px 0 12px; }
+  .card .cost { font-size: 12px; color: #92400e; background: #fffbeb; border-radius: 6px; padding: 5px 8px; margin-top: 10px; }
+
+  /* ---- the measuring ruler: 212px is the calendar's natural width ---- */
+  .ruler { margin: 12px 0 8px; position: relative; height: 20px; }
+  .ruler .bar {
+    position: absolute; left: 0; top: 6px; height: 0;
+    border-top: 2px dashed #94a3b8; width: 212px;
+  }
+  .ruler .bar::before, .ruler .bar::after {
+    content: ''; position: absolute; top: -4px; width: 2px; height: 10px; background: #94a3b8;
+  }
+  .ruler .bar::before { left: 0; }
+  .ruler .bar::after { right: 0; }
+  .ruler .cap { position: absolute; left: 0; top: 8px; font-size: 10px; color: #64748b; }
+  .readout { font-size: 11px; color: #64748b; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .readout b { color: #0f172a; }
+  .readout.over b { color: #b91c1c; }
+
+  /* ================= the popover itself — mirrors the shipped Tailwind ================= */
+  .pop {
+    display: inline-block; background: #fff;
+    border: 1px solid var(--gray-200); border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1);
+    position: relative;
+  }
+  .pop-body { display: flex; }
+  .cal { padding: 8px; }
+
+  /* CalendarNavHeader */
+  .cal-head { display: flex; align-items: center; margin-bottom: 4px; padding: 0 4px; gap: 6px; }
+  .cal-title {
+    display: inline-flex; align-items: center; gap: 4px;
+    border: 0; background: transparent; font: inherit; font-size: 14px; font-weight: 600;
+    color: #1f2937; cursor: pointer; padding: 2px 4px; border-radius: 4px;
+  }
+  .cal-title:hover { background: #f3f4f6; }
+  .cal-nav { margin-left: auto; display: flex; gap: 2px; }
+  .cal-nav button {
+    border: 0; background: transparent; cursor: pointer; color: var(--gray-500);
+    padding: 3px; border-radius: 4px; line-height: 0;
+  }
+  .cal-nav button:hover { background: #f3f4f6; color: #111827; }
+
+  /* day grid — 7 x 28px = 196px, exactly --rdp-day-width: 1.75rem */
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 28px); }
+  .cal-grid .wd {
+    height: 20px; display: grid; place-items: center;
+    font-size: 12px; color: var(--gray-500); opacity: .6;
+  }
+  .cal-grid button.day {
+    width: 28px; height: 28px; border: 0; background: transparent; cursor: pointer;
+    border-radius: 4px; font: inherit; font-size: 12px; color: #1f2937;
+  }
+  .cal-grid button.day:hover { background: #f3f4f6; }
+  .cal-grid button.day.out { color: #cbd5e1; }
+  .cal-grid button.day.today { box-shadow: inset 0 0 0 1.5px var(--color-primary); font-weight: 600; }
+  .cal-grid button.day.sel { background: var(--color-primary); color: #fff; font-weight: 600; }
+
+  /* ================= footers ================= */
+  .foot { border-top: 1px solid var(--gray-200); }
+  .row { display: flex; align-items: center; gap: 8px; padding: 8px; }
+  .row.tight { padding: 6px 8px; }
+
+  .today-btn {
+    border: 0; background: transparent; font: inherit; font-size: 12px; font-weight: 600;
+    color: var(--color-primary); cursor: pointer; padding: 2px 4px; border-radius: 4px;
+    white-space: nowrap;
+  }
+  .today-btn:hover { background: var(--color-primary-50); }
+
+  .time-label { font-size: 12px; font-weight: 500; color: var(--gray-700); }
+  .echo { font-size: 11px; color: #9ca3af; margin-left: auto; white-space: nowrap; }
+  .clock { color: var(--gray-500); flex-shrink: 0; }
+
+  .time { display: flex; align-items: center; gap: 4px; }
+  .time.grow { flex: 1 1 0%; }
+  .sep { color: var(--gray-500); }
+
+  .sel-wrap { position: relative; display: inline-block; }
+  .sel-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 4px;
+    padding: 4px 8px; border: 1px solid var(--gray-200); border-radius: 4px;
+    background: #fff; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  .sel-btn:hover { border-color: #d1d5db; }
+  .sel-list {
+    position: absolute; bottom: 100%; margin-bottom: 4px; left: 0; z-index: 20;
+    min-width: 100%; max-height: 160px; overflow-y: auto;
+    background: #fff; border: 1px solid var(--gray-200); border-radius: 4px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / .1); padding: 4px 0; list-style: none; margin-top: 0;
+  }
+  .sel-list li { padding: 4px 8px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .sel-list li:hover { background: #f3f4f6; }
+  .sel-list li[data-on="1"] { background: rgb(13 148 136 / .1); color: var(--color-primary); font-weight: 500; }
+
+  .done {
+    border: 0; cursor: pointer; font: inherit; background: var(--color-primary); color: #fff;
+    margin-left: auto; white-space: nowrap;
+  }
+  /* the shipped Done: rounded text-sm px-3 py-1 */
+  .done.lg { border-radius: 4px; padding: 4px 12px; font-size: 14px; font-weight: 500; }
+  /* the DatePickerInput Apply button: rounded-md text-xs px-3 py-1 */
+  .done.sm { border-radius: 6px; padding: 4px 12px; font-size: 12px; font-weight: 500; }
+  .done:hover { background: #0b8177; }
+
+  .divider { width: 1px; align-self: stretch; background: var(--gray-200); margin: 0 2px; }
+
+  .footnote { margin-top: 34px; max-width: 900px; color: #4b5563; line-height: 1.8; font-size: 13px; }
+  .footnote h2 { font-size: 15px; margin: 0 0 8px; }
+  .footnote code { background: #eef2f7; padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+
+<h1>Date + Time picker — จัดวาง footer ใหม่</h1>
+<p class="lede">
+  ปฏิทินไม่ได้กำหนดความกว้าง (<code>absolute right-0</code> ไม่มี <code>w-*</code>) มันจึงกว้างเท่า
+  <em>ลูกที่กว้างที่สุด</em> — กริดวันกว้าง 196px + padding = <b>212px</b> แต่ footer แถวเดียวที่มี
+  Today + Time + 00:00 + Done ต้องการ ~250px <b>footer จึงเป็นตัวดันปฏิทินให้กว้างเกิน</b>
+  เส้นประใต้ปฏิทินแต่ละอันคือ 212px ไว้เทียบว่าอันไหนล้น
+</p>
+
+<div class="toolbar">
+  <label><input type="checkbox" id="opt-echo" checked /> แบบ A: โชว์วันที่ที่เลือกท้ายแถว Today</label>
+  <label><input type="checkbox" id="opt-btn" /> ใช้สไตล์ปุ่มเดียวกับ Apply ของ DateInput (เล็กลง)</label>
+  <span style="font-size:12px;color:#6b7280">กดปุ่มในปฏิทินได้จริงทุกอัน — เปลี่ยนเดือน, กด Today, กางชั่วโมง/นาที</span>
+</div>
+
+<div class="cards" id="cards"></div>
+
+<div class="footnote">
+  <h2>สิ่งที่ยังเหมือนเดิมทุกแบบ</h2>
+  <ul>
+    <li><b>Today แค่เลื่อนปฏิทินมาเดือนนี้</b> ไม่ได้เลือกวันให้ — ฟิลด์ที่ห้ามเลือกวันนี้จึงยังกดได้ปกติ</li>
+    <li>ชั่วโมง/นาที <b>กางขึ้นบน</b> เพราะอยู่ล่างสุดของ popover</li>
+    <li>Done แค่ปิด popover แล้วยิง <code>onBlur</code> ให้ validation ของฟอร์มทำงาน — ไม่ได้ commit ค่าอะไรเพิ่ม</li>
+  </ul>
+</div>
+
+<script>
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const WD = ['M','T','W','T','F','S','S'];
+  const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+  const pad = n => String(n).padStart(2, '0');
+  const sameDay = (a,b) => a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+
+  const VARIANTS = [
+    {
+      key: 'base', tag: 'ของปัจจุบัน', cls: 'bad',
+      title: 'แถวเดียว — ที่ ship อยู่ตอนนี้',
+      note: 'Today ไปยืนติดคำว่า Time อ่านรวมกันเป็น “Today Time” และแถวนี้กว้างกว่ากริดปฏิทิน ปฏิทินเลยลอยอยู่ในกรอบที่กว้างเกิน',
+    },
+    {
+      key: 'a', tag: 'แบบ A', cls: 'pick',
+      title: 'สองแถว ตาม POC เดิม',
+      note: 'Today ได้แถวของตัวเอง แถวล่างเหลือแค่เรื่องเวลา — แต่ละแถวจึงไม่เกิน 212px ปฏิทินไม่ถูกดันอีก',
+      cost: 'จ่ายด้วยความสูง popover เพิ่ม ~29px',
+    },
+    {
+      key: 'b', tag: 'แบบ B', cls: '',
+      title: 'แถวเดียว จัดกลุ่มใหม่',
+      note: 'ตัด label “Time” ทิ้ง (สองช่องคั่นด้วย : มันอ่านออกอยู่แล้ว) ใส่ไอคอนนาฬิกาแทน คั่น Today ด้วยเส้น แล้วดันกลุ่มเวลา+Done ไปชิดขวา',
+      cost: 'Today ยังอยู่บรรทัดเดียวกับเวลา และพอดีเป๊ะ — ถ้าวันหลังแปลปุ่มเป็นไทยจะล้นอีก',
+    },
+    {
+      key: 'c', tag: 'แบบ C', cls: '',
+      title: 'ย้าย Today ขึ้นไปอยู่หัวปฏิทิน',
+      note: 'footer กลับไปเป็นของเวลาล้วนแบบก่อนหน้านี้ (จึงไม่มีทางเพี้ยน) และ Today ไปอยู่ข้างลูกศรเปลี่ยนเดือน ซึ่งตรงกับสิ่งที่มันทำจริง',
+      cost: 'ต้องแก้ CalendarNavHeader ที่ DateInput ใช้ร่วมด้วย',
+    },
+  ];
+
+  const opts = { echo: true, smallBtn: false };
+
+  function buildDays(state) {
+    const first = new Date(state.y, state.m, 1);
+    const lead = (first.getDay() + 6) % 7;          // Monday-start
+    const start = new Date(state.y, state.m, 1 - lead);
+    let html = WD.map(w => '<div class="wd">' + w + '</div>').join('');
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      const cls = ['day'];
+      if (d.getMonth() !== state.m) cls.push('out');
+      if (sameDay(d, TODAY)) cls.push('today');
+      if (sameDay(d, state.sel)) cls.push('sel');
+      html += '<button type="button" class="' + cls.join(' ') + '" data-day="' + i + '">' + d.getDate() + '</button>';
+    }
+    return html;
+  }
+
+  const CHEV_D = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const CHEV_U = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 15l-6-6-6 6"/></svg>';
+  const CHEV_DN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+  const CARET = '<svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" style="color:#6b7280;flex-shrink:0"><path d="M5.25 7.5l4.75 5 4.75-5H5.25z"/></svg>';
+  const CLOCK = '<svg class="clock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>';
+
+  function sel(kind, value, state) {
+    const open = state.open === kind;
+    const n = kind === 'h' ? 24 : 60;
+    let list = '';
+    if (open) {
+      list = '<ul class="sel-list">';
+      for (let i = 0; i < n; i++) {
+        list += '<li data-pick="' + kind + '" data-val="' + i + '" data-on="' + (i === value ? 1 : 0) + '">' + pad(i) + '</li>';
+      }
+      list += '</ul>';
+    }
+    return '<span class="sel-wrap"><button type="button" class="sel-btn" data-open="' + kind + '">' +
+      '<span>' + pad(value) + '</span>' + CARET + '</button>' + list + '</span>';
+  }
+
+  function timeGroup(state, grow) {
+    return '<span class="time' + (grow ? ' grow' : '') + '">' +
+      sel('h', state.h, state) + '<span class="sep">:</span>' + sel('mi', state.mi, state) + '</span>';
+  }
+
+  function doneBtn() {
+    return '<button type="button" class="done ' + (opts.smallBtn ? 'sm' : 'lg') + '" data-done="1">Done</button>';
+  }
+
+  function todayBtn() {
+    return '<button type="button" class="today-btn" data-today="1">Today</button>';
+  }
+
+  function footer(key, state) {
+    if (key === 'base') {
+      return '<div class="foot"><div class="row">' + todayBtn() +
+        '<span class="time-label">Time</span>' + timeGroup(state, true) + doneBtn() + '</div></div>';
+    }
+    if (key === 'a') {
+      const echo = opts.echo
+        ? '<span class="echo">' + state.sel.getDate() + ' ' + MONTHS[state.sel.getMonth()].slice(0,3) + ' ' + state.sel.getFullYear() + '</span>'
+        : '';
+      return '<div class="foot"><div class="row tight">' + todayBtn() + echo + '</div></div>' +
+             '<div class="foot"><div class="row tight"><span class="time-label">Time</span>' +
+             timeGroup(state, false) + doneBtn() + '</div></div>';
+    }
+    if (key === 'b') {
+      return '<div class="foot"><div class="row tight">' + todayBtn() +
+        '<span class="divider"></span><span class="time" style="margin-left:auto">' + CLOCK + '</span>' +
+        timeGroup(state, false) + doneBtn() + '</div></div>';
+    }
+    // c
+    return '<div class="foot"><div class="row tight"><span class="time-label">Time</span>' +
+      timeGroup(state, false) + doneBtn() + '</div></div>';
+  }
+
+  function head(key, state) {
+    const today = key === 'c' ? todayBtn() : '';
+    return '<div class="cal-head">' +
+      '<button type="button" class="cal-title"><span>' + MONTHS[state.m] + ' ' + state.y + '</span>' + CHEV_D + '</button>' +
+      today +
+      '<span class="cal-nav">' +
+      '<button type="button" data-step="-1" aria-label="Previous month">' + CHEV_U + '</button>' +
+      '<button type="button" data-step="1" aria-label="Next month">' + CHEV_DN + '</button>' +
+      '</span></div>';
+  }
+
+  function mount(card, v) {
+    const state = {
+      y: TODAY.getFullYear(), m: TODAY.getMonth(),
+      sel: new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate()),
+      h: 9, mi: 0, open: null,
+    };
+    const host = card.querySelector('.host');
+    const readout = card.querySelector('.readout');
+
+    function render() {
+      host.innerHTML =
+        '<div class="pop"><div class="pop-body"><div class="cal">' +
+        head(v.key, state) +
+        '<div class="cal-grid">' + buildDays(state) + '</div>' +
+        '</div></div>' + footer(v.key, state) + '</div>';
+
+      const w = host.querySelector('.pop').offsetWidth;
+      const over = w > 214;
+      readout.className = 'readout' + (over ? ' over' : '');
+      readout.innerHTML = 'ความกว้าง popover จริง: <b>' + w + 'px</b> ' +
+        (over ? '— ล้นกริด ' + (w - 212) + 'px' : '— พอดีกริด ✓');
+    }
+
+    host.addEventListener('click', e => {
+      const pick = e.target.closest('[data-pick]');
+      if (pick) { state[pick.dataset.pick] = Number(pick.dataset.val); state.open = null; render(); return; }
+
+      const btn = e.target.closest('button');
+      if (!btn) { state.open = null; render(); return; }
+
+      if (btn.dataset.step) {
+        const next = new Date(state.y, state.m + Number(btn.dataset.step), 1);
+        state.y = next.getFullYear(); state.m = next.getMonth(); state.open = null; render(); return;
+      }
+      if (btn.dataset.today) {
+        state.y = TODAY.getFullYear(); state.m = TODAY.getMonth(); state.open = null; render(); return;
+      }
+      if (btn.dataset.open) {
+        state.open = state.open === btn.dataset.open ? null : btn.dataset.open; render(); return;
+      }
+      if (btn.dataset.day != null) {
+        const first = new Date(state.y, state.m, 1);
+        const lead = (first.getDay() + 6) % 7;
+        state.sel = new Date(state.y, state.m, 1 - lead + Number(btn.dataset.day));
+        state.y = state.sel.getFullYear(); state.m = state.sel.getMonth();
+        state.open = null; render(); return;
+      }
+      if (btn.dataset.done) { state.open = null; render(); return; }
+      state.open = null; render();
+    });
+
+    render();
+    return render;
+  }
+
+  const renderers = [];
+  const cards = document.getElementById('cards');
+  VARIANTS.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'card ' + v.cls;
+    card.innerHTML =
+      '<div class="card-head"><span class="tag">' + v.tag + '</span><h2>' + v.title + '</h2></div>' +
+      '<p class="note">' + v.note + '</p>' +
+      '<div class="host"></div>' +
+      '<div class="ruler"><span class="bar"></span><span class="cap">&nbsp;กริดปฏิทิน 212px</span></div>' +
+      '<div class="readout"></div>' +
+      (v.cost ? '<div class="cost">' + v.cost + '</div>' : '');
+    cards.appendChild(card);
+    renderers.push(mount(card, v));
+  });
+
+  document.getElementById('opt-echo').addEventListener('change', e => {
+    opts.echo = e.target.checked; renderers.forEach(r => r());
+  });
+  document.getElementById('opt-btn').addEventListener('change', e => {
+    opts.smallBtn = e.target.checked; renderers.forEach(r => r());
+  });
+</script>

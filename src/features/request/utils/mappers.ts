@@ -33,7 +33,7 @@ export const mapRequestResponseToForm = (
       loanDetail: {
         bankingSegment: response.detail?.loanDetail?.bankingSegment ?? '',
         loanApplicationNumber: response.detail?.loanDetail?.loanApplicationNumber ?? '',
-        facilityLimit: response.detail?.loanDetail?.facilityLimit ?? 0,
+        facilityLimit: response.detail?.loanDetail?.facilityLimit ?? null,
         additionalFacilityLimit: response.detail?.loanDetail?.additionalFacilityLimit ?? null,
         previousFacilityLimit: response.detail?.loanDetail?.previousFacilityLimit ?? null,
         totalSellingPrice: response.detail?.loanDetail?.totalSellingPrice ?? 0,

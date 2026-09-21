@@ -5,6 +5,8 @@ import { useFormReadOnly } from './form/context';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: React.ReactNode;
   helperText?: string;
   error?: string;
   fullWidth?: boolean;
@@ -15,10 +17,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
+  (allProps, ref) => {
+    const {
       className,
       label,
+      labelAddon,
       helperText,
       error,
       fullWidth = true,
@@ -31,9 +34,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       maxLength,
       value,
       ...props
-    },
-    ref,
-  ) => {
+    } = allProps;
     // Generate a unique ID if not provided
     const uuid = useId();
     const inputId = id || uuid;
@@ -46,11 +47,34 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     return (
       <div className={clsx(fullWidth && 'w-full')}>
-        {label && (
-          <label data-field-label htmlFor={inputId} className="block text-xs font-medium text-gray-700 mb-1">
-            {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
-          </label>
+        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
+            of this component with `display: contents`, so an extra element in between would take
+            the label column and stretch. */}
+        {labelAddon ? (
+          <div className="flex items-center gap-1.5 mb-1">
+            {label && (
+              <label
+                data-field-label
+                htmlFor={inputId}
+                className="block text-xs font-medium text-gray-700"
+              >
+                {label}
+                {required && <span className="text-danger ml-0.5">*</span>}
+              </label>
+            )}
+            {labelAddon}
+          </div>
+        ) : (
+          label && (
+            <label
+              data-field-label
+              htmlFor={inputId}
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
+              {label}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </label>
+          )
         )}
 
         <div className={clsx('relative', fullWidth && 'w-full')}>
@@ -69,7 +93,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
                 : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-              isDisabled ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : 'bg-white hover:border-gray-300',
+              isDisabled
+                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
+                : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-9',
               fullWidth && 'w-full',
@@ -81,7 +107,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             }
             disabled={isDisabled}
             maxLength={maxLength}
-            value={value}
+            // `null` is a legitimate form value — "not applicable", or a field the API must leave
+            // alone — but React reads it as "uncontrolled" and stops managing the box, leaving
+            // whatever text was last in the DOM on screen. An empty string is the controlled way
+            // to say the same thing. Only coerce when the caller passed `value` at all:
+            // `{...register('x')}` passes none and keeps its text in the DOM, so forcing '' on it
+            // would freeze the box.
+            value={'value' in allProps ? (value ?? '') : undefined}
             {...props}
           />
 
@@ -104,7 +136,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               <span
                 className={clsx(
                   'text-xs',
-                  currentLength > maxLength! ? 'text-danger' : 'text-gray-400'
+                  currentLength > maxLength! ? 'text-danger' : 'text-gray-400',
                 )}
               >
                 {currentLength}/{maxLength}

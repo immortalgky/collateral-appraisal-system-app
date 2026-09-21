@@ -17,6 +17,7 @@ import {
 } from '../api/blockReappraisal';
 import type { BlockReappraisalUnitDetail, BlockReappraisalCreateResult } from '../types';
 import { isCondo } from '@/features/blockProject/types';
+import BlockReappraisalNotRequiredModal from '../components/BlockReappraisalNotRequiredModal';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -169,7 +170,9 @@ function SortableTh({ label, columnKey, activeKey, dir, onSort, align = 'left' }
 function EstimateCell({ value }: { value: number | null }) {
   const empty = value == null || value === 0;
   return (
-    <td className={`py-1.5 px-3 tabular-nums text-right ${empty ? 'text-gray-300' : 'text-gray-700'}`}>
+    <td
+      className={`py-1.5 px-3 tabular-nums text-right ${empty ? 'text-gray-300' : 'text-gray-700'}`}
+    >
       {empty ? '–' : value.toLocaleString()}
     </td>
   );
@@ -324,7 +327,9 @@ function Field({
   align?: 'right';
 }) {
   return (
-    <div className={`flex flex-col leading-tight ${align === 'right' ? 'items-end text-right' : ''}`}>
+    <div
+      className={`flex flex-col leading-tight ${align === 'right' ? 'items-end text-right' : ''}`}
+    >
       <span className="text-[11px] text-gray-400">{label}</span>
       <span className="text-sm font-medium text-gray-800 tabular-nums mt-0.5">{value ?? '-'}</span>
     </div>
@@ -635,17 +640,20 @@ function BlockReappraisalDetailPage() {
     });
   };
 
-  const handleOptOutConfirm = () => {
+  const handleOptOutConfirm = (remark: string) => {
     if (!collateralMasterId) return;
-    optOutMutation.mutate(collateralMasterId, {
-      onSuccess: () => {
-        toast.success(t('success.optOut'));
-        navigate('/standalone/block-reappraisal');
+    optOutMutation.mutate(
+      { collateralMasterId, remark },
+      {
+        onSuccess: () => {
+          toast.success(t('success.optOut'));
+          navigate('/standalone/block-reappraisal');
+        },
+        onError: () => {
+          toast.error(t('error.optOutFailed'));
+        },
       },
-      onError: () => {
-        toast.error(t('error.optOutFailed'));
-      },
-    });
+    );
   };
 
   // ── Loading skeleton ──
@@ -778,7 +786,9 @@ function BlockReappraisalDetailPage() {
           {/* Sold progress gauge */}
           <div className="flex items-center gap-3 min-w-[220px]">
             <div className="flex flex-col leading-tight">
-              <span className="text-[11px] text-gray-400">{t('detail.overview.donutSoldLabel')}</span>
+              <span className="text-[11px] text-gray-400">
+                {t('detail.overview.donutSoldLabel')}
+              </span>
               <span className="text-sm font-semibold text-gray-900 tabular-nums">
                 {soldPct.toFixed(1)}%
                 <span className="ml-1 text-xs font-normal text-gray-400">
@@ -795,7 +805,11 @@ function BlockReappraisalDetailPage() {
 
           {/* Sold / Available tallies */}
           <div className="flex items-center gap-5">
-            <MiniStat dotClass="bg-violet-500" label={t('detail.overview.sold')} value={chipCounts.sold} />
+            <MiniStat
+              dotClass="bg-violet-500"
+              label={t('detail.overview.sold')}
+              value={chipCounts.sold}
+            />
             <MiniStat
               dotClass="bg-green-500"
               label={t('detail.overview.available')}
@@ -830,9 +844,7 @@ function BlockReappraisalDetailPage() {
         <div className="shrink-0 px-4 py-3 border-b border-gray-100 flex items-center justify-between">
           <h3 className="text-xs font-semibold text-gray-700">{t('detail.units.title')}</h3>
           <span className="text-xs text-gray-400 tabular-nums">
-            {filtersActive
-              ? `${filteredUnits.length} / ${units.length}`
-              : units.length}{' '}
+            {filtersActive ? `${filteredUnits.length} / ${units.length}` : units.length}{' '}
             {t('detail.units.count')}
           </span>
         </div>
@@ -863,7 +875,12 @@ function BlockReappraisalDetailPage() {
                 onChange={e => setMaxValue(e.target.value)}
               />
             </div>
-            <StatusChips value={statusFilter} onChange={setStatusFilter} counts={chipCounts} t={t} />
+            <StatusChips
+              value={statusFilter}
+              onChange={setStatusFilter}
+              counts={chipCounts}
+              t={t}
+            />
             {filtersActive && (
               <Button
                 variant="ghost"
@@ -935,16 +952,10 @@ function BlockReappraisalDetailPage() {
         />
       )}
 
-      <ConfirmDialog
+      <BlockReappraisalNotRequiredModal
         isOpen={optOutConfirmOpen}
         onClose={() => setOptOutConfirmOpen(false)}
         onConfirm={handleOptOutConfirm}
-        title={t('detail.optOutModal.title')}
-        message={t('detail.optOutModal.body')}
-        confirmText={t('detail.optOutModal.confirm')}
-        cancelText={t('common:actions.cancel')}
-        variant="danger"
-        isLoading={optOutMutation.isPending}
       />
     </div>
   );

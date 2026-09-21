@@ -10,7 +10,6 @@ import {
   useAppraisalContextSafe,
 } from '@/features/appraisal/context/AppraisalContext';
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -29,9 +28,8 @@ import { createCondoForm, createCondoFormDefault, type createCondoFormType } fro
 import { mapCondoPropertyResponseToForm, mapCondoFormDataToApiPayload } from '../utils/mappers';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import PropertyPhotoSection, {
-  type PropertyPhotoSectionRef,
-} from '../components/PropertyPhotoSection';
+import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
+import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { PageReadOnlyContext, usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useProgressivePrefill } from '@/features/collateralMaster';
 import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
@@ -266,34 +264,16 @@ const CreateCondoPage = () => {
     );
   }
 
+  // The header's tabs; construction appears only when it applies.
+  const editorTabs = [
+    { id: 'condo', label: t('createPage.navCondo') },
+    ...(isUnderConstruction || isCiAppraisal
+      ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
+      : []),
+  ];
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
-            {
-              label: t('createPage.navCondo'),
-              id: 'properties-section',
-              icon: 'building',
-              onClick: () => setActiveTab('condo'),
-            },
-            ...(isUnderConstruction || isCiAppraisal
-              ? [
-                  {
-                    label: t('createPage.navConstructionInspection'),
-                    id: 'construction-section',
-                    icon: 'helmet-safety',
-                    onClick: () => setActiveTab('construction'),
-                  },
-                ]
-              : []),
-          ]}
-        />
-      </div>
-
       <PageReadOnlyContext.Provider value={isReadOnly}>
         <FormProvider methods={methods} schema={createCondoForm}>
           <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
@@ -302,6 +282,15 @@ const CreateCondoPage = () => {
               id="form-scroll-container"
               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
+              <PropertyEditorHeader
+                appraisalId={appraisalId}
+                propertyId={propertyId}
+                typeCode="U"
+                photoSectionRef={photoSectionRef}
+                tabs={editorTabs}
+                activeTab={activeTab}
+                onTabChange={id => setActiveTab(id as typeof activeTab)}
+              />
               <ResizableSidebar
                 isOpen={isOpen}
                 onToggle={onToggle}
@@ -310,44 +299,11 @@ const CreateCondoPage = () => {
               >
                 <ResizableSidebar.Main>
                   <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    {/* Photos Section */}
-                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <Icon
-                            name="images"
-                            style="solid"
-                            className="w-5 h-5 text-indigo-600"
-                          />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          {t('createPage.photosSection')}
-                        </h2>
-                      </div>
-                      <div className="h-px bg-gray-200 mb-4" />
-                      {appraisalId && (
-                        <PropertyPhotoSection
-                          ref={photoSectionRef}
-                          appraisalId={appraisalId}
-                          propertyId={propertyId}
-                        />
-                      )}
-                    </Section>
-
                     {/* Condo Tab Content */}
                     <div
-                      id="properties-section"
+                      id="condo-section"
                       className={`flex flex-col gap-6 ${activeTab !== 'condo' ? 'hidden' : ''}`}
                     >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
-                          <Icon name="building" style="solid" className="w-5 h-5 text-violet-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          {t('createPage.condoSection')}
-                        </h2>
-                      </div>
-                      <div className="h-px bg-gray-200" />
                       {/* Condo Form */}
                       <Section
                         id="condo-info"
@@ -364,19 +320,6 @@ const CreateCondoPage = () => {
                         id="construction-section"
                         className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                            <Icon
-                              name="helmet-safety"
-                              style="solid"
-                              className="w-5 h-5 text-amber-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            {t('createPage.constructionSection')}
-                          </h2>
-                        </div>
-                        <div className="h-px bg-gray-200" />
                         <Section id="construction-info" anchor className="flex flex-col gap-6">
                           <ConstructionInspectionTab
                             readOnly={isReadOnly}

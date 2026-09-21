@@ -12,8 +12,11 @@ interface MonthYearPanelProps {
   onStepYear: (delta: number) => void;
   /** Pick an absolute year from the year grid (falls back to onStepYear if omitted) */
   onSelectYear?: (year: number) => void;
-  /** Jump back to today */
-  onToday: () => void;
+  /**
+   * Jump back to today. Optional: the date pickers now carry Today in the calendar footer, where
+   * it is reachable without opening this panel first, and render the panel without it.
+   */
+  onToday?: () => void;
   /** 12 short month labels (Jan..Dec), localizable */
   monthLabels: string[];
   todayLabel?: string;
@@ -150,18 +153,20 @@ export function MonthYearPanel({
         </div>
       )}
 
-      <div className="flex justify-end mt-2">
-        <button
-          type="button"
-          onClick={() => {
-            setYearGridOpen(false);
-            onToday();
-          }}
-          className="text-xs font-semibold text-primary hover:underline px-1 py-0.5"
-        >
-          {todayLabel}
-        </button>
-      </div>
+      {onToday && (
+        <div className="flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={() => {
+              setYearGridOpen(false);
+              onToday();
+            }}
+            className="text-xs font-semibold text-primary hover:underline px-1 py-0.5"
+          >
+            {todayLabel}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

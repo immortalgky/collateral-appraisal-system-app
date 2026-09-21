@@ -39,6 +39,16 @@ import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
+import { sortCompanyResponses } from '@/features/quotation/utils/sortCompanyResponses';
+import { Link } from 'react-router-dom';
+import { QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
+import { hasRoleOrPermission } from '@/shared/utils/accessControl';
+import {
+  buildQuotationEmailHtml,
+  formatQuotationSubjectAppraisalNumbersLabel,
+  formatQuotationSubjectCustomerLabel,
+} from '@/features/quotation/utils/quotationEmailTemplate';
+import { useQuotationAttachmentUpload } from '@/features/quotation/hooks/useQuotationAttachmentUpload';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -493,6 +503,27 @@ const EditDraftForm = ({
   );
 };
 
+const NavToQuotationScreen = ({
+  canNavigate,
+  quotationId,
+  children,
+}: {
+  canNavigate: boolean;
+  quotationId: string | null;
+  children: React.ReactNode;
+}) => {
+  const { t } = useTranslation('appraisal');
+  const id = quotationId ?? '';
+
+  if (!canNavigate || !id) return <>{children}</>;
+
+  return (
+    <Link to={`/quotations/${id}`} className="group" title={t('quotation.viewQuotationHint')}>
+      {children}
+    </Link>
+  );
+};
+
 // ─── QuotationSection ─────────────────────────────────────────────────────────
 
 interface QuotationSectionProps {
@@ -509,6 +540,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { t, i18n } = useTranslation('appraisal');
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
+  const canOpenQuotation = hasRoleOrPermission(currentUser, QUOTATION_SELECTION_ROLES);
   const [sendStep, setSendStep] = useState<SendStep | null>(null);
   /** appraisalId → { documentId → { level } }; outer key tracks per-appraisal coverage */
   const [shareSelections, setShareSelections] = useState<ShareSelections>({});
@@ -580,6 +612,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
+  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
   const { mutate: setSharedDocuments, isPending: isSettingDocs } = useSetSharedDocuments(
     activeQuotation?.id ?? '',
   );
@@ -595,6 +628,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   // PropertyType code → locale description (e.g. "LB" → "ที่ดินพร้อมสิ่งปลูกสร้าง").
   const propertyTypeParams = useParametersByGroup('PropertyType');
+  const buildingTypeParams = useParametersByGroup('BuildingType', 'th', 'th');
+  const machineStatusParams = useParametersByGroup('MachineStatus', 'th', 'th');
 
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotationDetail?.appraisals ?? [];
@@ -604,14 +639,21 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       if (!code) return '';
       return propertyTypeParams.find(p => p.code === code)?.description ?? code;
     };
+    const buildingTypeDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return buildingTypeParams.find(p => p.code === code)?.description ?? code;
+    };
+    const machineStatusDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return machineStatusParams.find(p => p.code === code)?.description ?? code;
+    };
 
     const distinctCustomerNames = [
-      ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
-    ].join(', ');
+      ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
+    ];
     const appraisalNumbers = appraisals
       .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean)
-      .join(',');
+      .filter(Boolean);
 
     const targetTime = cutOffTime
       ? cutOffTime.toLocaleTimeString('th-TH', {
@@ -628,13 +670,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         })
       : '';
 
-    const appraisalList = appraisals
-      .map(
-        (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${propertyTypeDescription(a.propertyType)}`,
-      )
-      .join('\n');
-
     const adminFullName = `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
 
     const bccEmails = (quotationDetail?.invitedCompanies ?? [])
@@ -646,10 +681,18 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       from: currentUser?.email ?? '',
       cc: 'appraisal.team@lhbank.com',
       bcc: bccEmails,
-      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
-      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+      subject: `Quotation ${formatQuotationSubjectCustomerLabel(distinctCustomerNames)} (${formatQuotationSubjectAppraisalNumbersLabel(appraisalNumbers)})`,
+      content: buildQuotationEmailHtml({
+        appraisals,
+        targetTime,
+        targetDate,
+        adminFullName,
+        propertyTypeDescription,
+        buildingTypeDescription,
+        machineStatusDescription,
+      }),
     };
-  }, [quotationDetail, currentUser, propertyTypeParams]);
+  }, [quotationDetail, currentUser, propertyTypeParams, buildingTypeParams, machineStatusParams]);
 
   /**
    * Statuses where the Cancel Quotation action is offered. Mirrors the branches
@@ -767,6 +810,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   const status = (quotationDetail?.status ?? activeQuotation.status) as QuotationStatus | string;
 
+  /** Quotation-number label, wrapped in the nav-to-quotation link when permitted.
+      Every status branch below renders this with the same canNavigate/quotationId. */
+  const renderQuotationNumber = (className: string) => (
+    <NavToQuotationScreen canNavigate={canOpenQuotation} quotationId={activeQuotation.id}>
+      <span className={clsx(className, 'group-hover:text-blue-400 transition-colors')}>
+        {activeQuotation.quotationNumber}
+      </span>
+    </NavToQuotationScreen>
+  );
+
   /** Cancel Quotation footer + modal — rendered in every non-terminal, non-Draft branch.
       Draft auto-cancels via last-appraisal-removal so it gets the Remove button instead;
       Finalized/Cancelled are terminal so the action is hidden. */
@@ -866,7 +919,14 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
     };
 
-    const invitedCompanies = quotationDetail?.invitedCompanies ?? [];
+    const invitedCompanies = sortCompanyResponses(quotationDetail?.invitedCompanies ?? [], inv => {
+      const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
+      return {
+        status: cq?.status ?? 'Pending',
+        totalNetAmount: cq?.totalQuotedPrice,
+        companyName: inv.companyName,
+      };
+    });
 
     return (
       <div className="flex flex-col gap-2">
@@ -878,9 +938,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 <Icon name="clock" style="solid" className="size-4 text-purple-700" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {activeQuotation.quotationNumber}
-                </span>
+                {renderQuotationNumber('text-sm font-semibold text-gray-900')}
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
@@ -979,10 +1037,15 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -1007,7 +1070,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -1091,6 +1158,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               bcc: values.bcc,
               subject: values.subject,
               content: values.content,
+              attachments: values.attachments,
             },
             {
               onSuccess: () => {
@@ -1189,9 +1257,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 <Icon name="file-pen" style="solid" className="size-4 text-purple-700" />
               </div>
               <div>
-                <span className="text-sm font-semibold text-gray-900">
-                  {activeQuotation.quotationNumber}
-                </span>
+                {renderQuotationNumber('text-sm font-semibold text-gray-900')}
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
@@ -1336,9 +1402,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}
               <div className="mt-3 pt-3 border-t border-gray-100">
                 <div>
-                  <div className="text-xs text-gray-500">
-                    {t('quotation.specialRequirements')}
-                  </div>
+                  <div className="text-xs text-gray-500">{t('quotation.specialRequirements')}</div>
                   <div className="font-medium text-gray-900 whitespace-pre-wrap">
                     {draftDetail?.specialRequirements?.trim() || t('quotation.notSet')}
                   </div>
@@ -1385,9 +1449,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           showFrom={false}
           showCc={true}
           showBcc={true}
-          showAttachments={false}
+          showAttachments={true}
+          onUploadAttachment={uploadQuotationAttachment}
           subjectLabel="Subject"
           isPending={isBusy}
+          richTextContent
           onSubmit={handleFinalSend}
         />
 
@@ -1464,9 +1530,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">
-              {activeQuotation.quotationNumber}
-            </span>
+            {renderQuotationNumber('text-sm font-semibold text-gray-700')}
             <QuotationStatusBadge status={status} />
           </div>
         </div>
@@ -1486,9 +1550,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">
-            {activeQuotation.quotationNumber}
-          </span>
+          {renderQuotationNumber('text-sm font-semibold text-gray-700')}
           <QuotationStatusBadge status={status} />
         </div>
         <ShortlistSentPanel quotation={quotationDetail} />
@@ -1508,9 +1570,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-700">
-                {activeQuotation.quotationNumber}
-              </span>
+              {renderQuotationNumber('text-sm font-semibold text-gray-700')}
               <QuotationStatusBadge status={status} />
             </div>
             {winner && !readOnly && (
@@ -1593,9 +1653,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">
-            {activeQuotation.quotationNumber}
-          </span>
+          {renderQuotationNumber('text-sm font-semibold text-gray-700')}
           <QuotationStatusBadge status={status} />
         </div>
         <NegotiationPanel quotation={quotationDetail} />
@@ -1634,16 +1692,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <Icon name="circle-check" style="solid" className="size-4 text-green-700" />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-900">
-              {activeQuotation.quotationNumber}
-            </span>
+            {renderQuotationNumber('text-sm font-semibold text-gray-900')}
             <QuotationStatusBadge status={status} className="ml-2" />
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-600">
           <p>
             {t('quotation.finalizedWith', {
-              company: winner ? localizeCompanyName(winner.companyName, winner.companyNameLocal) : '—',
+              company: winner
+                ? localizeCompanyName(winner.companyName, winner.companyNameLocal)
+                : '—',
             })}
           </p>
           {finalPrice != null && (
@@ -1672,9 +1730,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               <Icon name="ban" style="solid" className="size-4 text-red-700" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">
-                {activeQuotation.quotationNumber}
-              </span>
+              {renderQuotationNumber('text-sm font-semibold text-gray-900')}
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
@@ -1709,9 +1765,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       </div>
       <div className="px-4 py-3">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-purple-600">
-            {activeQuotation.quotationNumber}
-          </span>
+          {renderQuotationNumber('text-sm font-medium text-purple-600')}
           <QuotationStatusBadge status={status} />
         </div>
       </div>

@@ -432,6 +432,7 @@
     "specialRequirements": "ข้อกำหนดพิเศษ",
     "closes": "ปิดรับ",
     "hoursRemaining": "เหลือ {{n}} ชั่วโมง",
+    "viewQuotationHint": "คลิกเพื่อดูรายละเอียดใบเสนอราคา",
     "stats": {
       "companiesInvited": "บริษัทที่เชิญ",
       "responses": "การตอบรับ",
@@ -510,10 +511,7 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": [
-        "ยังไม่ตรวจสอบ",
-        "ตรวจสอบแล้ว"
-      ],
+      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
@@ -633,6 +631,7 @@
       "legalSection": "สิทธิและกฎหมาย",
       "legalSubtitle": "กรรมสิทธิ์ ที่ตั้ง และภาระผูกพัน",
       "save": "บันทึก",
+      "saveDraft": "บันทึกร่าง",
       "saved": "บันทึกสรุปเครื่องจักรแล้ว",
       "saveFailed": "บันทึกสรุปเครื่องจักรไม่สำเร็จ",
       "fields": {
@@ -655,6 +654,99 @@
         "longitude": "ลองจิจูด",
         "obligation": "ภาระผูกพัน",
         "other": "อื่นๆ"
+      },
+      "suggested": {
+        "applyEmpty": "เติมช่องที่ว่าง",
+        "applyOne": "ใช้ค่าที่คำนวณ ({{value}})",
+        "helpTitle": "คำนวณจากเครื่องจักรในใบประเมินนี้",
+        "helpComputed": "คำนวณได้ {{value}} เครื่อง",
+        "helpNote": "เป็นค่าตั้งต้นเท่านั้น — ระบบไม่เขียนทับค่าที่กรอกเอง",
+        "rules": {
+          "surveyedNumber": "นับเครื่องที่สำรวจพบ (สภาพการใช้งานไม่ใช่ \"สำรวจไม่พบ\")",
+          "appraisalNumber": "นับเครื่องที่รับรองราคา ซึ่งเป็นตัวเดียวกับประเมินมูลค่า",
+          "installedAndUseCount": "นับเครื่องที่ติดตั้งแล้ว และสภาพการใช้งานเป็น \"ใช้งานอยู่\"",
+          "appraisalScrapCount": "นับเครื่องที่สภาพการใช้งานเป็น \"ไม่ได้ใช้งาน\" และยังประเมินมูลค่า",
+          "appraisedByDocumentCount": "นับเครื่องที่อยู่ระหว่างการจัดซื้อ ซึ่งตั้งราคาจากใบเสนอราคา",
+          "notInstalledCount": "นับเครื่องที่อยู่ระหว่างการจัดซื้อ"
+        }
+      },
+      "groups": {
+        "counts": "จำนวนเครื่องจักร",
+        "condition": "สภาพโดยรวมและตลาด",
+        "ownership": "กรรมสิทธิ์",
+        "location": "ที่ตั้ง",
+        "obligation": "ภาระผูกพันและหมายเหตุ"
+      },
+      "table": {
+        "item": "รายการ",
+        "entered": "ค่าที่กรอก",
+        "derived": "คำนวณได้",
+        "source": "ที่มา",
+        "use": "ใช้",
+        "ungrouped": "ยังไม่จัดกลุ่ม",
+        "sourceSentence": "มาจาก {{list}}",
+        "sourcePart_other": "{{group}} {{count}} เครื่อง",
+        "sourceJoin": " และ ",
+        "sourceUngrouped": "ที่ยังไม่จัดกลุ่ม",
+        "sourceNone": "ไม่มีเครื่องจักรเข้าเงื่อนไขนี้",
+        "sourcePart_one": "{{group}} {{count}} เครื่อง",
+        "sourceGroupNumber": "กลุ่ม {{number}}"
+      },
+      "checks": {
+        "title": "ตัวเลขยังไม่ลงรอยกัน",
+        "appraisedOverSurveyed": "ประเมิน {{appraised}} มากกว่าสำรวจ {{surveyed}}",
+        "splitOverSurveyed": "ติดตั้งแล้ว + ยังไม่ติดตั้ง = {{split}} มากกว่าจำนวนที่สำรวจ {{surveyed}}",
+        "note": "เป็นคำเตือนเท่านั้น บันทึกได้ตามปกติ"
+      }
+    },
+    "machineryInfo": {
+      "sectionTitle": "ข้อมูลเครื่องจักร",
+      "fields": {
+        "propertyName": "ชื่อเครื่องจักร",
+        "machineType": "ประเภทเครื่องจักร",
+        "brand": "ยี่ห้อ",
+        "model": "รุ่น",
+        "series": "แบบ",
+        "quantity": "จำนวน",
+        "manufacturer": "ผู้ผลิต",
+        "yearOfManufacture": "ปีที่ผลิต",
+        "purchaseDate": "วันที่ซื้อ",
+        "purchasePrice": "ราคาซื้อ",
+        "isOwnerVerified": "ตรวจสอบกรรมสิทธิ์",
+        "ownerName": "ผู้ถือกรรมสิทธิ์",
+        "registrationStatus": "สถานะการจดทะเบียน",
+        "registrationNumber": "หมายเลขทะเบียน",
+        "installationStatus": "สถานะเครื่องจักร",
+        "invoiceNumber": "เลขที่ใบเสนอราคา",
+        "isPriceCertified": "รับรองราคาประเมิน",
+        "conditionUse": "สภาพการใช้งาน",
+        "isOperational": "ใช้งานได้",
+        "machineCondition": "สภาพเครื่องจักร",
+        "machineAge": "อายุเครื่องจักร",
+        "machineEfficiency": "ประสิทธิภาพเครื่องจักร",
+        "usagePurpose": "ใช้ในการ",
+        "capacity": "ขนาดความสามารถ",
+        "location": "ตำแหน่งที่ตั้ง",
+        "width": "ความกว้าง",
+        "length": "ความยาว",
+        "height": "ความสูง",
+        "machineDimensions": "ขนาดเครื่อง",
+        "energyUse": "พลังงานที่ใช้",
+        "machineTechnology": "เทคโนโลยีเครื่องจักร",
+        "other": "อื่น ๆ",
+        "machineParts": "ส่วนประกอบของเครื่องจักร",
+        "remark": "หมายเหตุ",
+        "appraiserOpinion": "ความเห็นผู้ประเมิน"
+      },
+      "options": {
+        "cannot": "ตรวจสอบไม่ได้",
+        "can": "ตรวจสอบได้",
+        "unregistered": "ไม่ได้จดทะเบียน",
+        "registered": "จดทะเบียนแล้ว",
+        "notCertified": "ไม่รับรอง",
+        "certified": "รับรอง",
+        "cannotUse": "ใช้ไม่ได้",
+        "canUse": "ใช้ได้"
       }
     }
   },
@@ -669,13 +761,86 @@
       "pinView": "ดูบนแผนที่",
       "pinNoLocation": "ไม่ได้ระบุตำแหน่ง"
     },
+    "machineryChips": {
+      "registered": "จดทะเบียนแล้ว",
+      "unregistered": "ไม่ได้จดทะเบียน",
+      "notPriceCertified": "ไม่รับรองราคา"
+    },
     "addNewGroup": "เพิ่มกลุ่มใหม่",
     "noGroups": "ยังไม่มีกลุ่มทรัพย์สิน",
     "noGroupsHint": "คลิก \"เพิ่มกลุ่มใหม่\" เพื่อสร้างกลุ่มแรก",
     "loadError": "ไม่สามารถโหลดกลุ่มทรัพย์สินได้",
     "loadErrorHint": "กรุณารีเฟรชหน้า",
-    "viewGrid": "ตาราง",
-    "viewList": "รายการ",
+    "stackColumns": {
+      "machine": "เครื่องจักร",
+      "registrationNumber": "เลขทะเบียน",
+      "registrationStatus": "สถานะทะเบียน",
+      "brandModel": "ยี่ห้อ / รุ่น"
+    },
+    "registeredCount": "จดทะเบียน {{registered}}/{{total}}",
+    "itemCount": "{{n}} รายการ",
+    "splitView": {
+      "openEditor": "เปิดหน้าแก้ไข",
+      "selectHint": "เลือกทรัพย์สินจากรายการทางซ้าย",
+      "photoCount": "{{n}} รูป",
+      "noPhotos": "ยังไม่มีรูป",
+      "rowHint": "ดับเบิลคลิกเพื่อแก้ไข · คลิกขวาสำหรับคำสั่งอื่น",
+      "emptyHint": "ยังไม่มีทรัพย์สิน — เพิ่มได้จากปุ่มในกลุ่มด้านซ้าย",
+      "emptyReadOnly": "ยังไม่มีทรัพย์สิน"
+    },
+    "toolbar": {
+      "groups": "กลุ่ม",
+      "properties": "ทรัพย์สิน"
+    },
+    "picker": {
+      "title": "เลือกประเภททรัพย์สิน",
+      "own": "กรรมสิทธิ์",
+      "lease": "สิทธิการเช่า",
+      "other": "อื่น ๆ",
+      "soon": "เร็ว ๆ นี้",
+      "addShort": "เพิ่ม",
+      "leaseSuffix": "(เช่า)"
+    },
+    "units": {
+      "sqm": "ตร.ม.",
+      "sqwa": "ตร.ว.",
+      "raiNganWa": "ไร่"
+    },
+    "viewModes": {
+      "rows": "รายการ",
+      "cards": "การ์ด",
+      "table": "ตาราง",
+      "split": "สองแพนล์"
+    },
+    "notSet": "ยังไม่ระบุที่ตั้ง",
+    "coordsNotSet": "ยังไม่ระบุพิกัด",
+    "openInGoogleMaps": "เปิดใน Google Maps",
+    "addToGroup": "เพิ่มทรัพย์สินเข้ากลุ่ม",
+    "dropHere": "ลากทรัพย์สินมาวางที่นี่ หรือกดเพิ่มด้านล่าง",
+    "renameHint": "คลิกเพื่อเปลี่ยนชื่อ",
+    "groupActions": "จัดการกลุ่ม",
+    "renameGroup": "เปลี่ยนชื่อกลุ่ม",
+    "deleteGroup": "ลบกลุ่ม",
+    "pricingAnalysis": "วิเคราะห์ราคา",
+    "dragToReorder": "ลากเพื่อจัดลำดับในกลุ่ม หรือลากไปวางที่กลุ่มอื่นเพื่อย้าย",
+    "pricing": {
+      "done": "ประเมินราคาแล้ว",
+      "todo": "ยังไม่ประเมิน",
+      "inProgress": "กำลังประเมิน"
+    },
+    "stack": {
+      "collapse": "ยุบ"
+    },
+    "table": {
+      "image": "รูป",
+      "property": "ทรัพย์สิน",
+      "type": "ประเภท",
+      "area": "พื้นที่",
+      "location": "ที่ตั้ง",
+      "coordinates": "พิกัด",
+      "actions": "จัดการ",
+      "buildingType": "ประเภทอาคาร"
+    },
     "contextMenu": {
       "view": "ดู",
       "edit": "แก้ไข",
@@ -702,6 +867,32 @@
       "propertyMoveFailed": "ไม่สามารถย้ายทรัพย์สินได้",
       "propertyPasteFailed": "ไม่สามารถวางทรัพย์สินได้",
       "reorderFailed": "ไม่สามารถเรียงลำดับทรัพย์สินได้"
+    },
+    "floorCount": "{{n}} ชั้น",
+    "machinerySummary": {
+      "title": "สรุปเครื่องจักร",
+      "status": {
+        "none": "ยังไม่ได้บันทึก",
+        "done": "บันทึกแล้ว",
+        "drift": "จำนวนไม่ตรงกับรายการ"
+      },
+      "hint": {
+        "none": "ใบประเมินนี้มีเครื่องจักร {{n}} เครื่อง — ต้องบันทึกสรุป",
+        "drift": "ที่บันทึกไว้ → ที่นับได้จากรายการเครื่องจักรตอนนี้"
+      },
+      "actions": {
+        "start": "เริ่มทำสรุป",
+        "open": "เปิดสรุป",
+        "review": "ตรวจสอบสรุป"
+      },
+      "counts": {
+        "surveyedNumber": "สำรวจ",
+        "appraisalNumber": "ประเมิน",
+        "installedAndUseCount": "ติดตั้งใช้งาน",
+        "appraisalScrapCount": "ซาก",
+        "appraisedByDocumentCount": "ตามเอกสาร",
+        "notInstalledCount": "ยังไม่ติดตั้ง"
+      }
     }
   },
   "view360": {
@@ -1146,7 +1337,93 @@
       "deleted": "ลบรูปภาพแล้ว",
       "deleteFailed": "ไม่สามารถลบรูปภาพได้",
       "updated": "อัปเดตรูปภาพแล้ว",
-      "updateFailed": "ไม่สามารถอัปเดตรูปภาพได้"
+      "updateFailed": "ไม่สามารถอัปเดตรูปภาพได้",
+      "addedToTopic": "เพิ่ม {{n}} รูปลงหัวข้อ “{{topic}}” แล้ว"
+    },
+    "summary": "{{total}} รูป · ใช้ในรายงานแล้ว {{used}}",
+    "filters": {
+      "all": "ทั้งหมด",
+      "used": "ใช้แล้ว",
+      "unused": "ยังไม่ใช้"
+    },
+    "searchPlaceholder": "ค้นหาคำบรรยาย / ชื่อไฟล์",
+    "upload": "อัปโหลดรูป",
+    "layout": {
+      "label": "จัดวาง",
+      "type": "ตามประเภท",
+      "flat": "เรียงต่อกัน"
+    },
+    "sort": {
+      "label": "เรียงตาม",
+      "newest": "อัปโหลดล่าสุด",
+      "oldest": "อัปโหลดเก่าสุด",
+      "name": "ชื่อไฟล์"
+    },
+    "view": {
+      "grid": "กริด",
+      "list": "รายการ"
+    },
+    "selectAll": "เลือกทั้งหมด",
+    "types": {
+      "property": "รูปทรัพย์สิน",
+      "general": "รูปทั่วไป",
+      "law_regulation": "รูปกฎหมาย / เอกสาร",
+      "other": "อื่น ๆ"
+    },
+    "typeCount": "{{n}} รูป",
+    "uploading": "กำลังอัปโหลด {{n}} ไฟล์…",
+    "processing": "กำลังประมวลผล…",
+    "drop": {
+      "title": "วางรูปที่นี่",
+      "hint": "ปล่อยเพื่ออัปโหลด"
+    },
+    "uploadTile": {
+      "title": "อัปโหลด",
+      "hint": "หรือลากรูปมาวางที่ใดก็ได้ในหน้านี้"
+    },
+    "empty": {
+      "title": "ยังไม่มีรูป",
+      "hint": "อัปโหลดรูปจากเครื่อง หรือลากมาวางที่นี่"
+    },
+    "noResults": {
+      "title": "ไม่พบรูปที่ตรงเงื่อนไข",
+      "hint": "ลองเปลี่ยนคำค้นหรือตัวกรอง",
+      "clear": "ล้างตัวกรอง"
+    },
+    "showing": "แสดง {{shown}} จาก {{total}} รูป",
+    "bulk": {
+      "selected": "เลือก {{n}} รูป",
+      "addToTopic": "เพิ่มลงหัวข้อ",
+      "linkToProperty": "ผูกกับทรัพย์",
+      "delete": "ลบ",
+      "clear": "ยกเลิกการเลือก",
+      "noTopics": "ยังไม่มีหัวข้อ — สร้างได้ที่แท็บรูปภาพ"
+    },
+    "deleteOne": {
+      "title": "ลบรูป",
+      "message": "ลบรูปนี้ใช่ไหม ย้อนกลับไม่ได้"
+    },
+    "deleteMany": {
+      "title": "ลบรูปที่เลือก",
+      "message": "ลบรูปที่เลือก {{n}} รูปใช่ไหม ย้อนกลับไม่ได้"
+    },
+    "confirmDelete": "ลบ",
+    "cancel": "ยกเลิก",
+    "link": {
+      "title": "ผูกรูปกับทรัพย์",
+      "hint": "เลือกทรัพย์ที่รูปเหล่านี้เป็นของ",
+      "none": "ยังไม่มีทรัพย์",
+      "confirm": "ผูกรูป"
+    },
+    "grid": {
+      "used": "ใช้แล้ว",
+      "unused": "ยังไม่ใช้",
+      "noCaption": "ยังไม่มีคำบรรยาย",
+      "select": "เลือกรูป",
+      "deselect": "ยกเลิกเลือกรูป",
+      "edit": "แก้ไข",
+      "delete": "ลบ",
+      "empty": "ไม่มีรูป"
     }
   },
   "search": {
@@ -1173,6 +1450,43 @@
       "saveFailed": "ไม่สามารถบันทึกรายการได้",
       "deleted": "ลบรายการแล้ว",
       "deleteFailed": "ไม่สามารถลบรายการได้"
+    },
+    "count": "{{n}} รายการที่เกี่ยวกับทรัพย์นี้",
+    "noImages": "ไม่มีรูปประกอบ",
+    "actions": {
+      "menu": "คำสั่ง",
+      "edit": "แก้ไข",
+      "delete": "ลบ"
+    },
+    "deleteConfirm": {
+      "title": "ลบรายการ",
+      "message": "ลบรายการนี้ใช่ไหม ย้อนกลับไม่ได้"
+    },
+    "loadError": "โหลดกฎหมายและข้อบังคับไม่สำเร็จ",
+    "editor": {
+      "headerLabel": "หัวข้อ",
+      "remarkLabel": "รายละเอียด",
+      "images": "รูปประกอบ",
+      "photoCount": "{{n}} รูป",
+      "missingCount": "หาย {{n}}",
+      "dragHint": "ลากเพื่อเรียงลำดับ",
+      "captionPlaceholder": "คำบรรยายในหัวข้อนี้…",
+      "captionLabel": "คำบรรยายรูปที่ {{n}}",
+      "noCaption": "ไม่มีคำบรรยาย",
+      "missingTitle": "รูปนี้ถูกลบจากแกลเลอรีแล้ว",
+      "missingHint": "หัวข้อนี้ยังชี้ถึงอยู่",
+      "missingNoImage": "ไม่มีรูปให้แสดง",
+      "remove": "เอาออก",
+      "removeAria": "เอาออกจากหัวข้อ",
+      "upload": "อัปโหลด",
+      "fromGallery": "เลือกจากแกลเลอรี",
+      "dropHere": "ลากไฟล์มาวาง หรือ",
+      "emptyTitle": "ยังไม่มีรูปประกอบ",
+      "emptyHint": "เช่น แผนที่ผังเมือง ประกาศ หรือภาพถ่ายที่เกี่ยวข้อง",
+      "emptyReadOnly": "หัวข้อนี้ไม่มีรูป",
+      "dropTitle": "วางไฟล์เพื่อเพิ่มเป็นรูปประกอบ",
+      "dropSub": "รูปจะเข้าแกลเลอรีของใบนี้ด้วย",
+      "saved": "บันทึกแล้ว"
     }
   },
   "markets": {
@@ -1193,6 +1507,82 @@
       "saveFailed": "ไม่สามารถบันทึกข้อมูลตลาดเปรียบเทียบได้",
       "deleted": "ลบข้อมูลตลาดเปรียบเทียบแล้ว",
       "deleteFailed": "ไม่สามารถลบข้อมูลตลาดเปรียบเทียบได้"
+    },
+    "count": "{{n}} รายการในใบประเมินนี้",
+    "findOnMap": "ค้นหาจากแผนที่",
+    "create": "สร้างข้อมูลตลาด",
+    "viewModes": {
+      "list": "รายการ",
+      "map": "แผนที่"
+    },
+    "summary": {
+      "median": "ค่ากลาง",
+      "nearest": "ใกล้ทรัพย์ที่สุด",
+      "latest": "ข้อมูลล่าสุด",
+      "used": "ใช้ในการประเมินราคา",
+      "usedValue": "{{used}} จาก {{total}}",
+      "count": "{{n}} ใบ",
+      "noUnit": "ไม่ระบุหน่วย",
+      "medianValue": "med {{price}}"
+    },
+    "meta": {
+      "distance": "ห่าง {{d}}"
+    },
+    "flags": {
+      "stale": "ข้อมูลเก่า {{age}}",
+      "noLocation": "ไม่มีพิกัด"
+    },
+    "price": {
+      "saleOnly": "ราคาขายจริง",
+      "offerOnly": "ราคาเสนอขาย",
+      "offer": "เสนอขาย {{price}}"
+    },
+    "usedIn": "ใช้ใน {{method}}",
+    "methods": {
+      "WQS": "WQS",
+      "SaleGrid": "Sale Grid",
+      "DirectComparison": "Direct Comparison"
+    },
+    "units": {
+      "01": "บาท/ตร.ว.",
+      "02": "บาท/ตร.ม.",
+      "03": "บาท/ยูนิต",
+      "04": "บาท/วัน",
+      "05": "บาท/เดือน",
+      "06": "บาท/ปี"
+    },
+    "age": {
+      "today": "วันนี้",
+      "days": "{{n}} วัน",
+      "weeks": "{{n}} สัปดาห์",
+      "months": "{{n}} เดือน",
+      "years": "{{n}} ปี"
+    },
+    "ago": "{{age}}ที่แล้ว",
+    "distance": {
+      "m": "{{n}} ม.",
+      "km": "{{n}} กม."
+    },
+    "actions": {
+      "menu": "คำสั่ง",
+      "open": "เปิด",
+      "copy": "คัดลอก",
+      "delete": "ลบ"
+    },
+    "deleteConfirm": {
+      "title": "ลบข้อมูลตลาด",
+      "message": "ลบข้อมูลตลาดใบนี้ออกจากใบประเมินใช่ไหม",
+      "confirm": "ลบ",
+      "cancel": "ยกเลิก"
+    },
+    "loadError": "โหลดข้อมูลตลาดไม่สำเร็จ",
+    "loadErrorHint": "กรุณาลองใหม่อีกครั้ง",
+    "map": {
+      "subject": "ทรัพย์ที่ประเมิน",
+      "comparable": "ข้อมูลตลาด",
+      "noLocation": "{{n}} รายการไม่มีพิกัด จึงไม่แสดงบนแผนที่",
+      "rings": "รัศมีจากทรัพย์",
+      "unavailable": "แผนที่ใช้งานไม่ได้"
     }
   },
   "constructionInspection": {
@@ -1364,7 +1754,9 @@
     "marketComparableDeleted": "ลบข้อมูลตลาดเปรียบเทียบสำเร็จ",
     "marketComparableDeleteFailed": "ลบข้อมูลตลาดเปรียบเทียบล้มเหลว",
     "appraisalReportNotAvailable": "ยังไม่มีเล่มประเมินสมบูรณ์แนบอยู่ในงานประเมินนี้",
-    "appraisalSummaryNotAvailable": "ยังไม่มีรายงานสรุปผลการประเมินราคาทรัพย์สินแนบอยู่ในงานประเมินนี้"
+    "appraisalSummaryNotAvailable": "ยังไม่มีรายงานสรุปผลการประเมินราคาทรัพย์สินแนบอยู่ในงานประเมินนี้",
+    "topicReorderFailed": "บันทึกลำดับหัวข้อได้ไม่ครบ กรุณาตรวจลำดับอีกครั้ง",
+    "topicUpdateFailed": "บันทึกหัวข้อไม่สำเร็จ กรุณาตรวจอีกครั้ง"
   },
   "common": {
     "unsavedChanges": "มีการเปลี่ยนแปลงที่ยังไม่บันทึก",
@@ -1782,5 +2174,157 @@
     "blockedOnSubmit": "กรุณาระบุบริษัทประเมินภายนอกและวันที่ประเมินจากเล่มรายงาน ก่อนส่งงาน",
     "outstandingBoth": "ระบุบริษัทและวันที่ประเมิน",
     "outstandingDate": "ระบุวันที่ประเมิน"
+  },
+  "photoTopics": {
+    "title": "หัวข้อรูปในรายงาน",
+    "summary": "{{topics}} หัวข้อ · {{photos}} รูป",
+    "dragHint": "ลากเพื่อเรียงลำดับในรายงาน",
+    "photoCount": "{{n}} รูป",
+    "columnsShort": "{{n}} คอลัมน์",
+    "add": "เพิ่มหัวข้อ",
+    "namePlaceholder": "ชื่อหัวข้อ…",
+    "save": "เพิ่ม",
+    "cancel": "ยกเลิก",
+    "rename": "เปลี่ยนชื่อหัวข้อ",
+    "delete": "ลบหัวข้อ",
+    "unplaced": "รูปที่ยังไม่อยู่ในหัวข้อใด {{n}} รูป",
+    "unplacedAction": "เลือกเพิ่ม",
+    "columnsLabel": "คอลัมน์ในรายงาน",
+    "fromGallery": "เพิ่มจากแกลเลอรี",
+    "upload": "อัปโหลด",
+    "pagePreview": "หน้ารายงาน · {{n}} คอลัมน์",
+    "empty": {
+      "title": "ยังไม่มีหัวข้อ",
+      "hint": "สร้างหัวข้อเพื่อจัดรูปลงรายงาน"
+    },
+    "selectTopic": {
+      "title": "เลือกหัวข้อ",
+      "hint": "เลือกหัวข้อด้านซ้ายเพื่อดูรูป"
+    },
+    "topicEmpty": "หัวข้อนี้ยังไม่มีรูป",
+    "drop": {
+      "title": "วางรูปที่นี่",
+      "hint": "รูปจะถูกเพิ่มลงหัวข้อ “{{topic}}”"
+    },
+    "loading": "กำลังโหลดรูป…",
+    "loadError": "โหลดรูปไม่สำเร็จ",
+    "loadTopicsError": "โหลดหัวข้อไม่สำเร็จ",
+    "loadGalleryError": "โหลดรูปในแกลเลอรีไม่สำเร็จ",
+    "deleteTopic": {
+      "title": "ลบหัวข้อ",
+      "message": "ลบหัวข้อ “{{name}}” ใช่ไหม รูปยังอยู่ในแกลเลอรี แต่จะออกจากหัวข้อนี้"
+    },
+    "removePhoto": {
+      "title": "เอารูปออกจากหัวข้อ",
+      "message": "เอา “{{name}}” ออกจากหัวข้อนี้ใช่ไหม"
+    },
+    "confirmDelete": "ลบ",
+    "confirmRemove": "เอาออก",
+    "preview": "ตัวอย่าง",
+    "previewShow": "แสดงตัวอย่างหน้ารายงาน",
+    "previewHide": "ปิดตัวอย่างหน้ารายงาน"
+  },
+  "editorHeader": {
+    "tabsLabel": "ส่วนของทรัพย์สิน",
+    "cover": "ภาพหน้าปก",
+    "addPhoto": "เพิ่มรูป",
+    "addFirstPhoto": "เพิ่มรูปแรก",
+    "firstIsCover": "รูปแรกจะเป็นภาพหน้าปก",
+    "noPhotos": "ยังไม่มีรูป",
+    "viewAll": "ดูทั้งหมด {{n}} รูป",
+    "newProperty": "ทรัพย์ใหม่",
+    "untitled": "ยังไม่ตั้งชื่อ",
+    "newHint": "บันทึกแล้วข้อมูลหลักจะแสดงที่นี่",
+    "position": "{{group}} · ชิ้นที่ {{n}}",
+    "titleCount": "เอกสารสิทธิ์ {{n}} ฉบับ",
+    "titleNo": "เอกสารสิทธิ์ {{no}}"
+  },
+  "breadcrumb": {
+    "tasks": "งาน",
+    "appraisalSearch": "ค้นหาใบประเมิน",
+    "appraisalList": "รายการใบประเมิน",
+    "pricingAnalysis": "วิเคราะห์ราคา",
+    "new": "เพิ่ม{{what}}",
+    "pages": {
+      "request": "ข้อมูลคำขอ",
+      "administration": "งานธุรการ",
+      "appointment": "นัดหมายและค่าธรรมเนียม",
+      "feeAppointmentApproval": "อนุมัติค่าธรรมเนียมและนัดหมาย",
+      "quotation": "ใบเสนอราคา",
+      "property": "ข้อมูลทรัพย์สิน",
+      "propertyPma": "ข้อมูลทรัพย์สิน (PMA)",
+      "blockCondo": "ข้อมูลทรัพย์สิน (อาคารชุด)",
+      "blockVillage": "ข้อมูลทรัพย์สิน (หมู่บ้าน)",
+      "documents": "รายการเอกสาร",
+      "provideDocuments": "ส่งเอกสารเพิ่มเติม",
+      "summary": "สรุปและตัดสินใจ",
+      "activityTracking": "ติดตามกิจกรรม",
+      "summary360": "สรุป 360"
+    },
+    "types": {
+      "land": "ที่ดิน",
+      "building": "อาคาร",
+      "condo": "ห้องชุด",
+      "landBuilding": "ที่ดินและสิ่งปลูกสร้าง",
+      "machinery": "เครื่องจักร",
+      "leaseLand": "สิทธิการเช่าที่ดิน",
+      "leaseBuilding": "สิทธิการเช่าอาคาร",
+      "leaseLandBuilding": "สิทธิการเช่าที่ดินและสิ่งปลูกสร้าง",
+      "leaseCondo": "สิทธิการเช่าห้องชุด"
+    },
+    "things": {
+      "comparable": "ข้อมูลตลาด",
+      "law": "กฎหมายและข้อบังคับ",
+      "tower": "อาคาร",
+      "model": "แบบ"
+    }
+  },
+  "marketEditor": {
+    "sectionsLabel": "ส่วนของข้อมูลตลาด",
+    "sections": {
+      "source": "ที่มาของข้อมูล",
+      "price": "ราคา",
+      "location": "ตำแหน่ง",
+      "factors": "ปัจจัยสำรวจ",
+      "remark": "หมายเหตุ"
+    },
+    "fields": {
+      "template": "แบบสำรวจ",
+      "surveyName": "ชื่อข้อมูลเปรียบเทียบ",
+      "infoDateTime": "วันที่ / เวลาที่ได้ข้อมูล",
+      "sourceInfo": "แหล่งที่มา",
+      "sourcePlaceholder": "เช่น ป้ายประกาศขาย, นายหน้า, เว็บไซต์",
+      "priceUnit": "หน่วยราคา",
+      "saleDate": "วันที่ขาย",
+      "latitude": "ละติจูด",
+      "longitude": "ลองจิจูด",
+      "other": "อื่น ๆ"
+    },
+    "price": {
+      "label": "ราคา",
+      "sale": "ราคาขายจริง",
+      "offer": "ราคาเสนอขาย",
+      "notSaved": "ยังไม่บันทึก"
+    },
+    "location": {
+      "nearest": "ห่างทรัพย์ที่ประเมินที่ใกล้ที่สุด {{d}}",
+      "noCoords": "ยังไม่มีพิกัด — จะไม่ขึ้นบนแผนที่ในแท็บตลาด"
+    },
+    "factors": {
+      "count": "{{n}} รายการ",
+      "empty": "เลือกแบบสำรวจเพื่อแสดงปัจจัย"
+    },
+    "header": {
+      "newComparable": "ข้อมูลตลาดใหม่",
+      "untitled": "ยังไม่ตั้งชื่อ",
+      "numberPending": "เลขที่จะออกให้เมื่อบันทึก",
+      "copiedFrom": "คัดลอกจาก {{number}} — บันทึกแล้วจะได้เลขที่ใหม่",
+      "position": "รายการที่ {{n}} จาก {{total}} ในใบนี้"
+    },
+    "toasts": {
+      "updateFailed": "บันทึกข้อมูลตลาดไม่สำเร็จ กรุณาลองอีกครั้ง",
+      "createFailed": "สร้างข้อมูลตลาดไม่สำเร็จ กรุณาลองอีกครั้ง",
+      "linkFailed": "สร้างข้อมูลตลาดแล้ว แต่ผูกกับใบประเมินนี้ไม่สำเร็จ"
+    }
   }
 }

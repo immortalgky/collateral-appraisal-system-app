@@ -58,6 +58,8 @@ export interface UploadDocumentParams {
   file: File;
   documentType: string;
   documentCategory: string;
+  /** Bytes handed over so far. `total` is null when the browser cannot compute it. */
+  onProgress?: (loaded: number, total: number | null) => void;
 }
 
 // Document Type to Category Mapping (max 10 chars)

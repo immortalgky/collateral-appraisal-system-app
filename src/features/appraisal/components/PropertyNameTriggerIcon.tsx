@@ -8,9 +8,11 @@ import { useTranslation } from 'react-i18next';
  *  B  / LSB  → buildingNumber + modelName
  *  U  / LSU  → condoName + modelName
  *  LB / LS   → [L formula] + " " + [B formula]
- *  MAC       → machineName
+ *
+ * Machinery is absent on purpose: its form has a single name field, so there is nothing to
+ * derive propertyName from.
  */
-export type PropertyType = 'L' | 'LSL' | 'B' | 'LSB' | 'U' | 'LSU' | 'LB' | 'LS' | 'MAC';
+export type PropertyType = 'L' | 'LSL' | 'B' | 'LSB' | 'U' | 'LSU' | 'LB' | 'LS';
 
 interface PropertyNameFillTriggerIconProps {
   propertyType: PropertyType;
@@ -40,10 +42,6 @@ function buildCondoPart(values: Record<string, any>): string {
   return parts.join(' ');
 }
 
-function buildMachinePart(values: Record<string, any>): string {
-  return (values.machineName ?? '').toString().trim();
-}
-
 function derivePropertyName(propertyType: PropertyType, values: Record<string, any>): string {
   switch (propertyType) {
     case 'L':
@@ -64,9 +62,6 @@ function derivePropertyName(propertyType: PropertyType, values: Record<string, a
       const buildingPart = buildBuildingPart(values);
       return [landPart, buildingPart].filter(Boolean).join(' ');
     }
-
-    case 'MAC':
-      return buildMachinePart(values);
 
     default:
       return '';

@@ -405,7 +405,8 @@ function StatStrip({
   // one pass; LB/Land units all carry a null towerName, so it degenerates to a plain distinct
   // count for them.
   const models = isCondo(projectType)
-    ? new Set(units.filter(u => u.modelType).map(u => `${u.towerName ?? ''}.${u.modelType}`)).size
+    ? new Set(units.filter(u => u.modelType).map(u => JSON.stringify([u.towerName ?? '', u.modelType])))
+        .size
     : new Set(units.map(u => u.modelType).filter(Boolean)).size;
 
   return (
@@ -472,8 +473,11 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const remainingCount = unitsData?.remainingCount ?? units.filter(u => !u.isSold).length;
 
   useEffect(() => {
-    setPageNumber(0);
-  }, [unitsData]);
+    setPageNumber(prev => {
+      const totalPages = Math.max(1, Math.ceil(units.length / pageSize));
+      return Math.min(prev, totalPages - 1);
+    });
+  }, [unitsData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePageChange = (pageNumber: number) => {
     setPageNumber(pageNumber);

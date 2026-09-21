@@ -29,7 +29,9 @@
     "clearAll": "全部清除"
   },
   "select": {
-    "placeholder": "请选择"
+    "placeholder": "请选择",
+    "searchPlaceholder": "搜索...",
+    "typeToSearch": "输入以搜索..."
   },
   "range": {
     "from": "从",
@@ -48,6 +50,44 @@
     "pending": "待处理",
     "completed": "已完成",
     "draft": "草稿"
+  },
+  "dino": {
+    "hint": "按空格键跳跃",
+    "hintTouch": "点击跳跃",
+    "gameOver": "游戏结束",
+    "restart": "按空格键重新开始",
+    "restartTouch": "点击重新开始"
+  },
+  "documentViewer": {
+    "downloaded": "文件已下载完成，可以关闭此标签页",
+    "title": "正在打开文件",
+    "opening": "正在打开文件…",
+    "errorTitle": "无法打开文件",
+    "failed": "无法打开文件，请关闭此标签页后重试",
+    "popupBlocked": "浏览器阻止了新标签页，请允许本网站的弹出窗口",
+    "close": "关闭此标签页",
+    "cancel": "取消",
+    "downloadStarted": "正在下载 {{name}} — 请查看浏览器的下载列表",
+    "downloadStartedUnnamed": "正在下载 — 请查看浏览器的下载列表"
+  },
+  "transfer": {
+    "serverTooSlow": "服务器准备文件耗时过长，请重试",
+    "downloading": "正在下载…",
+    "exportFailed": "报表下载失败，请重试",
+    "uploading": "正在上传…",
+    "processing": "服务器处理中…",
+    "uploadStalled": "上传过程中连接中断，请重试",
+    "downloadStalled": "下载过程中连接中断，请重试",
+    "failed": "上传失败",
+    "resume": "继续上传",
+    "cancel": "取消",
+    "dismiss": "关闭",
+    "secondsLeft": "剩余 {{count}} 秒",
+    "minutesLeft": "剩余 {{count}} 分钟",
+    "fileTooLarge": "此文件超过 {{limit}} 上限（当前 {{size}}）",
+    "uploadCancelled": "已取消上传",
+    "uploadAbandoned": "离开页面导致上传中断，请重新上传该文件。",
+    "downloadCancelled": "已取消下载"
   },
   "confirm": {
     "deleteTitle": "确认删除",

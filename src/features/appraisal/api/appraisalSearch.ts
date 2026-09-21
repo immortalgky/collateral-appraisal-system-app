@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { downloadBlob } from '@shared/api/blobTransfer';
+import { saveBlob } from '@/shared/utils/saveBlob';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -84,6 +86,7 @@ export interface AppraisalDto {
   district: string | null;
   subDistrict: string | null;
   appointmentDateTime: string | null;
+  inspectionNumber: number | null;
   /** Groups appraisals raised together; null for a standalone one. */
   groupTag: string | null;
   /** SLA hours expressed in 8-hour working days, computed by the view. */
@@ -240,9 +243,6 @@ export function useDeleteSavedSearch() {
  */
 export const MAX_EXPORT_ROWS = 10_000;
 
-/** Generous enough for a full-size export; the global axios default of 10s is not. */
-const EXPORT_TIMEOUT_MS = 120_000;
-
 export async function exportAppraisals(
   params: Omit<AppraisalSearchParams, 'pageNumber' | 'pageSize'>,
   format: 'xlsx' | 'csv' = 'xlsx',
@@ -252,18 +252,9 @@ export async function exportAppraisals(
       .filter(([, v]) => v !== undefined && v !== '' && v !== null)
       .map(([k, v]) => [k, String(v)]),
   );
-  const { data } = await axios.get('/appraisals/export', {
-    params: cleanParams,
-    responseType: 'blob',
-    // The global axios timeout is 10s, which a full export blows through routinely — the server
-    // builds up to MAX_EXPORT_ROWS rows off the view. Aborting at 10s looks identical to a failed
-    // download, so the user retries and aborts again.
-    timeout: EXPORT_TIMEOUT_MS,
-  });
-  const url = URL.createObjectURL(data);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `appraisals-${new Date().toISOString().slice(0, 10)}.${format}`;
-  link.click();
-  URL.revokeObjectURL(url);
+  // The global axios timeout is 10s, which a full export blows through routinely — the server
+  // builds up to MAX_EXPORT_ROWS rows off the view before sending a byte. blobTransfer waits on
+  // idle time instead of capping the total, so a slow export finishes and a dead one still ends.
+  const { data } = await downloadBlob('/appraisals/export', { params: cleanParams });
+  saveBlob(data, `appraisals-${new Date().toISOString().slice(0, 10)}.${format}`);
 }

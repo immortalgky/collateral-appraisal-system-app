@@ -2,7 +2,11 @@ import { type FormField, FormFields } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
+import { SegmentedControl } from '@/shared/components/SegmentedControl';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   useGetMarketComparableTemplate,
   useGetMarketComparableTemplateById,
@@ -11,57 +15,78 @@ import { useSearchParams } from 'react-router-dom';
 import Icon from '@/shared/components/Icon';
 import { getTranslatedFactorName } from '@shared/utils/translationUtils';
 import { useLocaleStore } from '@shared/store';
+import { useMarketFormatters } from '../hooks/useMarketFormatters';
+import { useSubjectPoints } from '../hooks/useSubjectPoints';
+import { hasCoords, nearestKm } from '../utils/marketComparableFormat';
 
-// SectionRow component for consistent section styling with icons
+/** Element ids of the form's sections, in page order — the header's bar jumps to them. */
+export const COMPARABLE_SECTIONS = {
+  source: 'comparable-source',
+  price: 'comparable-price',
+  location: 'comparable-location',
+  factors: 'comparable-factors',
+  remark: 'comparable-remark',
+} as const;
+
+/** The fields each section holds, so the bar can count a section's errors. Factors count `factorData`. */
+export const COMPARABLE_SECTION_FIELDS = {
+  source: ['surveyName', 'infoDateTime', 'sourceInfo'],
+  // The two prices are left out: only one is on screen, so the page counts the pair once.
+  price: ['offerPriceUnit', 'salePriceUnit', 'saleDate'],
+  location: ['latitude', 'longitude'],
+  // The type has no field of its own (the header's chip shows it); the template sets it.
+  factors: ['templateCode', 'propertyType'],
+  remark: ['notes'],
+} as const;
+
+type PriceKind = 'sale' | 'offer';
+
+const isSet = (v: unknown) => v != null && v !== '';
+
 interface SectionRowProps {
+  /** Anchor for the header's section bar. */
+  id: string;
   title: string;
-  icon?: string;
+  icon: string;
+  /** A quiet line under the title, e.g. how many factors the template has. */
+  subtitle?: ReactNode;
+  isLast?: boolean;
   children: ReactNode;
 }
 
-const SectionRow = ({ title, icon, children }: SectionRowProps) => (
+/** Title on the left, fields on the right, a rule between sections — as the property forms lay out. */
+const SectionRow = ({ id, title, icon, subtitle, isLast = false, children }: SectionRowProps) => (
   <>
-    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
+    <div id={id} className="cas-section-head col-span-full xl:col-span-1 pt-1">
       <div className="flex items-center gap-2">
-        {icon && (
-          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-          </div>
-        )}
+        <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
+          <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
+        </div>
         <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
       </div>
+      {subtitle && <p className="mt-1 pl-9 text-xs text-gray-400">{subtitle}</p>}
     </div>
-    <div className="col-span-full xl:col-span-4">
-      <div className="grid grid-cols-12 gap-4">{children}</div>
-    </div>
+    <div className="col-span-full min-w-0 xl:col-span-4">{children}</div>
+    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5 my-2" />}
   </>
 );
 
 const FactorsSkeleton = () => (
-  <div className="space-y-4">
-    <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
-      {[1, 2, 3, 4].map(i => (
-        <div key={i} className="contents">
-          <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gray-200 animate-pulse" />
-              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-            </div>
-          </div>
-          <div className="col-span-full xl:col-span-4">
-            <div className="h-10 w-1/2 bg-gray-200 rounded animate-pulse" />
-          </div>
-          {i < 4 && <div className="h-px bg-gray-200 col-span-full xl:col-span-5" />}
-        </div>
-      ))}
-    </div>
+  <div className="flex flex-col gap-4">
+    {[1, 2, 3, 4].map(i => (
+      <div key={i} className="flex flex-col gap-1.5">
+        <div className="h-3.5 w-32 animate-pulse rounded bg-gray-200" />
+        <div className="h-9 w-full animate-pulse rounded-lg bg-gray-100" />
+      </div>
+    ))}
   </div>
 );
 
 const MarketComparableForm = () => {
+  const { t } = useTranslation('appraisal');
   const language = useLocaleStore(s => s.language);
-  const { getValues, setValue, reset } = useFormContext();
+  const isReadOnly = usePageReadOnly();
+  const { getValues, setValue, reset, clearErrors, formState } = useFormContext();
   const [isTemplateChanged, setIsTemplateChanged] = useState(false);
   const isInitialSetup = useRef(true);
   const [searchParams] = useSearchParams();
@@ -158,28 +183,45 @@ const MarketComparableForm = () => {
     setValue('templateId', selectedTemplate?.id || null);
   }, [templateCode, selectedTemplate]);
 
-  const staticFields: FormField[] = [
-    {
-      type: 'dropdown',
-      name: 'propertyType',
-      label: '',
-      group: 'PropertyType',
-      wrapperClassName: 'col-span-12',
-      required: true,
-      disabled: true,
-    },
-    {
-      type: 'dropdown',
-      name: 'templateCode',
-      label: '',
-      options: comparableTemplateOptions,
-      wrapperClassName: 'col-span-12',
-      required: true,
-    },
+  // Distance to the appraisal's nearest collateral, from the coordinates as typed.
+  const appraisalId = useAppraisalId();
+  const subjects = useSubjectPoints(appraisalId);
+  const f = useMarketFormatters();
+  const point =
+    initialLat != null && initialLon != null && hasCoords(initialLat, initialLon)
+      ? { lat: initialLat, lon: initialLon }
+      : null;
+  const nearest = nearestKm(point, subjects);
+
+  // A sale price and an asking price are exclusive. Until the user picks, open on what was saved —
+  // a comparable holding only an asking price opens on it. Read from the defaults rather than the
+  // live values, so clearing the field being typed in does not flip the choice under the cursor.
+  const [chosenKind, setChosenKind] = useState<PriceKind | null>(null);
+  const saved = formState.defaultValues;
+  const priceKind: PriceKind =
+    chosenKind ?? (isSet(saved?.offerPrice) && !isSet(saved?.salePrice) ? 'offer' : 'sale');
+  const choosePriceKind = (kind: PriceKind) => {
+    if (kind === priceKind) return;
+    const other =
+      kind === 'sale'
+        ? ['offerPrice', 'offerPriceUnit']
+        : ['salePrice', 'salePriceUnit', 'saleDate'];
+    for (const name of other) {
+      if (isSet(getValues(name))) setValue(name, null, { shouldDirty: true });
+    }
+    clearErrors(['offerPrice', 'salePrice', 'saleDate']);
+    setChosenKind(kind);
+  };
+  const priceKindOptions = [
+    { value: 'sale' as const, label: t('marketEditor.price.sale'), icon: 'handshake' },
+    { value: 'offer' as const, label: t('marketEditor.price.offer'), icon: 'tag' },
+  ];
+
+  const sourceFields: FormField[] = [
     {
       type: 'text-input',
       name: 'surveyName',
-      label: '',
+      label: t('marketEditor.fields.surveyName'),
       wrapperClassName: 'col-span-12',
       required: true,
       maxLength: 100,
@@ -187,70 +229,85 @@ const MarketComparableForm = () => {
     {
       type: 'datetime-input',
       name: 'infoDateTime',
-      label: '',
-      wrapperClassName: 'col-span-12',
+      label: t('marketEditor.fields.infoDateTime'),
+      wrapperClassName: 'col-span-12 md:col-span-6',
+      required: true,
       disableFutureDates: true,
     },
     {
       type: 'text-input',
       name: 'sourceInfo',
-      label: '',
-      wrapperClassName: 'col-span-12',
+      label: t('marketEditor.fields.sourceInfo'),
+      placeholder: t('marketEditor.fields.sourcePlaceholder'),
+      wrapperClassName: 'col-span-12 md:col-span-6',
       maxLength: 200,
     },
-    {
-      type: 'number-input',
-      name: 'offerPrice',
-      label: '',
-      wrapperClassName: 'col-span-8',
-      maxIntegerDigits: 15,
-      decimalPlaces: 2,
-      disableWhen: { field: 'salePrice', operator: 'isNotEmpty' },
-      disabledValue: null,
-    },
+  ];
+
+  const templateFields: FormField[] = [
     {
       type: 'dropdown',
-      name: 'offerPriceUnit',
-      label: '',
-      group: 'MeasurementUnits',
-      wrapperClassName: 'col-span-4',
-      disableWhen: { field: 'salePrice', operator: 'isNotEmpty' },
-      disabledValue: null,
-    },
-    {
-      type: 'number-input',
-      name: 'salePrice',
-      label: '',
-      wrapperClassName: 'col-span-8',
-      maxIntegerDigits: 15,
-      decimalPlaces: 2,
-      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
-      disabledValue: null,
-    },
-    {
-      type: 'dropdown',
-      name: 'salePriceUnit',
-      label: '',
-      group: 'MeasurementUnits',
-      wrapperClassName: 'col-span-4',
-      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
-      disabledValue: null,
-    },
-    {
-      type: 'date-input',
-      name: 'saleDate',
-      label: '',
+      name: 'templateCode',
+      label: t('marketEditor.fields.template'),
+      options: comparableTemplateOptions,
       wrapperClassName: 'col-span-12',
-      disableWhen: { field: 'offerPrice', operator: 'isNotEmpty' },
-      disabledValue: null,
-      disableFutureDates: true,
-      requiredWhen: { field: 'salePrice', operator: 'isNotEmpty' },
+      required: true,
     },
+  ];
+
+  const priceFields: FormField[] =
+    priceKind === 'sale'
+      ? [
+          {
+            type: 'number-input',
+            name: 'salePrice',
+            label: t('marketEditor.price.sale'),
+            wrapperClassName: 'col-span-12 md:col-span-5',
+            required: true,
+            maxIntegerDigits: 15,
+            decimalPlaces: 2,
+          },
+          {
+            type: 'dropdown',
+            name: 'salePriceUnit',
+            label: t('marketEditor.fields.priceUnit'),
+            group: 'MeasurementUnits',
+            wrapperClassName: 'col-span-12 md:col-span-4',
+          },
+          {
+            type: 'date-input',
+            name: 'saleDate',
+            label: t('marketEditor.fields.saleDate'),
+            wrapperClassName: 'col-span-12 md:col-span-3',
+            disableFutureDates: true,
+            requiredWhen: { field: 'salePrice', operator: 'isNotEmpty' },
+          },
+        ]
+      : [
+          {
+            type: 'number-input',
+            name: 'offerPrice',
+            label: t('marketEditor.price.offer'),
+            wrapperClassName: 'col-span-12 md:col-span-5',
+            required: true,
+            maxIntegerDigits: 15,
+            decimalPlaces: 2,
+          },
+          {
+            type: 'dropdown',
+            name: 'offerPriceUnit',
+            label: t('marketEditor.fields.priceUnit'),
+            group: 'MeasurementUnits',
+            wrapperClassName: 'col-span-12 md:col-span-4',
+          },
+        ];
+
+  const locationFields: FormField[] = [
     {
       type: 'number-input',
       name: 'latitude',
-      label: 'Latitude',
-      wrapperClassName: 'col-span-6',
+      label: t('marketEditor.fields.latitude'),
+      wrapperClassName: 'col-span-12 md:col-span-6',
       rightIcon: pickerButton,
       decimalPlaces: 6,
       maxIntegerDigits: 3,
@@ -262,8 +319,8 @@ const MarketComparableForm = () => {
     {
       type: 'number-input',
       name: 'longitude',
-      label: 'Longitude',
-      wrapperClassName: 'col-span-6',
+      label: t('marketEditor.fields.longitude'),
+      wrapperClassName: 'col-span-12 md:col-span-6',
       rightIcon: pickerButton,
       decimalPlaces: 6,
       maxIntegerDigits: 3,
@@ -271,54 +328,6 @@ const MarketComparableForm = () => {
       allowZero: true,
       min: -180,
       max: 180,
-    },
-  ];
-
-  const formStaticSections = [
-    {
-      label: 'Property Type',
-      icon: 'building',
-      fields: staticFields.filter(f => f.name === 'propertyType'),
-    },
-    {
-      label: 'Template',
-      icon: 'file-lines',
-      fields: staticFields.filter(f => f.name === 'templateCode'),
-    },
-    {
-      label: 'Comparable Name',
-      icon: 'tag',
-      fields: staticFields.filter(f => f.name === 'surveyName'),
-    },
-    {
-      label: 'Information Date / Time',
-      icon: 'calendar',
-      fields: staticFields.filter(f => f.name === 'infoDateTime'),
-    },
-    {
-      label: 'Source of Information',
-      icon: 'circle-info',
-      fields: staticFields.filter(f => f.name === 'sourceInfo'),
-    },
-    {
-      label: 'Offer Price',
-      icon: 'money-bill',
-      fields: staticFields.filter(f => f.name === 'offerPrice' || f.name === 'offerPriceUnit'),
-    },
-    {
-      label: 'Sale Price',
-      icon: 'money-bill',
-      fields: staticFields.filter(f => f.name === 'salePrice' || f.name === 'salePriceUnit'),
-    },
-    {
-      label: 'Sale Date',
-      icon: 'calendar',
-      fields: staticFields.filter(f => f.name === 'saleDate'),
-    },
-    {
-      label: 'Location',
-      icon: 'location-dot',
-      fields: staticFields.filter(f => f.name === 'latitude' || f.name === 'longitude'),
     },
   ];
 
@@ -333,45 +342,99 @@ const MarketComparableForm = () => {
     },
   ];
 
+  // One factor per row, top to bottom, each labelled with its own name.
+  const otherLabel = t('marketEditor.fields.other');
+  const factorFields = factors.flatMap((fac: any, index: number) =>
+    buildFormField(fac, index, getTranslatedFactorName(fac.translations, language), otherLabel),
+  );
+
+  let factorsBody: ReactNode;
+  if (isLoading || getMarketLoading) factorsBody = <FactorsSkeleton />;
+  else if (factors.length > 0)
+    factorsBody = (
+      <div className="grid grid-cols-12 gap-4">
+        <FormFields fields={factorFields} />
+      </div>
+    );
+  else factorsBody = <p className="text-sm text-gray-400">{t('marketEditor.factors.empty')}</p>;
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Static Fields */}
-      <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
-        {formStaticSections.map(section => (
-          <SectionRow key={section.label} title={section.label} icon={section.icon}>
-            <FormFields fields={section.fields} />
-          </SectionRow>
-        ))}
-      </div>
+    <>
+      <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
+        <SectionRow
+          id={COMPARABLE_SECTIONS.source}
+          title={t('marketEditor.sections.source')}
+          icon="circle-info"
+        >
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={sourceFields} />
+          </div>
+        </SectionRow>
 
-      {/* Survey Factors Section */}
-      <div id="factors-section" className="pt-2">
-        {isLoading || getMarketLoading ? (
-          <FactorsSkeleton />
-        ) : (
-          factors.length > 0 && (
-            <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
-              {factors.map((fac: any, index: number) => {
-                const fields: FormField[] = buildFormField(fac, index);
-                return (
-                  <SectionRow
-                    key={fac.factorCode}
-                    title={getTranslatedFactorName(fac.translations, language)}
-                    icon="sliders"
-                  >
-                    <FormFields fields={fields} />
-                  </SectionRow>
-                );
-              })}
-            </div>
-          )
-        )}
-      </div>
+        <SectionRow
+          id={COMPARABLE_SECTIONS.price}
+          title={t('marketEditor.sections.price')}
+          icon="money-bill"
+        >
+          {!isReadOnly && (
+            <SegmentedControl
+              className="mb-3 w-fit"
+              options={priceKindOptions}
+              value={priceKind}
+              onChange={choosePriceKind}
+            />
+          )}
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={priceFields} />
+          </div>
+        </SectionRow>
 
-      {/* Remark */}
-      <div className="grid grid-cols-5 gap-6 pt-2">
-        <SectionRow title="Remark" icon="note-sticky">
-          <FormFields fields={remark} />
+        <SectionRow
+          id={COMPARABLE_SECTIONS.location}
+          title={t('marketEditor.sections.location')}
+          icon="location-dot"
+        >
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={locationFields} />
+          </div>
+          {point ? (
+            nearest != null && (
+              <p className="mt-3 text-xs text-gray-500">
+                {t('marketEditor.location.nearest', { d: f.distance(nearest) })}
+              </p>
+            )
+          ) : (
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
+              <Icon name="location-dot" style="solid" className="text-[10px]" />
+              {t('marketEditor.location.noCoords')}
+            </p>
+          )}
+        </SectionRow>
+
+        <SectionRow
+          id={COMPARABLE_SECTIONS.factors}
+          title={t('marketEditor.sections.factors')}
+          icon="sliders"
+          subtitle={
+            factors.length > 0 ? t('marketEditor.factors.count', { n: factors.length }) : undefined
+          }
+        >
+          {/* The template decides which factors there are, so it sits right above them. */}
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={templateFields} />
+          </div>
+          <div className="mt-4 border-t border-gray-100 pt-4">{factorsBody}</div>
+        </SectionRow>
+
+        <SectionRow
+          id={COMPARABLE_SECTIONS.remark}
+          title={t('marketEditor.sections.remark')}
+          icon="note-sticky"
+          isLast
+        >
+          <div className="grid grid-cols-12 gap-4">
+            <FormFields fields={remark} />
+          </div>
         </SectionRow>
       </div>
 
@@ -385,11 +448,16 @@ const MarketComparableForm = () => {
         initialLat={initialLat}
         initialLon={initialLon}
       />
-    </div>
+    </>
   );
 };
 
-const buildFormField = (fac: any, index: number): FormField[] => {
+const buildFormField = (
+  fac: any,
+  index: number,
+  label: string,
+  otherLabel: string,
+): FormField[] => {
   const isRequired = !!fac.isMandatory;
   switch (fac.dataType) {
     case 'Dropdown':
@@ -397,14 +465,14 @@ const buildFormField = (fac: any, index: number): FormField[] => {
         {
           type: 'dropdown',
           name: `factorData.[${index}].value`,
-          label: '',
+          label,
           wrapperClassName: 'col-span-12',
           group: fac.parameterGroup,
           required: isRequired,
         },
         {
           type: 'text-input',
-          label: 'Other',
+          label: otherLabel,
           name: `factorData.[${index}].otherRemarks`,
           wrapperClassName: 'col-span-12',
           showWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
@@ -417,6 +485,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
       return [
         {
           type: 'radio-group',
+          label,
           name: `factorData.[${index}].value`,
           orientation: 'horizontal',
           group: fac.parameterGroup,
@@ -425,7 +494,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
         },
         {
           type: 'text-input',
-          label: 'Other',
+          label: otherLabel,
           name: `factorData.[${index}].otherRemarks`,
           wrapperClassName: 'col-span-12',
           showWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
@@ -438,6 +507,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
       return [
         {
           type: 'checkbox-group',
+          label,
           name: `factorData.[${index}].value`,
           orientation: 'horizontal',
           group: fac.parameterGroup,
@@ -446,7 +516,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
         },
         {
           type: 'text-input',
-          label: 'Other',
+          label: otherLabel,
           name: `factorData.[${index}].otherRemarks`,
           wrapperClassName: 'col-span-12',
           showWhen: { field: `factorData.[${index}].value`, is: '99', operator: 'contains' },
@@ -459,6 +529,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
       return [
         {
           type: 'checkbox',
+          label,
           name: `factorData.[${index}].value`,
           wrapperClassName: 'col-span-12',
         },
@@ -469,7 +540,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
         {
           type: 'number-input',
           name: `factorData.[${index}].value`,
-          label: '',
+          label,
           wrapperClassName: 'col-span-12',
           required: isRequired,
           ...(fac.fieldLength ? { maxIntegerDigits: fac.fieldLength } : {}),
@@ -482,7 +553,7 @@ const buildFormField = (fac: any, index: number): FormField[] => {
         {
           type: 'text-input',
           name: `factorData.[${index}].value`,
-          label: '',
+          label,
           wrapperClassName: 'col-span-12',
           required: isRequired,
           ...(fac.fieldLength ? { maxLength: fac.fieldLength } : {}),

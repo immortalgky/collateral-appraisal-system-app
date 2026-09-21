@@ -144,6 +144,7 @@ function BuildingDetailPopUpModal({
 
   const isGross = watch('depreciationMethod') === 'Gross';
   const buildingYear = watch('year') || 0;
+  const areaDescriptionValue = watch('areaDescription');
   const areaValue = watch('area');
   const pricePerSqMValue = watch('pricePerSqMBeforeDepreciation');
   const depreciationPeriods = watch('depreciationPeriods') || [];
@@ -262,6 +263,7 @@ function BuildingDetailPopUpModal({
                   <div className="col-span-5">
                     <TextInput
                       {...register('areaDescription')}
+                      value={areaDescriptionValue ?? ''}
                       label="Detail"
                       placeholder="Enter building description"
                       maxLength={50}

@@ -151,7 +151,9 @@ export default function PartialDateInput({
         </span>
       )}
 
-      <div className="grid grid-cols-[1.5fr_1.2fr_0.8fr] gap-2">
+      {/* Equal thirds. The field spans the full 12-column form row, so the old
+          1.5/1.2/0.8 ratio left Year oversized and Day cramped at that width. */}
+      <div className="grid grid-cols-3 gap-2">
         <Dropdown
           options={yearOptions}
           value={year || undefined}

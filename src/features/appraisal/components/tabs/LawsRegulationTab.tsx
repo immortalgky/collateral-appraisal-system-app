@@ -1,68 +1,157 @@
-import { useState } from 'react';
+import { type KeyboardEvent, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import clsx from 'clsx';
+import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
-import Button from '@shared/components/Button';
-import FormCard from '@shared/components/sections/FormCard';
 import { useParameterDescription } from '@shared/utils/parameterUtils';
 import { useGetLawAndRegulations, useSaveLawAndRegulations } from '@features/appraisal/api';
+import { useGetGalleryPhotos } from '../../api/gallery';
+import { toGalleryImage } from '../../types/gallery';
 import { DeleteConfirmationModal } from '../DeleteConfirmationModal';
 import type { LawAndRegulationDtoType } from '@shared/schemas/v1';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import DataErrorState from '@/shared/components/DataErrorState';
 
-const LAW_HEADER_GROUP = 'LAW_HEADER';
+/**
+ * The parameter group the create/edit form picks headers from. The tab used to resolve labels
+ * against 'LAW_HEADER', a group that does not exist, so every row showed a bare code.
+ */
+const LAW_HEADER_GROUP = 'Header';
 
-/** Resolve headerCode → label via parameter store */
-const ItemHeaderLabel = ({ headerCode }: { headerCode: string }) => {
-  const label = useParameterDescription(LAW_HEADER_GROUP, headerCode);
-  return <>{label}</>;
-};
+/** Thumbnails shown per item before the rest fold into "+N". */
+const MAX_THUMBS = 3;
 
-interface ItemRowProps {
+interface ItemCardProps {
   item: LawAndRegulationDtoType;
-  onClick: () => void;
+  thumbnails: string[];
+  readOnly: boolean;
+  onOpen: () => void;
   onDelete: () => void;
-  readOnly?: boolean;
 }
 
-const ItemRow = ({ item, onClick, onDelete, readOnly }: ItemRowProps) => {
+/**
+ * One law or regulation: the header, the remark, and the pictures that back it up.
+ *
+ * The old row showed a header and one line of remark; the images were only visible after opening
+ * the item. They are the evidence — a zoning map, a highway boundary — so they come out here.
+ */
+const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProps) => {
+  const { t } = useTranslation('appraisal');
+  const label = useParameterDescription(LAW_HEADER_GROUP, item.headerCode);
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onOpen();
+    }
+  };
+  const shown = thumbnails.slice(0, MAX_THUMBS);
+  const more = thumbnails.length - shown.length;
+
   return (
     <div
-      onClick={onClick}
-      className="group flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={onKeyDown}
+      className="grid cursor-pointer grid-cols-[2.25rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-3.5 py-3 transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
     >
-      {/* Link icon */}
-      <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-        <Icon name="link" className="text-blue-600" style="solid" />
+      <span className="flex size-9 items-center justify-center rounded-lg bg-amber-600/10 text-amber-700">
+        <Icon name="gavel" style="solid" className="text-sm" />
+      </span>
+
+      <div className="min-w-0">
+        <h4 className="flex items-baseline gap-2 text-[13.5px] font-semibold text-gray-900">
+          <span className="truncate">{label || item.headerCode}</span>
+          {/* The code only adds something when the master has a real name to show beside it. */}
+          {label && label !== item.headerCode && (
+            <span className="shrink-0 text-[10.5px] font-medium tabular-nums text-gray-400">
+              {item.headerCode}
+            </span>
+          )}
+        </h4>
+        {item.remark && (
+          <p className="mt-0.5 line-clamp-2 text-[12.5px] text-gray-600">{item.remark}</p>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">
-          <ItemHeaderLabel headerCode={item.headerCode} />
-        </p>
-        {item.remark && <p className="text-xs text-gray-500 line-clamp-1">{item.remark}</p>}
-      </div>
-
-      {/* Delete button (visible on hover) */}
-      {!readOnly && (
-        <button
-          type="button"
-          onClick={e => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="flex-shrink-0 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
-        >
-          <Icon name="trash" style="regular" className="w-4 h-4" />
-        </button>
+      {shown.length > 0 ? (
+        <div className="flex items-center gap-1.5">
+          {shown.map(src => (
+            <img
+              key={src}
+              src={src}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="h-10 w-14 rounded-md bg-gray-100 object-cover"
+            />
+          ))}
+          {more > 0 && (
+            <span className="flex size-10 items-center justify-center rounded-md bg-gray-100 text-[11px] font-semibold tabular-nums text-gray-600">
+              +{more}
+            </span>
+          )}
+        </div>
+      ) : (
+        <span className="self-center text-[11px] italic text-gray-400">
+          {t('lawsRegulations.noImages')}
+        </span>
       )}
 
-      {/* External link icon */}
-      <Icon name="arrow-up-right-from-square" className="text-gray-400 group-hover:text-primary" />
+      {readOnly ? (
+        <span aria-hidden />
+      ) : (
+        <Menu as="div" className="relative">
+          <MenuButton
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => e.stopPropagation()}
+            aria-label={t('lawsRegulations.actions.menu')}
+            className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+          >
+            <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
+          </MenuButton>
+          <MenuItems
+            anchor={{ to: 'bottom end', gap: 4 }}
+            onClick={e => e.stopPropagation()}
+            onKeyDown={e => e.stopPropagation()}
+            className="z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+          >
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  type="button"
+                  onClick={onOpen}
+                  className={clsx(
+                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700',
+                    focus && 'bg-gray-50',
+                  )}
+                >
+                  <Icon name="pencil" className="text-xs text-gray-400" />
+                  {t('lawsRegulations.actions.edit')}
+                </button>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className={clsx(
+                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600',
+                    focus && 'bg-red-50',
+                  )}
+                >
+                  <Icon name="trash" className="text-xs" />
+                  {t('lawsRegulations.actions.delete')}
+                </button>
+              )}
+            </MenuItem>
+          </MenuItems>
+        </Menu>
+      )}
     </div>
   );
 };
@@ -85,8 +174,15 @@ export const LawsRegulationTab = () => {
 
   const { data, isLoading, isError, error, refetch } = useGetLawAndRegulations(appraisalId);
   const saveMutation = useSaveLawAndRegulations();
+  // Item images reference gallery photos; the gallery query is shared with the Gallery tab.
+  const { data: galleryData } = useGetGalleryPhotos(appraisalId);
 
   const items = data?.items ?? [];
+
+  const thumbnailById = useMemo(
+    () => new Map((galleryData?.photos ?? []).map(p => [p.id, toGalleryImage(p).thumbnailSrc])),
+    [galleryData],
+  );
 
   const [deleteTarget, setDeleteTarget] = useState<LawAndRegulationDtoType | null>(null);
 
@@ -143,7 +239,7 @@ export const LawsRegulationTab = () => {
     return (
       <DataErrorState
         variant="inline"
-        title="Failed to load laws and regulations"
+        title={t('lawsRegulations.loadError')}
         message={(error as Error)?.message}
         onRetry={refetch}
       />
@@ -151,69 +247,56 @@ export const LawsRegulationTab = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900">Laws & Regulations</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Relevant laws and regulations for property appraisal
-          </p>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-gray-900">{t('lawsRegulations.pageTitle')}</h3>
+          <p className="text-xs text-gray-500">{t('lawsRegulations.count', { n: items.length })}</p>
         </div>
         {!readOnly && (
-          <Button size="sm" onClick={handleCreate}>
-            <Icon name="plus" style="solid" className="w-3.5 h-3.5 mr-1.5" />
-            Add
-          </Button>
+          <button
+            type="button"
+            onClick={handleCreate}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+          >
+            <Icon name="plus" style="solid" className="text-[11px]" />
+            {t('lawsRegulations.addRecord')}
+          </button>
         )}
       </div>
 
-      {/* Regulations Reference card */}
       {items.length === 0 ? (
-        <FormCard
-          title="Regulations Reference"
-          subtitle="Relevant laws and regulations"
-          icon="gavel"
-          iconColor="amber"
-        >
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-              <Icon name="gavel" style="solid" className="w-6 h-6 text-gray-400" />
-            </div>
-            <p className="text-sm font-medium text-gray-900">No items yet</p>
-            <p className="text-xs text-gray-500 mt-1">
-              Click the Add button to create a new law & regulation entry.
-            </p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-12 text-center">
+          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-50">
+            <Icon name="gavel" style="solid" className="text-xl text-gray-300" />
           </div>
-        </FormCard>
+          <p className="text-sm font-medium text-gray-600">{t('lawsRegulations.noRecords')}</p>
+          <p className="mt-1 text-xs text-gray-400">{t('lawsRegulations.noRecordsHint')}</p>
+        </div>
       ) : (
-        <FormCard
-          title="Regulations Reference"
-          subtitle="Relevant laws and regulations"
-          icon="gavel"
-          iconColor="amber"
-        >
-          <div className="space-y-1">
-            {items.map(item => (
-              <ItemRow
-                key={item.id}
-                item={item}
-                onClick={() => handleItemClick(item)}
-                onDelete={() => setDeleteTarget(item)}
-                readOnly={readOnly}
-              />
-            ))}
-          </div>
-        </FormCard>
+        <div className="flex flex-col gap-2">
+          {items.map(item => (
+            <ItemCard
+              key={item.id}
+              item={item}
+              thumbnails={[...item.images]
+                .sort((a, b) => a.displaySequence - b.displaySequence)
+                .map(img => thumbnailById.get(img.galleryPhotoId))
+                .filter((src): src is string => !!src)}
+              readOnly={readOnly}
+              onOpen={() => handleItemClick(item)}
+              onDelete={() => setDeleteTarget(item)}
+            />
+          ))}
+        </div>
       )}
 
-      {/* Delete confirmation */}
       <DeleteConfirmationModal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Law & Regulation"
-        message="Are you sure you want to delete this item? This action cannot be undone."
+        title={t('lawsRegulations.deleteConfirm.title')}
+        message={t('lawsRegulations.deleteConfirm.message')}
         isLoading={saveMutation.isPending}
       />
     </div>

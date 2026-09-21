@@ -1,5 +1,11 @@
 import { startOfDay, isBefore, isAfter, isEqual, addDays } from 'date-fns';
 
+/** One public holiday. `date` is a plain calendar date, `yyyy-MM-dd`, never a timestamp. */
+export interface HolidayInfo {
+  date: string;
+  name: string;
+}
+
 export interface DateConstraintPresets {
   disablePastDates?: boolean;
   disableFutureDates?: boolean;
@@ -7,6 +13,24 @@ export interface DateConstraintPresets {
   minDate?: Date | string | null;
   disableDaysBefore?: number;
   disableDaysAfter?: number;
+  /** Holidays to mark on the calendar. Marking alone never blocks a date. */
+  holidays?: HolidayInfo[];
+  /** Opt-in: also refuse the dates in `holidays`. */
+  disableHolidays?: boolean;
+}
+
+/** Local calendar key, `yyyy-MM-dd`. Deliberately not toISOString(), which shifts to UTC. */
+export function toDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** Holiday name by date key, for both the calendar tooltip and the typed-value message. */
+export function buildHolidayMap(holidays: HolidayInfo[] | undefined): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const holiday of holidays ?? []) map.set(holiday.date, holiday.name);
+  return map;
 }
 
 function parseDate(val: Date | string | null | undefined): Date | null {
@@ -33,7 +57,11 @@ export function buildDisabledMatcher(
     minDate,
     disableDaysBefore,
     disableDaysAfter,
+    holidays,
+    disableHolidays,
   } = presets;
+
+  const blockedHolidays = disableHolidays ? buildHolidayMap(holidays) : null;
 
   const hasAny =
     disablePastDates ||
@@ -41,7 +69,8 @@ export function buildDisabledMatcher(
     disableToday ||
     minDate ||
     (disableDaysBefore != null && disableDaysBefore > 0) ||
-    (disableDaysAfter != null && disableDaysAfter > 0);
+    (disableDaysAfter != null && disableDaysAfter > 0) ||
+    (blockedHolidays != null && blockedHolidays.size > 0);
 
   if (!hasAny) return undefined;
 
@@ -53,7 +82,8 @@ export function buildDisabledMatcher(
     !disableToday &&
     !minAnchor &&
     !disableDaysBefore &&
-    !disableDaysAfter
+    !disableDaysAfter &&
+    !blockedHolidays?.size
   ) {
     return undefined;
   }
@@ -62,6 +92,7 @@ export function buildDisabledMatcher(
     const day = startOfDay(date);
     const today = startOfDay(new Date());
 
+    if (blockedHolidays?.has(toDateKey(day))) return true;
     if (disablePastDates && isBefore(day, today)) return true;
     if (disableFutureDates && isAfter(day, today)) return true;
     if (disableToday && isEqual(day, today)) return true;
@@ -87,6 +118,10 @@ export function validateDateConstraints(date: Date, presets: DateConstraintPrese
   const today = startOfDay(new Date());
   const minAnchor = parseDate(presets.minDate);
 
+  if (presets.disableHolidays) {
+    const holidayName = buildHolidayMap(presets.holidays).get(toDateKey(day));
+    if (holidayName) return `Cannot select a holiday (${holidayName})`;
+  }
   if (presets.disablePastDates && isBefore(day, today)) {
     return 'Cannot select a past date';
   }

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import Button from '../Button';
 
 interface CancelButtonProps {
@@ -7,6 +8,7 @@ interface CancelButtonProps {
 
 const CancelButton = ({ fallbackPath }: CancelButtonProps) => {
   const navigate = useNavigate();
+  const { t } = useTranslation('common');
 
   const handleCancel = () => {
     if (fallbackPath) {
@@ -18,7 +20,7 @@ const CancelButton = ({ fallbackPath }: CancelButtonProps) => {
 
   return (
     <Button variant="ghost" type="button" onClick={handleCancel}>
-      Cancel
+      {t('actions.cancel', { defaultValue: 'Cancel' })}
     </Button>
   );
 };

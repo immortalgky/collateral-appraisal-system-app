@@ -14,7 +14,7 @@ import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarnin
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { useGetPropertyDetail } from '@/features/appraisal/api/propertyGroup';
 import { useGetAppraisalById } from '@/features/appraisal/api/appraisal';
-import { getTypeIconName } from '@/features/appraisal/utils/propertyTypeConfig';
+import { getPropertyIcon } from '@/features/appraisal/utils/propertyTypeConfig';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useBreadcrumbExtrasStore } from '@shared/store';
 import type { PropertyGroupItemDtoType } from '@shared/schemas/v1';
@@ -108,8 +108,8 @@ function PropertyRail({
             )}
           >
             <Icon
-              style="solid"
-              name={getTypeIconName(p.propertyType ?? '')}
+              style={getPropertyIcon(p.propertyType ?? '').style}
+              name={getPropertyIcon(p.propertyType ?? '').name}
               className={clsx('size-4 shrink-0', isSelected ? 'text-primary' : 'text-gray-400')}
             />
             <div className="min-w-0 flex-1">
