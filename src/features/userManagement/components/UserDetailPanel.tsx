@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -8,7 +9,7 @@ import TextInput from '@shared/components/inputs/TextInput';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
-import { formatLocaleDateTime } from '@shared/utils/dateUtils';
+import { formatDate, formatLocaleDateTime } from '@shared/utils/dateUtils';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
 import {
   useGetUserById,
@@ -20,16 +21,21 @@ import {
   useUnlockUser,
   useResetPassword,
   useLdapLookup,
+  useSetAccessWindow,
 } from '../api/users';
+import { useGetPasswordPolicyConfig } from '../admin/api/passwordPolicyAdmin';
 import { useGetRoles } from '../api/roles';
 import { useGetGroups } from '../api/groups';
 import { useGetTeams } from '../api/teams';
 import { useGetEligibleCompanies } from '../api/companies';
 import ChangePasswordModal from './ChangePasswordModal';
+import AccessWindowModal from './AccessWindowModal';
+import AccessWindowPasswordModal from './AccessWindowPasswordModal';
 import PasswordPolicyChecklist from './PasswordPolicyChecklist';
 import AssignmentTable from './AssignmentTable';
 import { usePasswordPolicyChecks } from '../hooks/usePasswordPolicyChecks';
-import type { AdminUpdateUserRequest } from '../types';
+import { useAccessWindowCountdown } from '../hooks/useAccessWindowCountdown';
+import type { AdminUpdateUserRequest, SetAccessWindowResponse } from '../types';
 
 interface UserDetailPanelProps {
   userId: string;
@@ -320,6 +326,44 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       onSuccess: () => toast.success(t('toasts.userUnlocked')),
       onError: () => toast.error(t('toasts.userUnlockFailed')),
     });
+  };
+
+  // Temporary access window
+  const setAccessWindow = useSetAccessWindow();
+  const { data: passwordPolicyConfig } = useGetPasswordPolicyConfig();
+  const accessWindowOpen = !!user?.accessExpiresAt && new Date(user.accessExpiresAt).getTime() > Date.now();
+  // Ticks every second while a window is open so the countdown label stays live.
+  const countdown = useAccessWindowCountdown(accessWindowOpen ? (user?.accessExpiresAt ?? null) : null);
+  const [showAccessWindowModal, setShowAccessWindowModal] = useState(false);
+  const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
+  const [showCloseWindowConfirm, setShowCloseWindowConfirm] = useState(false);
+  const [closeReason, setCloseReason] = useState('');
+
+  const handleAccessWindowSuccess = (response: SetAccessWindowResponse) => {
+    // Extending returns no password (the current holder stays signed in); only show
+    // the one-time reveal when a fresh password was actually issued.
+    if (response.password) setIssuedPassword(response.password);
+  };
+
+  const handleCloseWindow = () => {
+    if (!closeReason.trim()) {
+      toast.error(t('accessWindow.reasonRequired'));
+      return;
+    }
+    // Any timestamp in the past closes the window — a minute back avoids clock-skew edge cases.
+    const pastExpiry = formatDate(new Date(Date.now() - 60_000), 'yyyy-MM-ddTHH:mm:ss');
+    setAccessWindow.mutate(
+      { id: userId, expiresAt: pastExpiry, reason: closeReason.trim() },
+      {
+        onSuccess: () => {
+          toast.success(t('toasts.accessWindowClosed'));
+          setShowCloseWindowConfirm(false);
+          setCloseReason('');
+        },
+        onError: (err: any) =>
+          toast.error(err?.apiError?.detail || err?.apiError?.title || t('toasts.accessWindowFailed')),
+      },
+    );
   };
 
   if (isLoading) {
@@ -615,6 +659,83 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           )}
         </div>
       </section>
+
+      {/* Temporary Access Section — only for ad-hoc accounts, closed by default */}
+      {user.isTemporaryAccess && (
+        <section
+          className={clsx(
+            'bg-white rounded-xl border shadow-sm overflow-hidden',
+            accessWindowOpen && countdown.isUnderWarningThreshold ? 'border-amber-300' : 'border-gray-200',
+          )}
+        >
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+            <span
+              className={clsx(
+                'flex size-6 items-center justify-center rounded-md',
+                accessWindowOpen && countdown.isUnderWarningThreshold ? 'bg-amber-50' : 'bg-cyan-50',
+              )}
+            >
+              <Icon
+                name="clock"
+                style="solid"
+                className={clsx(
+                  'size-3',
+                  accessWindowOpen && countdown.isUnderWarningThreshold ? 'text-amber-500' : 'text-cyan-500',
+                )}
+              />
+            </span>
+            <span className="text-sm font-semibold text-gray-800">{t('sections.temporaryAccess')}</span>
+          </div>
+          <div className="px-4 py-4">
+            {accessWindowOpen ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-baseline gap-2">
+                  <span
+                    className={clsx(
+                      'text-2xl font-bold tabular-nums',
+                      countdown.isUnderWarningThreshold ? 'text-amber-600' : 'text-gray-800',
+                    )}
+                  >
+                    {countdown.label}
+                  </span>
+                  <span className="text-xs text-gray-400">{t('accessWindow.remaining')}</span>
+                </div>
+                <p className="text-xs text-gray-500">
+                  {t('accessWindow.endsAt', {
+                    time: formatLocaleDateTime(user.accessExpiresAt, i18n.language),
+                  })}
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setShowAccessWindowModal(true)}>
+                    <Icon name="clock-rotate-left" style="solid" className="size-3.5 mr-1.5" />
+                    {t('accessWindow.extendButton')}
+                  </Button>
+                  <Button variant="danger" size="sm" onClick={() => setShowCloseWindowConfirm(true)}>
+                    <Icon name="lock" style="solid" className="size-3.5 mr-1.5" />
+                    {t('accessWindow.closeButton')}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="text-sm text-gray-500">{t('accessWindow.closedMessage')}</p>
+                <p className="text-xs text-gray-400">
+                  {t('accessWindow.capHint', { hours: passwordPolicyConfig?.maxAccessWindowHours ?? 8 })}
+                </p>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  className="self-start"
+                  onClick={() => setShowAccessWindowModal(true)}
+                >
+                  <Icon name="unlock" style="solid" className="size-3.5 mr-1.5" />
+                  {t('accessWindow.openButton')}
+                </Button>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* General Edit Modal */}
       <Modal
@@ -950,6 +1071,53 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         onClose={() => setShowChangePasswordModal(false)}
         userId={userId}
       />
+
+      {/* Open/Extend Access Window Modal */}
+      <AccessWindowModal
+        isOpen={showAccessWindowModal}
+        onClose={() => setShowAccessWindowModal(false)}
+        userId={userId}
+        maxAccessWindowHours={passwordPolicyConfig?.maxAccessWindowHours ?? 8}
+        currentExpiresAt={accessWindowOpen ? user.accessExpiresAt : null}
+        onSuccess={handleAccessWindowSuccess}
+      />
+
+      {/* One-time Access Window Password Reveal */}
+      <AccessWindowPasswordModal
+        isOpen={!!issuedPassword}
+        onClose={() => setIssuedPassword(null)}
+        password={issuedPassword ?? ''}
+      />
+
+      {/* Close Access Window Confirm */}
+      <ConfirmDialog
+        isOpen={showCloseWindowConfirm}
+        onClose={() => {
+          setShowCloseWindowConfirm(false);
+          setCloseReason('');
+        }}
+        onConfirm={handleCloseWindow}
+        title={t('accessWindow.closeConfirmTitle')}
+        confirmText={t('accessWindow.closeButton')}
+        variant="danger"
+        isLoading={setAccessWindow.isPending}
+      >
+        <div className="text-left space-y-3">
+          <p className="text-sm text-gray-500">{t('accessWindow.closeConfirmMessage')}</p>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('accessWindow.reasonLabel')} <span className="text-danger">*</span>
+            </label>
+            <textarea
+              value={closeReason}
+              onChange={e => setCloseReason(e.target.value)}
+              rows={2}
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              placeholder={t('accessWindow.reasonPlaceholder')}
+            />
+          </div>
+        </div>
+      </ConfirmDialog>
 
       {/* Reset Password Modal */}
       <Modal

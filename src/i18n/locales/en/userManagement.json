@@ -52,7 +52,8 @@
     "account": "Account",
     "profile": "Profile",
     "access": "Access",
-    "approvalPeriod": "Approval Period"
+    "approvalPeriod": "Approval Period",
+    "temporaryAccess": "Temporary access"
   },
   "fields": {
     "username": "Username",
@@ -97,7 +98,8 @@
     "addressLine1": "Address Line 1",
     "addressLine2": "Address Line 2",
     "effectiveDate": "Effective Date",
-    "expireDate": "Expire Date"
+    "expireDate": "Expire Date",
+    "isTemporaryAccess": "Temporary-access account"
   },
   "placeholders": {
     "searchUsers": "Search users...",
@@ -174,7 +176,8 @@
     "loanTypesComma": "Separate multiple loan types with a comma",
     "ldapPassword": "Password is managed by Active Directory — the user signs in with their AD credentials.",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
-    "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team."
+    "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
+    "temporaryAccessCreate": "Starts closed — the account has no password until an admin opens an access window."
   },
   "empty": {
     "noUsersFound": "No users found",
@@ -428,7 +431,11 @@
     "userUnlockFailed": "Failed to unlock user account",
     "ldapUserNotFound": "User not found in LDAP/AD",
     "ldapInfoLoaded": "Loaded info from LDAP",
-    "ldapLookupFailed": "LDAP lookup failed"
+    "ldapLookupFailed": "LDAP lookup failed",
+    "accessWindowOpened": "Access window opened",
+    "accessWindowExtended": "Access window extended",
+    "accessWindowClosed": "Access window closed",
+    "accessWindowFailed": "Failed to update the access window"
   },
   "validation": {
     "nameRequired": "Name is required",
@@ -494,6 +501,9 @@
     "propagationNote": "Complexity, expiry, history, and blocklist changes apply within about a minute across all servers.",
     "blocklistLabel": "Forbidden passwords (one per line)",
     "blocklistHint": "Case-insensitive. These exact passwords are rejected.",
+    "temporaryAccessSection": "Temporary Access",
+    "maxAccessWindowHours": "Max access window (hours)",
+    "maxAccessWindowHoursHint": "Default 8. Hard limit 720 hours (30 days).",
     "save": "Save policy",
     "saved": "Password policy updated.",
     "saveFailed": "Failed to update password policy."
@@ -563,5 +573,39 @@
     "language": "Language",
     "languageHint": "Language used across the interface.",
     "accessHint": "This is what you can do in the system today. If a menu or action is missing, ask your system administrator to review the roles and permissions listed here."
+  },
+  "accessWindow": {
+    "openTitle": "Open access window",
+    "extendTitle": "Extend access window",
+    "durationLabel": "Duration",
+    "remaining": "remaining",
+    "endsAt": "Ends {{time}}",
+    "extendButton": "Extend",
+    "closeButton": "Close now",
+    "openButton": "Open access window",
+    "closedMessage": "This account cannot sign in until an access window is opened.",
+    "capHint": "Up to {{hours}} hours per window.",
+    "capNote": "The window cannot extend more than {{hours}} hours from now.",
+    "exceedsCap": "The end time cannot be more than {{hours}} hours from now.",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "Why is this access window needed?",
+    "reasonRequired": "A reason is required",
+    "selectEndRequired": "Choose an end time",
+    "customChip": "Custom",
+    "customEndLabel": "Custom end time",
+    "hoursChip": "{{count}} h",
+    "extendMinutesChip": "+{{count}} min",
+    "extendHoursChip": "+{{count}} h",
+    "extendPasswordUnchanged": "The password does not change — extending only moves the expiry.",
+    "closeConfirmTitle": "Close access window now?",
+    "closeConfirmMessage": "The account will no longer be able to sign in, and the current password is rotated.",
+    "passwordModal": {
+      "title": "Access window password",
+      "warning": "This password is shown only once and can't be retrieved again. Copy it now and share it through a secure channel.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "confirmCheckbox": "I copied this password",
+      "done": "Done"
+    }
   }
 }
