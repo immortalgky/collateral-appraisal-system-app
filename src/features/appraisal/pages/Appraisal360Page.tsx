@@ -120,7 +120,7 @@ const Appraisal360Page = () => {
           (b.uploadedAt ?? '').localeCompare(a.uploadedAt ?? '') || b.sortOrder - a.sortOrder,
       )[0];
 
-      viewDocument(latest.documentId);
+      viewDocument(latest.documentId, latest.fileSizeBytes, latest.fileName);
     },
     [appraisalDocuments, viewDocument],
   );

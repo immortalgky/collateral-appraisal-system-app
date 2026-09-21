@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { z } from 'zod';
 import i18n from '@/i18n';
@@ -254,16 +255,77 @@ export const useDownloadDocument = () => {
 };
 
 /**
+ * Past this, a document is handed to the browser to download rather than opened inline.
+ *
+ * Viewing buffers the whole file in the *opening* tab before a pixel is shown, and the browser's
+ * PDF viewer then expands it again — roughly twice the file in memory, held until the viewer tab
+ * is closed. At a few hundred megabytes that tab can die, and it takes any half-filled form in it
+ * with it. The browser's own download manager has none of that problem, and rather more to offer:
+ * a real progress bar, a transfer that can be paused and resumed (the API answers range requests),
+ * and a file that survives the page.
+ *
+ * Nothing stored today can reach this: uploads are capped at 50 MB server-side. It is here for
+ * the chunked upload that raises that to 1 GB, so that the first gigabyte-sized document does not
+ * arrive at a viewer with no ceiling — not as a rule that fires now.
+ */
+export const MAX_INLINE_VIEW_BYTES = 300 * 1024 * 1024;
+
+/**
+ * A plain URL, so the browser downloads it itself rather than this tab holding the bytes.
+ *
+ * That also means it carries no Authorization header: the token lives in memory and is attached by
+ * the axios interceptor, which a raw navigation does not go through. It works because
+ * DownloadDocumentEndpoint is `.AllowAnonymous()`. If that is ever secured — it should be — this
+ * needs a signed URL or a cookie, and every `<img src>` in the app needs the same.
+ */
+const documentDownloadUrl = (documentId: string) =>
+  `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documents/${documentId}/download?download=true`;
+
+/**
  * Returns a function that opens a stored document inline in a new browser tab, with the loading
  * page, progress and cancellation that useBlobViewerTab provides.
+ *
+ * Pass `fileSizeBytes` where the caller knows it: past {@link MAX_INLINE_VIEW_BYTES} the document
+ * is downloaded instead of opened. Callers that omit it keep the inline behaviour.
  */
 export const useViewDocument = () => {
   const openInTab = useBlobViewerTab();
+  const { t } = useTranslation('common');
+
   // Memoised for the same reason the hook it wraps is: this ends up in callers' dependency arrays.
   return useCallback(
-    (documentId: string) =>
-      openInTab(options => fetchDocumentBlob(documentId, options).then(result => result.blob)),
-    [openInTab],
+    (documentId: string, fileSizeBytes?: number | null, fileName?: string | null) => {
+      if (fileSizeBytes != null && fileSizeBytes > MAX_INLINE_VIEW_BYTES) {
+        // A link click rather than a window: a link is not a pop-up, so nothing blocks it, and an
+        // attachment response goes to the browser's download manager with the page left alone.
+        //
+        // `target="_blank"` because the response is not always an attachment: a missing document
+        // answers 404 with a plain body, and a file gone from storage answers 500. Without a
+        // target those render *in this tab*, and the half-filled form that was on screen is gone —
+        // the loss this whole ceiling exists to prevent. The cost is an empty tab on those two
+        // error paths in Safari and Firefox, which is the cheaper mistake by a distance.
+        const link = document.createElement('a');
+        link.href = documentDownloadUrl(documentId);
+        link.target = '_blank';
+        link.rel = 'noopener';
+        document.body.append(link);
+        link.click();
+        link.remove();
+
+        // Said out loud, because a download has no window of its own to look at: the page does not
+        // change, and a browser that suppressed the click would otherwise leave the user clicking
+        // an eye icon that appears to do nothing at all.
+        toast.success(
+          fileName
+            ? t('documentViewer.downloadStarted', { name: fileName })
+            : t('documentViewer.downloadStartedUnnamed'),
+        );
+        return;
+      }
+
+      openInTab(options => fetchDocumentBlob(documentId, options).then(result => result.blob));
+    },
+    [openInTab, t],
   );
 };
 
