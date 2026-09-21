@@ -283,6 +283,7 @@
     "columnFacilityLimit": "วงเงินสินเชื่อ",
     "columnAppraisalValue": "มูลค่าประเมิน",
     "columnAppraisalDate": "วันที่ประเมิน",
+    "columnInspectionNumber": "ครั้งที่ตรวจ",
     "dateFilterFrom": "วันที่ประเมินจาก",
     "dateFilterTo": "วันที่ประเมินถึง"
   },
