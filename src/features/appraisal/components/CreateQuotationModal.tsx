@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { addHours, formatISO } from 'date-fns';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -49,7 +50,9 @@ const CreateQuotationModal = ({
   const localizeCompanyName = useLocalizedCompanyName();
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
+  const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(() =>
+    formatISO(addHours(new Date(), 1)),
+  );
   const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
   const [remarks, setRemarks] = useState('');
 
