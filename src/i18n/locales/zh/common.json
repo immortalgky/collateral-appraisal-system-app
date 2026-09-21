@@ -75,7 +75,17 @@
     "uploading": "正在上传…",
     "processing": "服务器处理中…",
     "uploadStalled": "上传过程中连接中断，请重试",
-    "downloadStalled": "下载过程中连接中断，请重试"
+    "downloadStalled": "下载过程中连接中断，请重试",
+    "failed": "上传失败",
+    "resume": "继续上传",
+    "cancel": "取消",
+    "dismiss": "关闭",
+    "secondsLeft": "剩余 {{count}} 秒",
+    "minutesLeft": "剩余 {{count}} 分钟",
+    "fileTooLarge": "此文件超过 {{limit}} 上限（当前 {{size}}）",
+    "uploadCancelled": "已取消上传",
+    "uploadAbandoned": "离开页面导致上传中断，请重新上传该文件。",
+    "downloadCancelled": "已取消下载"
   },
   "confirm": {
     "deleteTitle": "确认删除",

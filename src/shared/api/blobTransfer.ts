@@ -39,6 +39,22 @@ export const SERVER_WORKING_TIMEOUT_MS = 600_000;
 const IDLE_TIMEOUT_MS = 120_000;
 
 /**
+ * Raised when a transfer is stopped on purpose — the panel's Cancel, or a caller's own signal.
+ *
+ * Without it an abort surfaces as a plain axios cancellation with no `apiError`, and every
+ * caller's generic handler says "Failed to upload deed.pdf" about something the user chose to do.
+ */
+export class TransferCancelledError extends Error {
+  readonly apiError: { detail: string };
+
+  constructor(direction: 'upload' | 'download') {
+    super(`The ${direction} was cancelled`);
+    this.name = 'TransferCancelledError';
+    this.apiError = { detail: i18n.t(`common:transfer.${direction}Cancelled`) };
+  }
+}
+
+/**
  * Raised when the watchdog fires, so a caller can say "the connection stopped" instead of
  * "the file could not be read" — the two need very different things from the user.
  */
@@ -144,6 +160,10 @@ const run = async <T>(
       id,
       label ?? i18n.t(`common:transfer.${direction === 'upload' ? 'uploading' : 'downloading'}`),
       direction,
+      // The panel gets the same handle the caller's own signal pulls. Until now a transfer could
+      // only be stopped by whoever started it, and almost nothing passed a signal — so a 20-minute
+      // upload of the wrong file had to be waited out.
+      () => controller.abort(),
     );
   }
   let stalled = false;
@@ -203,6 +223,7 @@ const run = async <T>(
   } catch (error) {
     // The abort surfaces as a plain cancellation, so the reason has to be carried out separately.
     if (stalled) throw new TransferStalledError(direction, phase);
+    if (controller.signal.aborted) throw new TransferCancelledError(direction);
     await recoverProblemDetails(error);
     throw error;
   } finally {
@@ -243,3 +264,43 @@ export const uploadForm = <T>(
     'upload',
     options,
   );
+
+/**
+ * PUTs raw bytes — one piece of a file being sent in chunks.
+ *
+ * Always `silent`: the caller is a loop sending many of these for a single file, and one panel
+ * entry per chunk would replace a progress bar with a stampede. The loop registers the file once
+ * and reports the total itself.
+ */
+export const putBlob = <T>(
+  url: string,
+  body: Blob,
+  options: TransferOptions = {},
+): Promise<AxiosResponse<T>> =>
+  run<T>(
+    config =>
+      axios.put<T>(url, body, {
+        ...config,
+        params: options.params,
+        headers: { 'Content-Type': 'application/octet-stream' },
+      }),
+    'upload',
+    { ...options, silent: true },
+  );
+
+/**
+ * POSTs JSON through the same machinery as a transfer.
+ *
+ * For the requests that bracket a large upload — opening one, and closing it once the bytes are
+ * all there. They carry almost nothing, but the closing one waits while the server hashes a
+ * gigabyte, and the shared axios instance would give up on it after ten seconds.
+ */
+export const postJson = <T>(
+  url: string,
+  body: unknown,
+  options: TransferOptions = {},
+): Promise<AxiosResponse<T>> =>
+  run<T>(config => axios.post<T>(url, body, { ...config, params: options.params }), 'upload', {
+    ...options,
+    silent: true,
+  });
