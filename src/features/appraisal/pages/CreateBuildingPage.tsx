@@ -13,7 +13,6 @@ import { useCollateralPrefillStore } from '@/features/collateralMaster/store/col
 import { useProgressivePrefill } from '@/features/collateralMaster/hooks/useProgressivePrefill';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -39,9 +38,8 @@ import {
 } from '../utils/mappers';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import PropertyPhotoSection, {
-  type PropertyPhotoSectionRef,
-} from '../components/PropertyPhotoSection';
+import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
+import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
 
@@ -274,34 +272,16 @@ const CreateBuildingPage = () => {
     );
   }
 
+  // The header's tabs; construction appears only when it applies.
+  const editorTabs = [
+    { id: 'building', label: t('createPage.navBuilding') },
+    ...(isUnderConstruction || isCiAppraisal
+      ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
+      : []),
+  ];
+
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
-            {
-              label: t('createPage.navBuilding'),
-              id: 'properties-section',
-              icon: 'building',
-              onClick: () => setActiveTab('building'),
-            },
-            ...(isUnderConstruction || isCiAppraisal
-              ? [
-                  {
-                    label: t('createPage.navConstructionInspection'),
-                    id: 'construction-section',
-                    icon: 'helmet-safety',
-                    onClick: () => setActiveTab('construction'),
-                  },
-                ]
-              : []),
-          ]}
-        />
-      </div>
-
       <PageReadOnlyContext.Provider value={isReadOnly}>
         <FormProvider methods={methods} schema={createBuildingForm}>
           <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
@@ -310,6 +290,15 @@ const CreateBuildingPage = () => {
               id="form-scroll-container"
               className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
             >
+              <PropertyEditorHeader
+                appraisalId={appraisalId}
+                propertyId={propertyId}
+                typeCode="B"
+                photoSectionRef={photoSectionRef}
+                tabs={editorTabs}
+                activeTab={activeTab}
+                onTabChange={id => setActiveTab(id as typeof activeTab)}
+              />
               <ResizableSidebar
                 isOpen={isOpen}
                 onToggle={onToggle}
@@ -318,41 +307,11 @@ const CreateBuildingPage = () => {
               >
                 <ResizableSidebar.Main>
                   <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                          <Icon
-                            name="images"
-                            style="solid"
-                            className="w-5 h-5 text-indigo-600"
-                          />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">{t('createPage.photosSection')}</h2>
-                      </div>
-                      <div className="h-px bg-gray-200 mb-4" />
-                      {appraisalId && (
-                        <PropertyPhotoSection
-                          ref={photoSectionRef}
-                          appraisalId={appraisalId}
-                          propertyId={propertyId}
-                        />
-                      )}
-                    </Section>
-
                     {/* Building Tab Content */}
                     <div
-                      id="properties-section"
+                      id="building-section"
                       className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Icon name="building" style="solid" className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          {t('createPage.buildingSection')}
-                        </h2>
-                      </div>
-                      <div className="h-px bg-gray-200" />
                       <Section id="building-info" anchor className="flex flex-col gap-6">
                         <BuildingDetailForm />
                       </Section>
@@ -364,19 +323,6 @@ const CreateBuildingPage = () => {
                         id="construction-section"
                         className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                            <Icon
-                              name="helmet-safety"
-                              style="solid"
-                              className="w-5 h-5 text-amber-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            {t('createPage.constructionSection')}
-                          </h2>
-                        </div>
-                        <div className="h-px bg-gray-200" />
                         <Section id="construction-info" anchor className="flex flex-col gap-6">
                           <ConstructionInspectionTab
                             readOnly={isReadOnly}

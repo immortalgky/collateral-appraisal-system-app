@@ -552,6 +552,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
             markedForRemovalIds={markedForRemovalIds}
             onUndoRemoval={handleUndoRemoval}
             hideSelectedPanel
+            fixedFilters={{ status: 'Pending' }}
           />
           <div className="flex justify-end pt-2 border-t border-gray-100">
             <Button onClick={() => setShowPicker(false)}>

@@ -46,16 +46,41 @@ function SkeletonRow({ index, collapsed = false }: { index: number; collapsed?: 
   );
 }
 
+/**
+ * The application item for the page the user is on: the one whose href is the path itself or the
+ * longest prefix of it. Property Information lives at `:basePath/property`, but its forms, market
+ * comparables and laws open below it (`…/property/land/:id`), and an exact comparison left the
+ * whole section dark there. Longest wins, so only one item ever lights.
+ */
+function activeApplicationHref(items: NavItem[], pathname: string): string | null {
+  // A group's pricing analysis lives at `:basePath/groups/:id/pricing-analysis`, under no menu
+  // item, but is opened from Property Information's Properties tab — the breadcrumb files it there
+  // too — so it lights that item.
+  const property = items.find(item => item.itemKey === 'appraisal.property');
+  const path =
+    property && /\/groups\/[^/]+\/pricing-analysis(\/|$)/.test(pathname) ? property.href : pathname;
+  let best: string | null = null;
+  for (const { href } of items) {
+    if (!href || href === '#') continue;
+    const matches = path === href || path.startsWith(`${href}/`);
+    if (matches && (!best || href.length > best.length)) best = href;
+  }
+  return best;
+}
+
 function CompactMenuItem({
   item,
   collapsed = false,
+  active,
 }: {
   item: NavItem & { canEdit?: boolean };
   collapsed?: boolean;
+  /** Decided by the caller for the application section; otherwise the path must match exactly. */
+  active?: boolean;
 }) {
   const location = useLocation();
   const to = item.href;
-  const isActive = location.pathname === item.href;
+  const isActive = active ?? location.pathname === item.href;
   const isReadOnly = item.canEdit === false;
   const iconStyle = (item.iconStyle || 'solid') as
     | 'solid'
@@ -207,6 +232,8 @@ export function MobileAppraisalSidebar({
   );
 
   const applicationNav = useAppraisalNavigation(navContext);
+  const { pathname } = useLocation();
+  const activeHref = activeApplicationHref(applicationNav, pathname);
   const mainNav = useNavigation();
 
   // Use first 3 main nav items as "general" compact links
@@ -237,11 +264,11 @@ export function MobileAppraisalSidebar({
             {/* Logo Area */}
             <div className="px-5 py-5">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm">
+                <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm">
                   <img alt="LHBank" src={logo} className="h-7 w-auto" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
+                  <span className="text-sm font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
                     CAS
                   </span>
                   <div
@@ -287,7 +314,7 @@ export function MobileAppraisalSidebar({
                       ))
                     : applicationNav.map(item => (
                         <li key={item.href + item.itemKey}>
-                          <CompactMenuItem item={item} />
+                          <CompactMenuItem item={item} active={item.href === activeHref} />
                         </li>
                       ))}
                 </ul>
@@ -358,6 +385,8 @@ export default function AppraisalSidebar({
   );
 
   const applicationNav = useAppraisalNavigation(navContext);
+  const { pathname } = useLocation();
+  const activeHref = activeApplicationHref(applicationNav, pathname);
   const mainNav = useNavigation();
   const generalItems = mainNav.slice(0, 3);
 
@@ -378,12 +407,12 @@ export default function AppraisalSidebar({
           )}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-6 w-auto" />
             </div>
             {!sidebarCollapsed && (
               <div className="flex flex-col">
-                <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
+                <span className="text-sm font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
                   CAS
                 </span>
                 <div
@@ -448,7 +477,11 @@ export default function AppraisalSidebar({
                   ))
                 : applicationNav.map(item => (
                     <li key={item.href + item.itemKey}>
-                      <CompactMenuItem item={item} collapsed={sidebarCollapsed} />
+                      <CompactMenuItem
+                        item={item}
+                        collapsed={sidebarCollapsed}
+                        active={item.href === activeHref}
+                      />
                     </li>
                   ))}
             </ul>

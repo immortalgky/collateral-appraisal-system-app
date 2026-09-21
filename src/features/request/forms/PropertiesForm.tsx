@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import FormTable from '../components/tables/FormTable';
+import FormTable, { type FormTableColumn } from '../components/tables/FormTable';
 import { SectionHeader } from '../../../shared/components';
+import { mapBuildingType } from '../data/mapCollateral';
 
 const PropertiesForm = () => {
   const { t } = useTranslation('request');
 
-  const propertiesColumns = [
+  const propertiesColumns: FormTableColumn[] = [
     {
       name: 'propertyType',
       label: t('fields.propertyType'),
@@ -17,13 +18,18 @@ const PropertiesForm = () => {
       label: t('fields.buildingType'),
       inputType: 'dropdown',
       group: 'BuildingType',
+      filterOptions: {
+        type: 'dynamic',
+        field: 'propertyType',
+        map: mapBuildingType,
+      },
     },
     {
       name: 'sellingPrice',
       label: t('fields.sellingPrice'),
       inputType: 'number',
       maxIntegerDigits: 15,
-      decimalDigits: 2,
+      decimalPlaces: 2,
     },
   ];
 

@@ -1,10 +1,11 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { type ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
 import type { UseMutationResult } from '@tanstack/react-query';
 import {
   useAddMarketComparableImage,
   useRemoveMarketComparableImage,
 } from '../api/marketComparable';
 import EntityPhotoSection, { type EntityPhotoSectionRef } from './EntityPhotoSection';
+import type { PhotoSectionView } from './PropertyPhotoSection';
 
 export interface MarketComparablePhotoSectionRef {
   linkImagesToComparable: (marketComparableId: string) => Promise<void>;
@@ -19,6 +20,8 @@ interface MarketComparablePhotoSectionProps {
     title?: string | null;
     description?: string | null;
   }>;
+  /** Draws the photos instead of the default strip, e.g. inside the comparable form's header. */
+  renderGallery?: (view: PhotoSectionView) => ReactNode;
 }
 
 // Thin adapter hooks that bridge { entityId } → { marketComparableId }.
@@ -85,7 +88,7 @@ function useRemoveMarketComparableImageAdapter(): UseMutationResult<
 const MarketComparablePhotoSection = forwardRef<
   MarketComparablePhotoSectionRef,
   MarketComparablePhotoSectionProps
->(({ appraisalId, marketComparableId, images }, ref) => {
+>(({ appraisalId, marketComparableId, images, renderGallery }, ref) => {
   const innerRef = useRef<EntityPhotoSectionRef>(null);
 
   useImperativeHandle(ref, () => ({
@@ -102,6 +105,7 @@ const MarketComparablePhotoSection = forwardRef<
       images={images}
       useAddImage={useAddMarketComparableImageAdapter}
       useRemoveImage={useRemoveMarketComparableImageAdapter}
+      renderGallery={renderGallery}
       // Thumbnail hooks omitted — cover UI stays hidden for MarketComparable
     />
   );

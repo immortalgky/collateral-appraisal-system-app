@@ -1,0 +1,10 @@
+{
+  "page": {
+    "title": "Hangfire Dashboard",
+    "subtitle": "Live state of every background job — queues, processing, succeeded, failed and retries.",
+    "frameHint": "If the dashboard does not load, your sign-in may have expired — open it in a new tab and sign in again."
+  },
+  "actions": {
+    "openInNewTab": "Open in new tab"
+  }
+}

@@ -8,6 +8,7 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import FormCard from '@shared/components/sections/FormCard';
 import ActionBar from '@/shared/components/ActionBar';
+import CancelButton from '@/shared/components/buttons/CancelButton';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { FormFields, type FormField } from '@/shared/components/form';
 import FieldHelp from '@/shared/components/form/FieldHelp';
@@ -378,10 +379,18 @@ const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
  * machines" (not tied to any single machine). Shown as a tab in the Property
  * Information page when the appraisal contains machinery.
  */
-export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) => {
+export const MachinerySummaryTab = ({
+  onSaved,
+  cancelPath,
+}: {
+  onSaved?: () => void;
+  /** Where Cancel goes. Without one it steps back in history, like the property forms. */
+  cancelPath?: string;
+} = {}) => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const appraisalId = useAppraisalId();
+  const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useGetMachinerySummary(appraisalId);
   const { data: suggestedCounts } = useGetMachinerySummarySuggestedCounts(appraisalId);
@@ -391,6 +400,8 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
     defaultValues: machinerySummaryFormDefault,
     resolver: zodResolver(machinerySummaryForm),
   });
+
+  const { getValues, reset } = methods;
 
   // Seed the form once the summary loads (null response → empty defaults).
   useEffect(() => {
@@ -429,15 +440,42 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
   );
 
   const onSubmit: SubmitHandler<machinerySummaryFormType> = values => {
+    setSaveAction('submit');
     if (!appraisalId) return;
     saveMutation.mutate(
       { appraisalId, ...values },
       {
         onSuccess: () => {
           toast.success(t('propertyInfo.machinerySummary.saved'));
+          setSaveAction(null);
           onSaved?.();
         },
-        onError: () => toast.error(t('propertyInfo.machinerySummary.saveFailed')),
+        onError: () => {
+          toast.error(t('propertyInfo.machinerySummary.saveFailed'));
+          setSaveAction(null);
+        },
+      },
+    );
+  };
+
+  const handleSaveDraft = () => {
+    setSaveAction('draft');
+    const data = getValues();
+    const payload = mapMachinerySummaryResponseToForm(data);
+    if (!appraisalId) return;
+    saveMutation.mutate(
+      { appraisalId, ...payload },
+      {
+        onSuccess: () => {
+          reset(getValues());
+          toast.success(t('propertyInfo.machinerySummary.saved'));
+          setSaveAction(null);
+          onSaved?.();
+        },
+        onError: () => {
+          toast.error(t('propertyInfo.machinerySummary.saveFailed'));
+          setSaveAction(null);
+        },
       },
     );
   };
@@ -505,13 +543,30 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
           <MachinerySummaryLegalForm readOnly={readOnly} />
         </FormCard>
 
-        {/* Sticky footer actions — pinned to the bottom of the scroll area */}
-        {!readOnly && (
-          <ActionBar>
-            <ActionBar.Left>
-              <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
-            </ActionBar.Left>
+        {/* Sticky footer actions — pinned to the bottom of the scroll area. Cancel is there even
+            when read-only, the same as the property forms: it is the way back to the list. */}
+        <ActionBar>
+          <ActionBar.Left>
+            <CancelButton fallbackPath={cancelPath} />
+            {!readOnly && (
+              <>
+                <ActionBar.Divider />
+                <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
+              </>
+            )}
+          </ActionBar.Left>
+          {!readOnly && (
             <ActionBar.Right>
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={handleSaveDraft}
+                isLoading={saveMutation.isPending && saveAction === 'draft'}
+                disabled={saveMutation.isPending}
+              >
+                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
+                {t('propertyInfo.machinerySummary.saveDraft')}
+              </Button>
               <Button
                 type="submit"
                 isLoading={saveMutation.isPending}
@@ -521,8 +576,8 @@ export const MachinerySummaryTab = ({ onSaved }: { onSaved?: () => void } = {}) 
                 {t('propertyInfo.machinerySummary.save')}
               </Button>
             </ActionBar.Right>
-          </ActionBar>
-        )}
+          )}
+        </ActionBar>
       </form>
     </FormProvider>
   );

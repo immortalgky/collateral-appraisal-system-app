@@ -1,4 +1,12 @@
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import {
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -28,9 +36,24 @@ export interface PropertyPhotoSectionRef {
   linkPhotosToProperty: (propertyId: string) => Promise<void>;
 }
 
+/**
+ * What a custom layout gets to draw the photos with. Uploading, choosing from the gallery, the
+ * preview (with set-cover and delete) and the confirm dialogs all stay in this component.
+ */
+export interface PhotoSectionView {
+  /** Cover first. */
+  photos: Photo[];
+  thumbnailId: string | null;
+  readOnly: boolean;
+  onAdd: () => void;
+  onPreview: (photo: Photo) => void;
+}
+
 interface PropertyPhotoSectionProps {
   appraisalId: string;
   propertyId?: string;
+  /** Draws the photos instead of the default strip, e.g. inside the property form's header. */
+  renderGallery?: (view: PhotoSectionView) => ReactNode;
 }
 
 interface DeleteTarget {
@@ -39,7 +62,7 @@ interface DeleteTarget {
 }
 
 const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSectionProps>(
-  ({ appraisalId, propertyId }, ref) => {
+  ({ appraisalId, propertyId, renderGallery }, ref) => {
     const readOnly = usePageReadOnly();
     const { t } = useTranslation('appraisal');
     const currentUser = useAuthStore(state => state.user);
@@ -475,15 +498,25 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
 
     return (
       <>
-        <PhotoGallery
-          photos={sortedPhotos}
-          onAddClick={() => setShowPhotoSourceModal(true)}
-          onDelete={handleDeleteRequest}
-          onSetThumbnail={handleSetThumbnail}
-          onPreview={handlePreview}
-          thumbnailId={thumbnailId}
-          disabled={readOnly}
-        />
+        {renderGallery ? (
+          renderGallery({
+            photos: sortedPhotos,
+            thumbnailId,
+            readOnly,
+            onAdd: () => setShowPhotoSourceModal(true),
+            onPreview: handlePreview,
+          })
+        ) : (
+          <PhotoGallery
+            photos={sortedPhotos}
+            onAddClick={() => setShowPhotoSourceModal(true)}
+            onDelete={handleDeleteRequest}
+            onSetThumbnail={handleSetThumbnail}
+            onPreview={handlePreview}
+            thumbnailId={thumbnailId}
+            disabled={readOnly}
+          />
+        )}
 
         {/* Photo Source Modal (Upload or Gallery) */}
         <PhotoSourceModal

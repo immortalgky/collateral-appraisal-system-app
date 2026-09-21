@@ -1,0 +1,264 @@
+<title>Breadcrumb ใบประเมิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&family=Sarabun:wght@400;500;600;700&display=swap" />
+<style>
+  /* The app's own teal and Roboto+Sarabun, as in the other mocks of this redesign. */
+  :root {
+    --f-sans: 'Roboto', 'Sarabun', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --f-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --ground: #f4f6f6; --surface: #ffffff; --surface-2: #f8fafa; --surface-3: #edf1f1;
+    --line: #e3e9e8; --line-soft: #eef2f2; --line-strong: #cbd5d3;
+    --ink: #1f2937; --ink-2: #55636f; --ink-3: #8a96a0;
+    --accent: #0d9488; --accent-ink: #0f766e; --accent-wash: #e6f7f5; --accent-line: #99f6e4;
+    --bad: #b91c1c; --bad-wash: #fef2f2; --warn: #b45309; --warn-wash: #fffbeb; --ok: #15803d; --ok-wash: #f0fdf4;
+    --menu: #6d28d9;
+    --shadow: 0 1px 2px rgba(16, 24, 32, 0.05), 0 1px 3px rgba(16, 24, 32, 0.04);
+    --r-card: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+      --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+      --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+      --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+      --bad: #f87171; --bad-wash: #3b1414; --warn: #fbbf24; --warn-wash: #3a2a0b; --ok: #4ade80; --ok-wash: #11301d;
+      --menu: #a78bfa;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+    --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+    --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+    --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+    --bad: #f87171; --bad-wash: #3b1414; --warn: #fbbf24; --warn-wash: #3a2a0b; --ok: #4ade80; --ok-wash: #11301d;
+    --menu: #a78bfa;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/1.5 var(--f-sans); }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  code { font-family: var(--f-mono); font-size: 12px; }
+
+  .page { max-width: 1240px; margin: 0 auto; padding: 28px 20px 48px; display: grid; gap: 18px; }
+  .intro h1 { margin: 0 0 4px; font-size: 20px; font-weight: 700; text-wrap: balance; }
+  .intro p { margin: 0; color: var(--ink-2); max-width: 78ch; }
+
+  .tally { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tally div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; min-width: 150px; }
+  .tally b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .tally span { font-size: 12px; color: var(--ink-3); }
+  .tally .bad b { color: var(--bad); }
+  .tally .ok b { color: var(--ok); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 10px 14px; box-shadow: var(--shadow); }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl > span { font-size: 12px; color: var(--ink-3); }
+  .seg { display: inline-flex; background: var(--surface-3); border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+  .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--ink-3); margin-left: auto; }
+  .legend .m { border-bottom: 1.5px dotted var(--menu); color: var(--ink-2); }
+
+  .table { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 1020px; }
+  th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); }
+  thead th { font-size: 12px; font-weight: 500; color: var(--ink-3); background: var(--surface-2); position: sticky; top: 0; }
+  tr.grp td { background: var(--surface-2); font-size: 12px; font-weight: 600; color: var(--ink-2); letter-spacing: 0.02em; padding: 7px 12px; }
+  td.pg { width: 210px; }
+  td.pg b { display: block; font-weight: 600; font-size: 13px; }
+  td.pg code { color: var(--ink-3); word-break: break-all; }
+  tr.fine td.now .crumbs { opacity: 0.85; }
+
+  .crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; font-size: 12.5px; }
+  .crumbs .home { color: var(--ink-3); font-size: 12px; margin-right: 2px; }
+  .crumbs .sep { color: var(--line-strong); margin: 0 5px; font-size: 11px; }
+  .crumbs .c { color: var(--ink-2); padding: 2px 6px; border-radius: 6px; white-space: nowrap; }
+  .crumbs .c.last { color: var(--accent-ink); background: var(--accent-wash); font-weight: 600; }
+  .crumbs .c.m { border-bottom: 1.5px dotted var(--menu); border-radius: 6px 6px 0 0; }
+  .crumbs .c.new { outline: 1.5px dashed var(--accent); outline-offset: -1px; }
+  .crumbs .gap { color: var(--bad); font-size: 11.5px; font-style: italic; margin-left: 6px; }
+
+  .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .tag { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap; }
+  .tag.bad { color: var(--bad); background: var(--bad-wash); }
+  .tag.warn { color: var(--warn); background: var(--warn-wash); }
+  .tag.ok { color: var(--ok); background: var(--ok-wash); }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+  .note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 16px; }
+  .note h3 { margin: 0 0 8px; font-size: 14px; }
+  .note ol, .note ul { margin: 0; padding-left: 20px; color: var(--ink-2); font-size: 13px; }
+  .note li + li { margin-top: 5px; }
+  .note li b { color: var(--ink); font-weight: 600; }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <h1>Breadcrumb ใบประเมิน: ตอนนี้ vs ที่เสนอ</h1>
+    <p>
+      ไล่ทุกหน้าใต้ <code>/tasks/:taskId/*</code> และ <code>/appraisals/:appraisalId/*</code> ช่อง "ตอนนี้" คำนวณตามโค้ดใน
+      <code>TaskLayout</code> / <code>AppraisalLayout</code> จริง ๆ (รวมข้อความที่หน้าเติมผ่าน <code>useBreadcrumbExtras</code>)
+      เลขใบประเมินและชื่อรายการเป็นตัวอย่าง
+    </p>
+  </header>
+
+  <div class="tally" id="tally"></div>
+
+  <div class="controls" id="controls"></div>
+
+  <div class="table"><table>
+    <thead><tr><th>หน้า</th><th>ตอนนี้</th><th>เสนอ</th><th>ปัญหา</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+
+  <div class="cols">
+    <div class="note">
+      <h3>ต้นเหตุ</h3>
+      <ul>
+        <li><b>ป้ายฝังเป็นอังกฤษในโค้ด 2 ชุด</b> — ตาราง <code>routeLabels</code> ก๊อปไว้ทั้งใน TaskLayout และ AppraisalLayout แล้วเริ่มไม่ตรงกัน — TaskLayout ไม่มี <code>activity-tracking</code> ทั้งที่งานก็มีหน้านี้ (AppraisalLayout มี)</li>
+        <li><b>ไม่ได้ใช้ชื่อเดียวกับที่ผู้ใช้กด</b> — เมนูข้างอ่านชื่อจาก DB, แท็บอ่านจาก i18n แต่ breadcrumb มีคำของตัวเอง</li>
+        <li><b>รู้จักแค่ URL ที่อยู่ในตาราง</b> — หน้าใหม่ (สรุปเครื่องจักร, ใบเสนอราคา, 360, สิทธิการเช่า, เครื่องจักร) ไม่มีใครเพิ่มเข้าตาราง breadcrumb เลยหยุดกลางทาง</li>
+        <li><b>หน้าแก้ไขไม่บอกว่าแก้อะไร</b> — มีแค่ตลาด/กฎหมาย/แบบ/อาคาร (block) ที่เติมชื่อรายการ ทรัพย์สิน 9 ประเภทกับการวิเคราะห์ราคาไม่เติม</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>ทำอย่างไร</h3>
+      <ol>
+        <li><b>ตัวสร้างชุดเดียว</b> <code>buildAppraisalBreadcrumb()</code> ใช้ทั้งสอง layout ต่างกันแค่ crumb แรก</li>
+        <li><b>ระดับหน้า = ชื่อเมนูข้าง</b> จับจาก path ใน <code>useMenuStore.appraisal</code> + <code>resolveLabel</code> — ตรงกับเมนูเสมอ admin แปลได้เอง</li>
+        <li><b>ระดับแท็บ = คีย์ i18n ตัวเดียวกับแถบแท็บ</b> และใส่เสมอ ถ้า URL ไม่มี <code>?tab=</code> ใช้แท็บแรก</li>
+        <li><b>ชื่อรายการ</b> — <code>PropertyEditorHeader</code> เติมชื่อทรัพย์ครั้งเดียวได้ทั้ง 9 หน้า (หาแถวทรัพย์อยู่แล้ว) · หน้าวิเคราะห์ราคาเติมชื่อกลุ่ม/แบบ</li>
+        <li><b>เพิ่ม route ที่หายไป</b> ตามตาราง และ "New Markets" → "เพิ่มข้อมูลตลาด"</li>
+        <li><b>crumb แรกของโหมดดูใบประเมิน</b> ตั้งชื่อตามหน้าที่มาจริง (มี <code>returnPath</code> อยู่แล้ว)</li>
+      </ol>
+    </div>
+    <div class="note">
+      <h3>อยากให้ตัดสินใจ</h3>
+      <ul>
+        <li><b>ระดับหน้าเอาจากเมนู DB หรือ i18n ในโค้ด?</b> — DB: ตรงกับเมนูข้างเสมอ แต่ตอนนี้คำแปล <code>th</code> ของเมนูใบประเมินทั้ง 17 รายการเป็นคำอังกฤษ (ต้องให้ admin แปลในหน้าจัดการเมนู) · i18n: ไทยทันที แต่ถ้า admin เปลี่ยนชื่อเมนู breadcrumb ไม่เปลี่ยนตาม</li>
+        <li><b>หน้าแก้ทรัพย์ใส่ระดับแท็บ "ทรัพย์สิน" คั่นก่อนชื่อทรัพย์ไหม?</b> (ตารางใส่ไว้)</li>
+        <li><b>ชื่อรายการยาวมาก</b> ให้ตัดท้ายด้วย … และขึ้นเต็มตอนชี้ไหม</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Each row: current crumbs after the appraisal number, proposed crumbs, issues.
+  // A crumb is a string, or { l, m?: from the menu, new?: a name the page adds }.
+  // Proposed crumbs carry { th, en } where the words differ by language.
+  const L = (th, en) => ({ th, en });
+  const T = {
+    props: L('ทรัพย์สิน', 'Properties'), markets: L('ตลาด', 'Markets'), gallery: L('แกลเลอรี', 'Gallery'),
+    photos: L('รูปภาพ', 'Photos'), laws: L('กฎหมายและข้อบังคับ', 'Laws & regulations'),
+    models: L('แบบ', 'Models'), towers: L('อาคาร', 'Towers'), info: L('ข้อมูลโครงการ', 'Project info'),
+  };
+  const M = l => ({ l, m: true }); // page level, taken from the menu (DB label, today English in both languages)
+
+  const ISSUE = {
+    missing: ['bad', 'หน้าหายจาก breadcrumb'],
+    noLeaf: ['bad', 'ไม่บอกว่าเป็นรายการไหน'],
+    noTab: ['warn', 'ไม่มีระดับแท็บ'],
+    words: ['warn', 'คำไม่ตรงเมนู/แท็บ'],
+    drift: ['warn', 'สอง layout ไม่ตรงกัน'],
+    grammar: ['warn', 'ป้าย "New …" ผิด'],
+    ok: ['ok', 'ถูกต้อง'],
+  };
+
+  const ROWS = [
+    { grp: 'หน้าหลักของใบประเมิน' },
+    { name: 'ข้อมูลคำขอ', url: '/request/:requestId', now: ['Request Information'], next: [M('Request Information')], issues: ['ok'] },
+    { name: 'ธุรการ / นัดหมาย / เอกสาร / สรุป', url: '/administration · /appointment · /documents · /summary', now: ['Administration'], next: [M('Administration')], issues: ['ok'], fine: true },
+    { name: '360 Summary', url: '/360', now: [], next: [M('360 Summary')], issues: ['missing'] },
+    { name: 'ติดตามกิจกรรม', url: '/activity-tracking', now: { task: [], appraisal: ['Activity Tracking'] }, next: [L('ติดตามกิจกรรม', 'Activity tracking')], issues: { task: ['missing', 'drift'], appraisal: ['words'] } },
+    { name: 'อนุมัติค่าธรรมเนียมและนัดหมาย', url: '/fee-appointment-approval', now: { task: ['Fee & Appointment Approval'], appraisal: null }, next: [M('Fee & Appointment Approval')], issues: { task: ['ok'], appraisal: null } },
+    { name: 'ขอเอกสารเพิ่ม', url: '/provide-documents', now: { task: ['Provide Additional Documents'], appraisal: null }, next: [M('Provide Documents')], issues: { task: ['words'], appraisal: null } },
+    { name: 'ใบเสนอราคา (5 หน้า)', url: '/quotation/submit · review · pick-winner …', now: { task: [], appraisal: null }, next: [M('Submit Quotation')], issues: { task: ['missing'], appraisal: null } },
+
+    { grp: 'ข้อมูลทรัพย์สิน' },
+    { name: 'แท็บทรัพย์สิน (เปิดจากเมนู)', url: '/property', now: ['Property Information'], next: [M('Property Information'), T.props], issues: ['noTab'] },
+    { name: 'แท็บตลาด', url: '/property?tab=markets', now: ['Property Information', 'Markets'], next: [M('Property Information'), T.markets], issues: ['words'] },
+    { name: 'แก้ที่ดิน', url: '/property/land/:propertyId', now: ['Property Information', 'Land'], next: [M('Property Information'), T.props, { ...L('ที่ดิน — ต.บางเขน', 'Land — Bang Khen'), new: true }], issues: ['noLeaf'] },
+    { name: 'เพิ่มที่ดิน', url: '/property/land/new?groupId=…', now: ['Property Information', 'New Land'], next: [M('Property Information'), T.props, L('เพิ่มที่ดิน', 'New land')], issues: ['words'] },
+    { name: 'แก้เครื่องจักร', url: '/property/machinery/:propertyId', now: ['Property Information'], next: [M('Property Information'), T.props, { ...L('เครื่องผลิตเม็ดพลาสติก', 'Plastic pelletizer'), new: true }], issues: ['missing', 'noLeaf'] },
+    { name: 'สิทธิการเช่า (4 ประเภท)', url: '/property/lease-land/:propertyId …', now: ['Property Information'], next: [M('Property Information'), T.props, { ...L('สิทธิการเช่าที่ดิน — ต.บางเขน', 'Leasehold land — Bang Khen'), new: true }], issues: ['missing', 'noLeaf'] },
+    { name: 'สรุปเครื่องจักร', url: '/property/machinery-summary', now: ['Property Information'], next: [M('Property Information'), T.props, L('สรุปเครื่องจักร', 'Machinery summary')], issues: ['missing'] },
+    { name: 'แก้ห้องชุด (PMA)', url: '/property/condo/:propertyId/pma', now: ['Property Information', 'Condominium'], next: [M('Property Information'), T.props, { ...L('ห้อง 1205 — อาคาร A', 'Unit 1205 — Tower A'), new: true }], issues: ['noLeaf'] },
+    { name: 'ข้อมูลตลาด', url: '/property/market-comparable/:id', now: ['Property Information', 'Markets', 'MKC-000128-2569'], next: [M('Property Information'), T.markets, 'MKC-000128-2569'], issues: ['words'] },
+    { name: 'เพิ่มข้อมูลตลาด', url: '/property/market-comparable/new', now: ['Property Information', 'New Markets'], next: [M('Property Information'), T.markets, L('เพิ่มข้อมูลตลาด', 'New comparable')], issues: ['grammar'] },
+    { name: 'กฎหมายและข้อบังคับ', url: '/property/law-and-regulation/:itemId', now: ['Property Information', 'Law & Regulation', 'ผังเมืองสีเหลือง'], next: [M('Property Information'), T.laws, 'ผังเมืองสีเหลือง'], issues: ['words'] },
+
+    { grp: 'วิเคราะห์ราคา' },
+    { name: 'วิเคราะห์ราคาของกลุ่ม', url: '/groups/:groupId/pricing-analysis/:id', now: ['Property Information', 'Pricing Analysis'], next: [M('Property Information'), T.props, { ...L('กลุ่ม 1 — วิเคราะห์ราคา', 'Group 1 — Pricing analysis'), new: true }], issues: ['noLeaf', 'noTab'] },
+    { name: 'วิเคราะห์ราคาของแบบ (block)', url: '/block-condo/model/:modelId/pricing-analysis/:id', now: ['Property Information', 'Model'], next: [M('Property Information (Condo)'), T.models, 'Type A', L('วิเคราะห์ราคา', 'Pricing analysis')], issues: ['noLeaf', 'missing'] },
+
+    { grp: 'โครงการ (block)' },
+    { name: 'แท็บแบบ', url: '/block-condo?tab=models', now: ['Property Information', 'Model'], next: [M('Property Information (Condo)'), T.models], issues: ['words'] },
+    { name: 'แก้แบบ', url: '/block-condo/model/:modelId', now: ['Property Information', 'Model', 'Type A'], next: [M('Property Information (Condo)'), T.models, 'Type A'], issues: ['words'] },
+    { name: 'แก้อาคาร', url: '/block-condo/tower/:towerId', now: ['Property Information', 'Tower', 'Tower A'], next: [M('Property Information (Condo)'), T.towers, 'Tower A'], issues: ['words'] },
+  ];
+
+  const state = { ctx: 'task', lang: 'th' };
+  const pick = (v) => (v && !Array.isArray(v) && 'task' in v ? v[state.ctx] : v);
+  const word = (c) => (typeof c === 'string' ? c : c.th !== undefined ? c[state.lang] : c.l);
+
+  function base(proposed) {
+    if (state.ctx === 'task') return [proposed ? (state.lang === 'th' ? 'งาน' : 'Tasks') : 'Task', '69000170'];
+    return [proposed ? (state.lang === 'th' ? 'ค้นหาใบประเมิน' : 'Appraisal search') : 'Appraisal Search', '69000170'];
+  }
+
+  function crumbs(list, proposed, gapNote) {
+    const all = [...base(proposed), ...list];
+    const html = all.map((c, i) => {
+      const cls = ['c'];
+      if (i === all.length - 1) cls.push('last');
+      if (typeof c === 'object' && c.m) cls.push('m');
+      if (typeof c === 'object' && c.new && proposed) cls.push('new');
+      return `${i ? '<span class="sep">›</span>' : ''}<span class="${cls.join(' ')}">${word(c)}</span>`;
+    }).join('');
+    return `<div class="crumbs"><span class="home">⌂</span><span class="sep">›</span>${html}${gapNote ? `<span class="gap">${gapNote}</span>` : ''}</div>`;
+  }
+
+  function render() {
+    document.getElementById('controls').innerHTML = [
+      ['เข้าจาก', 'ctx', [['task', 'งาน (/tasks)'], ['appraisal', 'ดูใบประเมิน (/appraisals)']]],
+      ['ภาษา (ช่องเสนอ)', 'lang', [['th', 'ไทย'], ['en', 'English']]],
+    ].map(([label, key, opts]) => `<div class="ctl"><span>${label}</span><div class="seg">${opts.map(([v, t]) =>
+      `<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${state[key] === v}">${t}</button>`).join('')}</div></div>`).join('') +
+      '<div class="legend"><span><span class="m">เส้นประม่วง</span> = ชื่อจากเมนูข้าง (DB)</span><span>กรอบประ = ชื่อรายการที่หน้าเติมให้</span></div>';
+
+    let bad = 0, ok = 0, total = 0;
+    document.getElementById('rows').innerHTML = ROWS.map(r => {
+      if (r.grp) return `<tr class="grp"><td colspan="4">${r.grp}</td></tr>`;
+      const now = pick(r.now);
+      const issues = pick(r.issues);
+      if (issues === null) return ''; // the page exists only under /tasks
+      total++;
+      if (issues.includes('ok')) ok++; else bad++;
+      const gap = issues.includes('missing') ? 'หยุดตรงนี้' : '';
+      return `<tr class="${r.fine ? 'fine' : ''}">
+        <td class="pg"><b>${r.name}</b><code>${r.url}</code></td>
+        <td class="now">${crumbs(now, false, gap)}</td>
+        <td>${crumbs(r.next, true)}</td>
+        <td><div class="tags">${issues.map(i => `<span class="tag ${ISSUE[i][0]}">${ISSUE[i][1]}</span>`).join('')}</div></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tally').innerHTML =
+      `<div><b>${total}</b><span>หน้าที่ตรวจ (${state.ctx === 'task' ? 'โหมดงาน' : 'โหมดดูใบประเมิน'})</span></div>` +
+      `<div class="bad"><b>${bad}</b><span>หน้ามีปัญหา</span></div>` +
+      `<div class="ok"><b>${ok}</b><span>ถูกต้องแล้ว</span></div>` +
+      `<div><b>2</b><span>ตารางป้ายที่ก๊อปซ้ำกัน</span></div>`;
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-k]');
+    if (!b) return;
+    state[b.dataset.k] = b.dataset.v;
+    render();
+  });
+  render();
+</script>

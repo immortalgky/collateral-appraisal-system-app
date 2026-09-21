@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -9,8 +9,6 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
-import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
@@ -23,9 +21,9 @@ import type {
   CreateMarketComparableRequestType,
   UpdateMarketComparableRequestType,
 } from '@/shared/schemas/v1';
-import MarketComparablePhotoSection, {
-  type MarketComparablePhotoSectionRef,
-} from '../components/MarketComparablePhotoSection';
+import type { MarketComparablePhotoSectionRef } from '../components/MarketComparablePhotoSection';
+import { ComparableEditorHeader } from '../components/ComparableEditorHeader';
+import type { EditorTab } from '../components/EditorIdentityCard';
 import {
   useCreateMarketComparable,
   useGetMarketComparableById,
@@ -33,7 +31,10 @@ import {
   useLinkAppraisalComparable,
   useUpdateMarketComparable,
 } from '../api/marketComparable';
-import MarketComparableForm from '../forms/MarketComparableForm';
+import MarketComparableForm, {
+  COMPARABLE_SECTION_FIELDS,
+  COMPARABLE_SECTIONS,
+} from '../forms/MarketComparableForm';
 import {
   createMarketComparableForm,
   createMarketComparableFormDefault,
@@ -161,8 +162,53 @@ const CreateMarketComparablePage = () => {
 
   const {
     handleSubmit,
-    formState: { isDirty },
+    formState: { isDirty, errors },
   } = methods;
+
+  // A new comparable takes its type from the template the form picks, or from the link it came from.
+  const typeCode =
+    useWatch({ control: methods.control, name: 'propertyType' }) ||
+    searchParams.get('propertyType') ||
+    '';
+  const factorCount = useWatch({ control: methods.control, name: 'factorData' })?.length ?? 0;
+
+  // The header's section bar, with each section's failed fields counted so none hides off-screen.
+  const countErrors = (names: readonly string[]) =>
+    names.filter(name => errors[name as keyof typeof errors]).length;
+  const factorErrors = Array.isArray(errors.factorData)
+    ? errors.factorData.filter(Boolean).length
+    : 0;
+  const sections: EditorTab[] = [
+    {
+      id: COMPARABLE_SECTIONS.source,
+      label: t('marketEditor.sections.source'),
+      errorCount: countErrors(COMPARABLE_SECTION_FIELDS.source),
+    },
+    {
+      id: COMPARABLE_SECTIONS.price,
+      label: t('marketEditor.sections.price'),
+      // With no price at all both fail, but only the one the toggle shows is on screen.
+      errorCount:
+        countErrors(COMPARABLE_SECTION_FIELDS.price) +
+        (errors.offerPrice || errors.salePrice ? 1 : 0),
+    },
+    {
+      id: COMPARABLE_SECTIONS.location,
+      label: t('marketEditor.sections.location'),
+      errorCount: countErrors(COMPARABLE_SECTION_FIELDS.location),
+    },
+    {
+      id: COMPARABLE_SECTIONS.factors,
+      label: t('marketEditor.sections.factors'),
+      count: factorCount,
+      errorCount: countErrors(COMPARABLE_SECTION_FIELDS.factors) + factorErrors,
+    },
+    {
+      id: COMPARABLE_SECTIONS.remark,
+      label: t('marketEditor.sections.remark'),
+      errorCount: countErrors(COMPARABLE_SECTION_FIELDS.remark),
+    },
+  ];
 
   const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
@@ -221,9 +267,7 @@ const CreateMarketComparablePage = () => {
           navigate(`${basePath}/${parentSegment}?tab=markets`);
         },
         onError: (error: any) => {
-          toast.error(
-            error.apiError?.detail || 'Failed to update market comparable. Please try again.',
-          );
+          toast.error(error.apiError?.detail || t('marketEditor.toasts.updateFailed'));
         },
       });
     } else {
@@ -262,9 +306,7 @@ const CreateMarketComparablePage = () => {
                 notes: null,
               });
             } catch (error: any) {
-              toast.error(
-                error.apiError?.detail || 'Created comparable but failed to link to appraisal.',
-              );
+              toast.error(error.apiError?.detail || t('marketEditor.toasts.linkFailed'));
               return;
             }
           }
@@ -280,9 +322,7 @@ const CreateMarketComparablePage = () => {
           }
         },
         onError: (error: any) => {
-          toast.error(
-            error.apiError?.detail || 'Failed to create market comparable. Please try again.',
-          );
+          toast.error(error.apiError?.detail || t('marketEditor.toasts.createFailed'));
         },
       });
     }
@@ -304,18 +344,6 @@ const CreateMarketComparablePage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            ...(appraisalId ? [{ label: 'Photos', id: 'photos-section', icon: 'images' }] : []),
-            { label: 'Comparable', id: 'comparable-section', icon: 'chart-line' },
-            { label: 'Survey Factors', id: 'factors-section', icon: 'sliders' },
-          ]}
-        />
-      </div>
-
       <FormProvider methods={methods} schema={createMarketComparableForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -323,6 +351,15 @@ const CreateMarketComparablePage = () => {
             id="form-scroll-container"
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
           >
+            <ComparableEditorHeader
+              appraisalId={appraisalId}
+              marketComparableId={marketId ?? undefined}
+              source={marketComparable?.marketComparable}
+              isCopy={!isEditMode && !!copyFromId}
+              typeCode={typeCode}
+              photoSectionRef={photoSectionRef}
+              sections={sections}
+            />
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -330,48 +367,7 @@ const CreateMarketComparablePage = () => {
               closedWidth="w-1/50"
             >
               <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photo Section (appraisal context only) */}
-                  {appraisalId && (
-                    <Section id="photos-section" anchor>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-                          <Icon name="images" style="solid" className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">Photos</h2>
-                      </div>
-                      <div className="h-px bg-gray-200 mb-4" />
-                      <MarketComparablePhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        marketComparableId={marketId ?? undefined}
-                        images={marketComparable?.marketComparable?.images}
-                      />
-                    </Section>
-                  )}
-
-                  {/* Comparable Information Header */}
-                  <Section id="comparable-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Icon
-                          name="magnifying-glass-location"
-                          style="solid"
-                          className="w-5 h-5 text-orange-600"
-                        />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        Comparable Information
-                      </h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                  </Section>
-
-                  {/* Market Comparable Form */}
-                  <Section anchor className="flex flex-col gap-6">
-                    <MarketComparableForm />
-                  </Section>
-                </div>
+                <MarketComparableForm />
               </ResizableSidebar.Main>
             </ResizableSidebar>
           </div>
@@ -391,7 +387,7 @@ const CreateMarketComparablePage = () => {
               <ActionBar.Right>
                 <Button type="submit" isLoading={isPending} disabled={isPending}>
                   <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
+                  {t('createPage.save')}
                 </Button>
               </ActionBar.Right>
             )}

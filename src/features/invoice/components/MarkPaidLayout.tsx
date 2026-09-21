@@ -85,7 +85,7 @@ const MarkPaidLayout = ({ invoices, isSubmitting, onCancel, onSubmit }: MarkPaid
               required
               value={paymentOrderNo}
               onChange={e => setPaymentOrderNo(e.target.value)}
-              maxLength={10}
+              maxLength={15}
               placeholder="e.g. PO-000001"
             />
             <DateInput

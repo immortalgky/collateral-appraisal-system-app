@@ -1,0 +1,297 @@
+<title>หน้าแก้กฎหมายและข้อบังคับ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" />
+<style>
+  /* The app's teal and Roboto+Sarabun, as in the other mocks of this redesign. */
+  :root {
+    --f-sans: 'Roboto', 'Sarabun', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --ground: #f4f6f6; --surface: #ffffff; --surface-2: #f8fafa; --surface-3: #edf1f1;
+    --line: #e3e9e8; --line-soft: #eef2f2; --line-strong: #cbd5d3;
+    --ink: #1f2937; --ink-2: #55636f; --ink-3: #8a96a0;
+    --accent: #0d9488; --accent-ink: #0f766e; --accent-wash: #f0fdfa; --accent-line: #99f6e4;
+    --law: #b45309; --law-wash: #fff7ed;
+    --bad: #b91c1c; --bad-wash: #fef2f2;
+    --shadow: 0 1px 2px rgba(16, 24, 32, 0.05), 0 1px 3px rgba(16, 24, 32, 0.04);
+    --shadow-lift: 0 2px 4px rgba(16, 24, 32, 0.06), 0 8px 24px rgba(16, 24, 32, 0.07);
+    --r-card: 14px; --r-field: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+      --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+      --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+      --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+      --law: #fbbf24; --law-wash: #3a2a0b; --bad: #f87171; --bad-wash: #3b1414;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4); --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+    --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+    --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+    --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+    --law: #fbbf24; --law-wash: #3a2a0b; --bad: #f87171; --bad-wash: #3b1414;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4); --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 14px/1.5 var(--f-sans); }
+  button, input, textarea, select { font: inherit; color: inherit; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+  .page { max-width: 1220px; margin: 0 auto; padding: 28px 20px 48px; display: grid; gap: 18px; }
+  .intro h1 { margin: 0 0 4px; font-size: 20px; font-weight: 700; text-wrap: balance; }
+  .intro p { margin: 0; color: var(--ink-2); max-width: 76ch; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 10px 14px; box-shadow: var(--shadow); }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl > span { font-size: 12px; color: var(--ink-3); }
+  .seg { display: inline-flex; background: var(--surface-3); border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--ink-2); cursor: pointer; }
+  .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+  /* ── app frame ── */
+  .app { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); box-shadow: var(--shadow-lift); overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; min-height: 640px; }
+  .crumbs { display: flex; gap: 8px; align-items: center; padding: 10px 18px; font-size: 12px; color: var(--ink-3); border-bottom: 1px solid var(--line-soft); flex-wrap: wrap; }
+  .crumbs b { color: var(--accent-ink); font-weight: 600; background: var(--accent-wash); padding: 2px 8px; border-radius: 6px; }
+  .body { padding: 18px; min-width: 0; }
+  .actionbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; border-top: 1px solid var(--line); background: var(--surface); }
+  .actionbar .r { display: flex; gap: 10px; }
+  .btn { border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-field); padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+  .btn.sm { padding: 4px 9px; font-size: 12px; }
+
+  /* ── the law itself ── */
+  .law-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .law-head .ico { width: 34px; height: 34px; border-radius: 9px; background: var(--law-wash); color: var(--law); display: grid; place-items: center; font-size: 16px; flex: none; }
+  .law-head select { border: 1px solid var(--line); border-radius: var(--r-field); padding: 6px 30px 6px 10px; font-size: 15px; font-weight: 600; background: var(--surface); min-width: 0; max-width: 100%; }
+  .law-head small { color: var(--ink-3); font-size: 12px; }
+  .fld label { display: flex; justify-content: space-between; font-size: 12px; color: var(--ink-3); margin-bottom: 4px; }
+  .fld textarea { width: 100%; border: 1px solid var(--line); border-radius: var(--r-field); padding: 10px 12px; font-size: 13.5px; line-height: 1.65; resize: vertical; min-height: 260px; background: var(--surface); }
+  .ro .fld textarea, .ro .law-head select { background: var(--surface-2); }
+
+  .split { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr); gap: 20px; align-items: start; }
+  .panel { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface-2); padding: 12px; position: sticky; top: 0; }
+  .panel-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+  .panel-head b { font-size: 14px; font-weight: 600; }
+  .panel-head span { color: var(--ink-3); font-size: 12px; }
+  .panel-head .hint { margin-left: auto; font-size: 11.5px; color: var(--ink-3); }
+
+  .shots { display: grid; gap: 10px; }
+  .A .shots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .B .shots { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .shot { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .15s, opacity .15s; }
+  .shot.dragging { opacity: .4; }
+  .shot.over { box-shadow: 0 0 0 2px var(--accent); }
+  .shot .pic { aspect-ratio: 4 / 3; position: relative; cursor: zoom-in; }
+  .shot .num { position: absolute; left: 6px; top: 6px; background: rgba(17,24,39,.72); color: #fff; font-size: 11px; font-weight: 600; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+  .shot .x { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 999px; border: 0; background: rgba(17,24,39,.72); color: #fff; cursor: pointer; font-size: 13px; line-height: 1; opacity: 0; transition: opacity .15s; }
+  .shot:hover .x, .shot .x:focus-visible { opacity: 1; }
+  .shot .grip { position: absolute; right: 36px; top: 6px; height: 24px; padding: 0 6px; border-radius: 999px; background: rgba(17,24,39,.72); color: #fff; font-size: 12px; display: grid; place-items: center; cursor: grab; opacity: 0; transition: opacity .15s; }
+  .shot:hover .grip { opacity: 1; }
+  .shot .cap { border: 0; border-top: 1px solid var(--line-soft); padding: 7px 9px; font-size: 12.5px; width: 100%; background: transparent; }
+  .shot .cap::placeholder { color: var(--ink-3); }
+  .ro .shot .cap { color: var(--ink-2); }
+  .shot.missing { border-style: dashed; border-color: var(--bad); background: var(--bad-wash); }
+  .shot.missing .pic { cursor: default; display: grid; place-items: center; text-align: center; padding: 10px; color: var(--bad); font-size: 12px; background: repeating-linear-gradient(135deg, transparent 0 8px, color-mix(in srgb, var(--bad) 7%, transparent) 8px 16px); }
+  .shot.missing .pic b { display: block; font-size: 12.5px; margin-bottom: 2px; }
+  .shot.missing .cap { color: var(--bad); display: flex; justify-content: space-between; align-items: center; }
+
+  .adder { border: 1.5px dashed var(--line-strong); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; color: var(--ink-3); font-size: 12px; background: var(--surface); }
+  .A .adder { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; text-align: left; }
+  .B .adder { aspect-ratio: auto; min-height: 150px; }
+  .adder .row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+  .empty { grid-column: 1 / -1; border: 1.5px dashed var(--line-strong); border-radius: 12px; padding: 26px 16px; text-align: center; background: var(--surface); color: var(--ink-3); font-size: 13px; }
+  .empty b { display: block; color: var(--ink); font-size: 14px; margin-bottom: 4px; }
+  .empty .row { display: flex; gap: 8px; justify-content: center; margin-top: 12px; }
+
+  .drop { position: absolute; inset: 0; border: 2px dashed var(--accent); border-radius: var(--r-card); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); display: grid; place-items: center; text-align: center; color: var(--accent-ink); font-weight: 600; z-index: 3; }
+  .drop small { display: block; font-weight: 400; color: var(--ink-2); margin-top: 2px; }
+  .imgs { position: relative; }
+  .B .imgs { margin-top: 20px; }
+  .B .panel { position: static; background: transparent; border: 0; padding: 0; }
+
+  /* sample images — CSS only, the artifact cannot load real ones */
+  .z1 { background: linear-gradient(90deg, transparent 0 48%, #fff 48% 50%, transparent 50%), linear-gradient(0deg, transparent 0 58%, #fff 58% 60%, transparent 60%), conic-gradient(from 90deg at 50% 60%, #fdba74 0 25%, #fde68a 0 50%, #fca5a5 0 75%, #fdba74 0); }
+  .z2 { background: linear-gradient(#f8fafc, #f8fafc) padding-box, repeating-linear-gradient(180deg, #cbd5e1 0 1px, transparent 1px 11px); background-color: #fff; box-shadow: inset 14px 0 0 #fff, inset -14px 0 0 #fff; }
+  .z3 { background: radial-gradient(circle at 30% 40%, #86efac 0 18%, transparent 19%), radial-gradient(circle at 70% 65%, #fde68a 0 22%, transparent 23%), linear-gradient(135deg, #dbeafe, #e0f2fe); }
+  .z4 { background: linear-gradient(180deg, #93c5fd 0 45%, #a3a3a3 45% 52%, #65a30d 52% 100%); }
+  .z5 { background: repeating-linear-gradient(90deg, #fecaca 0 22px, #fed7aa 22px 44px, #fef08a 44px 66px), #fff; }
+
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 16px; }
+  .note h3 { margin: 0 0 8px; font-size: 14px; }
+  .note ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+  .note li + li { margin-top: 5px; }
+  .note b { color: var(--ink); font-weight: 600; }
+  @media (max-width: 860px) { .split { grid-template-columns: 1fr; } .panel { position: static; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <h1>หน้าแก้กฎหมายและข้อบังคับ — เน้นรูปประกอบ</h1>
+    <p>ชื่อหัวข้อ ข้อความ และรูปในหน้านี้เป็นตัวอย่าง (master "หัวข้อ" ในระบบตอนนี้ยังเป็น 01/02/03/99) — ลองลากรูปเพื่อเรียงลำดับ พิมพ์คำบรรยาย หรือกด × เอารูปออกได้</p>
+  </header>
+
+  <div class="controls" id="controls"></div>
+  <div class="app" id="app"></div>
+
+  <div class="notes">
+    <div class="note">
+      <h3>ตอนนี้เป็นแบบนี้</h3>
+      <ul>
+        <li>การ์ดรูปใหญ่ 4 ต่อแถว + ช่องเพิ่มขนาดเท่ารูป — 6 รูปก็เลื่อนจอแล้ว</li>
+        <li>ใต้รูปเป็นชื่อไฟล์ ขนาดไฟล์ "PNG · 1.86 MB" ซึ่งไม่มีใครใช้ ส่วนคำบรรยายต้องเปิดรูปใหญ่ถึงแก้ได้ และแก้<b>คำบรรยายในแกลเลอรี</b> (ใช้ร่วมทั้งใบ)</li>
+        <li><b>รูปที่ถูกลบจากแกลเลอรีแล้วยังค้างอยู่ในหัวข้อ</b> — ขึ้นรูปแตก "Photo 2" (ใบ 69000170 หัวข้อ 01 รูปที่ 2 เป็นแบบนี้จริง)</li>
+        <li>เรียงลำดับไม่ได้ ทั้งที่มี <code>DisplaySequence</code></li>
+        <li>ยืนยันลบบอก "ย้อนกลับไม่ได้" แต่จริง ๆ แค่เอาออกจากหัวข้อ รูปยังอยู่ในแกลเลอรี และยังไม่บันทึกจนกด Save</li>
+        <li>ข้อความอังกฤษทั้งหน้า: Edit Law & Regulation · Header · Images · Add photos · Save draft</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>ที่เปลี่ยน</h3>
+      <ul>
+        <li>หัวหน้าคือ<b>ชื่อหัวข้อกฎหมาย</b> (ดรอปดาวน์เดิม) แทนคำว่า "Edit Law & Regulation"</li>
+        <li>รูปเล็กลง มีเลขลำดับ <b>ลากเพื่อเรียง</b> · × = เอาออกจากหัวข้อ ไม่ต้องยืนยัน (ยังไม่บันทึกจนกด บันทึก)</li>
+        <li><b>คำบรรยายพิมพ์ใต้รูปได้เลย</b> ใช้ช่อง <code>Description</code> ของรูปในหัวข้อนี้ (มีใน DB อยู่แล้วแต่ไม่เคยมีช่องให้กรอก)</li>
+        <li>รูปที่หายจากแกลเลอรี → กรอบแดง "รูปนี้ถูกลบจากแกลเลอรีแล้ว" + ปุ่มเอาออก</li>
+        <li>ปุ่ม อัปโหลด / เลือกจากแกลเลอรี อยู่ตรงนั้นเลย ไม่ต้องผ่านหน้าต่างเลือกแหล่งก่อน · ลากไฟล์มาวางได้เหมือนเดิม</li>
+        <li>ไม่แก้ BE — ใช้ API บันทึกเดิม</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>อยากให้ตัดสินใจ</h3>
+      <ul>
+        <li><b>A หรือ B</b> — A: ข้อความกับรูปเห็นพร้อมกัน เหมาะกับจอกว้าง · B: รูปได้พื้นที่มากกว่า</li>
+        <li><b>คำบรรยายเป็นของหัวข้อนี้ หรือของรูปในแกลเลอรี?</b> — ของหัวข้อ: รูปเดียวกันใช้ต่างหัวข้อบรรยายต่างกันได้ (เสนอแบบนี้) · ของแกลเลอรี: แก้ที่เดียวเห็นทุกที่ แบบที่เป็นอยู่</li>
+        <li>ชื่อหัวข้อจริงของ master "หัวข้อ" (ค้างอยู่ใน backlog)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const HEADERS = ['ผังเมืองรวม', 'กฎหมายควบคุมอาคาร', 'เขตทางหลวง / เวนคืน', 'อื่น ๆ'];
+  const TEXT = 'ที่ดินตั้งอยู่ในเขตผังเมืองรวมกรุงเทพมหานคร พ.ศ. 2556 บริเวณหมายเลข ย.4-17 ที่ดินประเภทที่อยู่อาศัยหนาแน่นปานกลาง (สีส้ม)\n\nใช้ประโยชน์ได้เพื่อการอยู่อาศัยเป็นส่วนใหญ่ อัตราส่วนพื้นที่อาคารรวมต่อพื้นที่ดิน (FAR) ไม่เกิน 4.5 : 1 และอัตราส่วนพื้นที่ว่างต่อพื้นที่อาคารรวม (OSR) ไม่น้อยกว่าร้อยละ 7.5\n\nห้ามประกอบกิจการโรงงานทุกจำพวก ยกเว้นโรงงานจำพวกที่ 1 ที่ไม่ก่อเหตุรำคาญ';
+  const ALL = [
+    { id: 'a', cls: 'z1', cap: 'แผนที่ผังเมือง บริเวณ ย.4-17' },
+    { id: 'b', missing: true, cap: '' },
+    { id: 'c', cls: 'z2', cap: 'ประกาศกรุงเทพมหานคร หน้า 12' },
+    { id: 'd', cls: 'z3', cap: '' },
+    { id: 'e', cls: 'z4', cap: 'สภาพถนนหน้าที่ดิน' },
+  ];
+
+  const state = { variant: 'A', photos: 'broken', ro: false, drag: false };
+  let shots = [];
+  const resetShots = () => {
+    shots = state.photos === 'none' ? [] : ALL.filter(s => state.photos === 'broken' || !s.missing).map(s => ({ ...s }));
+  };
+  resetShots();
+
+  const CONTROLS = [
+    ['แบบ', 'variant', [['A', 'A · สองฝั่ง'], ['B', 'B · คอลัมน์เดียว']]],
+    ['รูป', 'photos', [['broken', '5 รูป (1 หายจากแกลเลอรี)'], ['ok', 'ครบ 4 รูป'], ['none', 'ยังไม่มีรูป']]],
+    ['สิทธิ์', 'ro', [[false, 'แก้ไขได้'], [true, 'อ่านอย่างเดียว']]],
+    ['ลากไฟล์เข้ามา', 'drag', [[false, 'ไม่'], [true, 'กำลังลาก']]],
+  ];
+
+  function controls() {
+    document.getElementById('controls').innerHTML = CONTROLS.map(([label, key, opts]) =>
+      `<div class="ctl"><span>${label}</span><div class="seg">${opts.map(([v, t]) =>
+        `<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${String(state[key]) === String(v)}">${t}</button>`).join('')}</div></div>`).join('');
+  }
+
+  function shotHtml(s, i) {
+    if (s.missing) {
+      return `<div class="shot missing" data-i="${i}">
+        <div class="pic"><div><b>รูปนี้ถูกลบจากแกลเลอรีแล้ว</b>หัวข้อนี้ยังชี้ถึงอยู่</div><span class="num">${i + 1}</span></div>
+        <div class="cap"><span>ไม่มีรูปให้แสดง</span>${state.ro ? '' : `<button type="button" class="btn sm" data-rm="${i}">เอาออก</button>`}</div>
+      </div>`;
+    }
+    return `<div class="shot" data-i="${i}" ${state.ro ? '' : 'draggable="true"'}>
+      <div class="pic ${s.cls}"><span class="num">${i + 1}</span>${state.ro ? '' : `<span class="grip" title="ลากเพื่อเรียง">⠿</span><button type="button" class="x" data-rm="${i}" aria-label="เอาออกจากหัวข้อ">×</button>`}</div>
+      <input class="cap" data-cap="${i}" value="${s.cap.replace(/"/g, '&quot;')}" placeholder="${state.ro ? 'ไม่มีคำบรรยาย' : 'คำบรรยายในหัวข้อนี้…'}" ${state.ro ? 'readonly' : ''} />
+    </div>`;
+  }
+
+  function adder() {
+    if (state.ro) return '';
+    return `<div class="adder"><span>ลากไฟล์มาวาง หรือ</span><div class="row"><button type="button" class="btn sm">⤒ อัปโหลด</button><button type="button" class="btn sm">▦ เลือกจากแกลเลอรี</button></div></div>`;
+  }
+
+  function images() {
+    const broken = shots.filter(s => s.missing).length;
+    const grid = shots.length
+      ? shots.map(shotHtml).join('') + adder()
+      : `<div class="empty"><b>ยังไม่มีรูปประกอบ</b>${state.ro ? 'หัวข้อนี้ไม่มีรูป' : 'เช่น แผนที่ผังเมือง ประกาศ หรือภาพถ่ายที่เกี่ยวข้อง'}${state.ro ? '' : '<div class="row"><button type="button" class="btn sm">⤒ อัปโหลด</button><button type="button" class="btn sm">▦ เลือกจากแกลเลอรี</button></div>'}</div>`;
+    return `<div class="imgs panel">
+      <div class="panel-head"><b>รูปประกอบ</b><span>${shots.length ? shots.length + ' รูป' : ''}${broken ? ` · <span style="color:var(--bad)">หาย ${broken}</span>` : ''}</span>${shots.length > 1 && !state.ro ? '<span class="hint">ลากเพื่อเรียงลำดับ</span>' : ''}</div>
+      <div class="shots">${grid}</div>
+      ${state.drag && !state.ro ? '<div class="drop"><div>วางไฟล์เพื่อเพิ่มเป็นรูปประกอบ<small>รูปจะเข้าแกลเลอรีของใบนี้ด้วย</small></div></div>' : ''}
+    </div>`;
+  }
+
+  function form() {
+    return `<div>
+      <div class="law-head">
+        <span class="ico">⚖</span>
+        <select ${state.ro ? 'disabled' : ''} aria-label="หัวข้อ">${HEADERS.map((h, i) => `<option ${i === 0 ? 'selected' : ''}>${h}</option>`).join('')}</select>
+        <small>หัวข้อ</small>
+      </div>
+      <div class="fld"><label><span>รายละเอียด</span><span>${TEXT.length}/4000</span></label>
+        <textarea ${state.ro ? 'readonly' : ''}>${TEXT}</textarea></div>
+    </div>`;
+  }
+
+  function render() {
+    controls();
+    const app = document.getElementById('app');
+    app.className = `app ${state.variant} ${state.ro ? 'ro' : ''}`;
+    const body = state.variant === 'A'
+      ? `<div class="split">${form()}${images()}</div>`
+      : `${form()}${images()}`;
+    app.innerHTML = `
+      <div class="crumbs">⌂ › งาน › 69000170 › Property Information › กฎหมายและข้อบังคับ › <b>ผังเมืองรวม</b></div>
+      <div class="body">${body}</div>
+      <div class="actionbar"><span style="font-size:13px;color:var(--ink-2)">ยกเลิก</span>${state.ro ? '' : '<div class="r"><button type="button" class="btn ghost">บันทึกร่าง</button><button type="button" class="btn primary">✓ บันทึก</button></div>'}</div>`;
+    wireDrag();
+  }
+
+  function wireDrag() {
+    let from = null;
+    document.querySelectorAll('.shot[draggable]').forEach(el => {
+      el.addEventListener('dragstart', e => { from = Number(el.dataset.i); el.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+      el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('over'); });
+      el.addEventListener('dragleave', () => el.classList.remove('over'));
+      el.addEventListener('drop', e => {
+        e.preventDefault();
+        const to = Number(el.dataset.i);
+        if (from === null || from === to) return;
+        const [moved] = shots.splice(from, 1);
+        shots.splice(to, 0, moved);
+        render();
+      });
+    });
+  }
+
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-k]');
+    if (b) {
+      const v = b.dataset.v;
+      state[b.dataset.k] = v === 'true' ? true : v === 'false' ? false : v;
+      if (b.dataset.k === 'photos') resetShots();
+      render();
+      return;
+    }
+    const rm = e.target.closest('[data-rm]');
+    if (rm) { shots.splice(Number(rm.dataset.rm), 1); render(); }
+  });
+  document.addEventListener('input', e => {
+    const i = e.target.dataset.cap;
+    if (i !== undefined) shots[Number(i)].cap = e.target.value;
+  });
+  render();
+</script>

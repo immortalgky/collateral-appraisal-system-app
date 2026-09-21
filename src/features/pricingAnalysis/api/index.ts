@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { uploadForm } from '@shared/api/blobTransfer';
 import {
   type AddPricingAnalysisApproachRequestType,
   type AddPricingAnalysisApproachResponseType,
@@ -1204,12 +1205,12 @@ export function useUploadHypothesisUnitDetails() {
     }): Promise<UploadHypothesisUnitDetailsResult> => {
       const formData = new FormData();
       formData.append('file', file);
-      const { data } = await axios.post(
+      const { data } = await uploadForm<UploadHypothesisUnitDetailsResult>(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/hypothesis-analysis/uploads`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        { label: file.name },
       );
-      return data as UploadHypothesisUnitDetailsResult;
+      return data;
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({

@@ -133,6 +133,7 @@
     "condoName": "ชื่อคอนโด",
     "usageAreaSqM": "พื้นที่ใช้สอย (ตร.ม.)",
     "vehicleType": "ประเภทยานพาหนะ",
+    "vehicleRegistrationNumber": "เลขเล่มทะเบียนรถ",
     "licensePlateNumber": "ทะเบียนรถ",
     "appointmentLocationVehicle": "สถานที่นัดหมาย",
     "chassisNumber": "หมายเลขตัวถัง",
@@ -227,7 +228,7 @@
     "columnFileName": "ชื่อไฟล์",
     "columnUploadedAt": "อัปโหลดเมื่อ",
     "validationErrorsTitle": "ข้อผิดพลาดการตรวจสอบไฟล์",
-    "supportedText": "PDF, PNG, JPG (สูงสุด 10MB ต่อไฟล์)",
+    "supportedText": "PDF, PNG, JPG (สูงสุด {{limit}} ต่อไฟล์)",
     "uploadingDocuments": "กำลังอัปโหลดเอกสาร...",
     "uploadComplete": "{{done}}/{{total}} เสร็จสิ้น"
   },
@@ -353,7 +354,7 @@
     "appraisalNotFound": "ไม่พบการประเมิน",
     "appraisalLoadFailed": "โหลดข้อมูลการประเมินไม่สำเร็จ กรุณาลองใหม่",
     "missingDocTypeError": "{{name}}: ประเภทไฟล์ไม่รองรับ ใช้ PDF, PNG หรือ JPG",
-    "missingDocSizeError": "{{name}}: ขนาดไฟล์เกิน 10MB",
+    "missingDocSizeError": "{{name}}: ขนาดไฟล์เกิน {{limit}}",
     "missingDocAttachFailed": "อัปโหลดไฟล์แล้วแต่แนบกับคำขอไม่สำเร็จ กรุณาลองใหม่",
     "missingDocUploadFailed": "อัปโหลด {{name}} ไม่สำเร็จ",
     "missingDocSessionFailed": "เริ่มเซสชันอัปโหลดไม่สำเร็จ กรุณาลองใหม่"

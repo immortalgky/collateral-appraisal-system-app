@@ -64,6 +64,8 @@ const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
   slaStatus: 'SLA',
   assigneeUserId: 'Assignee',
   activityId: 'Task Type',
+  purpose: 'Purpose',
+  channel: 'Channel',
   dateType: 'Date Type',
   dateFrom: 'From',
   dateTo: 'To',

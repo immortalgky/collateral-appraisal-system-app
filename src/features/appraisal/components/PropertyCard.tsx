@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useNavigate } from 'react-router-dom';
@@ -18,10 +19,17 @@ interface PropertyCardProps {
   onContextMenu: (e: React.MouseEvent, property: PropertyItem, groupId: string) => void;
   /** Opens the in-app properties map centred on this property. */
   onShowOnMap?: (propertyId: string) => void;
+  /**
+   * `row` is the standalone property row; `stack` is the same row squeezed into the aligned
+   * columns of a same-type pile. Both stay a single sortable node so drag and drop keeps
+   * working either way — see PropertyStackSection.
+   */
+  layout?: 'row' | 'stack';
 }
 
 export const PropertyCard = React.memo(
-  ({ property, groupId, onContextMenu, onShowOnMap }: PropertyCardProps) => {
+  ({ property, groupId, onContextMenu, onShowOnMap, layout = 'row' }: PropertyCardProps) => {
+    const { t } = useTranslation('appraisal');
     const readOnly = usePageReadOnly();
     const navigate = useNavigate();
     const appraisalId = useAppraisalId();
@@ -67,26 +75,29 @@ export const PropertyCard = React.memo(
         style={style}
         data-property-id={property.id}
         onContextMenu={readOnly ? undefined : e => onContextMenu(e, property, groupId)}
-        className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 focus-within:ring-2 focus-within:ring-primary/20 transition-all duration-150 flex"
+        className="group/row flex items-stretch bg-white hover:bg-gray-50/70 focus-within:bg-gray-50 transition-colors"
       >
-        {/* Drag Handle */}
+        {/* Drag handle — a faint gutter rather than a filled bar, so the row reads as one
+            surface. It stays in the DOM (never display:none) or dnd-kit loses its activator. */}
         <div
           ref={setActivatorNodeRef}
           {...(!readOnly ? attributes : {})}
           {...(!readOnly ? listeners : {})}
-          className={`flex items-center justify-center w-8 bg-gray-50 hover:bg-gray-100 border-r border-gray-200 flex-shrink-0 ${readOnly ? 'cursor-default opacity-40' : 'cursor-grab active:cursor-grabbing'}`}
+          className={`flex items-center justify-center w-5 flex-shrink-0 text-gray-200 transition-colors ${
+            readOnly
+              ? 'cursor-default'
+              : 'cursor-grab active:cursor-grabbing group-hover/row:text-gray-400'
+          }`}
           style={{ touchAction: 'none' }}
-          title={
-            readOnly ? undefined : 'Drag to reorder within group, or drop on another group to move'
-          }
+          title={readOnly ? undefined : t('properties.dragToReorder')}
         >
-          <Icon name="grip-vertical" className="text-gray-400 text-sm" />
+          <Icon name="grip-vertical" className="text-[11px]" />
         </div>
 
         <PropertyCardContent
           property={property}
           onClick={handleCardClick}
-          size="compact"
+          size={layout === 'stack' ? 'stack' : 'compact'}
           onLocationClick={onShowOnMap ? () => onShowOnMap(property.id) : undefined}
         />
       </div>
