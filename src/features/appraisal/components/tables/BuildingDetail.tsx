@@ -128,7 +128,15 @@ const propertiesTableHeader: FormTableHeader[] = [
     name: 'areaDescription',
     className: 'w-full border-r border-neutral-3',
     tooltip: 'Building area description',
-    footer: () => <span className="font-semibold text-gray-700 text-xs">Total</span>,
+    footer: ({ groupLabel }: { rows: any[]; groupLabel?: string }) => {
+      const label =
+        groupLabel === 'Building'
+          ? 'Building Total'
+          : groupLabel === 'Non-Building'
+            ? 'Non-building Total'
+            : 'All Total';
+      return <span className="font-semibold text-gray-700 text-xs">{label}</span>;
+    },
   },
   {
     type: 'derived',

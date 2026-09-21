@@ -85,7 +85,7 @@ interface FormTableDerivedHeader extends BaseHeader {
   normalize?: (v: number) => number;
   modifier?: (v: string) => string;
 
-  footer?: (ctx: { rows: any[] }) => React.ReactNode; // footer aggregation / rendering
+  footer?: (ctx: { rows: any[]; groupLabel?: string }) => React.ReactNode; // footer aggregation / rendering
 }
 
 interface FormTableDisplayHeader extends BaseHeader {
@@ -323,7 +323,7 @@ const BuildingDetailTable = ({
     </tr>
   );
 
-  const renderSubtotalRow = (groupRows: any[], subtotalClassName?: string) => (
+  const renderSubtotalRow = (groupRows: any[], subtotalClassName?: string, groupLabel?: string) => (
     <tr className={clsx('border-t border-neutral-3', subtotalClassName)}>
       {headers
         .filter((h): h is Exclude<FormTableHeader, { type: 'group' }> => h.type !== 'group')
@@ -343,7 +343,7 @@ const BuildingDetailTable = ({
           let content: React.ReactNode;
           switch (header.type) {
             case 'derived':
-              content = footerFn({ rows: groupRows });
+              content = footerFn({ rows: groupRows, groupLabel });
               break;
             case 'input-number':
               content = footerFn(groupRows);
@@ -441,7 +441,7 @@ const BuildingDetailTable = ({
                             </td>
                           </tr>
                           {groupIndices.map((idx, i) => renderDataRow(idx, undefined, i + 1))}
-                          {renderSubtotalRow(groupRows, group.subtotalClassName)}
+                          {renderSubtotalRow(groupRows, group.subtotalClassName, group.label)}
                         </Fragment>
                       );
                     })
