@@ -459,6 +459,8 @@
     "clearFilters": "Clear all filters",
     "clear": "Clear",
     "selectAll": "Select all",
+    "selectAllDocuments": "Select all documents",
+    "selectedCount": "{{selected}}/{{total}} selected",
     "clearAll": "Clear all",
     "matchingCount": "({{count}} matching)",
     "appraisalNo": "Appraisal No.",

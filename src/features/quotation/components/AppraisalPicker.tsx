@@ -1027,6 +1027,18 @@ export function AppraisalDocPicker({
   const { data, isLoading, isError, refetch } = useGetRequestDocuments(requestId ?? undefined);
   const sections = data?.sections ?? [];
 
+  const allUploadedDocs = sections.flatMap(section => section.documents.filter(d => d.documentId));
+  const selectedCount = allUploadedDocs.filter(d => !!apSelection[d.documentId!]).length;
+  const allSelected = allUploadedDocs.length > 0 && selectedCount === allUploadedDocs.length;
+  const someSelected = selectedCount > 0 && !allSelected;
+
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 py-4 px-3 text-xs text-gray-400">
@@ -1054,16 +1066,42 @@ export function AppraisalDocPicker({
     return <div className="px-3 py-3 text-xs text-gray-400">{t('empty.noDocumentsFound')}</div>;
   }
 
+  const handleSelectAll = () => {
+    sections.forEach(section => {
+      const level: SharedDocumentSelectionDto['level'] =
+        section.titleId == null ? 'RequestLevel' : 'TitleLevel';
+      const uploadedDocs = section.documents.filter(d => d.documentId);
+      uploadedDocs.forEach(d => onToggle(appraisalId, d.documentId!, level, !allSelected));
+    });
+  };
+
   return (
     <div className="flex flex-col divide-y divide-gray-100 max-h-[280px] overflow-y-auto">
+      {allUploadedDocs.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <span className="text-[10px] text-gray-500 tabular-nums">
+            {t('picker.selectedCount', { selected: selectedCount, total: allUploadedDocs.length })}
+          </span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              ref={selectAllRef}
+              type="checkbox"
+              checked={allSelected}
+              onChange={handleSelectAll}
+              className="size-3 accent-primary rounded"
+            />
+            <span className="text-[10px] text-gray-500">{t('picker.selectAllDocuments')}</span>
+          </label>
+        </div>
+      )}
       {sections.map((section, sIdx) => {
         const level: SharedDocumentSelectionDto['level'] =
           section.titleId == null ? 'RequestLevel' : 'TitleLevel';
         const uploadedDocs = section.documents.filter(d => d.documentId);
         if (uploadedDocs.length === 0) return null;
 
-        const allSelected = uploadedDocs.every(d => !!apSelection[d.documentId!]);
-        const handleSelectAll = (checked: boolean) => {
+        const sectionAllSelected = uploadedDocs.every(d => !!apSelection[d.documentId!]);
+        const handleSectionSelectAll = (checked: boolean) => {
           uploadedDocs.forEach(d => onToggle(appraisalId, d.documentId!, level, checked));
         };
 
@@ -1076,8 +1114,8 @@ export function AppraisalDocPicker({
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={allSelected}
-                  onChange={e => handleSelectAll(e.target.checked)}
+                  checked={sectionAllSelected}
+                  onChange={e => handleSectionSelectAll(e.target.checked)}
                   className="size-3 accent-primary rounded"
                 />
                 <span className="text-[10px] text-gray-500">{t('picker.selectAll')}</span>
