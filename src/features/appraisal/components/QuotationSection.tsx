@@ -39,6 +39,7 @@ import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
+import { sortCompanyResponses } from '@/features/quotation/utils/sortCompanyResponses';
 import { Link } from 'react-router-dom';
 import { QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
 import { hasRoleOrPermission } from '@/shared/utils/accessControl';
@@ -918,7 +919,14 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
     };
 
-    const invitedCompanies = quotationDetail?.invitedCompanies ?? [];
+    const invitedCompanies = sortCompanyResponses(quotationDetail?.invitedCompanies ?? [], inv => {
+      const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
+      return {
+        status: cq?.status ?? 'Pending',
+        totalNetAmount: cq?.totalQuotedPrice,
+        companyName: inv.companyName,
+      };
+    });
 
     return (
       <div className="flex flex-col gap-2">
@@ -1029,10 +1037,15 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -1057,7 +1070,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">

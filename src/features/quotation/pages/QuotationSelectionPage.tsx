@@ -27,6 +27,7 @@ import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 import { useQuotationAttachmentUpload } from '../hooks/useQuotationAttachmentUpload';
 import {
@@ -96,7 +97,14 @@ const QuotationSelectionPage = () => {
   const [isDraftCancelOpen, setIsDraftCancelOpen] = useState(false);
   const [viewingCqId, setViewingCqId] = useState<string | null>(null);
 
-  const shortlisted = (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted);
+  const shortlisted = sortCompanyResponses(
+    (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted),
+    cq => ({
+      status: cq.status,
+      totalNetAmount: cq.totalQuotedPrice,
+      companyName: cq.companyName,
+    }),
+  );
   const tentativeWinner = quotation?.tentativeWinnerQuotationId
     ? shortlisted.find(q => q.id === quotation.tentativeWinnerQuotationId)
     : null;
@@ -503,10 +511,19 @@ const QuotationSelectionPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {(quotation.invitedCompanies ?? []).map(inv => {
-                    const cq = (quotation.companyQuotations ?? []).find(
-                      q => q.companyId === inv.companyId,
-                    );
+                  {sortCompanyResponses(
+                    (quotation.invitedCompanies ?? []).map(inv => ({
+                      inv,
+                      cq: (quotation.companyQuotations ?? []).find(
+                        q => q.companyId === inv.companyId,
+                      ),
+                    })),
+                    ({ inv, cq }) => ({
+                      status: cq?.status ?? 'Pending',
+                      totalNetAmount: cq?.totalQuotedPrice,
+                      companyName: inv.companyName,
+                    }),
+                  ).map(({ inv, cq }) => {
                     const items = cq?.items ?? [];
                     const hasItems = items.length > 0;
                     const totalFeeAmount = items.reduce(
@@ -517,10 +534,15 @@ const QuotationSelectionPage = () => {
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -545,7 +567,11 @@ const QuotationSelectionPage = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -774,10 +800,15 @@ const QuotationSelectionPage = () => {
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     const submittedAt = (() => {
                       if (!cq.submittedAt) return '—';
                       const d = new Date(cq.submittedAt);
@@ -820,7 +851,11 @@ const QuotationSelectionPage = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
