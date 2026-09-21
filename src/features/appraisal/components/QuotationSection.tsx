@@ -39,6 +39,12 @@ import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
+import {
+  buildQuotationEmailHtml,
+  formatQuotationSubjectAppraisalNumbersLabel,
+  formatQuotationSubjectCustomerLabel,
+} from '@/features/quotation/utils/quotationEmailTemplate';
+import { useQuotationAttachmentUpload } from '@/features/quotation/hooks/useQuotationAttachmentUpload';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -580,6 +586,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
+  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
   const { mutate: setSharedDocuments, isPending: isSettingDocs } = useSetSharedDocuments(
     activeQuotation?.id ?? '',
   );
@@ -595,6 +602,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   // PropertyType code → locale description (e.g. "LB" → "ที่ดินพร้อมสิ่งปลูกสร้าง").
   const propertyTypeParams = useParametersByGroup('PropertyType');
+  const buildingTypeParams = useParametersByGroup('BuildingType', 'th', 'th');
+  const machineStatusParams = useParametersByGroup('MachineStatus', 'th', 'th');
 
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotationDetail?.appraisals ?? [];
@@ -604,14 +613,21 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       if (!code) return '';
       return propertyTypeParams.find(p => p.code === code)?.description ?? code;
     };
+    const buildingTypeDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return buildingTypeParams.find(p => p.code === code)?.description ?? code;
+    };
+    const machineStatusDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return machineStatusParams.find(p => p.code === code)?.description ?? code;
+    };
 
     const distinctCustomerNames = [
-      ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
-    ].join(', ');
+      ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
+    ];
     const appraisalNumbers = appraisals
       .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean)
-      .join(',');
+      .filter(Boolean);
 
     const targetTime = cutOffTime
       ? cutOffTime.toLocaleTimeString('th-TH', {
@@ -628,13 +644,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         })
       : '';
 
-    const appraisalList = appraisals
-      .map(
-        (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${propertyTypeDescription(a.propertyType)}`,
-      )
-      .join('\n');
-
     const adminFullName = `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
 
     const bccEmails = (quotationDetail?.invitedCompanies ?? [])
@@ -646,10 +655,18 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       from: currentUser?.email ?? '',
       cc: 'appraisal.team@lhbank.com',
       bcc: bccEmails,
-      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
-      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+      subject: `Quotation ${formatQuotationSubjectCustomerLabel(distinctCustomerNames)} (${formatQuotationSubjectAppraisalNumbersLabel(appraisalNumbers)})`,
+      content: buildQuotationEmailHtml({
+        appraisals,
+        targetTime,
+        targetDate,
+        adminFullName,
+        propertyTypeDescription,
+        buildingTypeDescription,
+        machineStatusDescription,
+      }),
     };
-  }, [quotationDetail, currentUser, propertyTypeParams]);
+  }, [quotationDetail, currentUser, propertyTypeParams, buildingTypeParams, machineStatusParams]);
 
   /**
    * Statuses where the Cancel Quotation action is offered. Mirrors the branches
@@ -1091,6 +1108,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               bcc: values.bcc,
               subject: values.subject,
               content: values.content,
+              attachments: values.attachments,
             },
             {
               onSuccess: () => {
@@ -1385,9 +1403,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           showFrom={false}
           showCc={true}
           showBcc={true}
-          showAttachments={false}
+          showAttachments={true}
+          onUploadAttachment={uploadQuotationAttachment}
           subjectLabel="Subject"
           isPending={isBusy}
+          richTextContent
           onSubmit={handleFinalSend}
         />
 

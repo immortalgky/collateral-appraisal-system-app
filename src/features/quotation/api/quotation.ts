@@ -706,6 +706,7 @@ export const useSendQuotation = (quotationId: string) => {
       bcc?: string;
       subject: string;
       content?: string;
+      attachments?: string[];
     }) => {
       const { data } = await axios.post(`/quotations/${quotationId}/send`, emailData);
       return data;
