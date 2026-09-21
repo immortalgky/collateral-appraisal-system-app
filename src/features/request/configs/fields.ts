@@ -26,6 +26,8 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 // Purpose codes that make this request a Construction Inspection
 const CI_PURPOSES = ['06', '11'];
 
+const PREV_APP_NO_REQUIRED = ['02', '03', '04', '05', '06', '08', '09', '11', '12', '13'];
+
 export function makeRequestFields(t: TFunction<'request'>): FormField[] {
   return [
     {
@@ -62,6 +64,8 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       valueField: 'detail.prevAppraisalValue',
       dateField: 'detail.prevAppraisalDate',
       wrapperClassName: 'col-span-1',
+      requiredWhen: { field: 'purpose', is: PREV_APP_NO_REQUIRED, operator: 'in' },
+      disableWhen: { field: 'purpose', is: '07' },
     },
     {
       type: 'number-input',
@@ -1948,6 +1952,7 @@ export const requestFields: FormField[] = [
     valueField: 'detail.prevAppraisalValue',
     dateField: 'detail.prevAppraisalDate',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
   },
   {
     type: 'number-input',
