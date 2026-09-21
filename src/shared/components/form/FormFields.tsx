@@ -28,6 +28,7 @@ import LocationSelector from '../inputs/LocationSelector';
 import { useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
+import FieldHelp from './FieldHelp';
 import type { FormField } from './types';
 import { useFilterWatchValues } from '@/shared/hooks/useFilterWatchValues';
 import ParameterSearchInput from '../inputs/ParameterSearchInput';
@@ -246,18 +247,107 @@ function FieldRenderer({
   // (via useWatch) means this also re-fires when the value is re-seeded while already
   // disabled — e.g. a parent reset()/async load populating the form after mount, which a
   // one-shot "on became disabled" effect would miss.
+  //
+  // Keyed on the field's OWN rule, never on `globalDisabled`: a read-only page disables every
+  // field, and a page that is read-only only until its menu tree loads would otherwise rewrite
+  // values on a form nobody is allowed to edit.
   const watchedValue = useWatch({ control, name });
+  // What the field held just before it was clamped, so a toggle flipped by mistake can be undone.
+  const preClampRef = useRef<unknown>(undefined);
+  const wasFieldDisabledRef = useRef<boolean | null>(null);
+  const lastSeenValueRef = useRef<unknown>(undefined);
   useEffect(() => {
-    if (!isDisabled) return;
-    if (field.disabledValue === undefined) return;
+    const wasDisabled = wasFieldDisabledRef.current;
+    const lastSeenValue = lastSeenValueRef.current;
+    wasFieldDisabledRef.current = fieldDisabled;
+    const current = getValues(name);
+    lastSeenValueRef.current = current;
 
-    if (getValues(name) !== field.disabledValue) {
-      setValue(name, field.disabledValue, {
-        shouldDirty: false,
-        shouldValidate: true,
-      });
+    if (!fieldDisabled) return;
+    if (field.disabledValue === undefined) return;
+    if (current === field.disabledValue) return;
+
+    // A blank always takes the stand-in: there is nothing to lose and the field should read
+    // "not applicable" rather than sit empty.
+    const isEmpty = current === null || current === undefined || current === '';
+    if (isEmpty) {
+      // Not dirty: filling a blank as a record opens is presentation, and marking it would arm
+      // the unsaved-changes prompt on a form nobody has touched.
+      setValue(name, field.disabledValue, { shouldDirty: false, shouldValidate: true });
+      return;
     }
-  }, [isDisabled, watchedValue, name, field.disabledValue, getValues, setValue]);
+
+    // Overwriting text takes more than the field being disabled — it takes the appraiser having
+    // just said so. Two other things reach this line and must not destroy stored data:
+    //   • mount (wasDisabled === null), and
+    //   • reset() landing a record — every page seeds module defaults and applies the record in
+    //     an effect, so the governing field flips to "disabled" and this field's value arrives in
+    //     the SAME commit. A user flipping a toggle changes only the governing field, so the two
+    //     are told apart by whether this field's own value moved at the same time.
+    // Getting this wrong destroys data silently: the clamped '' is posted on the next save and
+    // the API reads '' as "clear this".
+    const userFlippedTheRule = wasDisabled === false && current === lastSeenValue;
+    if (!userFlippedTheRule) return;
+
+    preClampRef.current = current;
+    // Dirty, unlike the blank-filling case above: the appraiser's own action changed a stored
+    // value, and the Data Correction form sends only the fields marked dirty
+    // (toCorrectionRequest walks dirtyFields). Clamping quietly there cleared the number on
+    // screen but left it in the database, so the report kept printing a registration number
+    // under the "ยังไม่ได้รับการจดทะเบียน" heading.
+    setValue(name, field.disabledValue, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [fieldDisabled, watchedValue, name, field.disabledValue, getValues, setValue]);
+
+  // …and let it go again when the field becomes editable. `disabledValue` is a stand-in for "not
+  // applicable" — "ไม่สามารถตรวจสอบกรรมสิทธิ์ได้", "-", 0 — not data the appraiser meant to enter,
+  // so leaving it behind made them delete it by hand before they could type. Opt out with
+  // `clearOnEnable: false` where the stand-in is a legitimate resting value, as on a toggle.
+  const prevDisabledRef = useRef<boolean | null>(null);
+  useEffect(() => {
+    const wasDisabled = prevDisabledRef.current;
+    prevDisabledRef.current = fieldDisabled;
+
+    // The field's own rule again, not `globalDisabled` — a page leaving read-only is not the
+    // appraiser saying this field now applies.
+    // Only on a real disabled → enabled transition. Never on mount: a saved record whose value
+    // genuinely equals the stand-in must survive being opened.
+    if (fieldDisabled || wasDisabled !== true) return;
+    if (field.disabledValue === undefined || field.clearOnEnable === false) return;
+
+    // Release it to the empty value the control itself understands. A text input handed `null`
+    // flips from controlled to uncontrolled: React stops managing it and the DOM keeps showing
+    // the stand-in, which is exactly the bug this effect was written to fix. An empty string is
+    // still a controlled value. Non-string stand-ins (a number, a date) have no such literal, so
+    // they fall back to null.
+    // Give back what was clamped away, if anything: a saved description survives its toggle
+    // being flipped to No and back, instead of being destroyed by a stray click and then saved
+    // as an empty string. An explicit `enabledValue` still wins — it names a resting value the
+    // field must land on, not the appraiser's own text.
+    const restored =
+      field.enabledValue !== undefined
+        ? field.enabledValue
+        : preClampRef.current !== undefined
+          ? preClampRef.current
+          : typeof field.disabledValue === 'string'
+            ? ''
+            : null;
+    if (getValues(name) === field.disabledValue && getValues(name) !== restored) {
+      // Dirty on purpose: the stored value really does change, so the form must offer to save it.
+      setValue(name, restored, { shouldDirty: true, shouldValidate: false });
+      preClampRef.current = undefined;
+    }
+  }, [
+    fieldDisabled,
+    name,
+    field.disabledValue,
+    field.clearOnEnable,
+    field.enabledValue,
+    getValues,
+    setValue,
+  ]);
 
   // Clear field value when hidden by showWhen/hideWhen (clearOnHide defaults to true)
   const prevVisibleRef = useRef<boolean | null>(null);
@@ -311,14 +401,23 @@ function FieldRenderer({
     disabled: _d,
     required: _r,
     disabledValue: _dv,
+    clearOnEnable: _coe,
+    enabledValue: _ev,
     clearOnHide: _coh,
     hiddenValue: _hv,
     formatPattern: _fp,
     formatPatternMessage: _fpm,
+    help: _help,
     inputMask,
     placeholder: fieldPlaceholder,
     ...passedField
   } = field;
+
+  // The "?" beside the label. Rendered next to the label rather than inside it, so the button is
+  // not swallowed by the label's click target.
+  const labelAddon = field.help ? (
+    <FieldHelp config={field.help} namePrefix={namePrefix} index={index} />
+  ) : undefined;
 
   // Render the appropriate field component
   const renderFieldComponent = () => {
@@ -339,6 +438,7 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...textProps}
+            labelAddon={labelAddon}
             inputMask={inputMask}
             error={error?.message}
           />
@@ -352,9 +452,16 @@ function FieldRenderer({
           max: passedField.max ?? schemaProps.max,
           required: isRequired,
           disabled: isDisabled,
+          ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
         return (
-          <NumberInput {...fieldProps} {...passedField} {...numberProps} error={error?.message} />
+          <NumberInput
+            {...fieldProps}
+            {...passedField}
+            {...numberProps}
+            labelAddon={labelAddon}
+            error={error?.message}
+          />
         );
       }
 
@@ -364,7 +471,15 @@ function FieldRenderer({
           disabled: isDisabled,
           ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
-        return <DateInput {...fieldProps} {...passedField} {...dateProps} error={error?.message} />;
+        return (
+          <DateInput
+            {...fieldProps}
+            {...passedField}
+            {...dateProps}
+            labelAddon={labelAddon}
+            error={error?.message}
+          />
+        );
       }
 
       case 'datetime-input': {
@@ -403,6 +518,7 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...dropdownProps}
+            labelAddon={labelAddon}
             error={error?.message}
             filterWatchValues={filterWatchValues}
           />
@@ -411,7 +527,14 @@ function FieldRenderer({
 
       case 'boolean-toggle': {
         const { type: _bt, name: _bn, key: _bk, ...boolToggleRest } = passedField;
-        return <FormBooleanToggle {...boolToggleRest} name={name} disabled={isDisabled} />;
+        return (
+          <FormBooleanToggle
+            {...boolToggleRest}
+            name={name}
+            disabled={isDisabled}
+            labelAddon={labelAddon}
+          />
+        );
       }
 
       case 'string-toggle': {
@@ -429,7 +552,13 @@ function FieldRenderer({
           ...(fieldPlaceholder && { placeholder: fieldPlaceholder }),
         };
         return (
-          <Textarea {...fieldProps} {...passedField} {...textareaProps} error={error?.message} />
+          <Textarea
+            {...fieldProps}
+            {...passedField}
+            {...textareaProps}
+            labelAddon={labelAddon}
+            error={error?.message}
+          />
         );
       }
 
@@ -488,6 +617,7 @@ function FieldRenderer({
           <FormRadioGroup
             name={name}
             label={rgLabel}
+            labelAddon={labelAddon}
             disabled={isDisabled}
             className={rgClass}
             size={rgSize}
@@ -574,6 +704,7 @@ function FieldRenderer({
             group={(passedField as any).group ?? ''}
             options={(passedField as any).options}
             label={passedField.label}
+            labelAddon={labelAddon}
             {...{ required: isRequired, disabled: isDisabled }}
             error={error?.message}
           />
@@ -589,7 +720,14 @@ function FieldRenderer({
   // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
   // because Dropdown never forwards `name` to the DOM.
   return (
-    <div data-field={name} className={clsx(field.wrapperClassName)}>
+    <div
+      data-field={name}
+      // Marks a field switched off by its own rule — disableWhen/enableWhen/disabled — so the grid
+      // layout can show it as inactive. Deliberately not set for `globalDisabled`: a read-only page
+      // disables every field, and tinting all of them would just look like a broken form.
+      data-field-disabled={fieldDisabled || undefined}
+      className={clsx(field.wrapperClassName)}
+    >
       {renderFieldComponent()}
     </div>
   );

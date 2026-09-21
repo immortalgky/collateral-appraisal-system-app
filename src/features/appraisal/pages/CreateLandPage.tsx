@@ -6,7 +6,6 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 
 import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
 import Section from '@/shared/components/sections/Section';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -28,9 +27,8 @@ import { createLandForm, createLandFormDefault, type createLandFormType } from '
 import { mapLandPropertyResponseToForm } from '../utils/mappers';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import PropertyPhotoSection, {
-  type PropertyPhotoSectionRef,
-} from '../components/PropertyPhotoSection';
+import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
+import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 const CreateLandPage = () => {
@@ -97,6 +95,17 @@ const CreateLandPage = () => {
   // Conditional tabs driven by isRentedOut flag
   const isRentedOut = methods.watch('isRentedOut');
   const [activeTab, setActiveTab] = useState<'land' | 'lease-agreement' | 'rental-info'>('land');
+
+  // The header's tabs; lease and rental exist only while the land is rented out.
+  const editorTabs = [
+    { id: 'land', label: t('createPage.navLand') },
+    ...(isRentedOut
+      ? [
+          { id: 'lease-agreement', label: t('createPage.navLeaseAgreement') },
+          { id: 'rental-info', label: t('createPage.navRentalInfo') },
+        ]
+      : []),
+  ];
 
   // Reset to land tab when isRentedOut is turned off
   useEffect(() => {
@@ -215,38 +224,6 @@ const CreateLandPage = () => {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="form-scroll-container"
-          anchors={[
-            { label: t('createPage.navPhotos'), id: 'photos', icon: 'images' },
-            {
-              label: t('createPage.navLand'),
-              id: 'land-section',
-              icon: 'mountain-sun',
-              onClick: () => setActiveTab('land'),
-            },
-            ...(isRentedOut
-              ? [
-                  {
-                    label: t('createPage.navLeaseAgreement'),
-                    id: 'lease-agreement-section',
-                    icon: 'file-contract',
-                    onClick: () => setActiveTab('lease-agreement'),
-                  },
-                  {
-                    label: t('createPage.navRentalInfo'),
-                    id: 'rental-info-section',
-                    icon: 'calendar-days',
-                    onClick: () => setActiveTab('rental-info'),
-                  },
-                ]
-              : []),
-          ]}
-        />
-      </div>
-
       <FormProvider methods={methods} schema={createLandForm}>
         <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
@@ -254,6 +231,15 @@ const CreateLandPage = () => {
             id="form-scroll-container"
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
           >
+            <PropertyEditorHeader
+              appraisalId={appraisalId}
+              propertyId={propertyId}
+              typeCode="L"
+              photoSectionRef={photoSectionRef}
+              tabs={editorTabs}
+              activeTab={activeTab}
+              onTabChange={id => setActiveTab(id as typeof activeTab)}
+            />
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -262,47 +248,11 @@ const CreateLandPage = () => {
             >
               <ResizableSidebar.Main>
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Photos Section — always visible */}
-                  <Section id="photos" anchor className="min-w-0 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                        <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {t('createPage.photosSection')}
-                      </h2>
-                    </div>
-                    <div className="h-px bg-gray-200 mb-4" />
-                    {appraisalId && (
-                      <PropertyPhotoSection
-                        ref={photoSectionRef}
-                        appraisalId={appraisalId}
-                        propertyId={propertyId}
-                      />
-                    )}
-                  </Section>
-
                   {/* Land Tab Content */}
                   <div
                     id="land-section"
                     className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
                   >
-                    <Section id="properties-section" anchor>
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                          <Icon
-                            name="mountain-sun"
-                            style="solid"
-                            className="w-5 h-5 text-amber-600"
-                          />
-                        </div>
-                        <h2 className="text-lg font-semibold text-gray-900">
-                          {t('createPage.landSection')}
-                        </h2>
-                      </div>
-                      <div className="h-px bg-gray-200" />
-                    </Section>
-
                     <Section
                       id="land-title"
                       anchor
@@ -326,19 +276,6 @@ const CreateLandPage = () => {
                       className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <Icon
-                              name="file-contract"
-                              style="solid"
-                              className="w-5 h-5 text-purple-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            {t('createPage.leaseAgreementSection')}
-                          </h2>
-                        </div>
-                        <div className="h-px bg-gray-200 mb-6" />
                         <LeaseAgreementForm namePrefix="leaseAgreement" />
                       </Section>
                     </div>
@@ -351,19 +288,6 @@ const CreateLandPage = () => {
                       className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center">
-                            <Icon
-                              name="calendar-days"
-                              style="solid"
-                              className="w-5 h-5 text-teal-600"
-                            />
-                          </div>
-                          <h2 className="text-lg font-semibold text-gray-900">
-                            {t('createPage.rentalInfoSection')}
-                          </h2>
-                        </div>
-                        <div className="h-px bg-gray-200 mb-6" />
                         <RentalInfoForm namePrefix="rentalInfo" />
                       </Section>
                     </div>

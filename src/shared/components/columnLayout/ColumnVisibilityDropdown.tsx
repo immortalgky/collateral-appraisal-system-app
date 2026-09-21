@@ -160,12 +160,19 @@ export function ColumnVisibilityDropdown<K extends string>({
   }
 
   return (
-    <Popover className="relative">
-      {/* h-full lets a flex parent with items-stretch size this to match its neighbours; it falls
-          back to the square 36px anywhere else, because size-9 still sets the height. */}
+    // h-full on the root too: the wrapper a caller stretches is this component's PARENT, and
+    // without passing that height through, the button's own h-full resolved against an auto-height
+    // Popover and silently fell back to 36px — which is what made the task toolbars look wrong.
+    <Popover className="relative h-full">
+      {/* Height is `h-full` floored by `min-h-9`, never `size-9`: h-full and size-9 both set
+          height, so which one applied came down to the order Tailwind emitted them in, and the
+          button rendered a different size on different pages. This pair cannot conflict — it
+          matches a parent that has a definite height, and falls back to the square 36px when it
+          does not. In a row laid out with items-end (the task toolbars) give the wrapper
+          `self-stretch` so there IS a definite height to match. */}
       <PopoverButton
         title={t('columns.toggleColumns')}
-        className={`relative flex h-full items-center justify-center size-9 border rounded-lg outline-none transition-all ${
+        className={`relative flex h-full min-h-9 w-9 items-center justify-center border rounded-lg outline-none transition-all ${
           hiddenCount > 0
             ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100'
             : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300'

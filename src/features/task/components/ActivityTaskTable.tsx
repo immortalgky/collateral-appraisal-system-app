@@ -1,3 +1,4 @@
+import { InboxZeroArt, NoResultsArt } from '@/shared/components/illustrations';
 import {
   ColumnResizeHandle,
   ColumnVisibilityDropdown,
@@ -230,6 +231,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
   const paginatedResult: TaskListResponse | undefined = data;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
+  /** Nothing to show, and not because we are still fetching — the table lays itself out differently. */
+  const isEmpty = !isLoading && listTasks.length === 0;
   const totalCount = paginatedResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -405,7 +408,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
             {/* Columns (list only) */}
             {poolViewMode === 'list' && (
-              <div className="mb-2">
+              <div className="mb-2 self-stretch">
                 <ColumnVisibilityDropdown
                   labels={COLUMN_LABELS}
                   orderedColumns={poolCols.orderedColumns}
@@ -523,7 +526,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
             {/* Columns (list only) */}
             {viewMode === 'list' && (
-              <div className="mb-2">
+              <div className="mb-2 self-stretch">
                 <ColumnVisibilityDropdown
                   labels={COLUMN_LABELS}
                   orderedColumns={orderedColumns}
@@ -677,7 +680,12 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
           {/* Content */}
           {viewMode === 'list' ? (
             <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-              <div className="flex-1 min-h-0 overflow-auto">
+              {/* Only the rows scroll. With none, this shrinks to the header, its overflow is
+                  clipped (nothing to scroll to, so a scrollbar would just be noise) and the empty
+                  state below gets the rest of the card. */}
+              <div
+                className={isEmpty ? 'shrink-0 overflow-hidden' : 'flex-1 min-h-0 overflow-auto'}
+              >
                 <table
                   ref={tableRef}
                   className="table-fixed text-sm"
@@ -731,37 +739,6 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                         columns={visibleColumns.map(() => ({ width: 'w-24' }))}
                         rows={8}
                       />
-                    ) : listTasks.length === 0 ? (
-                      <tr>
-                        <td colSpan={visibleColumns.length + 1} className="py-24">
-                          <div className="flex flex-col items-center gap-4">
-                            <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                              <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm font-semibold text-gray-700">
-                                {hasFilters ? 'No matching tasks' : 'All clear'}
-                              </p>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {hasFilters
-                                  ? 'Try adjusting your search or filters.'
-                                  : 'No tasks assigned in this activity.'}
-                              </p>
-                            </div>
-                            {hasFilters && (
-                              <button
-                                onClick={() => {
-                                  setSearchTerm('');
-                                  setFilters({});
-                                }}
-                                className="text-xs text-primary hover:underline font-medium"
-                              >
-                                Clear filters
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
                     ) : (
                       listTasks.map(task => (
                         <tr
@@ -809,6 +786,42 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                   </tbody>
                 </table>
               </div>
+
+              {/* Outside the table on purpose: the table is far wider than the screen, so a cell
+                  spanning every column would centre this on the TABLE and leave it off to the
+                  right, behind a horizontal scrollbar. */}
+              {isEmpty && (
+                <div className="flex flex-1 min-h-0 items-center justify-center overflow-y-auto p-8">
+                  <div className="flex flex-col items-center gap-4">
+                    {hasFilters ? (
+                      <NoResultsArt className="h-24 w-28" />
+                    ) : (
+                      <InboxZeroArt className="h-24 w-28" />
+                    )}
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-700">
+                        {hasFilters ? 'No matching tasks' : 'All clear'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {hasFilters
+                          ? 'Try adjusting your search or filters.'
+                          : 'No tasks assigned in this activity.'}
+                      </p>
+                    </div>
+                    {hasFilters && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setFilters({});
+                        }}
+                        className="text-xs text-primary hover:underline font-medium"
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <Pagination
                 currentPage={pageNumber}

@@ -1,3 +1,4 @@
+import { InboxZeroArt, NoResultsArt } from '@/shared/components/illustrations';
 import {
   ColumnResizeHandle,
   ColumnVisibilityDropdown,
@@ -479,7 +480,7 @@ function TaskListingPage() {
 
             {/* Columns (list only) */}
             {poolViewMode === 'list' && (
-              <div className="mb-2">
+              <div className="mb-2 self-stretch">
                 <ColumnVisibilityDropdown
                   labels={COLUMN_LABELS}
                   orderedColumns={poolCols.orderedColumns}
@@ -597,7 +598,7 @@ function TaskListingPage() {
 
             {/* Columns (list only) */}
             {viewMode === 'list' && (
-              <div className="mb-2">
+              <div className="mb-2 self-stretch">
                 <ColumnVisibilityDropdown
                   labels={COLUMN_LABELS}
                   orderedColumns={orderedColumns}
@@ -861,9 +862,11 @@ function TaskListingPage() {
               {isListEmpty && (
                 <div className="flex-1 min-h-0 flex items-center justify-center p-12">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                      <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
-                    </div>
+                    {hasFilters ? (
+                      <NoResultsArt className="h-24 w-28" />
+                    ) : (
+                      <InboxZeroArt className="h-24 w-28" />
+                    )}
                     <div className="text-center">
                       <p className="text-sm font-semibold text-gray-700">
                         {hasFilters ? 'No matching tasks' : 'All clear'}

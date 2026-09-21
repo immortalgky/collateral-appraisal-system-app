@@ -228,6 +228,25 @@
   border-color: transparent;
 }
 
+/* ── a field switched off by its own rule ─────────────────────────────────
+   The rules above paint every control `background: transparent`, which wipes the components' own
+   `bg-gray-50` — so a disabled field differed from an editable one by nothing but slightly greyer
+   text, and in a column of thirty rows that reads as nothing at all.
+
+   The row recedes instead of changing colour: no second grey competing with the label column, and
+   nothing that reads as a filled-in state. It also stops offering the hover highlight, which was
+   inviting a click on a row that cannot take one.
+
+   Keyed on `data-field-disabled` (FormFields.tsx), which is set only when the field's own
+   disableWhen/enableWhen/disabled turned it off — never for a read-only page, where every row
+   would fade at once and the form would look broken rather than locked. */
+[data-form-layout='grid'] .cas-form-grid [data-field][data-field-disabled] {
+  opacity: 0.55;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field][data-field-disabled]:hover {
+  background: transparent;
+}
+
 /* ── helper line and character counter ────────────────────────────────────
    The counter is the component root's third child, so flattening drops it into
    the next implicit row — under the label, where it read as a stray "1/100".

@@ -1,10 +1,10 @@
+import { InboxZeroArt } from '@/shared/components/illustrations';
 import { useMemo, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { GroupByField, Task } from '../types';
 import { useTaskGroupCounts, type KanbanScope, type TaskGroupCount } from '../api';
 import { TaskKanbanColumn } from './TaskKanbanColumn';
 import { getActivityConfig } from '../config/activityConfig';
-import Icon from '@/shared/components/Icon';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 
 interface TaskKanbanBoardProps {
@@ -152,16 +152,15 @@ export const TaskKanbanBoard = ({
     [groups, presentation.order],
   );
 
-  const handleTaskClick =
-    onTaskClick ?? ((task: Task) => navigate(`/tasks/${task.id}/opening`));
+  const handleTaskClick = onTaskClick ?? ((task: Task) => navigate(`/tasks/${task.id}/opening`));
 
   if (isLoading) return null;
 
   if (sortedGroups.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-400">
-        <Icon style="regular" name="inbox" className="size-10 mb-3" />
-        <p className="text-sm">No tasks</p>
+        <InboxZeroArt className="h-24 w-28" />
+        <p className="mt-2 text-sm">No tasks</p>
       </div>
     );
   }

@@ -1,0 +1,928 @@
+<meta charset="utf-8" />
+<title>Segmented Date Field</title>
+<style>
+  :root {
+    --color-primary: #0d9488;
+    --color-primary-50: #f0fdfa;
+    --color-primary-100: #ccfbf1;
+    --color-primary-600: #0d9488;
+    --color-primary-700: #0f766e;
+    --color-danger: #dc2626;
+    --color-danger-50: #fef2f2;
+    --color-holiday: #e11d48;
+    --color-holiday-bg: #fff1f2;
+    --font-sans: 'Roboto', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 24px;
+    background: #f8fafc;
+    color: #111827;
+    font-family: var(--font-sans);
+    font-size: 14px;
+  }
+
+  .page { max-width: 1080px; margin: 0 auto; }
+
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .subtitle { color: #6b7280; font-size: 13px; margin: 0 0 20px; }
+
+  .banner {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .card h2 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 2px;
+    color: #111827;
+  }
+
+  .card .note {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 12px;
+    line-height: 1.6;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 4px;
+  }
+  .field-label .req { color: var(--color-danger); margin-left: 2px; }
+
+  /* ── the input box ─────────────────────────────────────────────── */
+  .df { width: 100%; }
+  .df-control { position: relative; width: 100%; }
+
+  .df input {
+    display: block;
+    width: 100%;
+    padding: 8px 36px 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    background: #fff;
+    color: #111827;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .df input::selection { background: var(--color-primary-100); color: #0f172a; }
+  .df input:hover:not(:disabled) { border-color: #d1d5db; }
+  .df input:focus { outline: none; border-color: #9ca3af; box-shadow: 0 0 0 2px #e5e7eb; }
+  .df input:disabled { background: #f9fafb; color: #6b7280; cursor: not-allowed; }
+  /* incomplete value renders grey — a single <input> cannot colour only some characters */
+  .df input.is-incomplete { color: #9ca3af; }
+  .df.has-error input { border-color: var(--color-danger); }
+  .df.has-error input:focus { box-shadow: 0 0 0 2px #fecaca; }
+
+  .df .cal-btn {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    border-radius: 6px;
+    color: #9ca3af;
+    cursor: pointer;
+  }
+  .df .cal-btn:hover { background: #f3f4f6; color: #4b5563; }
+  .df .cal-btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+  .df .cal-btn[disabled] { cursor: not-allowed; }
+
+  .df .msg { margin: 4px 0 0; font-size: 12px; color: #6b7280; min-height: 16px; }
+  .df.has-error .msg { color: var(--color-danger); }
+
+  /* ── popover ───────────────────────────────────────────────────── */
+  .pop {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 4px);
+    /* hangs off the input's right edge, under the icon that opened it */
+    right: 0;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+    padding: 0;
+    display: none;
+  }
+  .pop.open { display: block; }
+  .pop-body { display: flex; }
+  .cal { padding: 8px; width: 232px; }
+
+  .cal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px 4px;
+  }
+  .cal-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2937;
+    padding: 2px 4px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .cal-title:hover { background: #f3f4f6; }
+  .cal-title svg { color: #9ca3af; transition: transform .15s; }
+  .cal-title.expanded svg { transform: rotate(180deg); }
+  .cal-nav { display: flex; gap: 2px; }
+  .cal-nav button {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border: 0; background: transparent; border-radius: 4px;
+    color: #9ca3af; cursor: pointer;
+  }
+  .cal-nav button:hover { background: #f3f4f6; color: #4b5563; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 28px); gap: 1px; }
+  .cal-grid .wd {
+    height: 22px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: #9ca3af;
+  }
+  .cal-grid button.day {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border: 0; background: transparent; border-radius: 4px;
+    font: inherit; font-size: 12px; color: #374151; cursor: pointer;
+    position: relative;
+  }
+  .cal-grid button.day:hover:not(:disabled) { background: #f3f4f6; }
+  .cal-grid button.day.outside { color: #d1d5db; }
+  .cal-grid button.day.today { box-shadow: inset 0 0 0 1.5px var(--color-primary); font-weight: 600; }
+  .cal-grid button.day.selected { background: var(--color-primary); color: #fff; font-weight: 600; }
+  .cal-grid button.day:disabled { color: #d1d5db; cursor: not-allowed; }
+
+  /* holiday: coloured, still selectable unless the field opts into disableHolidays */
+  .cal-grid button.day.holiday { color: var(--color-holiday); background: var(--color-holiday-bg); font-weight: 600; }
+  .cal-grid button.day.holiday.outside { color: #fda4af; background: transparent; }
+  .cal-grid button.day.holiday.selected { background: var(--color-primary); color: #fff; }
+  .cal-grid button.day.holiday:disabled { color: #fda4af; background: #fff5f6; }
+  .cal-grid button.day.holiday::after {
+    content: '';
+    position: absolute;
+    bottom: 3px; left: 50%; transform: translateX(-50%);
+    width: 3px; height: 3px; border-radius: 50%;
+    background: currentColor;
+  }
+  .cal-grid button.day.selected::after { background: #fff; }
+
+  .cal-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid #e5e7eb;
+    padding: 6px 10px;
+  }
+  .cal-foot .today-btn {
+    border: 0; background: transparent; font: inherit; font-size: 12px; font-weight: 600;
+    color: var(--color-primary-700); cursor: pointer; padding: 2px 4px; border-radius: 4px;
+  }
+  .cal-foot .today-btn:hover { background: var(--color-primary-50); text-decoration: underline; }
+  .cal-foot .hint { font-size: 11px; color: #9ca3af; }
+
+  .time-row {
+    display: flex; align-items: center; gap: 8px;
+    border-top: 1px solid #e5e7eb;
+    padding: 6px 10px;
+  }
+  .time-row label { font-size: 12px; color: #6b7280; }
+  .time-row select {
+    font: inherit; font-size: 12px; padding: 3px 4px;
+    border: 1px solid #e5e7eb; border-radius: 6px; background: #fff;
+  }
+  .time-row .done {
+    margin-left: auto;
+    border: 0; border-radius: 6px; padding: 4px 12px;
+    background: var(--color-primary); color: #fff; font: inherit; font-size: 12px; font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* month / year side panel */
+  .my { width: 176px; padding: 8px 8px 8px 12px; border-left: 1px solid #e5e7eb; }
+  .my-year { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .my-year button {
+    width: 22px; height: 22px; border: 0; background: transparent; border-radius: 4px;
+    color: #9ca3af; cursor: pointer;
+  }
+  .my-year button:hover { background: #f3f4f6; }
+  .my-year span { font-size: 13px; font-weight: 600; }
+  .my-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .my-grid button {
+    border: 0; background: transparent; border-radius: 6px; padding: 5px 0;
+    font: inherit; font-size: 12px; color: #374151; cursor: pointer;
+  }
+  .my-grid button:hover { background: #f3f4f6; }
+  .my-grid button.active { background: var(--color-primary); color: #fff; font-weight: 600; }
+
+  /* ── side panels ───────────────────────────────────────────────── */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #4b5563; margin-top: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+  table.keys { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.keys td { padding: 5px 0; vertical-align: top; border-bottom: 1px solid #f3f4f6; }
+  table.keys td:first-child { width: 132px; }
+  kbd {
+    display: inline-block;
+    background: #f3f4f6; border: 1px solid #e5e7eb; border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 5px; font-size: 11px; font-family: ui-monospace, monospace;
+  }
+
+  pre.state {
+    margin: 0;
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 11.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  pre.state .k { color: #7dd3fc; }
+  pre.state .v { color: #86efac; }
+  pre.state .null { color: #64748b; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 620px) { .row2 { grid-template-columns: 1fr; } }
+</style>
+
+<div class="page">
+  <h1>Date Picker POC</h1>
+  <p class="subtitle">
+    ปฏิทิน + ช่องกรอกวันที่แบบใหม่ — พิมพ์แก้ทีละส่วน, ปฏิทินเปิดเฉพาะตอนกดไอคอน, ปุ่ม Today อยู่หน้าแรก, ไฮไลต์วันหยุด
+  </p>
+
+  <div class="banner">
+    <strong>นี่คือ mock เพื่อดู UX เท่านั้น</strong> — ไม่ได้ต่อ API และยังไม่ได้แก้โค้ดจริงสักไฟล์<br />
+    วันหยุดในนี้เป็น <strong>ข้อมูลตัวอย่างที่ hardcode ไว้</strong> (ตาราง <code>workflow.Holidays</code> ของจริงยังว่างเปล่า
+    และรอบนี้ตกลงกันว่ายังไม่ทำฝั่งข้อมูล) — ทำแค่ให้ component รับ prop มาแสดงผลได้<br />
+    วันนี้ในเครื่อง = <strong id="today-label"></strong>
+  </div>
+
+  <div class="grid">
+    <!-- ── LEFT COLUMN ──────────────────────────────────────────── -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="card">
+        <h2>1. Purchase Date — วันที่อย่างเดียว (ห้ามเลือกอนาคต)</h2>
+        <p class="note">
+          ช่องเดียวกับในภาพที่ส่งมา (<code>disableFutureDates</code>) วันหยุดขึ้นสีแดงแต่ยังเลือกได้
+        </p>
+        <label class="field-label" for="f-purchase">Purchase Date<span class="req">*</span></label>
+        <div id="fld-purchase"></div>
+      </div>
+
+      <div class="card">
+        <h2>2. Appointment Date &amp; Time — มีเวลาด้วย (ห้ามเลือกอดีต)</h2>
+        <p class="note">
+          กรอก <code>dd/mm/yyyy hh:mm</code> ได้ตรง ๆ ในช่อง เลื่อนไปส่วนชั่วโมง/นาทีด้วย <kbd>→</kbd> หรือ <kbd>:</kbd>
+        </p>
+        <label class="field-label" for="f-appt">Appointment Date</label>
+        <div id="fld-appt"></div>
+      </div>
+
+      <div class="card">
+        <h2>3. ตัวอย่าง <code>disableHolidays</code> — ห้ามเลือกวันหยุด</h2>
+        <p class="note">
+          prop เสริมสำหรับช่องที่ห้ามลงวันหยุดจริง ๆ (เช่นวันนัดตรวจ) วันหยุด+เสาร์อาทิตย์กดไม่ได้ และถ้าพิมพ์ตรงวันหยุดจะขึ้น error
+        </p>
+        <label class="field-label" for="f-inspect">Inspection Date</label>
+        <div id="fld-inspect"></div>
+      </div>
+
+      <div class="card">
+        <h2>4. สถานะอื่น ๆ</h2>
+        <div class="row2">
+          <div>
+            <label class="field-label" for="f-disabled">Disabled</label>
+            <div id="fld-disabled"></div>
+          </div>
+          <div>
+            <label class="field-label" for="f-empty">ว่าง (ยังไม่กรอก)</label>
+            <div id="fld-empty"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RIGHT COLUMN ─────────────────────────────────────────── -->
+    <div style="display:flex; flex-direction:column; gap:16px;">
+      <div class="card">
+        <h2>ค่าที่ส่งเข้าฟอร์ม (react-hook-form)</h2>
+        <p class="note">
+          commit เฉพาะตอนกรอกครบและวันที่ถูกต้องเท่านั้น — รูปแบบ ISO เดิมไม่เปลี่ยน
+        </p>
+        <pre class="state" id="state-dump"></pre>
+      </div>
+
+      <div class="card">
+        <h2>คีย์บอร์ดที่ลองได้</h2>
+        <table class="keys">
+          <tr><td><kbd>คลิก</kbd> ในช่อง</td><td>เลือกเฉพาะส่วนที่คลิก (วัน / เดือน / ปี / ชม. / นาที) — <strong>ปฏิทินไม่เด้ง</strong></td></tr>
+          <tr><td><kbd>0</kbd>–<kbd>9</kbd></td><td>พิมพ์ทับเฉพาะส่วนนั้น แล้วกระโดดส่วนถัดไปเองเมื่อครบ</td></tr>
+          <tr><td><kbd>↑</kbd> <kbd>↓</kbd></td><td>บวก/ลบค่าของส่วนที่เลือก (วนรอบ) — ส่วนที่ยังว่างเริ่มจากค่าวันนี้</td></tr>
+          <tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>ย้ายไปส่วนก่อนหน้า / ถัดไป</td></tr>
+          <tr><td><kbd>/</kbd> <kbd>:</kbd> <kbd>Space</kbd></td><td>ยืนยันส่วนปัจจุบันแล้วไปส่วนถัดไป</td></tr>
+          <tr><td><kbd>Backspace</kbd></td><td>ล้างส่วนที่เลือก กดซ้ำเมื่อว่างแล้วจะถอยไปลบส่วนก่อนหน้าต่อ (กดค้างลบย้อนได้ทั้งช่อง) — <kbd>Delete</kbd> ล้างเฉพาะส่วนที่เลือก ไม่ถอย</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>ปิดปฏิทิน</td></tr>
+          <tr><td>วาง (paste)</td><td>วาง <code>04/09/2026</code> หรือ <code>04/09/2026 14:30</code> ได้ทั้งก้อน</td></tr>
+          <tr><td>ไอคอน 📅</td><td><strong>ที่เดียว</strong>ที่เปิดปฏิทิน</td></tr>
+        </table>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--color-primary)"></i> วันที่เลือก</span>
+          <span><i class="swatch" style="box-shadow:inset 0 0 0 1.5px var(--color-primary); background:#fff"></i> วันนี้</span>
+          <span><i class="swatch" style="background:var(--color-holiday-bg); border:1px solid var(--color-holiday)"></i> วันหยุด</span>
+          <span><i class="swatch" style="background:#f3f4f6"></i> เลือกไม่ได้</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>เทียบกับของเดิม</h2>
+        <table class="keys">
+          <tr><td>ปุ่ม Today</td><td>เดิมซ่อนในแผงเดือน/ปี → <strong>ย้ายมาอยู่ footer ของหน้าแรก</strong> (กดแล้วแค่เลื่อนปฏิทินมาเดือนนี้ ไม่เลือกวันให้)</td></tr>
+          <tr><td>เปิดปฏิทิน</td><td>เดิมคลิกที่ไหนในช่องก็เด้ง → <strong>เฉพาะไอคอน</strong> (โหมดช่วงวันที่ยังคลิกช่องได้เหมือนเดิม เพราะเป็น read-only)</td></tr>
+          <tr><td>การพิมพ์</td><td>เดิมพิมพ์แก้เดือนต้องลบใหม่ทั้งหมด → <strong>แก้ทีละส่วน</strong> + ล็อกฟอร์แมต</td></tr>
+          <tr><td>พิมพ์ค้างครึ่ง ๆ</td><td>เดิมทิ้งข้อความขยะไว้ในช่อง → <strong>blur แล้วย้อนกลับค่าที่ commit ล่าสุด</strong></td></tr>
+          <tr><td>วันหยุด</td><td>เดิมไม่มีเลย → รับ prop <code>holidays</code> มาไฮไลต์ + tooltip ชื่อวันหยุด</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── mock holiday data (สมมติ) ───────────────────────────────────────────────
+  const HOLIDAYS = {
+    '2026-01-01': 'วันขึ้นปีใหม่',
+    '2026-03-03': 'วันมาฆบูชา',
+    '2026-04-06': 'วันจักรี',
+    '2026-04-13': 'วันสงกรานต์',
+    '2026-04-14': 'วันสงกรานต์',
+    '2026-04-15': 'วันสงกรานต์',
+    '2026-05-01': 'วันแรงงานแห่งชาติ',
+    '2026-05-04': 'วันฉัตรมงคล',
+    '2026-05-31': 'วันวิสาขบูชา',
+    '2026-06-03': 'วันเฉลิมพระชนมพรรษาสมเด็จพระนางเจ้าฯ พระบรมราชินี',
+    '2026-07-28': 'วันเฉลิมพระชนมพรรษา ร.10',
+    '2026-07-29': 'วันอาสาฬหบูชา',
+    '2026-07-30': 'วันเข้าพรรษา',
+    '2026-08-12': 'วันแม่แห่งชาติ',
+    '2026-09-11': 'วันหยุดพิเศษ (ตัวอย่าง)',
+    '2026-09-24': 'วันมหิดล (ตัวอย่าง)',
+    '2026-10-13': 'วันคล้ายวันสวรรคต ร.9',
+    '2026-10-23': 'วันปิยมหาราช',
+    '2026-12-05': 'วันพ่อแห่งชาติ',
+    '2026-12-10': 'วันรัฐธรรมนูญ',
+    '2026-12-31': 'วันสิ้นปี',
+  };
+
+  const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const WEEKDAYS = ['M','T','W','T','F','S','S']; // Monday first
+
+  const pad = (n, len) => String(n).padStart(len, '0');
+  const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1, 2)}-${pad(d.getDate(), 2)}`;
+  const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const TODAY = startOfDay(new Date());
+  const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+
+  document.getElementById('today-label').textContent =
+    `${pad(TODAY.getDate(), 2)}/${pad(TODAY.getMonth() + 1, 2)}/${TODAY.getFullYear()}`;
+
+  // ── segment model ──────────────────────────────────────────────────────────
+  // A fixed-width template string. Every segment keeps a constant slice, so the
+  // format is locked no matter what the user types.
+  //   date      : dd/mm/yyyy          → 0..9
+  //   date+time : dd/mm/yyyy hh:mm    → 0..15
+  const DATE_SEGMENTS = [
+    { key: 'd',  start: 0, len: 2, min: 1,    max: 31,   blank: 'dd' },
+    { key: 'm',  start: 3, len: 2, min: 1,    max: 12,   blank: 'mm' },
+    { key: 'y',  start: 6, len: 4, min: 1900, max: 2999, blank: 'yyyy' },
+  ];
+  const TIME_SEGMENTS = [
+    { key: 'h',  start: 11, len: 2, min: 0, max: 23, blank: 'hh' },
+    { key: 'mi', start: 14, len: 2, min: 0, max: 59, blank: 'mm' },
+  ];
+
+  function buildText(parts, withTime) {
+    const segs = withTime ? DATE_SEGMENTS.concat(TIME_SEGMENTS) : DATE_SEGMENTS;
+    const piece = s => (parts[s.key] == null ? s.blank : pad(parts[s.key], s.len));
+    let text = `${piece(segs[0])}/${piece(segs[1])}/${piece(segs[2])}`;
+    if (withTime) text += ` ${piece(segs[3])}:${piece(segs[4])}`;
+    return text;
+  }
+
+  function segmentIndexAt(caret, segs) {
+    for (let i = 0; i < segs.length; i++) {
+      const s = segs[i];
+      if (caret <= s.start + s.len) return i;
+    }
+    return segs.length - 1;
+  }
+
+  // ── the field ──────────────────────────────────────────────────────────────
+  function createDateField(mountEl, opts) {
+    const {
+      id,
+      withTime = false,
+      required = false,
+      disabled = false,
+      disableFutureDates = false,
+      disablePastDates = false,
+      disableHolidays = false,
+      helper = '',
+      initial = null, // Date
+      onCommit = () => {},
+    } = opts;
+
+    const segs = withTime ? DATE_SEGMENTS.concat(TIME_SEGMENTS) : DATE_SEGMENTS;
+
+    // state
+    let parts = { d: null, m: null, y: null, h: null, mi: null };
+    let committed = null;      // Date | null — the value the form holds
+    let typingBuffer = '';     // digits typed into the active segment so far
+    let activeIndex = 0;
+    let errorMsg = '';
+    let viewMonth = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+    let open = false;
+    let showMonthPanel = false;
+
+    if (initial) {
+      parts = {
+        d: initial.getDate(), m: initial.getMonth() + 1, y: initial.getFullYear(),
+        h: withTime ? initial.getHours() : null,
+        mi: withTime ? initial.getMinutes() : null,
+      };
+      committed = initial;
+      viewMonth = new Date(initial.getFullYear(), initial.getMonth(), 1);
+    }
+
+    // DOM
+    mountEl.innerHTML = `
+      <div class="df">
+        <div class="df-control">
+          <input id="${id}" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="${withTime ? 'dd/mm/yyyy hh:mm' : 'dd/mm/yyyy'}"
+                 ${disabled ? 'disabled' : ''} />
+          <button type="button" class="cal-btn" aria-label="Open calendar" ${disabled ? 'disabled' : ''}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </button>
+          <div class="pop"></div>
+        </div>
+        <p class="msg"></p>
+      </div>
+    `;
+
+    const wrap = mountEl.querySelector('.df');
+    const input = mountEl.querySelector('input');
+    const calBtn = mountEl.querySelector('.cal-btn');
+    const pop = mountEl.querySelector('.pop');
+    const msg = mountEl.querySelector('.msg');
+
+    // ── helpers ──────────────────────────────────────────────────────────────
+    const isComplete = () =>
+      parts.d != null && parts.m != null && parts.y != null &&
+      (!withTime || (parts.h != null && parts.mi != null));
+
+    function toDate() {
+      if (!isComplete()) return null;
+      if (parts.d > daysInMonth(parts.y, parts.m - 1)) return null; // 31/02 etc.
+      return new Date(parts.y, parts.m - 1, parts.d, parts.h || 0, parts.mi || 0);
+    }
+
+    function violation(date) {
+      const day = startOfDay(date);
+      if (disableFutureDates && day > TODAY) return 'Date cannot be in the future';
+      if (disablePastDates && day < TODAY) return 'Date cannot be in the past';
+      if (disableHolidays) {
+        if (HOLIDAYS[iso(day)]) return `Holiday: ${HOLIDAYS[iso(day)]}`;
+        const wd = day.getDay();
+        if (wd === 0 || wd === 6) return 'Weekends are not allowed';
+      }
+      return '';
+    }
+
+    function isDayDisabled(date) {
+      return violation(date) !== '';
+    }
+
+    /** Commit to "the form" when the value is complete and legal. */
+    function tryCommit() {
+      const date = toDate();
+      if (!isComplete()) { errorMsg = ''; return; }
+      if (!date) { errorMsg = 'Invalid date'; return; }
+      const v = violation(date);
+      if (v) { errorMsg = v; return; }
+      errorMsg = '';
+      committed = date;
+      onCommit(date);
+    }
+
+    function render() {
+      input.value = (isComplete() || parts.d != null || parts.m != null || parts.y != null ||
+                     parts.h != null || parts.mi != null || document.activeElement === input)
+        ? buildText(parts, withTime)
+        : '';
+      input.classList.toggle('is-incomplete', !isComplete());
+      wrap.classList.toggle('has-error', !!errorMsg);
+      msg.textContent = errorMsg || helper;
+      if (open) renderPopover();
+    }
+
+    function selectSegment(i) {
+      activeIndex = Math.max(0, Math.min(segs.length - 1, i));
+      typingBuffer = '';
+      const s = segs[activeIndex];
+      requestAnimationFrame(() => input.setSelectionRange(s.start, s.start + s.len));
+    }
+
+    // ── typing ───────────────────────────────────────────────────────────────
+    function typeDigit(digit) {
+      const s = segs[activeIndex];
+      const next = (typingBuffer + digit).slice(-s.len);
+      const num = parseInt(next, 10);
+
+      parts[s.key] = num;
+      typingBuffer = next;
+
+      // Advance when the segment is full, or when no second digit could keep it legal.
+      const full = next.length >= s.len;
+      const cannotGrow = num * 10 > s.max;
+      if (full || cannotGrow) {
+        // day/month have no 0 — clamp so "0" then Tab does not leave a zero behind
+        if (parts[s.key] < s.min && s.min === 1) parts[s.key] = 1;
+        clampDayToMonth();
+        tryCommit();
+        if (activeIndex < segs.length - 1) selectSegment(activeIndex + 1);
+        else { typingBuffer = ''; requestAnimationFrame(() => input.setSelectionRange(s.start, s.start + s.len)); }
+      } else {
+        requestAnimationFrame(() => input.setSelectionRange(s.start, s.start + s.len));
+      }
+      render();
+    }
+
+    function clampDayToMonth() {
+      if (parts.d != null && parts.m != null && parts.y != null) {
+        const max = daysInMonth(parts.y, parts.m - 1);
+        if (parts.d > max) parts.d = max;
+      }
+    }
+
+    function stepSegment(delta) {
+      const s = segs[activeIndex];
+      if (parts[s.key] == null) {
+        // start from today's corresponding value rather than from the minimum
+        const seed = { d: TODAY.getDate(), m: TODAY.getMonth() + 1, y: TODAY.getFullYear(), h: 9, mi: 0 };
+        parts[s.key] = seed[s.key];
+      } else {
+        const span = s.max - s.min + 1;
+        parts[s.key] = ((parts[s.key] - s.min + delta) % span + span) % span + s.min;
+      }
+      typingBuffer = '';
+      clampDayToMonth();
+      tryCommit();
+      if (committed) viewMonth = new Date(committed.getFullYear(), committed.getMonth(), 1);
+      render();
+      const seg = segs[activeIndex];
+      requestAnimationFrame(() => input.setSelectionRange(seg.start, seg.start + seg.len));
+    }
+
+    // Backspace on an already-empty segment walks back and clears the one before it. Delete stays
+    // put and only clears the segment the user is on.
+    function clearSegment(walkBack) {
+      const alreadyEmpty = parts[segs[activeIndex].key] == null;
+      if (walkBack && alreadyEmpty && activeIndex > 0) activeIndex -= 1;
+
+      const s = segs[activeIndex];
+      parts[s.key] = null;
+      typingBuffer = '';
+      errorMsg = '';
+      render();
+      requestAnimationFrame(() => input.setSelectionRange(s.start, s.start + s.len));
+    }
+
+    input.addEventListener('focus', () => {
+      const firstEmpty = segs.findIndex(s => parts[s.key] == null);
+      selectSegment(firstEmpty === -1 ? 0 : firstEmpty);
+      render();
+    });
+
+    input.addEventListener('mouseup', e => {
+      e.preventDefault();
+      selectSegment(segmentIndexAt(input.selectionStart ?? 0, segs));
+    });
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Tab') return; // let focus move on
+
+      if (/^[0-9]$/.test(e.key)) { e.preventDefault(); typeDigit(e.key); return; }
+      if (e.key === 'ArrowUp')    { e.preventDefault(); stepSegment(1); return; }
+      if (e.key === 'ArrowDown')  { e.preventDefault(); stepSegment(-1); return; }
+      if (e.key === 'ArrowRight') { e.preventDefault(); selectSegment(activeIndex + 1); return; }
+      if (e.key === 'ArrowLeft')  { e.preventDefault(); selectSegment(activeIndex - 1); return; }
+      if (e.key === '/' || e.key === ':' || e.key === ' ') { e.preventDefault(); selectSegment(activeIndex + 1); return; }
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        e.preventDefault();
+        clearSegment(e.key === 'Backspace');
+        return;
+      }
+      if (e.key === 'Escape') { closePopover(); return; }
+      if (e.key === 'Enter') { e.preventDefault(); tryCommit(); render(); return; }
+      // block every other printable key — the format stays locked
+      if (e.key.length === 1 && !e.metaKey && !e.ctrlKey) e.preventDefault();
+    });
+
+    input.addEventListener('paste', e => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData).getData('text').trim();
+      const m = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:[ T](\d{1,2}):(\d{2}))?/);
+      if (!m) return;
+      parts.d = +m[1]; parts.m = +m[2]; parts.y = +m[3];
+      if (withTime) { parts.h = m[4] != null ? +m[4] : 0; parts.mi = m[5] != null ? +m[5] : 0; }
+      clampDayToMonth();
+      tryCommit();
+      if (committed) viewMonth = new Date(committed.getFullYear(), committed.getMonth(), 1);
+      render();
+    });
+
+    // Half-typed values never survive a blur: fall back to whatever the form holds.
+    input.addEventListener('blur', () => {
+      if (!isComplete() || errorMsg) {
+        if (committed) {
+          parts = {
+            d: committed.getDate(), m: committed.getMonth() + 1, y: committed.getFullYear(),
+            h: withTime ? committed.getHours() : null,
+            mi: withTime ? committed.getMinutes() : null,
+          };
+        } else if (!isComplete()) {
+          parts = { d: null, m: null, y: null, h: null, mi: null };
+        }
+        if (!errorMsg || isComplete()) errorMsg = '';
+      }
+      if (required && !committed) errorMsg = 'This field is required';
+      render();
+    });
+
+    // ── popover ──────────────────────────────────────────────────────────────
+    function openPopover() {
+      open = true;
+      showMonthPanel = false;
+      if (committed) viewMonth = new Date(committed.getFullYear(), committed.getMonth(), 1);
+      pop.classList.add('open');
+      render();
+    }
+    function closePopover() {
+      open = false;
+      showMonthPanel = false;
+      pop.classList.remove('open');
+      pop.innerHTML = '';
+    }
+
+    calBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      open ? closePopover() : openPopover();
+    });
+
+    document.addEventListener('mousedown', e => {
+      if (open && !wrap.contains(e.target)) closePopover();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && open) closePopover();
+    });
+
+    function renderPopover() {
+      const y = viewMonth.getFullYear();
+      const mo = viewMonth.getMonth();
+      const first = new Date(y, mo, 1);
+      const offset = (first.getDay() + 6) % 7; // Monday-first
+      const cells = [];
+      for (let i = 0; i < 42; i++) cells.push(new Date(y, mo, 1 - offset + i));
+
+      const selected = committed ? startOfDay(committed) : null;
+
+      const dayHtml = cells.map(d => {
+        const key = iso(d);
+        const holiday = HOLIDAYS[key];
+        const outside = d.getMonth() !== mo;
+        const off = isDayDisabled(d);
+        const cls = ['day'];
+        if (outside) cls.push('outside');
+        if (holiday) cls.push('holiday');
+        if (selected && +startOfDay(d) === +selected) cls.push('selected');
+        if (+startOfDay(d) === +TODAY) cls.push('today');
+        const title = holiday ? ` title="${holiday}"` : '';
+        return `<button type="button" class="${cls.join(' ')}" data-date="${key}"${title}${off ? ' disabled' : ''}>${d.getDate()}</button>`;
+      }).join('');
+
+      const monthPanel = showMonthPanel ? `
+        <div class="my">
+          <div class="my-year">
+            <button type="button" data-year="-1">&#8249;</button>
+            <span>${y}</span>
+            <button type="button" data-year="1">&#8250;</button>
+          </div>
+          <div class="my-grid">
+            ${MONTHS_SHORT.map((label, i) =>
+              `<button type="button" data-month="${i}" class="${i === mo ? 'active' : ''}">${label}</button>`).join('')}
+          </div>
+        </div>` : '';
+
+      const timeRow = withTime ? `
+        <div class="time-row">
+          <label>Time</label>
+          <select data-time="h">${Array.from({ length: 24 }, (_, i) =>
+            `<option value="${i}" ${parts.h === i ? 'selected' : ''}>${pad(i, 2)}</option>`).join('')}</select>
+          <span>:</span>
+          <select data-time="mi">${Array.from({ length: 60 }, (_, i) =>
+            `<option value="${i}" ${parts.mi === i ? 'selected' : ''}>${pad(i, 2)}</option>`).join('')}</select>
+          <button type="button" class="done" data-done="1">Done</button>
+        </div>` : '';
+
+      pop.innerHTML = `
+        <div class="pop-body">
+          <div class="cal">
+            <div class="cal-head">
+              <button type="button" class="cal-title ${showMonthPanel ? 'expanded' : ''}" data-toggle="1">
+                <span>${MONTHS_LONG[mo]} ${y}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                     stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              <div class="cal-nav">
+                <button type="button" data-step="-1" aria-label="Previous month">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round"><path d="M18 15l-6-6-6 6" /></svg>
+                </button>
+                <button type="button" data-step="1" aria-label="Next month">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+              </div>
+            </div>
+            <div class="cal-grid">
+              ${WEEKDAYS.map(w => `<div class="wd">${w}</div>`).join('')}
+              ${dayHtml}
+            </div>
+          </div>
+          ${monthPanel}
+        </div>
+        <div class="cal-foot">
+          <button type="button" class="today-btn" data-today="1">Today</button>
+          <span class="hint">เลื่อนปฏิทินมาเดือนนี้</span>
+        </div>
+        ${timeRow}
+      `;
+    }
+
+    pop.addEventListener('click', e => {
+      const btn = e.target.closest('button');
+      if (!btn) return;
+
+      if (btn.dataset.step) {
+        viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() + Number(btn.dataset.step), 1);
+        render(); return;
+      }
+      if (btn.dataset.toggle) { showMonthPanel = !showMonthPanel; render(); return; }
+      if (btn.dataset.year) {
+        viewMonth = new Date(viewMonth.getFullYear() + Number(btn.dataset.year), viewMonth.getMonth(), 1);
+        render(); return;
+      }
+      if (btn.dataset.month) {
+        viewMonth = new Date(viewMonth.getFullYear(), Number(btn.dataset.month), 1);
+        showMonthPanel = false; render(); return;
+      }
+      if (btn.dataset.today) {
+        // Navigates only — it does NOT pick today's date.
+        viewMonth = new Date(TODAY.getFullYear(), TODAY.getMonth(), 1);
+        showMonthPanel = false; render(); return;
+      }
+      if (btn.dataset.done) { closePopover(); return; }
+      if (btn.dataset.date) {
+        const [yy, mm, dd] = btn.dataset.date.split('-').map(Number);
+        parts.d = dd; parts.m = mm; parts.y = yy;
+        if (withTime && parts.h == null) { parts.h = 9; parts.mi = 0; }
+        typingBuffer = '';
+        tryCommit();
+        viewMonth = new Date(yy, mm - 1, 1);
+        if (withTime) render(); else { closePopover(); render(); }
+        return;
+      }
+    });
+
+    pop.addEventListener('change', e => {
+      const sel = e.target.closest('select');
+      if (!sel) return;
+      parts[sel.dataset.time] = Number(sel.value);
+      tryCommit();
+      render();
+    });
+
+    render();
+    if (committed) onCommit(committed);
+    return { get value() { return committed; } };
+  }
+
+  // ── mount the demos ────────────────────────────────────────────────────────
+  const formState = {
+    purchaseDate: null,
+    appointmentAt: null,
+    inspectionDate: null,
+  };
+
+  function dumpState() {
+    const el = document.getElementById('state-dump');
+    const line = (k, v) =>
+      `  <span class="k">"${k}"</span>: ` +
+      (v ? `<span class="v">"${v}"</span>` : `<span class="null">null</span>`);
+    el.innerHTML = '{\n' + Object.entries(formState).map(([k, v]) => line(k, v)).join(',\n') + '\n}';
+  }
+
+  // ISO with offset — same shape the current component emits (formatISO)
+  function isoWithOffset(d) {
+    const tz = -d.getTimezoneOffset();
+    const sign = tz >= 0 ? '+' : '-';
+    const hh = pad(Math.floor(Math.abs(tz) / 60), 2);
+    const mm = pad(Math.abs(tz) % 60, 2);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1, 2)}-${pad(d.getDate(), 2)}` +
+           `T${pad(d.getHours(), 2)}:${pad(d.getMinutes(), 2)}:00${sign}${hh}:${mm}`;
+  }
+
+  createDateField(document.getElementById('fld-purchase'), {
+    id: 'f-purchase',
+    required: true,
+    disableFutureDates: true,
+    helper: 'ห้ามเลือกวันในอนาคต',
+    initial: new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate()),
+    onCommit: d => { formState.purchaseDate = isoWithOffset(d); dumpState(); },
+  });
+
+  createDateField(document.getElementById('fld-appt'), {
+    id: 'f-appt',
+    withTime: true,
+    disablePastDates: true,
+    helper: 'ห้ามเลือกวันย้อนหลัง',
+    onCommit: d => { formState.appointmentAt = isoWithOffset(d); dumpState(); },
+  });
+
+  createDateField(document.getElementById('fld-inspect'), {
+    id: 'f-inspect',
+    disableHolidays: true,
+    helper: 'ห้ามลงวันหยุด/เสาร์-อาทิตย์',
+    onCommit: d => { formState.inspectionDate = isoWithOffset(d); dumpState(); },
+  });
+
+  createDateField(document.getElementById('fld-disabled'), {
+    id: 'f-disabled',
+    disabled: true,
+    initial: new Date(2026, 5, 15),
+    helper: 'read-only mode',
+  });
+
+  createDateField(document.getElementById('fld-empty'), {
+    id: 'f-empty',
+    helper: 'คลิกในช่องแล้วพิมพ์ได้เลย',
+  });
+
+  dumpState();
+</script>

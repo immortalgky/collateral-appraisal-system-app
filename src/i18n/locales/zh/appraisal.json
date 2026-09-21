@@ -69,7 +69,21 @@
       "collapse": "隐藏筛选",
       "created": "创建日期",
       "slaDue": "SLA 截止",
-      "assigneeUserId": "负责人"
+      "assigneeUserId": "负责人",
+      "add": "添加筛选",
+      "searchIn": "搜索{{label}}…",
+      "showingOf": "显示 {{shown}} / {{total}}",
+      "typeToFind": "输入以查找其余项",
+      "noMatch": "没有匹配的选项",
+      "groups": {
+        "work": "工作与状态",
+        "kind": "业务类型",
+        "owner": "负责人",
+        "area": "区域",
+        "time": "日期"
+      },
+      "anyValue": "全部",
+      "optionsUnavailable": "暂无可选项"
     },
     "status": {
       "Pending": "待处理",
@@ -88,7 +102,9 @@
       "AtRisk": "有风险",
       "Breached": "已超期",
       "overdue": "超期 {{time}}",
-      "left": "剩余 {{time}}"
+      "left": "剩余 {{time}}",
+      "closed": "已结案",
+      "cancelled": "已取消"
     },
     "assignmentType": {
       "Internal": "内部",
@@ -136,7 +152,26 @@
     "activeFilters": "筛选：",
     "clearAll": "全部清除",
     "removeFilter": "移除筛选",
-    "activityTracking": "活动跟踪"
+    "activityTracking": "活动跟踪",
+    "searchTips": {
+      "trigger": "找不到？",
+      "title": "找不到？可以这样试试",
+      "prefix": "默认从值的开头匹配 — 输入 691 可找到 69105467，输入 05467 则不行",
+      "wildcard": "以 * 开头可匹配值中间的内容，例如 *john",
+      "scoped": "在搜索框左侧选择单个字段，即可匹配该字段中的任意位置",
+      "minLength": "至少输入 {{count}} 个字符才会开始搜索",
+      "coverageTitle": "“全部字段”会搜索哪些内容",
+      "coverage": {
+        "numbers": "估价单号 · 申请单号 · 贷款申请号 · 上次估价单号",
+        "people": "客户姓名（申请中的所有客户）· 客户电话 · 联系人姓名与电话 · 申请人",
+        "properties": "地契号 · 地块号 · 房号 · 车牌 · 所有人 · 项目名称 · 公寓名称",
+        "places": "府、县、区名称（当输入的是地址名称时）"
+      }
+    },
+    "emptyAll": "暂无估价单",
+    "emptyAllHint": "有新的估价单时会显示在这里",
+    "moreCustomers_one": "该申请还有 {{count}} 位客户",
+    "moreCustomers_other": "该申请还有 {{count}} 位客户"
   },
   "appointment": {
     "sectionTitle": "预约信息",
@@ -472,10 +507,7 @@
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
       "priceVerification": "价格核实",
-      "priceVerificationOptions": [
-        "未核实",
-        "已核实"
-      ],
+      "priceVerificationOptions": ["未核实", "已核实"],
       "reviewPrices": "审查价格",
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",
@@ -611,6 +643,99 @@
         "longitude": "经度",
         "obligation": "义务负担",
         "other": "其他"
+      },
+      "suggested": {
+        "applyEmpty": "填入空白栏",
+        "applyOne": "使用计算值（{{value}}）",
+        "helpTitle": "根据本次评估的机器计算",
+        "helpComputed": "计算值：{{value}}",
+        "helpNote": "仅为初始值，不会覆盖您填写的内容。",
+        "rules": {
+          "surveyedNumber": "勘查中找到的机器（使用状况不是\"未找到\"）",
+          "appraisalNumber": "已认证价格的机器，与已评估价值相同",
+          "installedAndUseCount": "已安装并在使用中的机器",
+          "appraisalScrapCount": "未在使用但仍进行评估的机器",
+          "appraisedByDocumentCount": "采购中、按报价单定价的机器",
+          "notInstalledCount": "采购中的机器"
+        }
+      },
+      "groups": {
+        "counts": "机器数量",
+        "condition": "整体状况与市场",
+        "ownership": "产权",
+        "location": "位置",
+        "obligation": "义务与备注"
+      },
+      "table": {
+        "item": "项目",
+        "entered": "填写值",
+        "derived": "计算值",
+        "source": "来源",
+        "use": "使用",
+        "ungrouped": "未分组",
+        "sourceSentence": "来自 {{list}}",
+        "sourcePart_other": "{{group}} {{count}} 台",
+        "sourceJoin": "，",
+        "sourceUngrouped": "未分组的机器",
+        "sourceNone": "没有符合条件的机器",
+        "sourcePart_one": "{{group}} {{count}} 台",
+        "sourceGroupNumber": "第 {{number}} 组"
+      },
+      "checks": {
+        "title": "数字不一致",
+        "appraisedOverSurveyed": "评估 {{appraised}} 超过勘查 {{surveyed}}",
+        "splitOverSurveyed": "已安装 + 未安装 = {{split}}，超过勘查的 {{surveyed}}",
+        "note": "仅为提示，不影响保存。"
+      }
+    },
+    "machineryInfo": {
+      "sectionTitle": "机器信息",
+      "fields": {
+        "propertyName": "机器名称",
+        "machineType": "机器类型",
+        "brand": "品牌",
+        "model": "型号",
+        "series": "系列",
+        "quantity": "数量",
+        "manufacturer": "制造国",
+        "yearOfManufacture": "制造年份",
+        "purchaseDate": "购买日期",
+        "purchasePrice": "购买价格",
+        "isOwnerVerified": "核查所有权",
+        "ownerName": "产权持有人",
+        "registrationStatus": "登记状态",
+        "registrationNumber": "登记号",
+        "installationStatus": "安装状态",
+        "invoiceNumber": "报价单号",
+        "isPriceCertified": "价格认证",
+        "conditionUse": "使用状况",
+        "isOperational": "可使用",
+        "machineCondition": "机器状况",
+        "machineAge": "机器年限",
+        "machineEfficiency": "机器效率",
+        "usagePurpose": "用途",
+        "capacity": "生产能力",
+        "location": "位置",
+        "width": "宽度",
+        "length": "长度",
+        "height": "高度",
+        "machineDimensions": "机器尺寸",
+        "energyUse": "能源使用",
+        "machineTechnology": "机器技术",
+        "other": "其他",
+        "machineParts": "机器部件",
+        "remark": "备注",
+        "appraiserOpinion": "评估师意见"
+      },
+      "options": {
+        "cannot": "不能",
+        "can": "能",
+        "unregistered": "未登记",
+        "registered": "已登记",
+        "notCertified": "不认证",
+        "certified": "认证",
+        "cannotUse": "不可用",
+        "canUse": "可用"
       }
     }
   },
@@ -625,13 +750,86 @@
       "pinView": "在地图上查看",
       "pinNoLocation": "未设置位置"
     },
+    "machineryChips": {
+      "registered": "已登记",
+      "unregistered": "未登记",
+      "notPriceCertified": "价格未认证"
+    },
     "addNewGroup": "添加新组",
     "noGroups": "暂无房产组",
     "noGroupsHint": "点击\"添加新组\"创建第一个组",
     "loadError": "加载房产组失败",
     "loadErrorHint": "请刷新页面重试",
-    "viewGrid": "网格视图",
-    "viewList": "列表视图",
+    "stackColumns": {
+      "machine": "机器",
+      "registrationNumber": "登记编号",
+      "registrationStatus": "登记状态",
+      "brandModel": "品牌 / 型号"
+    },
+    "registeredCount": "已登记 {{registered}}/{{total}}",
+    "itemCount": "{{n}} 项",
+    "splitView": {
+      "openEditor": "打开编辑页",
+      "selectHint": "请从左侧列表选择资产",
+      "photoCount": "{{n}} 张照片",
+      "noPhotos": "尚无照片",
+      "rowHint": "双击编辑 · 右键更多操作",
+      "emptyHint": "尚无资产——可从左侧分组中添加。",
+      "emptyReadOnly": "尚无资产。"
+    },
+    "toolbar": {
+      "groups": "个组",
+      "properties": "项资产"
+    },
+    "picker": {
+      "title": "选择资产类型",
+      "own": "所有权",
+      "lease": "租赁权",
+      "other": "其他",
+      "soon": "即将推出",
+      "addShort": "添加",
+      "leaseSuffix": "（租赁）"
+    },
+    "units": {
+      "sqm": "平方米",
+      "sqwa": "平方哇",
+      "raiNganWa": "莱"
+    },
+    "viewModes": {
+      "rows": "列表",
+      "cards": "卡片",
+      "table": "表格",
+      "split": "双栏"
+    },
+    "notSet": "尚未填写位置",
+    "coordsNotSet": "尚未填写坐标",
+    "openInGoogleMaps": "在 Google 地图中打开",
+    "addToGroup": "向组内添加资产",
+    "dropHere": "将资产拖到此处，或在下方添加",
+    "renameHint": "点击可重命名",
+    "groupActions": "组操作",
+    "renameGroup": "重命名组",
+    "deleteGroup": "删除组",
+    "pricingAnalysis": "定价分析",
+    "dragToReorder": "拖动可在组内排序，拖到其他组可移动",
+    "pricing": {
+      "done": "已定价",
+      "todo": "未定价",
+      "inProgress": "评估中"
+    },
+    "stack": {
+      "collapse": "收起"
+    },
+    "table": {
+      "image": "图片",
+      "property": "资产",
+      "type": "类型",
+      "area": "面积",
+      "location": "位置",
+      "coordinates": "坐标",
+      "actions": "操作",
+      "buildingType": "建筑类型"
+    },
     "contextMenu": {
       "view": "查看",
       "edit": "编辑",
@@ -658,6 +856,32 @@
       "propertyMoveFailed": "移动房产失败",
       "propertyPasteFailed": "粘贴房产失败",
       "reorderFailed": "重排房产失败"
+    },
+    "floorCount": "{{n}} 层",
+    "machinerySummary": {
+      "title": "机器汇总",
+      "status": {
+        "none": "尚未保存",
+        "done": "已保存",
+        "drift": "数量与清单不符"
+      },
+      "hint": {
+        "none": "本估价共有 {{n}} 台机器 — 请保存汇总",
+        "drift": "已保存 → 按当前机器清单统计"
+      },
+      "actions": {
+        "start": "开始汇总",
+        "open": "打开汇总",
+        "review": "检查汇总"
+      },
+      "counts": {
+        "surveyedNumber": "已勘察",
+        "appraisalNumber": "已估价",
+        "installedAndUseCount": "已安装使用",
+        "appraisalScrapCount": "残值",
+        "appraisedByDocumentCount": "按文件",
+        "notInstalledCount": "未安装"
+      }
     }
   },
   "view360": {
@@ -1102,7 +1326,93 @@
       "deleted": "照片已删除",
       "deleteFailed": "删除照片失败",
       "updated": "照片已更新",
-      "updateFailed": "更新照片失败"
+      "updateFailed": "更新照片失败",
+      "addedToTopic": "已将 {{n}} 张照片加入“{{topic}}”"
+    },
+    "summary": "共 {{total}} 张 · 报告已用 {{used}}",
+    "filters": {
+      "all": "全部",
+      "used": "已使用",
+      "unused": "未使用"
+    },
+    "searchPlaceholder": "搜索说明或文件名",
+    "upload": "上传照片",
+    "layout": {
+      "label": "排列",
+      "type": "按类型",
+      "flat": "平铺"
+    },
+    "sort": {
+      "label": "排序",
+      "newest": "最新上传",
+      "oldest": "最早上传",
+      "name": "文件名"
+    },
+    "view": {
+      "grid": "网格",
+      "list": "列表"
+    },
+    "selectAll": "全选",
+    "types": {
+      "property": "资产照片",
+      "general": "一般照片",
+      "law_regulation": "法规 / 文件照片",
+      "other": "其他"
+    },
+    "typeCount": "{{n}} 张",
+    "uploading": "正在上传 {{n}} 个文件…",
+    "processing": "处理中…",
+    "drop": {
+      "title": "将照片拖放到此处",
+      "hint": "松开即可上传"
+    },
+    "uploadTile": {
+      "title": "上传",
+      "hint": "或将照片拖放到本页任意位置"
+    },
+    "empty": {
+      "title": "暂无照片",
+      "hint": "从设备上传照片或拖放到此处。"
+    },
+    "noResults": {
+      "title": "没有匹配的照片",
+      "hint": "请尝试其他搜索或筛选",
+      "clear": "清除筛选"
+    },
+    "showing": "显示 {{shown}} / {{total}}",
+    "bulk": {
+      "selected": "已选 {{n}} 张",
+      "addToTopic": "加入主题",
+      "linkToProperty": "关联资产",
+      "delete": "删除",
+      "clear": "取消选择",
+      "noTopics": "暂无主题 — 请在照片页创建"
+    },
+    "deleteOne": {
+      "title": "删除照片",
+      "message": "确定删除此照片？此操作无法撤销。"
+    },
+    "deleteMany": {
+      "title": "删除所选照片",
+      "message": "确定删除所选的 {{n}} 张照片？此操作无法撤销。"
+    },
+    "confirmDelete": "删除",
+    "cancel": "取消",
+    "link": {
+      "title": "关联到资产",
+      "hint": "选择这些照片所属的资产",
+      "none": "暂无资产",
+      "confirm": "关联照片"
+    },
+    "grid": {
+      "used": "已使用",
+      "unused": "未使用",
+      "noCaption": "暂无说明",
+      "select": "选择照片",
+      "deselect": "取消选择",
+      "edit": "编辑",
+      "delete": "删除",
+      "empty": "没有照片"
     }
   },
   "search": {
@@ -1129,6 +1439,43 @@
       "saveFailed": "保存记录失败",
       "deleted": "记录已删除",
       "deleteFailed": "删除记录失败"
+    },
+    "count": "与本资产相关 {{n}} 项",
+    "noImages": "无配图",
+    "actions": {
+      "menu": "操作",
+      "edit": "编辑",
+      "delete": "删除"
+    },
+    "deleteConfirm": {
+      "title": "删除条目",
+      "message": "确定删除此条目？此操作无法撤销。"
+    },
+    "loadError": "无法加载法规",
+    "editor": {
+      "headerLabel": "标题",
+      "remarkLabel": "详情",
+      "images": "配图",
+      "photoCount": "{{n}} 张",
+      "missingCount": "缺失 {{n}}",
+      "dragHint": "拖动以排序",
+      "captionPlaceholder": "此条目的说明…",
+      "captionLabel": "第 {{n}} 张照片说明",
+      "noCaption": "无说明",
+      "missingTitle": "已从图库中删除",
+      "missingHint": "此条目仍指向它",
+      "missingNoImage": "无可显示内容",
+      "remove": "移除",
+      "removeAria": "从此条目移除",
+      "upload": "上传",
+      "fromGallery": "从图库选择",
+      "dropHere": "拖放文件到此，或",
+      "emptyTitle": "暂无配图",
+      "emptyHint": "例如规划图、公告或相关照片",
+      "emptyReadOnly": "此条目没有图片",
+      "dropTitle": "放开以添加为配图",
+      "dropSub": "图片也会加入本估价的图库",
+      "saved": "已保存"
     }
   },
   "markets": {
@@ -1149,6 +1496,82 @@
       "saveFailed": "保存市场可比案例失败",
       "deleted": "市场可比案例已删除",
       "deleteFailed": "删除市场可比案例失败"
+    },
+    "count": "本估价共 {{n}} 项",
+    "findOnMap": "在地图上查找",
+    "create": "新建可比数据",
+    "viewModes": {
+      "list": "列表",
+      "map": "地图"
+    },
+    "summary": {
+      "median": "中位数",
+      "nearest": "距标的最近",
+      "latest": "最新数据",
+      "used": "用于定价",
+      "usedValue": "{{used}} / {{total}}",
+      "count": "{{n}} 项",
+      "noUnit": "未注明单位",
+      "medianValue": "med {{price}}"
+    },
+    "meta": {
+      "distance": "相距 {{d}}"
+    },
+    "flags": {
+      "stale": "数据已有 {{age}}",
+      "noLocation": "无坐标"
+    },
+    "price": {
+      "saleOnly": "成交价",
+      "offerOnly": "报价",
+      "offer": "报价 {{price}}"
+    },
+    "usedIn": "用于 {{method}}",
+    "methods": {
+      "WQS": "WQS",
+      "SaleGrid": "Sale Grid",
+      "DirectComparison": "Direct Comparison"
+    },
+    "units": {
+      "01": "泰铢/平方哇",
+      "02": "泰铢/平方米",
+      "03": "泰铢/单位",
+      "04": "泰铢/天",
+      "05": "泰铢/月",
+      "06": "泰铢/年"
+    },
+    "age": {
+      "today": "今天",
+      "days": "{{n}} 天",
+      "weeks": "{{n}} 周",
+      "months": "{{n}} 个月",
+      "years": "{{n}} 年"
+    },
+    "ago": "{{age}}前",
+    "distance": {
+      "m": "{{n}} 米",
+      "km": "{{n}} 公里"
+    },
+    "actions": {
+      "menu": "操作",
+      "open": "打开",
+      "copy": "复制",
+      "delete": "删除"
+    },
+    "deleteConfirm": {
+      "title": "移除可比数据",
+      "message": "确定从本估价中移除此可比数据吗？",
+      "confirm": "删除",
+      "cancel": "取消"
+    },
+    "loadError": "无法加载市场可比数据",
+    "loadErrorHint": "请重试",
+    "map": {
+      "subject": "估价标的",
+      "comparable": "可比数据",
+      "noLocation": "{{n}} 项无坐标，未显示在地图上",
+      "rings": "距标的半径",
+      "unavailable": "地图不可用"
     }
   },
   "constructionInspection": {
@@ -1317,7 +1740,9 @@
     "marketComparableUpdated": "市场可比案例更新成功",
     "marketComparableCreated": "市场可比案例创建成功",
     "appraisalReportNotAvailable": "此评估尚未附加完整评估报告。",
-    "appraisalSummaryNotAvailable": "此评估尚未附加评估摘要报告。"
+    "appraisalSummaryNotAvailable": "此评估尚未附加评估摘要报告。",
+    "topicReorderFailed": "未能完整保存主题顺序，请再检查一遍。",
+    "topicUpdateFailed": "无法保存该主题，请再检查一遍。"
   },
   "common": {
     "unsavedChanges": "有未保存的更改",
@@ -1733,5 +2158,157 @@
     "blockedOnSubmit": "提交前请先填写外部评估公司及其报告上的评估日期。",
     "outstandingBoth": "请填写评估公司及日期",
     "outstandingDate": "请填写评估日期"
+  },
+  "photoTopics": {
+    "title": "报告照片主题",
+    "summary": "{{topics}} 个主题 · {{photos}} 张",
+    "dragHint": "拖动以调整报告顺序",
+    "photoCount": "{{n}} 张",
+    "columnsShort": "{{n}} 列",
+    "add": "添加主题",
+    "namePlaceholder": "主题名称…",
+    "save": "添加",
+    "cancel": "取消",
+    "rename": "重命名主题",
+    "delete": "删除主题",
+    "unplaced": "{{n}} 张照片未归入任何主题",
+    "unplacedAction": "添加",
+    "columnsLabel": "报告中的列数",
+    "fromGallery": "从图库添加",
+    "upload": "上传",
+    "pagePreview": "报告页 · {{n}} 列",
+    "empty": {
+      "title": "暂无主题",
+      "hint": "创建主题以编排报告照片"
+    },
+    "selectTopic": {
+      "title": "选择主题",
+      "hint": "在左侧选择主题以查看照片"
+    },
+    "topicEmpty": "此主题暂无照片",
+    "drop": {
+      "title": "拖放照片到此处",
+      "hint": "将加入“{{topic}}”"
+    },
+    "loading": "正在加载照片…",
+    "loadError": "无法加载照片",
+    "loadTopicsError": "无法加载主题",
+    "loadGalleryError": "无法加载图库照片",
+    "deleteTopic": {
+      "title": "删除主题",
+      "message": "删除“{{name}}”？照片仍保留在图库中，但会移出此主题。"
+    },
+    "removePhoto": {
+      "title": "移出照片",
+      "message": "将“{{name}}”移出此主题？"
+    },
+    "confirmDelete": "删除",
+    "confirmRemove": "移出",
+    "preview": "预览",
+    "previewShow": "显示报告页预览",
+    "previewHide": "隐藏报告页预览"
+  },
+  "editorHeader": {
+    "tabsLabel": "资产部分",
+    "cover": "封面",
+    "addPhoto": "添加照片",
+    "addFirstPhoto": "添加第一张照片",
+    "firstIsCover": "第一张照片将作为封面",
+    "noPhotos": "暂无照片",
+    "viewAll": "查看全部 {{n}} 张",
+    "newProperty": "新资产",
+    "untitled": "尚未命名",
+    "newHint": "保存后将在此显示主要信息",
+    "position": "{{group}} · 第 {{n}} 项",
+    "titleCount": "{{n}} 份产权文件",
+    "titleNo": "产权文件 {{no}}"
+  },
+  "breadcrumb": {
+    "tasks": "任务",
+    "appraisalSearch": "评估搜索",
+    "appraisalList": "评估列表",
+    "pricingAnalysis": "价格分析",
+    "new": "新增{{what}}",
+    "pages": {
+      "request": "申请信息",
+      "administration": "行政",
+      "appointment": "预约与费用",
+      "feeAppointmentApproval": "费用与预约审批",
+      "quotation": "报价",
+      "property": "资产信息",
+      "propertyPma": "资产信息 (PMA)",
+      "blockCondo": "资产信息 (公寓)",
+      "blockVillage": "资产信息 (村庄)",
+      "documents": "文件清单",
+      "provideDocuments": "补充文件",
+      "summary": "总结与决定",
+      "activityTracking": "活动跟踪",
+      "summary360": "360 总览"
+    },
+    "types": {
+      "land": "土地",
+      "building": "建筑",
+      "condo": "公寓",
+      "landBuilding": "土地及建筑",
+      "machinery": "机器",
+      "leaseLand": "租赁土地",
+      "leaseBuilding": "租赁建筑",
+      "leaseLandBuilding": "租赁土地及建筑",
+      "leaseCondo": "租赁公寓"
+    },
+    "things": {
+      "comparable": "市场可比数据",
+      "law": "法律法规",
+      "tower": "楼栋",
+      "model": "户型"
+    }
+  },
+  "marketEditor": {
+    "sectionsLabel": "市场比较数据的各部分",
+    "sections": {
+      "source": "数据来源",
+      "price": "价格",
+      "location": "位置",
+      "factors": "调查因素",
+      "remark": "备注"
+    },
+    "fields": {
+      "template": "调查模板",
+      "surveyName": "比较数据名称",
+      "infoDateTime": "信息日期 / 时间",
+      "sourceInfo": "信息来源",
+      "sourcePlaceholder": "例如：售卖告示、中介、网站",
+      "priceUnit": "价格单位",
+      "saleDate": "成交日期",
+      "latitude": "纬度",
+      "longitude": "经度",
+      "other": "其他"
+    },
+    "price": {
+      "label": "价格",
+      "sale": "成交价",
+      "offer": "报价",
+      "notSaved": "尚未保存"
+    },
+    "location": {
+      "nearest": "距最近的被评估物业 {{d}}",
+      "noCoords": "尚无坐标——不会显示在市场地图上。"
+    },
+    "factors": {
+      "count": "{{n}} 项",
+      "empty": "请选择调查模板以显示其因素。"
+    },
+    "header": {
+      "newComparable": "新市场比较数据",
+      "untitled": "未命名",
+      "numberPending": "保存后分配编号",
+      "copiedFrom": "复制自 {{number}}——保存后将生成新编号",
+      "position": "本评估中第 {{n}} 项，共 {{total}} 项"
+    },
+    "toasts": {
+      "updateFailed": "无法更新市场比较数据，请重试。",
+      "createFailed": "无法创建市场比较数据，请重试。",
+      "linkFailed": "已创建比较数据，但无法关联到本评估。"
+    }
   }
 }

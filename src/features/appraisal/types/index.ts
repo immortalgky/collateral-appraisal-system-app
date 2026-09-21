@@ -1,3 +1,5 @@
+import type { AreaUnit } from '../utils/areaFormat';
+
 export const PropertyType = {
   BUILDING: 'Building',
   CONDOMINIUM: 'Condominium',
@@ -48,7 +50,11 @@ export interface PropertyItem {
   image?: string;
   photos?: PropertyPhoto[];
   address: string;
+  /** Display string, e.g. `1-2-30.00 (630 Sq.Wa)` or `33 Sq.M`. Machines carry dimensions here. */
   area: string;
+  /** Raw area behind `area`. Absent for machines. See utils/areaFormat.ts. */
+  areaValue?: number;
+  areaUnit?: AreaUnit;
   latitude?: number;
   longitude?: number;
   priceRange: string;
@@ -59,11 +65,25 @@ export interface PropertyItem {
   titles?: LandTitleInfo[];
   sequenceNumber?: number;
   detailId?: string;
-  machineName?: string;
   brand?: string;
   model?: string;
   registrationNumber?: string;
   dimension?: string;
+  /** Machinery only: ownership registered with the authorities. */
+  registrationStatus?: boolean;
+  /** Machinery only: the appraiser appraises a value for this machine (see FieldHelp on the form). */
+  isPriceCertified?: boolean;
+  /** Machinery only: ConditionUse parameter code — '01' in use, '02' not in use, '03' not found. */
+  conditionUse?: string;
+  /**
+   * Building only: BuildingType parameter code. Older rows hold free text ('SingleHouse'), which
+   * has no match in the master and is printed as it stands.
+   */
+  buildingType?: string;
+  /** Building only: the appraiser's free-text type, filled in when `buildingType` is '99' (other). */
+  buildingTypeOther?: string;
+  /** Building only: storeys. Can be fractional — a mezzanine is recorded as half a floor. */
+  numberOfFloors?: number;
 }
 
 export interface PropertyGroup {
@@ -73,6 +93,13 @@ export interface PropertyGroup {
   description?: string | null;
   groupNumber?: number;
   pricingAnalysisId?: string | null;
+  /** Final appraised value of the group, once its pricing analysis has one. */
+  appraisedValue?: number | null;
+  /**
+   * Whether the pricing analysis holds at least one method. The analysis itself is created as
+   * soon as the screen is opened, so its existence alone does not mean anyone has started.
+   */
+  hasPricingMethods?: boolean;
 }
 
 export interface PropertyClipboardStore {

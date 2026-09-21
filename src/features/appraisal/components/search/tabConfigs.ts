@@ -2,9 +2,18 @@ import type { ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 
+/**
+ * Sections of the "add filter" menu. Twelve fields in one flat list is what made the old grid
+ * unreadable — finding "province" meant scanning all of them.
+ */
+export const FILTER_GROUPS = ['work', 'kind', 'owner', 'area', 'time'] as const;
+export type FilterGroup = (typeof FILTER_GROUPS)[number];
+
 export interface FilterField {
   key: string;
   label: string;
+  /** Section of the add-filter menu. Omitted on hidden fields, which the menu never offers. */
+  group?: FilterGroup;
   type:
     | 'text'
     | 'select'
@@ -51,6 +60,7 @@ export interface AppraisalColumnDef {
 export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] => [
   {
     key: 'status',
+    group: 'work',
     label: t('list.filters.statusLabel'),
     type: 'select',
     placeholder: t('list.filters.statusPlaceholder'),
@@ -65,6 +75,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'priority',
+    group: 'work',
     label: t('list.filters.priorityLabel'),
     type: 'select',
     placeholder: t('list.filters.priorityPlaceholder'),
@@ -75,6 +86,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'slaStatus',
+    group: 'work',
     label: t('list.filters.slaStatusLabel'),
     type: 'select',
     placeholder: t('list.filters.slaStatusPlaceholder'),
@@ -86,6 +98,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'appraisalType',
+    group: 'kind',
     label: t('list.filters.typeLabel'),
     type: 'select',
     placeholder: t('list.filters.typePlaceholder'),
@@ -99,6 +112,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'assignmentType',
+    group: 'owner',
     label: t('list.filters.assignmentLabel'),
     type: 'select',
     placeholder: t('list.filters.assignmentPlaceholder'),
@@ -109,6 +123,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'bankingSegment',
+    group: 'owner',
     label: t('list.filters.bankingSegmentLabel'),
     type: 'parameter-select',
     parameterGroup: 'BankingSegment',
@@ -116,6 +131,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'purpose',
+    group: 'kind',
     label: t('list.filters.purposeLabel'),
     type: 'parameter-select',
     parameterGroup: 'AppraisalPurpose',
@@ -123,6 +139,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'propertyType',
+    group: 'kind',
     label: t('list.filters.propertyTypeLabel'),
     type: 'parameter-select',
     parameterGroup: 'PropertyType',
@@ -130,18 +147,21 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'province',
+    group: 'area',
     label: t('common.province'),
     type: 'province-autocomplete',
     placeholder: t('list.filters.provincePlaceholder'),
   },
   {
     key: 'assigneeCompanyId',
+    group: 'owner',
     label: t('common.company'),
     type: 'company-autocomplete',
     placeholder: t('list.filters.companyPlaceholder'),
   },
   {
     key: 'created',
+    group: 'time',
     label: t('list.filters.created'),
     type: 'date-range',
     fromKey: 'createdFrom',
@@ -149,6 +169,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
   },
   {
     key: 'slaDueDate',
+    group: 'time',
     label: t('list.filters.slaDue'),
     type: 'date-range',
     fromKey: 'slaDueDateFrom',

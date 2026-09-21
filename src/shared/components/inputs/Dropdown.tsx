@@ -5,6 +5,7 @@ import {
   ListboxOptions as HeadlessListboxOptions,
 } from '@headlessui/react';
 import { forwardRef, type ReactNode, type SelectHTMLAttributes, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useParameterOptions } from '../../utils/parameterUtils';
@@ -70,10 +71,21 @@ function applyOptionFilters(
 
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
+  labelAddon?: ReactNode;
   placeholder?: string;
   onChange?: (value: any) => void;
   error?: string;
   filterOptions?: OptionFilter | OptionFilter[];
+  /**
+   * Shrink the control for a dense bar — a pagination footer, a toolbar — instead of a form row.
+   * Same component, same behaviour, smaller box: without it the only way to fit a dropdown into
+   * those places was a native <select>, which renders as an OS menu and matches nothing else here.
+   *
+   * Not called `size`: this interface extends SelectHTMLAttributes, where `size` is the number of
+   * visible rows, and shadowing it with a string union makes the whole interface stop extending.
+   */
+  compact?: boolean;
   filterWatchValues?: Record<string, unknown>;
   showValuePrefix?: boolean;
   /**
@@ -95,6 +107,9 @@ interface ListBoxProps {
   disabled?: boolean;
   error?: string;
   showValuePrefix?: boolean;
+  compact?: boolean;
+  /** Names the control for assistive tech where there is no visible label — a toolbar or footer. */
+  ariaLabel?: string;
 }
 
 interface ListBoxOptionProps {
@@ -117,17 +132,28 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       value,
       onChange,
       label,
-      placeholder = 'Please select',
+      labelAddon,
+      placeholder,
       error,
       required,
       disabled,
       filterOptions,
       filterWatchValues,
       showValuePrefix = true,
+      compact = false,
+      // Pulled out by name on purpose: `...props` feeds exactly one thing below
+      // (props.className), so anything left in it never reaches the DOM. aria-label
+      // type-checked — this interface extends SelectHTMLAttributes — and then vanished.
+      'aria-label': ariaLabel,
       ...props
     },
     ref,
   ) => {
+    const { t } = useTranslation('common');
+    // Default lives in the locale files, not in this signature — the old 'Please select' literal
+    // was the last English string left on a fully translated form.
+    const resolvedPlaceholder =
+      placeholder ?? t('select.placeholder', { defaultValue: 'Please select' });
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
     const parameterOptions = useParameterOptions(group ?? '');
@@ -145,8 +171,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     }, [allOptions, filters, filterWatchValues]);
 
     const dropdownOptions = useMemo(() => {
-      return [{ value: null, label: placeholder, id: '' }, ...filteredOptions];
-    }, [filteredOptions, placeholder]);
+      return [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions];
+    }, [filteredOptions, resolvedPlaceholder]);
 
     const selectedOption = useMemo(
       () => allOptions.find(opt => opt.value === value) ?? null,
@@ -158,21 +184,38 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 
     return (
       <div className={clsx('w-full', props.className)}>
-        {label && (
-          <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
-            {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
+            of this component with `display: contents`, so an extra element in between would take
+            the label column and stretch. */}
+        {labelAddon ? (
+          <div className="flex items-center gap-1.5 mb-1">
+            {label && (
+              <div data-field-label className="block text-xs font-medium text-gray-700">
+                {label}
+                {required && <span className="text-danger ml-0.5">*</span>}
+              </div>
+            )}
+            {labelAddon}
           </div>
+        ) : (
+          label && (
+            <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+              {label}
+              {required && <span className="text-danger ml-0.5">*</span>}
+            </div>
+          )
         )}
         <ListBox
           ref={ref}
           value={selectedOption}
           onChange={selectedOnChange}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           //selectedLabel={selectedOption?.label}
           selected={selectedOption}
           disabled={isDisabled}
           error={error}
+          compact={compact}
+          ariaLabel={ariaLabel}
           showValuePrefix={showValuePrefix}
         >
           {dropdownOptions.map(option => (
@@ -188,14 +231,29 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
 );
 
 const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
-  ({ placeholder, selected, children, disabled, error, showValuePrefix = true, ...props }, ref) => {
+  (
+    {
+      placeholder,
+      selected,
+      children,
+      disabled,
+      error,
+      showValuePrefix = true,
+      compact = false,
+      ariaLabel,
+      ...props
+    },
+    ref,
+  ) => {
     return (
       <HeadlessListBox disabled={disabled} by="value" {...props}>
         <div className="relative">
           <HeadlessListboxButton
             ref={ref}
+            aria-label={ariaLabel}
             className={clsx(
-              'block relative w-full rounded-lg border text-left text-sm transition-colors duration-200 pr-9',
+              'block relative w-full rounded-lg border text-left transition-colors duration-200',
+              compact ? 'text-xs pr-7' : 'text-sm pr-9',
               'focus:outline-none focus:ring-2',
               disabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
@@ -205,10 +263,19 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
                 : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
             )}
           >
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-              <Icon style="regular" name="chevron-down" className="size-3.5" />
+            <div
+              className={clsx(
+                'absolute inset-y-0 right-0 flex items-center pointer-events-none text-gray-400',
+                compact ? 'pr-2' : 'pr-3',
+              )}
+            >
+              <Icon
+                style="regular"
+                name="chevron-down"
+                className={compact ? 'size-3' : 'size-3.5'}
+              />
             </div>
-            <div className="px-3 py-2 truncate">
+            <div className={clsx('truncate', compact ? 'px-2 py-1' : 'px-3 py-2')}>
               {selected?.value ? (
                 showValuePrefix ? (
                   `${selected.value} - ${selected.label}`

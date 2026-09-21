@@ -28,7 +28,7 @@ export const projectInformationFields: FormField[] = [
     type: 'text-input',
     label: 'Developer',
     name: 'developer',
-    wrapperClassName: 'col-span-6',
+    wrapperClassName: 'col-span-12',
     maxLength: 50,
   },
   {
@@ -63,13 +63,30 @@ export const projectInformationFields: FormField[] = [
     maxIntegerDigits: 3,
     wrapperClassName: 'col-span-4',
   },
+];
+
+/**
+ * Unit/phase counts. Split out of projectInformationFields so ProjectInfoForm can slot the
+ * type-specific block (Title Number / License Expiration Date) in between: those belong with
+ * the land area above, not after the counts.
+ *
+ * Two columns each, not four: they hold short numbers and short labels, and the room they give
+ * up goes to the construction pair that shares their row (2 + 2 + 4 + 4 = 12), where a card
+ * label of "Under Construction" needs about 195px before it starts wrapping.
+ *
+ * `col-start-1` on the first field is what keeps that row intact for BOTH project types. Condo's
+ * type-specific block above is a full-width textarea and ends its own row, but LandAndBuilding's
+ * is a four-column date: without the rule the counts would backfill the eight columns it leaves
+ * free, pushing the checkbox up beside them and stranding the percent on the next row.
+ */
+export const projectCountFields: FormField[] = [
   {
     type: 'number-input',
     label: 'Unit For Sale',
     name: 'unitForSaleCount',
     decimalPlaces: 0,
     maxIntegerDigits: 5,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-2 col-start-1',
   },
   {
     type: 'number-input',
@@ -77,7 +94,48 @@ export const projectInformationFields: FormField[] = [
     name: 'numberOfPhase',
     decimalPlaces: 0,
     maxIntegerDigits: 2,
+    wrapperClassName: 'col-span-2',
+  },
+];
+
+/**
+ * Construction progress of the development as a whole. Shares the counts row, four columns
+ * each, so the section's last row reads 2 + 2 + 4 + 4 = 12.
+ *
+ * `self-center` centres the bordered checkbox card against the full height of the row: its
+ * neighbours are label + input and it carries no label, so without an alignment rule it rides
+ * up against the top of the cell. `self-end` was tried first and left it hanging off the
+ * bottom edge.
+ *
+ * A block appraisal has no property rows and therefore no construction-inspection screen, so
+ * this one figure is the only place the progress is captured — and it is what the result API
+ * hands back to LOS for every unit of the project.
+ *
+ * The percent stays on screen at all times and is disabled rather than hidden, so the reader
+ * can see the field exists and why it is unavailable. `disabledValue: null` drops the number
+ * when the appraiser unticks the box — and only then: the clamp deliberately leaves a stored
+ * value alone on mount and on reset(), so loading a record never wipes it.
+ */
+export const constructionProgressFields: FormField[] = [
+  {
+    type: 'checkbox',
+    label: 'Under Construction',
+    name: 'isUnderConstruction',
+    wrapperClassName: 'col-span-4 self-center',
+  },
+  {
+    type: 'number-input',
+    label: 'Construction Progress (%)',
+    name: 'constructionProgressPercent',
+    decimalPlaces: 2,
+    maxIntegerDigits: 3,
+    allowZero: true,
+    min: 0,
+    max: 100,
     wrapperClassName: 'col-span-4',
+    disableWhen: { field: 'isUnderConstruction', is: true, operator: 'notEquals' },
+    disabledValue: null,
+    requiredWhen: { field: 'isUnderConstruction', is: true },
   },
 ];
 
@@ -369,11 +427,12 @@ export const modelFloorMaterialFields: FormField[] = [
 
 export const condoProjectInfoFields: FormField[] = [
   {
-    type: 'text-input',
-    label: 'Built on Title Deed Number',
+    type: 'textarea',
+    label: 'Title Number',
     name: 'builtOnTitleDeedNumber',
-    wrapperClassName: 'col-span-6',
-    maxLength: 100,
+    wrapperClassName: 'col-span-12',
+    maxLength: 500,
+    showCharCount: true,
   },
 ];
 

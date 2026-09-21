@@ -12,7 +12,13 @@ interface Props {
   restGroups: SearchGroup[];
   collapsedGroups: Set<string>;
   onToggleGroup: (key: string) => void;
-  isLoading: boolean;
+  /**
+   * A search is in flight for what is typed right now — including the debounce window before the
+   * request is even sent. Not the query's `isLoading`: results are kept from the previous term, so
+   * that flag is false while a new term is being searched and the panel would answer for the old
+   * one.
+   */
+  isSearching: boolean;
   isError: boolean;
   isShowingResults: boolean;
   expandSubstring: boolean;
@@ -51,7 +57,7 @@ export default function SearchResults({
   restGroups,
   collapsedGroups,
   onToggleGroup,
-  isLoading,
+  isSearching,
   isError,
   isShowingResults,
   expandSubstring,
@@ -74,6 +80,19 @@ export default function SearchResults({
       .querySelector(`#search-result-${highlightedIndex}`)
       ?.scrollIntoView({ block: 'nearest' });
   }, [highlightedIndex]);
+
+  // Before `!isShowingResults`: that flag follows the DEBOUNCED term, so the first characters of a
+  // fresh search still read as "nothing typed" and the panel offered recent searches while the box
+  // was already working. Whatever else is true, if a search is running, say so.
+  if (isSearching) {
+    return (
+      <div className="p-2">
+        <SkeletonRow />
+        <SkeletonRow />
+        <SkeletonRow />
+      </div>
+    );
+  }
 
   if (!isShowingResults) {
     return (
@@ -104,16 +123,6 @@ export default function SearchResults({
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-2">
-        <SkeletonRow />
-        <SkeletonRow />
-        <SkeletonRow />
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="p-6 text-center">
@@ -137,7 +146,11 @@ export default function SearchResults({
   if (exactGroups.length === 0 && restGroups.length === 0) {
     return (
       <div className="p-6 text-center">
-        <Icon name="magnifying-glass" style="regular" className="size-8 text-gray-300 mx-auto mb-2" />
+        <Icon
+          name="magnifying-glass"
+          style="regular"
+          className="size-8 text-gray-300 mx-auto mb-2"
+        />
         <p className="text-sm text-gray-500">{t('search.noResults')}</p>
         {/*
           Names are matched by prefix, so a surname alone finds nothing. Rather than make every
@@ -205,7 +218,10 @@ export default function SearchResults({
           const item = group.appraisals[0];
           const index = runningIndex++;
           return (
-            <div key={key} className="p-2 border-b border-gray-100 dark:border-base-300 last:border-b-0">
+            <div
+              key={key}
+              className="p-2 border-b border-gray-100 dark:border-base-300 last:border-b-0"
+            >
               <SearchResultItem
                 item={item}
                 index={index}
@@ -230,7 +246,9 @@ export default function SearchResults({
                 className="size-3 text-gray-400 shrink-0"
               />
               <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 shrink-0">
-                {t(`search.fields.${group.matchField}` as never, { defaultValue: group.matchField })}
+                {t(`search.fields.${group.matchField}` as never, {
+                  defaultValue: group.matchField,
+                })}
               </span>
               <span className="text-sm font-medium text-gray-900 dark:text-base-content truncate">
                 {group.matchLabel}

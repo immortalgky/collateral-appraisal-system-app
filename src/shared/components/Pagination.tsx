@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
+import Dropdown from './inputs/Dropdown';
 
 export interface PaginationProps {
   /** Current page index (0-based) */
@@ -85,17 +86,23 @@ function Pagination({
           </span>
         )}
         {showPageSizeSelector && onPageSizeChange && (
-          <select
-            value={pageSize}
-            onChange={e => onPageSizeChange(Number(e.target.value))}
-            className="px-2 py-1 border border-gray-200 rounded bg-white text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-          >
-            {pageSizeOptions.map(size => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
+          /* The app's own dropdown, not a native <select>: a select renders as an OS menu — grey
+             panel, system font, its own tick — which is why this one control looked foreign on
+             every list in the product. `compact` keeps the footer bar the height it always was. */
+          <div className="w-20">
+            <Dropdown
+              compact
+              showValuePrefix={false}
+              aria-label={t('pagination.pageSize')}
+              options={pageSizeOptions.map(size => ({
+                value: String(size),
+                label: String(size),
+                id: size,
+              }))}
+              value={String(pageSize)}
+              onChange={v => onPageSizeChange(Number(v))}
+            />
+          </div>
         )}
       </div>
 

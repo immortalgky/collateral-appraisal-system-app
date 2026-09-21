@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
@@ -46,6 +46,12 @@ interface AppraisalResultsTableProps {
    * layout would spill outside a frame the user cannot scroll.
    */
   layout?: ColumnTableLayout;
+  /**
+   * Replaces the plain "nothing found" block. The list page passes an illustrated one carrying the
+   * search rules; SearchAppraisalModal keeps the default, because it wraps this table in a
+   * fixed-height `overflow-hidden` frame that a taller empty state would spill out of.
+   */
+  emptyState?: ReactNode;
 }
 
 function AppraisalResultsTable({
@@ -61,6 +67,7 @@ function AppraisalResultsTable({
   pageSize = 0,
   isStale = false,
   layout,
+  emptyState,
 }: AppraisalResultsTableProps) {
   const { t } = useTranslation('appraisal');
   const internalTableRef = useRef<HTMLTableElement>(null);
@@ -68,7 +75,6 @@ function AppraisalResultsTable({
   // Row numbers stay on unless a layout explicitly turns them off, so the no-layout callers are
   // unchanged.
   const showRowNumber = layout?.showRowNumber ?? true;
-  const leadingCells = showRowNumber ? 1 : 0;
   const localizeCompanyName = useLocalizedCompanyName();
   const provinceName = useProvinceName();
   const propertyTypeLabels = usePropertyTypeLabels();
@@ -124,7 +130,16 @@ function AppraisalResultsTable({
     return String(val);
   };
 
+  /** Statuses where the clock has stopped, so a countdown would be fiction. */
+  const isClosed = (item: AppraisalDto) =>
+    item.status === 'Completed' || item.status === 'Cancelled';
+
   const formatSlaStatus = (item: AppraisalDto): string => {
+    // A finished appraisal has no time left or overdue — the due date is in the past and the
+    // countdown would keep growing forever, reading "overdue 240d" on a job delivered on time.
+    if (isClosed(item)) {
+      return item.status === 'Completed' ? t('list.sla.closed') : t('list.sla.cancelled');
+    }
     if (!item.slaStatus) return '-';
     // Actual CALENDAR time from now until the SLA due date (how much real time is left), rather than
     // the business-hours figure — calendar is what the bank reads off the deadline date.
@@ -141,6 +156,103 @@ function AppraisalResultsTable({
     return item.slaStatus;
   };
 
+  /**
+   * The column sizing and the header row, written once for both renders.
+   *
+   * Both renders use it as-is: the header keeps the widths the user set either way, because a
+   * header squeezed to fit the screen turns every label into an ellipsis, which is worse than a
+   * header you can scroll. What the empty state leaves out is the tbody — see below.
+   */
+  const tableHead = (
+    <>
+      {/* A <colgroup> is what actually pins the widths under table-fixed; setting them on <th>
+            alone lets the browser redistribute them. */}
+      {layout && (
+        <colgroup>
+          {showRowNumber && <col style={{ width: ROW_NUMBER_WIDTH }} />}
+          {columns.map(col => (
+            <col key={col.key} style={{ width: layout.widths[col.key] }} />
+          ))}
+        </colgroup>
+      )}
+      <thead className="sticky top-0 z-20 bg-gray-50">
+        <tr className="border-b border-gray-200">
+          {showRowNumber && (
+            <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12">
+              #
+            </th>
+          )}
+          {columns.map((col, colIndex) => (
+            <th
+              key={col.key}
+              onClick={() => col.sortable && onSort(col.key)}
+              className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap ${
+                layout ? 'relative overflow-hidden text-ellipsis' : ''
+              } ${col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''}`}
+            >
+              <span className="inline-flex items-center gap-1">
+                {col.label}
+                {/* Same indicator as the task tables: a faint double arrow marks a column as
+                    sortable at all, and only the one in use turns solid. Showing nothing until a
+                    column was clicked meant the header never said which columns could be sorted. */}
+                {col.sortable &&
+                  (sortBy === col.key ? (
+                    <Icon
+                      style="solid"
+                      name={sortDir === 'asc' ? 'sort-up' : 'sort-down'}
+                      className="size-2.5 text-primary"
+                    />
+                  ) : (
+                    <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />
+                  ))}
+              </span>
+              {layout && (
+                <ColumnResizeHandle
+                  width={layout.widths[col.key]}
+                  onResize={px => layout.setWidth(col.key, px)}
+                  getAutoFitWidth={layout.getAutoFitWidth(col.key, colIndex)}
+                />
+              )}
+            </th>
+          ))}
+        </tr>
+      </thead>
+    </>
+  );
+
+  // Nothing found: leave the table out entirely rather than putting the message in a cell.
+  // With user-set widths this table is ~2,200px wide, so a `colSpan` cell centres the message on
+  // the TABLE, not on the screen — the user had to scroll sideways to read why their search
+  // returned nothing, past a horizontal scrollbar for columns holding no data. Dropping the table
+  // also drops the scrollbar, and the message lands in the middle of what is actually visible.
+  if (!isLoading && items.length === 0) {
+    return (
+      <div className="flex flex-1 min-h-0 w-full flex-col">
+        {/* Header only, at the widths the user set: squeezing the columns to fit turned every
+            label into an ellipsis. Overflow is CLIPPED rather than scrollable — with no rows under
+            it there is nothing to scroll to, and a scrollbar under an empty table is just noise. */}
+        <div className="w-full shrink-0 overflow-hidden">
+          <table
+            ref={tableRef}
+            className={`table table-sm ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
+            style={layout ? { width: totalWidth } : undefined}
+          >
+            {tableHead}
+          </table>
+        </div>
+        <div className="flex flex-1 items-center justify-center overflow-y-auto p-8">
+          {emptyState ?? (
+            <div className="flex flex-col items-center gap-2">
+              <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
+              <p className="text-gray-500 font-medium">{t('list.empty')}</p>
+              <p className="text-xs text-gray-400">{t('list.emptyHint')}</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`w-full flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-auto transition-opacity ${
@@ -153,52 +265,7 @@ function AppraisalResultsTable({
         className={`table table-sm ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
         style={layout ? { width: totalWidth } : undefined}
       >
-        {/* A <colgroup> is what actually pins the widths under table-fixed; setting them on <th>
-            alone lets the browser redistribute them. */}
-        {layout && (
-          <colgroup>
-            {showRowNumber && <col style={{ width: ROW_NUMBER_WIDTH }} />}
-            {columns.map(col => (
-              <col key={col.key} style={{ width: layout.widths[col.key] }} />
-            ))}
-          </colgroup>
-        )}
-        <thead className="sticky top-0 z-20 bg-gray-50">
-          <tr className="border-b border-gray-200">
-            {showRowNumber && (
-              <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12">
-                #
-              </th>
-            )}
-            {columns.map((col, colIndex) => (
-              <th
-                key={col.key}
-                onClick={() => col.sortable && onSort(col.key)}
-                className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap ${
-                  layout ? 'relative overflow-hidden text-ellipsis' : ''
-                } ${col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''}`}
-              >
-                <span className="inline-flex items-center gap-1">
-                  {col.label}
-                  {col.sortable && sortBy === col.key && (
-                    <Icon
-                      style="solid"
-                      name={sortDir === 'asc' ? 'arrow-up' : 'arrow-down'}
-                      className="size-3 text-primary"
-                    />
-                  )}
-                </span>
-                {layout && (
-                  <ColumnResizeHandle
-                    width={layout.widths[col.key]}
-                    onResize={px => layout.setWidth(col.key, px)}
-                    getAutoFitWidth={layout.getAutoFitWidth(col.key, colIndex)}
-                  />
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
+        {tableHead}
         <tbody className="divide-y divide-gray-100">
           {isLoading ? (
             <TableRowSkeleton
@@ -213,16 +280,6 @@ function AppraisalResultsTable({
               // on a cold load, where there is no height to preserve in the first place).
               rows={Math.min(Math.max(items.length, 8), pageSize || 8)}
             />
-          ) : items.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length + leadingCells} className="text-center py-16">
-                <div className="flex flex-col items-center gap-2">
-                  <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                  <p className="text-gray-500 font-medium">{t('list.empty')}</p>
-                  <p className="text-xs text-gray-400">{t('list.emptyHint')}</p>
-                </div>
-              </td>
-            </tr>
           ) : (
             items.map((item, index) => {
               const isLoadingRow = loadingRowId === item.id;
@@ -285,16 +342,32 @@ function AppraisalResultsTable({
                       ) : col.key === 'slaStatus' ? (
                         <span
                           className={`text-xs font-medium ${
-                            item.slaStatus === 'Breached'
-                              ? 'text-red-600'
-                              : item.slaStatus === 'AtRisk'
-                                ? 'text-amber-600'
-                                : item.slaStatus === 'OnTrack'
-                                  ? 'text-green-600'
-                                  : 'text-gray-400'
+                            // Closed work is grey whatever the SLA said: red on a delivered job
+                            // reads as "needs attention" when there is nothing left to do.
+                            isClosed(item)
+                              ? 'text-gray-400'
+                              : item.slaStatus === 'Breached'
+                                ? 'text-red-600'
+                                : item.slaStatus === 'AtRisk'
+                                  ? 'text-amber-600'
+                                  : item.slaStatus === 'OnTrack'
+                                    ? 'text-green-600'
+                                    : 'text-gray-400'
                           }`}
                         >
                           {formatSlaStatus(item)}
+                        </span>
+                      ) : col.key === 'customerName' ? (
+                        <span className="inline-flex items-center gap-1.5">
+                          <span className="truncate">{item.customerName || '-'}</span>
+                          {item.customerCount > 1 && (
+                            <span
+                              title={t('list.moreCustomers', { count: item.customerCount - 1 })}
+                              className="shrink-0 rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-500"
+                            >
+                              +{item.customerCount - 1}
+                            </span>
+                          )}
                         </span>
                       ) : col.key === 'appraisalNumber' ? (
                         <span className="font-medium text-primary inline-flex items-center gap-1.5">
