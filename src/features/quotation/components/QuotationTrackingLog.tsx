@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import Icon from '@/shared/components/Icon';
 import { useGetQuotationActivityLog } from '../api/quotation';
 
@@ -25,80 +26,101 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
 
   return (
     <div className="rounded-xl border border-gray-200 overflow-hidden">
-      <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
-        <div className="size-7 rounded-lg bg-violet-100 flex items-center justify-center">
-          <Icon name="clock-rotate-left" style="solid" className="size-3.5 text-violet-600" />
-        </div>
-        <h2 className="text-sm font-semibold text-gray-700">{t('trackingLog.title')}</h2>
-      </div>
-
-      {isLoading && (
-        <div className="flex items-center justify-center py-10">
-          <Icon name="spinner" style="solid" className="size-5 animate-spin text-primary" />
-        </div>
-      )}
-
-      {isError && (
-        <div className="px-4 py-6 text-center">
-          <p className="text-sm text-gray-500">{t('trackingLog.unableToLoad')}</p>
-        </div>
-      )}
-
-      {!isLoading && !isError && (
-        <>
-          {(rows ?? []).length === 0 ? (
-            <div className="px-4 py-8 text-center">
-              <p className="text-sm text-gray-500">{t('empty.noActivity')}</p>
+      <Disclosure defaultOpen>
+        {({ open }) => (
+          <>
+            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex gap-2 items-center">
+                <div className="size-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                  <Icon
+                    name="clock-rotate-left"
+                    style="solid"
+                    className="size-3.5 text-violet-600"
+                  />
+                </div>
+                <h2 className="text-sm font-semibold text-gray-700">{t('trackingLog.title')}</h2>
+              </div>
+              <DisclosureButton className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
+                <Icon
+                  name={open ? 'chevron-up' : 'chevron-down'}
+                  style="solid"
+                  className="w-3 h-3"
+                />
+              </DisclosureButton>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('columns.activityName')}
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('columns.actionDateTime')}
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('columns.actionBy')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {(rows ?? []).map(row => (
-                    <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-2">
-                        <span className="text-sm font-medium text-gray-900">
-                          {row.activityName}
-                        </span>
-                        {row.remark && (
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            <span className="font-medium text-gray-500">{t('fields.reason')}:</span>{' '}
-                            {row.remark}
-                          </p>
-                        )}
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className="text-sm text-gray-600">
-                          {formatDateTime(row.actionAt)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2">
-                        <span className="text-sm text-gray-600">{row.actionBy}</span>
-                        {row.actionByRole && (
-                          <p className="text-xs text-gray-400">{row.actionByRole}</p>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
+
+            {isLoading && (
+              <div className="flex items-center justify-center py-10">
+                <Icon name="spinner" style="solid" className="size-5 animate-spin text-primary" />
+              </div>
+            )}
+
+            {isError && (
+              <div className="px-4 py-6 text-center">
+                <p className="text-sm text-gray-500">{t('trackingLog.unableToLoad')}</p>
+              </div>
+            )}
+
+            {!isLoading && !isError && (
+              <DisclosurePanel>
+                {(rows ?? []).length === 0 ? (
+                  <div className="px-4 py-8 text-center">
+                    <p className="text-sm text-gray-500">{t('empty.noActivity')}</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {t('columns.activityName')}
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {t('columns.actionDateTime')}
+                          </th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {t('columns.actionBy')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {(rows ?? []).map(row => (
+                          <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-4 py-2">
+                              <span className="text-sm font-medium text-gray-900">
+                                {row.activityName}
+                              </span>
+                              {row.remark && (
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                  <span className="font-medium text-gray-500">
+                                    {t('fields.reason')}:
+                                  </span>{' '}
+                                  {row.remark}
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className="text-sm text-gray-600">
+                                {formatDateTime(row.actionAt)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className="text-sm text-gray-600">{row.actionBy}</span>
+                              {row.actionByRole && (
+                                <p className="text-xs text-gray-400">{row.actionByRole}</p>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </DisclosurePanel>
+            )}
+          </>
+        )}
+      </Disclosure>
     </div>
   );
 };

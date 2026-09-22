@@ -14,12 +14,12 @@ export default function NotificationList() {
       {notifications.map(notification => {
         const config = notificationTypeConfig[notification.type];
         return (
-          <button
+          <div
             key={notification.id}
-            type="button"
+            role="button"
             onClick={() => markAsRead(notification.id)}
             className={clsx(
-              'w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl',
+              'w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl cursor-pointer',
               !notification.isRead && 'bg-blue-50/30',
             )}
           >
@@ -50,7 +50,7 @@ export default function NotificationList() {
               <p className="text-sm text-gray-500 mt-0.5">{notification.message}</p>
               <p className="text-xs text-gray-400 mt-1.5">{timeAgo(notification.createdAt, t)}</p>
             </div>
-          </button>
+          </div>
         );
       })}
     </div>

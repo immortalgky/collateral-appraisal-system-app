@@ -25,6 +25,13 @@ const ZH_ENGLISH_FALLBACK = new Set([
   'feeAppointmentApproval',
   'feeApprovalConfig',
   'evaluationConfig',
+  // `oauthAdmin` has no zh file and no th file either; src/i18n/index.ts registers
+  // English for both. Remove this entry when a real zh/oauthAdmin.json lands —
+  // membership here skips the key-parity check outright, so leaving it would keep
+  // a shipped zh file unchecked forever. (The th case above has no opt-out on
+  // purpose and stays red until th/oauthAdmin.json exists.)
+  'oauthAdmin',
+  'hangfire',
 ]);
 
 function flattenKeys(obj: Record<string, unknown>, prefix = ''): string[] {
@@ -46,6 +53,15 @@ const namespaces: string[] = readdirSync(join(localesDir, 'en'))
   .map((f: string) => f.replace(/\.json$/, ''));
 
 describe('i18n locale parity', () => {
+  // Membership in ZH_ENGLISH_FALLBACK skips the key-parity check for that
+  // namespace entirely, and nothing otherwise forces an entry out once a real zh
+  // file lands — so a translator could ship `zh/<ns>.json` with drifted keys and
+  // this suite would stay green while zh users saw raw keys. Self-retiring, the
+  // same way the guard in src/i18n/index.ts is.
+  it.each([...ZH_ENGLISH_FALLBACK])('zh fallback "%s" still has no zh file', (ns: string) => {
+    expect(existsSync(join(localesDir, 'zh', `${ns}.json`))).toBe(false);
+  });
+
   it.each(namespaces)('th matches en for "%s"', (ns: string) => {
     const en = keySet('en', ns);
     expect(existsSync(join(localesDir, 'th', `${ns}.json`))).toBe(true);

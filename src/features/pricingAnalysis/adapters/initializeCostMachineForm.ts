@@ -1,4 +1,5 @@
 import type { UseFormReset } from 'react-hook-form';
+import { NOT_FOUND_CONDITION_CODE } from '../schemas/costMachineForm';
 import type { CostMachineFormType } from '../schemas/costMachineForm';
 import type { MachineryItem, MachineryRowFormValue } from '../components/CostMachineSection';
 import type { MachineCostItemResponse } from '../api';
@@ -35,7 +36,7 @@ export function buildMachineryFormDefaults(
       const diffResidualLifeSpan = lifeSpan - durationInUse;
       const conditionFactor = saved.conditionFactor ?? 0;
       const residualLifeSpan =
-        diffResidualLifeSpan < 5 && (machine.conditionUse ?? '') !== '03'
+        diffResidualLifeSpan < 5 && (machine.conditionUse ?? '') !== NOT_FOUND_CONDITION_CODE
           ? 5
           : diffResidualLifeSpan;
       const physicalDeterioration =
@@ -45,14 +46,17 @@ export function buildMachineryFormDefaults(
         id: saved.id,
         appraisalPropertyId: machine.appraisalPropertyId,
         machine,
-        rcn: saved.rcnReplacementCost,
-        lifeSpan: saved.lifeSpanYears,
+        // `?? null` on every one: the API omits null properties, so these arrive as undefined and
+        // the form would hold undefined where the type says null. Normalise here so every row —
+        // saved or not — carries the same empty value, and nothing downstream has to know which.
+        rcn: saved.rcnReplacementCost ?? null,
+        lifeSpan: saved.lifeSpanYears ?? null,
         durationInUse,
         residualLifeSpan,
-        conditionFactor: saved.conditionFactor,
+        conditionFactor: saved.conditionFactor ?? null,
         physicalDeterioration,
-        functionalObsolescence: saved.functionalObsolescence,
-        economicObsolescence: saved.economicObsolescence,
+        functionalObsolescence: saved.functionalObsolescence ?? null,
+        economicObsolescence: saved.economicObsolescence ?? null,
         fmv: saved.fairMarketValue ?? 0,
         marketDemand: saved.marketDemandAvailable ? ('Y' as const) : ('N' as const),
         notes: saved.notes ?? '',

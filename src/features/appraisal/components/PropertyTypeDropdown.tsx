@@ -1,108 +1,41 @@
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Menu, MenuButton, MenuItems } from '@headlessui/react';
 import Icon from '@shared/components/Icon';
 import clsx from 'clsx';
 import { usePropertyBasePath } from '../hooks/usePropertyBasePath';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { PROPERTY_TYPES } from '../utils/propertyTypeConfig';
+import { PropertyTypePicker } from './PropertyTypePicker';
 
-export const PROPERTY_TYPES = [
-  {
-    type: 'Building',
-    code: 'B',
-    icon: 'building',
-    route: 'building',
-    description: 'Standalone building structure',
-  },
-  {
-    type: 'Condominium',
-    code: 'U',
-    icon: 'city',
-    route: 'condo',
-    description: 'Condominium unit',
-  },
-  {
-    type: 'Land and building',
-    code: 'LB',
-    icon: 'house-chimney',
-    route: 'land-building',
-    description: 'Land with building structure',
-  },
-  {
-    type: 'Lands',
-    code: 'L',
-    icon: 'map-location-dot',
-    route: 'land',
-    description: 'Land parcel only',
-  },
-  {
-    type: 'Lease Agreement Building',
-    code: 'LSB',
-    icon: 'file-contract',
-    route: 'lease-building',
-    description: 'Leased building property',
-  },
-  {
-    type: 'Lease Agreement Land and building',
-    code: 'LS',
-    icon: 'file-signature',
-    route: 'lease-land-building',
-    description: 'Leased land with building',
-  },
-  {
-    type: 'Lease Agreement Condo',
-    code: 'LSU',
-    icon: 'file-signature',
-    route: 'lease-condo',
-    description: 'Leased condominium unit',
-  },
-  {
-    type: 'Lease Agreement Lands',
-    code: 'LSL',
-    icon: 'scroll',
-    route: 'lease-land',
-    description: 'Leased land parcel',
-  },
-  {
-    type: 'Machine',
-    code: 'MAC',
-    icon: 'gears',
-    route: 'machinery',
-    description: 'Machinery and equipment',
-  },
-  {
-    type: 'Vehicle',
-    code: 'VEH',
-    icon: 'car',
-    route: null,
-    description: 'Vehicle asset',
-  },
-  {
-    type: 'Vessel',
-    code: 'VES',
-    icon: 'ship',
-    route: null,
-    description: 'Marine vessel',
-  },
-] as const;
+// Several screens already import PROPERTY_TYPES from here; keep that entry point working.
+export { PROPERTY_TYPES };
 
 interface PropertyTypeDropdownProps {
   groupId: string;
   onSelectType?: (type: string, groupId: string, code: string) => void;
   buttonClassName?: string;
+  /** Colour for the trigger's two icons — a filled button needs them light. Defaults to grey. */
+  iconClassName?: string;
   buttonLabel?: string;
   disableDefaultNavigation?: boolean;
   align?: 'left' | 'right';
+  /** Wrapper class — lets the caller turn the trigger into a full-width row. */
+  className?: string;
 }
 
 export const PropertyTypeDropdown = ({
   groupId,
   onSelectType,
   buttonClassName,
+  iconClassName,
   buttonLabel,
   disableDefaultNavigation = false,
   align = 'left',
+  className,
 }: PropertyTypeDropdownProps) => {
+  const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const navigate = useNavigate();
   const appraisalId = useAppraisalId();
@@ -125,72 +58,35 @@ export const PropertyTypeDropdown = ({
   };
 
   return (
-    <Menu as="div" className="relative inline-block text-left">
+    // `inline-block` is the default, not a base class: passing `block` alongside it only wins by
+    // Tailwind's CSS ordering, which puts inline-block last. Callers that want a full-width row
+    // supply their own display utility instead.
+    <Menu as="div" className={clsx('relative text-left', className ?? 'inline-block')}>
       <MenuButton
         disabled={readOnly}
         className={clsx(
-          'flex items-center gap-2 px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors',
+          'flex items-center gap-2 transition-colors',
           readOnly && 'opacity-50 cursor-not-allowed',
-          buttonClassName,
+          // The chrome is a default, not a base: a caller passing `px-2.5` next to a base `px-4`
+          // only wins by Tailwind's output order, which is not something to build on.
+          buttonClassName ??
+            'px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50',
         )}
       >
-        <Icon name="circle-plus" className="text-gray-500" />
-        <span>{buttonLabel ?? 'Add property to group'}</span>
-        <Icon name="chevron-down" className="text-gray-400 ml-1" style="solid" />
+        <Icon name="circle-plus" className={iconClassName ?? 'text-gray-500'} />
+        <span>{buttonLabel ?? t('properties.addToGroup')}</span>
+        <Icon
+          name="chevron-down"
+          className={clsx('ml-1', iconClassName ?? 'text-gray-400')}
+          style="solid"
+        />
       </MenuButton>
 
       <MenuItems
         anchor={{ to: align === 'right' ? 'bottom end' : 'bottom start', gap: 8 }}
-        className="z-50 w-72 rounded-xl bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+        className="z-50 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
       >
-        <div className="py-2 max-h-[400px] overflow-y-auto">
-          {PROPERTY_TYPES.map(propertyType => (
-            <MenuItem key={propertyType.type}>
-              {({ focus }) => (
-                <button
-                  type="button"
-                  onClick={() => handleSelect(propertyType)}
-                  disabled={!propertyType.route}
-                  className={clsx(
-                    'w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors',
-                    focus && propertyType.route ? 'bg-gray-50' : '',
-                    !propertyType.route ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-                  )}
-                >
-                  <div
-                    className={clsx(
-                      'w-8 h-8 rounded-lg flex items-center justify-center',
-                      propertyType.route ? 'bg-primary/10' : 'bg-gray-100',
-                    )}
-                  >
-                    <Icon
-                      name={propertyType.icon}
-                      className={clsx(
-                        'text-sm',
-                        propertyType.route ? 'text-primary' : 'text-gray-400',
-                      )}
-                      style="solid"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={clsx(
-                        'text-sm font-medium',
-                        propertyType.route ? 'text-gray-900' : 'text-gray-500',
-                      )}
-                    >
-                      {propertyType.type}
-                    </p>
-                    {!propertyType.route && <p className="text-xs text-gray-400">Coming soon</p>}
-                  </div>
-                  {propertyType.route && (
-                    <Icon name="chevron-right" className="text-gray-300" style="solid" />
-                  )}
-                </button>
-              )}
-            </MenuItem>
-          ))}
-        </div>
+        <PropertyTypePicker onPick={handleSelect} />
       </MenuItems>
     </Menu>
   );

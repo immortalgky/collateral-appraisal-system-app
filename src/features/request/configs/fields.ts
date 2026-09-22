@@ -1,7 +1,11 @@
 import type { TFunction } from 'i18next';
 import type { FieldArrayField, FormField } from '@/shared/components/form';
 import type { ListBoxItem } from '@/shared/components';
-import { mapCollateral } from '@features/request/data/mapCollateral.ts';
+import {
+  LAND_CODES,
+  LEASE_LAND_CODE,
+  mapCollateral,
+} from '@features/request/data/mapCollateral.ts';
 import {
   AERIAL_TITLE_TYPES,
   LAND_PARCEL_TITLE_TYPES,
@@ -25,6 +29,9 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 
 // Purpose codes that make this request a Construction Inspection
 const CI_PURPOSES = ['06', '11'];
+const FACILITIE_LIMIT_AMOUNT_REQUIRED = ['01', '02', '03', '04', '12', '13', '14'];
+
+const PREV_APP_NO_REQUIRED = ['02', '03', '04', '05', '06', '08', '09', '11', '12', '13'];
 
 export function makeRequestFields(t: TFunction<'request'>): FormField[] {
   return [
@@ -62,6 +69,8 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       valueField: 'detail.prevAppraisalValue',
       dateField: 'detail.prevAppraisalDate',
       wrapperClassName: 'col-span-1',
+      requiredWhen: { field: 'purpose', is: PREV_APP_NO_REQUIRED, operator: 'in' },
+      disableWhen: { field: 'purpose', is: '07' },
     },
     {
       type: 'number-input',
@@ -126,7 +135,8 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       wrapperClassName: 'col-span-1',
       maxIntegerDigits: 15,
       required: true,
-      disableWhen: { field: 'purpose', is: '02' },
+      disableWhen: { field: 'purpose', is: ['02', '07', '08'], operator: 'in' },
+      requiredWhen: { field: 'purpose', is: FACILITIE_LIMIT_AMOUNT_REQUIRED, operator: 'in' },
     },
     {
       type: 'number-input',
@@ -135,6 +145,7 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       wrapperClassName: 'col-span-1',
       maxIntegerDigits: 15,
       requiredWhen: { field: 'purpose', is: '02' },
+      disableWhen: { field: 'purpose', is: ['07', '08'], operator: 'in' },
     },
     {
       type: 'number-input',
@@ -143,6 +154,7 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       wrapperClassName: 'col-span-1',
       maxIntegerDigits: 15,
       requiredWhen: { field: 'purpose', is: '02' },
+      disableWhen: { field: 'purpose', is: ['07', '08'], operator: 'in' },
     },
   ];
 }
@@ -832,6 +844,14 @@ export function makeTitleVehicleFields(t: TFunction<'request'>): FormField[] {
     },
     {
       type: 'text-input',
+      label: t('fields.vehicleRegistrationNumber'),
+      name: 'vehicleRegistrationNumber',
+      wrapperClassName: 'col-span-3',
+      requiredWhen: { field: 'collateralType', is: '10' },
+      maxLength: 50,
+    },
+    {
+      type: 'text-input',
       label: t('fields.chassisNumber'),
       name: 'vin',
       wrapperClassName: 'col-span-3',
@@ -844,8 +864,6 @@ export function makeTitleVehicleFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.licensePlateNumber'),
       name: 'licensePlateNumber',
       wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'collateralType', is: '10' },
       maxLength: 50,
     },
     {
@@ -968,7 +986,11 @@ export function makeTitleAddressFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.houseNumber'),
       name: 'titleAddress.houseNumber',
       wrapperClassName: 'col-span-2',
-      required: true,
+      requiredWhen: {
+        field: 'collateralType',
+        is: [...LAND_CODES, ...LEASE_LAND_CODE],
+        operator: 'notIn',
+      },
       maxLength: 10,
     },
     {
@@ -1060,7 +1082,11 @@ export function makeDopaAddressFields(t: TFunction<'request'>): FormField[] {
       name: 'dopaAddress.houseNumber',
       wrapperClassName: 'col-span-2',
       maxLength: 10,
-      required: true,
+      requiredWhen: {
+        field: 'collateralType',
+        is: [...LAND_CODES, ...LEASE_LAND_CODE],
+        operator: 'notIn',
+      },
     },
     {
       type: 'text-input',
@@ -1479,6 +1505,14 @@ export const titleVehicleFields: FormField[] = [
   },
   {
     type: 'text-input',
+    label: _st('Vehicle Registration Number'),
+    name: 'vehicleRegistrationNumber',
+    wrapperClassName: 'col-span-3',
+    requiredWhen: { field: 'collateralType', is: '10' },
+    maxLength: 50,
+  },
+  {
+    type: 'text-input',
     label: _st('Chassis Number'),
     name: 'vin',
     wrapperClassName: 'col-span-3',
@@ -1491,8 +1525,6 @@ export const titleVehicleFields: FormField[] = [
     label: _st('License Plate Number'),
     name: 'licensePlateNumber',
     wrapperClassName: 'col-span-3',
-    required: true,
-    requiredWhen: { field: 'collateralType', is: '10' },
     maxLength: 50,
   },
   {
@@ -1606,7 +1638,11 @@ export const titleAddressFields: FormField[] = [
     label: _st('House Number'),
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
-    required: true,
+    requiredWhen: {
+      field: 'collateralType',
+      is: [...LAND_CODES, ...LEASE_LAND_CODE],
+      operator: 'notIn',
+    },
     maxLength: 10,
   },
   {
@@ -1696,7 +1732,11 @@ export const dopaAddressFields: FormField[] = [
     name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
     maxLength: 10,
-    required: true,
+    requiredWhen: {
+      field: 'collateralType',
+      is: [...LAND_CODES, ...LEASE_LAND_CODE],
+      operator: 'notIn',
+    },
   },
   {
     type: 'text-input',
@@ -1948,6 +1988,7 @@ export const requestFields: FormField[] = [
     valueField: 'detail.prevAppraisalValue',
     dateField: 'detail.prevAppraisalDate',
     wrapperClassName: 'col-span-1',
+    requiredWhen: { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -1995,7 +2036,8 @@ export const requestFields: FormField[] = [
     name: 'detail.loanDetail.facilityLimit',
     wrapperClassName: 'col-span-1',
     maxIntegerDigits: 15,
-    required: true,
+    disableWhen: { field: 'purpose', is: ['02', '07', '08'], operator: 'in' },
+    requiredWhen: { field: 'purpose', is: FACILITIE_LIMIT_AMOUNT_REQUIRED, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -2004,6 +2046,7 @@ export const requestFields: FormField[] = [
     wrapperClassName: 'col-span-1',
     maxIntegerDigits: 15,
     requiredWhen: { field: 'purpose', is: '02' },
+    disableWhen: { field: 'purpose', is: ['07', '08'], operator: 'in' },
   },
   {
     type: 'number-input',
@@ -2012,6 +2055,7 @@ export const requestFields: FormField[] = [
     wrapperClassName: 'col-span-1',
     maxIntegerDigits: 15,
     requiredWhen: { field: 'purpose', is: '02' },
+    disableWhen: { field: 'purpose', is: ['07', '08'], operator: 'in' },
   },
 ];
 

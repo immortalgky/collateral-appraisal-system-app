@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { arrayMove } from '@dnd-kit/sortable';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
@@ -12,18 +13,14 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import UnsavedChangesDialog from '@shared/components/UnsavedChangesDialog';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
-import Section from '@shared/components/sections/Section';
-import clsx from 'clsx';
-import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { FormFields, type FormField } from '@/shared/components/form';
-import { PhotoGridView } from '../components/gallery';
+import { LawImagesPanel, type LawPanelImage, CAPTION_MAX } from '../components/LawImagesPanel';
 import PhotoPreviewModal, { type PreviewablePhoto } from '../components/PhotoPreviewModal';
-import PhotoSourceModal from '../components/PhotoSourceModal';
 import GallerySelectionModal from '../components/GallerySelectionModal';
 import type { GalleryImage } from '../types/gallery';
 import { toGalleryImage } from '../types/gallery';
 import { useGetLawAndRegulations, useSaveLawAndRegulations } from '../api/lawAndRegulation';
-import { useGetGalleryPhotos, useAddGalleryPhoto, useUpdateGalleryPhoto } from '../api/gallery';
+import { useGetGalleryPhotos, useAddGalleryPhoto } from '../api/gallery';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type {
   LawAndRegulationImageInputType,
@@ -48,31 +45,35 @@ interface LocalImage {
   description: string | null;
 }
 
-const formFields: FormField[] = [
-  {
-    type: 'dropdown',
-    label: 'Header',
-    name: 'headerCode',
-    group: LAW_HEADER_GROUP,
-    required: true,
-  },
-  {
-    type: 'textarea',
-    label: 'Laws and Regulations',
-    name: 'remark',
-    maxLength: 4000,
-    showCharCount: true,
-    className: 'min-h-[240px]',
-  },
-];
-
 // Container segments that host law-and-regulation detail pages — drives the
 // after-save redirect so the URL prefix (block-condo / property / etc.) is preserved.
 const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateLawAndRegulationPage = () => {
   const { t } = useTranslation('appraisal');
+  const { t: tCommon } = useTranslation('common');
   const isReadOnly = usePageReadOnly();
+
+  const formFields = useMemo<FormField[]>(
+    () => [
+      {
+        type: 'dropdown',
+        label: t('lawsRegulations.editor.headerLabel'),
+        name: 'headerCode',
+        group: LAW_HEADER_GROUP,
+        required: true,
+      },
+      {
+        type: 'textarea',
+        label: t('lawsRegulations.editor.remarkLabel'),
+        name: 'remark',
+        maxLength: 4000,
+        showCharCount: true,
+        className: 'min-h-[240px]',
+      },
+    ],
+    [t],
+  );
   const navigate = useNavigate();
   const basePath = useBasePath();
   const location = useLocation();
@@ -93,26 +94,22 @@ const CreateLawAndRegulationPage = () => {
   });
 
   const {
-    formState: { isDirty },
+    formState: { isDirty: isFormDirty },
   } = methods;
-  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
-  // Image & UI state
+  // Image & UI state. The images live outside the form, so they carry their own dirty flag —
+  // without it, adding or taking off a picture never warned about leaving with unsaved work.
   const [images, setImages] = useState<LocalImage[]>([]);
+  const [imagesDirty, setImagesDirty] = useState(false);
+  const isDirty = isFormDirty || imagesDirty;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 
   // Preview state
   const [previewPhoto, setPreviewPhoto] = useState<PreviewablePhoto | null>(null);
 
   // Modal state
-  const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
-
-  // Delete confirmation state
-  const [deleteTarget, setDeleteTarget] = useState<{
-    galleryPhotoId: string;
-    fileName: string;
-  } | null>(null);
 
   // Drag-and-drop state
   const [isDragging, setIsDragging] = useState(false);
@@ -125,19 +122,6 @@ const CreateLawAndRegulationPage = () => {
   const saveMutation = useSaveLawAndRegulations();
   const uploadMutation = useUploadDocument();
   const { mutateAsync: addGalleryPhoto } = useAddGalleryPhoto();
-  const { mutateAsync: updateGalleryPhotoApi, isPending: isUpdatingDescription } =
-    useUpdateGalleryPhoto();
-
-  // DTO map for gallery update calls
-  const galleryPhotoDtoMap = useMemo(() => {
-    const map = new Map<string, GalleryPhotoDtoType>();
-    if (galleryData?.photos) {
-      for (const dto of galleryData.photos as GalleryPhotoDtoType[]) {
-        map.set(dto.id, dto);
-      }
-    }
-    return map;
-  }, [galleryData]);
 
   // Upload session
   const uploadSessionIdRef = useRef<string | null>(null);
@@ -205,50 +189,41 @@ const CreateLawAndRegulationPage = () => {
     }
   }, [isEditMode, itemId, allItems]);
 
-  // Map LocalImage[] → GalleryImage[] for PhotoGridView
-  const gridImages: GalleryImage[] = useMemo(
+  // What the images panel draws. A photo the gallery no longer has is flagged rather than shown
+  // as a broken image — but only once the gallery has loaded, or every photo would look gone.
+  const panelImages: LawPanelImage[] = useMemo(
     () =>
-      images.map((img, idx) => {
+      images.map(img => {
         const galleryImg = galleryPhotoMap.get(img.galleryPhotoId);
         return {
-          id: img.galleryPhotoId,
-          documentId: galleryImg?.documentId ?? '',
-          photoNumber: idx + 1,
-          src: galleryImg?.src ?? '',
-          thumbnailSrc: galleryImg?.thumbnailSrc ?? '',
-          alt: galleryImg?.fileName ?? `Photo ${idx + 1}`,
+          key: img.galleryPhotoId,
+          src: galleryImg?.thumbnailSrc || galleryImg?.src || undefined,
           fileName: galleryImg?.fileName,
-          caption: galleryImg?.caption ?? null,
-          description: galleryImg?.caption ?? undefined,
-          photoType: 'LAW_REG',
-          photoCategory: null,
-          isInUse: galleryImg?.isInUse ?? false,
-          latitude: null,
-          longitude: null,
-          capturedAt: null,
-          fileExtension: galleryImg?.fileExtension,
-          mimeType: galleryImg?.mimeType,
-          fileSizeBytes: galleryImg?.fileSizeBytes,
+          caption: img.description ?? galleryImg?.caption ?? null,
+          missing: !!galleryData && !galleryImg,
         };
       }),
-    [images, galleryPhotoMap],
+    [images, galleryPhotoMap, galleryData],
   );
 
   // Map for preview modal
   const previewablePhotos: PreviewablePhoto[] = useMemo(
     () =>
-      images.map(img => {
-        const galleryImg = galleryPhotoMap.get(img.galleryPhotoId);
-        return {
-          id: img.galleryPhotoId,
-          src: galleryImg?.src ?? '',
-          fileName: galleryImg?.fileName,
-          caption: galleryImg?.caption ?? null,
-          fileExtension: galleryImg?.fileExtension,
-          mimeType: galleryImg?.mimeType,
-          fileSizeBytes: galleryImg?.fileSizeBytes,
-        };
-      }),
+      images
+        .map(img => {
+          const galleryImg = galleryPhotoMap.get(img.galleryPhotoId);
+          return {
+            id: img.galleryPhotoId,
+            src: galleryImg?.src ?? '',
+            fileName: galleryImg?.fileName,
+            caption: img.description ?? galleryImg?.caption ?? null,
+            fileExtension: galleryImg?.fileExtension,
+            mimeType: galleryImg?.mimeType,
+            fileSizeBytes: galleryImg?.fileSizeBytes,
+          };
+        })
+        // A photo the gallery lost has nothing to show.
+        .filter(photo => photo.src !== ''),
     [images, galleryPhotoMap],
   );
 
@@ -295,6 +270,7 @@ const CreateLawAndRegulationPage = () => {
             description: null,
           },
         ]);
+        setImagesDirty(true);
         toast.success(t('toasts.lawImageUploaded', { name: file.name }));
       } catch {
         toast.error(t('toasts.lawImageUploadFailed'));
@@ -303,14 +279,10 @@ const CreateLawAndRegulationPage = () => {
     [appraisalId, getOrCreateSession, uploadMutation, addGalleryPhoto, currentUser],
   );
 
-  // "Upload from Device" handler (via PhotoSourceModal)
-  const handleUploadFromDevice = useCallback(
-    (files: FileList) => {
-      Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-          handleUpload(file);
-        }
-      });
+  // The panel's upload button
+  const handleUploadFiles = useCallback(
+    (files: File[]) => {
+      files.filter(file => file.type.startsWith('image/')).forEach(file => handleUpload(file));
     },
     [handleUpload],
   );
@@ -361,7 +333,9 @@ const CreateLawAndRegulationPage = () => {
       el.removeEventListener('dragleave', onDragLeave);
       el.removeEventListener('drop', onDrop);
     };
-  }, []);
+    // Attach again once loading ends: while the spinner shows, the panel is not on the page.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
 
   // Gallery images available for selection (exclude already-added ones)
   const currentGalleryPhotoIds = useMemo(
@@ -377,41 +351,59 @@ const CreateLawAndRegulationPage = () => {
   }, [galleryData, currentGalleryPhotoIds]);
 
   // "Choose from Gallery" handler
-  const handleGallerySelect = useCallback((selectedImages: GalleryImage[]) => {
-    setImages(prev => [
-      ...prev,
-      ...selectedImages.map((img, idx) => ({
-        id: null,
-        galleryPhotoId: img.id,
-        displaySequence: prev.length + idx + 1,
-        title: null,
-        description: null,
-      })),
-    ]);
-    if (selectedImages.length > 0) {
-      toast.success(
-        selectedImages.length === 1 ? 'Photo added' : `${selectedImages.length} photos added`,
-      );
-    }
+  const handleGallerySelect = useCallback(
+    (selectedImages: GalleryImage[]) => {
+      setImages(prev => [
+        ...prev,
+        ...selectedImages.map((img, idx) => ({
+          id: null,
+          galleryPhotoId: img.id,
+          displaySequence: prev.length + idx + 1,
+          title: null,
+          description: null,
+        })),
+      ]);
+      if (selectedImages.length > 0) {
+        setImagesDirty(true);
+        toast.success(t('toasts.photoAddedCount', { count: selectedImages.length }));
+      }
+    },
+    [t],
+  );
+
+  // Taking a picture off this item only unlinks it — it stays in the gallery, and nothing is
+  // saved until the user saves — so it asks for no confirmation.
+  const removeImage = useCallback((key: string) => {
+    setImages(prev => prev.filter(img => img.galleryPhotoId !== key));
+    setPreviewPhoto(prev => (prev?.id === key ? null : prev));
+    setImagesDirty(true);
   }, []);
 
-  // Delete handler for PhotoGridView
-  const handleImageDelete = useCallback((image: GalleryImage) => {
-    setDeleteTarget({ galleryPhotoId: image.id, fileName: image.fileName ?? image.alt });
+  const reorderImages = useCallback((activeKey: string, overKey: string) => {
+    setImages(prev => {
+      const from = prev.findIndex(img => img.galleryPhotoId === activeKey);
+      const to = prev.findIndex(img => img.galleryPhotoId === overKey);
+      return from < 0 || to < 0 ? prev : arrayMove(prev, from, to);
+    });
+    setImagesDirty(true);
   }, []);
 
-  const confirmDelete = useCallback(() => {
-    if (!deleteTarget) return;
-    setImages(prev => prev.filter(img => img.galleryPhotoId !== deleteTarget.galleryPhotoId));
-    setPreviewPhoto(prev => (prev?.id === deleteTarget.galleryPhotoId ? null : prev));
-    setDeleteTarget(null);
-  }, [deleteTarget]);
+  // The caption belongs to this law item (its image's Description), so one picture used under two
+  // headers can say something different under each. Until the item has one of its own, the
+  // gallery photo's caption shows instead — captions written before this editor lived there.
+  // Cleared stays cleared: an empty string is kept rather than turned back into null, which would
+  // bring the gallery caption back.
+  const changeCaption = useCallback((key: string, caption: string) => {
+    setImages(prev =>
+      prev.map(img => (img.galleryPhotoId === key ? { ...img, description: caption } : img)),
+    );
+    setImagesDirty(true);
+  }, []);
 
-  // Click handler for PhotoGridView (opens preview)
-  const handleImageClick = useCallback(
-    (image: GalleryImage) => {
-      const match = previewablePhotos.find(p => p.id === image.id);
-      setPreviewPhoto(match ?? { id: image.id, src: image.src, fileName: image.fileName });
+  const previewImage = useCallback(
+    (key: string) => {
+      const match = previewablePhotos.find(p => p.id === key);
+      if (match) setPreviewPhoto(match);
     },
     [previewablePhotos],
   );
@@ -484,7 +476,9 @@ const CreateLawAndRegulationPage = () => {
         { appraisalId, items },
         {
           onSuccess: () => {
-            toast.success(action === 'draft' ? 'Draft saved' : 'Saved successfully');
+            toast.success(
+              action === 'draft' ? t('toasts.draftSaved') : t('lawsRegulations.editor.saved'),
+            );
             setSaveAction(null);
             skipWarning();
             navigateBack();
@@ -511,74 +505,25 @@ const CreateLawAndRegulationPage = () => {
   return (
     <FormProvider {...methods}>
       <div className="flex flex-col h-full min-h-0">
-        {/* Scrollable Form Content */}
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth">
-          <div className="px-4 py-6 flex flex-col gap-6">
-            {/* Page title */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Icon name="gavel" style="solid" className="w-5 h-5 text-amber-600" />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                {isEditMode ? 'Edit' : 'New'} Law & Regulation
-              </h2>
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          {/* The law on the left and its pictures beside it, so both are in view on a wide screen;
+              narrow screens stack them. No page title: the breadcrumb already names the item. */}
+          <div className="grid items-start gap-5 px-4 py-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,1fr)]">
+            <div className="flex min-w-0 flex-col gap-6">
+              <FormFields fields={formFields} disabled={isReadOnly} />
             </div>
-
-            <div className="h-px bg-gray-200" />
-
-            {/* Form fields (Header dropdown + Remark textarea) */}
-            <Section id="form-section">
-              <div className="flex flex-col gap-6">
-                <FormFields fields={formFields} disabled={isReadOnly} />
-              </div>
-            </Section>
-
-            {/* Images */}
-            <Section id="images-section">
-              <div ref={dropZoneRef} className="relative flex flex-col gap-4">
-                <span className="block text-xs font-medium text-gray-700">Images</span>
-
-                {/* Drag overlay */}
-                <div
-                  className={clsx(
-                    'absolute inset-0 z-40 flex items-center justify-center border-2 border-dashed rounded-2xl transition-opacity pointer-events-none',
-                    isDragging
-                      ? 'opacity-100 border-primary bg-primary/5'
-                      : 'opacity-0 border-transparent',
-                  )}
-                >
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3 animate-bounce">
-                      <Icon name="cloud-arrow-down" className="text-2xl text-primary" />
-                    </div>
-                    <p className="text-lg font-semibold text-primary">Drop photos here</p>
-                    <p className="text-sm text-primary/60 mt-1">Release to upload</p>
-                  </div>
-                </div>
-
-                {/* Photo grid */}
-                <PhotoGridView
-                  images={gridImages}
-                  onImageClick={handleImageClick}
-                  onImageDelete={isReadOnly ? undefined : handleImageDelete}
-                  showUsedBadge={false}
-                  prepend={
-                    !isReadOnly ? (
-                      <div
-                        onClick={() => setShowPhotoSourceModal(true)}
-                        className="aspect-[4/3] rounded-xl border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md flex flex-col items-center justify-center cursor-pointer transition-all duration-300"
-                      >
-                        <div className="w-14 h-14 rounded-2xl bg-gray-100 text-gray-400 flex items-center justify-center mb-3">
-                          <Icon name="plus" className="text-2xl" />
-                        </div>
-                        <p className="text-sm font-medium text-gray-600">Add photos</p>
-                        <p className="text-xs text-gray-400 mt-1">Click or drag & drop</p>
-                      </div>
-                    ) : undefined
-                  }
-                />
-              </div>
-            </Section>
+            <LawImagesPanel
+              images={panelImages}
+              readOnly={isReadOnly}
+              isDragging={isDragging}
+              dropZoneRef={dropZoneRef}
+              onReorder={reorderImages}
+              onRemove={removeImage}
+              onCaptionChange={changeCaption}
+              onPreview={previewImage}
+              onUpload={handleUploadFiles}
+              onChooseFromGallery={() => setShowGalleryModal(true)}
+            />
           </div>
         </div>
 
@@ -586,7 +531,7 @@ const CreateLawAndRegulationPage = () => {
         <ActionBar>
           <ActionBar.Left>
             <Button variant="ghost" type="button" onClick={navigateBack}>
-              Cancel
+              {tCommon('actions.cancel')}
             </Button>
             {!isReadOnly && (
               <>
@@ -605,7 +550,7 @@ const CreateLawAndRegulationPage = () => {
                 disabled={isPending}
               >
                 <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                Save draft
+                {t('createPage.saveDraft')}
               </Button>
               <Button
                 type="button"
@@ -614,30 +559,11 @@ const CreateLawAndRegulationPage = () => {
                 disabled={isPending}
               >
                 <Icon name="check" style="solid" className="size-4 mr-2" />
-                Save
+                {t('createPage.save')}
               </Button>
             </ActionBar.Right>
           )}
         </ActionBar>
-
-        {/* Delete Confirmation */}
-        <ConfirmDialog
-          isOpen={deleteTarget !== null}
-          onClose={() => setDeleteTarget(null)}
-          onConfirm={confirmDelete}
-          title="Delete Image"
-          message={`Are you sure you want to delete "${deleteTarget?.fileName}"? This action cannot be undone.`}
-          confirmText="Delete"
-          variant="danger"
-        />
-
-        {/* Photo Source Modal (Upload or Gallery) */}
-        <PhotoSourceModal
-          isOpen={showPhotoSourceModal}
-          onClose={() => setShowPhotoSourceModal(false)}
-          onUploadFromDevice={handleUploadFromDevice}
-          onChooseFromGallery={() => setShowGalleryModal(true)}
-        />
 
         {/* Gallery Selection Modal */}
         <GallerySelectionModal
@@ -650,7 +576,7 @@ const CreateLawAndRegulationPage = () => {
 
         <UnsavedChangesDialog blocker={blocker} />
 
-        {/* Photo Preview Modal */}
+        {/* Photo Preview Modal — its caption is this item's caption, the same one typed under the tile */}
         {previewPhoto && (
           <PhotoPreviewModal
             photo={previewPhoto}
@@ -658,42 +584,16 @@ const CreateLawAndRegulationPage = () => {
             onClose={() => setPreviewPhoto(null)}
             onNavigate={setPreviewPhoto}
             showInUseStatus={false}
-            onDelete={
-              isReadOnly
-                ? undefined
-                : () => {
-                    setDeleteTarget({
-                      galleryPhotoId: previewPhoto.id,
-                      fileName: previewPhoto.fileName ?? 'this image',
-                    });
-                  }
-            }
+            onDelete={isReadOnly ? undefined : () => removeImage(previewPhoto.id)}
+            captionMaxLength={CAPTION_MAX}
             onSaveDescription={
               isReadOnly
                 ? undefined
-                : async (caption: string) => {
-                    if (!appraisalId) return;
-                    try {
-                      const dto = galleryPhotoDtoMap.get(previewPhoto.id);
-                      await updateGalleryPhotoApi({
-                        appraisalId,
-                        photoId: previewPhoto.id,
-                        caption: caption || null,
-                        photoCategory: dto?.photoCategory ?? null,
-                        latitude: dto?.latitude ?? null,
-                        longitude: dto?.longitude ?? null,
-                        capturedAt: dto?.capturedAt ?? null,
-                      });
-                      setPreviewPhoto(prev =>
-                        prev ? { ...prev, caption: caption || null } : null,
-                      );
-                      toast.success(t('toasts.lawDescriptionUpdated'));
-                    } catch {
-                      toast.error(t('toasts.lawDescriptionUpdateFailed'));
-                    }
+                : (caption: string) => {
+                    changeCaption(previewPhoto.id, caption);
+                    setPreviewPhoto(prev => (prev ? { ...prev, caption: caption || null } : null));
                   }
             }
-            isSavingDescription={isUpdatingDescription}
           />
         )}
       </div>

@@ -195,7 +195,8 @@
   },
   "costMachine": {
     "title": "Cost Machine",
-    "loadFailed": "Failed to load machine cost items"
+    "loadFailed": "Failed to load machine cost items",
+    "notPriceCertified": "价格未认证"
   },
   "costBuilding": {
     "title": "Cost Building"

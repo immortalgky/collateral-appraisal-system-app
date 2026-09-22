@@ -29,7 +29,9 @@
     "clearAll": "Clear all"
   },
   "select": {
-    "placeholder": "Please select"
+    "placeholder": "Please select",
+    "searchPlaceholder": "Search...",
+    "typeToSearch": "Type to search..."
   },
   "range": {
     "from": "From",
@@ -48,6 +50,44 @@
     "pending": "Pending",
     "completed": "Completed",
     "draft": "Draft"
+  },
+  "dino": {
+    "hint": "Press Space to jump",
+    "hintTouch": "Tap to jump",
+    "gameOver": "Game over",
+    "restart": "Press Space to restart",
+    "restartTouch": "Tap to restart"
+  },
+  "documentViewer": {
+    "downloaded": "The file has been downloaded. You can close this tab.",
+    "title": "Opening file",
+    "opening": "Opening the file…",
+    "errorTitle": "Could not open the file",
+    "failed": "The file could not be opened. Close this tab and try again.",
+    "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site and try again.",
+    "close": "Close this tab",
+    "cancel": "Cancel",
+    "downloadStarted": "Downloading {{name}} — check your downloads.",
+    "downloadStartedUnnamed": "Downloading — check your downloads."
+  },
+  "transfer": {
+    "serverTooSlow": "The server took too long to prepare the file. Please try again.",
+    "downloading": "Downloading…",
+    "exportFailed": "The report could not be downloaded. Please try again.",
+    "uploading": "Uploading…",
+    "processing": "Processing on the server…",
+    "uploadStalled": "The connection stopped during the upload. Please try again.",
+    "downloadStalled": "The connection stopped during the download. Please try again.",
+    "failed": "Upload failed",
+    "resume": "Carry on",
+    "cancel": "Cancel",
+    "dismiss": "Dismiss",
+    "secondsLeft": "{{count}}s left",
+    "minutesLeft": "{{count}} min left",
+    "fileTooLarge": "This file is larger than the {{limit}} limit (it is {{size}}).",
+    "uploadCancelled": "Upload cancelled",
+    "uploadAbandoned": "The upload stopped when you left the screen. Please upload the file again.",
+    "downloadCancelled": "Download cancelled"
   },
   "confirm": {
     "deleteTitle": "Confirm Delete",

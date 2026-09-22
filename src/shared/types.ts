@@ -9,6 +9,24 @@ export type Density = 'compact' | 'normal' | 'comfortable';
 /** Field arrangement on the appraisal property forms. See formLayoutConstants.ts. */
 export type FormLayout = 'classic' | 'grid';
 
+/**
+ * How the Properties tab lays out each group. Declared here — beside the other persisted UI
+ * preferences — because the union used to be copy-pasted into PropertyInformationPage,
+ * PropertiesTab and GroupContainer, so adding a mode to one of the three compiled cleanly and
+ * silently dropped the value at the next boundary.
+ *
+ * Not to be confused with `GalleryViewMode` (features/appraisal/types/gallery.ts) — that is the
+ * Gallery tab's own three-way switch and is unrelated.
+ */
+export type PropertiesViewMode = 'rows' | 'cards' | 'table' | 'split';
+export type MarketsViewMode = 'list' | 'map';
+export type GallerySort = 'newest' | 'oldest' | 'name';
+export interface GalleryPrefs {
+  group: 'type' | 'flat';
+  sort: GallerySort;
+  view: 'grid' | 'list';
+}
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -26,6 +44,15 @@ export type UIStore = {
   setDensity: (density: Density) => void;
   formLayout: FormLayout;
   setFormLayout: (layout: FormLayout) => void;
+  /** Properties tab layout. Persisted per browser, like density and formLayout. */
+  propertiesViewMode: PropertiesViewMode;
+  setPropertiesViewMode: (mode: PropertiesViewMode) => void;
+  marketsViewMode: MarketsViewMode;
+  setMarketsViewMode: (mode: MarketsViewMode) => void;
+  galleryPrefs: GalleryPrefs;
+  setGalleryPrefs: (patch: Partial<GalleryPrefs>) => void;
+  photoTopicsPreviewOpen: boolean;
+  setPhotoTopicsPreviewOpen: (open: boolean) => void;
 };
 
 export type ParameterStore = {
@@ -57,6 +84,11 @@ export type BreadcrumbItem = {
   label: string;
   href: string;
   icon?: string; // Icon name for the breadcrumb item
+  /**
+   * Set by a page on its leaf to take the place of the layout's last crumb rather than follow it.
+   * The layout can only name the kind of thing (a property type); the page knows the thing's name.
+   */
+  replacesLast?: boolean;
 };
 
 export type BreadcrumbStore = {
@@ -110,4 +142,3 @@ export type CompanyStore = {
   setCompanies: (companies: CompanyItem[]) => void;
   setLoading: (loading: boolean) => void;
 };
-

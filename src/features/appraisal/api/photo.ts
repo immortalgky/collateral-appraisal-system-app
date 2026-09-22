@@ -39,13 +39,16 @@ export const photoTopicKeys = {
  * Hook for fetching photo topics for an appraisal
  * GET /appraisals/{appraisalId}/photo-topics
  */
+/** GET /appraisals/{appraisalId}/photo-topics — also read directly by the Photos tab's write queue. */
+export const fetchPhotoTopics = async (appraisalId: string): Promise<GetPhotoTopicsResultType> => {
+  const { data } = await axios.get(`/appraisals/${appraisalId}/photo-topics`);
+  return data;
+};
+
 export const useGetPhotoTopics = (appraisalId: string | undefined) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'photo-topics'],
-    queryFn: async (): Promise<GetPhotoTopicsResultType> => {
-      const { data } = await axios.get(`/appraisals/${appraisalId}/photo-topics`);
-      return data;
-    },
+    queryFn: () => fetchPhotoTopics(appraisalId ?? ''),
     enabled: !!appraisalId,
   });
 };

@@ -1,21 +1,40 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import Icon from '@shared/components/Icon';
-import Button from '@shared/components/Button';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
-import PhotoSourceModal from '../PhotoSourceModal';
+import { SegmentedControl } from '@shared/components/SegmentedControl';
+import { useUIStore } from '@shared/store';
 import GallerySelectionModal from '../GallerySelectionModal';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import PhotoPreviewModal from '../PhotoPreviewModal';
 import type { PreviewablePhoto } from '../PhotoPreviewModal';
 import { PhotoGridView } from '../gallery';
+import { GroupActionsMenu } from '../GroupActionsMenu';
+import { useGroupRename } from '../../hooks/useGroupRename';
 import type { GalleryImage, TopicPhotoDisplay } from '../../types/gallery';
 import { toGalleryImage, toTopicPhotoDisplay } from '../../types/gallery';
 import type { PhotoTopicDtoType, GalleryPhotoDtoType } from '@shared/schemas/v1';
 import {
+  fetchPhotoTopics,
+  photoTopicKeys,
   useGetPhotoTopics,
   useCreatePhotoTopic,
   useUpdatePhotoTopic,
@@ -28,204 +47,182 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAuthStore } from '@features/auth/store';
 import DataErrorState from '@/shared/components/DataErrorState';
 
-const LAYOUT_OPTIONS = [
-  { value: 1 as const, label: '1', icon: 'square' },
-  { value: 2 as const, label: '2', icon: 'table-columns' },
-  { value: 3 as const, label: '3', icon: 'table-cells' },
-];
+/** Columns a topic's photos take in the report. */
+const COLUMN_OPTIONS = [
+  { value: '1', label: '1', icon: 'square' },
+  { value: '2', label: '2', icon: 'table-columns' },
+  { value: '3', label: '3', icon: 'table-cells' },
+] as const;
+type ColumnValue = (typeof COLUMN_OPTIONS)[number]['value'];
+const clampColumns = (n: number): 1 | 2 | 3 => (n <= 1 ? 1 : n >= 3 ? 3 : 2);
 
-// TopicItem Component
-const TopicItem = ({
+/** A tiny picture of N columns, beside the count in each topic row. */
+const ColumnsGlyph = ({ n }: { n: number }) => (
+  <span className="inline-flex gap-px" aria-hidden>
+    {Array.from({ length: n }, (_, i) => (
+      <i key={i} className="h-2.5 w-1 rounded-[1px] bg-current opacity-60" />
+    ))}
+  </span>
+);
+
+/**
+ * One topic in the rail: drag handle, name with its photo count and columns, and the ⋮ menu.
+ * Renames in place with the same hook the property groups use.
+ */
+const TopicRow = ({
   topic,
+  columns,
   isSelected,
-  onSelect,
-  onDelete,
-  onEdit,
   readOnly,
+  onSelect,
+  onRename,
+  onDelete,
 }: {
   topic: PhotoTopicDtoType;
+  columns: number;
   isSelected: boolean;
+  readOnly: boolean;
   onSelect: () => void;
+  onRename: (name: string) => void;
   onDelete: () => void;
-  onEdit: (name: string) => void;
-  readOnly?: boolean;
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(topic.topicName);
-
-  const handleSave = () => {
-    if (editName.trim()) {
-      onEdit(editName.trim());
-    }
-    setIsEditing(false);
-  };
+  const { t } = useTranslation('appraisal');
+  const rename = useGroupRename(topic.id, topic.topicName, (_id, name) => onRename(name));
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: topic.id,
+    disabled: readOnly,
+  });
 
   return (
     <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
       className={clsx(
-        'group relative rounded-xl transition-all duration-200',
-        isSelected
-          ? 'bg-primary shadow-lg shadow-primary/25'
-          : 'bg-white border border-gray-100 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5',
+        'flex items-center gap-1.5 border-l-[3px] py-2 pl-1.5 pr-1 transition-colors',
+        isSelected ? 'border-primary bg-primary-50' : 'border-transparent hover:bg-gray-50',
+        isDragging && 'opacity-50',
       )}
     >
-      {isEditing ? (
-        <div className="p-3">
-          <input
-            type="text"
-            value={editName}
-            onChange={e => setEditName(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter') handleSave();
-              if (e.key === 'Escape') setIsEditing(false);
-            }}
-            onBlur={handleSave}
-            className="w-full px-3 py-2 text-sm border border-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
-            autoFocus
-          />
-        </div>
-      ) : (
-        <button type="button" onClick={onSelect} className="w-full text-left p-3">
-          <div className="flex items-center gap-3">
-            {/* Icon */}
-            <div
-              className={clsx(
-                'w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors',
-                isSelected
-                  ? 'bg-white/20 text-white'
-                  : 'bg-primary/10 text-primary group-hover:bg-primary/20',
-              )}
-            >
-              <Icon name="images" style="solid" className="text-sm" />
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <p
-                className={clsx(
-                  'text-sm font-medium truncate',
-                  isSelected ? 'text-white' : 'text-gray-800',
-                )}
-              >
-                {topic.topicName}
-              </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className={clsx('text-xs', isSelected ? 'text-white/70' : 'text-gray-400')}>
-                  {topic.photoCount} {topic.photoCount === 1 ? 'photo' : 'photos'}
-                </span>
-              </div>
-            </div>
-
-            {/* Photo Count Badge */}
-            {topic.photoCount > 0 && (
-              <div
-                className={clsx(
-                  'px-2 py-0.5 rounded-full text-xs font-medium',
-                  isSelected ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary',
-                )}
-              >
-                {topic.photoCount}
-              </div>
-            )}
-
-            {/* Actions */}
-            {!readOnly && (
-              <div
-                className={clsx(
-                  'flex items-center gap-0.5 transition-opacity',
-                  isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                )}
-              >
-                <button
-                  type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    setEditName(topic.topicName);
-                    setIsEditing(true);
-                  }}
-                  className={clsx(
-                    'p-1.5 rounded-lg transition-colors',
-                    isSelected
-                      ? 'text-white/70 hover:text-white hover:bg-white/10'
-                      : 'text-gray-400 hover:text-primary hover:bg-primary/10',
-                  )}
-                >
-                  <Icon name="pen" className="text-xs" />
-                </button>
-                <button
-                  type="button"
-                  onClick={e => {
-                    e.stopPropagation();
-                    onDelete();
-                  }}
-                  className={clsx(
-                    'p-1.5 rounded-lg transition-colors',
-                    isSelected
-                      ? 'text-white/70 hover:text-white hover:bg-red-500/20'
-                      : 'text-gray-400 hover:text-red-500 hover:bg-red-50',
-                  )}
-                >
-                  <Icon name="trash" className="text-xs" />
-                </button>
-              </div>
-            )}
-          </div>
+      {!readOnly && (
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label={t('photoTopics.dragHint')}
+          className="cursor-grab px-0.5 text-gray-300 hover:text-gray-500 active:cursor-grabbing"
+        >
+          <Icon name="grip-vertical" style="solid" className="text-[10px]" />
         </button>
+      )}
+      {rename.isEditing ? (
+        <input
+          ref={rename.inputRef}
+          value={rename.value}
+          onChange={e => rename.setValue(e.target.value)}
+          onBlur={rename.commit}
+          onKeyDown={rename.onKeyDown}
+          className="min-w-0 flex-1 rounded border border-primary bg-white px-1.5 py-0.5 text-[12.5px] outline-none focus:ring-1 focus:ring-primary"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={onSelect}
+          className="min-w-0 flex-1 rounded text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          <span
+            className={clsx(
+              'block truncate text-[12.5px]',
+              isSelected ? 'font-semibold text-primary-800' : 'text-gray-800',
+            )}
+          >
+            {topic.topicName}
+          </span>
+          <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
+            <span className="tabular-nums">
+              {t('photoTopics.photoCount', { n: topic.photoCount })}
+            </span>
+            <span>·</span>
+            <ColumnsGlyph n={columns} />
+            <span>{t('photoTopics.columnsShort', { n: columns })}</span>
+          </span>
+        </button>
+      )}
+      {!readOnly && !rename.isEditing && (
+        <GroupActionsMenu
+          onRename={rename.start}
+          onDelete={onDelete}
+          iconClassName="text-[10px]"
+          labels={{ rename: t('photoTopics.rename'), delete: t('photoTopics.delete') }}
+        />
       )}
     </div>
   );
 };
 
-// Upload Placeholder Component - Enhanced design
-const UploadPlaceholder = ({
-  onClick,
-  isDragging,
-}: {
-  onClick: () => void;
-  isDragging?: boolean;
-}) => (
-  <div
-    onClick={onClick}
-    className={clsx(
-      'aspect-[4/3] rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all duration-300',
-      isDragging
-        ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg shadow-primary/20'
-        : 'border-gray-200 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md',
-    )}
-  >
-    <div
-      className={clsx(
-        'w-14 h-14 rounded-2xl flex items-center justify-center mb-3 transition-all duration-300',
-        isDragging
-          ? 'bg-primary/20 text-primary scale-110'
-          : 'bg-gray-100 text-gray-400 group-hover:bg-primary/10 group-hover:text-primary',
-      )}
-    >
-      <Icon name={isDragging ? 'cloud-arrow-down' : 'plus'} className="text-2xl" />
-    </div>
-    <p
-      className={clsx(
-        'text-sm font-medium transition-colors',
-        isDragging ? 'text-primary' : 'text-gray-600',
-      )}
-    >
-      {isDragging ? 'Drop photos here' : 'Add photos'}
-    </p>
-    <p
-      className={clsx(
-        'text-xs mt-1 transition-colors',
-        isDragging ? 'text-primary/70' : 'text-gray-400',
-      )}
-    >
-      Click or drag & drop
-    </p>
-  </div>
-);
+/**
+ * A thumbnail of how a report page lays photos out at this column count. It is an illustration,
+ * not a tally: a fixed sample whatever the topic holds, so a long topic does not run the little
+ * page off the bottom of the panel. One row at a single column — a full-width photo is tall
+ * enough that two would not fit the page — and two rows otherwise.
+ */
+const sampleRows = (columns: number) => (columns === 1 ? 1 : 2);
 
+const ReportPagePreview = ({ columns, onClose }: { columns: number; onClose: () => void }) => {
+  const { t } = useTranslation('appraisal');
+  return (
+    <div className="relative w-32 shrink-0">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label={t('photoTopics.previewHide')}
+        title={t('photoTopics.previewHide')}
+        className="absolute -right-1.5 -top-1.5 z-10 flex size-5 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 shadow-sm transition-colors hover:text-gray-700"
+      >
+        <Icon name="xmark" style="solid" className="text-[9px]" />
+      </button>
+      <div className="flex aspect-[1/1.414] flex-col gap-1 overflow-hidden rounded-md border border-gray-200 bg-white p-2 shadow-sm">
+        <span className="h-1 w-3/5 shrink-0 rounded bg-gray-200" />
+        <span className="mb-1 h-1 w-2/5 shrink-0 rounded bg-gray-100" />
+        <div
+          className="grid gap-1"
+          style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+        >
+          {Array.from({ length: columns * sampleRows(columns) }, (_, i) => (
+            <span key={i} className="aspect-[4/3] rounded-[2px] bg-primary/30" />
+          ))}
+        </div>
+      </div>
+      <p className="mt-1.5 text-center text-[10.5px] text-gray-400">
+        {t('photoTopics.pagePreview', { n: columns })}
+      </p>
+    </div>
+  );
+};
+
+/**
+ * Topic writes, one queue per appraisal. The API replaces a topic whole — name, position and
+ * columns together — so two writes in flight at once each carried the other's field as it was
+ * before: a column change could undo a drag, a drag could undo a rename. Kept outside the
+ * component so that switching tabs and coming back joins the same queue instead of starting a
+ * second one that races the first.
+ */
+const topicWriteQueues = new Map<string, { tail: Promise<void>; pending: number }>();
+
+interface TopicWrite {
+  topicId: string;
+  topicName: string;
+  sortOrder: number;
+  displayColumns: number;
+}
+
+/**
+ * The report's photo topics: a rail of topics on the left, the selected topic's photos on the
+ * right. The photos keep an ordinary grid whatever the column setting — rearranging them on every
+ * click made the list jump around — and the setting shows in the report-page preview beside them.
+ */
 export const PhotosTab = () => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
-  // Get appraisalId from URL params
   const appraisalId = useAppraisalId();
   const currentUser = useAuthStore(state => state.user);
 
@@ -238,7 +235,8 @@ export const PhotosTab = () => {
     refetch: refetchTopics,
   } = useGetPhotoTopics(appraisalId);
   const { mutate: createTopic } = useCreatePhotoTopic();
-  const { mutate: updateTopic } = useUpdatePhotoTopic();
+  const { mutateAsync: updateTopicAsync } = useUpdatePhotoTopic();
+  const queryClient = useQueryClient();
   const { mutate: deleteTopic, isPending: isDeletingTopic } = useDeletePhotoTopic();
   const { mutateAsync: assignPhotoToTopic, isPending: isAssigningPhoto } = useAssignPhotoToTopic();
 
@@ -265,11 +263,26 @@ export const PhotosTab = () => {
     return map;
   }, [galleryData]);
 
-  const topics = topicsData?.topics || [];
+  /**
+   * Topics in report order. A drag reorders them here at once and holds that order until every
+   * queued topic write has landed and the topics have been re-read (see `queueTopicWrite`).
+   */
+  const [orderOverride, setOrderOverride] = useState<string[] | null>(null);
+  const topics = useMemo(() => {
+    const list = [...(topicsData?.topics ?? [])].sort((a, b) => a.sortOrder - b.sortOrder);
+    if (!orderOverride) return list;
+    // A topic added while the dragged order is held is not in it; keep it, after the rest.
+    const held = orderOverride
+      .map(id => list.find(x => x.id === id))
+      .filter((x): x is PhotoTopicDtoType => !!x);
+    return [...held, ...list.filter(x => !orderOverride.includes(x.id))];
+  }, [topicsData, orderOverride]);
+
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [localLayouts, setLocalLayouts] = useState<Record<string, number>>({});
-  const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
+  /** Which photos the gallery picker offers: all of them, or only those in no topic yet. */
+  const [galleryModalScope, setGalleryModalScope] = useState<'all' | 'unplaced'>('all');
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [newTopicName, setNewTopicName] = useState('');
   const [isDragging, setIsDragging] = useState(false);
@@ -283,8 +296,13 @@ export const PhotosTab = () => {
   } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const newTopicInputRef = useRef<HTMLInputElement>(null);
   const uploadSessionIdRef = useRef<string | null>(null);
   const sessionPromiseRef = useRef<Promise<string> | null>(null);
+
+  useEffect(() => {
+    if (isAddingTopic) newTopicInputRef.current?.focus();
+  }, [isAddingTopic]);
 
   // Select first topic when topics load
   useEffect(() => {
@@ -313,6 +331,14 @@ export const PhotosTab = () => {
     () => (galleryData?.photos ?? []).map(toGalleryImage),
     [galleryData],
   );
+
+  /** Photos not in any topic yet — the ones still to be placed in the report. */
+  const unplacedImages: GalleryImage[] = useMemo(() => {
+    const unplacedIds = new Set(
+      (galleryData?.photos ?? []).filter(p => (p.photoTopicIds ?? []).length === 0).map(p => p.id),
+    );
+    return galleryImages.filter(img => unplacedIds.has(img.id));
+  }, [galleryData, galleryImages]);
 
   // Map topic photos → GalleryImage[] for PhotoGridView
   const gridImages: GalleryImage[] = useMemo(
@@ -384,17 +410,71 @@ export const PhotosTab = () => {
     }
   };
 
-  const handleEditTopic = (topicId: string, name: string) => {
+  /**
+   * Queue a write to the topics (see `topicWriteQueues`). Each write is built when its turn comes,
+   * from the topics read straight from the API — not from the cache, whose refresh any other
+   * refresh of the same list (an upload, a caption, a topic added or removed) can cut short,
+   * leaving it as it was. The dragged order stays on screen until the queue is empty and the list
+   * on screen has been replaced with what the server now has.
+   */
+  const queueTopicWrite = (
+    build: (current: PhotoTopicDtoType[]) => TopicWrite[],
+    failedMessage: string,
+    onFailed?: () => void,
+  ) => {
     if (!appraisalId) return;
-    const topic = topics.find(t => t.id === topicId);
-    if (!topic) return;
-    updateTopic({
-      appraisalId,
-      topicId,
-      topicName: name,
-      sortOrder: topic.sortOrder,
-      displayColumns: topic.displayColumns,
+    const key = photoTopicKeys.all(appraisalId);
+    const queue = topicWriteQueues.get(appraisalId) ?? { tail: Promise.resolve(), pending: 0 };
+    topicWriteQueues.set(appraisalId, queue);
+    queue.pending += 1;
+    queue.tail = queue.tail.then(async () => {
+      try {
+        const current = (await fetchPhotoTopics(appraisalId)).topics ?? [];
+        const results = await Promise.allSettled(
+          build(current).map(write => updateTopicAsync({ appraisalId, ...write })),
+        );
+        // A topic deleted after this write read the list answers 404. It is gone, not unsaved —
+        // no reason to tell the user the order failed.
+        const failed = results.some(
+          r =>
+            r.status === 'rejected' &&
+            (r.reason as { response?: { status?: number } })?.response?.status !== 404,
+        );
+        if (failed) {
+          onFailed?.();
+          toast.error(failedMessage);
+        }
+      } catch {
+        onFailed?.();
+        toast.error(failedMessage);
+      } finally {
+        queue.pending -= 1;
+        if (queue.pending === 0) {
+          // Through the cache's own refresh, never a write of a separate read: that read could be
+          // older than a refresh that lands meanwhile (a topic added, a photo uploaded) and would
+          // put the old list back for the whole staleTime.
+          await queryClient.invalidateQueries({ queryKey: key });
+          // Checked again: a write queued while that refresh was in flight still holds its order.
+          if (queue.pending === 0) setOrderOverride(null);
+        }
+      }
     });
+  };
+
+  const handleEditTopic = (topicId: string, name: string) => {
+    queueTopicWrite(current => {
+      const topic = current.find(x => x.id === topicId);
+      return topic
+        ? [
+            {
+              topicId,
+              topicName: name,
+              sortOrder: topic.sortOrder,
+              displayColumns: topic.displayColumns,
+            },
+          ]
+        : [];
+    }, t('toasts.topicUpdateFailed'));
   };
 
   const handleDeleteTopic = async () => {
@@ -428,18 +508,72 @@ export const PhotosTab = () => {
   };
 
   const handleLayoutChange = (layout: number) => {
-    if (selectedTopicId && appraisalId && selectedTopicRaw) {
-      // Update local state immediately for responsive UI
-      setLocalLayouts(prev => ({ ...prev, [selectedTopicId]: layout }));
-      // Also call API to persist
-      updateTopic({
-        appraisalId,
-        topicId: selectedTopicId,
-        topicName: selectedTopicRaw.topicName,
-        sortOrder: selectedTopicRaw.sortOrder,
-        displayColumns: layout,
-      });
-    }
+    if (!selectedTopicId || !appraisalId || !selectedTopicRaw) return;
+    const topicId = selectedTopicId;
+    // Shown at once; saved in turn. If the save fails, drop the local value so the page shows
+    // the columns the server really has.
+    setLocalLayouts(prev => ({ ...prev, [topicId]: layout }));
+    queueTopicWrite(
+      current => {
+        const topic = current.find(x => x.id === topicId);
+        return topic
+          ? [
+              {
+                topicId,
+                topicName: topic.topicName,
+                sortOrder: topic.sortOrder,
+                displayColumns: layout,
+              },
+            ]
+          : [];
+      },
+      t('toasts.topicUpdateFailed'),
+      // Only if it is still this value: a later click may already have replaced it.
+      () =>
+        setLocalLayouts(prev => {
+          if (prev[topicId] !== layout) return prev;
+          const next = { ...prev };
+          delete next[topicId];
+          return next;
+        }),
+    );
+  };
+
+  // Whether the report-page preview is shown beside the photos — remembered per browser.
+  const previewOpen = useUIStore(state => state.photoTopicsPreviewOpen);
+  const setPreviewOpen = useUIStore(state => state.setPhotoTopicsPreviewOpen);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+
+  /** Reorder topics: every topic whose position changed gets its new sortOrder saved. */
+  const handleTopicDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || !appraisalId) return;
+    const from = topics.findIndex(x => x.id === active.id);
+    const to = topics.findIndex(x => x.id === over.id);
+    if (from < 0 || to < 0) return;
+    const ids = arrayMove(topics, from, to).map(x => x.id);
+    setOrderOverride(ids);
+    // Only topics whose position differs from the list as re-read are sent, with their name and
+    // columns from that same list — a drag made while earlier writes are still landing no longer
+    // compares against positions the server has not caught up with.
+    queueTopicWrite(
+      current =>
+        ids.flatMap((id, index) => {
+          const topic = current.find(x => x.id === id);
+          return !topic || topic.sortOrder === index + 1
+            ? []
+            : [
+                {
+                  topicId: id,
+                  topicName: topic.topicName,
+                  sortOrder: index + 1,
+                  displayColumns: topic.displayColumns,
+                },
+              ];
+        }),
+      t('toasts.topicReorderFailed'),
+    );
   };
 
   const handleFileSelect = useCallback(
@@ -499,16 +633,15 @@ export const PhotosTab = () => {
         toast.error(t('toasts.uploadSessionFailed'));
       }
     },
-    [selectedTopicId, appraisalId, getOrCreateSession, uploadDocument, addGalleryPhoto, currentUser],
+    [
+      selectedTopicId,
+      appraisalId,
+      getOrCreateSession,
+      uploadDocument,
+      addGalleryPhoto,
+      currentUser,
+    ],
   );
-
-  const handleUploadFromDevice = (files: FileList) => {
-    handleFileSelect(files);
-  };
-
-  const handleChooseFromGallery = () => {
-    setShowGalleryModal(true);
-  };
 
   const handleGallerySelect = async (selectedImages: GalleryImage[]) => {
     if (!selectedTopicId || !appraisalId) return;
@@ -568,6 +701,11 @@ export const PhotosTab = () => {
     }
   };
 
+  const openGalleryPicker = (scope: 'all' | 'unplaced') => {
+    setGalleryModalScope(scope);
+    setShowGalleryModal(true);
+  };
+
   if (isLoadingTopics) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -575,7 +713,7 @@ export const PhotosTab = () => {
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center animate-pulse">
             <Icon name="images" className="text-xl text-primary" />
           </div>
-          <p className="text-sm text-gray-500">Loading photos...</p>
+          <p className="text-sm text-gray-500">{t('photoTopics.loading')}</p>
         </div>
       </div>
     );
@@ -585,7 +723,7 @@ export const PhotosTab = () => {
     return (
       <DataErrorState
         variant="inline"
-        title="Failed to load photos"
+        title={t('photoTopics.loadError')}
         message={(topicsError as Error)?.message}
         onRetry={() => {
           void refetchTopics();
@@ -595,236 +733,257 @@ export const PhotosTab = () => {
     );
   }
 
+  const columns = clampColumns(selectedTopic?.displayColumns ?? 2);
+
   return (
-    <div className="flex gap-6 min-h-[600px]">
-      {/* Left Panel - Topics List */}
-      <div className="w-[300px] flex-shrink-0 flex flex-col bg-gradient-to-b from-gray-50/50 to-white rounded-2xl p-4">
-        {/* Header Card */}
-        <div className="bg-primary rounded-xl p-4 mb-4 shadow-lg shadow-primary/20">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Icon name="layer-group" style="solid" className="text-white text-lg" />
-            </div>
-            <div>
-              <h3 className="text-white font-semibold">Photo Topics</h3>
-              <p className="text-white/70 text-xs mt-0.5">
-                {topics.length} topic{topics.length !== 1 ? 's' : ''} · {totalPhotos} photo
-                {totalPhotos !== 1 ? 's' : ''}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Add Topic Button */}
-        {!readOnly && !isAddingTopic && (
-          <button
-            type="button"
-            onClick={() => setIsAddingTopic(true)}
-            className="w-full mb-4 py-2.5 px-4 rounded-xl border-2 border-dashed border-primary/30 text-primary hover:border-primary hover:bg-primary/5 transition-all duration-200 flex items-center justify-center gap-2 text-sm font-medium"
-          >
-            <Icon name="plus" />
-            New Topic
-          </button>
-        )}
-
-        {/* Add Topic Input */}
-        {!readOnly && isAddingTopic && (
-          <div className="mb-4 p-4 bg-white rounded-xl border border-primary/10 shadow-sm">
-            <input
-              type="text"
-              value={newTopicName}
-              onChange={e => setNewTopicName(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter') handleAddTopic();
-                if (e.key === 'Escape') {
-                  setIsAddingTopic(false);
-                  setNewTopicName('');
-                }
-              }}
-              placeholder="Topic name..."
-              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary mb-3"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <Button size="sm" variant="primary" onClick={handleAddTopic} className="flex-1">
-                <Icon name="check" className="mr-1.5" />
-                Add
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setIsAddingTopic(false);
-                  setNewTopicName('');
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Topics List */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-          {isTopicsError && !isGalleryError && (
-            <DataErrorState
-              variant="inline"
-              title="Failed to load topics"
-              message={(topicsError as Error)?.message}
-              onRetry={refetchTopics}
-            />
-          )}
-          {topics.map(topic => (
-            <TopicItem
-              key={topic.id}
-              topic={topic}
-              isSelected={topic.id === selectedTopicId}
-              onSelect={() => setSelectedTopicId(topic.id)}
-              onDelete={() =>
-                setDeleteConfirm({ type: 'topic', id: topic.id, name: topic.topicName })
-              }
-              onEdit={name => handleEditTopic(topic.id, name)}
-              readOnly={readOnly}
-            />
-          ))}
-
-          {topics.length === 0 && !isAddingTopic && (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Icon name="folder-open" className="text-2xl text-primary" />
-              </div>
-              <p className="text-sm font-medium text-gray-600">No topics yet</p>
-              <p className="text-xs text-gray-400 mt-1 max-w-[180px] mx-auto">
-                Create topics to organize your photos by category
-              </p>
-            </div>
-          )}
-        </div>
+    // Exactly the tab area's height, so the page itself never scrolls: the rail scrolls its
+    // topics and the right-hand panel scrolls its photos, each inside its own box.
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <div className="min-w-0">
+        <h3 className="text-sm font-semibold text-gray-900">{t('photoTopics.title')}</h3>
+        <p className="text-xs text-gray-500">
+          {t('photoTopics.summary', { topics: topics.length, photos: totalPhotos })}
+        </p>
       </div>
 
-      {/* Right Panel - Photo Grid */}
-      <div
-        className="flex-1 flex flex-col min-w-0"
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mb-5 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-4">
-            {/* Selected Topic Title */}
-            {selectedTopic && (
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Icon name="images" style="solid" className="text-primary text-sm" />
+      <div className="flex min-h-0 flex-1 gap-4">
+        {/* Left: the topics, in report order */}
+        <div className="flex w-52 shrink-0 flex-col overflow-hidden rounded-xl border border-gray-200 bg-white">
+          {!readOnly && topics.length > 1 && (
+            <div className="border-b border-gray-100 px-3 py-1.5 text-[11px] text-gray-400">
+              {t('photoTopics.dragHint')}
+            </div>
+          )}
+          <div className="flex-1 overflow-y-auto">
+            {isTopicsError && !isGalleryError && (
+              <DataErrorState
+                variant="inline"
+                title={t('photoTopics.loadTopicsError')}
+                message={(topicsError as Error)?.message}
+                onRetry={refetchTopics}
+              />
+            )}
+            <DndContext
+              sensors={readOnly ? [] : sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleTopicDragEnd}
+            >
+              <SortableContext items={topics.map(x => x.id)} strategy={verticalListSortingStrategy}>
+                <div className="divide-y divide-gray-100">
+                  {topics.map(topic => (
+                    <TopicRow
+                      key={topic.id}
+                      topic={topic}
+                      columns={clampColumns(localLayouts[topic.id] ?? topic.displayColumns)}
+                      isSelected={topic.id === selectedTopicId}
+                      readOnly={readOnly}
+                      onSelect={() => setSelectedTopicId(topic.id)}
+                      onRename={name => handleEditTopic(topic.id, name)}
+                      onDelete={() =>
+                        setDeleteConfirm({ type: 'topic', id: topic.id, name: topic.topicName })
+                      }
+                    />
+                  ))}
                 </div>
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-800">{selectedTopic.topicName}</h4>
-                  <p className="text-xs text-gray-400">
-                    {topicPhotos.length} photo{topicPhotos.length !== 1 ? 's' : ''}
+              </SortableContext>
+            </DndContext>
+
+            {topics.length === 0 && !isAddingTopic && (
+              <div className="px-4 py-10 text-center">
+                <Icon name="folder-open" className="mb-2 text-2xl text-gray-300" />
+                <p className="text-sm font-medium text-gray-600">{t('photoTopics.empty.title')}</p>
+                <p className="mt-1 text-xs text-gray-400">{t('photoTopics.empty.hint')}</p>
+              </div>
+            )}
+          </div>
+
+          {!readOnly && selectedTopicId && unplacedImages.length > 0 && (
+            <button
+              type="button"
+              onClick={() => openGalleryPicker('unplaced')}
+              className="mx-2 mb-2 rounded-lg bg-amber-50 px-2.5 py-2 text-left text-[11.5px] text-amber-800 transition-colors hover:bg-amber-100"
+            >
+              {t('photoTopics.unplaced', { n: unplacedImages.length })} ·{' '}
+              <span className="font-semibold">{t('photoTopics.unplacedAction')} ›</span>
+            </button>
+          )}
+
+          {!readOnly &&
+            (isAddingTopic ? (
+              <div className="border-t border-gray-200 p-2">
+                <input
+                  ref={newTopicInputRef}
+                  type="text"
+                  value={newTopicName}
+                  onChange={e => setNewTopicName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') handleAddTopic();
+                    if (e.key === 'Escape') {
+                      setIsAddingTopic(false);
+                      setNewTopicName('');
+                    }
+                  }}
+                  placeholder={t('photoTopics.namePlaceholder')}
+                  className="mb-2 w-full rounded-lg border border-gray-200 px-2.5 py-1.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAddTopic}
+                    className="flex-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+                  >
+                    {t('photoTopics.save')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAddingTopic(false);
+                      setNewTopicName('');
+                    }}
+                    className="rounded-lg px-3 py-1.5 text-xs text-gray-600 transition-colors hover:bg-gray-100"
+                  >
+                    {t('photoTopics.cancel')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsAddingTopic(true)}
+                className="flex items-center gap-1.5 border-t border-gray-200 px-3 py-2 text-left text-xs font-medium text-primary-700 transition-colors hover:bg-gray-50"
+              >
+                <Icon name="plus" className="text-[10px]" />
+                {t('photoTopics.add')}
+              </button>
+            ))}
+        </div>
+
+        {/* Right: the selected topic, as the report will lay it out */}
+        <div
+          className="flex min-w-0 flex-1 flex-col overflow-hidden"
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {selectedTopic && (
+            <div className="mb-3 flex shrink-0 flex-wrap items-center gap-3 border-b border-gray-100 pb-3">
+              <div className="min-w-0">
+                <h4 className="truncate text-sm font-semibold text-gray-900">
+                  {selectedTopic.topicName}
+                </h4>
+                <p className="text-xs text-gray-400">
+                  {t('photoTopics.photoCount', { n: topicPhotos.length })}
+                </p>
+              </div>
+              <div className="ml-auto flex flex-wrap items-center gap-2">
+                <span className="text-xs text-gray-500">{t('photoTopics.columnsLabel')}</span>
+                <SegmentedControl
+                  options={COLUMN_OPTIONS}
+                  value={String(columns) as ColumnValue}
+                  onChange={value => handleLayoutChange(Number(value))}
+                />
+                <button
+                  type="button"
+                  aria-pressed={previewOpen}
+                  onClick={() => setPreviewOpen(!previewOpen)}
+                  title={previewOpen ? t('photoTopics.previewHide') : t('photoTopics.previewShow')}
+                  className={clsx(
+                    'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors',
+                    previewOpen
+                      ? 'border-primary/40 bg-primary-50 text-primary-700'
+                      : 'border-gray-300 bg-white text-gray-500 hover:bg-gray-50',
+                  )}
+                >
+                  <Icon name="file-lines" className="text-[11px]" />
+                  {t('photoTopics.preview')}
+                </button>
+                {!readOnly && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => openGalleryPicker('all')}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-white px-3 py-1.5 text-xs font-semibold text-primary-700 transition-colors hover:bg-primary-50"
+                    >
+                      <Icon name="images" className="text-[11px]" />
+                      {t('photoTopics.fromGallery')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+                    >
+                      <Icon name="cloud-arrow-up" className="text-[11px]" />
+                      {t('photoTopics.upload')}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="min-h-0 flex-1 overflow-hidden">
+            {isGalleryError && !isTopicsError ? (
+              <DataErrorState
+                variant="inline"
+                title={t('photoTopics.loadGalleryError')}
+                message={(galleryError as Error)?.message}
+                onRetry={refetchGallery}
+              />
+            ) : !selectedTopic ? (
+              <div className="flex h-full flex-col items-center justify-center py-16">
+                <Icon name="hand-pointer" className="mb-3 text-3xl text-gray-300" />
+                <p className="text-sm font-medium text-gray-500">
+                  {t('photoTopics.selectTopic.title')}
+                </p>
+                <p className="mt-1 text-xs text-gray-400">{t('photoTopics.selectTopic.hint')}</p>
+              </div>
+            ) : isDragging ? (
+              <div className="m-1 flex h-full min-h-[320px] items-center justify-center rounded-2xl border-2 border-dashed border-primary bg-primary-50/60">
+                <div className="text-center">
+                  <div className="mx-auto mb-3 flex size-16 animate-bounce items-center justify-center rounded-2xl bg-primary-100">
+                    <Icon name="cloud-arrow-down" className="text-2xl text-primary" />
+                  </div>
+                  <p className="text-lg font-semibold text-primary-700">
+                    {t('photoTopics.drop.title')}
+                  </p>
+                  <p className="mt-1 text-sm text-primary/80">
+                    {t('photoTopics.drop.hint', { topic: selectedTopic.topicName })}
                   </p>
                 </div>
               </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Layout Selector */}
-            {selectedTopic && (
-              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
-                {LAYOUT_OPTIONS.map(option => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => handleLayoutChange(option.value)}
-                    className={clsx(
-                      'w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200',
-                      selectedTopic?.displayColumns === option.value
-                        ? 'bg-white text-primary shadow-sm'
-                        : 'text-gray-400 hover:text-gray-600',
-                    )}
-                    title={`${option.value} column${option.value > 1 ? 's' : ''}`}
-                  >
-                    <Icon name={option.icon} className="text-sm" />
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Add Photos Button */}
-            {!readOnly && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowPhotoSourceModal(true)}
-                disabled={!selectedTopicId}
-                className="!shadow-lg !shadow-primary/25"
-              >
-                <Icon name="plus" className="mr-1.5" />
-                Add Photos
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Photo Grid */}
-        <div className="flex-1 overflow-y-auto">
-          {isGalleryError && !isTopicsError ? (
-            <DataErrorState
-              variant="inline"
-              title="Failed to load gallery photos"
-              message={(galleryError as Error)?.message}
-              onRetry={refetchGallery}
-            />
-          ) : !selectedTopicId ? (
-            <div className="flex flex-col items-center justify-center h-full py-16">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center mb-4">
-                <Icon name="hand-pointer" className="text-3xl text-gray-300" />
-              </div>
-              <p className="text-base font-medium text-gray-500">Select a topic</p>
-              <p className="text-sm text-gray-400 mt-1">
-                Choose a topic from the left panel to view photos
-              </p>
-            </div>
-          ) : isDragging ? (
-            <div className="h-full flex items-center justify-center border-2 border-dashed border-primary rounded-2xl bg-primary/5 m-2">
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4 animate-bounce">
-                  <Icon name="cloud-arrow-down" className="text-3xl text-primary" />
-                </div>
-                <p className="text-xl font-semibold text-primary">Drop photos here</p>
-                <p className="text-sm text-primary/70 mt-1">
-                  Release to upload to "{selectedTopic?.topicName}"
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="p-2">
-              <PhotoGridView
-                images={gridImages}
-                onImageClick={image => setPreviewPhoto(image)}
-                onImageDelete={
-                  readOnly
-                    ? undefined
-                    : image =>
-                        setDeleteConfirm({
-                          type: 'photo',
-                          id: image.id,
-                          name: image.fileName || image.alt,
-                        })
-                }
-                showUsedBadge={false}
-                prepend={
-                  readOnly ? undefined : (
-                    <UploadPlaceholder
-                      onClick={() => setShowPhotoSourceModal(true)}
-                      isDragging={false}
+            ) : (
+              <div className="flex h-full gap-4">
+                <div className="min-w-0 flex-1 overflow-y-auto pr-1">
+                  {gridImages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 py-14 text-center">
+                      <Icon name="images" className="mb-2 text-2xl text-gray-300" />
+                      <p className="text-sm text-gray-500">{t('photoTopics.topicEmpty')}</p>
+                    </div>
+                  ) : (
+                    <PhotoGridView
+                      images={gridImages}
+                      layout="dense"
+                      onImageClick={image => setPreviewPhoto(image)}
+                      onImageDelete={
+                        readOnly
+                          ? undefined
+                          : image =>
+                              setDeleteConfirm({
+                                type: 'photo',
+                                id: image.id,
+                                name: image.caption || image.fileName || image.alt,
+                              })
+                      }
+                      showUsedBadge={false}
                     />
-                  )
-                }
-              />
-            </div>
-          )}
+                  )}
+                </div>
+                {previewOpen && (
+                  <ReportPagePreview columns={columns} onClose={() => setPreviewOpen(false)} />
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -841,20 +1000,12 @@ export const PhotosTab = () => {
         className="hidden"
       />
 
-      {/* Photo Source Modal */}
-      <PhotoSourceModal
-        isOpen={showPhotoSourceModal}
-        onClose={() => setShowPhotoSourceModal(false)}
-        onUploadFromDevice={handleUploadFromDevice}
-        onChooseFromGallery={handleChooseFromGallery}
-      />
-
       {/* Gallery Selection Modal */}
       <GallerySelectionModal
         isOpen={showGalleryModal}
         onClose={() => setShowGalleryModal(false)}
         onSelect={handleGallerySelect}
-        images={galleryImages}
+        images={galleryModalScope === 'unplaced' ? unplacedImages : galleryImages}
         multiSelect
       />
 
@@ -863,13 +1014,21 @@ export const PhotosTab = () => {
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={deleteConfirm?.type === 'topic' ? handleDeleteTopic : handleRemovePhoto}
-        title={deleteConfirm?.type === 'topic' ? 'Delete Topic' : 'Remove Photo'}
+        title={
+          deleteConfirm?.type === 'topic'
+            ? t('photoTopics.deleteTopic.title')
+            : t('photoTopics.removePhoto.title')
+        }
         message={
           deleteConfirm?.type === 'topic'
-            ? `Are you sure you want to delete "${deleteConfirm?.name}"? All photos in this topic will be unassigned.`
-            : `Are you sure you want to remove "${deleteConfirm?.name}" from this topic?`
+            ? t('photoTopics.deleteTopic.message', { name: deleteConfirm?.name ?? '' })
+            : t('photoTopics.removePhoto.message', { name: deleteConfirm?.name ?? '' })
         }
-        confirmText="Delete"
+        confirmText={
+          deleteConfirm?.type === 'topic'
+            ? t('photoTopics.confirmDelete')
+            : t('photoTopics.confirmRemove')
+        }
         variant="danger"
         isLoading={isDeletingTopic || isAssigningPhoto}
       />

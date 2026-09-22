@@ -5,7 +5,7 @@ import { formatNumber } from '@shared/utils/formatUtils';
 import {
   createUploadSession,
   useUploadDocument,
-  useDownloadDocument,
+  useViewDocument,
 } from '@features/request/api/documents';
 
 function formatFileSize(bytes: number): string {
@@ -47,18 +47,17 @@ export function ConstructionSummaryForm({
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const uploadDocument = useUploadDocument();
-  const downloadDocument = useDownloadDocument();
+  const viewDocument = useViewDocument();
 
   const hasDocument = !!summary?.documentId;
 
   const handleViewDocument = () => {
     if (!summary?.documentId) return;
-    downloadDocument.mutate(summary.documentId, {
-      onSuccess: ({ blob }) => {
-        const url = URL.createObjectURL(blob);
-        window.open(url, '_blank');
-      },
-    });
+    // Through the shared viewer, like every other "view" in the app: it opens the tab inside this
+    // click so Safari allows it, shows progress, can be cancelled, and hands anything past
+    // MAX_INLINE_VIEW_BYTES to the browser to download instead. This used to fetch the blob here
+    // and window.open an object URL — no progress, no cancel, and no ceiling.
+    viewDocument(summary.documentId, summary.fileSizeBytes, summary.fileName);
   };
 
   const handleUpload = async (file: File) => {

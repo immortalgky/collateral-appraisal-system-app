@@ -2,7 +2,7 @@ import '@features/pricingAnalysis/i18n';
 import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAppraisalId, useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import MarketsTab from '@features/appraisal/components/tabs/MarketsTab';
@@ -21,6 +21,8 @@ import { useSelectionActions } from '@features/pricingAnalysis/hooks/useSelectio
 import { useCalculationFlow } from '@features/pricingAnalysis/hooks/useCalculationFlow';
 import { createInitialState } from '@features/pricingAnalysis/store/createInitialState';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
+import { useGetProjectModelById } from '@features/blockProject/api/projectModel';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import { PricingAnalysisAccordion } from '@features/pricingAnalysis/components/selection/PricingAnalysisAccordion';
@@ -276,6 +278,7 @@ function PricingAnalysisContent({
   returnTo?: string;
 }) {
   const { t } = useTranslation('pricingAnalysis');
+  const { t: tAppraisal } = useTranslation('appraisal');
   const [activeTab, setActiveTab] = useState<TabId>('properties');
   // Tab label: "Properties" for group subjects; "Model" for projectModel subjects.
   // Tab id stays 'properties' in both cases to avoid breaking reducer/URL state.
@@ -289,6 +292,12 @@ function PricingAnalysisContent({
         { id: 'markets', label: t('page.tabs.markets'), icon: 'chart-line' },
       ];
   const [pendingSystemCalcMode, setPendingSystemCalcMode] = useState<boolean | null>(null);
+
+  // The breadcrumb's last crumb names what is being priced — the layout only knows the route, so
+  // it can say "pricing analysis" but not of which group or model. For a model subject `groupId`
+  // carries the model id (see PricingAnalysisPage).
+  const { pathname } = useLocation();
+  const { data: model } = useGetProjectModelById(appraisalId, isModelSubject ? groupId : undefined);
 
   // (1) Fetch all server data
   const {
@@ -309,6 +318,21 @@ function PricingAnalysisContent({
     pricingAnalysisId,
     skipGroupDetail: isModelSubject,
   });
+
+  const subjectName = (isModelSubject ? model?.modelName : groupDetail?.groupName)?.trim();
+  useBreadcrumbExtras(
+    subjectName
+      ? [
+          {
+            label: `${tAppraisal('breadcrumb.pricingAnalysis')} · ${subjectName}`,
+            href: pathname,
+            icon: 'chart-mixed',
+            replacesLast: true,
+          },
+        ]
+      : [],
+    [subjectName, pathname],
+  );
 
   // (2) Own the reducer
   const [state, dispatch] = useReducer(approachMethodReducer, initialState);

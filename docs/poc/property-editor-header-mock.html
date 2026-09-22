@@ -1,0 +1,509 @@
+<title>หัวฟอร์มทรัพย์สิน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap"
+/>
+<style>
+  /* Tokens are the Properties/Markets mocks', which are the app's own teal and Roboto+Sarabun. */
+  :root {
+    --f-sans: 'Roboto', 'Sarabun', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --ground: #f4f6f6;
+    --surface: #ffffff;
+    --surface-2: #f8fafa;
+    --surface-3: #edf1f1;
+    --line: #e3e9e8;
+    --line-soft: #eef2f2;
+    --line-strong: #cbd5d3;
+    --ink: #1f2937;
+    --ink-2: #55636f;
+    --ink-3: #8a96a0;
+    --accent: #0d9488;
+    --accent-ink: #0f766e;
+    --accent-wash: #f0fdfa;
+    --accent-line: #99f6e4;
+    --cover: #b45309;
+    --cover-wash: #fffbeb;
+    --t-land: #15803d;
+    --t-condo: #6d28d9;
+    --t-mac: #b45309;
+    --old-indigo: #4f46e5;
+    --old-indigo-wash: #e0e7ff;
+    --old-amber-wash: #fef3c7;
+    --shadow: 0 1px 2px rgba(16, 24, 32, 0.05), 0 1px 3px rgba(16, 24, 32, 0.04);
+    --shadow-lift: 0 2px 4px rgba(16, 24, 32, 0.06), 0 8px 24px rgba(16, 24, 32, 0.07);
+    --r-card: 14px;
+    --r-field: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+      --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+      --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+      --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+      --cover: #fbbf24; --cover-wash: #3a2a0b;
+      --t-land: #4ade80; --t-condo: #a78bfa; --t-mac: #fbbf24;
+      --old-indigo: #a5b4fc; --old-indigo-wash: #25284a; --old-amber-wash: #3a2a0b;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+      --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
+    }
+  }
+  :root[data-theme='dark'] {
+    --ground: #0f1417; --surface: #171d21; --surface-2: #1c2429; --surface-3: #232c32;
+    --line: #2b353b; --line-soft: #232c32; --line-strong: #3a464e;
+    --ink: #e5e7eb; --ink-2: #aeb9c2; --ink-3: #7d8892;
+    --accent: #2dd4bf; --accent-ink: #5eead4; --accent-wash: #10322f; --accent-line: #17544e;
+    --cover: #fbbf24; --cover-wash: #3a2a0b;
+    --t-land: #4ade80; --t-condo: #a78bfa; --t-mac: #fbbf24;
+    --old-indigo: #a5b4fc; --old-indigo-wash: #25284a; --old-amber-wash: #3a2a0b;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-lift: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font: 14px/1.5 var(--f-sans);
+  }
+  button { font: inherit; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; display: grid; gap: 20px; }
+  .intro h1 { margin: 0 0 4px; font-size: 20px; font-weight: 700; text-wrap: balance; }
+  .intro p { margin: 0; color: var(--ink-2); max-width: 70ch; }
+
+  /* ── controls ─────────────────────────────────────────── */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card);
+    padding: 12px 14px; box-shadow: var(--shadow);
+  }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl > span { font-size: 12px; color: var(--ink-3); letter-spacing: 0.02em; }
+  .seg { display: inline-flex; background: var(--surface-3); border-radius: 9px; padding: 2px; gap: 2px; }
+  .seg button {
+    border: 0; background: transparent; padding: 4px 10px; border-radius: 7px;
+    font-size: 12px; font-weight: 500; color: var(--ink-2); cursor: pointer;
+  }
+  .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+
+  /* ── app frame ────────────────────────────────────────── */
+  .stage { overflow-x: auto; }
+  .app {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card);
+    box-shadow: var(--shadow-lift); overflow: hidden; margin: 0 auto;
+    display: grid; grid-template-rows: auto 1fr; height: 640px;
+  }
+  .app.full { max-width: 1080px; }
+  .app.panel { max-width: 900px; }
+  .crumbs {
+    display: flex; gap: 8px; align-items: center; padding: 10px 16px; font-size: 12px;
+    color: var(--ink-3); border-bottom: 1px solid var(--line-soft);
+  }
+  .crumbs b { color: var(--accent-ink); font-weight: 600; background: var(--accent-wash); padding: 2px 8px; border-radius: 6px; }
+  .shell { display: grid; min-height: 0; }
+  .app.panel .shell { grid-template-columns: 200px 1fr; }
+  .rail { border-right: 1px solid var(--line); background: var(--surface); overflow: hidden; font-size: 12px; }
+  .rail h4 { margin: 0; padding: 8px 10px; font-size: 12px; font-weight: 600; border-bottom: 1px solid var(--line-soft); background: var(--surface-2); }
+  .rail div { padding: 6px 10px; border-left: 3px solid transparent; color: var(--ink-2); display: flex; gap: 6px; align-items: center; }
+  .rail div.on { border-left-color: var(--accent); background: var(--accent-wash); color: var(--accent-ink); font-weight: 600; }
+  .rail i { width: 6px; height: 6px; border-radius: 50%; background: var(--t-land); flex: none; }
+
+  .editor { display: grid; grid-template-rows: auto 1fr auto; min-height: 0; min-width: 0; }
+  .editor-top { padding: 14px 16px 0; min-width: 0; }
+  .scroll { overflow: auto; padding: 14px 16px 16px; min-height: 0; position: relative; }
+  .actionbar {
+    display: flex; justify-content: space-between; align-items: center; padding: 10px 18px;
+    border-top: 1px solid var(--line); background: var(--surface);
+  }
+  .actionbar .l { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--ink-2); }
+  .actionbar .r { display: flex; gap: 10px; }
+  .btn {
+    border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-field);
+    padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer; display: inline-flex; gap: 6px; align-items: center;
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { border-color: transparent; background: transparent; color: var(--ink-2); }
+  .btn.sm { padding: 4px 9px; font-size: 12px; }
+
+  /* ── sample photos: CSS only, the artifact cannot load real images ── */
+  .ph { background-size: cover; background-position: center; }
+  .ph1 { background: linear-gradient(180deg, #8fb8de 0 42%, #cfe0c3 42% 48%, #6d8f4e 48% 100%); }
+  .ph2 { background: linear-gradient(180deg, #f2b27a 0 35%, #2d3748 35% 100%),
+                     repeating-linear-gradient(90deg, #fbd38d 0 6px, transparent 6px 14px); background-blend-mode: normal; }
+  .ph3 { background: repeating-linear-gradient(0deg, #cbd5e1 0 10px, #94a3b8 10px 12px),
+                     linear-gradient(#e2e8f0, #cbd5e1); }
+  .ph4 { background: linear-gradient(160deg, #a7c7a1 0 55%, #8b7355 55% 100%); }
+  .ph5 { background: linear-gradient(180deg, #dbe7f3 0 30%, #e8dcc8 30% 100%); }
+  .ph6 { background: linear-gradient(135deg, #64748b 0 50%, #475569 50% 100%); }
+  .ph7 { background: radial-gradient(circle at 70% 30%, #fde68a 0 12%, transparent 13%), linear-gradient(180deg, #7dd3fc 0 50%, #65a30d 50% 100%); }
+
+  /* ── CURRENT ─────────────────────────────────────────── */
+  .old-nav { display: flex; gap: 2px; background: var(--surface-2); border: 1px solid var(--line-soft); border-radius: 9px; padding: 2px; width: max-content; max-width: 100%; overflow: hidden; }
+  .old-nav a { font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 7px; color: var(--ink-2); text-decoration: none; white-space: nowrap; }
+  .old-nav a.on { background: var(--surface); color: var(--accent-ink); box-shadow: var(--shadow); outline: 1px solid var(--accent-line); }
+  .old-h { display: flex; gap: 10px; align-items: center; margin: 4px 0 12px; }
+  .old-h span { width: 34px; height: 34px; border-radius: 9px; background: var(--old-indigo-wash); display: grid; place-items: center; color: var(--old-indigo); font-size: 15px; }
+  .old-h.land span { background: var(--old-amber-wash); color: var(--cover); }
+  .old-h h3 { margin: 0; font-size: 17px; font-weight: 600; }
+  .old-rule { height: 1px; background: var(--line); margin-bottom: 14px; }
+  .old-strip { display: flex; gap: 8px; overflow: hidden; margin-bottom: 22px; }
+  .old-add { width: 148px; height: 112px; flex: none; border: 1px dashed var(--line-strong); border-radius: 8px; background: var(--surface-2); display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--ink-3); }
+  .old-tile { width: 144px; height: 112px; flex: none; border-radius: 8px; position: relative; overflow: hidden; }
+  .old-tile.cover { outline: 2px solid #fbbf24; }
+  .old-tile .badge { position: absolute; top: 4px; left: 4px; background: #fbbf24; color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; }
+  .old-tile .more { position: absolute; inset: 0; background: rgba(0,0,0,.5); color: #fff; display: grid; place-items: center; font-weight: 600; font-size: 18px; }
+
+  /* ── A: identity header ──────────────────────────────── */
+  .idcard {
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px;
+    border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px; background: var(--surface);
+  }
+  .cover {
+    width: 184px; aspect-ratio: 4 / 3; border-radius: 10px; position: relative; overflow: hidden; flex: none;
+  }
+  .app.panel .cover { width: 128px; }
+  .cover .tag {
+    position: absolute; left: 6px; bottom: 6px; font-size: 10.5px; font-weight: 600;
+    background: rgba(17, 24, 39, 0.72); color: #fff; padding: 1px 7px; border-radius: 999px;
+  }
+  .cover.empty {
+    border: 1.5px dashed var(--line-strong); background: var(--surface-2); display: grid; place-items: center;
+    text-align: center; color: var(--ink-3); font-size: 12px; padding: 8px;
+  }
+  .cover.empty b { display: block; color: var(--accent-ink); font-weight: 600; font-size: 13px; }
+  .id-main { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .id-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .chip { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; border: 1px solid currentColor; line-height: 18px; }
+  .id-top .where { margin-left: auto; font-size: 12px; color: var(--ink-3); }
+  .id-main h2 { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.3; text-wrap: balance; }
+  .facts { display: flex; flex-wrap: wrap; gap: 2px 0; font-size: 13px; color: var(--ink-2); }
+  .facts span + span::before { content: '·'; margin: 0 8px; color: var(--ink-3); }
+  .facts .todo { color: var(--ink-3); font-style: italic; }
+  .thumbs { display: flex; align-items: center; gap: 6px; margin-top: auto; padding-top: 6px; flex-wrap: wrap; }
+  .thumb { width: 56px; height: 42px; border-radius: 6px; position: relative; overflow: hidden; flex: none; cursor: pointer; }
+  .thumb.is-cover { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3.5px var(--cover); }
+  .thumb .more { position: absolute; inset: 0; background: rgba(17,24,39,.55); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+  .thumbs .hint { font-size: 12px; color: var(--ink-3); }
+  .add-wrap { position: relative; }
+  .menu {
+    position: absolute; top: calc(100% + 4px); left: 0; z-index: 5; min-width: 190px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow-lift); padding: 4px;
+  }
+  .menu div { padding: 7px 10px; border-radius: 7px; font-size: 13px; display: flex; gap: 8px; }
+  .menu div:hover { background: var(--surface-2); }
+
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-top: 12px; overflow-x: auto; scrollbar-width: none; }
+  .tabs button {
+    border: 0; background: none; padding: 8px 12px; margin-bottom: -1px; font-size: 13px; font-weight: 500;
+    color: var(--ink-3); border-bottom: 2px solid transparent; cursor: pointer; white-space: nowrap;
+  }
+  .tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+  .tabs .muted { margin-left: auto; align-self: center; font-size: 11.5px; color: var(--ink-3); padding-right: 4px; white-space: nowrap; }
+
+  /* collapsed header while scrolled */
+  .mini {
+    display: flex; align-items: center; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--line);
+    background: var(--surface); box-shadow: 0 4px 10px -6px rgba(16,24,32,.18); min-width: 0;
+  }
+  .mini .cover { width: 40px; border-radius: 6px; }
+  .mini .cover .tag { display: none; }
+  .mini b { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .mini .tabs { margin: 0 0 0 auto; border: 0; }
+  .mini .tabs button { padding: 4px 10px; }
+
+  /* ── B: filmstrip ────────────────────────────────────── */
+  .b-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+  .b-title b { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .b-title small { color: var(--ink-3); font-size: 12px; white-space: nowrap; }
+  .strip {
+    border: 1px solid var(--line); border-radius: var(--r-card); padding: 10px 12px; background: var(--surface-2); margin-bottom: 16px;
+  }
+  .strip-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+  .strip-head b { font-weight: 600; }
+  .strip-head .n { color: var(--ink-3); }
+  .strip-head .sp { margin-left: auto; display: flex; gap: 6px; }
+  .film { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+  .film .t { width: 104px; height: 78px; border-radius: 8px; flex: none; position: relative; overflow: hidden; }
+  .film .t .tag { position: absolute; left: 5px; top: 5px; font-size: 10px; font-weight: 600; background: var(--cover-wash); color: var(--cover); padding: 0 6px; border-radius: 999px; border: 1px solid currentColor; }
+  .film .empty { flex: 1; height: 78px; border: 1.5px dashed var(--line-strong); border-radius: 8px; display: grid; place-items: center; color: var(--ink-3); font-size: 12.5px; text-align: center; }
+
+  /* ── form body stub ─────────────────────────────────── */
+  .sec { border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px; margin-bottom: 14px; background: var(--surface); }
+  .sec h5 { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px 14px; }
+  .fld label { display: block; font-size: 12px; color: var(--ink-3); margin-bottom: 3px; }
+  .fld div { border: 1px solid var(--line); border-radius: var(--r-field); padding: 6px 10px; font-size: 13px; background: var(--surface); min-height: 32px; }
+
+  /* ── notes ───────────────────────────────────────────── */
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+  .note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 16px; }
+  .note h3 { margin: 0 0 6px; font-size: 14px; }
+  .note ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 13px; }
+  .note li + li { margin-top: 4px; }
+  .cmp { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); }
+  .cmp table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 640px; }
+  .cmp th, .cmp td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  .cmp th { font-size: 12px; color: var(--ink-3); font-weight: 500; background: var(--surface-2); }
+  .cmp td.num { font-variant-numeric: tabular-nums; }
+  .cmp tr:last-child td { border-bottom: 0; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="page">
+  <header class="intro">
+    <h1>หัวฟอร์มทรัพย์สิน: รูปภาพ + ส่วนหัวรายละเอียด</h1>
+    <p>
+      ใช้ร่วมกัน 9 หน้า (ที่ดิน · อาคาร · ที่ดินและสิ่งปลูกสร้าง · ห้องชุด · เครื่องจักร · สิทธิการเช่า 4 แบบ)
+      กดสลับแบบ ความกว้าง ประเภททรัพย์ และสถานะด้านบนเพื่อเทียบ — รูปในนี้เป็นภาพตัวอย่างวาดด้วย CSS
+    </p>
+  </header>
+
+  <div class="controls" id="controls"></div>
+
+  <div class="stage"><div class="app full" id="app"></div></div>
+
+  <div class="cmp">
+    <table>
+      <thead>
+        <tr><th></th><th>ปัจจุบัน</th><th>A · หัวทรัพย์</th><th>B · แถบรูปบาง</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>พื้นที่ก่อนถึงช่องกรอกแรก (ประมาณ)</td><td class="num">≈ 330 px</td><td class="num">≈ 230 px</td><td class="num">≈ 190 px</td></tr>
+        <tr><td>บอกว่ากำลังแก้ทรัพย์ชิ้นไหน</td><td>ไม่บอก (มีแค่ breadcrumb)</td><td>ชื่อ + ประเภท + ข้อมูลหลัก + ภาพหน้าปก</td><td>ชื่อ + ประเภท บรรทัดเดียว</td></tr>
+        <tr><td>แถบแท็บ</td><td>"รูปภาพ" เลื่อนจอ แต่ที่เหลือสลับเนื้อหา หน้าตาเหมือนกัน</td><td>แท็บจริงล้วน ขีดใต้แบบเดียวกับแท็บหน้าหลัก</td><td>แท็บจริงล้วน</td></tr>
+        <tr><td>ตอนเลื่อนลง</td><td>แถบแท็บค้าง รูปเลื่อนหาย</td><td>ยุบเป็นแถบเล็ก: หน้าปก + ชื่อ + แท็บ</td><td>แถบแท็บค้าง แถบรูปเลื่อนหาย</td></tr>
+        <tr><td>ขนาดงาน</td><td>—</td><td>component หัวใหม่ 1 ตัว + แก้ 9 หน้า</td><td>เล็กกว่า: เปลี่ยนแถบรูป + แท็บ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h3>ใช้ของเดิมทั้งหมด ไม่แก้ BE</h3>
+      <ul>
+        <li>อัปโหลด / เลือกจากแกลเลอรี / ตั้งหน้าปก / ลบ / ดูรูปใหญ่ — ยังเป็น <code>PropertyPhotoSection</code> ตัวเดิม เปลี่ยนแค่หน้าตา</li>
+        <li>บรรทัดข้อมูลหลักอ่านจากค่าในฟอร์มสด ๆ (โฉนด เนื้อที่ ที่ตั้ง) พิมพ์แล้วหัวเปลี่ยนตาม ไม่ต้องเรียก API เพิ่ม</li>
+        <li>ช่องที่ยังไม่กรอกขึ้นตัวเอียงสีจาง เช่น "ยังไม่ระบุที่ตั้ง" แทนการซ่อน</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>แก้ของค้างไปด้วย</h3>
+      <ul>
+        <li>ข้อความอังกฤษ: Click to add picture · Cover · Photos · Lease Agreement · Rental Info (หน้าสิทธิการเช่ายัง hardcode)</li>
+        <li>หัว "Land Information" ที่ซ้ำกับแท็บ ตัดออก — แท็บบอกอยู่แล้ว</li>
+        <li>เครื่องจักรมีส่วนเดียว → ไม่แสดงแถบแท็บเลย</li>
+      </ul>
+    </div>
+    <div class="note">
+      <h3>อยากให้ตัดสินใจ</h3>
+      <ul>
+        <li>เลือก A หรือ B (หรือผสม เช่น หัวแบบ A แต่ไม่มีหน้าปกใหญ่)</li>
+        <li>A: ให้หัวยุบเป็นแถบเล็กตอนเลื่อนลงไหม</li>
+        <li>ในโหมดสองแพนล์ รางซ้ายบอกชื่อทรัพย์อยู่แล้ว — ยังให้แสดงชื่อในหัวซ้ำไหม</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TYPES = {
+    land: {
+      label: 'ที่ดิน', color: 'var(--t-land)', name: 'ที่ดิน — ต.บางเขน', where: 'กลุ่ม 1 · ชิ้นที่ 2',
+      facts: ['โฉนด 3 ใบ', '2-1-50 ไร่', 'ต.บางเขน อ.เมืองนนทบุรี จ.นนทบุรี'],
+      tabs: ['ที่ดิน', 'สัญญาเช่า', 'ข้อมูลการเช่า'], oldTabs: ['Photos', 'Land', 'Lease Agreement', 'Rental Info'],
+      oldHead: 'Land Information', photos: 12,
+      body: [
+        ['โฉนดที่ดิน', [['เลขที่โฉนด', '12345, 12346, 12347'], ['เลขที่ดิน', '88'], ['หน้าสำรวจ', '4521'], ['เนื้อที่รวม', '2-1-50 ไร่']]],
+        ['ที่ตั้งและสภาพที่ดิน', [['ตำบล', 'บางเขน'], ['อำเภอ', 'เมืองนนทบุรี'], ['จังหวัด', 'นนทบุรี'], ['ถนน', 'ติวานนท์'], ['สภาพที่ดิน', 'ถมแล้ว'], ['รูปแปลง', 'สี่เหลี่ยมผืนผ้า']]],
+      ],
+    },
+    condo: {
+      label: 'ห้องชุด', color: 'var(--t-condo)', name: 'ห้อง 1205 — อาคาร A', where: 'กลุ่ม 2 · ชิ้นที่ 1',
+      facts: ['ชั้น 12', '35.50 ตร.ม.', null],
+      tabs: ['ห้องชุด', 'ระหว่างก่อสร้าง'], oldTabs: ['Photos', 'Condo', 'Construction'],
+      oldHead: 'Condo Information', photos: 5,
+      body: [
+        ['ห้องชุด', [['ชื่อโครงการ', 'ศุภาลัย ปาร์ค'], ['เลขที่ห้อง', '1205'], ['ชั้น', '12'], ['พื้นที่', '35.50 ตร.ม.']]],
+        ['อาคารชุด', [['ทะเบียนอาคารชุด', '12/2562'], ['จำนวนชั้น', '32'], ['ที่ตั้ง', '—']]],
+      ],
+    },
+    mac: {
+      label: 'เครื่องจักร', color: 'var(--t-mac)', name: 'เครื่องผลิตเม็ดพลาสติก', where: 'กลุ่ม 1 · ชิ้นที่ 4',
+      facts: ['Toshiba · IS-220GN', 'ปีผลิต 2019', 'ใช้งานได้'],
+      tabs: [], oldTabs: ['Photos', 'Machinery'],
+      oldHead: 'Machinery Information', photos: 3,
+      body: [
+        ['เครื่องจักร', [['ชื่อเครื่อง', 'เครื่องผลิตเม็ดพลาสติก'], ['ยี่ห้อ', 'Toshiba'], ['รุ่น', 'IS-220GN'], ['ปีผลิต', '2019'], ['เลขเครื่อง', 'TS-88213'], ['สภาพ', 'ใช้งานได้']]],
+      ],
+    },
+  };
+  const FACT_EMPTY = ['ยังไม่ระบุโฉนด', 'ยังไม่ระบุเนื้อที่', 'ยังไม่ระบุที่ตั้ง'];
+  const PH = ['ph1', 'ph2', 'ph3', 'ph4', 'ph5', 'ph6', 'ph7'];
+
+  const state = { variant: 'A', width: 'full', type: 'land', photos: true, scrolled: false, tab: 0, addOpen: false };
+
+  const CONTROLS = [
+    ['แบบ', 'variant', [['old', 'ปัจจุบัน'], ['A', 'A · หัวทรัพย์'], ['B', 'B · แถบรูปบาง']]],
+    ['ความกว้าง', 'width', [['full', 'เต็มหน้า'], ['panel', 'แพนล์ขวา']]],
+    ['ประเภท', 'type', [['land', 'ที่ดิน'], ['condo', 'ห้องชุด'], ['mac', 'เครื่องจักร']]],
+    ['รูป', 'photos', [[true, 'มีรูป'], [false, 'ยังไม่มีรูป']]],
+    ['เลื่อน', 'scrolled', [[false, 'บนสุด'], [true, 'เลื่อนลงแล้ว']]],
+  ];
+
+  function renderControls() {
+    document.getElementById('controls').innerHTML = CONTROLS.map(([label, key, opts]) =>
+      `<div class="ctl"><span>${label}</span><div class="seg">${opts.map(([v, t]) =>
+        `<button type="button" data-k="${key}" data-v="${v}" aria-pressed="${String(state[key]) === String(v)}">${t}</button>`).join('')}</div></div>`
+    ).join('');
+  }
+
+  const photoCount = () => (state.photos ? TYPES[state.type].photos : 0);
+
+  function facts(ty) {
+    return `<div class="facts">${ty.facts.map((f, i) =>
+      f ? `<span>${f}</span>` : `<span class="todo">${FACT_EMPTY[i] ?? 'ยังไม่ระบุ'}</span>`).join('')}</div>`;
+  }
+
+  function tabsHtml(ty, extra = '') {
+    if (ty.tabs.length === 0) return '';
+    return `<div class="tabs">${ty.tabs.map((t, i) =>
+      `<button type="button" data-tab="${i}" class="${i === state.tab ? 'on' : ''}">${t}</button>`).join('')}${extra}</div>`;
+  }
+
+  function addButton() {
+    return `<span class="add-wrap"><button type="button" class="btn sm" data-add>＋ เพิ่มรูป ▾</button>${state.addOpen
+      ? '<div class="menu"><div>⤒ อัปโหลดจากเครื่อง</div><div>▦ เลือกจากแกลเลอรีของใบนี้</div></div>' : ''}</span>`;
+  }
+
+  /* ── CURRENT ── */
+  function oldTop(ty) {
+    return `<nav class="old-nav">${ty.oldTabs.map((t, i) => `<a class="${i === 0 ? 'on' : ''}">${t}</a>`).join('')}</nav>`;
+  }
+  function oldBody(ty) {
+    const n = photoCount();
+    const fit = state.width === 'panel' ? 3 : 5;
+    const tiles = Array.from({ length: Math.min(n, fit) }, (_, i) => {
+      const last = n > fit && i === fit - 1;
+      return `<div class="old-tile ph ${PH[i % PH.length]} ${i === 0 && !last ? 'cover' : ''}">${i === 0 ? '<span class="badge">Cover</span>' : ''}${last ? `<span class="more">+${n - fit + 1}</span>` : ''}</div>`;
+    }).join('');
+    return `
+      <div class="old-h"><span>▣</span><h3>Photos</h3></div><div class="old-rule"></div>
+      <div class="old-strip"><div class="old-add">＋<br/>Click to add picture</div>${tiles}</div>
+      <div class="old-h land"><span>▲</span><h3>${ty.oldHead}</h3></div><div class="old-rule"></div>`;
+  }
+
+  /* ── A ── */
+  function aHeader(ty) {
+    const n = photoCount();
+    const cover = n
+      ? `<div class="cover ph ${PH[0]}"><span class="tag">ภาพหน้าปก</span></div>`
+      : `<div class="cover empty"><div><b>＋ เพิ่มรูปแรก</b>ลากรูปมาวางได้<br/>รูปแรกจะเป็นหน้าปก</div></div>`;
+    const fit = state.width === 'panel' ? 4 : 7;
+    const thumbs = n
+      ? Array.from({ length: Math.min(n, fit) }, (_, i) => {
+          const last = n > fit && i === fit - 1;
+          return `<div class="thumb ph ${PH[i % PH.length]} ${i === 0 ? 'is-cover' : ''}" title="${i === 0 ? 'ภาพหน้าปก' : 'รูปที่ ' + (i + 1)}">${last ? `<span class="more">+${n - fit + 1}</span>` : ''}</div>`;
+        }).join('')
+      : '<span class="hint">ยังไม่มีรูป</span>';
+    return `
+      <div class="idcard">
+        ${cover}
+        <div class="id-main">
+          <div class="id-top"><span class="chip" style="color:${ty.color}">${ty.label}</span><span class="where">${ty.where}</span></div>
+          <h2>${ty.name}</h2>
+          ${facts(ty)}
+          <div class="thumbs">${thumbs}${addButton()}${n ? `<button type="button" class="btn ghost sm">ดูทั้งหมด ${n} รูป</button>` : ''}</div>
+        </div>
+      </div>
+      ${tabsHtml(ty)}`;
+  }
+  function aMini(ty) {
+    const n = photoCount();
+    return `<div class="mini">
+      ${n ? `<div class="cover ph ${PH[0]}"></div>` : ''}
+      <span class="chip" style="color:${ty.color}">${ty.label}</span><b>${ty.name}</b>
+      ${tabsHtml(ty)}
+    </div>`;
+  }
+
+  /* ── B ── */
+  function bTop(ty) {
+    return `<div class="b-title"><span class="chip" style="color:${ty.color}">${ty.label}</span><b>${ty.name}</b><small>${ty.where}</small></div>${tabsHtml(ty)}`;
+  }
+  function bStrip() {
+    const n = photoCount();
+    const film = n
+      ? Array.from({ length: n }, (_, i) =>
+          `<div class="t ph ${PH[i % PH.length]}">${i === 0 ? '<span class="tag">หน้าปก</span>' : ''}</div>`).join('')
+      : '<div class="empty">ยังไม่มีรูป — ลากรูปมาวาง หรือกด "เพิ่มรูป" · รูปแรกจะเป็นหน้าปก</div>';
+    return `<div class="strip">
+      <div class="strip-head"><b>รูปภาพ</b><span class="n">${n ? n + ' รูป' : ''}</span>
+        <span class="sp">${addButton()}${n ? '<button type="button" class="btn ghost sm">ดูทั้งหมด</button>' : ''}</span></div>
+      <div class="film">${film}</div>
+    </div>`;
+  }
+
+  function body(ty) {
+    return ty.body.map(([h, fields]) =>
+      `<section class="sec"><h5>${h}</h5><div class="grid">${fields.map(([l, v]) =>
+        `<div class="fld"><label>${l}</label><div>${v}</div></div>`).join('')}</div></section>`).join('');
+  }
+
+  function render() {
+    renderControls();
+    const ty = TYPES[state.type];
+    if (state.tab >= ty.tabs.length) state.tab = 0;
+    const app = document.getElementById('app');
+    app.className = `app ${state.width}`;
+
+    let top = '';
+    let scrollTop = '';
+    if (state.variant === 'old') {
+      top = `<div class="editor-top">${oldTop(ty)}</div>`;
+      scrollTop = state.scrolled ? '' : oldBody(ty);
+    } else if (state.variant === 'A') {
+      top = state.scrolled ? aMini(ty) : '';
+      scrollTop = state.scrolled ? '' : aHeader(ty) + '<div style="height:14px"></div>';
+    } else {
+      top = `<div class="editor-top">${bTop(ty)}</div>`;
+      scrollTop = state.scrolled ? '' : bStrip();
+    }
+
+    const rail = state.width === 'panel'
+      ? `<aside class="rail"><h4>กลุ่ม 1</h4><div><i></i>ที่ดินและสิ่งปลูกสร้าง</div><div class="on"><i style="background:${ty.color}"></i>${ty.name}</div><div><i style="background:#2563eb"></i>อาคาร</div><div><i style="background:var(--t-mac)"></i>เครื่องผลิตเม็ดพลาสติก</div><h4>กลุ่ม 2</h4><div><i style="background:var(--t-condo)"></i>ห้อง 1205</div></aside>`
+      : '';
+
+    app.innerHTML = `
+      <div class="crumbs">⌂ › Task › 69000170 › <b>Property Information</b></div>
+      <div class="shell">
+        ${rail}
+        <div class="editor">
+          <div>${top}</div>
+          <div class="scroll">${scrollTop}${body(ty)}</div>
+          <div class="actionbar"><div class="l"><span>ยกเลิก</span></div><div class="r"><button class="btn" type="button">บันทึกร่าง</button><button class="btn primary" type="button">✓ บันทึก</button></div></div>
+        </div>
+      </div>`;
+  }
+
+  document.addEventListener('click', e => {
+    const seg = e.target.closest('[data-k]');
+    if (seg) {
+      const k = seg.dataset.k;
+      const v = seg.dataset.v;
+      state[k] = v === 'true' ? true : v === 'false' ? false : v;
+      state.addOpen = false;
+      render();
+      return;
+    }
+    const tab = e.target.closest('[data-tab]');
+    if (tab) { state.tab = Number(tab.dataset.tab); render(); return; }
+    if (e.target.closest('[data-add]')) { state.addOpen = !state.addOpen; render(); return; }
+    if (state.addOpen && !e.target.closest('.menu')) { state.addOpen = false; render(); }
+  });
+
+  render();
+</script>

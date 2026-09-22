@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Property-type glyphs for the appraisal Properties tab.
+
+  Hand-drawn rather than taken from Font Awesome, because the eleven property types are four
+  things held two ways, and the Font Awesome set could not say that: land came out as a globe,
+  and a standalone building and a land-and-building were both houses differing by a chimney.
+  Here the shape names the thing, and a lease borrows its freehold twin's shape — the picker
+  marks the tenure with a dashed tile instead.
+
+  Stroke, not fill, and one stroke width throughout so no glyph outweighs another. `.icon`
+  (src/index.css) sets `fill: currentColor` on the host <svg>, so every path states
+  `fill="none"` itself or it would come out as a blob.
+
+  Only the four base kinds live here. Machinery, vehicles and vessels keep their Font Awesome
+  icons — a gear, a car and a ship needed no reinvention.
+
+  Kept in its own file, not merged into solid.svg: those six are dropped in whole from Font
+  Awesome and anything added to them is lost on the next update.
+
+  Source of the paths: docs/poc/property-type-picker-mock.html
+-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="land" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M1.9 12.4 5.2 4.6h5.6l3.3 7.8Z"/>
+    <path d="M5.6 8.6h4.8"/>
+  </symbol>
+
+  <symbol id="building" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3.2" width="10" height="10.8" rx="1"/>
+    <path d="M5.7 6h.7M9.6 6h.7M5.7 8.6h.7M9.6 8.6h.7"/>
+    <path d="M6.6 14v-3h2.8v3"/>
+  </symbol>
+
+  <symbol id="land-building" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M3 7.4 8 3.4l5 4"/>
+    <path d="M4.6 6.9v5.3h6.8V6.9"/>
+    <path d="M1.6 13.6h12.8"/>
+  </symbol>
+
+  <symbol id="condo" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="4.4" y="1.6" width="7.2" height="12.8" rx="1"/>
+    <path d="M6.4 4h.7M8.9 4h.7M6.4 6.5h.7M8.9 6.5h.7M6.4 9h.7M8.9 9h.7M6.4 11.5h.7M8.9 11.5h.7"/>
+  </symbol>
+
+</svg>

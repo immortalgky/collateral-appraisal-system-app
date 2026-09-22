@@ -21,7 +21,13 @@ export const queryClient = new QueryClient({
        * harmful — it multiplies load precisely when the server is already struggling.
        */
       retry: (failureCount, error) => {
-        if (axios.isCancel(error)) return false;
+        // Both shapes of "we stopped this on purpose": the raw axios cancellation, and the one
+        // blobTransfer translates it into so screens can tell a cancelled transfer from a failed
+        // one. No transfer sits in a queryFn today, so the second arm is a guard against the next
+        // one that does rather than a live path. Matched by name on purpose: importing the class
+        // from blobTransfer would close a cycle back through axiosInstance to this file.
+        if (axios.isCancel(error) || (error as Error)?.name === 'TransferCancelledError')
+          return false;
 
         const RETRYABLE_4XX = [408, 425, 429];
         const status = axios.isAxiosError(error) ? error.response?.status : undefined;

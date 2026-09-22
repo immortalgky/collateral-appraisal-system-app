@@ -12,6 +12,9 @@ import type {
   Density,
   FormLayout,
   LoadingStore,
+  PropertiesViewMode,
+  MarketsViewMode,
+  GalleryPrefs,
   LocaleStore,
   ParameterStore,
   StoredParameters,
@@ -25,6 +28,27 @@ import {
 } from './components/sidebarConstants';
 import { DEFAULT_DENSITY, isDensity } from './components/densityConstants';
 import { DEFAULT_FORM_LAYOUT, isFormLayout } from './components/formLayoutConstants';
+import {
+  DEFAULT_PROPERTIES_VIEW_MODE,
+  isPropertiesViewMode,
+} from './components/propertiesViewModeConstants';
+import {
+  DEFAULT_MARKETS_VIEW_MODE,
+  isMarketsViewMode,
+} from './components/marketsViewModeConstants';
+
+/** How the gallery is arranged until someone changes it: grouped by photo type, newest first. */
+const DEFAULT_GALLERY_PREFS: GalleryPrefs = { group: 'type', sort: 'newest', view: 'grid' };
+
+/** Each field checked on its own, so one stale value falls back without discarding the rest. */
+const readGalleryPrefs = (value: unknown): GalleryPrefs => {
+  const v = (value ?? {}) as Partial<Record<keyof GalleryPrefs, unknown>>;
+  return {
+    group: v.group === 'flat' ? 'flat' : 'type',
+    sort: v.sort === 'oldest' || v.sort === 'name' ? v.sort : 'newest',
+    view: v.view === 'list' ? 'list' : 'grid',
+  };
+};
 import type { Dealer, Parameter } from './types/api';
 import type { ThaiAddress } from './data/thaiAddresses';
 
@@ -48,6 +72,17 @@ export const useUIStore = create<UIStore>()(
       setDensity: (density: Density) => set({ density }),
       formLayout: DEFAULT_FORM_LAYOUT,
       setFormLayout: (formLayout: FormLayout) => set({ formLayout }),
+      propertiesViewMode: DEFAULT_PROPERTIES_VIEW_MODE,
+      setPropertiesViewMode: (propertiesViewMode: PropertiesViewMode) =>
+        set({ propertiesViewMode }),
+      marketsViewMode: DEFAULT_MARKETS_VIEW_MODE,
+      setMarketsViewMode: (marketsViewMode: MarketsViewMode) => set({ marketsViewMode }),
+      galleryPrefs: DEFAULT_GALLERY_PREFS,
+      setGalleryPrefs: (patch: Partial<GalleryPrefs>) =>
+        set(state => ({ galleryPrefs: { ...state.galleryPrefs, ...patch } })),
+      photoTopicsPreviewOpen: true,
+      setPhotoTopicsPreviewOpen: (photoTopicsPreviewOpen: boolean) =>
+        set({ photoTopicsPreviewOpen }),
     }),
     {
       name: 'cas-ui-store',
@@ -57,6 +92,10 @@ export const useUIStore = create<UIStore>()(
         theme: state.theme,
         density: state.density,
         formLayout: state.formLayout,
+        propertiesViewMode: state.propertiesViewMode,
+        marketsViewMode: state.marketsViewMode,
+        galleryPrefs: state.galleryPrefs,
+        photoTopicsPreviewOpen: state.photoTopicsPreviewOpen,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<{
@@ -65,6 +104,10 @@ export const useUIStore = create<UIStore>()(
           theme: unknown;
           density: unknown;
           formLayout: unknown;
+          propertiesViewMode: unknown;
+          marketsViewMode: unknown;
+          galleryPrefs: unknown;
+          photoTopicsPreviewOpen: unknown;
         }>;
         const rawW = p.sidebarWidth;
         const w =
@@ -77,6 +120,12 @@ export const useUIStore = create<UIStore>()(
         const formLayout: FormLayout = isFormLayout(p.formLayout)
           ? p.formLayout
           : DEFAULT_FORM_LAYOUT;
+        const propertiesViewMode: PropertiesViewMode = isPropertiesViewMode(p.propertiesViewMode)
+          ? p.propertiesViewMode
+          : DEFAULT_PROPERTIES_VIEW_MODE;
+        const marketsViewMode: MarketsViewMode = isMarketsViewMode(p.marketsViewMode)
+          ? p.marketsViewMode
+          : DEFAULT_MARKETS_VIEW_MODE;
         return {
           ...current,
           sidebarWidth: w,
@@ -84,6 +133,11 @@ export const useUIStore = create<UIStore>()(
           theme,
           density,
           formLayout,
+          propertiesViewMode,
+          marketsViewMode,
+          galleryPrefs: readGalleryPrefs(p.galleryPrefs),
+          photoTopicsPreviewOpen:
+            typeof p.photoTopicsPreviewOpen === 'boolean' ? p.photoTopicsPreviewOpen : true,
         };
       },
     },
