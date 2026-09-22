@@ -122,7 +122,7 @@
     "rai": "ไร่",
     "ngan": "งาน",
     "sqWa": "ตร.วา",
-    "owner": "เจ้าของ",
+    "owner": "ผู้ถือกรรมสิทธิ์",
     "titleDetail": "รายละเอียดโฉนด",
     "usageArea": "พื้นที่ใช้สอย",
     "numberOfBuilding": "จำนวนอาคาร",
@@ -182,7 +182,7 @@
     "vehicleType": "ประเภทยานพาหนะ",
     "machineType": "ประเภทเครื่องจักร",
     "qty": "จำนวน",
-    "owner": "เจ้าของ"
+    "owner": "ผู้ถือกรรมสิทธิ์"
   },
   "rightMenu": {
     "title": "รายละเอียดคำขอ",
@@ -428,7 +428,7 @@
     "colRow": "แถว",
     "colType": "ประเภท",
     "colIdentity": "เลขที่/หมายเลข",
-    "colOwner": "เจ้าของ",
+    "colOwner": "ผู้ถือกรรมสิทธิ์",
     "colLocation": "ที่ตั้ง",
     "colColumn": "คอลัมน์",
     "colReason": "เหตุผล",

@@ -13,8 +13,6 @@ export const BuildingDetailDto = z.object({
   area: z.string().optional(),
 });
 
-const ZeroOne = z.enum(['0', '1']);
-
 export const CreateCondoRequest = z
   .object({
     ownerName: z.string(),
