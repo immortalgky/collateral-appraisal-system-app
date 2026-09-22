@@ -25,7 +25,8 @@ export function pricingTemplateDtoToDcfTemplate(dto: PricingTemplateDto): DCFTem
     finalValue: 0,
     finalValueRounded: 0,
     appraisalPrice: 0,
-    appraisalPriceRounded: 0,
+    // null = no override. 0 would be sent as indicatedValue 0 and saved as a real override.
+    appraisalPriceRounded: null,
     sections: dto.sections
       .slice()
       .sort((a, b) => a.displaySeq - b.displaySeq)

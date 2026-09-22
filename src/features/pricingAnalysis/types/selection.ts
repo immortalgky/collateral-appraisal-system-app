@@ -41,7 +41,53 @@ export interface Method {
    * rows — null means the group is priced as one blended figure.
    */
   landRatePerSqWa?: number | null;
+  /**
+   * Cost approach only: which part of the group's value this method produces. Enforced
+   * server-side to exactly these four (`PricingAnalysisMethod.SetRole`) — null is a normal
+   * state, not missing data: the method isn't in a Cost approach, or was reverted by
+   * UnlinkBuildingCostMethod before being re-tagged. Optional only because not every code path
+   * that builds a Method (e.g. project-model subjects) has been confirmed to populate it yet.
+   */
+  role?: MethodRole | null;
+  /**
+   * Id of a sibling method *in the same approach* whose value this method was generated from —
+   * e.g. a Building Cost method linked to the WQS/SAG/DC method that produced it. Server-side
+   * links never cross approach boundaries, so this cannot represent an Income/DCF method
+   * holding a copy of a Cost method's value; that's a different, not-yet-modeled relationship.
+   */
+  linkedMethodId?: string | null;
+  /**
+   * `PricingAnalysisMethod.Remark` (nvarchar(4000)) — existing per-method note field, already
+   * written by several other save commands (SaveMachineCostItems, SaveComparativeAnalysis, ...).
+   * Used here for the manual-mode "source of this value" note. Optional until `MethodDto` returns
+   * it from the API.
+   */
+  remark?: string | null;
+  /**
+   * `PricingAnalysisMethods.UseSystemCalc` — per-method system/manual flag, independent of the
+   * group-wide toggle (`GroupDetails.useSystemCalc`). Flipping it is destructive server-side
+   * (`PricingAnalysisMethod.SetCalcMode` clears the method's recorded value, unit type and
+   * value-per-unit), so callers must confirm before writing it — see
+   * PricingAnalysisMethodBoardRow. Defaults to `true` (server default) until `MethodDto` returns
+   * it from the generated schema.
+   */
+  useSystemCalc?: boolean;
+  /**
+   * `PricingAnalysisMethods.UpdatedAt` — the audit timestamp every entity carries
+   * (`Entity<Guid>`), surfaced through `MethodDto` so the board's "last updated" column has
+   * something to show. Null until the method's first save: the audit interceptor only stamps
+   * it on an actual update, so a freshly created method legitimately has no value here.
+   */
+  updatedAt?: string | null;
 }
+
+/** Exhaustive — `PricingAnalysisMethod.SetRole` (BE) throws on anything outside this set. */
+export type MethodRole = 'Land' | 'Building' | 'LandAndBuilding' | 'Machinery';
+
+/** Frontend spelling of the Cost approach type (BE sends `'Cost'`; FE config and
+ *  createInitialState both map it to this value — see pricingAnalysis.config.json
+ *  and store/createInitialState.ts). */
+export const COST_APPROACH_TYPE = 'COSTAPPR';
 
 export interface Approach {
   id?: string;

@@ -438,6 +438,8 @@ export interface AppraisalPickerProps {
   onUndoRemoval?: (id: string) => void;
   /** When true, the picker omits its own selected-list panel — the caller renders one. */
   hideSelectedPanel?: boolean;
+  /** Filter values the caller fixes; overrides the matching user-editable filter in the query regardless of what's selected in that filter's control. */
+  fixedFilters?: Partial<AppraisalFilters>;
   error?: string;
 }
 
@@ -453,6 +455,7 @@ export function AppraisalPicker({
   markedForRemovalIds,
   onUndoRemoval,
   hideSelectedPanel = false,
+  fixedFilters,
   error,
 }: AppraisalPickerProps) {
   const { t } = useTranslation(['quotation', 'common']);
@@ -493,27 +496,30 @@ export function AppraisalPicker({
   const PAGE_SIZE = 10;
   const headerCheckboxRef = useRef<HTMLInputElement>(null);
 
-  const debouncedCustomerName = useDebounced(filters.customerName, 300).trim();
-  const debouncedAppraisalNumber = useDebounced(filters.appraisalNumber, 300).trim();
-  const debouncedSubDistrict = useDebounced(filters.subDistrict, 300).trim();
-  const debouncedDistrict = useDebounced(filters.district, 300).trim();
+  // Fixed values always win over whatever the user has selected in the corresponding control.
+  const effectiveFilters: AppraisalFilters = { ...filters, ...fixedFilters };
+
+  const debouncedCustomerName = useDebounced(effectiveFilters.customerName, 300).trim();
+  const debouncedAppraisalNumber = useDebounced(effectiveFilters.appraisalNumber, 300).trim();
+  const debouncedSubDistrict = useDebounced(effectiveFilters.subDistrict, 300).trim();
+  const debouncedDistrict = useDebounced(effectiveFilters.district, 300).trim();
 
   const queryParams: EligibleAppraisalsParams = {
     pageNumber,
     pageSize: PAGE_SIZE,
     ...(debouncedCustomerName && { customerName: debouncedCustomerName }),
     ...(debouncedAppraisalNumber && { appraisalNumber: debouncedAppraisalNumber }),
-    ...(filters.purpose && { purpose: filters.purpose }),
-    ...(filters.requestedAt && {
-      requestedAtFrom: filters.requestedAt,
-      requestedAtTo: filters.requestedAt,
+    ...(effectiveFilters.purpose && { purpose: effectiveFilters.purpose }),
+    ...(effectiveFilters.requestedAt && {
+      requestedAtFrom: effectiveFilters.requestedAt,
+      requestedAtTo: effectiveFilters.requestedAt,
     }),
-    ...(filters.channel && { channel: filters.channel }),
-    ...(filters.status && { status: filters.status }),
-    ...(filters.bankingSegment && { bankingSegment: filters.bankingSegment }),
+    ...(effectiveFilters.channel && { channel: effectiveFilters.channel }),
+    ...(effectiveFilters.status && { status: effectiveFilters.status }),
+    ...(effectiveFilters.bankingSegment && { bankingSegment: effectiveFilters.bankingSegment }),
     ...(debouncedSubDistrict && { subDistrict: debouncedSubDistrict }),
     ...(debouncedDistrict && { district: debouncedDistrict }),
-    ...(filters.province && { province: filters.province }),
+    ...(effectiveFilters.province && { province: effectiveFilters.province }),
     ...(excludeQuotationRequestId && { excludeQuotationRequestId }),
   };
 
@@ -692,12 +698,17 @@ export function AppraisalPicker({
               {t('picker.status')}
             </label>
             <select
-              value={filters.status}
+              value={effectiveFilters.status}
               onChange={e => handleFilterChange('status', e.target.value)}
               className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
             >
-              <option value="">{t('picker.statusAll')}</option>
-              {APPRAISAL_STATUS_OPTIONS.map(opt => (
+              {fixedFilters?.status === undefined && (
+                <option value="">{t('picker.statusAll')}</option>
+              )}
+              {(fixedFilters?.status === undefined
+                ? APPRAISAL_STATUS_OPTIONS
+                : APPRAISAL_STATUS_OPTIONS.filter(opt => opt.value === fixedFilters.status)
+              ).map(opt => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
                 </option>
@@ -1027,6 +1038,18 @@ export function AppraisalDocPicker({
   const { data, isLoading, isError, refetch } = useGetRequestDocuments(requestId ?? undefined);
   const sections = data?.sections ?? [];
 
+  const allUploadedDocs = sections.flatMap(section => section.documents.filter(d => d.documentId));
+  const selectedCount = allUploadedDocs.filter(d => !!apSelection[d.documentId!]).length;
+  const allSelected = allUploadedDocs.length > 0 && selectedCount === allUploadedDocs.length;
+  const someSelected = selectedCount > 0 && !allSelected;
+
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 py-4 px-3 text-xs text-gray-400">
@@ -1054,16 +1077,42 @@ export function AppraisalDocPicker({
     return <div className="px-3 py-3 text-xs text-gray-400">{t('empty.noDocumentsFound')}</div>;
   }
 
+  const handleSelectAll = () => {
+    sections.forEach(section => {
+      const level: SharedDocumentSelectionDto['level'] =
+        section.titleId == null ? 'RequestLevel' : 'TitleLevel';
+      const uploadedDocs = section.documents.filter(d => d.documentId);
+      uploadedDocs.forEach(d => onToggle(appraisalId, d.documentId!, level, !allSelected));
+    });
+  };
+
   return (
     <div className="flex flex-col divide-y divide-gray-100 max-h-[280px] overflow-y-auto">
+      {allUploadedDocs.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2.5">
+          <span className="text-[10px] text-gray-500 tabular-nums">
+            {t('picker.selectedCount', { selected: selectedCount, total: allUploadedDocs.length })}
+          </span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              ref={selectAllRef}
+              type="checkbox"
+              checked={allSelected}
+              onChange={handleSelectAll}
+              className="size-3 accent-primary rounded"
+            />
+            <span className="text-[10px] text-gray-500">{t('picker.selectAllDocuments')}</span>
+          </label>
+        </div>
+      )}
       {sections.map((section, sIdx) => {
         const level: SharedDocumentSelectionDto['level'] =
           section.titleId == null ? 'RequestLevel' : 'TitleLevel';
         const uploadedDocs = section.documents.filter(d => d.documentId);
         if (uploadedDocs.length === 0) return null;
 
-        const allSelected = uploadedDocs.every(d => !!apSelection[d.documentId!]);
-        const handleSelectAll = (checked: boolean) => {
+        const sectionAllSelected = uploadedDocs.every(d => !!apSelection[d.documentId!]);
+        const handleSectionSelectAll = (checked: boolean) => {
           uploadedDocs.forEach(d => onToggle(appraisalId, d.documentId!, level, checked));
         };
 
@@ -1076,8 +1125,8 @@ export function AppraisalDocPicker({
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={allSelected}
-                  onChange={e => handleSelectAll(e.target.checked)}
+                  checked={sectionAllSelected}
+                  onChange={e => handleSectionSelectAll(e.target.checked)}
                   className="size-3 accent-primary rounded"
                 />
                 <span className="text-[10px] text-gray-500">{t('picker.selectAll')}</span>

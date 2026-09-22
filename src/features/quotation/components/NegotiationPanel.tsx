@@ -99,8 +99,12 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
               <Button
                 variant="outline"
                 size="sm"
+                disabled={quotation.status !== 'WinnerTentative'}
                 onClick={openReject}
                 className="text-red-600 border-red-300 hover:bg-red-50"
+                title={
+                  quotation.status === 'Negotiating' ? t('negotiation.awaitingResponse') : undefined
+                }
               >
                 <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
                 {t('buttons.rejectWinner')}

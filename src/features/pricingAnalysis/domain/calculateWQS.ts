@@ -44,6 +44,9 @@ export function detectPriceUnit(calculations: unknown): string | null {
   return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
 
+// detectPriceUnitMixed moved to domain/detectPriceUnitMixed.ts (shared with SAG/DC
+// — it was a byte-identical copy in all three domain files).
+
 export function calcWeightedScore(weight: unknown, score: unknown) {
   const w = Number(weight) || 0;
   const s = Number(score) || 0;

@@ -83,6 +83,8 @@ export const useUIStore = create<UIStore>()(
       photoTopicsPreviewOpen: true,
       setPhotoTopicsPreviewOpen: (photoTopicsPreviewOpen: boolean) =>
         set({ photoTopicsPreviewOpen }),
+      appraisalDetailsOpen: true,
+      setAppraisalDetailsOpen: (appraisalDetailsOpen: boolean) => set({ appraisalDetailsOpen }),
     }),
     {
       name: 'cas-ui-store',
@@ -96,6 +98,7 @@ export const useUIStore = create<UIStore>()(
         marketsViewMode: state.marketsViewMode,
         galleryPrefs: state.galleryPrefs,
         photoTopicsPreviewOpen: state.photoTopicsPreviewOpen,
+        appraisalDetailsOpen: state.appraisalDetailsOpen,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<{
@@ -108,6 +111,7 @@ export const useUIStore = create<UIStore>()(
           marketsViewMode: unknown;
           galleryPrefs: unknown;
           photoTopicsPreviewOpen: unknown;
+          appraisalDetailsOpen: unknown;
         }>;
         const rawW = p.sidebarWidth;
         const w =
@@ -138,6 +142,8 @@ export const useUIStore = create<UIStore>()(
           galleryPrefs: readGalleryPrefs(p.galleryPrefs),
           photoTopicsPreviewOpen:
             typeof p.photoTopicsPreviewOpen === 'boolean' ? p.photoTopicsPreviewOpen : true,
+          appraisalDetailsOpen:
+            typeof p.appraisalDetailsOpen === 'boolean' ? p.appraisalDetailsOpen : true,
         };
       },
     },

@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useBlocker } from 'react-router-dom';
+
+export type UnsavedChangesGuard = { when: boolean; skipRef: { current: boolean } };
 
 export function useUnsavedChangesWarning(isDirty: boolean) {
   const skipRef = useRef(false);
 
-  const blocker = useBlocker(() => isDirty && !skipRef.current);
+  // No useBlocker here. The router honours only its last-registered blocker, so a clean page that
+  // still held one could swallow every navigation with no dialog to answer. UnsavedChangesDialog
+  // registers the blocker itself, and only while the form is dirty.
+  const blocker: UnsavedChangesGuard = { when: isDirty, skipRef };
 
   const skipWarning = useCallback(() => {
     skipRef.current = true;

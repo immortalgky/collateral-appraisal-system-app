@@ -17,6 +17,9 @@ import { findRentalSourceProperty } from '../utils/leaseProperty';
 interface MethodSectionRendererProps {
   state: SelectionState;
   serverData: PricingServerData;
+  /** The group's NET land area, sq.wa — title deeds less encroachment/deductions
+   *  (GetPricingAnalysis.landAreaInSqWa, PricingPropertyDataService.LandAreaSql). */
+  groupNetLandSqWa?: number;
   appraisalId?: string;
   calculationMethodData: {
     comparativeFactors: GetComparativeFactorsResponseType | undefined;
@@ -36,6 +39,7 @@ export function MethodSectionRenderer({
   serverData,
   appraisalId,
   calculationMethodData,
+  groupNetLandSqWa = 0,
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
@@ -60,7 +64,7 @@ export function MethodSectionRenderer({
     savedComparativeAnalysisTemplateId:
       calculationMethodData.comparativeFactors?.comparativeAnalysisTemplateId,
     savedFinalValueAdjusted:
-      (calculationMethodData.comparativeFactors as any)?.finalValue?.finalValueAdjusted ?? null,
+      (calculationMethodData.comparativeFactors as any)?.finalValue?.finalValueOverride ?? null,
     savedLandValue:
       (calculationMethodData.comparativeFactors as any)?.finalValue?.landValue ?? null,
     savedMethodValue: (calculationMethodData.comparativeFactors as any)?.methodValue ?? null,
@@ -78,7 +82,7 @@ export function MethodSectionRenderer({
             (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
           savedHasBuildingCost={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
@@ -96,7 +100,7 @@ export function MethodSectionRenderer({
             (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
           savedHasBuildingCost={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
@@ -114,7 +118,7 @@ export function MethodSectionRenderer({
             (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
           savedHasBuildingCost={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
@@ -125,7 +129,14 @@ export function MethodSectionRenderer({
         />
       );
     case 'I':
-      return <DiscountedCashFlowPanel {...panelProps} />;
+      return (
+        <DiscountedCashFlowPanel
+          {...panelProps}
+          // HBU: the split is measured against the NET land (deed less deductions) — pricing
+          // always uses net; the deed total (groupDetail.area) overstated it by the deduction.
+          groupLandSqWa={groupNetLandSqWa}
+        />
+      );
     case 'MC_COST':
       return (
         <CostMachinePanel
@@ -143,7 +154,7 @@ export function MethodSectionRenderer({
             (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
           savedHasBuildingCost={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
@@ -161,7 +172,7 @@ export function MethodSectionRenderer({
             (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
           savedHasBuildingCost={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
@@ -181,7 +192,7 @@ export function MethodSectionRenderer({
             (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
           }
           savedAppraisalPrice={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.appraisalPrice ?? null
+            (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
           savedHasBuildingCost={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.hasBuildingValue ?? null
@@ -227,6 +238,7 @@ export function MethodSectionRenderer({
           onCalculationSave={onCalculationSave}
           onCalculationMethodDirty={onCalculationMethodDirty}
           onCancelCalculationMethod={onCancelCalculationMethod}
+          properties={serverData.properties}
         />
       );
     default:

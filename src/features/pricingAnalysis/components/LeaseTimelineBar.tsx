@@ -1,3 +1,4 @@
+
 interface LeaseTimelineBarProps {
   leaseStartDate?: string;
   leaseEndDate?: string;
@@ -39,32 +40,37 @@ export function LeaseTimelineBar({
     : Math.round(totalMs / (1000 * 60 * 60 * 24));
   const remainingYears = (remainingDays / 365.25).toFixed(1);
 
+  // mock:288-290/2471 (`.tl`) — a bare 6px bar + dot marker, no inline elapsed/remaining
+  // text row. That row measured ~300px minimum ("Start DD/MM/YYYY · NN% elapsed · N.N yr
+  // remaining · End DD/MM/YYYY") against the rail's ~240px usable width — the mock's own
+  // fix for the same width was to drop the text to a `title` tooltip, which is what this
+  // now does; Start/End are already shown above this bar in the rail's lease-date grid,
+  // so repeating them here would be redundant even with room to spare.
+  //
+  // Deliberate deviation from the mock: at low elapsed % (e.g. 1% on a 30-year contract)
+  // the fill is visually indistinguishable from a section divider, and a `title` tooltip
+  // gives no affordance telling anyone to hover — this is also the only place the
+  // remaining term appears on screen. A short caption line restates the tooltip's own
+  // numbers so the two can never disagree.
   return (
-    <div className="space-y-1.5">
-      {/* Bar */}
-      <div className="relative h-2 rounded-full bg-gray-200 overflow-hidden">
+    <>
+      {/* mock `.tl` (#edf1f1 track, #99f6e4 fill, #0d9488 dot). No overflow-hidden: it
+          clipped the 10px dot on the 6px track. */}
+      <div
+        className="relative h-[6px] rounded-[3px] bg-[#edf1f1] mt-[10px] mb-[12px]"
+        title={`${formatShort(start)} – ${formatShort(end)} · ${pct.toFixed(0)}% elapsed${appraisal ? ` · ${remainingYears} yr remaining` : ''}`}
+      >
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-gray-400 to-gray-500"
+          className="absolute inset-y-0 left-0 rounded-[3px] bg-[#99f6e4]"
           style={{ width: `${pct}%` }}
         />
         {appraisal && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary border-2 border-white shadow-sm"
-            style={{ left: `${pct}%`, marginLeft: '-6px' }}
+            className="absolute top-1/2 -translate-y-1/2 size-[10px] rounded-full bg-[#0d9488] border-2 border-white"
+            style={{ left: `${pct}%`, marginLeft: '-5px' }}
           />
         )}
       </div>
-
-      {/* Labels */}
-      <div className="flex items-center justify-between text-[10px] text-gray-400">
-        <span>Start {formatShort(start)}</span>
-        {appraisal && (
-          <span className="text-primary font-medium">
-            {pct.toFixed(0)}% elapsed · {remainingYears} yr remaining
-          </span>
-        )}
-        <span>End {formatShort(end)}</span>
-      </div>
-    </div>
+    </>
   );
 }

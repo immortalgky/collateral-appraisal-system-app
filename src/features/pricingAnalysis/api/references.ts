@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { pricingAnalysisKeys } from './queryKeys';
 
@@ -30,7 +30,7 @@ const SUBJECT_TYPE_NAME_TO_VALUE: Record<string, PricingAnalysisSubjectType> = {
   ProfitRentRef: 6,
 };
 
-function normalizeSubjectType(raw: unknown): PricingAnalysisSubjectType {
+export function normalizeSubjectType(raw: unknown): PricingAnalysisSubjectType {
   if (typeof raw === 'number') return raw as PricingAnalysisSubjectType;
   if (typeof raw === 'string') {
     if (Object.prototype.hasOwnProperty.call(SUBJECT_TYPE_NAME_TO_VALUE, raw))
@@ -88,6 +88,22 @@ export interface GetReferencesResponse {
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 
+async function fetchReferences(
+  subjectType: PricingAnalysisSubjectType,
+  anchorId: string,
+  anchorRefKey?: string | null,
+): Promise<GetReferencesResponse> {
+  const params: Record<string, string> = {
+    subjectType: String(subjectType),
+    anchorId,
+  };
+  if (anchorRefKey != null) {
+    params.anchorRefKey = anchorRefKey;
+  }
+  const { data } = await axios.get('/pricing-analysis/references', { params });
+  return normalizeReferencesResponse(data as GetReferencesResponse);
+}
+
 /**
  * GET /pricing-analysis/references?subjectType=&anchorId=&anchorRefKey=
  * Returns all saved reference analyses for an anchor.
@@ -99,21 +115,40 @@ export function useGetReferences(
 ) {
   return useQuery({
     queryKey: pricingAnalysisKeys.references(subjectType ?? 0, anchorId ?? '', anchorRefKey),
-    queryFn: async (): Promise<GetReferencesResponse> => {
-      const params: Record<string, string> = {
-        subjectType: String(subjectType),
-        anchorId: anchorId!,
-      };
-      if (anchorRefKey != null) {
-        params.anchorRefKey = anchorRefKey;
-      }
-      const { data } = await axios.get('/pricing-analysis/references', { params });
-      return normalizeReferencesResponse(data as GetReferencesResponse);
-    },
+    queryFn: () => fetchReferences(subjectType!, anchorId!, anchorRefKey),
     enabled: subjectType != null && !!anchorId,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: 30_000,
+  });
+}
+
+/**
+ * The same query as useGetReferences, for MANY anchors at once — one machine per anchor.
+ *
+ * Deliberately built on the SAME key factory call that useGetReferences uses (anchorRefKey
+ * omitted, which the factory stores as null), so the per-cell WQS buttons and any bulk view
+ * read and write one cache entry per machine rather than two competing ones: open the bulk
+ * dialog and every machine's saved references are already there, and a value applied through
+ * either route leaves the other's badge count correct.
+ *
+ * `enabled` is what keeps this honest — passing the dialog's open state means a table of 40
+ * machines issues no requests at all until someone actually asks for the bulk picker.
+ */
+export function useGetReferencesForAnchors(
+  subjectType: PricingAnalysisSubjectType,
+  anchorIds: string[],
+  enabled = true,
+) {
+  return useQueries({
+    queries: anchorIds.map(anchorId => ({
+      queryKey: pricingAnalysisKeys.references(subjectType, anchorId, null),
+      queryFn: () => fetchReferences(subjectType, anchorId),
+      enabled: enabled && !!anchorId,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: 30_000,
+    })),
   });
 }
 
@@ -171,11 +206,7 @@ export function useCreateReferenceFromMethod() {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
-        queryKey: pricingAnalysisKeys.references(
-          variables.subjectType,
-          variables.anchorId,
-          null,
-        ),
+        queryKey: pricingAnalysisKeys.references(variables.subjectType, variables.anchorId, null),
       });
     },
   });

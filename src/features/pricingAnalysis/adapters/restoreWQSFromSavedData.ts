@@ -165,7 +165,14 @@ export function restoreWQSFromSavedData({
       },
       WQSCalculations,
       WQSFinalValue: {
-        landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        // Net area, same rule as initializeWQSForm — restoring saved work must not put the
+        // pre-deduction figure back on screen.
+        landArea:
+          property?.netLandAreaInSqWa != null
+            ? Number(property.netLandAreaInSqWa)
+            : property?.totalLandAreaInSqWa
+              ? Number(property.totalLandAreaInSqWa)
+              : undefined,
         usableArea: property?.totalBuildingArea
           ? Number(property.totalBuildingArea)
           : property?.usableArea

@@ -15,6 +15,7 @@ import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import { useBreadcrumbExtrasStore } from '@shared/store';
 import { useNavigation } from '@shared/hooks/useNavigation';
 import LoadingOverlay from '@shared/components/LoadingOverlay';
+import UploadProgressPanel from '@shared/components/UploadProgressPanel';
 import { ActivityProgressHubBootstrap } from '@features/appraisal/components/ActivityProgressHubBootstrap';
 import {
   RightMenuPortalProvider,
@@ -165,6 +166,7 @@ function Layout() {
         </div>
 
         <LoadingOverlay />
+        <UploadProgressPanel />
       </div>
     </RightMenuPortalProvider>
   );

@@ -27,6 +27,7 @@ import {
 import { PropertyNameTriggerIcon, type PropertyType } from '../components/PropertyNameTriggerIcon';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { FieldLabels } from '../components/FieldLabels';
 
 interface BuildingDetailFormProps {
   prefix?: string;
@@ -56,14 +57,8 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
     <div className="col-span-full xl:col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5" />}
+    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5" />}
   </>
-);
-
-const Card = ({ children }: { children: ReactNode }) => (
-  <div className="col-span-12">
-    <div className="grid grid-cols-12 gap-3">{children}</div>
-  </div>
 );
 
 // copy owner from land
@@ -113,106 +108,175 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
     [displayOwnerIcon],
   );
 
-  const buildingFields = useMemo<FormField[]>(
-    () =>
-      buildingInfoField.map(field => {
+  // The property-name and owner fields carry trigger icons that depend on the property type.
+  const { identity, legal } = useMemo(() => {
+    const withIcons = (fields: FormField[]) =>
+      fields.map(field => {
         if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
         if (field.name === 'ownerNameBuilding' && ownerIcon)
           return { ...field, rightIcon: ownerIcon };
         return field;
-      }),
-    [fillIcon, ownerIcon],
-  );
+      });
+    return { identity: withIcons(identityFields), legal: withIcons(legalFields) };
+  }, [fillIcon, ownerIcon]);
+
   return (
-    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
-      <SectionRow title="Building Information" icon="building">
-        <FormFields fields={buildingFields} />
-      </SectionRow>
+    <FieldLabels scope="building">
+      <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <SectionRow title="Identification" icon="building">
+          <FormFields fields={identity} />
+        </SectionRow>
 
-      <SectionRow title="Building Type" icon="list">
-        <FormFields fields={buildingTypeField} />
-      </SectionRow>
+        <SectionRow title="Ownership & Legal" icon="scale-balanced">
+          <FormFields fields={legal} />
+        </SectionRow>
 
-      <SectionRow title="Decoration" icon="paint-roller">
-        <FormFields fields={decorationField} />
-      </SectionRow>
+        <SectionRow title="Type & Use" icon="list">
+          <FormFields fields={typeAndUseFields} />
+        </SectionRow>
 
-      <SectionRow title="Encroachment" icon="arrows-left-right">
-        <FormFields fields={encroachmentField} />
-      </SectionRow>
+        <SectionRow title="Condition & Quality" icon="gauge">
+          <FormFields fields={conditionFields} />
+        </SectionRow>
 
-      <SectionRow title="Material & Style" icon="cubes">
-        <Card>
-          <FormFields fields={buildingMaterialField} />
-        </Card>
-        <Card>
-          <FormFields fields={buildingStyleField} />
-        </Card>
-        <Card>
-          <FormFields fields={constructionStyleField} />
-        </Card>
-      </SectionRow>
+        <SectionRow title="Structure" icon="warehouse">
+          <FormFields fields={structureFields} />
+        </SectionRow>
 
-      <SectionRow title="Is Residential" icon="house">
-        <FormFields fields={isResidentialField} />
-      </SectionRow>
+        <SectionRow title="Finishes & Enclosure" icon="paint-roller">
+          <FormFields fields={finishesFields} />
+        </SectionRow>
 
-      <SectionRow title="General Structure" icon="warehouse">
-        <FormFields fields={generalStructureField} />
-      </SectionRow>
+        <SectionRow title="Floors" icon="layer-group">
+          <FormFields fields={floorFields} />
+          <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} />
+        </SectionRow>
 
-      <SectionRow title="Roof & Ceiling" icon="house-chimney">
-        <Card>
-          <FormFields fields={roofFrameField} />
-        </Card>
-        <Card>
-          <FormFields fields={roofField} />
-        </Card>
-        <Card>
-          <FormFields fields={ceilingField} />
-        </Card>
-      </SectionRow>
+        <SectionRow title="Area & Cost" icon="table">
+          <FormFields fields={areaFields} />
+          <div className="col-span-12">
+            <BuildingDetail
+              name={prefix != null ? `${prefix}.depreciationDetails` : 'depreciationDetails'}
+              showCostSummary
+            />
+          </div>
+        </SectionRow>
 
-      <SectionRow title="Wall" icon="square">
-        <Card>
-          <FormFields fields={interiorWallFields} />
-        </Card>
-        <Card>
-          <FormFields fields={exteriorWallFields} />
-        </Card>
-      </SectionRow>
+        <SectionRow title="Limitations" icon="triangle-exclamation">
+          <FormFields fields={encroachmentField} />
+        </SectionRow>
 
-      <SectionRow title="Surface" icon="layer-group">
-        <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} />
-      </SectionRow>
-
-      <SectionRow title="Construction & Use" icon="gears">
-        <Card>
-          <FormFields fields={fenceField} />
-        </Card>
-        <Card>
-          <FormFields fields={constTypeFeild} />
-        </Card>
-        <Card>
-          <FormFields fields={utilizationFeild} />
-        </Card>
-      </SectionRow>
-
-      <SectionRow title="Building Detail" icon="table">
-        <FormFields fields={buildingArea} />
-        <div className="col-span-12">
-          <BuildingDetail
-            name={prefix != null ? `${prefix}.depreciationDetails` : 'depreciationDetails'}
-          />
-        </div>
-      </SectionRow>
-
-      <SectionRow title="Remark" icon="comment" isLast>
-        <FormFields fields={remarkBuildingField} />
-      </SectionRow>
-    </div>
+        <SectionRow title="Remark" icon="comment" isLast>
+          <FormFields fields={remarkBuildingField} />
+        </SectionRow>
+      </div>
+    </FieldLabels>
   );
 };
+
+/*
+ * The screen's field order, grouped the way an appraiser collects it on site. The field configs in
+ * configs/fields.ts stay as they are — the Block model form and the schema read them too — and are
+ * picked by name here. A span given here replaces the config's own col-span for this screen only.
+ */
+const byName = new Map(
+  [
+    ...buildingInfoField,
+    ...buildingTypeField,
+    ...decorationField,
+    ...buildingMaterialField,
+    ...buildingStyleField,
+    ...isResidentialField,
+    ...constructionStyleField,
+    ...generalStructureField,
+    ...roofFrameField,
+    ...roofField,
+    ...ceilingField,
+    ...interiorWallFields,
+    ...exteriorWallFields,
+    ...fenceField,
+    ...constTypeFeild,
+    ...utilizationFeild,
+    ...buildingArea,
+  ].map(field => [field.name, field]),
+);
+
+const pick = (...entries: (string | [name: string, span: string])[]): FormField[] =>
+  entries.map(entry => {
+    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const field = byName.get(name);
+    // Fail loudly: a renamed config field would otherwise just vanish from the form.
+    if (!field) throw new Error(`BuildingDetailForm: no field config named "${name}"`);
+    if (!span) return field;
+    const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+  });
+
+const identityFields = pick(
+  ['houseNumber', 'col-span-4'],
+  ['noHouseNumber', 'col-span-8'],
+  'propertyName',
+  ['buildingNumber', 'col-span-3'],
+  ['modelName', 'col-span-3'],
+  ['builtOnTitleNumber', 'col-span-6'],
+);
+
+const legalFields = pick(
+  ['isOwnerVerifiedBuilding', 'col-span-4'],
+  ['ownerNameBuilding', 'col-span-8'],
+  'hasObligation',
+  'obligationDetails',
+  'isAppraisable',
+);
+
+const typeAndUseFields = pick(
+  'buildingType',
+  'buildingTypeOther',
+  'constructionType',
+  'constructionTypeOther',
+  'utilizationType',
+  'utilizationTypeOther',
+  ['isResidential', 'col-span-12'],
+  'residentialRemark',
+);
+
+const conditionFields = pick(
+  'buildingConditionType',
+  'buildingConditionTypeOther',
+  ['buildingAge', 'col-span-3'],
+  ['isUnderConstruction', 'col-span-3'],
+  ['constructionLicenseExpirationDate', 'col-span-6'],
+  'buildingMaterialType',
+  'buildingStyleType',
+  'buildingStyleTypeOther',
+  'decorationType',
+  'decorationTypeOther',
+);
+
+const structureFields = pick(
+  'constructionStyleType',
+  'structureType',
+  'structureTypeOther',
+  'roofFrameType',
+  'roofFrameTypeOther',
+  'roofType',
+  'roofTypeOther',
+);
+
+const finishesFields = pick(
+  'ceilingType',
+  'ceilingTypeOther',
+  'interiorWallType',
+  'interiorWallTypeOther',
+  'exteriorWallType',
+  'exteriorWallTypeOther',
+  'fenceType',
+  'fenceTypeOther',
+);
+
+const floorFields = pick(['numberOfFloors', 'col-span-3']);
+
+const areaFields = pick(['totalBuildingArea', 'col-span-3']);
 
 const surfaceTableHeader = [
   {

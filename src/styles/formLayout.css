@@ -153,6 +153,31 @@
 [data-form-layout='grid'] .cas-form-grid [data-field].col-span-9 {
   --cas-label-w: 16rem;
 }
+/* The first field of a shared row takes the same label column when it is wide enough — half the
+   row, or a third of it paired with one other field (FormFields marks it `data-row-lead`) — so its
+   control starts where the full-row fields' do and the left edge runs straight down the form. The
+   leads of 4/4/4 and 3/3/6 rows keep the narrow label; 16rem out of a third of a three-field row
+   would leave almost nothing for the control.
+
+   Only once the row has the room, measured on the section's own grid rather than the viewport
+   (sidebars and the section rail change it): a 16rem label plus a toggle needs about 24rem, so a
+   third-of-the-row lead waits for a 72rem grid and a half-row lead for a 48rem one. Below that the
+   lead keeps the narrow label instead of dropping its control onto a second line. */
+[data-form-layout='grid'] .cas-form-grid .grid:has(> [data-field]) {
+  container-type: inline-size;
+}
+@container (min-width: 48rem) {
+  [data-form-layout='grid']
+    .cas-form-grid
+    [data-field][data-row-lead]:not(.col-span-4):not(.col-span-5) {
+    --cas-label-w: 16rem;
+  }
+}
+@container (min-width: 72rem) {
+  [data-form-layout='grid'] .cas-form-grid [data-field][data-row-lead] {
+    --cas-label-w: 16rem;
+  }
+}
 [data-form-layout='grid'] .cas-form-grid [data-field] [data-field-label] {
   flex: 0 0 var(--cas-label-w);
   width: var(--cas-label-w);
@@ -647,8 +672,13 @@
 }
 /* Row actions down to the title table's 1.5rem hit area — data rows only. The
    empty state lives in a `td[colspan]` and its "Add first surface" button carries
-   a label, so squaring it to 24px wrapped the text out of the button. */
-[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td:not([colspan]) button {
+   a label, so squaring it to 24px wrapped the text out of the button.
+
+   `:not([aria-haspopup])` spares Headless UI's ListboxButton: a dropdown column
+   renders its control as a <button> too, and squaring it to 24px collapsed the
+   whole field to one character — measured at 31.25px wide against a 471px cell.
+   Same exemption the icon-button rule above makes, for the same reason. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody td:not([colspan]) button:not([aria-haspopup]) {
   width: 1.5rem;
   height: 1.5rem;
 }
@@ -776,6 +806,11 @@
 }
 [data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tbody tr:hover td.sticky {
   background-color: var(--color-primary-50) !important;
+}
+/* A pinned total row sits on the surface too, or the rows scrolling under it show through its
+   figures. */
+[data-form-layout='grid'] .cas-form-grid [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table)) tfoot :is(td, th).sticky {
+  background-color: var(--color-base-100) !important;
 }
 
 /* ── the control fills the space the field was given ───────────────────────
@@ -968,4 +1003,343 @@
   .cas-form-grid
   [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater):hover {
   background-image: none;
+}
+
+/* ── the building cost table keeps its own treatment ───────────────────────
+   Every rule above dresses a repeater table on this screen in the title deed's
+   look: teal head, transparent fills below it, inputs drawn as bare cells. The
+   Building Detail table was redesigned to read like the Cost of Building table
+   in the Hypothesis approach instead — grey head, tinted group strips, and two
+   summary rows whose inputs stay boxed — so it opts out by name here rather than
+   by weakening those selectors, which Surface, Area Details and the title table
+   all still depend on. `!important` throughout because the rules it overrides
+   carry it too. */
+/* th.sticky is painted teal with !important further up, for pinned cells on the other
+   repeater tables. This table's header is grey, pinned or not. */
+/* Square corners: the frame above rounds every repeater table, this one sits flush. */
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table,
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table div:has(> table) {
+  border-radius: 0 !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table thead th.sticky,
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table thead tr,
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table thead th {
+  background-color: #0f766e !important;
+  color: #fff !important;
+  padding: 0.5rem 0.75rem;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tbody tr.cas-cost-group-b > td {
+  background-color: var(--color-primary-50) !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tbody tr.cas-cost-subtotal-b > td {
+  background-color: color-mix(in srgb, var(--color-primary-50) 55%, transparent) !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tbody tr.cas-cost-group-nb > td {
+  background-color: #fef3c7 !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tbody tr.cas-cost-subtotal-nb > td {
+  background-color: #fefce8 !important;
+}
+/* The totals line and the two summary rows below it: the summary rows are fields,
+   not readings, so their inputs keep a box of their own. */
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tfoot td {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+}
+/* The summary band brings its own padding; the tfoot rule above would double it. And the
+   "nothing below the header carries a fill" rule reaches every div in here, so the two panes
+   have to re-assert their own ground and spacing. */
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tfoot tr.cas-cost-summary td {
+  padding: 0 !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tfoot tr.cas-cost-summary td > div {
+  background-color: #e5e7eb !important;
+  gap: 1px;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tfoot tr.cas-cost-summary td > div > div {
+  padding: 0.375rem 1rem;
+  background-color: #f9fafb !important;
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  [data-field].cas-cost-table
+  tfoot
+  tr.cas-cost-summary
+  td
+  > div
+  > div:first-child {
+  background-color: #f0fdfa !important;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table tfoot td input {
+  border: 1px solid var(--color-base-300) !important;
+  background-color: var(--color-base-100) !important;
+  border-radius: 0.375rem;
+  padding: 0.375rem 0.625rem;
+}
+/* The card header sits inside the table's frame and spans it. A tone darker than the
+   column header below it, so the two read as separate bands rather than one grey block. */
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table > div:first-child {
+  width: 100%;
+  align-self: stretch;
+  background-color: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb;
+}
+[data-form-layout='grid'] .cas-form-grid [data-field].cas-cost-table > div:first-child > span {
+  color: #4b5563 !important;
+}
+
+/* ── Surface and Depreciation cards sit flush in the grid layout ────────────
+   Both cards draw their own frame (and keep their [data-field] on an empty anchor, so the
+   repeater rules above never reach them). Square corners here match the grid's ruled rows;
+   the classic layout keeps the rounded card. */
+[data-form-layout='grid'] .cas-form-grid .cas-table-card {
+  border-radius: 0;
+}
+
+/* ── condo: Usable Area takes the full row in the grid layout ───────────────
+   In the classic layout it shares its row at col-span-4. In the grid layout it behaves like a
+   col-span-12 field: the whole row, and the wide label column those fields get (the col-span-12
+   rule above keys on the class, so it has to be restated here). */
+[data-form-layout='grid'] .cas-form-grid .cas-condo-form [data-field='usableArea'] {
+  grid-column: 1 / -1;
+  --cas-label-w: 16rem;
+}
+
+/* ── land deductions: cells read as boxes ──────────────────────────────────
+   The repeater rules draw an editable cell as a bare strip. This table's first
+   column is a Dropdown, which keeps its own bordered control, so the row read as
+   half boxes and half strips. The condo Area Detail table sets the precedent
+   followed here: a rounded box that shows its edge on row hover and turns white
+   with a ring on focus.
+
+   This block has to sit at the end of the file. An earlier attempt placed it
+   directly under the repeater input rules, where it lost: three later blocks —
+   the tighter-rows padding, the cell padding reset, and the no-tint fill — each
+   restate padding or background for the same cells, so position decided it, not
+   specificity. The fill is the one declaration that also needs `!important`,
+   because the no-tint rule carries one. Scoped to this table by class: every
+   other repeater keeps the strip treatment. */
+[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells.cas-deduction-cells tbody td:has(input, textarea) {
+  padding: 0.25rem 0.375rem;
+}
+[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells.cas-deduction-cells tbody td :is(input, textarea) {
+  border-radius: 0.375rem;
+  border-color: var(--color-base-300);
+  padding: 0.375rem 0.5rem;
+}
+/* The label-less field rule underlines every wrapper that holds no [data-field-label],
+   which in a table cell is all of them — a stray rule under each input once the input
+   itself became a box. The box is the boundary here, so the underline goes. */
+[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells.cas-deduction-cells tbody td [data-field] {
+  border-bottom: 0;
+}
+/* No focus rule here on purpose: the repeater's own `inset 0 0 0 2px primary-500` is
+   what every other editable cell in the app shows, and an override here made this one
+   table highlight in a paler colour than its neighbours. */
+
+/* ── land form: one continuous sheet, section headers pinned while scrolling ──
+   Mock: docs/poc/property-form-layout-mock.html ("ต่อกัน + หัวค้าง", "เทากลาง").
+   Opted in with `.cas-sheet`, which each property form (and the PMA and correction
+   screens) sets on its own section container; a form without it keeps the gapped
+   sections.
+
+   Sections butt together instead of floating apart: the label column then runs
+   as one straight line down the form, and the header bar alone marks the break.
+   The bar goes neutral grey so teal is left to mean one thing — the chosen value.
+
+   The title-deed table above the form is part of the same sheet. It is a separate
+   Section with its own header (LandTitleTable), so the frame moves up to the page's
+   `#land-section`, which on every land page holds exactly those two Sections. */
+[data-form-layout='grid'] .cas-form-grid :is(#land-section:has(.cas-sheet), .cas-sheet) {
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.5rem;
+  /* clip, not hidden: `hidden` makes a scroll container, and a sticky header
+     inside one pins to it rather than to the page's scroller. */
+  overflow: clip;
+}
+[data-form-layout='grid'] .cas-form-grid :is(#land-section:has(.cas-sheet), .cas-sheet) {
+  gap: 0;
+}
+[data-form-layout='grid'] .cas-form-grid #land-section .cas-sheet {
+  border: 0;
+  border-radius: 0;
+}
+[data-form-layout='grid'] .cas-form-grid .cas-sheet .cas-section-rule {
+  display: none;
+}
+/* Each row paints in its own stacking layer, so nothing inside it can rise above the
+   pinned headers (z 5): the toggle's option labels are `relative z-10`, and without
+   this their text showed through the grey bar as the row slid beneath it. */
+[data-form-layout='grid'] .cas-form-grid .cas-sheet [data-field] {
+  isolation: isolate;
+}
+/* The PMA forms open their sheet with the page title and sync badges rather than a
+   section header, so that row gets the header's inset instead of sitting on the frame. */
+[data-form-layout='grid'] .cas-form-grid .cas-sheet .cas-sheet-title {
+  margin: 0;
+  padding: 0.75rem;
+}
+/* Row hover and an unpicked option's hover were the same grey, so hovering an option
+   changed nothing visible. Inside a sheet the option steps one shade darker. */
+[data-form-layout='grid']
+  .cas-form-grid
+  .cas-sheet
+  [data-field]
+  :is(
+    button[aria-pressed]:not([aria-pressed='true']),
+    div[role='radio']:not([data-checked]):not([aria-checked='true'])
+  ):hover {
+  background: var(--color-base-300);
+}
+/* …which makes an open list's own `z-50` count only inside its field, so the field
+   itself has to rise above the rows after it. The earlier open-popover rule sets the
+   z-index but relies on the field already being positioned, which label-less
+   fields are not; position it here so no field in a sheet can miss out. */
+[data-form-layout='grid']
+  .cas-form-grid
+  .cas-sheet
+  [data-field]:has([aria-expanded='true'], [role='listbox'], [role='dialog']) {
+  position: relative;
+  z-index: 40;
+}
+/* Any depth: the correction screen reaches its headers through a wrapper, and the
+   title table's header sits in its own Section beside the sheet. */
+[data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet, #land-section:has(.cas-sheet) #land-title)
+  .cas-section-head
+  + * {
+  margin-bottom: 0;
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head) {
+  position: sticky;
+  top: var(--cas-pin-top, 0px);
+  z-index: 5;
+  margin: 0;
+  /* A fixed height, so the title table's header row knows where to pin beneath it. */
+  height: var(--cas-head-h, 2.5rem);
+  /* The form's header is a plain block wrapping its icon-and-title row (the title
+     table's is itself the flex row), so a fixed height left the row at the top. */
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  background: var(--color-base-300);
+  border-top: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
+  border-bottom: 1px solid var(--color-base-300);
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-sheet > .cas-section-head:first-child,
+    /* …and a header the sheet reaches only through a wrapper, as the correction
+       screen's blocks do. */ .cas-sheet > :first-child > .cas-section-head:first-child,
+    #land-title .cas-section-head
+  ) {
+  border-top: 0;
+}
+/* …except the form's first header when the title table sits above it. */
+[data-form-layout='grid'] .cas-form-grid #land-section .cas-sheet > .cas-section-head:first-child {
+  border-top: 1px solid color-mix(in oklch, var(--color-base-content) 14%, transparent);
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head)
+  span {
+  color: var(--color-base-content);
+}
+[data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head)
+  svg:not(button *) {
+  color: var(--color-secondary-500);
+}
+/* The title header's icon chip is one level shallower than the form's, so the
+   base rule that shrinks the chip to its glyph misses it. */
+[data-form-layout='grid'] .cas-form-grid #land-section:has(.cas-sheet) #land-title .cas-section-head > div:first-child {
+  width: 1rem;
+  height: 1rem;
+  background: transparent;
+  border-radius: 0;
+}
+/* The title table's own frame would double the sheet's edge. */
+[data-form-layout='grid'] .cas-form-grid #land-section:has(.cas-sheet) #land-title div:has(> table) {
+  border: 0;
+  border-radius: 0;
+}
+[data-form-layout='grid'] #form-scroll-container {
+  --cas-pin-top: 0px;
+  --cas-head-h: 2.5rem;
+}
+/* Headers pin under the editor's tab bar when there is one — it is the scroller's
+   own sticky child: pt-3 plus a py-2 text-xs tab and its 1px rule. */
+[data-form-layout='grid'] #form-scroll-container:has(> .sticky) {
+  --cas-pin-top: calc(2.75rem + 1px);
+}
+/* The title table drops its own scroll box and runs in the page, so its column
+   header pins under the Title Detail header instead of inside a 28rem window —
+   one scrollbar for the whole form. */
+[data-form-layout='grid'] .cas-form-grid #land-section:has(.cas-sheet) #land-title div:has(> table) {
+  max-height: none;
+  overflow: clip;
+}
+/* Without its scroll box the table cannot scroll sideways, so it gives up its 720px
+   floor and lets the columns share what width there is — cropping would hide the
+   area and the row's edit/delete buttons. */
+[data-form-layout='grid'] .cas-form-grid #land-section:has(.cas-sheet) #land-title table {
+  min-width: 0;
+}
+[data-form-layout='grid'] .cas-form-grid #land-section:has(.cas-sheet) #land-title thead th {
+  top: calc(var(--cas-pin-top, 0px) + var(--cas-head-h, 2.5rem));
+  /* Under the section header (z 5): as the table leaves, its header row is pushed
+     up and must slide beneath the section header, not over it. */
+  z-index: 4;
+}
+/* Every box between the scroller and a pinned header is `overflow-hidden` (the
+   Sections, ResizableSidebar and its Main, the form roots), and each would capture
+   the header. `clip` crops the same way without becoming a scroll container. Safe on
+   the pages that render this form because none of them opens the sidebar panel,
+   whose own `sticky` would otherwise start working. */
+[data-form-layout='grid'] #form-scroll-container :has(.cas-sheet),
+[data-form-layout='grid'] .cas-form-grid .cas-sheet :has(.cas-section-head),
+[data-form-layout='grid'] #land-section:has(.cas-sheet) :is(#land-title, #land-title > div) {
+  overflow: clip;
+}
+/* Hover goes grey on this sheet: a teal tint under the pointer competed with the
+   teal of the chosen values. Focus keeps its teal ring — that one marks where
+   typing will land and should stand out. */
+[data-form-layout='grid']
+  .cas-form-grid
+  .cas-sheet
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled]):hover,
+[data-form-layout='grid']
+  .cas-form-grid
+  .cas-sheet
+  [data-field]:not(:has([data-field-label])):not(:has(table)):not(.cas-repeater):not(
+      [data-field-disabled]
+    ):hover {
+  background: var(--color-base-200);
+}
+[data-form-layout='grid'] .cas-form-grid #land-section:has(.cas-sheet) #land-title tbody tr:hover {
+  /* !important: the repeater rules clear row fills with one. */
+  background: var(--color-base-200) !important;
+}
+/* An open dropdown must still spill out of the boxes clipped above. Its panel is
+   positioned inside the field, not portalled, and the earlier "unclip while open"
+   rule only reaches `.overflow-hidden` at a lower specificity than these `#id`
+   selectors — so the list was cut off at the bottom of the block again. Same
+   trigger, same targets as the clip rules; `!important` because one of them
+   carries two ids. */
+[data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-sheet,
+    /* not the page's scroller: `visible` there stops it scrolling and resets it to the top */
+    :has(.cas-sheet):not(#form-scroll-container),
+    .cas-sheet :has(.cas-section-head),
+    #land-title,
+    #land-title > div
+  ):has([data-field] [aria-expanded='true'], [data-field] [role='listbox']) {
+  overflow: visible !important;
 }

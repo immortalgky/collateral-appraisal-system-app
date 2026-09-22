@@ -319,7 +319,7 @@ function PropertyCorrectionEditor({
               same `cas-form-grid` wrapper and `cas-section-head` band as every block above,
               so the reason reads as the last thing you fill in, not a separate dialog. */}
           <Section className="cas-form-grid mt-6 mb-6">
-            <div className="cas-section-grid">
+            <div className="cas-section-grid cas-sheet">
               <div className="cas-section-head mb-2 flex items-center gap-2">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-50">
                   <Icon style="solid" name="comment" className="size-3.5 text-primary-600" />

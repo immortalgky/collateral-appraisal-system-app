@@ -27,6 +27,7 @@ export function initializeProfitRentForm(
         growthRatePercent: p.growthRatePercent,
       })),
       estimatePriceRounded: analysis.estimatePriceRounded,
+      indicatedValue: analysis.indicatedValue,
       totalBuildingCost: analysis.totalBuildingCost ?? null,
       appraisalPriceWithBuilding: analysis.appraisalPriceWithBuilding ?? null,
       appraisalPriceWithBuildingRounded: analysis.appraisalPriceWithBuildingRounded ?? null,

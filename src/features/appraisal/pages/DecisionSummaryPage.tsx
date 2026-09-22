@@ -863,6 +863,14 @@ const DecisionSummaryPage = () => {
       ? (data?.buildingInsurance ?? 0)
       : (data?.buildingInsuranceReview ?? 0);
 
+  // A verified book keeps the reviewer's figures: AppraisalValuationSummaryService stops writing the
+  // three money columns once IsPriceVerified is true, so the stored *Review values can fall behind the
+  // live totals after a property or pricing edit. Nothing else on the page would say so.
+  const verifiedPricesStale =
+    data?.isPriceVerified === true &&
+    ((data?.totalAppraisalPrice ?? 0) !== (data?.totalAppraisalPriceReview ?? 0) ||
+      (data?.buildingInsurance ?? 0) !== (data?.buildingInsuranceReview ?? 0));
+
   const anyVisible = (...keys: SectionKey[]) => keys.some(showSection);
   const EmptyLine = ({ text }: { text: string }) => (
     <p className="text-sm text-gray-500 py-2">{text}</p>
@@ -1419,6 +1427,36 @@ const DecisionSummaryPage = () => {
                       : t('decisionSummary.sections.opinions')
                   }
                 >
+                  {verifiedPricesStale && (
+                    <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm">
+                      <p className="font-semibold text-amber-800">
+                        {t('decisionSummary.fields.verifiedStaleTitle')}
+                      </p>
+                      <p className="mt-1 text-gray-700 tabular-nums">
+                        {t('decisionSummary.fields.totalAppraisalPrice')}:{' '}
+                        {formatNumber(data?.totalAppraisalPriceReview ?? 0, 2)} →{' '}
+                        {formatNumber(data?.totalAppraisalPrice ?? 0, 2)}
+                        {' · '}
+                        {t('decisionSummary.fields.buildingInsurance')}:{' '}
+                        {formatNumber(data?.buildingInsuranceReview ?? 0, 2)} →{' '}
+                        {formatNumber(data?.buildingInsurance ?? 0, 2)}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {t('decisionSummary.fields.verifiedStaleHint')}
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-2 rounded border border-amber-400 px-3 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                        onClick={() =>
+                          setValue('totalAppraisalPriceReview', data?.totalAppraisalPrice ?? 0, {
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        {t('decisionSummary.fields.verifiedStaleAction')}
+                      </button>
+                    </div>
+                  )}
                   {showSection('priceVerification') && (
                     <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceVerification')}>
                       <InlineSubSection title={t('decisionSummary.fields.priceVerification')}>

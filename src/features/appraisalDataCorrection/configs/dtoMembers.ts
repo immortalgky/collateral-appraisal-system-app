@@ -70,6 +70,9 @@ export const DTO_MEMBERS = {
     'isEncroached',
     'encroachmentRemark',
     'encroachmentArea',
+    // 'landAreaDeductions' is deliberately absent: LandCorrection on the API declares no member
+    // for it, so anything sent under that name is dropped without an error. The correction screen
+    // shows the rows read-only until the API grows a correction contract for them.
     'isLandlocked',
     'landlockedRemark',
     'isForestBoundary',
@@ -247,7 +250,7 @@ export const DTO_MEMBERS = {
     'isMissingFromSurvey',
     'governmentPricePerSqm',
     'governmentPrice',
-    'fireInsuranceCondition',
+    'fireInsuranceCode',
     'buildingInsurancePrice',
     'sellingPrice',
     'forcedSalePrice',

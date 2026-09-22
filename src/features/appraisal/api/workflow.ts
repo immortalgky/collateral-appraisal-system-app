@@ -15,6 +15,10 @@ export interface ActivityLogItemDto {
   taskDescription: string | null;
   assignedTo: string | null;
   assignedToDisplayName: string | null;
+  /** '1' = a named person; anything else = a pool, and then `assignedTo` is a group name
+   *  (possibly ":Team_<teamId>"-suffixed) rather than a user code. Optional: an API predating
+   *  this omits it, and the client then falls back to naming whatever `assignedTo` holds. */
+  assignedType?: string | null;
   /** When THIS row's holder received the task. Frozen SLA anchor lives in stepEnteredAt. */
   startDate: string;
   /** Optional: an API predating the holder-clock work omits it — fall back to `startDate`. */

@@ -41,6 +41,11 @@ export const makeLeaseholdFormSchema = (t: TFunction<'pricingAnalysis'>) => {
       partialWa: z.number().nullable().default(null),
       pricePerSqWa: z.number().nullable().default(null),
       estimatePriceRounded: z.number().nullable().default(null),
+      // No `.default()` here — it diverges the schema's input/output types (see the
+      // `kind` field note in hypothesisForm.ts) and broke the zodResolver/useForm
+      // alignment. `.optional()` alone keeps input and output both `number | null | undefined`;
+      // leaseholdFormDefaults supplies the actual default of `null`.
+      indicatedValue: z.number().nullable().optional(),
       remark: z.string().nullable().optional(),
     })
     .passthrough();
@@ -78,5 +83,6 @@ export const leaseholdFormDefaults: LeaseholdFormType = {
   partialWa: null,
   pricePerSqWa: null,
   estimatePriceRounded: null,
+  indicatedValue: null,
   remark: null,
 };

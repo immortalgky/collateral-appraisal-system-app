@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import FormTable, { type FormTableColumn } from '../components/tables/FormTable';
 import { SectionHeader } from '../../../shared/components';
+import { mapBuildingType } from '../data/mapCollateral';
 
 const PropertiesForm = () => {
   const { t } = useTranslation('request');
@@ -21,6 +22,11 @@ const PropertiesForm = () => {
       otherFieldName: 'buildingTypeOther',
       otherTriggerValue: '99',
       maxLength: 100,
+      filterOptions: {
+        type: 'dynamic',
+        field: 'propertyType',
+        map: mapBuildingType,
+      },
     },
     {
       name: 'sellingPrice',

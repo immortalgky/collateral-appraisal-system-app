@@ -8,6 +8,7 @@ import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useRecallShortlist } from '../api/quotation';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import type { QuotationRequestDetailDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import { AdminCompanyQuotationDetailContent } from '../pages/AdminCompanyQuotationDetailPage';
 
@@ -46,7 +47,14 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
       ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
       : '—';
 
-  const shortlisted = (quotation.companyQuotations ?? []).filter(q => q.isShortlisted);
+  const shortlisted = sortCompanyResponses(
+    (quotation.companyQuotations ?? []).filter(q => q.isShortlisted),
+    cq => ({
+      status: cq.status,
+      totalNetAmount: cq.totalQuotedPrice,
+      companyName: cq.companyName,
+    }),
+  );
 
   return (
     <>
@@ -157,10 +165,15 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                   (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                   0,
                 );
-                const totalEstimateManday = items.reduce(
-                  (sum, item) => sum + (item.estimatedDays ?? 0),
-                  0,
-                );
+                const validEstimatedDays = items
+                  .map(item => item.estimatedDays)
+                  .filter((d): d is number => typeof d === 'number' && d > 0);
+                const minEstimateManday = validEstimatedDays.length
+                  ? Math.min(...validEstimatedDays)
+                  : undefined;
+                const maxEstimateManday = validEstimatedDays.length
+                  ? Math.max(...validEstimatedDays)
+                  : undefined;
                 return (
                   <tr
                     key={cq.id}
@@ -199,7 +212,11 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className="text-sm text-gray-600">
-                        {hasItems ? totalEstimateManday : '—'}
+                        {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                          ? minEstimateManday === maxEstimateManday
+                            ? minEstimateManday
+                            : `${minEstimateManday} - ${maxEstimateManday}`
+                          : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3">

@@ -103,6 +103,7 @@
     "searchPlaceholder": "ค้นหาด้วยเลขที่รายงานประเมิน...",
     "submittedFrom": "ส่งตั้งแต่",
     "submittedTo": "ส่งถึง",
+    "feePaymentMethod": "วิธีการชำระค่าธรรมเนียม",
     "empty": "ไม่พบงานที่มีสิทธิ์",
     "col": {
       "appraisalReportNo": "เลขที่รายงาน",

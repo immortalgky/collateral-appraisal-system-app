@@ -53,6 +53,9 @@ export type UIStore = {
   setGalleryPrefs: (patch: Partial<GalleryPrefs>) => void;
   photoTopicsPreviewOpen: boolean;
   setPhotoTopicsPreviewOpen: (open: boolean) => void;
+  /** Application Details panel on the right of appraisal/task pages. */
+  appraisalDetailsOpen: boolean;
+  setAppraisalDetailsOpen: (open: boolean) => void;
 };
 
 export type ParameterStore = {

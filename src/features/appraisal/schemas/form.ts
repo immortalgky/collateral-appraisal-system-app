@@ -16,6 +16,14 @@ import {
   rentalScheduleField,
 } from '../configs/fields';
 
+const landAreaDeductionItem = z.object({
+  id: z.string().nullable().optional(),
+  reasonCode: z.string(),
+  reasonOther: z.string().nullable().optional(),
+  areaInSqWa: z.coerce.number().nullable().optional(),
+  remark: z.string().nullable().optional(),
+});
+
 const landTitleItem = z.object({
   titleNumber: z.string(),
   titleType: z.string(),
@@ -88,6 +96,7 @@ const rentedOutRefinement = (data: any, ctx: z.RefinementCtx) => {
 
 export const createLandFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
+  landAreaDeductions: z.array(landAreaDeductionItem).nullable().optional(),
   isRentedOut: z.boolean().optional(),
   leaseAgreement: z.any().nullable().optional(),
   rentalInfo: z.any().nullable().optional(),
@@ -171,6 +180,8 @@ const constructionSummaryFormItem = z.object({
 });
 
 export const createBuildingFormBase = z.object({
+  finalCostValueOverride: z.coerce.number().nullable().optional(),
+  buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
   constructionEnterDetail: z.boolean().nullable().optional(),
@@ -210,6 +221,7 @@ const AreaDetailDto = z
   .passthrough();
 
 export const createCondoFormBase = z.object({
+  buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
   areaDetails: z.array(AreaDetailDto).nullable(),
   constructionEnterDetail: z.boolean().nullable().optional(),
   constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
@@ -222,7 +234,10 @@ export const createCondoForm = buildFormSchema(allCondoFields, createCondoFormBa
 );
 
 export const createLandAndBuildingFormBase = z.object({
+  finalCostValueOverride: z.coerce.number().nullable().optional(),
+  buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
   titles: z.array(landTitleItem).nullable().optional(),
+  landAreaDeductions: z.array(landAreaDeductionItem).nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
   constructionEnterDetail: z.boolean().nullable().optional(),
@@ -458,6 +473,7 @@ export type createMarketComparableFormType = z.infer<typeof createMarketComparab
 
 export const createLandFormDefault: createLandFormType = {
   titles: [],
+  landAreaDeductions: [],
   propertyName: '',
   latitude: 0,
   longitude: 0,
@@ -603,6 +619,8 @@ export const createBuildingFormDefault: createBuildingFormType = {
   utilizationTypeOther: '',
   totalBuildingArea: 0,
   buildingInsurancePrice: 0,
+  finalCostValueOverride: null,
+  buildingInsurancePriceOverride: null,
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',
@@ -672,7 +690,7 @@ export const createCondoFormDefault: createCondoFormType = {
   isMissingFromSurvey: false,
   governmentPricePerSqm: 0,
   governmentPrice: 0,
-  fireInsuranceCondition: '',
+  fireInsuranceCode: '',
   decorationType: '',
   decorationTypeOther: '',
   buildingAge: 0,
@@ -703,6 +721,7 @@ export const createCondoFormDefault: createCondoFormType = {
   facilityTypeOther: '',
   environmentType: [],
   buildingInsurancePrice: 0,
+  buildingInsurancePriceOverride: null,
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',
@@ -726,6 +745,7 @@ export const createCondoFormDefault: createCondoFormType = {
 
 export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   titles: [],
+  landAreaDeductions: [],
   propertyName: '',
   latitude: 0,
   longitude: 0,
@@ -862,6 +882,8 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   utilizationTypeOther: '',
   totalBuildingArea: 0,
   buildingInsurancePrice: 0,
+  finalCostValueOverride: null,
+  buildingInsurancePriceOverride: null,
   sellingPrice: 0,
   forcedSalePrice: 0,
   remark: '',

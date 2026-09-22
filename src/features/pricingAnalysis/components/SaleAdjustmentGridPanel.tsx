@@ -1,4 +1,4 @@
-import { type SubmitErrorHandler, useForm } from 'react-hook-form';
+import { type SubmitErrorHandler, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -8,8 +8,6 @@ import {
 } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
 import toast from 'react-hot-toast';
 import { useEffect, useState } from 'react';
-import { PricingAnalysisTemplateSelector } from '@/features/pricingAnalysis/components/PricingAnalysisTemplateSelector';
-import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
 import { SaleAdjustmentGridForm } from './SaleAdjustmentGridForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type {
@@ -32,6 +30,12 @@ import { syncSaleAdjustmentGridFormSurveys } from '@features/pricingAnalysis/ada
 import { restoreSaleAdjustmentGridFromSavedData } from '@features/pricingAnalysis/adapters/restoreSaleAdjustmentGridFromSavedData.ts';
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import { Button, Icon } from '@/shared/components';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { MethodTopBarPortal } from './MethodTopBarPortal';
+import { TemplatePopover } from './TemplatePopover';
+import { saleGridFieldPath } from '../adapters/saleAdjustmentGridFieldPath';
+import { fmt } from '../domain/formatters';
 
 interface SaleAdjustmentGridPanelProps {
   activeMethod?: {
@@ -104,6 +108,7 @@ export function SaleAdjustmentGridPanel({
   });
 
   const {
+    control,
     handleSubmit,
     getValues,
     reset,
@@ -111,6 +116,33 @@ export function SaleAdjustmentGridPanel({
     formState: { isDirty },
     trigger,
   } = methods;
+
+  const isReadOnly = usePageReadOnly();
+  // Stable id so the top-bar Save button (portaled outside this <form> via
+  // MethodTopBarPortal) still submits it natively — see WQSPanel.tsx for why. Each
+  // panel gets its own id (not a shared constant) so nothing collides if more than
+  // one ever mounts at once.
+  const formId = 'sag-panel-form';
+
+  // Top-bar value: SAG's Indicated Value lives in one of two fields depending on the
+  // include-building-cost toggle — same branch the panel's own summary section
+  // (SaleAdjustmentGridAdjustAppraisalPriceSection.tsx) already uses, so the bar and
+  // the summary can never disagree.
+  const includeBuildingCostForBar = useWatch({
+    control,
+    name: saleGridFieldPath.finalValueHasBuildingCost(),
+  });
+  const appraisalPriceRoundedForBar = useWatch({
+    control,
+    name: saleGridFieldPath.appraisalPriceRounded(),
+  });
+  const appraisalPriceIncludeBuildingCostRoundedForBar = useWatch({
+    control,
+    name: saleGridFieldPath.finalValueAppraisalPriceIncludeBuildingCostRounded(),
+  });
+  const indicatedValue = includeBuildingCostForBar
+    ? appraisalPriceIncludeBuildingCostRoundedForBar
+    : appraisalPriceRoundedForBar;
 
   // Linked comparables — syncs with server on select/deselect
   const { comparativeSurveys, syncSelection } = useLinkedComparables({
@@ -397,58 +429,94 @@ export function SaleAdjustmentGridPanel({
 
   return (
     <FormProvider methods={methods} schema={SaleAdjustmentGridDto}>
+      <MethodTopBarPortal slot="chip">
+        {/* Template chip — replaces the old PricingAnalysisTemplateSelector card; same
+            fields/handlers, now a popover anchored to the top bar beside the method name. */}
+        <TemplatePopover
+          valueLabel={selectedTemplateCode}
+          onSelectCollateralType={handleOnSelectCollateralType}
+          templateOptions={(templateList ?? [])
+            .filter(t => t.propertyType === collateralType)
+            .map(t => ({ value: t.templateCode, label: t.templateName }))}
+          onSelectTemplate={handleOnSelectTemplate}
+          onGenerate={handleOnGenerate}
+          isReadOnly={isReadOnly}
+        />
+      </MethodTopBarPortal>
+      <MethodTopBarPortal>
+        {isGenerated && (
+          <>
+            <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+              <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
+              <span className="text-sm font-semibold text-primary tabular-nums">
+                {fmt(Number(indicatedValue) || 0)}
+              </span>
+            </div>
+            {!isReadOnly && (
+              <>
+                <span className="w-px h-5 bg-gray-200 shrink-0" />
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={onCancelCalculationMethod}
+                  disabled={saveMutation.isPending}
+                  className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                >
+                  {t('footer.cancel')}
+                </Button>
+                {!!savedComparativeFactors?.length && (
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleOnReset}
+                    disabled={saveMutation.isPending}
+                    title={t('footer.reset')}
+                    aria-label={t('footer.reset')}
+                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+                  >
+                    <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  form={formId}
+                  isLoading={saveMutation.isPending}
+                  disabled={saveMutation.isPending}
+                  className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                >
+                  {!saveMutation.isPending && (
+                    <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+                  )}
+                  {t('footer.save')}
+                </Button>
+              </>
+            )}
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
         className="flex flex-col h-full gap-4"
       >
-        <PricingAnalysisTemplateSelector
-          icon="table"
-          methodName={t('saleAdjustmentGrid.methodName')}
-          onGenerate={handleOnGenerate}
-          collateralType={{
-            fieldName: 'collateralType',
-            onSelectCollateralType: handleOnSelectCollateralType,
-            value: collateralType,
-            group: 'PropertyType',
-          }}
-          template={{
-            fieldName: 'pricingTemplateCode',
-            onSelectTemplate: handleOnSelectTemplate,
-            value: selectedTemplateCode,
-            options: (templateList ?? [])
-              .filter(t => t.propertyType === collateralType)
-              .map(t => ({
-                value: t.templateCode,
-                label: t.templateName,
-              })),
-          }}
-        />
         {isGenerated && (
-          <>
-            <div className="flex-1 min-h-0 overflow-auto">
-              <SaleAdjustmentGridForm
-                {...methods}
-                property={property ?? {}}
-                buildingCost={buildingCost}
-                isCostApproach={isCostApproach}
-                marketSurveys={marketSurveys}
-                comparativeMarketSurveys={comparativeSurveys}
-                template={pricingTemplate}
-                allFactors={allFactors}
-                onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
-                manualSubject={manualSubject}
-              />
-            </div>
-            <MethodFooterActions
-              onCancel={onCancelCalculationMethod}
-              onReset={handleOnReset}
-              showReset={!!savedComparativeFactors && savedComparativeFactors.length > 0}
-              isSubmitting={saveMutation.isPending}
+          <div className="flex-1 min-h-0 overflow-auto">
+            <SaleAdjustmentGridForm
+              {...methods}
+              property={property ?? {}}
+              buildingCost={buildingCost}
+              isCostApproach={isCostApproach}
+              marketSurveys={marketSurveys}
+              comparativeMarketSurveys={comparativeSurveys}
+              template={pricingTemplate}
+              allFactors={allFactors}
+              onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+              manualSubject={manualSubject}
             />
-          </>
+          </div>
         )}
         <ConfirmDialog
           isOpen={isShowResetDialog}

@@ -1,8 +1,8 @@
-import { Icon, type ListBoxItem } from '@/shared/components';
+import { Icon } from '@/shared/components';
 import { RHFInputCell } from './table/RHFInputCell';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import ParameterSearchInput from '@/shared/components/inputs/ParameterSearchInput';
 import { useTranslation } from 'react-i18next';
+import type { ListBoxItem } from './table/TDropdown';
 
 interface PricingAnalysisTemplateSelectorProps {
   icon: string;

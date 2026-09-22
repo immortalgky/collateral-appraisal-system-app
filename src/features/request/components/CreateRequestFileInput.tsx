@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -6,12 +6,20 @@ import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import UploadArea from '@/shared/components/inputs/UploadArea';
-import { type UploadDocumentResponse, useUploadDocument } from '../api';
+import {
+  MAX_UPLOAD_BYTES,
+  sizeLabel,
+  type UploadDocumentResponse,
+  useUploadDocument,
+} from '../api';
 import FileAssignmentModal from './FileAssignmentModal';
 import { getDocumentCategory, type UploadedDocument } from '../types/document';
 import { useAuthStore } from '@/features/auth/store';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// The system's ceiling, not this screen's: anything past 20 MB is sent in chunks, so the 10 MB
+// this screen used to enforce was a limit of its own invention and the reason a scanned deed had
+// to be split by hand before it could be attached.
+const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
 const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
 
@@ -60,10 +68,10 @@ interface CreateRequestFileInputProps {
 }
 
 const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputProps) => {
-  const { t } = useTranslation('request');
+  const { t } = useTranslation(['request', 'common']);
   const { setValue, watch } = useFormContext();
   const currentUser = useAuthStore(state => state.user);
-  const { mutate: uploadDocuments, isPending } = useUploadDocument();
+  const { mutateAsync: uploadDocument, isPending } = useUploadDocument();
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<(UploadDocumentResponse & { file: File })[]>(
     [],
@@ -73,6 +81,18 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
   const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
   const isUploading = uploadProgress.length > 0;
 
+  // A batch is uploaded one file at a time, and each await is a chance for the screen to go. What
+  // is left of the batch stops there: finishing it would store files whose assignment — the
+  // setValue calls below — has nowhere to land, leaving them on the server attached to nothing.
+  // Set on the way in as well as cleared on the way out, because StrictMode mounts twice in dev.
+  const onScreen = useRef(true);
+  useEffect(() => {
+    onScreen.current = true;
+    return () => {
+      onScreen.current = false;
+    };
+  }, []);
+
   const validateFiles = (files: FileList): { valid: File[]; errors: string[] } => {
     const valid: File[] = [];
     const errors: string[] = [];
@@ -80,7 +100,12 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     Array.from(files).forEach(file => {
       // Check file size
       if (file.size > MAX_FILE_SIZE) {
-        errors.push(`${file.name}: File size exceeds 10MB`);
+        errors.push(
+          `${file.name}: ${t('common:transfer.fileTooLarge', {
+            limit: sizeLabel(MAX_FILE_SIZE),
+            size: sizeLabel(file.size),
+          })}`,
+        );
         return;
       }
 
@@ -167,42 +192,28 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       let failedCount = 0;
 
       for (const assignment of assignments) {
+        if (!onScreen.current) return;
+
         // Update status to uploading
         updateFileProgress(assignment.file.name, 'uploading');
 
         try {
-          // Upload single file with session
-          await new Promise<void>(resolve => {
-            uploadDocuments(
-              {
-                uploadSessionId: sessionId,
-                file: assignment.file,
-                documentType: assignment.docType,
-                documentCategory: getDocumentCategory(assignment.docType),
-              },
-              {
-                onSuccess: uploadedDoc => {
-                  uploadResults.push({
-                    assignment,
-                    documentId: uploadedDoc.documentId,
-                    fileName: uploadedDoc.fileName,
-                  });
-                  updateFileProgress(assignment.file.name, 'success');
-                  resolve();
-                },
-                onError: (error: any) => {
-                  console.error('Upload failed for file:', assignment.file.name, error);
-                  updateFileProgress(
-                    assignment.file.name,
-                    'error',
-                    error.apiError?.detail || 'Upload failed',
-                  );
-                  failedCount++;
-                  resolve(); // Continue with other files
-                },
-              },
-            );
+          // Awaited directly rather than through the mutation's per-call callbacks: React Query
+          // drops those once the component has no listeners, so a screen closed mid-upload left
+          // this loop suspended for the life of the page, holding on to every file still queued.
+          const uploadedDoc = await uploadDocument({
+            uploadSessionId: sessionId,
+            file: assignment.file,
+            documentType: assignment.docType,
+            documentCategory: getDocumentCategory(assignment.docType),
           });
+
+          uploadResults.push({
+            assignment,
+            documentId: uploadedDoc.documentId,
+            fileName: uploadedDoc.fileName,
+          });
+          updateFileProgress(assignment.file.name, 'success');
         } catch (error: any) {
           console.error('Upload failed for file:', assignment.file.name, error);
           updateFileProgress(
@@ -213,6 +224,11 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
           failedCount++;
         }
       }
+
+      // Checked again after the last file: the screen can go while it is in flight, and what
+      // follows writes to a form that would no longer be there and congratulates the user on a
+      // page they have already left.
+      if (!onScreen.current) return;
 
       // Map uploaded documents to form state
       const requestDocs: UploadedDocument[] = [];
@@ -283,6 +299,9 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       }, 2000);
     } catch (error: any) {
       console.error('Session creation failed:', error);
+      // Same rule as the success path: nothing to say to someone who has left, and the state this
+      // resets belongs to a screen that is gone.
+      if (!onScreen.current) return;
       toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
 
       // Mark all pending as error
@@ -311,7 +330,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
         onChange={handleChange}
         accept={ALLOWED_EXTENSIONS.join(', ')}
         multiple={true}
-        supportedText={t('documents.supportedText')}
+        supportedText={t('documents.supportedText', { limit: sizeLabel(MAX_FILE_SIZE) })}
         isLoading={isPending}
       />
 

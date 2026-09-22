@@ -2,6 +2,8 @@ import type { ReactNode, Ref } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
+import { SKYLINE, type SkylineKind } from '@shared/components/dinoLoader/dinoSprites';
+import { CITY_LANDMARKS } from '@shared/components/dinoLoader/dinoGame';
 import type { PhotoSectionView } from './PropertyPhotoSection';
 
 /** One entry in the bar under an editor's header. */
@@ -62,7 +64,10 @@ export const EditorIdentityCard = ({
       <button
         type="button"
         onClick={() => view?.onPreview(cover)}
-        className={clsx(COVER_BOX, 'flex items-center justify-center bg-gray-100')}
+        className={clsx(
+          COVER_BOX,
+          'flex items-center justify-center bg-gray-100 shadow-[0_6px_18px_rgba(13,148,136,0.16)] ring-3 ring-white',
+        )}
       >
         {cover.isUploading ? (
           <Icon name="spinner" style="solid" className="size-5 animate-spin text-gray-400" />
@@ -83,7 +88,7 @@ export const EditorIdentityCard = ({
         onClick={view.onAdd}
         className={clsx(
           COVER_BOX,
-          'flex flex-col items-center justify-center gap-0.5 border-[1.5px] border-dashed border-gray-300 bg-gray-50 px-2 text-center transition-colors hover:border-primary-300 hover:bg-primary-50',
+          'flex flex-col items-center justify-center gap-0.5 border-[1.5px] border-dashed border-gray-300 bg-white/60 px-2 text-center transition-colors hover:border-primary-300 hover:bg-primary-50',
         )}
       >
         <span className="text-xs font-semibold text-primary-700">
@@ -97,7 +102,7 @@ export const EditorIdentityCard = ({
   } else {
     coverSlot = (
       <div
-        className={clsx(COVER_BOX, 'flex flex-col items-center justify-center gap-1 bg-gray-50')}
+        className={clsx(COVER_BOX, 'flex flex-col items-center justify-center gap-1 bg-white/60')}
       >
         <Icon name="images" style="solid" className="size-5 text-gray-300" />
         <span className="text-[11px] text-gray-400">{t('editorHeader.noPhotos')}</span>
@@ -108,10 +113,14 @@ export const EditorIdentityCard = ({
   return (
     <div
       className={clsx(
-        '@container grid gap-4 rounded-xl border border-gray-200 bg-white p-3.5',
+        // White, with the loader's pixel skyline in the bottom-right corner behind the content;
+        // `isolate` keeps its -z-10 inside the card. A soft shadow lifts it off the page in place of
+        // a border.
+        '@container relative isolate grid gap-4 overflow-hidden rounded-xl bg-white p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_6px_20px_rgba(13,148,136,0.08)]',
         aside ? 'grid-cols-[auto_minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
       )}
     >
+      <PixelSkyline />
       {coverSlot}
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex flex-wrap items-center gap-2">{top}</div>
@@ -186,6 +195,52 @@ export const EditorIdentityCard = ({
     </div>
   );
 };
+
+/** Buildings from the dino loader's Bangkok skyline, left to right, as they stand in the corner. */
+const SCENE: SkylineKind[] = [
+  'SKY_HOUSE',
+  'SKY_TOWER_A',
+  'SKY_MAHANAKHON',
+  'SKY_SHOPHOUSE',
+  'SKY_BAIYOKE',
+  'SKY_YAK',
+  'SKY_TOWER_C',
+  'SKY_TOWER_D',
+];
+const SCENE_GAP = 2;
+
+/**
+ * Every sprite's '#' cells as one SVG path per tone, bottom-aligned, built once. Landmarks take the
+ * stronger tone, the rest the lighter one — the same split the loader's renderer makes.
+ */
+const scene = (() => {
+  const height = Math.max(...SCENE.map(kind => SKYLINE[kind].length));
+  const paths = { landmark: '', other: '' };
+  let x = 0;
+  for (const kind of SCENE) {
+    const rows = SKYLINE[kind];
+    const top = height - rows.length;
+    let d = '';
+    rows.forEach((row, y) => {
+      for (let i = 0; i < row.length; i++) if (row[i] === '#') d += `M${x + i} ${top + y}h1v1h-1z`;
+    });
+    paths[CITY_LANDMARKS.has(kind) ? 'landmark' : 'other'] += d;
+    x += rows[0].length + SCENE_GAP;
+  }
+  return { width: x - SCENE_GAP, height, ...paths };
+})();
+
+const PixelSkyline = () => (
+  <svg
+    viewBox={`0 0 ${scene.width} ${scene.height}`}
+    shapeRendering="crispEdges"
+    aria-hidden="true"
+    className="pointer-events-none absolute bottom-0 right-4 -z-10 h-[70%] max-h-28 w-auto opacity-70"
+  >
+    <path d={scene.other} fill="#D7ECE8" />
+    <path d={scene.landmark} fill="#A8D8CF" />
+  </svg>
+);
 
 interface EditorTabBarProps {
   barRef?: Ref<HTMLDivElement>;

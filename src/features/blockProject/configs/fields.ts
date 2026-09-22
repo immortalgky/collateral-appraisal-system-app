@@ -524,7 +524,7 @@ export const condoModelInfoFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fire Insurance Condition',
-    name: 'fireInsuranceCondition',
+    name: 'fireInsuranceCode',
     // Populated at render time from useFireInsuranceOptions('Condo') — see ModelDetailForm.
     options: [],
     wrapperClassName: 'col-span-12',
@@ -978,7 +978,7 @@ export const lbModelInfoFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fire Insurance Condition',
-    name: 'fireInsuranceCondition',
+    name: 'fireInsuranceCode',
     // Populated at render time from useFireInsuranceOptions('LandAndBuilding') — see ModelDetailForm.
     options: [],
     wrapperClassName: 'col-span-6',
@@ -1290,7 +1290,7 @@ export const projectLandInfoFields: FormField[] = [
     name: 'landDescription',
     wrapperClassName: 'col-span-12',
     required: true,
-    maxLength: 100,
+    maxLength: 4000,
     showCharCount: true,
   },
   {

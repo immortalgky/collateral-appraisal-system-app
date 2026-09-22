@@ -23,6 +23,7 @@ import {
 } from '@shared/contexts/PageReadOnlyContext';
 import TaskLayout, { TaskIndexRedirect } from './TaskLayout';
 import RoleProtectedRoute from '@shared/components/RoleProtectedRoute';
+import { QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
 
 // Page components — lazy-loaded so each route ships as its own on-demand chunk.
 // A <Suspense> boundary wraps the <Outlet/> in each layout (plus a top-level one
@@ -51,9 +52,7 @@ const MarketComparableListingPage = lazy(
   () => import('@/features/appraisal/pages/MarketComparableListingPage'),
 );
 const CreateLandPage = lazy(() => import('../features/appraisal/pages/CreateLandPage'));
-const MachinerySummaryPage = lazy(
-  () => import('../features/appraisal/pages/MachinerySummaryPage'),
-);
+const MachinerySummaryPage = lazy(() => import('../features/appraisal/pages/MachinerySummaryPage'));
 const CreateBuildingPage = lazy(() => import('../features/appraisal/pages/CreateBuildingPage'));
 const CreateCondoPage = lazy(() => import('@/features/appraisal/pages/CreateCondoPage'));
 const CreateLandBuildingPage = lazy(
@@ -695,7 +694,7 @@ export const router = createBrowserRouter([
       // RequestMaker / Admin selection page
       {
         path: 'quotations',
-        element: <RoleProtectedRoute allowedRoles={['RequestMaker', 'Admin', 'IntAdmin']} />,
+        element: <RoleProtectedRoute allowedRoles={QUOTATION_SELECTION_ROLES} />,
         children: [
           { index: true, element: <QuotationListingPage /> },
           { path: 'new', element: <NewQuotationPage /> },
@@ -803,9 +802,44 @@ export const router = createBrowserRouter([
     ],
   },
   // Appraisal Application Routes (separate layout with application sidebar)
+  // The appraisal workspace. Closed to CREDIT — a credit user who types the URL or follows an old
+  // bookmark is redirected instead of rendering the appraisal team's screens. Their equivalent is
+  // the activity panel on the list page, which the global search bar sends them to as
+  // /appraisals/search?appraisal={id} (QuickSearchQueryHandler picks the destination).
+  //
+  // Written as "deny the tracking-only audience", not "allow APPRAISAL_VIEW", and that is not the
+  // same route: this path carried NO guard before, and RequestMaker / RequestChecker hold no
+  // appraisal permission in AuthDataSeed while PoolTaskListPage navigates here whenever a pool task
+  // is already being worked by someone else or the lock call fails. An allow-list on APPRAISAL_VIEW
+  // bounced them to '/' with no message. The predicate mirrors the server's
+  // AppraisalFieldScope.IsTrackingOnly — hold the tracking code and not the full one.
+  //
+  // ⚠ This guards ONE of the two trees. The /tasks/:taskId tree below mirrors every workspace child
+  // (administration, property, documents, summary, 360, …) behind login only, so the block here is
+  // a front door, not a wall: someone holding a task id could still render those screens. Not
+  // closed in this change — the task tree is reached by people whose permission set was never
+  // surveyed, and the last two rounds of this work were spent undoing exactly that kind of
+  // unsurveyed tightening. Recorded in the backlog instead.
   {
     path: 'appraisals/:appraisalId',
-    element: <ProtectedRoute component={<AppraisalLayout />} />,
+    /* ProtectedRoute OUTSIDE, role guard inside. The other way round, the role guard reads
+       `useAuthStore(s => s.user)` before authentication has resolved — the store has no persist,
+       so `user` is null on the first render after any cold load — and redirects a fully entitled
+       appraiser to '/' on an F5 or a bookmarked deep link. It also stole the login redirect: an
+       unauthenticated visitor went to '/' instead of '/login', losing the return URL. */
+    element: (
+      <ProtectedRoute
+        component={
+          <RoleProtectedRoute
+            allowedRoles={[]}
+            requiredPermission="APPRAISAL_VIEW"
+            deniedPermission="APPRAISAL_TRACKING_VIEW"
+          >
+            <AppraisalLayout />
+          </RoleProtectedRoute>
+        }
+      />
+    ),
     errorElement: <ErrorPage />,
     children: [
       {

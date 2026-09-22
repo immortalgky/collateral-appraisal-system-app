@@ -39,6 +39,12 @@ export interface MarketReferenceModalProps {
   /** For room-type unmatched detection: the current display label of the anchor */
   currentAnchorLabel?: string;
   readOnly?: boolean;
+  /**
+   * Open straight into the calculation panel for this reference PricingAnalysis instead of the
+   * list. For the "create and open" flow, where stopping at a list containing the single
+   * reference just made is a step the user did not ask for. Back still returns to the list.
+   */
+  initialOpenPricingAnalysisId?: string | null;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -56,9 +62,16 @@ export function MarketReferenceModal({
   subjectProperty,
   currentAnchorLabel,
   readOnly,
+  initialOpenPricingAnalysisId,
 }: MarketReferenceModalProps) {
   const { t } = useTranslation('pricingAnalysis');
   const [openedRef, setOpenedRef] = useState<ReferenceDto | null>(null);
+
+  // The panel needs only the reference's own analysis id and subject type, so a caller that
+  // just created one can land on it without first fetching the full ReferenceDto the list
+  // would hand over. Cleared by Back, which drops to the list like any other drill-in.
+  const [skipList, setSkipList] = useState(!!initialOpenPricingAnalysisId);
+  const directOpenId = skipList ? initialOpenPricingAnalysisId : null;
 
   // Some entry points (notably the DCF / room-income reference flow) don't thread the WQS/SAG/DC
   // comparative template list down to here and pass `undefined`, leaving the in-panel Template
@@ -114,14 +127,17 @@ export function MarketReferenceModal({
 
             {/* Body */}
             <div className="px-6 py-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
-              {openedRef ? (
+              {openedRef || directOpenId ? (
                 <MarketReferenceMethodPanel
-                  pricingAnalysisId={openedRef.pricingAnalysisId}
-                  subjectType={openedRef.subjectType}
+                  pricingAnalysisId={openedRef?.pricingAnalysisId ?? directOpenId!}
+                  subjectType={openedRef?.subjectType ?? subjectType}
                   marketSurveys={marketSurveys}
                   templateList={resolvedTemplateList}
                   subjectProperty={subjectProperty}
-                  onBack={() => setOpenedRef(null)}
+                  onBack={() => {
+                    setOpenedRef(null);
+                    setSkipList(false);
+                  }}
                 />
               ) : (
                 <MarketReferenceList

@@ -236,7 +236,7 @@
     "columnFileName": "文件名",
     "columnUploadedAt": "上传时间",
     "validationErrorsTitle": "文件验证错误",
-    "supportedText": "PDF、PNG、JPG（每个最大10MB）",
+    "supportedText": "PDF、PNG、JPG（每个文件最大 {{limit}}）",
     "uploadingDocuments": "正在上传文件...",
     "uploadComplete": "{{done}}/{{total}} 完成"
   },
@@ -365,7 +365,7 @@
     "appraisalNotFound": "未找到评估。",
     "appraisalLoadFailed": "加载评估数据失败，请重试。",
     "missingDocTypeError": "{{name}}：不支持的文件类型，请使用 PDF、PNG 或 JPG。",
-    "missingDocSizeError": "{{name}}：文件大小超过 10MB。",
+    "missingDocSizeError": "{{name}}：文件大小超过 {{limit}}。",
     "missingDocAttachFailed": "文件已上传，但附加到申请失败，请重试。",
     "missingDocUploadFailed": "上传 {{name}} 失败。",
     "missingDocSessionFailed": "启动上传会话失败，请重试。"
@@ -405,10 +405,8 @@
     "provinceRequired": "省份为必填项。",
     "contactPersonNameRequired": "联系人姓名为必填项。",
     "contactPersonPhoneRequired": "联系人电话为必填项。",
-    "appointmentLocationRequired": "预约地点为必填项。",
     "feePaymentTypeRequired": "费用支付方式为必填项。",
     "customerNameRequired": "客户姓名为必填项。",
-    "contactNumberRequired": "联系电话为必填项。",
     "propertyTypeRequired": "房产类型为必填项。",
     "commentRequired": "评论为必填项",
     "titleMinItems": "产权信息至少需要1项"
