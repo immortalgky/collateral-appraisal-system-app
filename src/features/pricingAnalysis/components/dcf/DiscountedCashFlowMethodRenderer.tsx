@@ -43,9 +43,18 @@ export function DiscountedCashFlowMethodRenderer({
     assumptionName: assumption.assumptionName,
     assumptionType: assumption.assumptionType,
     isReadOnly: isReadOnly,
+    // Expanded-assumption breakdown lines (mock's tr.dtl): the label td spans both
+    // sticky columns via colSpan={2} — added on each of the ~13 Method* components that
+    // render `<td className={baseStyles.rowHeader}>`, since colSpan is a JSX attribute
+    // on that element itself and can't be smuggled in through a className string. Left
+    // padding is the mock's `tr.dtl td.stkw{padding-left:36px}` (mock:695); font/color is
+    // `tr.dtl td{color:ink-3;font-size:11px}` (mock:694) — the one place these detail
+    // rows deviate from the table's 12px base.
     baseStyles: {
-      rowHeader: 'pl-24 px-1 h-9 text-xs text-gray-500 border-b border-gray-300',
-      rowBody: 'px-1 h-9 text-xs text-right text-gray-500 border-b border-gray-300',
+      rowHeader:
+        'pl-[36px] pr-[8px] py-0 h-[26px] text-[11px] leading-[25px] text-gray-500 border-b border-gray-300 max-w-[490px] whitespace-nowrap overflow-hidden text-ellipsis [&_*]:whitespace-nowrap [&_span]:text-[11px]',
+      rowBody:
+        'px-[8px] py-0 h-[26px] text-[11px] leading-[25px] text-right text-gray-500 border-b border-gray-300',
     },
   };
 

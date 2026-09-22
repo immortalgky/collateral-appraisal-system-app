@@ -1,4 +1,3 @@
-import { Icon } from '@/shared/components';
 import { NumberInput } from '@/shared/components/inputs';
 import clsx from 'clsx';
 import { useEffect, useState } from 'react';
@@ -48,9 +47,15 @@ export const ManualCostBreakdown = ({
   const debouncedRate = useDebounce(rateInput, LAND_RATE_DEBOUNCE_MS);
 
   const landArea = context.landAreaInSqWa ?? 0;
-  const buildingValue = context.buildingValue ?? 0;
+  // Land only — `context.buildingValue` is deliberately not read here.
+  //
+  // This block renders solely for a method whose role is Land (see showCostBreakdown in
+  // PricingAnalysisMethodBoardRow), and a Land-role method's value is the land. Folding the
+  // group's building total in made it produce land + building while still being tagged as
+  // covering only Land, so the Cost approach added the building again through whichever method
+  // actually covers it — the same double-count the board's formula row warns about, reached from
+  // the other direction and with nothing on screen to show it had happened.
   const landValue = (rateInput ?? 0) * landArea;
-  const total = landValue + buildingValue;
 
   const { onLandRateSync } = context;
   const methodType = method.methodType;
@@ -68,8 +73,9 @@ export const ManualCostBreakdown = ({
     const next = e.target.value;
     setRateInput(next);
     // Re-derive the price the moment the rate moves. The appraiser can still overwrite it in the
-    // price field afterwards — that rounded figure is the group total, and rounding is their call.
-    onTotalChange(roundToThousand((next ?? 0) * landArea + buildingValue));
+    // price field afterwards — that rounded figure is this method's value, and rounding is
+    // their call.
+    onTotalChange(roundToThousand((next ?? 0) * landArea));
   };
 
   const handleBlur = () => {
@@ -84,64 +90,74 @@ export const ManualCostBreakdown = ({
     }
   };
 
-  const rowClass = clsx(
-    'flex items-center justify-between gap-3 border-t border-gray-100 tabular-nums',
-    compact ? 'py-1 text-[11px]' : 'py-1.5 text-xs',
-  );
-
+  // One line, read left to right as the arithmetic it is: rate × area = land value. It replaced a
+  // five-row vertical table (rate, area, land value, building value, total) whose only editable
+  // cell was the first — four of the five rows restated figures the sentence now carries inline,
+  // and the row it dropped entirely was the building one, which this method has no business
+  // pricing (see landValue above).
   return (
-    <div className={clsx('flex flex-col', compact ? 'mt-1.5' : 'mt-2')}>
-      <div className={clsx('flex items-center justify-between gap-3', compact ? 'pb-1' : 'pb-1.5')}>
-        <span className={clsx('font-medium text-gray-700', compact ? 'text-[11px]' : 'text-xs')}>
-          {t('manualCost.landRate')}
-        </span>
-        {isReadOnly ? (
-          <span className="text-xs font-semibold text-gray-800 tabular-nums">
-            {formatMoney(savedRate ?? 0)}
-          </span>
-        ) : (
-          <NumberInput
-            value={rateInput}
-            disabled={disabled}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-            decimalPlaces={2}
-            placeholder="0.00"
-            fullWidth={false}
-            className={compact ? 'w-32' : 'w-36'}
-            rightIcon={<Icon name="baht-sign" style="light" className="size-3" />}
-          />
-        )}
-      </div>
+    <div
+      className={clsx(
+        'flex flex-wrap items-center gap-x-2 gap-y-1 tabular-nums',
+        compact ? 'mt-1.5 text-[11px]' : 'mt-2 text-xs',
+      )}
+    >
+      <span className={clsx('font-medium text-gray-700', compact ? 'text-[11px]' : 'text-xs')}>
+        {t('manualCost.landRate')}
+      </span>
 
-      <div className={rowClass}>
-        <span className="text-gray-500">{t('manualCost.landArea')}</span>
-        <span className="text-gray-700">
-          {landArea.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
+      {isReadOnly ? (
+        <span className="font-semibold text-gray-800">{formatMoney(savedRate ?? 0)}</span>
+      ) : (
+        // Same three props as the method row's own value input directly above this one
+        // (PricingAnalysisMethodBoardRow) — `dense`, `fullWidth={false}`, `w-32` — so the two
+        // boxes are the same object seen twice rather than two boxes that happen to be near
+        // each other. `dense` is what carries the mock's `.in` treatment: 21px tall, 4px
+        // radius, quiet #f6f9f9 fill, border appearing only on hover/focus.
+        //
+        // No rightIcon: it would add `pr-12` and push the figure 48px off the right edge, which
+        // is the whole visible difference between these two boxes. The unit is already stated
+        // in the label to the left ("ราคาที่ดิน / ตร.ว."), so a ฿ here was repeating it at the
+        // cost of the alignment.
+        <NumberInput
+          dense
+          value={rateInput}
+          disabled={disabled}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          decimalPlaces={2}
+          placeholder="0.00"
+          fullWidth={false}
+          className="w-32"
+        />
+      )}
+
+      <span className="text-gray-500">
+        ×{' '}
+        {landArea.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}{' '}
+        {t('manualCost.sqWaUnit')}
+      </span>
+
+      <span className="text-gray-400">=</span>
+
+      <span className="text-gray-500">
+        {/* Reuses the board's own role label, so this word and the role chip on the row above can
+            never drift apart. */}
+        {t('board.role.Land')}{' '}
+        <b className="font-semibold text-gray-800">
+          {/* No forced decimals: the figure is a product, and the image this follows shows a whole
+              number as a whole number. A rate with satang still shows its own precision rather
+              than being silently rounded into the sentence. */}
+          {landValue.toLocaleString('en-US', {
+            minimumFractionDigits: 0,
             maximumFractionDigits: 2,
           })}
-        </span>
-      </div>
-      <div className={rowClass}>
-        <span className="text-gray-500">{t('manualCost.landValue')}</span>
-        <span className="text-gray-700">{formatMoney(landValue)}</span>
-      </div>
-      <div className={rowClass}>
-        <span className="text-gray-500">{t('manualCost.buildingValue')}</span>
-        <span className="text-gray-700">{formatMoney(buildingValue)}</span>
-      </div>
-      <div className={clsx(rowClass, 'border-gray-300 font-semibold')}>
-        <span className="text-gray-600">{t('manualCost.total')}</span>
-        <span className="text-gray-900">{formatMoney(total)}</span>
-      </div>
-
-      {buildingValue === 0 && (
-        <p className={clsx('mt-1.5 text-amber-700', compact ? 'text-[10px]' : 'text-[11px]')}>
-          {t('manualCost.noBuildingSchedule')}
-        </p>
-      )}
+        </b>
+      </span>
     </div>
   );
 };

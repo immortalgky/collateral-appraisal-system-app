@@ -33,6 +33,7 @@ export const mapLandPropertyResponseToForm = (
     : undefined;
   return {
     titles: (response as any).titles ?? [],
+    landAreaDeductions: (response as any).landAreaDeductions ?? [],
     propertyName: response.propertyName ?? '',
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
@@ -209,6 +210,8 @@ export const mapBuildingPropertyResponseToForm = (
     utilizationTypeOther: response.utilizationTypeOther ?? '',
     totalBuildingArea: response.totalBuildingArea ?? 0,
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    finalCostValueOverride: response.finalCostValueOverride ?? null,
+    buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
     remark: response.remark ?? '',
@@ -293,7 +296,7 @@ export const mapCondoPropertyResponseToForm = (
     governmentPrice: (response as any).governmentPrice ?? 0,
     // Not yet in the generated v1 response schema — cast until it's regenerated
     // (same pattern as the government-price fields above).
-    fireInsuranceCondition: (response as any).fireInsuranceCondition ?? '',
+    fireInsuranceCode: (response as any).fireInsuranceCode ?? '',
 
     decorationType: response.decorationType ?? '',
     decorationTypeOther: response.decorationTypeOther ?? '',
@@ -315,7 +318,13 @@ export const mapCondoPropertyResponseToForm = (
     roofType: response.roofType ?? [],
     roofTypeOther: response.roofTypeOther ?? '',
 
-    areaDetails: response.areaDetails ?? [],
+    // Rows saved before `sequence` existed have it null, and the API omits nulls from its JSON, so
+    // the key arrives missing and the form schema's z.coerce.number() turns it into NaN. Fill it
+    // from the stored order.
+    areaDetails: (response.areaDetails ?? []).map((row, index) => ({
+      ...row,
+      sequence: row.sequence ?? index + 1,
+    })),
     totalBuildingArea: response.totalBuildingArea ?? 0,
 
     isExpropriated: response.isExpropriated ?? false,
@@ -332,6 +341,7 @@ export const mapCondoPropertyResponseToForm = (
     environmentTypeOther: response.environmentTypeOther ?? '',
 
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forceSellingPrice ?? 0,
 
@@ -351,6 +361,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     : undefined;
   return {
     titles: (response as any).titles ?? [],
+    landAreaDeductions: (response as any).landAreaDeductions ?? [],
     propertyName: response.propertyName ?? '',
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
@@ -489,6 +500,8 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     utilizationTypeOther: response.utilizationTypeOther ?? '',
     totalBuildingArea: response.totalBuildingArea ?? 0,
     buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    finalCostValueOverride: response.finalCostValueOverride ?? null,
+    buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
     sellingPrice: response.sellingPrice ?? 0,
     forcedSalePrice: response.forcedSalePrice ?? 0,
     remark: response.remark ?? '',

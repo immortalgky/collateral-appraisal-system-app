@@ -10,8 +10,21 @@ import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { DiscountedCashFlowTable } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
-import { PricingAnalysisTemplateSelector } from '@features/pricingAnalysis/components/PricingAnalysisTemplateSelector.tsx';
-import { MethodFooterActions } from '@features/pricingAnalysis/components/MethodFooterActions.tsx';
+import clsx from 'clsx';
+import { Button, Icon } from '@/shared/components';
+import { TemplatePopover } from '../TemplatePopover';
+import { MethodTopBarPortal } from '../MethodTopBarPortal';
+import { MethodTabs } from '../MethodTabs';
+import {
+  MethodWorkArea,
+  MethodToolbarToggle,
+  MethodRailSectionTitle,
+  MethodRailField,
+} from '../MethodWorkArea';
+import { DenseProvider, RHFInputCell } from '../table/RHFInputCell';
+import { KpiSummaryStrip, type KpiCard } from '../KpiSummaryStrip';
+import { fmt } from '../../domain/formatters';
+import { dcfAssumptionLabel } from '../../domain/dcf/dcfNameLabel';
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { DiscountedCashFlowHighestBestUsed } from './DiscountedCashFlowHighestBestUsed';
 import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext.tsx';
@@ -30,16 +43,12 @@ import { pricingAnalysisKeys } from '../../api/queryKeys';
 import { mapDCFFormToSaveRequest } from '../../mappers/formToSaveRequest';
 import { mapIncomeAnalysisToDCFForm } from '../../mappers/analysisToForm';
 import { useDebounce } from '@/shared/hooks/useDebounce';
-import {
-  DiscountedCashFlowSummaryAssumption,
-  ViewAssumptionSummaryButton,
-} from './DiscountedCashFlowSummaryAssumption';
-import { KpiDashboard } from '../viz/KpiDashboard';
+import { DiscountedCashFlowAssumptionSheet } from './DiscountedCashFlowAssumptionSheet';
 import { CashflowTimelineChart } from '../viz/CashflowTimelineChart';
-import { SensitivityStrip } from '../SensitivityStrip';
 import { useIncomeScenarioResults } from '../../domain/useIncomeScenarioResults';
 import toast from 'react-hot-toast';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useGetAppraisalById } from '@/features/appraisal/api/appraisal';
 import { findLeaseProperty, isLeasePropertyType } from '../../utils/leaseProperty';
 import DataErrorState from '@/shared/components/DataErrorState';
 
@@ -62,6 +71,8 @@ interface DiscountedCashFlowPanelProps {
   }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
+  /** HBU: the group's land from its title deeds, sq.wa (0 = none recorded). */
+  groupLandSqWa?: number;
 }
 export function DiscountedCashFlowPanel({
   activeMethod,
@@ -71,6 +82,7 @@ export function DiscountedCashFlowPanel({
   onCalculationSave,
   onCalculationMethodDirty: _onCalculationMethodDirty,
   onCancelCalculationMethod,
+  groupLandSqWa = 0,
 }: DiscountedCashFlowPanelProps) {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
@@ -85,7 +97,11 @@ export function DiscountedCashFlowPanel({
   const [selectedTemplateCode, setSelectedTemplateCode] = useState<string>('');
   const [isGenerated, setIsGenerated] = useState<boolean>(false);
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [showAssumptionSummary, setShowAssumptionSummary] = useState(false);
+  // Stable id so the portaled top-bar Save still submits this <form> — see WQSPanel.tsx.
+  const formId = 'dcf-panel-form';
+  // mock:1284-style defaults: assumptions rail open, chart closed.
+  const [showRail, setShowRail] = useState(true);
+  const [showChart, setShowChart] = useState(false);
 
   const {
     data: pricingTemplates = [],
@@ -99,6 +115,7 @@ export function DiscountedCashFlowPanel({
   } = useGetPricingTemplateByCode(selectedTemplateCode || undefined);
 
   const appraisalId = useAppraisalId() ?? '';
+  const appraisalQuery = useGetAppraisalById(appraisalId || undefined);
   const propertyId =
     (findLeaseProperty(properties)?.propertyId as string) ?? properties?.[0]?.propertyId ?? '';
 
@@ -119,6 +136,14 @@ export function DiscountedCashFlowPanel({
     control: methods.control,
     name: 'totalNumberOfDayInYear',
   });
+  const watchedTemplateCode = useWatch({ control: methods.control, name: 'templateCode' });
+  const watchedAppraisalPriceRounded = useWatch({
+    control: methods.control,
+    name: 'appraisalPriceRounded',
+  });
+  // The computed method value (HBU-aware: income, or income + split land) — derived into
+  // the form by DiscountedCashFlowHighestBestUsed's rules.
+  const watchedAppraisalPrice = useWatch({ control: methods.control, name: 'appraisalPrice' });
 
   // Debounce the full watched state so preview fires ~400ms after the last edit.
   const debouncedSections = useDebounce(watchedSections, 400);
@@ -362,7 +387,10 @@ export function DiscountedCashFlowPanel({
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
-          appraisalValue: result.appraisalPriceRounded ?? result.finalValueRounded ?? 0,
+          // edited ?? computed — `values.appraisalPrice` is the computed method value
+          // (it includes the HBU split land, which finalValueRounded does not).
+          appraisalValue:
+            result.indicatedValue ?? values.appraisalPrice ?? result.finalValueRounded ?? 0,
         });
       }
       toast.success(t('toasts.saved'));
@@ -427,99 +455,380 @@ export function DiscountedCashFlowPanel({
     return <DataErrorState title={t('errors.loadFailed')} onRetry={handleRetry} />;
   }
 
+  const templateOptions = [...pricingTemplates]
+    .sort((a, b) => a.displaySeq - b.displaySeq)
+    .map(tpl => ({ value: tpl.code, label: tpl.name }));
+  const activeTemplateCode = selectedTemplateCode || watchedTemplateCode;
+  const templateLabel =
+    templateOptions.find(o => o.value === activeTemplateCode)?.label ?? activeTemplateCode ?? '';
+  const isSubmitting = formState.isSubmitting || saveMutation.isPending;
+  // Year 1 = the year after the appraisal date (user rule, 2026-09-21). `appraisalDate` is
+  // ValuationDate with the appointment only as fallback (vw_AppraisalDetail), never the
+  // appointment first.
+  const appraisalDate = appraisalQuery.data?.appraisalDate;
+  const firstYearBE = appraisalDate ? new Date(appraisalDate).getFullYear() + 543 + 1 : null;
+
+  // mock dcfSide(): the rail's room block edits the first income assumption whose method
+  // is room/area based (01/02/04/06) — those four share the occupancy + growth field names.
+  const roomAssumption = (() => {
+    const sections = (watchedSections ?? []) as DCFFormType['sections'];
+    for (const [si, sec] of sections.entries()) {
+      if (sec.sectionType !== 'income') continue;
+      for (const [ci, cat] of (sec.categories ?? []).entries()) {
+        for (const [ai, asm] of (cat.assumptions ?? []).entries()) {
+          const code = asm.method?.methodType;
+          if (!code || !['01', '02', '04', '06'].includes(code)) continue;
+          const detail = (asm.method?.detail ?? {}) as {
+            avgDailyRate?: number[];
+            avgRentalRate?: number[];
+          };
+          return {
+            path: `sections.${si}.categories.${ci}.assumptions.${ai}.method.detail`,
+            label: dcfAssumptionLabel(t, asm.assumptionType ?? '', asm.assumptionName ?? ''),
+            adrFirstYear:
+              (detail.avgDailyRate ?? detail.avgRentalRate ?? []).find(v => Number(v) > 0) ?? 0,
+          };
+        }
+      }
+    }
+    return null;
+  })();
+
   return (
     <FormProvider methods={methods} schema={DCFForm}>
+      <MethodTopBarPortal slot="chip">
+        <TemplatePopover
+          valueLabel={templateLabel}
+          templateFieldName="templateCode"
+          templateOptions={templateOptions}
+          onSelectTemplate={handleOnSelectTemplate}
+          onGenerate={handleOnGenerate}
+          isReadOnly={isReadOnly}
+        />
+      </MethodTopBarPortal>
+      <MethodTopBarPortal>
+        <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
+          <span className="text-sm font-semibold text-primary tabular-nums">
+            {fmt(watchedAppraisalPriceRounded ?? watchedAppraisalPrice ?? 0)}
+          </span>
+        </div>
+        {!isReadOnly && (
+          <>
+            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onCancelCalculationMethod}
+              disabled={isSubmitting}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {t('footer.cancel')}
+            </Button>
+            {!!incomeAnalysisQuery.data && (
+              <Button
+                variant="ghost"
+                type="button"
+                onClick={handleOnReset}
+                disabled={isSubmitting}
+                title={t('footer.reset')}
+                aria-label={t('footer.reset')}
+                className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+              >
+                <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+              </Button>
+            )}
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={isSubmitting}
+              disabled={isSubmitting}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {!isSubmitting && (
+                <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+              )}
+              {t('footer.save')}
+            </Button>
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
+          // HBU split must fit in the group's land (the API enforces the same rule).
+          // Checked before handleSubmit, not inside it: the valid-callback never runs while
+          // any other field fails schema validation, so the guard would silently not fire.
+          const values = getValues();
+          const splitWa = Number(values.highestBestUsed?.totalWa) || 0;
+          if (!values.isHighestBestUsed && groupLandSqWa > 0 && splitWa > groupLandSqWa) {
+            toast.error(t('methodTabs.dcf.hbu.splitExceeds', { max: fmt(groupLandSqWa) }));
+            return;
+          }
           handleOnSubmit(e);
         }}
+        className="flex flex-col h-full min-h-0 gap-4"
       >
         {incomeAnalysisQuery.isLoading && (
           <div className="py-6 text-sm text-gray-500">{t('empty.noData')}</div>
         )}
 
-        <PricingAnalysisTemplateSelector
-          icon={'chart-line-up'}
-          methodName={'Income'}
-          onGenerate={handleOnGenerate}
-          collateralType={{
-            onSelectCollateralType: () => null,
-            value: '',
-            group: 'PropertyType',
-          }}
-          template={{
-            fieldName: 'templateCode',
-            onSelectTemplate: handleOnSelectTemplate,
-            value: selectedTemplateCode,
-            options: [...pricingTemplates]
-              .sort((a, b) => a.displaySeq - b.displaySeq)
-              .map(t => ({ value: t.code, label: t.name })),
-          }}
-        />
+        {!isLoading && isGenerated && (
+          <MethodTabs
+            tabs={[
+              {
+                id: 'calc',
+                label: t('methodTabs.dcf.tabs.calc'),
+                // mock:3512-3518 — KPI strip → year pager (portaled in by the table's
+                // ScrollableTableContainer) → สมมติฐาน → กราฟ.
+                tools: <DCFKpiStrip />,
+                toolsAfterNav: (
+                  <>
+                    <MethodToolbarToggle
+                      label={t('methodTabs.toggleAssumptions')}
+                      pressed={showRail}
+                      onClick={() => setShowRail(v => !v)}
+                    />
+                    <MethodToolbarToggle
+                      label={t('methodTabs.toggleChart')}
+                      pressed={showChart}
+                      onClick={() => setShowChart(v => !v)}
+                    />
+                  </>
+                ),
+                content: (
+                  <DenseProvider value={true}>
+                    <MethodWorkArea
+                      compact
+                      showRail={showRail}
+                      rail={
+                        <>
+                          {/* Same RHF fieldNames the table and the Edit Assumption modal bind —
+                              one value, several inputs, no copy. The modal snapshots these values
+                              when it opens and its overlay blocks this rail while open, so the two
+                              surfaces can't diverge. */}
+                          <MethodRailSectionTitle>
+                            {t('methodTabs.dcf.rail.coreTitle')}
+                          </MethodRailSectionTitle>
+                          <MethodRailField
+                            label={t('methodTabs.dcf.rail.years')}
+                            unit={t('dcf.common.years')}
+                          >
+                            <RHFInputCell
+                              fieldName="totalNumberOfYears"
+                              inputType="number"
+                              disabled={isReadOnly}
+                              number={{
+                                decimalPlaces: 0,
+                                maxIntegerDigits: 2,
+                                maxValue: 99,
+                                allowNegative: false,
+                              }}
+                            />
+                          </MethodRailField>
+                          <MethodRailField
+                            label={t('methodTabs.dcf.rail.daysPerYear')}
+                            unit={t('dcf.common.days')}
+                          >
+                            <RHFInputCell
+                              fieldName="totalNumberOfDayInYear"
+                              inputType="number"
+                              disabled={isReadOnly}
+                              number={{
+                                decimalPlaces: 0,
+                                maxIntegerDigits: 3,
+                                maxValue: 370,
+                                allowNegative: false,
+                              }}
+                            />
+                          </MethodRailField>
+                          <MethodRailSectionTitle>
+                            {t('methodTabs.dcf.rail.valueTitle')}
+                          </MethodRailSectionTitle>
+                          <MethodRailField label={t('methodTabs.dcf.rail.discountRate')} unit="%">
+                            <RHFInputCell
+                              fieldName="discountedRate"
+                              inputType="number"
+                              disabled={isReadOnly}
+                              number={{ decimalPlaces: 2 }}
+                            />
+                          </MethodRailField>
+                          <MethodRailField label={t('methodTabs.dcf.rail.capRate')} unit="%">
+                            <RHFInputCell
+                              fieldName="capitalizeRate"
+                              inputType="number"
+                              disabled={isReadOnly}
+                              number={{ decimalPlaces: 2 }}
+                            />
+                          </MethodRailField>
+                          {roomAssumption && (
+                            <>
+                              <MethodRailSectionTitle>
+                                {roomAssumption.label}
+                              </MethodRailSectionTitle>
+                              <MethodRailField
+                                label={t('methodTabs.dcf.railRoom.occupancyFirstYear')}
+                                unit="%"
+                              >
+                                <RHFInputCell
+                                  fieldName={`${roomAssumption.path}.occupancyRateFirstYearPct`}
+                                  inputType="number"
+                                  disabled={isReadOnly}
+                                  number={{
+                                    decimalPlaces: 2,
+                                    maxIntegerDigits: 3,
+                                    maxValue: 100,
+                                    allowNegative: false,
+                                  }}
+                                />
+                              </MethodRailField>
+                              <MethodRailField
+                                label={t('methodTabs.dcf.railRoom.occupancyIncrease')}
+                                unit="%"
+                              >
+                                <RHFInputCell
+                                  fieldName={`${roomAssumption.path}.occupancyRatePct`}
+                                  inputType="number"
+                                  disabled={isReadOnly}
+                                  number={{
+                                    decimalPlaces: 2,
+                                    maxIntegerDigits: 3,
+                                    maxValue: 100,
+                                    allowNegative: false,
+                                  }}
+                                />
+                              </MethodRailField>
+                              <MethodRailField
+                                label={t('methodTabs.dcf.railRoom.every')}
+                                unit={t('dcf.common.years')}
+                              >
+                                <RHFInputCell
+                                  fieldName={`${roomAssumption.path}.occupancyRateYrs`}
+                                  inputType="number"
+                                  disabled={isReadOnly}
+                                  number={{
+                                    decimalPlaces: 0,
+                                    maxIntegerDigits: 3,
+                                    maxValue: 100,
+                                    allowNegative: false,
+                                  }}
+                                />
+                              </MethodRailField>
+                              <MethodRailField
+                                label={t('methodTabs.dcf.railRoom.roomRateIncrease')}
+                                unit="%"
+                              >
+                                <RHFInputCell
+                                  fieldName={`${roomAssumption.path}.increaseRatePct`}
+                                  inputType="number"
+                                  disabled={isReadOnly}
+                                  number={{
+                                    decimalPlaces: 2,
+                                    maxIntegerDigits: 3,
+                                    allowNegative: false,
+                                  }}
+                                />
+                              </MethodRailField>
+                              <MethodRailField
+                                label={t('methodTabs.dcf.railRoom.every')}
+                                unit={t('dcf.common.years')}
+                              >
+                                <RHFInputCell
+                                  fieldName={`${roomAssumption.path}.increaseRateYrs`}
+                                  inputType="number"
+                                  disabled={isReadOnly}
+                                  number={{
+                                    decimalPlaces: 0,
+                                    maxIntegerDigits: 3,
+                                    allowNegative: false,
+                                  }}
+                                />
+                              </MethodRailField>
+                              <MethodRailField
+                                label={t('methodTabs.dcf.railRoom.adrFirstYear')}
+                                unit={t('methodTabs.dcf.railRoom.baht')}
+                              >
+                                <span className="text-xs font-medium text-gray-700 tabular-nums">
+                                  {fmt(roomAssumption.adrFirstYear)}
+                                </span>
+                              </MethodRailField>
+                            </>
+                          )}
+                          <p className="mt-2 text-[11px] text-gray-400">
+                            {t('methodTabs.dcf.rail.note')}
+                          </p>
+                        </>
+                      }
+                    >
+                      {showChart && <DCFChart />}
+                      <div
+                        className={clsx(
+                          'flex flex-col flex-1 min-h-0 transition-opacity duration-200',
+                          previewMutation.isPending && 'opacity-50 pointer-events-none',
+                        )}
+                        aria-busy={previewMutation.isPending}
+                      >
+                        <DiscountedCashFlowTable
+                          totalNumberOfYears={getValues('totalNumberOfYears')}
+                          firstYearBE={firstYearBE}
+                          properties={properties ?? []}
+                          isReadOnly={isReadOnly}
+                          onStructuralChange={requestImmediatePreview}
+                          incomeAnalysisId={incomeAnalysisQuery.data?.id}
+                          hostMethodId={activeMethod?.methodId}
+                          marketSurveys={marketSurveys}
+                          ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+                        />
+                      </div>
+                      {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}
+                    </MethodWorkArea>
+                  </DenseProvider>
+                ),
+              },
+              {
+                // HANDOFF 18a — replaces the old "ดูสรุปสมมติฐาน" button + modal.
+                id: 'asm',
+                label: t('methodTabs.dcf.tabs.asm'),
+                content: (
+                  <DiscountedCashFlowAssumptionSheet
+                    properties={properties ?? []}
+                    isReadOnly={isReadOnly}
+                    onStructuralChange={requestImmediatePreview}
+                    incomeAnalysisId={incomeAnalysisQuery.data?.id}
+                    hostMethodId={activeMethod?.methodId}
+                    marketSurveys={marketSurveys}
+                    ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+                  />
+                ),
+              },
+              {
+                id: 'hbu',
+                label: t('methodTabs.dcf.tabs.hbu'),
+                content: (
+                  <DiscountedCashFlowHighestBestUsed
+                    isReadOnly={isReadOnly}
+                    incomeAnalysisId={incomeAnalysisQuery.data?.id}
+                    hostMethodId={activeMethod?.methodId}
+                    pricingAnalysisId={activeMethod?.pricingAnalysisId}
+                    marketSurveys={marketSurveys}
+                    subjectProperty={
+                      (properties ?? []).find(p => isLeasePropertyType(p.propertyType)) ??
+                      properties?.[0]
+                    }
+                    ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+                    groupLandSqWa={groupLandSqWa}
+                  />
+                ),
+              },
+            ]}
+          />
+        )}
 
-        {!isLoading && (
-          <div className="flex flex-col gap-4 mt-4">
-            {isGenerated && <DCFVisualizationSection />}
-
-            <div className="flex justify-end">
-              <ViewAssumptionSummaryButton onClick={() => setShowAssumptionSummary(true)} />
-            </div>
-            <div className="relative">
-              <div
-                className={
-                  previewMutation.isPending
-                    ? 'opacity-50 pointer-events-none transition-opacity duration-200'
-                    : 'transition-opacity duration-200'
-                }
-                aria-busy={previewMutation.isPending}
-              >
-                <DiscountedCashFlowTable
-                  totalNumberOfYears={getValues('totalNumberOfYears')}
-                  properties={properties ?? []}
-                  isReadOnly={isReadOnly}
-                  onStructuralChange={requestImmediatePreview}
-                  incomeAnalysisId={incomeAnalysisQuery.data?.id}
-                  hostMethodId={activeMethod?.methodId}
-                  marketSurveys={marketSurveys}
-                  ensureIncomeAnalysisId={ensureIncomeAnalysisId}
-                />
-              </div>
-              {previewMutation.isPending && (
-                <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-md">
-                  <span className="size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-                  Calculating…
-                </div>
-              )}
-            </div>
-
-            <DiscountedCashFlowSummaryAssumption
-              properties={properties ?? []}
-              getValues={getValues}
-              showAssumptionSummary={showAssumptionSummary}
-              onShowAssumptionSummary={() => setShowAssumptionSummary(!showAssumptionSummary)}
-            />
-            <DiscountedCashFlowHighestBestUsed
-              isReadOnly={isReadOnly}
-              incomeAnalysisId={incomeAnalysisQuery.data?.id}
-              hostMethodId={activeMethod?.methodId}
-              pricingAnalysisId={activeMethod?.pricingAnalysisId}
-              marketSurveys={marketSurveys}
-              subjectProperty={
-                (properties ?? []).find(p => isLeasePropertyType(p.propertyType)) ?? properties?.[0]
-              }
-              ensureIncomeAnalysisId={ensureIncomeAnalysisId}
-            />
-
-            {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}
-
-            {/* footer save, reset, cancel */}
-            <MethodFooterActions
-              onCancel={onCancelCalculationMethod}
-              onReset={handleOnReset}
-              showReset={!!incomeAnalysisQuery.data}
-              isSubmitting={formState.isSubmitting || saveMutation.isPending}
-            />
+        {previewMutation.isPending && (
+          <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-md">
+            <span className="size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+            Calculating…
           </div>
         )}
 
@@ -534,44 +843,42 @@ export function DiscountedCashFlowPanel({
   );
 }
 
-// Inner component — must be rendered inside FormProvider so useFormContext works.
-function DCFVisualizationSection() {
-  const { cashflowData, primaryKpi, secondaryKpis, discountRate, capitalizeRate } =
-    useIncomeScenarioResults();
+// Inner components — must render inside FormProvider so useFormContext works.
 
+/** mock:2708 kpis — the flat toolbar strip on the calc tab (not the old KpiDashboard cards). */
+function DCFKpiStrip() {
+  const { t } = useTranslation('pricingAnalysis');
+  const { cashflowData, totalPv } = useIncomeScenarioResults();
+  if (cashflowData.length === 0) return null;
+  const terminalValue =
+    [...cashflowData].reverse().find(d => d.terminalRevenue != null)?.terminalRevenue ?? null;
   return (
-    <div className="flex flex-col gap-4">
-      <KpiDashboard primary={primaryKpi} secondary={secondaryKpis} />
+    <KpiSummaryStrip
+      variant="flat"
+      cards={
+        [
+          {
+            label: t('methodTabs.dcf.kpi.noiYear1'),
+            value: cashflowData[0]?.noi ?? null,
+          },
+          { label: t('methodTabs.dcf.kpi.terminalValue'), value: terminalValue },
+          { label: t('methodTabs.dcf.kpi.sumPv'), value: totalPv, primary: true },
+        ] satisfies KpiCard[]
+      }
+    />
+  );
+}
 
-      {cashflowData.length > 0 && (
-        <CashflowTimelineChart
-          data={cashflowData}
-          discountRate={discountRate / 100}
-          capitalizeRate={capitalizeRate / 100}
-        />
-      )}
-
-      <SensitivityStrip
-        currentRate={discountRate}
-        calculateFinalValue={rate => {
-          // Recompute the DCF PV at the candidate discount rate using the
-          // per-year cashflows the backend produced for the current scenario:
-          //   PV(r) = Σ_{i=0..N-2} (grossRevenue[i] + terminalRevenue[i]) / (1+r)^(i+1)
-          // The terminal value depends on capRate (not discount rate), so it's
-          // carried in cashflowData[i].terminalRevenue at the appropriate year.
-          // Direct-cap scenarios (length < 2) are not discount-rate sensitive.
-          const years = cashflowData.length;
-          if (years < 2) return null;
-          const r = rate / 100;
-          if (r < 0) return null;
-          let pv = 0;
-          for (let i = 0; i < years - 1; i++) {
-            const gr = cashflowData[i]?.noi ?? 0;
-            const term = cashflowData[i]?.terminalRevenue ?? 0;
-            pv += (gr + term) / Math.pow(1 + r, i + 1);
-          }
-          return pv;
-        }}
+/** Chart behind the "กราฟ" toggle, above the table (mock:2680 `chart`). */
+function DCFChart() {
+  const { cashflowData, discountRate, capitalizeRate } = useIncomeScenarioResults();
+  if (cashflowData.length === 0) return null;
+  return (
+    <div className="shrink-0">
+      <CashflowTimelineChart
+        data={cashflowData}
+        discountRate={discountRate / 100}
+        capitalizeRate={capitalizeRate / 100}
       />
     </div>
   );

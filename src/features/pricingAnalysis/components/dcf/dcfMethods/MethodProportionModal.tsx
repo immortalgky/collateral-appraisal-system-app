@@ -3,6 +3,7 @@ import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumpt
 import type { DCFSection } from '../../../types/dcf';
 import type { UseFormGetValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { dcfAssumptionLabel, dcfCategoryLabel, dcfSectionLabel } from '../../../domain/dcf/dcfNameLabel';
 
 export function MethodProportionModal({
   name,
@@ -31,15 +32,19 @@ export function MethodProportionModal({
   const options = [
     ...sections.map(s => ({
       value: `section:${s.clientId}`,
-      label: `Total - ${s.sectionName}`,
+      label: t('dcf.methods.proportion.totalPrefix', {
+        name: dcfSectionLabel(t, s.sectionType, s.sectionName),
+      }),
     })),
     ...categories.map(c => ({
       value: `category:${c.clientId}`,
-      label: `Total - ${c.categoryName}`,
+      label: t('dcf.methods.proportion.totalPrefix', {
+        name: dcfCategoryLabel(t, c.categoryName, c.categoryName),
+      }),
     })),
     ...assumptions.map(a => ({
       value: `assumption:${a.assumption.clientId}`,
-      label: `${a.section.sectionName} - ${a.assumption.assumptionName ?? ''}`,
+      label: `${dcfSectionLabel(t, a.section.sectionType, a.section.sectionName)} - ${dcfAssumptionLabel(t, a.assumption.assumptionType, a.assumption.assumptionName ?? '')}`,
     })),
   ];
 

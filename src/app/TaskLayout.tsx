@@ -28,8 +28,7 @@ import { useAuthStore } from '@features/auth/store';
 import { DetailPageSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
-import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
-import { useDisclosure } from '@shared/hooks/useDisclosure';
+import { AppraisalRightPanel } from '@features/appraisal/components/AppraisalRightMenu';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
 import { userNavigation } from '@shared/config/userNavigation';
 
@@ -97,9 +96,6 @@ function AddressLoader() {
 function TaskLayout() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
-  const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
-    defaultIsOpen: true,
-  });
   useSidebarCssVar();
 
   const currentUsername = useAuthStore(s => s.user?.username);
@@ -366,25 +362,7 @@ function TaskLayout() {
               </div>
             </main>
 
-            {isRightMenuOpen ? (
-              <aside
-                className="hidden lg:flex w-72 shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden"
-                style={{ height: '100%' }}
-              >
-                <AppraisalRightMenu onClose={toggleRightMenu} />
-              </aside>
-            ) : (
-              <div className="hidden lg:flex shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
-                <button
-                  type="button"
-                  onClick={toggleRightMenu}
-                  className="w-10 h-full flex items-start justify-center pt-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors"
-                  title="Show application details"
-                >
-                  <Icon style="solid" name="chevron-left" className="size-4" />
-                </button>
-              </div>
-            )}
+            <AppraisalRightPanel />
           </div>
         </div>
 

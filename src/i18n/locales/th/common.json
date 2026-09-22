@@ -102,6 +102,9 @@
   "hint": {
     "scrollWithArrowKeys": "เลื่อนตารางด้วยปุ่มลูกศร"
   },
+  "nav": {
+    "visibleRange": "เห็น {{from}}–{{to}} จาก {{total}}"
+  },
   "language": {
     "en": "EN",
     "th": "TH",

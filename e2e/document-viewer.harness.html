@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head><meta charset="utf-8" /><title>loading tab harness</title></head>
+  <body>
+    <button id="open">open</button>
+    <button id="err">error</button>
+    <script type="module">
+      import { openLoadingTab } from '/src/shared/components/dinoLoader/loadingTab.ts';
+
+      const strings = {
+        title: 'Opening file',
+        message: 'Opening the file…',
+        hint: 'Press Space to jump',
+        gameOver: 'Game over',
+        errorTitle: 'Could not open the file',
+        downloaded: 'The file has been downloaded. You can close this tab.',
+        close: 'Close this tab',
+        cancel: 'Cancel',
+      };
+
+      window.__cancelled = 0;
+      window.__tab = null;
+      document.getElementById('open').onclick = () => {
+        window.__tab = openLoadingTab(strings, () => { window.__cancelled += 1; });
+      };
+      document.getElementById('err').onclick = () => window.__tab?.showError('Boom');
+      window.__setProgress = (l, t) => window.__tab?.setProgress(l, t);
+      window.__isOpen = () => window.__tab?.isOpen();
+    </script>
+  </body>
+</html>
+<script type="module">
+  // extra hooks for the slower behaviours
+  window.__released = 0;
+  window.__navigateToBlob = (mime, bytes) => {
+    const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+    const url = URL.createObjectURL(blob);
+    window.__tab.onceClosed(() => { window.__released += 1; URL.revokeObjectURL(url); });
+    window.__tab.navigate(url);
+    return url;
+  };
+</script>

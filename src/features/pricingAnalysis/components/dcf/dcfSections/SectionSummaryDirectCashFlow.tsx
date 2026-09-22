@@ -1,6 +1,7 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
-import { roundToThousand } from '../../../domain/calculation';
+import { STK2_CLASS, STK2_CLASS_FLEX, STK_CLASS, YEAR_CELL_CLASS } from '../dcfTableCellStyles';
 
 interface SectionSummaryDirectCashFlowProps {
   name: string;
@@ -27,17 +28,20 @@ interface SummarySectionTableProps {
   isReadOnly?: boolean;
 }
 function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySectionTableProps) {
-  const rowHeaderStyle = 'px-1.5 h-12 text-sm text-gray-700 border-b border-gray-300';
-  const rowBodyStyle = 'px-1.5 h-12 text-sm text-right text-gray-700 border-b border-gray-300';
-  const rowStyle = 'bg-white hover:bg-secondary/10';
+  const { t } = useTranslation('pricingAnalysis');
+  const rowHover = 'hover:bg-secondary/10';
+  const rowStk = clsx(STK_CLASS, 'bg-white', rowHover);
+  const rowStk2 = clsx(STK2_CLASS, 'bg-white', rowHover);
+  const rowYear = clsx(YEAR_CELL_CLASS, 'bg-white text-gray-700', rowHover);
 
   return (
     <>
       {/* last section */}
-      <tr className={clsx(rowStyle)}>
-        <td className={clsx(rowHeaderStyle)}>Contract Rental Fee</td>
+      <tr>
+        <td className={rowStk} title={t('dcf.summaryDCF.contractRentalFee')}>{t('dcf.summaryDCF.contractRentalFee')}</td>
+        <td className={rowStk2} />
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td key={idx} className={clsx(rowBodyStyle)}>
+          <td key={idx} className={rowYear}>
             <RHFInputCell
               fieldName={`${name}.contractRentalFee.${idx}`}
               inputType="display"
@@ -46,11 +50,11 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
           </td>
         ))}
       </tr>
-      <tr className={clsx(rowStyle)}>
-        <td className={clsx(rowHeaderStyle)}>
-          <div className="flex flex-row justify-between items-center">
-            <div>Net Operating Income (EBITDA) : NOI/ Gross Revenue</div>
-            <div className="w-16 text-sm flex flex-row gap-1 justitfy-end items-center">
+      <tr>
+        <td className={rowStk} title={t('dcf.summaryDCF.noiGrossRevenue')}>{t('dcf.summaryDCF.noiGrossRevenue')}</td>
+        <td className={clsx(STK2_CLASS_FLEX, 'bg-white', rowHover)}>
+          <div className="flex flex-row gap-1 items-center">
+            <div className="w-14">
               <RHFInputCell
                 fieldName="capitalizeRate"
                 inputType="number"
@@ -62,48 +66,36 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
                   allowNegative: false,
                 }}
               />
-              <span>%</span>
             </div>
+            <span className="text-[11px] text-gray-500">%</span>
           </div>
         </td>
-        <td className={clsx(rowBodyStyle)}>
-          <div className="text-right text-sm">
-            <RHFInputCell
-              fieldName={`${name}.totalNet`}
-              inputType="display"
-              accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
-            />
-          </div>
+        <td className={rowYear}>
+          <RHFInputCell
+            fieldName={`${name}.totalNet`}
+            inputType="display"
+            accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : 0}</span>}
+          />
         </td>
+        {Array.from({ length: Math.max(totalNumberOfYears - 1, 0) }, (_, idx) => (
+          <td key={idx} className={rowYear} />
+        ))}
       </tr>
-      <tr className={clsx(rowStyle)}>
-        <td className={clsx(rowHeaderStyle)}>Final Value</td>
-        <td className={clsx(rowBodyStyle)}>
+      <tr>
+        <td className={clsx(STK_CLASS, 'bg-gray-100 font-bold border-t border-gray-400')} title={t('dcf.summaryDCF.finalValue')}>
+          {t('dcf.summaryDCF.finalValue')}
+        </td>
+        <td className={clsx(STK2_CLASS, 'bg-gray-100 font-bold border-t border-gray-400')}>
           <RHFInputCell
             fieldName={`${name}.presentValue`}
             inputType="display"
             accessor={({ value }) => <span>{value ? Number(value).toLocaleString() : ''}</span>}
           />
         </td>
-      </tr>
-      <tr className={clsx(rowStyle)}>
-        <td className={clsx(rowHeaderStyle)}>Final Value (Rounded)</td>
-        {Array.from({ length: totalNumberOfYears }, (_, idx) => {
-          if (idx === 0) {
-            return (
-              <td key={idx} className={clsx(rowBodyStyle)}>
-                <RHFInputCell
-                  fieldName={`${name}.presentValue`}
-                  inputType="display"
-                  accessor={({ value }) => (
-                    <span>{value ? roundToThousand(Number(value)).toLocaleString() : 0}</span>
-                  )}
-                />
-              </td>
-            );
-          }
-          return <td key={idx} className={clsx(rowBodyStyle)}></td>;
-        })}
+        <td
+          colSpan={totalNumberOfYears}
+          className="px-[8px] py-0 h-[26px] text-[12px] leading-[25px] bg-gray-100 border-t border-gray-400"
+        />
       </tr>
     </>
   );

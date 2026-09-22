@@ -21,7 +21,13 @@ export function MethodFooterActions({
   return (
     <ActionBar>
       <ActionBar.Left>
-        <Button variant="ghost" type="button" onClick={onCancel} disabled={isSubmitting}>
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+          className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+        >
           {t('footer.cancel')}
         </Button>
         {showReset && onReset && (
@@ -32,18 +38,24 @@ export function MethodFooterActions({
               type="button"
               onClick={onReset}
               disabled={isSubmitting}
-              className="text-red-500 hover:text-red-600"
+              title={t('footer.reset')}
+              aria-label={t('footer.reset')}
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
             >
-              <Icon name="arrow-rotate-left" style="solid" className="size-4 mr-2" />
-              {t('footer.reset')}
+              <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
             </Button>
           </>
         )}
         <ActionBar.Divider />
       </ActionBar.Left>
       <ActionBar.Right>
-        <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
-          {!isSubmitting && <Icon style="solid" name="check" className="size-4 mr-2" />}
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          disabled={isSubmitting}
+          className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+        >
+          {!isSubmitting && <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />}
           {t('footer.save')}
         </Button>
       </ActionBar.Right>

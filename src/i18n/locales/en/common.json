@@ -102,6 +102,9 @@
   "hint": {
     "scrollWithArrowKeys": "Scroll table with arrow keys"
   },
+  "nav": {
+    "visibleRange": "Showing {{from}}–{{to}} of {{total}}"
+  },
   "language": {
     "en": "EN",
     "th": "TH",

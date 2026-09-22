@@ -15,7 +15,7 @@ export function mapWQSFormToSubmitSchema({
 
   const fv = WQSForm.WQSFinalValue;
 
-  // The Adjust Final Value UI now binds the user-rounded total to `appraisalPrice`
+  // The Adjust Final Value UI now binds the user-rounded total to `indicatedValue`
   // in all cases (unit 01/02, unit 03 machinery, with/without building cost).
   // `landValue` is only meaningful when hasBuildingValue = true (separate Land Price input).
   const hasBuildingCost = !!fv?.hasBuildingValue;
@@ -25,10 +25,11 @@ export function mapWQSFormToSubmitSchema({
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
     appraisalValue: userRoundedAppraisalPrice,
-    finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
+    // Wire key renamed; the right-hand side still reads the form model, which keeps its own name.
+    finalValueOverride: (fv?.finalValueAdjusted as number | undefined) ?? null,
     hasBuildingValue: fv?.hasBuildingValue ?? null,
     buildingValue: fv?.buildingValue ?? null,
-    appraisalPrice: userRoundedAppraisalPrice,
+    indicatedValue: userRoundedAppraisalPrice,
     includeLandArea: fv?.includeLandArea ?? null,
     landArea: fv?.landArea ?? null,
     landValue: landValueToSend,

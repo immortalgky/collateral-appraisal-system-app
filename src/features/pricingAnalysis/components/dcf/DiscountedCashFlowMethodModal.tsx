@@ -2,6 +2,7 @@ import Button from '@/shared/components/Button';
 import DataErrorState from '@/shared/components/DataErrorState';
 import Modal from '@/shared/components/Modal';
 import { useCallback, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { methodParams } from '../../data/dcfParameters';
 import { useGetPricingParameters } from '../../api';
@@ -13,6 +14,7 @@ import type { DCFMethod, DCFSection } from '../../types/dcf';
 import { createDefaultMethod } from '../../domain/dcf/createEmptyMethodDetail';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { getDCFFilteredAssumptions } from '../../domain/getDCFFilteredAssumptions';
+import { dcfAssumptionLabel, dcfCategoryLabel } from '../../domain/dcf/dcfNameLabel';
 
 export interface AssumptionEditDraft {
   targetSectionClientId: string | null;
@@ -53,6 +55,7 @@ export function DiscountedCashFlowMethodModal({
   marketSurveys,
   ensureIncomeAnalysisId,
 }: DiscountedCashFlowMethodModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
     resolver: zodResolver(AssumptionEditDraftSchema),
@@ -187,12 +190,16 @@ export function DiscountedCashFlowMethodModal({
     <Modal
       isOpen={!!editing}
       onClose={onCancelEditMode}
-      title={`Edit Assumption: ${initialData.displayName}`}
+      // Translated by code, like the table and the summary tab (the DB name is English).
+      // `?? ''` also stops a brand-new row's title reading "…: null".
+      title={t('dcf.methodModal.editAssumptionTitle', {
+        name: dcfAssumptionLabel(t, initialData.assumptionType, initialData.displayName ?? ''),
+      })}
       size={size ?? 'xl'}
     >
       {isPricingParamsError ? (
         <DataErrorState
-          title="Failed to load pricing parameters"
+          title={t('dcf.methodModal.loadParamsFailed')}
           onRetry={refetchPricingParams}
           variant="inline"
         />
@@ -207,18 +214,22 @@ export function DiscountedCashFlowMethodModal({
           >
             <div className="flex flex-col gap-2 mb-4">
               <div className="flex flex-row gap-1.5">
-                <span className="w-56">Category</span>
+                <span className="w-56">{t('dcf.methodModal.categoryLabel')}</span>
                 <div className="w-80">
                   <span className="text-sm">
-                    {currentSection?.categories?.find(
-                      c => c.clientId === getValues('targetCategoryClientId'),
-                    )?.categoryName ?? ''}
+                    {(() => {
+                      const name =
+                        currentSection?.categories?.find(
+                          c => c.clientId === getValues('targetCategoryClientId'),
+                        )?.categoryName ?? '';
+                      return dcfCategoryLabel(t, name, name);
+                    })()}
                   </span>
                 </div>
               </div>
 
               <div className="flex flex-row items-center gap-1.5">
-                <span className="w-56">Assumption</span>
+                <span className="w-56">{t('dcf.methodModal.assumptionLabel')}</span>
                 <div className="w-80">
                   <RHFInputCell
                     fieldName="assumptionType"
@@ -229,7 +240,7 @@ export function DiscountedCashFlowMethodModal({
                 </div>
                 {assumptionType === 'M99' ? (
                   <div className="flex items-center gap-1.5">
-                    <span>Description</span>
+                    <span>{t('dcf.methodModal.descriptionLabel')}</span>
                     <RHFInputCell
                       fieldName="assumptionName"
                       inputType="text"
@@ -244,7 +255,7 @@ export function DiscountedCashFlowMethodModal({
               </div>
 
               <div className="flex flex-row gap-1.5">
-                <span className="w-56">Method</span>
+                <span className="w-56">{t('dcf.methodModal.methodLabel')}</span>
                 <div className="w-80">
                   <RHFInputCell
                     fieldName="method.methodType"
@@ -278,11 +289,18 @@ export function DiscountedCashFlowMethodModal({
                 onClick={() => {
                   onCancelEditMode();
                 }}
+                className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
               >
-                Cancel
+                {t('footer.cancel')}
               </Button>
-              <Button type="submit" variant="primary" size="sm" disabled={isReadOnly}>
-                Save
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={isReadOnly}
+                className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              >
+                {t('footer.save')}
               </Button>
             </div>
           </form>

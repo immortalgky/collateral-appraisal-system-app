@@ -1,16 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useGroupBuildingCostMethod } from './BuildingCostLink';
 import { useController, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { MethodFooterActions } from './MethodFooterActions';
+import { MethodTopBarPortal } from './MethodTopBarPortal';
+import { MethodTabs } from './MethodTabs';
 import {
   profitRentFormDefaults,
   ProfitRentFormSchema,
   type ProfitRentFormType,
 } from '../schemas/profitRentForm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Icon } from '@/shared/components';
-import { NumberInput, Toggle } from '@/shared/components/inputs';
+import { Button, Checkbox, Icon } from '@/shared/components';
+import { NumberInput } from '@/shared/components/inputs';
 import { initializeProfitRentForm } from '../adapters/initializeProfitRentForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -25,20 +27,34 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetAppointment } from '@/features/appraisal/api/appointment';
 import toast from 'react-hot-toast';
 import { LeaseholdRentalInfoModal } from './LeaseholdRentalInfoModal';
-import { BuildingCostTable } from './BuildingCostTable';
 import { type KpiCard, KpiSummaryStrip } from './KpiSummaryStrip';
 import { ProfitRentChart } from './ProfitRentChart';
-import { SensitivityStrip } from './SensitivityStrip';
-import { RemarkSection } from './RemarkSection';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
-import { LeaseTimelineBar } from './LeaseTimelineBar';
+import { KvRow } from './KvRow';
+import {
+  SummaryGrid,
+  SummaryCard,
+  DisplayValueRow,
+  IndicatedValueRow,
+  SummaryNotesCard,
+} from './SummaryValueCard';
+import {
+  MethodWorkArea,
+  MethodToolbarToggle,
+  MethodRailSectionTitle,
+  MethodRailField,
+  MethodRailLeaseHeader,
+  MethodRailPeriodHeader,
+  MethodRailAddRow,
+  MethodRailSeg,
+} from './MethodWorkArea';
 import {
   computeProfitRentSchedule,
   generateProfitRentTable,
   type ProfitRentTableResult,
 } from '../domain/calculateProfitRent';
 import { fmt, formatDateOnly, toNum } from '../domain/formatters';
-import { roundToThousand } from '../domain/calculation';
+import { buildingFinalCostValue, roundToThousand } from '../domain/calculation';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { MarketReferenceButton } from './MarketReferenceButton';
 import { PricingAnalysisSubjectType } from '../api/references';
@@ -81,6 +97,9 @@ export function ProfitRentPanel({
 }: ProfitRentPanelProps) {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
+  // Stable id so the top-bar Save button (portaled outside this <form> via
+  // MethodTopBarPortal) still submits it natively — see LeaseholdPanel.tsx for why.
+  const formId = 'profit-rent-panel-form';
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -89,6 +108,10 @@ export function ProfitRentPanel({
   const [isRentalInfoModalOpen, setIsRentalInfoModalOpen] = useState(false);
   const [tableResult, setTableResult] = useState<ProfitRentTableResult | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+  // mock:1284 `sideL: true, chart: false` — the input rail defaults open, the chart
+  // defaults closed; both toggled from the tab toolbar (mock:3504-3505).
+  const [showRail, setShowRail] = useState(true);
+  const [showChart, setShowChart] = useState(false);
   // Local state: caches the analysis id obtained by an auto-save on button open,
   // so the WQS button is available even before the user has saved the form.
   const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
@@ -118,7 +141,15 @@ export function ProfitRentPanel({
   });
 
   const landAreaSqWa = useMemo(() => {
-    return Number(propertyDetail?.totalLandAreaInSqWa) || 0;
+    // Net area — title area less the deductions the appraiser listed (encroachment, land used by
+    // others, public waterway). Pricing values the appraisable area, not the registered one; the
+    // deed's own figure stays on the property form and in the book's per-title rows.
+    // `!= null` rather than a truthiness check: a fully deducted plot is a real 0, not a blank.
+    return (
+      (propertyDetail?.netLandAreaInSqWa != null
+        ? Number(propertyDetail.netLandAreaInSqWa)
+        : Number(propertyDetail?.totalLandAreaInSqWa)) || 0
+    );
   }, [propertyDetail]);
 
   // Fetch rental schedule and lease agreement
@@ -156,7 +187,11 @@ export function ProfitRentPanel({
   const { field: marketFeeField } = useController({ control, name: 'marketRentalFeePerSqWa' });
   const { field: growthPercentField } = useController({ control, name: 'growthRatePercent' });
   const { field: intervalField } = useController({ control, name: 'growthIntervalYears' });
-  const { field: estimateField } = useController({ control, name: 'estimatePriceRounded' });
+  // Appraisal Price — the appraiser's override. `estimatePriceRounded` and
+  // `appraisalPriceWithBuildingRounded` are system-computed only; they're freely
+  // overwritten by handleGenerate/the building-cost effect below, so editing other
+  // fields can no longer clobber this one.
+  const { field: indicatedValueField } = useController({ control, name: 'indicatedValue' });
 
   // Initialize form on data load
   const isInitialized = useRef(false);
@@ -187,7 +222,8 @@ export function ProfitRentPanel({
           totalContractRentalFee: savedData.analysis.totalContractRentalFee,
           totalReturnsFromLease: savedData.analysis.totalReturnsFromLease,
           totalPresentValue: savedData.analysis.totalPresentValue,
-          finalValueRounded: savedData.analysis.finalValueRounded,
+          // The API keeps one figure now; the local calc type still names it "rounded".
+          finalValueRounded: savedData.analysis.finalValue,
         };
         tableResultRef.current = result;
         setTableResult(result);
@@ -203,54 +239,32 @@ export function ProfitRentPanel({
   const getValuesRef = useRef(getValues);
   getValuesRef.current = getValues;
 
-  const handleGenerate = useCallback(
-    (preserveEstimate = false) => {
-      const data = getValuesRef.current();
-      const appraisalDateStr = appointment?.appointmentDateTime;
-      const contractRows = rentalScheduleData?.rows ?? [];
+  const handleGenerate = useCallback(() => {
+    const data = getValuesRef.current();
+    const appraisalDateStr = appointment?.appointmentDateTime;
+    const contractRows = rentalScheduleData?.rows ?? [];
 
-      const appraisalSchedule = appraisalDateStr
-        ? computeProfitRentSchedule(contractRows, appraisalDateStr)
-        : [];
+    const appraisalSchedule = appraisalDateStr
+      ? computeProfitRentSchedule(contractRows, appraisalDateStr)
+      : [];
 
-      if (appraisalSchedule.length === 0) return;
+    if (appraisalSchedule.length === 0) return;
 
-      // Save current values before regeneration
-      const savedEstimate = preserveEstimate ? data.estimatePriceRounded : undefined;
-      const savedBuildingRounded = preserveEstimate
-        ? data.appraisalPriceWithBuildingRounded
-        : undefined;
+    const result = generateProfitRentTable({
+      appraisalSchedule,
+      landAreaSqWa,
+      marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
+      growthRateType: data.growthRateType ?? 'Frequency',
+      growthRatePercent: data.growthRatePercent ?? 0,
+      growthIntervalYears: data.growthIntervalYears ?? 1,
+      growthPeriods: (data.growthPeriods ?? []) as any,
+      discountRate: data.discountRate ?? 0,
+    });
 
-      const result = generateProfitRentTable({
-        appraisalSchedule,
-        landAreaSqWa,
-        marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
-        growthRateType: data.growthRateType ?? 'Frequency',
-        growthRatePercent: data.growthRatePercent ?? 0,
-        growthIntervalYears: data.growthIntervalYears ?? 1,
-        growthPeriods: (data.growthPeriods ?? []) as any,
-        discountRate: data.discountRate ?? 0,
-      });
-
-      setTableResult(result);
-      tableResultRef.current = result;
-
-      if (preserveEstimate) {
-        // Restore saved values after regeneration
-        if (savedEstimate != null && savedEstimate !== 0) {
-          setValue('estimatePriceRounded', savedEstimate, { shouldDirty: false });
-        }
-        if (savedBuildingRounded != null && savedBuildingRounded !== 0) {
-          setValue('appraisalPriceWithBuildingRounded', savedBuildingRounded, {
-            shouldDirty: false,
-          });
-        }
-      } else {
-        setValue('estimatePriceRounded', result.finalValueRounded);
-      }
-    },
-    [appointment, rentalScheduleData, landAreaSqWa, setValue],
-  );
+    setTableResult(result);
+    tableResultRef.current = result;
+    setValue('estimatePriceRounded', result.finalValueRounded);
+  }, [appointment, rentalScheduleData, landAreaSqWa, setValue]);
 
   // Recalculate table once rental schedule is available (fixes dates, numberOfMonths, etc.)
   const hasRecalculated = useRef(false);
@@ -260,7 +274,7 @@ export function ProfitRentPanel({
       return;
     if (tableResult.rows[0]?.contractStart) return;
     hasRecalculated.current = true;
-    handleGenerate(true);
+    handleGenerate();
   }, [tableResult, rentalScheduleData, appointment, handleGenerate]);
 
   // Auto-generate on first visit when no saved data but all dependencies are ready
@@ -304,32 +318,6 @@ export function ProfitRentPanel({
     if (tableResult) handleGenerate();
   }, [isDirty, watchedInputs, watchedGrowthPeriods, tableResult, handleGenerate]);
 
-  // Sensitivity: recalculate final value with a different discount rate (C3 fix: no getValues in deps)
-  const calcSensitivity = useCallback(
-    (rate: number): number | null => {
-      const data = getValuesRef.current();
-      const appraisalDateStr = appointment?.appointmentDateTime;
-      const contractRows = rentalScheduleData?.rows ?? [];
-      const appraisalSchedule = appraisalDateStr
-        ? computeProfitRentSchedule(contractRows, appraisalDateStr)
-        : [];
-      if (appraisalSchedule.length === 0) return null;
-
-      const result = generateProfitRentTable({
-        appraisalSchedule,
-        landAreaSqWa,
-        marketRentalFeePerSqWa: data.marketRentalFeePerSqWa ?? 0,
-        growthRateType: data.growthRateType ?? 'Frequency',
-        growthRatePercent: data.growthRatePercent ?? 0,
-        growthIntervalYears: data.growthIntervalYears ?? 1,
-        growthPeriods: (data.growthPeriods ?? []) as any,
-        discountRate: rate,
-      });
-      return result.finalValueRounded;
-    },
-    [appointment, rentalScheduleData, landAreaSqWa],
-  );
-
   // `silent` mode persists (to obtain an analysis id) without the user-facing
   // "saved" toast or onCalculationSave side-effect — used by ensureAnalysisId
   // when opening the in-field market-reference control.
@@ -350,6 +338,7 @@ export function ProfitRentPanel({
         growthRatePercent: p.growthRatePercent,
       })),
       estimatePriceRounded: data.estimatePriceRounded,
+      indicatedValue: data.indicatedValue,
       remark: data.remark,
       appraisalPriceWithBuildingRounded: data.includeBuildingCost
         ? data.appraisalPriceWithBuildingRounded
@@ -374,11 +363,13 @@ export function ProfitRentPanel({
         });
       }
 
-      // Propagate building-inclusive price when building cost is included
-      const appraisalValue =
+      // The appraiser's override always wins; otherwise propagate the building-inclusive
+      // price when building cost is included, else the plain PV estimate.
+      const computedValue =
         data.includeBuildingCost && result.appraisalPriceWithBuildingRounded
           ? result.appraisalPriceWithBuildingRounded
           : (data.estimatePriceRounded ?? result.finalValueRounded);
+      const appraisalValue = data.indicatedValue ?? computedValue;
 
       if (!silent && activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
@@ -457,59 +448,32 @@ export function ProfitRentPanel({
     return items;
   }, [propertyDetail, propertiesMap, firstPropertyId]);
 
-  // Compute totalBuildingCost preview from depreciation details (same as WQS pattern)
+  // The group's building value — the rule BuildingCostLink documents for WQS/SAG/DC and
+  // the mock's `o.bld = bcTotOv ?? Σ per-building`: the Building Cost method's SAVED value
+  // wins (the appraiser may have keyed it, e.g. 23,000,000 over a 22,785,000 roll-up), else
+  // the per-building roll-up Σ(FinalCostValueOverride ?? roundToThousand(after)). This used to
+  // be the raw after-depreciation sum, which matched neither. SaveProfitRentAnalysis applies
+  // the same rule, so screen and stored value agree.
+  const { methodValue: bcMethodValue } = useGroupBuildingCostMethod();
+  const buildingRollUp = allGroupProperties.reduce((sum, b) => sum + buildingFinalCostValue(b), 0);
+  const buildingValue = bcMethodValue ?? buildingRollUp;
   useEffect(() => {
-    if (!isBuildingCostIncluded || !allGroupProperties.length) {
-      return;
-    }
+    if (!isBuildingCostIncluded || !allGroupProperties.length) return;
+    setValue('totalBuildingCost', buildingValue, { shouldDirty: false });
+  }, [allGroupProperties.length, isBuildingCostIncluded, buildingValue, setValue]);
 
-    let grandTotal = 0;
-    for (const building of allGroupProperties) {
-      const rawRows: unknown[] = (building.depreciationDetails as unknown[]) ?? [];
-      for (const rawRow of rawRows) {
-        const row = rawRow as Record<string, unknown>;
-        const priceBeforeDepreciation =
-          toNum(row['area']) * toNum(row['pricePerSqMBeforeDepreciation']);
-        const periods: unknown[] = (row['depreciationPeriods'] as unknown[]) ?? [];
-        const priceDepreciation = periods.reduce(
-          (acc: number, b: unknown) =>
-            acc + toNum((b as Record<string, unknown>).priceDepreciation),
-          0,
-        );
-        grandTotal += priceBeforeDepreciation - priceDepreciation;
-      }
-    }
-
-    setValue('totalBuildingCost', grandTotal, { shouldDirty: false });
-  }, [allGroupProperties, isBuildingCostIncluded, setValue]);
-
-  // Compute derived building cost fields for preview
+  // Compute derived building cost fields for preview. Both fields here are
+  // system-computed only (the appraiser's override lives in `indicatedValue`), so
+  // it's safe to keep them in sync on every change without a dirty-tracking guard.
   const totalBuildingCost = watch('totalBuildingCost') ?? 0;
-  const prevBuildingPriceRef = useRef<number | null>(null);
   useEffect(() => {
     if (!isBuildingCostIncluded || !isInitialized.current) return;
     const est = Number(estimatePrice) || 0;
     const buildingCost = Number(totalBuildingCost) || 0;
     const sum = est + buildingCost;
     setValue('appraisalPriceWithBuilding', sum, { shouldDirty: false });
-
-    // Auto-update rounded only when the user actively changes inputs (isDirty),
-    // not during initial hydration from saved data
-    if (!isDirty) {
-      // On init: only set if no saved value
-      const currentRounded = getValues('appraisalPriceWithBuildingRounded');
-      if (currentRounded == null || currentRounded === 0) {
-        setValue('appraisalPriceWithBuildingRounded', roundToThousand(sum), { shouldDirty: false });
-      }
-      prevBuildingPriceRef.current = sum;
-      return;
-    }
-
-    if (prevBuildingPriceRef.current !== sum) {
-      prevBuildingPriceRef.current = sum;
-      setValue('appraisalPriceWithBuildingRounded', roundToThousand(sum), { shouldDirty: false });
-    }
-  }, [isBuildingCostIncluded, estimatePrice, totalBuildingCost, isDirty, getValues, setValue]);
+    setValue('appraisalPriceWithBuildingRounded', roundToThousand(sum), { shouldDirty: false });
+  }, [isBuildingCostIncluded, estimatePrice, totalBuildingCost, setValue]);
 
   if (isLoading) {
     return <PanelSkeleton />;
@@ -523,516 +487,467 @@ export function ProfitRentPanel({
 
   return (
     <FormProvider methods={methods as any} schema={ProfitRentFormSchema as any}>
+      <MethodTopBarPortal>
+        <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
+          <span className="text-sm font-semibold text-primary tabular-nums">
+            {fmt(
+              indicatedValueField.value ??
+                (isBuildingCostIncluded
+                  ? watch('appraisalPriceWithBuildingRounded')
+                  : estimatePrice) ??
+                tableResult?.finalValueRounded ??
+                0,
+            )}
+          </span>
+        </div>
+        {!readOnly && (
+          <>
+            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onCancelCalculationMethod}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {t('footer.cancel')}
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={handleOnReset}
+              disabled={saveMutation.isPending}
+              title={t('footer.reset')}
+              aria-label={t('footer.reset')}
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+            >
+              <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={saveMutation.isPending}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {!saveMutation.isPending && (
+                <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+              )}
+              {t('footer.save')}
+            </Button>
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
-        className="flex flex-col gap-4"
+        className="flex flex-col h-full min-h-0 gap-4"
       >
-        {/* Header — matches Leasehold */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
-            <Icon name="file-signature" className="size-4" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900">{t('profitRent.headerTitle')}</h2>
-        </div>
-
-        {/* Lease Info Cards — matches Leasehold layout */}
-        <div className="rounded-lg border border-gray-200 p-5 space-y-4">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
-              <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  {t('profitRent.appraisalDate')}
-                </div>
-                <div className="text-sm font-medium text-gray-900">
-                  {appointment?.appointmentDateTime
-                    ? formatDateOnly(appointment.appointmentDateTime)
-                    : '-'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
-              <Icon name="calendar" className="size-4 text-green-500 shrink-0" />
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">{t('profitRent.leaseStart')}</div>
-                <div className="text-sm font-medium text-gray-900">
-                  {leaseAgreement?.leaseStartDate
-                    ? formatDateOnly(leaseAgreement.leaseStartDate)
-                    : '-'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
-              <Icon name="calendar" className="size-4 text-red-400 shrink-0" />
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">{t('profitRent.leaseEnd')}</div>
-                <div className="text-sm font-medium text-gray-900">
-                  {leaseAgreement?.leaseEndDate ? formatDateOnly(leaseAgreement.leaseEndDate) : '-'}
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsRentalInfoModalOpen(true)}
-              className="flex items-center gap-3 rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5 hover:bg-primary/10 transition-colors"
-            >
-              <Icon name="receipt" className="size-4 text-primary shrink-0" />
-              <div className="text-left">
-                <div className="text-[11px] text-primary/60 uppercase tracking-wide">{t('profitRent.viewRentalInfoShort')}</div>
-                <div className="text-sm font-medium text-primary">{t('profitRent.viewRentalInfo')}</div>
-              </div>
-            </button>
-          </div>
-          <LeaseTimelineBar
-            leaseStartDate={leaseAgreement?.leaseStartDate}
-            leaseEndDate={leaseAgreement?.leaseEndDate}
-            appraisalDate={appointment?.appointmentDateTime}
-          />
-        </div>
-
-        {/* Market Rental Fee & Land Area & Rates */}
-        <div className="rounded-lg border border-gray-200 p-4 space-y-3">
-          {/* Top row: Land Area + Market Fee + Monthly Total + Discount Rate */}
-          <div className="grid grid-cols-4 gap-3">
-            {/* Land Area — read-only */}
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
-                {t('profitRent.landArea')}
-              </div>
-              <div className="flex items-baseline gap-1">
-                <Icon
-                  name="ruler-combined"
-                  className="size-3 text-gray-400 shrink-0 relative top-0.5"
-                />
-                <span className="text-sm font-semibold text-gray-900">{fmt(landAreaSqWa)}</span>
-                <span className="text-[10px] text-gray-500">{t('profitRent.unitSqWa')}</span>
-              </div>
-            </div>
-
-            {/* Market Rental Fee — input */}
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <div className="mb-0.5">
-                <label className="text-[10px] text-gray-400 uppercase tracking-wide block">
-                  {t('profitRent.marketRentalFee')} <span className="text-red-400">*</span>
-                </label>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <div className="w-44">
-                  <NumberInput
-                    name={marketFeeField.name}
-                    ref={marketFeeField.ref}
-                    value={marketFeeField.value}
-                    onChange={e => marketFeeField.onChange(e.target.value)}
-                    onBlur={marketFeeField.onBlur}
-                    decimalPlaces={2}
-                    maxIntegerDigits={15}
-                    required={true}
-                    disabled={readOnly}
-                    className={!readOnly ? '!pr-14' : undefined}
-                    rightIcon={(() => {
-                      if (readOnly) return undefined;
-                      const effectiveId = savedData?.analysis?.id ?? ensuredId;
-                      return (
-                        <MarketReferenceButton
-                          compact
-                          label="WQS"
-                          subjectType={PricingAnalysisSubjectType.ProfitRentRef}
-                          anchorId={effectiveId ?? ''}
-                          hostMethodId={methodId}
-                          marketSurveys={marketSurveys ?? []}
-                          templateList={templateList}
-                          onApplyValue={v => marketFeeField.onChange(v)}
-                          onBeforeOpen={
-                            effectiveId
-                              ? undefined
-                              : async () => {
-                                  const id = await ensureAnalysisId();
-                                  if (id) setEnsuredId(id);
-                                  if (!id) throw new Error('no-id');
-                                }
-                          }
-                          className="pointer-events-auto shrink-0"
+        <div className="flex-1 min-h-0">
+          <MethodTabs
+            tabs={[
+              {
+                id: 'table',
+                label: t('profitRent.tabs.table'),
+                // mock:2444/2709 — the KPI strip belongs in the tab strip's right-hand
+                // toolbar, not above the table. Same shape as CostBuildingPanel.tsx:331-377.
+                tools: (
+                  <KpiSummaryStrip
+                    variant="flat"
+                    cards={
+                      [
+                        {
+                          label: t('profitRent.kpi.totalMarketRental'),
+                          value: tableResult?.totalMarketRentalFee ?? null,
+                          secondary: true,
+                        },
+                        {
+                          label: t('profitRent.kpi.totalContractRental'),
+                          value: tableResult?.totalContractRentalFee ?? null,
+                          secondary: true,
+                        },
+                        {
+                          label: t('profitRent.kpi.totalReturns'),
+                          value: tableResult?.totalReturnsFromLease ?? null,
+                          secondary: true,
+                        },
+                        {
+                          // The method's own result — never secondary, per
+                          // CostBuildingPanel.tsx's split (its own doc comment
+                          // 313-333 and KpiSummaryStrip.tsx:27).
+                          label: t('profitRent.kpi.presentValue'),
+                          value: tableResult?.totalPresentValue ?? null,
+                          primary: true,
+                        },
+                      ] satisfies KpiCard[]
+                    }
+                  />
+                ),
+                // mock:3504-3505 — the rail/chart toggles sit after the column-nav chips
+                // (portaled in via MethodTabsNavSlotCtx from the table's
+                // ScrollableTableContainer below), at the end of the toolbar.
+                toolsAfterNav: (
+                  <>
+                    <MethodToolbarToggle
+                      label={t('methodTabs.toggleContractInfo')}
+                      pressed={showRail}
+                      onClick={() => setShowRail(v => !v)}
+                    />
+                    <MethodToolbarToggle
+                      label={t('methodTabs.toggleChart')}
+                      pressed={showChart}
+                      onClick={() => setShowChart(v => !v)}
+                    />
+                  </>
+                ),
+                content: (
+                  <MethodWorkArea
+                    showRail={showRail}
+                    rail={
+                      <>
+                        <MethodRailLeaseHeader
+                          appraisalDate={appointment?.appointmentDateTime}
+                          leaseStartDate={leaseAgreement?.leaseStartDate}
+                          leaseEndDate={leaseAgreement?.leaseEndDate}
+                          onViewRentalInfo={() => setIsRentalInfoModalOpen(true)}
                         />
-                      );
-                    })()}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-500">{t('profitRent.unitBahtPerSqWaPerMonth')}</span>
-              </div>
-            </div>
-
-            {/* Monthly Total — computed */}
-            <div className="rounded-md bg-primary/5 border border-primary/10 px-3 py-2">
-              <div className="text-[10px] text-primary/60 uppercase tracking-wide mb-0.5">
-                {t('profitRent.monthlyTotal')}
-              </div>
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm font-semibold text-primary">
-                  {fmt((marketFeeField.value ?? 0) * landAreaSqWa)}
-                </span>
-                <span className="text-[10px] text-primary/60">{t('profitRent.unitBahtPerMonth')}</span>
-              </div>
-            </div>
-
-            {/* Discounted Rate — input */}
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                {t('profitRent.discountedRate')}
-              </label>
-              <div className="w-24">
-                <NumberInput
-                  name="discountRate"
-                  value={watch('discountRate')}
-                  onChange={e =>
-                    setValue('discountRate', e.target.value ?? 0, { shouldDirty: true })
-                  }
-                  decimalPlaces={2}
-                  maxIntegerDigits={3}
-                  rightIcon={<span className="text-xs text-gray-400">%</span>}
-                  disabled={readOnly}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200" />
-
-          {/* Market Rental Fee Increase */}
-          <div className="space-y-2">
-            <Toggle
-              label={t('profitRent.marketRentalFeeIncrease')}
-              options={['Frequency', 'Period']}
-              checked={growthRateType === 'Period'}
-              onChange={checked => {
-                if (readOnly) return;
-                setValue('growthRateType', checked ? 'Period' : 'Frequency', { shouldDirty: true });
-              }}
-              size="sm"
-              disabled={readOnly}
-            />
-
-            {growthRateType === 'Frequency' ? (
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
-                  <NumberInput
-                    label={t('profitRent.rate')}
-                    name={growthPercentField.name}
-                    ref={growthPercentField.ref}
-                    value={growthPercentField.value}
-                    onChange={e => growthPercentField.onChange(e.target.value)}
-                    onBlur={growthPercentField.onBlur}
-                    decimalPlaces={2}
-                    maxIntegerDigits={3}
-                    rightIcon={<span className="text-xs text-gray-400">%</span>}
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-sm text-gray-500 pb-2">{t('profitRent.every')}</span>
-                <div className="flex-1">
-                  <NumberInput
-                    label={t('profitRent.interval')}
-                    name={intervalField.name}
-                    ref={intervalField.ref}
-                    value={intervalField.value}
-                    onChange={e => intervalField.onChange(e.target.value)}
-                    onBlur={intervalField.onBlur}
-                    decimalPlaces={0}
-                    maxIntegerDigits={3}
-                    rightIcon={<span className="text-xs text-gray-400">{t('profitRent.unitYear')}</span>}
-                    disabled={readOnly}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 text-xs text-gray-500 font-medium">
-                  <span>{t('profitRent.fromYear')}</span>
-                  <span>{t('profitRent.toYear')}</span>
-                  <span>{t('profitRent.growthRatePercent')}</span>
-                  <span />
-                </div>
-                {growthPeriodFields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-end">
-                    <NumberInput
-                      value={watch(`growthPeriods.${index}.fromYear` as any)}
-                      onChange={e =>
-                        setValue(`growthPeriods.${index}.fromYear` as any, e.target.value ?? 0, {
-                          shouldDirty: true,
-                        })
-                      }
-                      maxIntegerDigits={3}
-                      decimalPlaces={0}
-                      disabled={readOnly}
-                    />
-                    <NumberInput
-                      value={watch(`growthPeriods.${index}.toYear` as any)}
-                      onChange={e =>
-                        setValue(`growthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
-                          shouldDirty: true,
-                        })
-                      }
-                      decimalPlaces={0}
-                      maxIntegerDigits={3}
-                      disabled={readOnly}
-                    />
-                    <NumberInput
-                      value={watch(`growthPeriods.${index}.growthRatePercent` as any)}
-                      onChange={e =>
-                        setValue(
-                          `growthPeriods.${index}.growthRatePercent` as any,
-                          e.target.value ?? 0,
-                          { shouldDirty: true },
-                        )
-                      }
-                      maxIntegerDigits={3}
-                      decimalPlaces={2}
-                      rightIcon={<span className="text-xs text-gray-400">%</span>}
-                      disabled={readOnly}
-                    />
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => removePeriod(index)}
-                        className="flex items-center justify-center text-red-400 hover:text-red-600 pb-1"
-                      >
-                        <Icon name="xmark" className="size-4" />
-                      </button>
-                    )}
-                    {readOnly && <span />}
-                  </div>
-                ))}
-                {!readOnly && (
-                  <button
-                    type="button"
-                    onClick={() => appendPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
-                    className="text-xs text-primary hover:underline flex items-center gap-1"
-                  >
-                    <Icon name="plus" className="size-3" />
-                    {t('profitRent.addPeriods')}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* KPI Summary */}
-        {tableResult && tableResult.rows.length > 0 && (
-          <KpiSummaryStrip
-            cards={
-              [
-                {
-                  label: t('profitRent.kpi.totalMarketRental'),
-                  value: tableResult.totalMarketRentalFee,
-                  icon: 'chart-bar',
-                  color: 'blue',
-                },
-                {
-                  label: t('profitRent.kpi.totalContractRental'),
-                  value: tableResult.totalContractRentalFee,
-                  icon: 'file-contract',
-                  color: 'gray',
-                },
-                {
-                  label: t('profitRent.kpi.totalReturns'),
-                  value: tableResult.totalReturnsFromLease,
-                  icon: 'arrow-trend-up',
-                  color: 'amber',
-                },
-                {
-                  label: t('profitRent.kpi.presentValue'),
-                  value: tableResult.totalPresentValue,
-                  icon: 'circle-check',
-                  color: 'green',
-                  primary: true,
-                },
-              ] satisfies KpiCard[]
-            }
-          />
-        )}
-
-        {/* Chart */}
-        {tableResult && tableResult.rows.length > 0 && <ProfitRentChart result={tableResult} />}
-
-        {/* Sensitivity */}
-        {tableResult && tableResult.rows.length > 0 && (
-          <SensitivityStrip currentRate={discountRateValue} calculateFinalValue={calcSensitivity} />
-        )}
-
-        {/* Calculation Table */}
-        {tableResult && tableResult.rows.length > 0 ? (
-          <ScrollableTableContainer>
-            <table className="w-full text-xs border-collapse">
-              <ProfitRentTable
-                tableResult={tableResult}
-                discountRateValue={discountRateValue}
-                hoveredCol={hoveredCol}
-                onColHover={setHoveredCol}
-              />
-            </table>
-          </ScrollableTableContainer>
-        ) : isLoading ? (
-          <TableSkeleton />
-        ) : null}
-
-        {/* Include building cost section */}
-        <div className="border-t border-gray-200 pt-2 space-y-3">
-          <Toggle
-            label={t('profitRent.includeBuildingCost')}
-            options={['No', 'Yes']}
-            size="sm"
-            checked={isBuildingCostIncluded}
-            onChange={checked => {
-              if (readOnly) return;
-              setValue('includeBuildingCost', checked, { shouldDirty: true });
-            }}
-            disabled={readOnly}
-          />
-
-          {isBuildingCostIncluded && (
-            <>
-              <BuildingCostCollapsible buildingCost={allGroupProperties} />
-              <div className="border-t border-gray-200" />
-
-              {/* Formula rows */}
-              <div className="text-sm divide-y divide-gray-100">
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-xs text-gray-600">{t('profitRent.estimatePriceFromPv')}</span>
-                  <span className="text-xs font-medium text-gray-800 tabular-nums">
-                    {fmt(Number(estimatePrice) || 0)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-xs text-gray-600">
-                    <span className="font-bold mr-1">+</span>
-                    {t('profitRent.buildingCostAfterDepre')}
-                  </span>
-                  <span className="text-xs font-medium text-gray-800 tabular-nums">
-                    {fmt(Number(watch('totalBuildingCost')) || 0)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-1.5">
-                  <span className="text-xs text-gray-700 font-medium">
-                    <span className="font-bold mr-1">=</span>
-                    {t('profitRent.appraisalPriceWithBuilding')}
-                  </span>
-                  <span className="text-xs font-semibold text-gray-900 tabular-nums">
-                    {fmt(Number(watch('appraisalPriceWithBuilding')) || 0)}
-                  </span>
-                </div>
-                {/* Appraisal Price */}
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-xs font-semibold text-gray-900">{t('profitRent.appraisalPrice')}</span>
-                  <div className="flex items-center gap-2">
-                    {(() => {
-                      const rounded = Number(watch('appraisalPriceWithBuildingRounded')) || 0;
-                      const computed = roundToThousand(
-                        Number(watch('appraisalPriceWithBuilding')) || 0,
-                      );
-                      const diff = rounded - computed;
-                      if (diff === 0) return null;
-                      const pct = computed !== 0 ? ((diff / computed) * 100).toFixed(1) : '0.0';
-                      const color = diff > 0 ? 'text-green-600' : 'text-red-600';
-                      const bgColor = diff > 0 ? 'bg-green-100' : 'bg-red-100';
-                      const icon = diff > 0 ? 'arrow-up' : 'arrow-down';
-                      return (
-                        <span
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} shrink-0`}
+                        <MethodRailSectionTitle>{t('profitRent.rentSectionTitle')}</MethodRailSectionTitle>
+                        <MethodRailField label={t('profitRent.landArea')} unit={t('profitRent.unitSqWa')}>
+                          <span className="text-xs font-medium text-gray-700 tabular-nums">
+                            {fmt(landAreaSqWa)}
+                          </span>
+                        </MethodRailField>
+                        {/* Back on the standard 128px control column: the WQS chip is now
+                            an icon-only 17px button (MarketReferenceButton `compact`), not
+                            the 48.8px text pill that needed `stacked` + pr-[60px]! to fit.
+                            Reservation = NumberInput's rightIcon wrapper pr-3 (9.75px at
+                            this repo's 13px root) + button width (17px) = 26.75px, rounded
+                            up to pr-[28px]!. Usable digit width: 128 (column) − 5 (dense
+                            px-[5px] left) − 28 (right) − 2 (border) = 93px, vs. 61px under
+                            the old reservation that already fit "30,000.00". Same numbers
+                            as LeaseholdPanel's land-value field — keep them in sync. */}
+                        <MethodRailField
+                          label={t('profitRent.marketRentalFee')}
+                          required
+                          unit={t('methodTabs.units.bahtPerSqWaMonth')}
                         >
-                          <Icon name={icon} style="solid" className="size-2.5" />
-                          {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}
-                          {pct}%)
-                        </span>
-                      );
-                    })()}
-                    <div className="w-40">
-                      <NumberInput
-                        name="appraisalPriceWithBuildingRounded"
-                        value={watch('appraisalPriceWithBuildingRounded') ?? 0}
-                        onChange={e =>
-                          setValue(
-                            'appraisalPriceWithBuildingRounded',
-                            Number(e.target.value) || 0,
-                            {
-                              shouldDirty: true,
-                            },
-                          )
-                        }
-                        maxIntegerDigits={15}
-                        decimalPlaces={2}
+                          <NumberInput
+                            dense
+                            name={marketFeeField.name}
+                            ref={marketFeeField.ref}
+                            value={marketFeeField.value}
+                            onChange={e => marketFeeField.onChange(e.target.value)}
+                            onBlur={marketFeeField.onBlur}
+                            decimalPlaces={2}
+                            maxIntegerDigits={15}
+                            required={true}
+                            disabled={readOnly}
+                            className={!readOnly ? 'pr-[28px]!' : undefined}
+                            rightIcon={(() => {
+                              if (readOnly) return undefined;
+                              const effectiveId = savedData?.analysis?.id ?? ensuredId;
+                              return (
+                                <MarketReferenceButton
+                                  compact
+                                  subjectType={PricingAnalysisSubjectType.ProfitRentRef}
+                                  anchorId={effectiveId ?? ''}
+                                  hostMethodId={methodId}
+                                  marketSurveys={marketSurveys ?? []}
+                                  templateList={templateList}
+                                  onApplyValue={v => marketFeeField.onChange(v)}
+                                  onBeforeOpen={
+                                    effectiveId
+                                      ? undefined
+                                      : async () => {
+                                          const id = await ensureAnalysisId();
+                                          if (id) setEnsuredId(id);
+                                          if (!id) throw new Error('no-id');
+                                        }
+                                  }
+                                  className="pointer-events-auto shrink-0"
+                                />
+                              );
+                            })()}
+                          />
+                        </MethodRailField>
+                        <MethodRailField
+                          label={t('profitRent.monthlyTotal')}
+                          unit={t('methodTabs.units.bahtPerMonth')}
+                        >
+                          <span className="text-gray-800 tabular-nums">
+                            {fmt((marketFeeField.value ?? 0) * landAreaSqWa)}
+                          </span>
+                        </MethodRailField>
+                        <MethodRailField label={t('profitRent.discountedRate')} unit="%">
+                          <NumberInput
+                            dense
+                            name="discountRate"
+                            value={watch('discountRate')}
+                            onChange={e =>
+                              setValue('discountRate', e.target.value ?? 0, { shouldDirty: true })
+                            }
+                            decimalPlaces={2}
+                            maxIntegerDigits={3}
+                            disabled={readOnly}
+                          />
+                        </MethodRailField>
+
+                        <MethodRailSectionTitle>
+                          {t('profitRent.marketRentalFeeIncrease')}
+                        </MethodRailSectionTitle>
+                        <MethodRailSeg
+                          options={[
+                            { value: 'Frequency', label: t('methodTabs.growthTypes.frequency') },
+                            { value: 'Period', label: t('methodTabs.growthTypes.period') },
+                          ]}
+                          value={growthRateType === 'Period' ? 'Period' : 'Frequency'}
+                          onChange={v => {
+                            if (readOnly) return;
+                            setValue('growthRateType', v, { shouldDirty: true });
+                          }}
+                          disabled={readOnly}
+                        />
+                        {growthRateType === 'Frequency' ? (
+                          <>
+                            <MethodRailField label={t('profitRent.rate')} unit="%">
+                              <NumberInput
+                                dense
+                                name={growthPercentField.name}
+                                ref={growthPercentField.ref}
+                                value={growthPercentField.value}
+                                onChange={e => growthPercentField.onChange(e.target.value)}
+                                onBlur={growthPercentField.onBlur}
+                                decimalPlaces={2}
+                                maxIntegerDigits={3}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                            <MethodRailField label={t('profitRent.every')} unit={t('profitRent.unitYear')}>
+                              <NumberInput
+                                dense
+                                name={intervalField.name}
+                                ref={intervalField.ref}
+                                value={intervalField.value}
+                                onChange={e => intervalField.onChange(e.target.value)}
+                                onBlur={intervalField.onBlur}
+                                decimalPlaces={0}
+                                maxIntegerDigits={3}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                          </>
+                        ) : (
+                          <div className="space-y-1.5 py-1">
+                            <MethodRailPeriodHeader />
+                            {growthPeriodFields.map((field, index) => (
+                              <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 items-center">
+                                <NumberInput
+                                  dense
+                                  value={watch(`growthPeriods.${index}.fromYear` as any)}
+                                  onChange={e =>
+                                    setValue(`growthPeriods.${index}.fromYear` as any, e.target.value ?? 0, {
+                                      shouldDirty: true,
+                                    })
+                                  }
+                                  maxIntegerDigits={3}
+                                  decimalPlaces={0}
+                                  disabled={readOnly}
+                                />
+                                <NumberInput
+                                  dense
+                                  value={watch(`growthPeriods.${index}.toYear` as any)}
+                                  onChange={e =>
+                                    setValue(`growthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
+                                      shouldDirty: true,
+                                    })
+                                  }
+                                  decimalPlaces={0}
+                                  maxIntegerDigits={3}
+                                  disabled={readOnly}
+                                />
+                                <NumberInput
+                                  dense
+                                  value={watch(`growthPeriods.${index}.growthRatePercent` as any)}
+                                  onChange={e =>
+                                    setValue(
+                                      `growthPeriods.${index}.growthRatePercent` as any,
+                                      e.target.value ?? 0,
+                                      { shouldDirty: true },
+                                    )
+                                  }
+                                  maxIntegerDigits={3}
+                                  decimalPlaces={2}
+                                  disabled={readOnly}
+                                />
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removePeriod(index)}
+                                    className="flex items-center justify-center text-red-400 hover:text-red-600"
+                                  >
+                                    <Icon name="xmark" className="size-3" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {!readOnly && (
+                              <MethodRailAddRow
+                                label={t('profitRent.addPeriods')}
+                                onClick={() => appendPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </>
+                    }
+                  >
+                    {/* Chart — mock:2506-2515 nests it in the `.chart` card, toggled by the
+                        "กราฟ" button, shown above the table. Sensitivity strip removed for
+                        now (rendered wrong — see PR notes); toggle still reveals the chart. */}
+                    {showChart && tableResult && tableResult.rows.length > 0 && (
+                      <div className="flex flex-col gap-4 shrink-0">
+                        <ProfitRentChart result={tableResult} />
+                      </div>
+                    )}
+
+                    {/* Calculation Table */}
+                    {tableResult && tableResult.rows.length > 0 ? (
+                      // No year pager: mock METHODS.PR carries no `nav` (only DCF and LH do).
+                      <ScrollableTableContainer
+                        edgeShadow
+                        stickyWidth={60}
+                        className="flex-1 min-h-0"
+                      >
+                        {/* rounded-none — DaisyUI's `.table` carries its own border-radius; this
+                            matches the mock's calc-tab tables (measured 0px everywhere). */}
+                        <table className="table min-w-max w-full text-[12px] leading-[25px] tabular-nums rounded-none">
+                          <ProfitRentTable
+                            tableResult={tableResult}
+                            discountRateValue={discountRateValue}
+                            hoveredCol={hoveredCol}
+                            onColHover={setHoveredCol}
+                          />
+                        </table>
+                      </ScrollableTableContainer>
+                    ) : isLoading ? (
+                      <TableSkeleton />
+                    ) : null}
+                  </MethodWorkArea>
+                ),
+              },
+              {
+                id: 'summary',
+                label: t('profitRent.tabs.summary'),
+                content: (
+                  <>
+                    {/* mock:2530 `kv()` — value card + notes card, side by side. */}
+                    <SummaryGrid>
+                      <SummaryCard title={t('costMachine.summary.title')}>
+                        <DisplayValueRow
+                          label={
+                            <>
+                              {t('profitRent.estimatePriceFromPv')}{' '}
+                              <span className="text-gray-400 text-[10.5px]">(PV)</span>
+                            </>
+                          }
+                          value={tableResult?.totalPresentValue ?? 0}
+                        />
+                        {/* mock:1610-style — checkbox lives in the label cell, its checked
+                            state is read back in the value cell instead of the old
+                            No/Yes toggle floating above the card. */}
+                        <KvRow
+                          label={
+                            <Checkbox
+                              className="[&>span>span]:h-[14px] [&>span>span]:w-[14px] [&>span>span]:border"
+                              size="sm"
+                              checked={!!isBuildingCostIncluded}
+                              onChange={checked => {
+                                if (readOnly) return;
+                                setValue('includeBuildingCost', checked, { shouldDirty: true });
+                              }}
+                              disabled={readOnly}
+                            >
+                              {t('profitRent.includeBuildingCost')}
+                            </Checkbox>
+                          }
+                          value={
+                            <span className="text-gray-600">
+                              {t(isBuildingCostIncluded ? 'profitRent.included' : 'profitRent.notIncluded')}
+                            </span>
+                          }
+                        />
+                        {/* mock:2846-2847 — the building part and the combined figure, so the
+                            step from PV to the indicated value is visible. */}
+                        {isBuildingCostIncluded && (
+                          <>
+                            <DisplayValueRow
+                              label={
+                                <span className="pl-3">
+                                  {t('methodTabs.buildingSummary.afterRow', { n: allGroupProperties.length })}
+                                </span>
+                              }
+                              value={buildingValue}
+                            />
+                            <DisplayValueRow
+                              label={t('methodTabs.buildingSummary.withBuilding')}
+                              value={Number(watch('appraisalPriceWithBuilding')) || 0}
+                            />
+                          </>
+                        )}
+                        <IndicatedValueRow
+                          label={
+                            <span className="font-semibold text-[#0f766e]">
+                              {t('costMachine.summary.indicatedValueLabel')}{' '}
+                              {/* The *SubLabel key is the English gloss, deliberately empty in
+                                  en/zh so it does not repeat the label it sits next to. */}
+                              <span className="text-[10.5px] text-gray-400 font-normal">
+                                {t('finalValue.indicatedValueSubLabel')}
+                              </span>
+                            </span>
+                          }
+                          // Raw (pre-rounding) upstream: the land+building sum while the
+                          // checkbox is ticked, else the raw PV total — same pair the two
+                          // deleted diff-badges above each compared their own rounded value
+                          // against (`roundToThousand(appraisalPriceWithBuilding)` /
+                          // `tableResult.finalValueRounded`, itself `roundToThousand(totalPresentValue)`).
+                          computedValue={
+                            isBuildingCostIncluded
+                              ? Number(watch('appraisalPriceWithBuilding')) || 0
+                              : (tableResult?.totalPresentValue ?? 0)
+                          }
+                          value={
+                            indicatedValueField.value ??
+                            (isBuildingCostIncluded
+                              ? watch('appraisalPriceWithBuildingRounded')
+                              : estimatePrice) ??
+                            tableResult?.finalValueRounded ??
+                            0
+                          }
+                          onChange={v => indicatedValueField.onChange(v)}
+                          disabled={readOnly}
+                        />
+                      </SummaryCard>
+                      {/* mock:2852 — a third card in the same grid (value left, this right,
+                          notes below), not a full-width block above it. */}
+                      {isBuildingCostIncluded && (
+                        <BuildingCostSummaryCard buildingCost={allGroupProperties} />
+                      )}
+                      <SummaryNotesCard
+                        value={watch('remark') ?? ''}
+                        onChange={v => setValue('remark', v || null, { shouldDirty: true })}
                         disabled={readOnly}
-                        className="!font-bold !text-right !text-sm !text-green-700"
                       />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
+                    </SummaryGrid>
+                  </>
+                ),
+              },
+            ]}
+          />
         </div>
-
-        {/* Estimate Price + Appraisal Price — when no building cost */}
-        {!isBuildingCostIncluded && (
-          <div className="text-sm divide-y divide-gray-100 border-t border-gray-200">
-            <div className="flex items-center justify-between py-1.5">
-              <span className="text-xs text-gray-600">{t('profitRent.estimatePriceFromPv')}</span>
-              <span className="text-xs font-medium text-gray-800 tabular-nums">
-                {fmt(tableResult?.finalValueRounded ?? 0)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-2">
-              <span className="text-xs font-semibold text-gray-900 shrink-0">{t('profitRent.appraisalPrice')}</span>
-              <div className="flex items-center gap-2">
-                {(() => {
-                  const rounded = Number(estimateField.value) || 0;
-                  const computed = tableResult?.finalValueRounded ?? 0;
-                  const diff = rounded - computed;
-                  if (diff === 0 || computed === 0) return null;
-                  const pct = ((diff / computed) * 100).toFixed(1);
-                  const color = diff > 0 ? 'text-green-600' : 'text-red-600';
-                  const bgColor = diff > 0 ? 'bg-green-100' : 'bg-red-100';
-                  const icon = diff > 0 ? 'arrow-up' : 'arrow-down';
-                  return (
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} shrink-0`}
-                    >
-                      <Icon name={icon} style="solid" className="size-2.5" />
-                      {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}
-                      {pct}%)
-                    </span>
-                  );
-                })()}
-                <div className="w-40">
-                  <NumberInput
-                    name={estimateField.name}
-                    ref={estimateField.ref}
-                    value={estimateField.value}
-                    onChange={e => estimateField.onChange(e.target.value)}
-                    onBlur={estimateField.onBlur}
-                    decimalPlaces={2}
-                    disabled={readOnly}
-                    className="!font-bold !text-right !text-sm !text-green-700"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Notes & Assumptions */}
-        <RemarkSection setValue={setValue} watch={watch} readOnly={readOnly} />
-
-        {/* Footer — matches Leasehold */}
-        <MethodFooterActions
-          showReset={true}
-          isSubmitting={saveMutation.isPending}
-          onReset={handleOnReset}
-          onCancel={onCancelCalculationMethod}
-        />
 
         {/* Dialogs */}
         <ConfirmDialog
@@ -1068,36 +983,42 @@ function ProfitRentTable({
   const { t } = useTranslation('pricingAnalysis');
   const colHl = 'bg-blue-50/60';
 
-  // Sticky columns: 0=Year, 1=Start, 2=End (pinned left)
-  const stickyBase = [
-    'sticky left-0 z-10 min-w-[60px]',
-    'sticky left-[60px] z-10 min-w-[100px]',
-    'sticky left-[160px] z-10 min-w-[100px] shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]',
-  ];
+  // Sticky columns: only col 0 (Year) is pinned left — mock:2444 (`data-sticky="64"`,
+  // one column wide) pins just the year, not Start/End alongside it. It alone carries
+  // the scrolled-edge shadow, since it's the only frozen column now.
+  const stickyBase = 'sticky left-0 z-10 w-[60px] min-w-[60px] pa-sticky-edge';
+  // Start/End (cols 1-2) are dates, not numbers — they keep left alignment even after
+  // losing their pin, same as Year; every other column stays right-aligned.
+  const leftAlignCols = new Set([0, 1, 2]);
 
   const headBg = 'bg-gray-50';
   const bodyBg = 'bg-white';
   const totalBg = 'bg-gray-100';
+  // Soft, directional divider between every column — see the recipe note on
+  // ComparativeFactorTable/WQSScoringSection; never a bare border-[…].
+  const divider = 'border-r border-r-[#eef2f2]';
 
   const thCls = (col: number, extra?: string) => {
-    const isSticky = col < 3;
+    const isSticky = col === 0;
+    const alignCls = leftAlignCols.has(col) ? '' : 'text-right';
     // Sticky-left + sticky-top headers need z-30 (above both axes)
     const base = isSticky
-      ? `${stickyBase[col]} sticky top-0 z-30 ${headBg} px-3 py-2 text-gray-600 font-medium border-b border-gray-200`
-      : `sticky top-0 z-20 ${headBg} px-3 py-2 text-right text-gray-600 font-medium border-b border-gray-200 ${extra ?? ''}`;
+      ? `${stickyBase} sticky top-0 z-30 ${headBg} px-[8px] py-0 h-[36px] text-gray-600 font-medium border-b border-gray-200 ${divider}`
+      : `sticky top-0 z-20 ${headBg} px-[8px] py-0 h-[36px] ${alignCls} text-gray-600 font-medium border-b border-gray-200 ${divider} ${extra ?? ''}`;
     return `${base} ${hoveredCol === col ? colHl : ''}`;
   };
 
   const tdCls = (col: number, extra?: string) => {
-    const isSticky = col < 3;
+    const isSticky = col === 0;
+    const alignCls = leftAlignCols.has(col) ? '' : 'text-right';
     const base = isSticky
-      ? `${stickyBase[col]} ${bodyBg} px-3 py-1.5 text-gray-700 border-b border-gray-100`
-      : `px-3 py-1.5 text-right text-gray-700 border-b border-gray-100 ${extra ?? ''}`;
+      ? `${stickyBase} ${bodyBg} px-[8px] py-0 h-[26px] text-gray-700 border-b border-gray-100 ${divider}`
+      : `px-[8px] py-0 h-[26px] ${alignCls} text-gray-700 border-b border-gray-100 ${divider} ${extra ?? ''}`;
     return `${base} ${hoveredCol === col ? colHl : ''}`;
   };
 
   const totalTdCls = (col: number, extra?: string) => {
-    const base = `px-3 py-2 text-right text-gray-800 ${extra ?? ''}`;
+    const base = `px-[8px] py-0 h-[26px] text-right text-gray-800 ${divider} ${extra ?? ''}`;
     return `${base} ${hoveredCol === col ? colHl : ''}`;
   };
 
@@ -1106,27 +1027,64 @@ function ProfitRentTable({
     onMouseLeave: () => onColHover(null),
   });
 
+  // `sub` — the unit, rendered as a second line under the label (mock:2443 `th2`).
+  // Only the rate/amount columns carry one; Year/Start/End/Months/Discount rate
+  // stay single-line.
   const headers = [
     { label: t('profitRent.tableHeaders.year'), align: 'text-left' },
     { label: t('profitRent.tableHeaders.periodStart'), align: 'text-left' },
     { label: t('profitRent.tableHeaders.periodEnd'), align: 'text-left' },
     { label: t('profitRent.tableHeaders.numberOfMonth'), minW: 'min-w-[80px]' },
-    { label: t('profitRent.tableHeaders.marketRentalFeePerSqWaMonth'), minW: 'min-w-[130px]' },
-    { label: t('profitRent.tableHeaders.marketRentalFeePerMonth'), minW: 'min-w-[120px]' },
-    { label: t('profitRent.tableHeaders.marketRentalFeePerYear'), minW: 'min-w-[120px]' },
-    { label: t('profitRent.tableHeaders.contractRentalFeePerYear'), minW: 'min-w-[120px]' },
-    { label: t('profitRent.tableHeaders.returnsFromLease'), minW: 'min-w-[120px]' },
+    {
+      label: t('profitRent.tableHeaders.marketRentalFeePerSqWaMonth'),
+      sub: t('profitRent.unitBahtPerSqWaPerMonth'),
+      minW: 'min-w-[130px]',
+    },
+    {
+      label: t('profitRent.tableHeaders.marketRentalFeePerMonth'),
+      sub: t('profitRent.unitBahtPerMonth'),
+      minW: 'min-w-[120px]',
+    },
+    {
+      label: t('profitRent.tableHeaders.marketRentalFeePerYear'),
+      sub: t('profitRent.unitBahtPerYear'),
+      minW: 'min-w-[120px]',
+    },
+    {
+      label: t('profitRent.tableHeaders.contractRentalFeePerYear'),
+      sub: t('profitRent.unitBahtPerYear'),
+      minW: 'min-w-[120px]',
+    },
+    {
+      label: t('profitRent.tableHeaders.returnsFromLease'),
+      sub: t('profitRent.unitBaht'),
+      minW: 'min-w-[120px]',
+    },
     { label: t('profitRent.tableHeaders.discountedRate'), minW: 'min-w-[100px]' },
-    { label: t('profitRent.tableHeaders.presentValue'), minW: 'min-w-[120px]' },
+    {
+      label: t('profitRent.tableHeaders.presentValue'),
+      sub: t('profitRent.unitBaht'),
+      minW: 'min-w-[120px]',
+    },
   ];
 
   return (
     <>
       <thead>
-        <tr className="bg-gray-50">
+        <tr className="bg-gray-50 h-[36px]">
           {headers.map((h, col) => (
-            <th key={col} className={thCls(col, h.minW)} {...cellProps(col)}>
+            <th
+              key={col}
+              data-nav-col={col !== 0 ? true : undefined}
+              className={thCls(col, h.minW)}
+              {...cellProps(col)}
+            >
               {h.label}
+              {h.sub && (
+                <span className="block text-[10px] text-gray-400 font-normal leading-[12px]">
+                  {h.sub}
+                </span>
+              )}
             </th>
           ))}
         </tr>
@@ -1143,55 +1101,57 @@ function ProfitRentTable({
             <td className={tdCls(2)} {...cellProps(2)}>
               {row.contractEnd ? formatDateOnly(row.contractEnd) : '-'}
             </td>
-            <td className={tdCls(3)} {...cellProps(3)}>
+            <td className={tdCls(3, headers[3].minW)} {...cellProps(3)}>
               {row.numberOfMonths.toFixed(1)}
             </td>
-            <td className={tdCls(4)} {...cellProps(4)}>
+            <td className={tdCls(4, headers[4].minW)} {...cellProps(4)}>
               <div>{fmt(row.marketRentalFeePerSqWa)}</div>
               {row.marketRentalFeeGrowthPercent > 0 && (
                 <div className="text-[9px] text-gray-400">+{row.marketRentalFeeGrowthPercent}%</div>
               )}
             </td>
-            <td className={tdCls(5)} {...cellProps(5)}>
+            <td className={tdCls(5, headers[5].minW)} {...cellProps(5)}>
               {fmt(row.marketRentalFeePerMonth)}
             </td>
-            <td className={tdCls(6)} {...cellProps(6)}>
+            <td className={tdCls(6, headers[6].minW)} {...cellProps(6)}>
               {fmt(row.marketRentalFeePerYear)}
             </td>
-            <td className={tdCls(7)} {...cellProps(7)}>
+            <td className={tdCls(7, headers[7].minW)} {...cellProps(7)}>
               {fmt(row.contractRentalFeePerYear)}
             </td>
-            <td className={tdCls(8)} {...cellProps(8)}>
+            <td className={tdCls(8, headers[8].minW)} {...cellProps(8)}>
               {fmt(row.returnsFromLease)}
             </td>
-            <td className={tdCls(9)} {...cellProps(9)}>
+            <td className={tdCls(9, headers[9].minW)} {...cellProps(9)}>
               {discountRateValue.toFixed(2)} %
             </td>
-            <td className={tdCls(10)} {...cellProps(10)}>
+            <td className={tdCls(10, headers[10].minW)} {...cellProps(10)}>
               {fmt(row.presentValue)}
             </td>
           </tr>
         ))}
       </tbody>
       <tfoot className="sticky bottom-0 z-20">
-        <tr className="bg-gray-100 font-semibold border-t-2 border-gray-300">
-          <td className={`sticky left-0 z-30 ${totalBg} px-3 py-2 text-gray-800`} colSpan={3}>
+        <tr className="bg-gray-100 font-semibold border-t-2 border-gray-300 h-[26px]">
+          <td
+            className={`sticky left-0 z-30 ${totalBg} px-[8px] py-0 h-[26px] text-gray-800 pa-sticky-edge`}
+          >
             {t('profitRent.total')}
           </td>
-          <td className={`${totalBg} ${totalTdCls(3)}`} {...cellProps(3)}></td>
-          <td className={`${totalBg} ${totalTdCls(4)}`} {...cellProps(4)}></td>
-          <td className={`${totalBg} ${totalTdCls(5)}`} {...cellProps(5)}></td>
-          <td className={`${totalBg} ${totalTdCls(6)}`} {...cellProps(6)}>
+          {/* Start/End/Months/MarketFee-per-sqwa/MarketFee-per-month — one spanned empty
+              cell, matching mock:2448's `<td colspan="5">`, now that only Year is pinned. */}
+          <td className={totalBg} colSpan={5}></td>
+          <td className={`${totalBg} ${totalTdCls(6, headers[6].minW)}`} {...cellProps(6)}>
             {fmt(tableResult.totalMarketRentalFee)}
           </td>
-          <td className={`${totalBg} ${totalTdCls(7)}`} {...cellProps(7)}>
+          <td className={`${totalBg} ${totalTdCls(7, headers[7].minW)}`} {...cellProps(7)}>
             {fmt(tableResult.totalContractRentalFee)}
           </td>
-          <td className={`${totalBg} ${totalTdCls(8)}`} {...cellProps(8)}>
+          <td className={`${totalBg} ${totalTdCls(8, headers[8].minW)}`} {...cellProps(8)}>
             {fmt(tableResult.totalReturnsFromLease)}
           </td>
-          <td className={`${totalBg} ${totalTdCls(9)}`} {...cellProps(9)}></td>
-          <td className={`${totalBg} ${totalTdCls(10)}`} {...cellProps(10)}>
+          <td className={`${totalBg} ${totalTdCls(9, headers[9].minW)}`} {...cellProps(9)}></td>
+          <td className={`${totalBg} ${totalTdCls(10, headers[10].minW)}`} {...cellProps(10)}>
             {fmt(tableResult.totalPresentValue)}
           </td>
         </tr>
@@ -1201,117 +1161,61 @@ function ProfitRentTable({
 }
 
 /** 11b: Compact building cost summary with expand/collapse */
-function BuildingCostCollapsible({ buildingCost }: { buildingCost: Record<string, unknown>[] }) {
+/**
+ * mock:2852 `.bcsum` — the building-cost card on the summary tab: N buildings, the total
+ * after depreciation in the heading, one row per building, and a read-only note (the figures
+ * are Building Cost's; nothing here edits them). Per-building value is buildingFinalCostValue,
+ * the same rule as BuildingCostSql and the Building Cost screen.
+ */
+function BuildingCostSummaryCard({ buildingCost }: { buildingCost: Record<string, unknown>[] }) {
   const { t } = useTranslation('pricingAnalysis');
-  const [expanded, setExpanded] = useState(false);
-
-  // Compute summary per building
-  const summaries = buildingCost.map(building => {
-    const rows: unknown[] = (building.depreciationDetails as unknown[]) ?? [];
-    let totalArea = 0;
-    let totalBefore = 0;
-    let totalAfter = 0;
-    for (const rawRow of rows) {
-      const row = rawRow as Record<string, unknown>;
-      const area = toNum(row['area']);
-      const before = area * toNum(row['pricePerSqMBeforeDepreciation']);
-      const periods: unknown[] = (row['depreciationPeriods'] as unknown[]) ?? [];
-      const depre = periods.reduce(
-        (acc: number, b: unknown) => acc + toNum((b as Record<string, unknown>).priceDepreciation),
-        0,
-      );
-      totalArea += area;
-      totalBefore += before;
-      totalAfter += before - depre;
+  const rows = buildingCost.map(building => {
+    let area = 0;
+    let before = 0;
+    for (const raw of (building.depreciationDetails as unknown[]) ?? []) {
+      const r = raw as Record<string, unknown>;
+      area += toNum(r['area']);
+      before += toNum(r['area']) * toNum(r['pricePerSqMBeforeDepreciation']);
     }
     return {
-      name: (building.propertyName as string) || 'Building',
-      itemCount: rows.length,
-      totalArea,
-      totalBefore,
-      totalAfter,
+      name: (building.propertyName as string) || '—',
+      area,
+      before,
+      after: buildingFinalCostValue(building),
     };
   });
-
-  const grandAfter = summaries.reduce((s, b) => s + b.totalAfter, 0);
-
+  const totalAfter = rows.reduce((sum, r) => sum + r.after, 0);
+  const cell = 'px-[12px] h-[26px] leading-[25px] border-b border-[#e3e9e8] whitespace-nowrap';
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
-      {/* Compact summary */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 hover:bg-gray-100 transition-colors text-left"
-      >
-        <div className="flex items-center gap-2">
-          <Icon name="building" className="size-3.5 text-gray-500" />
-          <span className="text-xs font-semibold text-gray-700">{t('profitRent.buildingCostSummary')}</span>
-          <span className="text-[10px] text-gray-400">
-            ({summaries.reduce((s, b) => s + b.itemCount, 0)} items)
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-medium text-gray-600 tabular-nums">
-            {t('profitRent.afterDepre')}{' '}
-            {grandAfter.toLocaleString('en-US', {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </span>
-          <Icon
-            name="chevron-down"
-            className={`size-3 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
-          />
-        </div>
-      </button>
-
-      {/* Summary table - always visible */}
-      {!expanded && (
-        <div className="border-t border-gray-100">
-          {/* Column headers */}
-          <div className="flex items-center justify-between px-4 py-1 text-[10px] text-gray-400 uppercase tracking-wide border-b border-gray-100">
-            <span>{t('profitRent.propertyCol')}</span>
-            <div className="flex gap-6">
-              <span className="w-20 text-right">{t('profitRent.areaCol')}</span>
-              <span className="w-28 text-right">{t('profitRent.beforeDepre')}</span>
-              <span className="w-28 text-right">{t('profitRent.afterDepre')}</span>
-            </div>
-          </div>
-          {summaries.map((s, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between px-4 py-1.5 text-xs border-b border-gray-50 last:border-b-0"
-            >
-              <span className="text-gray-600">{s.name}</span>
-              <div className="flex gap-6 tabular-nums">
-                <span className="text-gray-400 w-20 text-right">
-                  {s.totalArea.toLocaleString()} m²
-                </span>
-                <span className="text-gray-500 w-28 text-right">
-                  {s.totalBefore.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-                <span className="text-gray-700 font-medium w-28 text-right">
-                  {s.totalAfter.toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-            </div>
+    <SummaryCard
+      title={t('methodTabs.buildingSummary.head', { n: rows.length, total: fmt(totalAfter) })}
+    >
+      <table className="w-full border-separate border-spacing-0 text-[12px] tabular-nums">
+        <thead>
+          <tr className="text-[#55636f]">
+            <th className={`${cell} text-left font-medium`}>{t('methodTabs.buildingSummary.property')}</th>
+            <th className={`${cell} text-right font-medium`}>{t('methodTabs.buildingSummary.area')}</th>
+            <th className={`${cell} text-right font-medium`}>{t('methodTabs.buildingSummary.before')}</th>
+            <th className={`${cell} text-right font-medium`}>{t('methodTabs.buildingSummary.after')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              <td className={`${cell} max-w-[160px] overflow-hidden text-ellipsis`} title={r.name}>
+                {r.name}
+              </td>
+              <td className={`${cell} text-right`}>{fmt(r.area)}</td>
+              <td className={`${cell} text-right`}>{fmt(r.before)}</td>
+              <td className={`${cell} text-right`}>{fmt(r.after)}</td>
+            </tr>
           ))}
-        </div>
-      )}
-
-      {/* Expanded: full BuildingCostTable */}
-      {expanded && (
-        <div className="border-t border-gray-200">
-          <BuildingCostTable buildingCost={buildingCost as any} />
-        </div>
-      )}
-    </div>
+        </tbody>
+      </table>
+      <p className="m-0 px-[12px] py-[6px] text-[11px] text-gray-400">
+        {t('methodTabs.buildingSummary.readOnlyNote')}
+      </p>
+    </SummaryCard>
   );
 }
 

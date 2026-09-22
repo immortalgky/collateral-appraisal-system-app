@@ -578,25 +578,11 @@ export const anticipationProsperityField: FormField[] = [
 
 export const expropriateField: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     name: 'isExpropriated',
     label: 'Is Expropriate',
-    wrapperClassName: 'col-span-3',
-  },
-
-  {
-    type: 'checkbox',
-    name: 'isInExpropriationLine',
-    label: 'In Line Expropriate',
-    wrapperClassName: 'col-span-3',
-  },
-
-  {
-    type: 'text-input',
-    label: 'Royal Decree',
-    name: 'royalDecree',
-    wrapperClassName: 'col-span-6',
-    maxLength: 20,
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
   },
 
   {
@@ -611,6 +597,14 @@ export const expropriateField: FormField[] = [
   },
 
   {
+    type: 'boolean-toggle',
+    name: 'isInExpropriationLine',
+    label: 'In Line Expropriate',
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
+  },
+
+  {
     type: 'textarea',
     label: 'Is In Line Expropriate',
     name: 'expropriationLineRemark',
@@ -620,24 +614,28 @@ export const expropriateField: FormField[] = [
     maxLength: 4000,
     showCharCount: true,
   },
+
+  {
+    type: 'text-input',
+    label: 'Royal Decree',
+    name: 'royalDecree',
+    wrapperClassName: 'col-span-12',
+    maxLength: 20,
+  },
 ];
 
 export const encroachedField: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     name: 'isEncroached',
     label: 'Is Encroached',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-6',
+    options: ['No', 'Yes'],
   },
 
-  {
-    type: 'number-input',
-    label: 'Encroached Area (Sq.Wa)',
-    name: 'encroachmentArea',
-    wrapperClassName: 'col-span-9',
-    disableWhen: { field: 'isEncroached', is: false },
-    maxIntegerDigits: 8,
-  },
+  // The deducted area is no longer typed here — it is the sum of the LandAreaDeductionTable rows,
+  // which the land form renders right under this group. The legacy field stays in the payload but
+  // is not what the appraisal prices against.
 
   {
     type: 'textarea',
@@ -645,7 +643,9 @@ export const encroachedField: FormField[] = [
     name: 'encroachmentRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isEncroached', is: true },
-    requiredWhen: { field: 'isEncroached', is: true },
+    // No longer required: the detail now lives in the LandAreaDeductionTable rows, each with its
+    // own remark, and this field is not rendered on the land form any more — so a `requiredWhen`
+    // here blocked the save with an error the user had no field to satisfy.
     maxLength: 4000,
     showCharCount: true,
   },
@@ -653,28 +653,34 @@ export const encroachedField: FormField[] = [
 
 export const electricityField: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     name: 'hasElectricity',
-    label: 'Has Electricity',
-    wrapperClassName: 'col-span-3',
+    // Yes = the plot lies far from the power line (the distance opens only then). The field name
+    // says "has"; the meaning, and so the label, is "far from".
+    label: 'Far from Electricity',
+    wrapperClassName: 'col-span-6',
+    options: ['No', 'Yes'],
   },
 
   {
     type: 'number-input',
-    label: 'Distance',
+    label: 'Distance from Electricity (m)',
     name: 'electricityDistance',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     disableWhen: { field: 'hasElectricity', is: false },
+    // Switching back to No clears the distance rather than leaving a stale figure behind.
+    disabledValue: 0,
     maxIntegerDigits: 3,
   },
 ];
 
 export const landBoundaryField: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     label: 'Is Landlocked',
     name: 'isLandlocked',
     wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
   },
 
   {
@@ -689,10 +695,11 @@ export const landBoundaryField: FormField[] = [
   },
 
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     label: 'Is Forest Boundary',
     name: 'isForestBoundary',
     wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
   },
 
   {
@@ -722,7 +729,9 @@ export const LimitationOther: FormField[] = [...electricityField, ...landBoundar
 export const evictionField: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Eviction',
+    // การรอนสิทธิ์: part of the plot is given over to a state utility (a high-voltage line, an
+    // underground railway). The field keeps its old name; "Eviction" was a mistranslation.
+    label: 'Right Restriction',
     name: 'evictionType',
     orientation: 'horizontal',
     group: 'Eviction',
@@ -1089,18 +1098,21 @@ export const decorationField: FormField[] = [
 
 export const encroachmentField: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     label: 'Is Encroaching',
     name: 'isEncroachingOthers',
-    wrapperClassName: 'col-span-3 flex items-center',
+    wrapperClassName: 'col-span-6',
+    options: ['No', 'Yes'],
   },
 
   {
     type: 'number-input',
     label: 'Encroaching Area',
     name: 'encroachingOthersArea',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     disableWhen: { field: 'isEncroachingOthers', is: false },
+    // Switching back to No clears the area rather than leaving a stale figure behind.
+    disabledValue: 0,
     maxIntegerDigits: 8,
   },
 
@@ -1392,7 +1404,7 @@ export const buildingArea: FormField[] = [
     type: 'number-input',
     name: 'totalBuildingArea',
     label: 'Total Building Area (sq.m.)',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-12',
     required: true,
     maxIntegerDigits: 8,
     decimalPlaces: 2,
@@ -2009,25 +2021,11 @@ export const roofFormFields: FormField[] = [
 
 export const expropriationFields: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     label: 'Is Expropriated',
     name: 'isExpropriated',
-    wrapperClassName: 'col-span-3',
-  },
-
-  {
-    type: 'checkbox',
-    label: 'In Line Expropriated',
-    name: 'isInExpropriationLine',
-    wrapperClassName: 'col-span-3',
-  },
-
-  {
-    type: 'text-input',
-    label: 'Royal Decree',
-    name: 'royalDecree',
-    wrapperClassName: 'col-span-6',
-    maxLength: 20,
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
   },
 
   {
@@ -2042,6 +2040,14 @@ export const expropriationFields: FormField[] = [
   },
 
   {
+    type: 'boolean-toggle',
+    label: 'In Line Expropriated',
+    name: 'isInExpropriationLine',
+    wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
+  },
+
+  {
     type: 'textarea',
     label: 'Is In Line Expropriated',
     name: 'expropriationLineRemark',
@@ -2050,6 +2056,14 @@ export const expropriationFields: FormField[] = [
     requiredWhen: { field: 'isInExpropriationLine', is: true },
     maxLength: 4000,
     showCharCount: true,
+  },
+
+  {
+    type: 'text-input',
+    label: 'Royal Decree',
+    name: 'royalDecree',
+    wrapperClassName: 'col-span-12',
+    maxLength: 20,
   },
 ];
 
@@ -2099,10 +2113,11 @@ export const environmentFields: FormField[] = [
 
 export const inForestBoundaryFormFields: FormField[] = [
   {
-    type: 'checkbox',
+    type: 'boolean-toggle',
     label: 'Is In Forest Boundary',
     name: 'isForestBoundary',
     wrapperClassName: 'col-span-12',
+    options: ['No', 'Yes'],
   },
 
   {
@@ -2241,13 +2256,13 @@ export const condoGovernmentPriceFields: FormField[] = [
 
 // Condo building insurance — unlike Government Price, this is NOT computed client-side.
 // buildingInsurancePrice (rate × usableArea) is derived and locked server-side from the
-// selected fireInsuranceCondition; the client only posts fireInsuranceCondition and
+// selected fireInsuranceCode; the client only posts fireInsuranceCode and
 // displays whatever buildingInsurancePrice the GET response returns. See CondoDetailForm.
 export const condoBuildingInsuranceFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fire Insurance Condition',
-    name: 'fireInsuranceCondition',
+    name: 'fireInsuranceCode',
     // Populated at render time from useFireInsuranceOptions('Condo') — see CondoDetailForm.
     options: [],
     wrapperClassName: 'col-span-6',
@@ -2262,6 +2277,9 @@ export const condoBuildingInsuranceFields: FormField[] = [
     maxIntegerDigits: 16,
     decimalPlaces: 2,
   },
+
+  // buildingInsurancePriceOverride is NOT declared here — it renders as CondoInsuranceSummary,
+  // the same Edited/Calculated band the building form shows, which a plain number-input cannot be.
 ];
 
 // --- Merged Land sections ---

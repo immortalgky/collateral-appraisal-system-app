@@ -1,13 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type SubmitErrorHandler } from 'react-hook-form';
+import { useForm, useWatch, type SubmitErrorHandler } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { PricingAnalysisTemplateSelector } from './PricingAnalysisTemplateSelector';
-import { MethodFooterActions } from './MethodFooterActions';
 import { makeWQSDto, WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
+import { fmt } from '../domain/formatters';
 import { useSaveComparativeAnalysis, useResetMethod } from '../api';
 import { WQSForm } from './WQSForm';
 import type {
@@ -28,6 +27,11 @@ import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedC
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import { Button, Icon } from '@/shared/components';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { MethodTopBarPortal } from './MethodTopBarPortal';
+import { TemplatePopover } from './TemplatePopover';
+import { wqsFieldPath } from '../adapters/wqsFieldPath';
 
 interface WQSPanelProps {
   activeMethod?: {
@@ -99,6 +103,7 @@ export function WQSPanel({
   });
 
   const {
+    control,
     handleSubmit,
     getValues,
     reset,
@@ -106,6 +111,13 @@ export function WQSPanel({
     formState: { isDirty },
     trigger,
   } = methods;
+
+  const isReadOnly = usePageReadOnly();
+  // Stable id so the top-bar Save button (portaled outside this <form> via
+  // MethodTopBarPortal) still submits it natively — a portal preserves React context
+  // but not DOM form association, so `form={formId}` on the button stands in for that.
+  const formId = 'wqs-panel-form';
+  const indicatedValue = useWatch({ control, name: wqsFieldPath.finalValueAppraisalPrice() });
 
   /** Linked comparables — syncs with server on select/deselect */
   const { comparativeSurveys, syncSelection } = useLinkedComparables({
@@ -128,6 +140,17 @@ export function WQSPanel({
     t => t.templateCode === selectedTemplateCode,
   )?.id;
   const templateDetailQuery = useGetComparativeAnalysisTemplateById(selectedTemplateId);
+
+  // Human label for the chip — "LB · WQS Land & Building" instead of the raw
+  // templateCode. Reads templateList directly rather than `pricingTemplate` because
+  // the latter only resolves after Generate/restore; the code (and therefore this
+  // label) is already known the moment the appraiser picks one from the dropdown.
+  const selectedTemplateName = (templateList ?? []).find(
+    t => t.templateCode === selectedTemplateCode,
+  )?.templateName;
+  const selectedTemplateLabel = selectedTemplateCode
+    ? [collateralType, selectedTemplateName ?? selectedTemplateCode].filter(Boolean).join(' · ')
+    : '';
 
   const [isShowResetDialog, setIsShowResetDialog] = useState<boolean>(false);
 
@@ -393,56 +416,110 @@ export function WQSPanel({
 
   return (
     <FormProvider methods={methods} schema={WQSDto}>
+      <MethodTopBarPortal slot="chip">
+        {/* Template chip — replaces the old PricingAnalysisTemplateSelector card; same
+            fields/handlers, now a popover anchored to the top bar beside the method name. */}
+        <TemplatePopover
+          valueLabel={selectedTemplateLabel}
+          onSelectCollateralType={handleOnSelectCollateralType}
+          templateOptions={(templateList ?? [])
+            .filter(t => t.propertyType === collateralType)
+            .map(t => ({ value: t.templateCode, label: t.templateName }))}
+          onSelectTemplate={handleOnSelectTemplate}
+          onGenerate={handleOnGenerate}
+          isReadOnly={isReadOnly}
+        />
+      </MethodTopBarPortal>
+      <MethodTopBarPortal>
+        {!isLoading && (
+          <>
+            <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+              {/* Top-bar label only — WQS-specific per the mock ("มูลค่าตามวิธีนี้
+                  (ปัดเศษ)"), distinct from the shared finalValue.indicatedValue label
+                  still used by the summary tab's own row and by every other method's
+                  top bar. */}
+              <span className="text-[10.5px] text-gray-400">{t('wqs.topBarValueLabel')}</span>
+              {/* `fmt()` — 2 decimals, same as every other method's top bar (SAG, DC, BC, MC,
+                  LH, PR, DCF all call it here).
+
+                  This used to be `Math.round(...)`, following the mock's rounded top-bar
+                  figure. It was the only rounded value display in the feature, and it lied
+                  about the field a tab away: an Indicated Value of 3,000,000.50 was shown up
+                  here as 3,000,001, so the bar and the editable box disagreed about the
+                  method's own value with nothing to explain the gap. The user asked for the
+                  decimals ("ฟิลด์นี้ควรแสดงทศนิยมได้") — their instruction outranks the mock,
+                  and it also puts WQS back in step with its siblings rather than making it the
+                  exception. The ฿ suffix stays: that part is still WQS-only and nobody asked
+                  for it to change. */}
+              <span className="text-[15px] font-semibold text-primary tabular-nums">
+                {fmt(Number(indicatedValue) || 0)} ฿
+              </span>
+            </div>
+            {!isReadOnly && (
+              <>
+                <span className="w-px h-5 bg-gray-200 shrink-0" />
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={onCancelCalculationMethod}
+                  disabled={saveMutation.isPending}
+                  className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                >
+                  {t('footer.cancel')}
+                </Button>
+                {!!savedComparativeFactors?.length && (
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleOnReset}
+                    disabled={saveMutation.isPending}
+                    title={t('footer.reset')}
+                    aria-label={t('footer.reset')}
+                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+                  >
+                    <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  form={formId}
+                  isLoading={saveMutation.isPending}
+                  disabled={saveMutation.isPending}
+                  className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                >
+                  {!saveMutation.isPending && (
+                    <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+                  )}
+                  {t('footer.save')}
+                </Button>
+              </>
+            )}
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
         className="flex flex-col h-full gap-4"
       >
-        <PricingAnalysisTemplateSelector
-          icon="scale-balanced"
-          methodName={t('wqs.methodName')}
-          onGenerate={handleOnGenerate}
-          collateralType={{
-            onSelectCollateralType: handleOnSelectCollateralType,
-            value: collateralType,
-            group: 'PropertyType',
-          }}
-          template={{
-            onSelectTemplate: handleOnSelectTemplate,
-            value: selectedTemplateCode,
-            options: (templateList ?? [])
-              .filter(t => t.propertyType === collateralType)
-              .map(t => ({
-                value: t.templateCode,
-                label: t.templateName,
-              })),
-          }}
-        />
         {!isLoading && (
-          <>
-            <div className="flex-1 min-h-0 overflow-auto">
-              <WQSForm
-                {...methods}
-                property={property ?? {}}
-                buildingCost={buildingCost}
-                isCostApproach={isCostApproach}
-                marketSurveys={marketSurveys}
-                comparativeMarketSurveys={comparativeSurveys}
-                template={pricingTemplate}
-                allFactors={allFactors}
-                onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
-                manualSubject={manualSubject}
-              />
-            </div>
-            <MethodFooterActions
-              onCancel={onCancelCalculationMethod}
-              onReset={handleOnReset}
-              showReset={!!savedComparativeFactors && savedComparativeFactors.length > 0}
-              isSubmitting={saveMutation.isPending}
+          <div className="flex-1 min-h-0 overflow-auto">
+            <WQSForm
+              {...methods}
+              property={property ?? {}}
+              buildingCost={buildingCost}
+              isCostApproach={isCostApproach}
+              marketSurveys={marketSurveys}
+              comparativeMarketSurveys={comparativeSurveys}
+              template={pricingTemplate}
+              allFactors={allFactors}
+              onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
+              manualSubject={manualSubject}
             />
-          </>
+          </div>
         )}
         <ConfirmDialog
           isOpen={isShowResetDialog}

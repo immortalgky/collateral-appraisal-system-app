@@ -102,6 +102,9 @@
   "hint": {
     "scrollWithArrowKeys": "使用方向键滚动表格"
   },
+  "nav": {
+    "visibleRange": "显示 {{from}}–{{to}}，共 {{total}}"
+  },
   "language": {
     "en": "EN",
     "th": "TH",

@@ -148,6 +148,8 @@ export const CreateBuildingRequest = z
 
     totalBuildingArea: z.coerce.number(),
     buildingInsurancePrice: z.coerce.number(),
+    finalCostValueOverride: z.coerce.number().nullable().optional(),
+    buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
     sellingPrice: z.coerce.number(),
     forcedSalePrice: z.coerce.number(),
 
@@ -217,6 +219,8 @@ export const UpdateBuildingRequest = z
 
     totalBuildingArea: z.coerce.number(),
     buildingInsurancePrice: z.coerce.number(),
+    finalCostValueOverride: z.coerce.number().nullable().optional(),
+    buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
     sellingPrice: z.coerce.number(),
     forcedSalePrice: z.coerce.number(),
 
@@ -287,6 +291,8 @@ export const GetBuildingPropertyByIdResult = z
 
     totalBuildingArea: z.coerce.number(),
     buildingInsurancePrice: z.coerce.number(),
+    finalCostValueOverride: z.coerce.number().nullable().optional(),
+    buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
     sellingPrice: z.coerce.number(),
     forcedSalePrice: z.coerce.number(),
 

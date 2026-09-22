@@ -55,7 +55,16 @@ function buildCalculations(comparativeSurveys: MarketComparableDetailType[]): WQ
 
 function buildFinalValue(property?: Record<string, unknown>) {
   return {
-    landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+    // Net area — title area less the deductions the appraiser listed (encroachment, land used by
+    // others, public waterway). Pricing values the appraisable area, not the registered one; the
+    // deed's own figure stays on the property form and in the book's per-title rows.
+    // `!= null` rather than a truthiness check: a fully deducted plot is a real 0, not a blank.
+    landArea:
+      property?.netLandAreaInSqWa != null
+        ? Number(property.netLandAreaInSqWa)
+        : property?.totalLandAreaInSqWa
+          ? Number(property.totalLandAreaInSqWa)
+          : undefined,
     usableArea: property?.totalBuildingArea
       ? Number(property.totalBuildingArea)
       : property?.usableArea

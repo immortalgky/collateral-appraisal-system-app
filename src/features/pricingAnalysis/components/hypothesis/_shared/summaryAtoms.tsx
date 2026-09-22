@@ -1,22 +1,23 @@
 /**
- * Shared atoms for Hypothesis Summary tabs (Land & Building + Condominium).
+ * Shared atoms for the Hypothesis Summary tabs (Land & Building + Condominium).
  *
- * The fixed-width column system (COL) keeps the rate input, derived total,
- * ratio %, and remove cells aligned across all row types regardless of section.
- * Suffix slot uses a negative left margin to sit flush against the rate-unit
- * label; long suffixes wrap to a second line within the slot.
+ * The summary is ONE ledger table (mock v94 `ledgerHtml`): Item | Rate / Setting | Quantity |
+ * Total | Ratio (L&B only), every row reading "rate × quantity = total", grouped under
+ * collapsible section bands. Rows are dense (26px) and every value is px-sized — root font-size
+ * is 13px here, so rem utilities would shrink ×0.8125.
  */
-import { type ReactNode, createContext, useContext } from 'react';
-import { Controller } from 'react-hook-form';
+import { type ReactNode, createContext, useContext, useState } from 'react';
+import { Controller, useController } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import { Icon } from '@/shared/components';
 import { fmt } from '../../../domain/formatters';
 import { FieldTooltip } from './FieldTooltip';
 
 // ─── Calculating context ──────────────────────────────────────────────────────
-// Wrap a summary tab in <IsCalculatingProvider value={true}> while a preview
-// request is in-flight; all derived-value atoms read from this context and
-// swap their number with an animated placeholder.
+// Wrap a summary tab in <IsCalculatingProvider value={true}> while a preview request is
+// in-flight; derived cells swap their number for an animated placeholder.
 
 const IsCalculatingContext = createContext(false);
 
@@ -30,386 +31,416 @@ export function IsCalculatingProvider({
   return <IsCalculatingContext.Provider value={value}>{children}</IsCalculatingContext.Provider>;
 }
 
-function CalcPlaceholder({ wide }: { wide?: boolean }) {
+function CalcPlaceholder() {
   return (
-    <span
-      className={`inline-block h-3.5 ${wide ? 'w-28' : 'w-16'} rounded bg-gray-200 animate-pulse align-middle`}
-    />
+    <span className="inline-block h-[12px] w-[64px] rounded bg-gray-200 animate-pulse align-middle" />
   );
 }
 
-// ─── Shared column widths ─────────────────────────────────────────────────────
+/** A computed number (2 dp, or whole for counts/months), or a placeholder while previewing. */
+export function Num({ value, int }: { value?: number | null; int?: boolean }) {
+  const isCalculating = useContext(IsCalculatingContext);
+  if (isCalculating) return <CalcPlaceholder />;
+  if (value === null || value === undefined) return null;
+  return <>{int ? Math.round(value).toLocaleString('en-US') : fmt(value)}</>;
+}
 
-// NOTE: `suffix` uses `-ml-16` (-64px) to pull itself into rateUnit's whitespace
-// so suffix text sits next to the "%" sign. This is HARD-COUPLED to `rateUnit: w-[80px]`
-// (16px ≈ "%" glyph width remains visible). If rateUnit width changes, recompute the
-// negative margin to keep alignment.
-export const COL = {
-  rate: 'w-[140px]', // rate value (number or input) — right-aligned
-  rateUnit: 'w-[80px]', // "Baht/Unit", "Baht/Sq.Wa", "%"
-  suffix: 'w-[140px] -ml-16', // italic descriptive text; -ml-16 paired with rateUnit=80px
-  mid: 'w-[112px]', // qty (60) + qtyUnit (44) + gap (8)
-  total: 'w-[140px]', // derived total — right-aligned
-  totalUnit: 'w-[40px]', // "Baht"
-  ratio: 'w-[68px]', // ratio %
-  remove: 'w-[20px]',
-} as const;
+export const pct = (x?: number | null) =>
+  x === null || x === undefined ? '' : `${Number(x).toFixed(2)} %`;
 
-// ─── Section shell ────────────────────────────────────────────────────────────
+// ─── Table shell ──────────────────────────────────────────────────────────────
 
-export function SectionPrimary({
+const RatioContext = createContext(false);
+const TD = 'px-[8px] py-0 h-[26px] leading-[25px] border-b border-[#eef2f2] align-middle';
+
+/**
+ * `table-layout: fixed` + a colgroup: in auto layout a cell's max-width is ignored, and the
+ * long English labels push the numeric columns off screen at 1366px.
+ */
+export function LedgerTable({ ratio = false, children }: { ratio?: boolean; children: ReactNode }) {
+  const { t } = useTranslation('pricingAnalysis');
+  const th =
+    'px-[8px] py-0 h-[27px] font-semibold text-gray-600 bg-gray-50 border-b border-gray-200';
+  return (
+    <RatioContext.Provider value={ratio}>
+      <table className="w-full table-fixed border-collapse text-[12px]">
+        <colgroup>
+          <col />
+          <col className="w-[250px]" />
+          <col className="w-[190px]" />
+          <col className="w-[150px]" />
+          {ratio && <col className="w-[80px]" />}
+        </colgroup>
+        <thead className="sticky top-0 z-[3]">
+          <tr>
+            <th className={`${th} text-left`}>{t('hypothesis.ledger.cols.item')}</th>
+            <th className={`${th} text-left`}>{t('hypothesis.ledger.cols.rate')}</th>
+            <th className={`${th} text-left`}>{t('hypothesis.ledger.cols.qty')}</th>
+            <th className={`${th} text-right`}>{t('hypothesis.ledger.cols.total')}</th>
+            {ratio && <th className={`${th} text-right`}>{t('hypothesis.ledger.cols.ratio')}</th>}
+          </tr>
+        </thead>
+        <tbody>{children}</tbody>
+      </table>
+    </RatioContext.Provider>
+  );
+}
+
+/** A collapsible section band. `id` is the jump-bar target (`hyp-sec-<id>`). */
+export function LedgerBand({
   id,
   title,
   children,
 }: {
-  /** Optional DOM id used for in-page scroll targets (e.g. from viz click-through). */
-  id?: string;
+  id: string;
   title: string;
   children: ReactNode;
 }) {
+  const ratio = useContext(RatioContext);
+  const [open, setOpen] = useState(true);
   return (
-    <div
-      id={id}
-      className="rounded-lg border border-gray-200 overflow-hidden shadow-sm scroll-mt-4"
-    >
-      <div className="bg-gray-100 px-5 py-3 border-b border-gray-200">
-        <h4 className="text-sm font-semibold text-gray-700 tracking-wide">{title}</h4>
-      </div>
-      <div className="divide-y divide-gray-100 bg-white">{children}</div>
-    </div>
+    <>
+      <tr id={`hyp-sec-${id}`} className="scroll-mt-[27px]">
+        <td
+          colSpan={ratio ? 5 : 4}
+          className="px-[8px] py-0 h-[26px] leading-[25px] bg-[#edf1f1] font-semibold text-gray-700 cursor-pointer select-none border-b border-[#e3e9e8]"
+          onClick={() => setOpen(o => !o)}
+        >
+          <span
+            className={clsx('inline-block w-[12px] transition-transform', !open && '-rotate-90')}
+          >
+            ▾
+          </span>{' '}
+          {title}
+        </td>
+      </tr>
+      {open && children}
+    </>
   );
 }
 
-export function SubSectionLabel({ label }: { label: string }) {
-  return (
-    <div className="px-5 py-2 bg-white">
-      <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-    </div>
-  );
-}
-
-// ─── Generic field row (label on left, freeform content on right) ────────────
-
-export function FieldRow({
+/**
+ * One ledger row. `tone`: `tot` = a section total (bold on grey), `final` = the method result
+ * (green — the only green on the page besides the top-bar price).
+ */
+export function LedgerRow({
   label,
-  alignTop,
-  tooltip,
-  children,
+  tip,
+  sub,
+  tone,
+  rate,
+  qty,
+  total,
+  totalUnit,
+  ratio,
+  warn,
 }: {
-  label: string;
-  alignTop?: boolean;
-  tooltip?: string;
-  children: ReactNode;
+  label: ReactNode;
+  tip?: string;
+  sub?: boolean;
+  tone?: 'tot' | 'final' | 'user';
+  rate?: ReactNode;
+  qty?: ReactNode;
+  total?: ReactNode;
+  totalUnit?: string;
+  ratio?: ReactNode;
+  warn?: boolean;
+}) {
+  const hasRatio = useContext(RatioContext);
+  const bg =
+    tone === 'tot'
+      ? 'bg-gray-50 font-semibold'
+      : tone === 'final'
+        ? 'bg-[#f0fdfa] font-bold text-[#0f766e]'
+        : tone === 'user'
+          ? 'bg-amber-50/40'
+          : '';
+  return (
+    <tr className={bg}>
+      <td className={clsx(TD, 'truncate', sub ? 'pl-[22px] text-gray-600' : 'text-gray-800')}>
+        <span className={clsx('inline-flex items-center gap-[2px]', warn && 'text-rose-600')}>
+          {label}
+          {tip && <FieldTooltip text={tip} />}
+        </span>
+      </td>
+      <td className={clsx(TD, 'whitespace-nowrap')}>{rate}</td>
+      <td className={clsx(TD, 'whitespace-nowrap')}>{qty}</td>
+      <td className={clsx(TD, 'text-right tabular-nums whitespace-nowrap')}>
+        {total}
+        {total !== undefined && totalUnit && (
+          <span className="text-[11px] text-gray-400 ml-[4px]">{totalUnit}</span>
+        )}
+      </td>
+      {hasRatio && <td className={clsx(TD, 'text-right tabular-nums text-gray-500')}>{ratio}</td>}
+    </tr>
+  );
+}
+
+// ─── Cell helpers ─────────────────────────────────────────────────────────────
+
+const Unit = ({ children }: { children?: ReactNode }) =>
+  children ? <span className="text-[10.5px] text-gray-400 ml-[4px]">{children}</span> : null;
+const Note = ({ children }: { children?: ReactNode }) =>
+  children ? <span className="text-[10.5px] text-gray-400 ml-[6px]">{children}</span> : null;
+
+/** Rate cell with an editable number: `[input] unit  note`. */
+export function RateInput({
+  control,
+  name,
+  unit,
+  note,
+  decimals = 2,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: any;
+  name: string;
+  unit?: string;
+  note?: ReactNode;
+  decimals?: number;
 }) {
   return (
-    <div
-      className={`grid grid-cols-12 gap-3 px-5 py-3 ${alignTop ? 'items-start' : 'items-center'}`}
-    >
-      <div className="col-span-2 text-xs font-medium text-gray-700 flex items-center gap-0.5">
-        {label}
-        {tooltip && <FieldTooltip text={tooltip} />}
-      </div>
-      <div className="col-span-10 flex items-center gap-3 flex-wrap">{children}</div>
-    </div>
+    <span className="inline-flex items-center">
+      <span className="inline-block w-[110px]">
+        <InlineNumberInput control={control} name={name} decimalPlaces={decimals} fillSlot />
+      </span>
+      <Unit>{unit}</Unit>
+      <Note>{note}</Note>
+    </span>
   );
 }
 
-export function DerivedValue({
+/** Rate cell with a read-only value: `**value** unit  note`. */
+export function RateValue({
   value,
   unit,
-  emphasize,
+  note,
+  danger,
 }: {
-  value?: number | null;
+  value: ReactNode;
   unit?: string;
-  emphasize?: boolean;
-}) {
-  const isCalculating = useContext(IsCalculatingContext);
-  return (
-    <div className="ml-auto flex items-center gap-2">
-      <span
-        className={`min-w-[110px] text-right tabular-nums text-xs ${
-          emphasize ? 'font-semibold text-primary' : 'font-medium text-gray-800'
-        }`}
-      >
-        {isCalculating ? <CalcPlaceholder /> : fmt(value)}
-      </span>
-      {unit && <span className="text-[11px] text-gray-500 w-[68px]">{unit}</span>}
-    </div>
-  );
-}
-
-export function PercentExpression({
-  percent,
-  ofLabel,
-  highlightPercent,
-}: {
-  percent?: number | null;
-  ofLabel: string;
-  highlightPercent?: boolean;
+  note?: ReactNode;
+  danger?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-[11px] text-gray-500">Considered at</span>
-      <span
-        className={`min-w-[80px] text-right tabular-nums text-xs font-medium ${
-          highlightPercent ? 'text-rose-600' : 'text-gray-800'
-        }`}
-      >
-        {percent !== null && percent !== undefined ? `${Number(percent).toFixed(2)} %` : '-'}
-      </span>
-      <span className="text-[11px] text-gray-500">{ofLabel}</span>
-    </div>
+    <span className="inline-flex items-center">
+      <b className={clsx('tabular-nums font-semibold', danger ? 'text-rose-600' : 'text-gray-800')}>
+        {value}
+      </b>
+      <Unit>{unit}</Unit>
+      <Note>{note}</Note>
+    </span>
   );
 }
 
-// ─── Project-cost-style row: input → optional qty/suffix → derived total + ratio ──
-
-export function PdcDerivedRow({
-  label,
-  rateInput,
-  rateUnit,
-  rateSuffix,
-  qtyLabel,
-  qtyValue,
-  qtyUnit,
-  total,
-  ratioPercent,
-  compact,
-  tooltip,
-}: {
-  label: string;
-  rateInput: ReactNode;
-  rateUnit: string;
-  rateSuffix?: string;
-  /** Label rendered before qtyValue in the mid column (e.g. "Area", "Quantity", "Average"). */
-  qtyLabel?: string;
-  qtyValue?: number | null;
-  qtyUnit?: string;
-  total?: number | null;
-  ratioPercent?: number | null;
-  /** Drops the trailing ratio + remove placeholders (no UserAddedRow alignment needed). */
-  compact?: boolean;
-  tooltip?: string;
-}) {
-  const isCalculating = useContext(IsCalculatingContext);
+/** Quantity cell: `× value unit`. */
+export function Qty({ value, unit, int }: { value?: number | null; unit?: string; int?: boolean }) {
+  if (value === null || value === undefined) return null;
   return (
-    <div className="flex items-center px-5 py-2.5 gap-2">
-      <div className="flex-1 text-xs font-medium text-gray-700 min-w-0 flex items-center gap-0.5">
-        <span>{label}</span>
-        {tooltip && <FieldTooltip text={tooltip} />}
-      </div>
-      <div className={`${COL.rate} flex justify-end shrink-0`}>{rateInput}</div>
-      <span className={`${COL.rateUnit} text-[11px] text-gray-500 shrink-0`}>{rateUnit}</span>
-      <div className={`${COL.suffix} shrink-0`}>
-        {rateSuffix && (
-          <span className="text-[11px] text-gray-400 italic leading-tight block">{rateSuffix}</span>
-        )}
-      </div>
-      <div className={`${COL.mid} flex items-center justify-end gap-2 shrink-0`}>
-        {!rateSuffix && qtyValue !== null && qtyValue !== undefined && (
-          <>
-            {qtyLabel && <span className="text-[11px] text-gray-500">{qtyLabel}</span>}
-            <span className="text-right tabular-nums text-xs font-medium text-gray-800">
-              {fmt(qtyValue)}
-            </span>
-            <span className="text-[11px] text-gray-500 w-[44px]">{qtyUnit ?? ''}</span>
-          </>
-        )}
-      </div>
-      <span
-        className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
-      >
-        {isCalculating ? (
-          <CalcPlaceholder />
-        ) : total !== null && total !== undefined ? (
-          fmt(total)
-        ) : (
-          ''
-        )}
-      </span>
-      <span className={`${COL.totalUnit} text-[11px] text-gray-500 shrink-0`}>
-        {total !== null && total !== undefined ? 'Baht' : ''}
-      </span>
-      {!compact && (
-        <>
-          <span
-            className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
-          >
-            {isCalculating ? (
-              <CalcPlaceholder />
-            ) : ratioPercent !== null && ratioPercent !== undefined ? (
-              `${Number(ratioPercent).toFixed(2)} %`
-            ) : (
-              ''
-            )}
-          </span>
-          <span className={`${COL.remove} shrink-0`} />
-        </>
-      )}
-    </div>
+    <span className="inline-flex items-center tabular-nums">
+      <span className="text-gray-400 mr-[4px]">×</span>
+      <Num value={value} int={int} />
+      <Unit>{unit}</Unit>
+    </span>
   );
 }
 
-export function PdcTotalRow({
-  label,
-  total,
-  ratioPercent,
-}: {
-  label: string;
-  total?: number | null;
-  ratioPercent?: number | null;
-}) {
-  const isCalculating = useContext(IsCalculatingContext);
+/** Full-width remark textarea row (Land section). */
+export function LedgerRemarkRow({ control, name }: { control: unknown; name: string }) {
+  const { t } = useTranslation('pricingAnalysis');
+  const ratio = useContext(RatioContext);
   return (
-    <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-gray-200/70 border-t border-gray-300 items-center">
-      <div className="col-span-4 text-xs font-bold text-gray-900">{label}</div>
-      <div className="col-span-8 flex items-center gap-2 ml-auto justify-end">
-        <span className="min-w-[140px] text-right tabular-nums text-sm font-bold text-gray-900">
-          {isCalculating ? <CalcPlaceholder wide /> : fmt(total)}
-        </span>
-        <span className="text-[11px] text-gray-600 whitespace-nowrap">Baht</span>
-        {ratioPercent !== null && ratioPercent !== undefined && (
-          <span className="min-w-[80px] text-right tabular-nums text-sm font-bold text-gray-900">
-            {isCalculating ? <CalcPlaceholder /> : `${Number(ratioPercent).toFixed(2)} %`}
-          </span>
-        )}
-      </div>
-    </div>
+    <tr>
+      <td colSpan={ratio ? 5 : 4} className="px-[8px] py-[4px] border-b border-[#eef2f2]">
+        <Controller
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          control={control as any}
+          name={name as never}
+          render={({ field }) => (
+            <textarea
+              {...field}
+              value={(field.value as string | null) ?? ''}
+              rows={2}
+              aria-label="Remark"
+              placeholder={t('hypothesis.ledger.remarkPlaceholder')}
+              className="w-full text-[12px] border border-gray-200 rounded-[6px] px-[8px] py-[4px] resize-y focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-gray-400"
+            />
+          )}
+        />
+      </td>
+    </tr>
   );
 }
 
-export function AddRowButton({ label, onClick }: { label: string; onClick: () => void }) {
+/** Dashed "+ Add …" button row under a section's user-added rows (L&B only). */
+export function LedgerAddRow({ label, onClick }: { label: string; onClick: () => void }) {
+  const ratio = useContext(RatioContext);
   return (
-    <div className="px-5 py-2 bg-white">
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full px-4 py-2 text-xs font-medium text-primary border border-dashed border-primary/40 rounded-md hover:bg-primary/5 transition-colors"
-      >
-        + {label}
-      </button>
-    </div>
+    <tr>
+      <td colSpan={ratio ? 5 : 4} className="px-[8px] py-[3px] border-b border-[#eef2f2]">
+        <button
+          type="button"
+          onClick={onClick}
+          className="border border-dashed border-primary text-primary text-[11px] rounded-[6px] px-[8px] leading-[18px] hover:bg-primary/5"
+        >
+          + {label}
+        </button>
+      </td>
+    </tr>
   );
 }
 
-// ─── User-added row (description + amount + delete) ──────────────────────────
-
-export function UserAddedRow({
+/**
+ * A user-added cost row (L&B, HANDOFF item 10): description in the item column, the delete
+ * button + "กรอกยอดเอง" in the settings column, the amount in the total column.
+ */
+export function LedgerUserRow({
   descriptionInput,
   amountInput,
-  amountValue,
   ratio,
   onRemove,
 }: {
   descriptionInput: ReactNode;
   amountInput: ReactNode;
-  /** Live amount value (mirrored on the right as the row total). */
-  amountValue?: number | null;
-  /** Server-computed (or client-derived) ratio %. */
   ratio?: number | null;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
-    <div className="flex items-center px-5 py-2.5 gap-2 bg-amber-50/30">
-      <div className="flex-1 min-w-0">{descriptionInput}</div>
-      <div className={`${COL.rate} flex justify-end shrink-0`}>{amountInput}</div>
-      <span className={`${COL.rateUnit} text-[11px] text-gray-500 shrink-0`}>Baht</span>
-      <span className={`${COL.suffix} shrink-0`} />
-      <span className={`${COL.mid} shrink-0`} />
-      <span
-        className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
-      >
-        {fmt(amountValue)}
-      </span>
-      <span className={`${COL.totalUnit} text-[11px] text-gray-500 shrink-0`}>Baht</span>
-      <span
-        className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
-      >
-        {ratio !== null && ratio !== undefined ? `${Number(ratio).toFixed(2)} %` : '-'}
-      </span>
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label="Remove row"
-        className={`${COL.remove} h-[20px] inline-flex items-center justify-center text-rose-500 hover:text-rose-700 shrink-0`}
-      >
-        <Icon name="xmark" style="solid" className="size-3.5" />
-      </button>
-    </div>
+    <LedgerRow
+      tone="user"
+      label={<span className="block w-full">{descriptionInput}</span>}
+      rate={
+        <span className="inline-flex items-center gap-[6px]">
+          <button
+            type="button"
+            onClick={onRemove}
+            title={t('hypothesis.ledger.remove')}
+            aria-label={t('hypothesis.ledger.remove')}
+            className="size-[20px] inline-flex items-center justify-center text-rose-500 hover:text-rose-700"
+          >
+            <Icon name="trash-can" style="regular" className="size-[12px]" />
+          </button>
+          <span className="text-[11px] text-gray-400">{t('hypothesis.ledger.enteredAmount')}</span>
+        </span>
+      }
+      total={<span className="inline-block w-[130px]">{amountInput}</span>}
+      ratio={pct(ratio)}
+    />
   );
 }
 
-// ─── Final-value section atoms ────────────────────────────────────────────────
-
-export function FvDerivedRow({
-  label,
-  value,
-  unit,
-  emphasize,
-  tooltip,
+/**
+ * The method result row — ONE field (HANDOFF item 3): pre-filled with the system's ±10,000
+ * rounded total, typing over it stores `indicatedValue`, "ใช้ค่าที่คำนวณ" clears it to null so
+ * the computed total applies again. Null (not 0) is what "not overridden" means on the wire.
+ */
+export function LedgerIndicatedValueRow({
+  control,
+  computed,
+  tip,
+  disabled,
 }: {
-  label: string;
-  value?: number | null;
-  unit?: string;
-  emphasize?: boolean;
-  tooltip?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  control: any;
+  computed?: number | null;
+  tip?: string;
+  disabled?: boolean;
 }) {
-  const isCalculating = useContext(IsCalculatingContext);
+  const { t } = useTranslation('pricingAnalysis');
+  const { field } = useController({ control, name: 'indicatedValue' });
+  const override = field.value as number | null | undefined;
+  const edited = override !== null && override !== undefined;
+  const delta = edited ? override - (computed ?? 0) : 0;
   return (
-    <div className={`flex items-center px-5 py-2.5 gap-2 ${emphasize ? 'bg-primary/5' : ''}`}>
-      <div
-        className={`flex-1 text-xs min-w-0 flex items-center gap-0.5 ${
-          emphasize ? 'font-semibold text-primary' : 'font-medium text-gray-700'
-        }`}
-      >
-        <span>{label}</span>
-        {tooltip && <FieldTooltip text={tooltip} />}
-      </div>
-      <span
-        className={`min-w-[160px] text-right tabular-nums shrink-0 ${
-          emphasize ? 'text-sm font-bold text-primary' : 'text-xs font-medium text-gray-800'
-        }`}
-      >
-        {isCalculating ? <CalcPlaceholder wide /> : fmt(value)}
-      </span>
-      {unit && (
-        <span
-          className={`text-[11px] shrink-0 whitespace-nowrap ${
-            emphasize ? 'text-primary/70' : 'text-gray-500'
-          }`}
+    <LedgerRow
+      tone="final"
+      tip={tip}
+      label={
+        <>
+          {t('hypothesis.ledger.indicatedValue')}
+          <span className="text-[10.5px] font-normal text-gray-500 ml-[6px]">
+            {t('hypothesis.ledger.totalAssetValue')}
+          </span>
+        </>
+      }
+      rate={
+        <span className="text-[10.5px] font-normal text-gray-500">
+          {edited ? (
+            <>
+              <span className="font-semibold text-[#b45309]">{t('hypothesis.ledger.edited')}</span>{' '}
+              {t('hypothesis.ledger.differs', {
+                value: `${delta >= 0 ? '+' : '−'}${fmt(Math.abs(delta))}`,
+              })}
+              {!disabled && (
+                <>
+                  {' · '}
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => field.onChange(null)}
+                  >
+                    {t('hypothesis.ledger.useCalculated')}
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            t('hypothesis.ledger.roundingHint', { value: fmt(computed ?? 0) })
+          )}
+        </span>
+      }
+      total={
+        <span className="inline-block w-[140px]">
+          <NumberInput
+            value={edited ? override : (computed ?? null)}
+            onChange={e => field.onChange(e.target.value)}
+            decimalPlaces={2}
+            disabled={disabled}
+            dense
+            aria-label={t('hypothesis.ledger.indicatedValue')}
+            className="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold!"
+          />
+        </span>
+      }
+    />
+  );
+}
+
+/** Section chips for the tab toolbar — each scrolls its band into view. */
+export function LedgerJumpBar({ sections }: { sections: { id: string; short: string }[] }) {
+  const { t } = useTranslation('pricingAnalysis');
+  return (
+    <div className="flex gap-[3px] flex-nowrap" aria-label={t('hypothesis.ledger.jumpAria')}>
+      {sections.map(s => (
+        <button
+          key={s.id}
+          type="button"
+          onClick={() =>
+            document.getElementById(`hyp-sec-${s.id}`)?.scrollIntoView({ block: 'start' })
+          }
+          className="text-[11px] h-[22px] px-[7px] rounded-[6px] border border-gray-200 bg-white text-gray-600 hover:border-primary hover:text-primary whitespace-nowrap"
         >
-          {unit}
-        </span>
-      )}
+          {s.short}
+        </button>
+      ))}
     </div>
   );
 }
 
-export function FvInputRow({
-  label,
-  rateInput,
-  rateUnit,
-  rateSuffix,
-  tooltip,
-}: {
-  label: string;
-  rateInput: ReactNode;
-  rateUnit: string;
-  rateSuffix?: string;
-  tooltip?: string;
-}) {
+/** Ledger on the left, charts in a 330px aside on the right while the chart toggle is on. */
+export function LedgerWithChart({ chart, children }: { chart?: ReactNode; children: ReactNode }) {
   return (
-    <div className="flex items-center px-5 py-2.5 gap-2">
-      <div className="flex-1 text-xs font-medium text-gray-700 min-w-0 flex items-center gap-0.5">
-        <span>{label}</span>
-        {tooltip && <FieldTooltip text={tooltip} />}
-      </div>
-      <div className="w-[140px] flex justify-end shrink-0">{rateInput}</div>
-      <span className="w-[20px] text-[11px] text-gray-500 shrink-0">{rateUnit}</span>
-      {rateSuffix && (
-        <span className="text-[11px] text-gray-400 italic whitespace-nowrap shrink-0 ml-1">
-          {rateSuffix}
-        </span>
+    <div
+      className={clsx(
+        'grid items-start',
+        chart ? 'grid-cols-[minmax(0,1fr)_330px]' : 'grid-cols-1',
+      )}
+    >
+      <div className="min-w-0">{children}</div>
+      {chart && (
+        <aside className="sticky top-0 border-l border-gray-200 px-[14px] pt-[10px] pb-[16px] bg-white flex flex-col gap-[12px]">
+          {chart}
+        </aside>
       )}
     </div>
   );
@@ -427,7 +458,7 @@ export function InlineNumberInput({
   control: any;
   name: string;
   decimalPlaces?: number;
-  /** When true, fill the parent column (use inside fixed-width COL.rate slots). */
+  /** When true, fill the parent slot instead of the default 110px. */
   fillSlot?: boolean;
 }) {
   return (
@@ -441,7 +472,9 @@ export function InlineNumberInput({
           onBlur={field.onBlur}
           decimalPlaces={decimalPlaces}
           fullWidth={fillSlot}
-          className={fillSlot ? '!text-xs' : '!text-xs !w-[110px]'}
+          // dense: the default NumberInput is ~32px tall and would break the 26px rows.
+          dense
+          className={fillSlot ? undefined : 'w-[110px]!'}
         />
       )}
     />

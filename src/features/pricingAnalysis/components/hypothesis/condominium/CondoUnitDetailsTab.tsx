@@ -1,55 +1,22 @@
 /**
- * Unit Details tab for Condominium hypothesis analysis.
+ * Unit Details tab for Condominium hypothesis analysis (mock v94): the unit table at full height
+ * with a total row. Upload / file history live in the tab toolbar (see UnitUploadControls); the
+ * KPI figures live there too (CondominiumTabs).
+ *
  * Upload columns: Floor No, Building, Apt No, Apartment, Apartment Type,
  * Condo Area Sq.M, Selling Price, Remark 1, Remark 2
  */
-import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Icon } from '@/shared/components';
 import { fmt } from '../../../domain/formatters';
-import { useUploadHypothesisUnitDetails, useDeleteHypothesisUpload } from '../../../api';
-import type {
-  UploadHistoryDto,
-  CondominiumUnitRowDto,
-  CondominiumSummaryDto,
-} from '../../../types/hypothesis';
-import toast from 'react-hot-toast';
-
-/** Row-level parse error returned by the BE as part of a 400 response message. */
-interface ParseRowError {
-  row: number;
-  field: string;
-  value: string;
-  reason: string;
-}
-
-/** Extract structured row errors from axios error response. */
-function extractParseErrors(error: unknown): ParseRowError[] | null {
-  if (!error || typeof error !== 'object') return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const axiosErr = error as any;
-  const message: string = axiosErr?.response?.data?.message ?? axiosErr?.response?.data ?? '';
-  if (typeof message !== 'string' || !message.includes('Excel parse errors')) return null;
-
-  const lines = message.split('\n').slice(1);
-  const errors: ParseRowError[] = [];
-  for (const line of lines) {
-    const m = line.match(/Row (\d+), Field '([^']+)': value '([^']*)' is (.+)\./);
-    if (m) {
-      errors.push({ row: parseInt(m[1], 10), field: m[2], value: m[3], reason: m[4] });
-    }
-  }
-  return errors.length > 0 ? errors : null;
-}
+import type { UploadHistoryDto, CondominiumUnitRowDto } from '../../../types/hypothesis';
+import { useUnitUpload, UnitUploadEmpty } from '../_shared/UnitUploadControls';
+import { UT_TABLE, UT_TH, UT_TD, UT_FIN, ModelPill, pillIndexer } from '../_shared/unitTable';
 
 interface CondoUnitDetailsTabProps {
   pricingAnalysisId: string;
   methodId: string;
   uploads: UploadHistoryDto[];
   rows: CondominiumUnitRowDto[];
-  previewSummary?: CondominiumSummaryDto | null;
-  /** System-derived sum of land title areas (Sq.Wa) for the property group. */
-  totalLandAreaFromTitles?: number | null;
 }
 
 export function CondoUnitDetailsTab({
@@ -57,344 +24,110 @@ export function CondoUnitDetailsTab({
   methodId,
   uploads,
   rows,
-  previewSummary,
-  totalLandAreaFromTitles,
 }: CondoUnitDetailsTabProps) {
   const { t } = useTranslation('pricingAnalysis');
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [parseErrors, setParseErrors] = useState<ParseRowError[] | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const uploadMutation = useUploadHypothesisUnitDetails();
-  const deleteMutation = useDeleteHypothesisUpload();
-
-  const handleFile = (file: File) => {
-    if (!file.name.endsWith('.xlsx')) {
-      toast.error(t('toasts.uploadXlsxOnly'));
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error(t('toasts.uploadMaxSize'));
-      return;
-    }
-    setParseErrors(null);
-    uploadMutation.mutate(
-      { pricingAnalysisId, methodId, file },
-      {
-        onSuccess: result => {
-          toast.success(t('toasts.uploadSuccess', { n: result.rowCount }));
-        },
-        onError: error => {
-          const errors = extractParseErrors(error);
-          if (errors) {
-            setParseErrors(errors);
-          } else {
-            toast.error(t('toasts.uploadFailed'));
-          }
-        },
-      },
-    );
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  };
-
-  const handleDeleteUpload = (uploadId: string) => {
-    deleteMutation.mutate(
-      { pricingAnalysisId, methodId, uploadId },
-      {
-        onSuccess: () => toast.success(t('toasts.uploadDeleted')),
-        onError: () => toast.error(t('toasts.deleteFailed')),
-      },
-    );
-  };
-
+  const { controls, pickFile, dropFile } = useUnitUpload({ pricingAnalysisId, methodId, uploads });
   const activeUpload = uploads.find(u => u.isActive);
+  const pillOf = pillIndexer(rows.map(r => r.modelType));
+  // Group by room type in first-appearance order (same order the pills are coloured in).
+  const types = [
+    ...rows
+      .reduce((acc, r) => {
+        const key = (r.modelType ?? '').trim();
+        const g = acc.get(key.toLowerCase()) ?? { name: key, count: 0, area: 0, price: 0 };
+        g.count += 1;
+        g.area += r.usableAreaSqM ?? 0;
+        g.price += r.sellingPrice ?? 0;
+        return acc.set(key.toLowerCase(), g);
+      }, new Map<string, { name: string; count: number; area: number; price: number }>())
+      .values(),
+  ];
+  const sum = (f: (r: CondominiumUnitRowDto) => number | null | undefined) =>
+    rows.reduce((acc, r) => acc + (f(r) ?? 0), 0);
 
   return (
-    <div className="space-y-4">
-      {/* Upload zone */}
-      <div
-        onDragOver={e => {
-          e.preventDefault();
-          setIsDragOver(true);
-        }}
-        onDragLeave={() => setIsDragOver(false)}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-        className={`
-          border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-          ${isDragOver ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary/50 hover:bg-gray-50'}
-        `}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".xlsx"
-          className="hidden"
-          onChange={e => {
-            const f = e.target.files?.[0];
-            if (f) handleFile(f);
-            e.target.value = '';
-          }}
-        />
-        {uploadMutation.isPending ? (
-          <div className="flex flex-col items-center gap-2">
-            <Icon name="spinner" className="size-8 text-primary animate-spin" />
-            <p className="text-sm text-gray-500">{t('upload.uploading')}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Icon name="file-excel" style="regular" className="size-8 text-gray-400" />
-            <p className="text-sm font-medium text-gray-700">
-              {t('upload.dropOrBrowse')} <span className="text-primary underline">{t('upload.browseLink')}</span>
-            </p>
-            <p className="text-xs text-gray-400">
-              .xlsx only · max 5 MB · Columns: Floor No, Building, Apt No, Apartment, Apartment
-              Type, Condo Area Sq.M, Selling Price, Remark 1, Remark 2
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Parse error table */}
-      {parseErrors && parseErrors.length > 0 && (
-        <div className="rounded-lg border border-red-200 overflow-hidden">
-          <div className="bg-red-50 px-4 py-2 border-b border-red-200 flex items-center gap-2">
-            <Icon
-              name="triangle-exclamation"
-              style="solid"
-              className="size-3.5 text-red-600 shrink-0"
-            />
-            <h4 className="text-xs font-semibold text-red-700 uppercase tracking-wide">
-              {t('upload.parseErrors')}
-            </h4>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs min-w-[400px]">
-              <thead>
-                <tr className="bg-red-50 border-b border-red-100">
-                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorRow')}</th>
-                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorField')}</th>
-                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorValue')}</th>
-                  <th className="text-left px-4 py-2 font-medium text-red-600">{t('upload.parseErrorReason')}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-red-50">
-                {parseErrors.map((e, i) => (
-                  <tr key={i} className="hover:bg-red-50/50">
-                    <td className="px-4 py-1.5 tabular-nums text-red-700 font-medium">{e.row}</td>
-                    <td className="px-4 py-1.5 text-red-700">{e.field}</td>
-                    <td className="px-4 py-1.5 text-red-500 font-mono">{e.value || '(empty)'}</td>
-                    <td className="px-4 py-1.5 text-red-600">{e.reason}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Upload history */}
-      {uploads.length > 0 && (
-        <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-            <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              {t('upload.uploadHistory')}
-            </h4>
-          </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-center px-4 py-2 font-medium text-gray-500 w-12">{t('upload.noCol')}</th>
-                <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.fileCol')}</th>
-                <th className="text-left px-4 py-2 font-medium text-gray-500">{t('upload.uploadedCol')}</th>
-                <th className="text-right px-4 py-2 font-medium text-gray-500">{t('upload.rowsCol')}</th>
-                <th className="text-center px-4 py-2 font-medium text-gray-500">{t('upload.statusCol')}</th>
-                <th className="px-4 py-2" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {[...uploads]
-                .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
-                .map((u, index) => (
-                <tr key={u.id} className={u.isActive ? 'bg-green-50' : ''}>
-                  <td className="px-4 py-2 text-center tabular-nums text-gray-500">{index + 1}</td>
-                  <td className="px-4 py-2 font-medium text-gray-700">
-                    <div className="flex items-center gap-1.5">
-                      <Icon
-                        name="file-excel"
-                        style="regular"
-                        className="size-3.5 text-green-600 shrink-0"
-                      />
-                      {u.fileName}
-                    </div>
-                  </td>
-                  <td className="px-4 py-2 text-gray-500">
-                    {new Date(u.uploadedAt).toLocaleString(undefined, {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      hour12: false,
-                    })}
-                  </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-gray-700">
-                    {u.rowCount.toLocaleString()}
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <span
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        u.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                      }`}
-                    >
-                      {u.isActive ? t('upload.statusPresent') : t('upload.statusHistoric')}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteUpload(u.id)}
-                      disabled={deleteMutation.isPending}
-                      className="text-gray-400 hover:text-red-500 transition-colors"
-                      aria-label="Delete upload"
-                    >
-                      <Icon name="trash" style="regular" className="size-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <div className="flex flex-col gap-[10px]">
+      {controls}
+      {!(activeUpload && rows.length > 0) && (
+        <UnitUploadEmpty onPick={pickFile} onDrop={dropFile} />
       )}
 
       {/* Unit listing */}
       {activeUpload && rows.length > 0 && (
-        <div className="rounded-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-            <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-              {t('upload.unitListing', { n: rows.length })}
-            </h4>
-          </div>
-          <div className="overflow-x-auto max-h-[480px]">
-            <table className="w-full text-xs min-w-[1000px]">
-              <thead className="sticky top-0">
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">#</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">Floor No</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Building</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Apartment No</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Apartment</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Apartment Type</th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">
-                    Condo Area (Sq.M)
-                  </th>
-                  <th className="text-right px-3 py-2 font-medium text-gray-500">
-                    Selling Price (Baht)
-                  </th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Remark 1</th>
-                  <th className="text-left px-3 py-2 font-medium text-gray-500">Remark 2</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {rows.map(row => (
-                  <tr key={row.sequenceNumber} className="hover:bg-gray-50">
-                    <td className="px-3 py-1.5 text-gray-400">{row.sequenceNumber}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
-                      {row.floorNo ?? '-'}
-                    </td>
-                    <td className="px-3 py-1.5 text-gray-700">{row.building ?? '-'}</td>
-                    <td className="px-3 py-1.5 text-gray-700">{row.aptNo ?? '-'}</td>
-                    <td className="px-3 py-1.5 text-gray-700">{row.apartment ?? '-'}</td>
-                    <td className="px-3 py-1.5">
-                      <span className="inline-flex px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 text-[10px] font-medium">
-                        {row.modelType ?? '-'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
-                      {fmt(row.usableAreaSqM)}
-                    </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
-                      {fmt(row.sellingPrice)}
-                    </td>
-                    <td className="px-3 py-1.5 text-gray-500">{row.remark1 ?? ''}</td>
-                    <td className="px-3 py-1.5 text-gray-500">{row.remark2 ?? ''}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <table className={UT_TABLE}>
+          <thead>
+            <tr>
+              <th className={`${UT_TH} text-left left-0 z-[3] w-[48px]`}>#</th>
+              <th className={`${UT_TH} text-right`}>{t('hypothesis.units.cols.floorNo')}</th>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.cols.building')}</th>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.cols.aptNo')}</th>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.cols.apartment')}</th>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.cols.aptType')}</th>
+              <th className={`${UT_TH} text-right`}>{t('hypothesis.units.cols.condoArea')}</th>
+              <th className={`${UT_TH} text-right`}>{t('hypothesis.units.cols.sellingPrice')}</th>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.cols.remark1')}</th>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.cols.remark2')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row => (
+              <tr key={row.sequenceNumber}>
+                <td className={`${UT_TD} text-[#8a96a0] sticky left-0 z-[1]`}>
+                  {row.sequenceNumber}
+                </td>
+                <td className={`${UT_TD} text-right`}>{row.floorNo ?? '—'}</td>
+                <td className={UT_TD}>{row.building ?? '—'}</td>
+                <td className={UT_TD}>{row.aptNo ?? '—'}</td>
+                <td className={UT_TD}>{row.apartment ?? '—'}</td>
+                <td className={UT_TD}>
+                  <ModelPill index={pillOf(row.modelType)}>{row.modelType ?? '—'}</ModelPill>
+                </td>
+                <td className={`${UT_TD} text-right`}>{fmt(row.usableAreaSqM)}</td>
+                <td className={`${UT_TD} text-right`}>{fmt(row.sellingPrice)}</td>
+                <td className={`${UT_TD} text-[#8a96a0]`}>{row.remark1 || '—'}</td>
+                <td className={`${UT_TD} text-[#8a96a0]`}>{row.remark2 || '—'}</td>
+              </tr>
+            ))}
+            <tr>
+              <td className={`${UT_FIN} sticky left-0 z-[1]`}>{t('hypothesis.units.total')}</td>
+              <td colSpan={5} className={UT_FIN}>
+                {t('hypothesis.units.rooms', { n: rows.length })}
+              </td>
+              <td className={`${UT_FIN} text-right`}>{fmt(sum(r => r.usableAreaSqM))}</td>
+              <td className={`${UT_FIN} text-right`}>{fmt(sum(r => r.sellingPrice))}</td>
+              <td colSpan={2} className={UT_FIN} />
+            </tr>
+          </tbody>
+        </table>
       )}
 
-      {/* Aggregate tiles from preview (FSD D01-D03 + Total Land Area from Title) */}
-      {/* Hidden until a unit-detail upload exists, mirroring the L&B `models` gate. */}
-      {rows.length > 0 && previewSummary && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <AggCard
-            label={t('upload.aggTotalLandAreaFromTitle')}
-            value={fmt(totalLandAreaFromTitles)}
-            unit="Sq.Wa"
-          />
-          <AggCard
-            label={t('upload.aggIndoorSalesArea')}
-            value={fmt(previewSummary.indoorSalesArea)}
-            unit="Sq.M"
-          />
-          <AggCard
-            label={t('upload.aggTotalUnits')}
-            value={
-              previewSummary.setAvgRoomSizeUnits != null
-                ? String(previewSummary.setAvgRoomSizeUnits)
-                : '-'
-            }
-          />
-          <AggCard
-            label={t('upload.aggTotalSellingPrice')}
-            value={fmt(previewSummary.totalProjectSellingPrice)}
-            unit="Baht"
-            highlight
-          />
-        </div>
+      {/* Per room-type analysis — the condo counterpart of L&B's model analysis */}
+      {activeUpload && rows.length > 0 && (
+        <table className={UT_TABLE}>
+          <thead>
+            <tr>
+              <th className={`${UT_TH} text-left`}>{t('hypothesis.units.typeAnalysis')}</th>
+              <th className={`${UT_TH} text-right`}>{t('hypothesis.units.roomCount')}</th>
+              <th className={`${UT_TH} text-right`}>{t('hypothesis.units.avgAreaSqM')}</th>
+              <th className={`${UT_TH} text-right`}>{t('hypothesis.units.totalAreaSqM')}</th>
+              <th className={`${UT_TH} text-right`}>{t('upload.colTotalRevenue')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {types.map(g => (
+              <tr key={g.name}>
+                <td className={UT_TD}>
+                  <ModelPill index={pillOf(g.name)}>{g.name || '—'}</ModelPill>
+                </td>
+                <td className={`${UT_TD} text-right`}>{g.count.toLocaleString()}</td>
+                <td className={`${UT_TD} text-right`}>{fmt(g.area / g.count)}</td>
+                <td className={`${UT_TD} text-right`}>{fmt(g.area)}</td>
+                <td className={`${UT_TD} text-right`}>{fmt(g.price)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
-    </div>
-  );
-}
-
-function AggCard({
-  label,
-  value,
-  unit,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  unit?: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className={`rounded-lg border p-3 ${
-        highlight ? 'bg-primary/5 border-primary/20' : 'bg-gray-50 border-gray-200'
-      }`}
-    >
-      <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">{label}</p>
-      <p className={`text-sm font-semibold ${highlight ? 'text-primary' : 'text-gray-900'}`}>
-        {value}
-        {unit && (
-          <span
-            className={`text-[10px] font-normal ml-1 ${highlight ? 'text-primary/60' : 'text-gray-400'}`}
-          >
-            {unit}
-          </span>
-        )}
-      </p>
     </div>
   );
 }

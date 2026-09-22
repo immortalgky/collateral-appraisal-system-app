@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import type { MethodSpecifiedRentalIncomePerSquareMeterWrapper } from '../../../types/dcf';
 
@@ -18,12 +19,13 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
   baseStyles,
   isReadOnly,
 }: MethodSpecifiedRentalIncomePerSquareMeterProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Saleable Area</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.saleableArea')}</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -37,9 +39,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
-                <span>Occupancy Rate - 1st year amt</span>
+                <span>{t('dcf.common.occupancyRateFirstYearAmt')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateFirstYearPct`}
@@ -53,7 +55,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                     }}
                   />
                 </div>
-                <span>% growth</span>
+                <span>{t('dcf.common.percentGrowth')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRatePct`}
@@ -67,7 +69,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                     }}
                   />
                 </div>
-                <span>% every</span>
+                <span>{t('dcf.common.percentEvery')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateYrs`}
@@ -81,7 +83,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
                     }}
                   />
                 </div>
-                <span>year(s)</span>
+                <span>{t('dcf.common.year')}</span>
               </div>
             </td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
@@ -108,7 +110,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Total Number of Saleable Area</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.common.totalNumberOfSaleableArea')}
+            </td>
             {(method.detail?.totalSaleableAreaDeductByOccRate ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -118,7 +122,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
             {(method.detail?.rentalRateIncrease ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -130,7 +134,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Average Rental Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.methods.rentalIncomePerSquareMeter.averageRentalRate')}
+            </td>
             {(method.detail?.avgRentalRate ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -140,8 +146,8 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Total Rental Income</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalRentalIncome')}</span>
             </td>
             {(method.detail?.totalRentalIncome ?? []).map((val, idx) => {
               return (

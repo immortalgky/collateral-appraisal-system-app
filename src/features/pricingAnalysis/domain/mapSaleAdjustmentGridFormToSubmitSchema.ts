@@ -31,10 +31,11 @@ export function mapSaleAdjustmentGridFormToSubmitSchema({
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
     appraisalValue: userAppraisalPrice,
-    finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
+    // Wire key renamed; the right-hand side still reads the form model, which keeps its own name.
+    finalValueOverride: (fv?.finalValueAdjusted as number | undefined) ?? null,
     hasBuildingValue: ap?.hasBuildingValue ?? null,
     buildingValue: ap?.totalBuildingCost ?? null,
-    appraisalPrice: userAppraisalPrice,
+    indicatedValue: userAppraisalPrice,
     includeLandArea: ap?.includeLandArea ?? null,
     landArea: ap?.landArea ?? null,
     landValue: landValueToSend,

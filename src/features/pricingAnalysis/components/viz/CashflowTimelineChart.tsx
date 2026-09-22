@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import { useTranslation } from 'react-i18next';
 
 export interface CashflowTimelineDataPoint {
   year: number;
@@ -43,21 +44,28 @@ interface ChartRow extends CashflowTimelineDataPoint {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function CashflowTooltip({ active, payload, label }: any) {
+  const { t } = useTranslation('pricingAnalysis');
   if (!active || !payload?.length) return null;
   const row = (payload[0]?.payload ?? {}) as ChartRow;
   return (
     <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
-      <div className="text-gray-500 mb-1">Year {label}</div>
-      <div style={{ color: '#22c55e' }}>Income: {fmtFull(row.income ?? 0)}</div>
-      <div style={{ color: '#f97316' }}>Expenses: {fmtFull(row.expenses ?? 0)}</div>
+      <div className="text-gray-500 mb-1">{t('dcf.chart.yearLabel', { year: label })}</div>
+      <div style={{ color: '#22c55e' }}>
+        {t('dcf.chart.income')}: {fmtFull(row.income ?? 0)}
+      </div>
+      <div style={{ color: '#f97316' }}>
+        {t('dcf.chart.expenses')}: {fmtFull(row.expenses ?? 0)}
+      </div>
       <div style={{ color: '#3b82f6' }} className="font-medium">
-        NOI: {fmtFull(row.noi ?? 0)}
+        {t('dcf.chart.noi')}: {fmtFull(row.noi ?? 0)}
       </div>
       {row.terminalBar > 0 && (
-        <div style={{ color: '#8b5cf6' }}>Terminal value: {fmtFull(row.terminalBar)}</div>
+        <div style={{ color: '#8b5cf6' }}>
+          {t('dcf.chart.terminalValue')}: {fmtFull(row.terminalBar)}
+        </div>
       )}
       <div style={{ color: '#0ea5e9' }} className="mt-1">
-        PV contribution: {fmtFull(row.presentValue ?? 0)}
+        {t('dcf.chart.pvContribution')}: {fmtFull(row.presentValue ?? 0)}
       </div>
     </div>
   );
@@ -68,6 +76,7 @@ export function CashflowTimelineChart({
   discountRate,
   capitalizeRate,
 }: CashflowTimelineChartProps) {
+  const { t } = useTranslation('pricingAnalysis');
   // Split NOI and terminal value into two stack segments so the bar visually
   // shows how much of the terminal-year bar comes from the cap-rate residual.
   const rows: ChartRow[] = data.map(d => ({
@@ -87,9 +96,14 @@ export function CashflowTimelineChart({
   return (
     <div className="rounded-lg border border-gray-200 p-3">
       <div className="flex items-center justify-between mb-1">
-        <div className="text-[11px] font-medium text-gray-500">Cashflow &amp; Present Value</div>
+        <div className="text-[11px] font-medium text-gray-500">
+          {t('dcf.chart.cashflowAndPresentValue')}
+        </div>
         <div className="text-[9px] text-gray-400">
-          Discount: {(discountRate * 100).toFixed(1)}% · Cap: {(capitalizeRate * 100).toFixed(1)}%
+          {t('dcf.chart.discountCapLine', {
+            discount: (discountRate * 100).toFixed(1),
+            cap: (capitalizeRate * 100).toFixed(1),
+          })}
         </div>
       </div>
 
@@ -100,10 +114,16 @@ export function CashflowTimelineChart({
           <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={fmtCompact} width={45} />
           <Tooltip content={<CashflowTooltip />} cursor={{ fill: '#f3f4f6' }} />
           <Legend wrapperStyle={{ fontSize: 9, paddingTop: 2 }} />
-          <Bar dataKey="noiBar" name="NOI" stackId="cf" fill="#3b82f6" radius={[0, 0, 0, 0]} />
+          <Bar
+            dataKey="noiBar"
+            name={t('dcf.chart.noi')}
+            stackId="cf"
+            fill="#3b82f6"
+            radius={[0, 0, 0, 0]}
+          />
           <Bar
             dataKey="terminalBar"
-            name="Terminal value"
+            name={t('dcf.chart.terminalValue')}
             stackId="cf"
             fill="#8b5cf6"
             radius={[4, 4, 0, 0]}
@@ -111,7 +131,7 @@ export function CashflowTimelineChart({
           <Line
             type="monotone"
             dataKey="presentValue"
-            name="Present value"
+            name={t('dcf.chart.presentValue')}
             stroke="#0ea5e9"
             strokeWidth={2}
             strokeDasharray="4 3"
@@ -121,14 +141,14 @@ export function CashflowTimelineChart({
       </ResponsiveContainer>
 
       <div className="mt-2 grid grid-cols-3 gap-3 text-[10px]">
-        <Stat label="NPV (Σ PV)" value={fmtFull(totalPv)} accent="text-sky-600" />
+        <Stat label={t('dcf.chart.npvSumPv')} value={fmtFull(totalPv)} accent="text-sky-600" />
         <Stat
-          label="Terminal share"
+          label={t('dcf.chart.terminalShare')}
           value={`${terminalShare.toFixed(1)}%`}
           accent="text-violet-600"
         />
         <Stat
-          label="Discount rate"
+          label={t('dcf.chart.discountRate')}
           value={`${(discountRate * 100).toFixed(1)}%`}
           accent="text-gray-700"
         />

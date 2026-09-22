@@ -371,7 +371,6 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                               const refButton = !isReadOnly ? (
                                 <MarketReferenceButton
                                   compact
-                                  label="WQS"
                                   subjectType={PricingAnalysisSubjectType.RoomIncomeRef}
                                   // Pass the live value; after onBeforeOpen resolves the state update
                                   // will have re-rendered with the new id, and the modal reads anchorId
@@ -417,7 +416,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                                     allowNegative: false,
                                   }}
                                   rightIcon={refButton}
-                                  inputClassName={refButton ? '!pr-14' : undefined}
+                                  inputClassName={refButton ? 'pr-14!' : undefined}
                                 />
                               );
                             })()}

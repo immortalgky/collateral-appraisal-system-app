@@ -1,33 +1,62 @@
 /**
  * GroupReferencesSection
  *
- * Shown inside the PricingAnalysisAccordion detail pane (Properties tab).
+ * Renders as the last group of rows inside PricingAnalysisMethodBoard's `<table>` — the
+ * compact mock's `refRowsHtml()` folds this into the same table rather than a separate card,
+ * so this returns `<tr>`s (no wrapping element) for the caller to place inside its `<tbody>`.
  * Displays all market references scoped to the group's PricingAnalysis
  * (those whose HostMethodId belongs to one of the group's methods).
  *
- * Actions: Open (drill-in) · Delete. No Add, no Apply.
+ * Actions: Open (drill-in) · Delete. No Apply.
+ *
+ * On the mock's "+ สร้างข้อมูลอ้างอิง" button (mock:3244, picker at mock:3257): the endpoint does
+ * exist (useCreateOrGetReference), so the blocker is the anchor, not the backend. Every reference
+ * type is anchored to something that lives inside a method — MachineryCostRef to a property id,
+ * IncomeLandRef to a DCF income-analysis id, LeaseholdLandRef/ProfitRentRef to that method's
+ * analysis id, RoomIncomeRef to a row inside a DCF method modal. Of those, only the machinery
+ * anchor is known at this screen; the rest do not exist until that method has been opened and
+ * saved. CreateOrGetReferenceCommandHandler stores whatever AnchorId it is handed without
+ * checking that it resolves, so supplying a placeholder would silently create an orphan. It also
+ * rejects PropertyGroup/ProjectModel outright — there is no group-level reference.
  */
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
-import { useQuery } from '@tanstack/react-query';
-import axios from '@shared/api/axiosInstance';
 import { Icon } from '@/shared/components';
+import Badge from '@/shared/components/Badge';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import {
   useGetGroupReferences,
   useDeleteReference,
   PricingAnalysisSubjectType,
   type ReferenceDto,
 } from '../api/references';
-import { useGetComparativeAnalysisTemplates } from '@features/templateManagement/api/comparativeTemplate';
-import { MarketReferenceModal } from './MarketReferenceModal';
+import { CreateReferencePopover } from './selection/CreateReferencePopover';
 import type { PropertyGroupItemDto } from '@/features/appraisal/api';
-import type { MarketComparableDetailType } from '../schemas';
-import type { TemplateDtoType } from '@/shared/schemas/v1';
+import { getMethodCode } from '../utils/methodCode';
+import { REFERENCE_PARAM } from '../constants/urlParams';
+
+/**
+ * Open a reference as a full page. The page (PricingAnalysisPage) watches this param and swaps
+ * the whole board for the reference's calculation panel, so a reference behaves like any other
+ * method rather than like a dialog — which is what the user asked for. Writing the URL here,
+ * rather than calling a prop threaded down through PricingAnalysisMethodBoard, keeps the two
+ * intermediate components out of it entirely.
+ *
+ * Pushes (no `replace`), so the browser's Back leaves the reference exactly like the page's own
+ * back button does.
+ */
+function useOpenReference() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  return (referencePricingAnalysisId: string) => {
+    const next = new URLSearchParams(searchParams);
+    next.set(REFERENCE_PARAM, referencePricingAnalysisId);
+    setSearchParams(next);
+  };
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -38,8 +67,6 @@ interface GroupReferencesSectionProps {
   groupMethods: Array<{ id?: string; methodType: string; label: string }>;
   /** Group properties for resolving machinery item name */
   groupProperties: PropertyGroupItemDto[];
-  /** Market surveys available for opening in the panel */
-  marketSurveys: MarketComparableDetailType[];
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -49,52 +76,12 @@ function formatNumber(v: number | null | undefined): string {
   return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-/** Map backend method type codes to display labels */
-function methodTypeBadge(methodType: string): string {
-  switch (methodType) {
-    case 'WQS':
-    case 'WQS_MARKET':
-      return 'WQS';
-    case 'SaleGrid':
-    case 'SAG_MARKET':
-      return 'SAG';
-    case 'DirectComparison':
-    case 'DC_MARKET':
-      return 'DC';
-    default:
-      return methodType;
-  }
-}
-
-// ── MachinerySubjectProperty (per-reference lazy fetch) ───────────────────────
-
-function useMachineryDetail(
-  appraisalId: string | undefined,
-  propertyId: string | undefined,
-  enabled: boolean,
-) {
-  return useQuery({
-    queryKey: ['appraisal', appraisalId, 'property', propertyId, 'machinery-detail'],
-    queryFn: async (): Promise<Record<string, unknown>> => {
-      const { data } = await axios.get(
-        `/appraisals/${appraisalId}/properties/${propertyId}/machinery-detail`,
-      );
-      return data as Record<string, unknown>;
-    },
-    enabled: enabled && !!appraisalId && !!propertyId,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
-}
-
 // ── ReferenceRow ──────────────────────────────────────────────────────────────
 
 interface ReferenceRowProps {
   ref_: ReferenceDto;
   groupMethods: GroupReferencesSectionProps['groupMethods'];
   groupProperties: PropertyGroupItemDto[];
-  marketSurveys: MarketComparableDetailType[];
-  templateList: TemplateDtoType[];
   readOnly: boolean;
   onDelete: (ref: ReferenceDto) => void;
 }
@@ -103,14 +90,11 @@ function ReferenceRow({
   ref_,
   groupMethods,
   groupProperties,
-  marketSurveys,
-  templateList,
   readOnly,
   onDelete,
 }: ReferenceRowProps) {
   const { t } = useTranslation('pricingAnalysis');
-  const appraisalId = useAppraisalId();
-  const [isOpen, setIsOpen] = useState(false);
+  const openReference = useOpenReference();
 
   // Resolve host-method label from group methods
   const hostMethod = groupMethods.find(m => m.id === ref_.hostMethodId);
@@ -142,83 +126,85 @@ function ReferenceRow({
     itemLabel = subjectLabels[ref_.subjectType] ?? t('groupReferences.subjects.machineryCostRef');
   }
 
-  // Fetch machinery detail for the subject-property auto-fill when drilling in
-  const { data: machineryDetail } = useMachineryDetail(
-    appraisalId ?? undefined,
-    ref_.anchorId,
-    isMachinery,
-  );
-
-  const subjectProperty = isMachinery ? machineryDetail : undefined;
+  const isCalculated = ref_.methods.some(m => m.valuePerUnit != null);
 
   return (
     <>
-      <div className="flex items-center justify-between px-3 py-2 rounded-lg border border-gray-100 bg-white hover:border-gray-200 transition-colors">
-        <div className="flex items-center gap-3 min-w-0">
-          {/* Host method + item */}
-          <div className="flex flex-col min-w-0">
-            <span className="text-[11px] text-gray-400 truncate">{hostMethodLabel}</span>
-            <span className="text-xs font-medium text-gray-800 truncate">{itemLabel}</span>
-          </div>
-
-          {/* Method badges + values */}
-          {ref_.methods.length > 0 && (
-            <div className="flex items-center gap-2 shrink-0">
-              {ref_.methods.map(m => (
-                <div key={m.methodId} className="flex items-center gap-1">
-                  <span
-                    className={clsx(
-                      'px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
-                      'bg-primary/10 text-primary border border-primary/20',
-                    )}
-                  >
-                    {methodTypeBadge(m.methodType)}
-                  </span>
-                  <span className="text-xs tabular-nums text-gray-700">
-                    {m.valuePerUnit != null ? formatNumber(m.valuePerUnit) : t('groupReferences.noValue')}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+      <tr className="h-[30px]">
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] min-w-0">
           <button
             type="button"
-            onClick={() => setIsOpen(true)}
-            className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors"
+            onClick={() => openReference(ref_.pricingAnalysisId)}
+            className="text-left hover:underline cursor-pointer truncate min-w-0 text-gray-700"
           >
-            <Icon name="arrow-up-right-from-square" className="size-3" />
-            {t('groupReferences.openReference')}
+            {hostMethod && (
+              <>
+                <span
+                  className="shrink-0 text-[10px] font-semibold leading-[16px] px-[5px] rounded-[4px]"
+                  style={{ background: '#edf1f1', color: '#55636f' }}
+                >
+                  {getMethodCode(hostMethod.methodType)}
+                </span>{' '}
+              </>
+            )}
+            <span className="text-[11px] text-[#8a96a0]">{hostMethodLabel}</span>{' '}
+            <span className="font-medium">{itemLabel}</span>
+          </button>
+        </td>
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
+          {/* Same height override as the method rows' status chip (see
+              PricingAnalysisMethodBoardRow) — these sit in one table, so the two have to be
+              sized together or the reference rows end up taller than the method rows. */}
+          <Badge
+            size="xs"
+            dot
+            badgeStyle="soft"
+            type="status"
+            className="py-0! leading-[14px]"
+            value={isCalculated ? 'completed' : 'cancelled'}
+          >
+            {isCalculated ? t('methodStatus.calculated') : t('groupReferences.noValue')}
+          </Badge>
+        </td>
+        <td className="px-[8px] py-0 text-right tabular-nums whitespace-nowrap">
+          {ref_.methods.length === 0
+            ? '—'
+            : ref_.methods.map((m, i) => (
+                <span key={m.methodId} className={clsx('text-gray-700', i > 0 && 'ml-2')}>
+                  <span className="text-gray-400 text-[10px] uppercase">
+                    {getMethodCode(m.methodType)}
+                  </span>{' '}
+                  {m.valuePerUnit != null ? formatNumber(m.valuePerUnit) : '—'}
+                </span>
+              ))}
+        </td>
+        <td className="px-[8px] py-0 text-[#8a96a0] whitespace-nowrap">—</td>
+        <td className="px-[8px] py-0 text-right whitespace-nowrap">
+          <button
+            type="button"
+            onClick={() => openReference(ref_.pricingAnalysisId)}
+            className="text-primary text-[12px] font-medium hover:underline cursor-pointer"
+          >
+            {isCalculated ? t('board.openMethod') : t('board.startCalculating')}
           </button>
           {!readOnly && (
             <button
               type="button"
               onClick={() => onDelete(ref_)}
-              className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 border border-red-200/50 rounded-lg hover:bg-red-50 transition-colors"
+              aria-label={t('groupReferences.deleteReference')}
               title={t('groupReferences.deleteReference')}
+              className="p-1 ml-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
             >
-              <Icon name="trash" style="solid" className="size-3" />
+              <Icon
+                name="xmark"
+                style="solid"
+                className="size-3.5 text-gray-400 hover:text-red-500 transition-colors"
+              />
             </button>
           )}
-        </div>
-      </div>
-
-      {/* Drill-in modal — no onApplyValue so apply button is hidden */}
-      <MarketReferenceModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        subjectType={ref_.subjectType}
-        anchorId={ref_.anchorId}
-        anchorRefKey={ref_.anchorRefKey}
-        hostMethodId={ref_.hostMethodId}
-        marketSurveys={marketSurveys}
-        templateList={templateList}
-        subjectProperty={subjectProperty}
-        currentAnchorLabel={ref_.anchorRefKey ?? undefined}
-        readOnly={readOnly}
-      />
+        </td>
+      </tr>
     </>
   );
 }
@@ -229,21 +215,17 @@ export function GroupReferencesSection({
   pricingAnalysisId,
   groupMethods,
   groupProperties,
-  marketSurveys,
 }: GroupReferencesSectionProps) {
   const { t } = useTranslation('pricingAnalysis');
   const readOnly = usePageReadOnly();
+  const openReference = useOpenReference();
   const [deleteTarget, setDeleteTarget] = useState<ReferenceDto | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { data, isLoading } = useGetGroupReferences(pricingAnalysisId);
   const deleteMutation = useDeleteReference();
-  // Fetch WQS/SAG/DC comparative template list for the drill-in panels
-  const { data: templateList = [] } = useGetComparativeAnalysisTemplates();
 
   const references = data?.references ?? [];
-
-  // Render nothing when there are no references (and not loading)
-  if (!isLoading && references.length === 0) return null;
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -264,41 +246,77 @@ export function GroupReferencesSection({
 
   return (
     <>
-      <div className="mt-3 space-y-1.5">
-        {/* Section header */}
-        <div className="flex items-center gap-1.5 mb-1">
-          <Icon name="chart-bar" className="size-3 text-gray-400" />
-          <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-            {t('groupReferences.sectionTitle')}
+      {/* Band header — same row shape as an approach row (tr.apr.refband in the mock) */}
+      <tr className="h-[30px] bg-[#f8fafa]">
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
+          <Icon name="chart-bar" style="solid" className="size-3 text-gray-400" />
+        </td>
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap" colSpan={2}>
+          <span className="font-semibold text-gray-800">{t('groupReferences.sectionTitle')}</span>{' '}
+          <span className="text-gray-400">
+            {t('groupReferences.bandSubtitle', { count: references.length })}
           </span>
-          {references.length > 0 && (
-            <span className="text-[10px] font-medium text-gray-400 bg-gray-100 rounded-full px-1.5 py-0.5">
-              {references.length}
-            </span>
+        </td>
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
+        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
+        {/* mock:3244 — `button.addm` in the band's last cell, same link styling as the board's
+            per-approach "+ เพิ่มวิธี". */}
+        <td className="px-[8px] py-0 text-right whitespace-nowrap">
+          {!readOnly && pricingAnalysisId && (
+            <div className="relative inline-block text-left">
+              <button
+                type="button"
+                className="text-primary text-[12px] font-medium hover:underline cursor-pointer"
+                onClick={() => setIsCreateOpen(open => !open)}
+              >
+                {t('groupReferences.createReference')}
+              </button>
+              {isCreateOpen && (
+                <CreateReferencePopover
+                  pricingAnalysisId={pricingAnalysisId}
+                  groupMethods={groupMethods}
+                  groupProperties={groupProperties}
+                  onClose={() => setIsCreateOpen(false)}
+                  /* Straight onto the reference's page (mock:3961 `enterRef` after create) —
+                     the same destination the row's link goes to, so creating and opening an
+                     existing one land in the same place. No waiting for the list refetch:
+                     the popover already knows the id it just created. */
+                  onCreated={created => openReference(created.referencePricingAnalysisId)}
+                />
+              )}
+            </div>
           )}
-        </div>
+        </td>
+      </tr>
 
-        {isLoading ? (
-          <div className="flex justify-center py-3">
+      {isLoading ? (
+        <tr>
+          <td></td>
+          <td colSpan={5} className="px-[8px] py-2">
             <div className="animate-spin size-4 border-2 border-primary border-t-transparent rounded-full" />
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {references.map(ref => (
-              <ReferenceRow
-                key={ref.pricingAnalysisId}
-                ref_={ref}
-                groupMethods={groupMethods}
-                groupProperties={groupProperties}
-                marketSurveys={marketSurveys}
-                templateList={templateList}
-                readOnly={readOnly}
-                onDelete={setDeleteTarget}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+          </td>
+        </tr>
+      ) : references.length === 0 ? (
+        /* mock:3245 — `tr.empty-apr`. The band stays visible with nothing in it rather than
+           disappearing, so the group's reference slot reads as empty instead of absent. */
+        <tr className="h-[30px]">
+          <td className="px-[8px] py-0 border-r border-r-[#eef2f2]"></td>
+          <td colSpan={5} className="px-[8px] py-0 text-gray-400">
+            {t('groupReferences.empty')}
+          </td>
+        </tr>
+      ) : (
+        references.map(ref => (
+          <ReferenceRow
+            key={ref.pricingAnalysisId}
+            ref_={ref}
+            groupMethods={groupMethods}
+            groupProperties={groupProperties}
+            readOnly={readOnly}
+            onDelete={setDeleteTarget}
+          />
+        ))
+      )}
 
       <ConfirmDialog
         isOpen={deleteTarget !== null}

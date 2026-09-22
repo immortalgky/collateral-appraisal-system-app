@@ -9,6 +9,7 @@
  */
 import { useCallback, useRef, useState } from 'react';
 import { Icon } from '@/shared/components';
+import Badge from '@/shared/components/Badge';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -24,6 +25,7 @@ import { pricingAnalysisKeys } from '../../api/queryKeys';
 import type { HypothesisVariant } from '../../types/hypothesis';
 import { LandBuildingTabs } from './landBuilding/LandBuildingTabs';
 import { CondominiumTabs } from './condominium/CondominiumTabs';
+import { MethodTopBarPortal } from '../MethodTopBarPortal';
 
 interface HypothesisPanelProps {
   activeMethod?: {
@@ -40,6 +42,8 @@ interface HypothesisPanelProps {
   }) => void;
   onCalculationMethodDirty: (check: boolean) => void;
   onCancelCalculationMethod: () => void;
+  /** The group's properties — the Cost of Building tab lists its buildings from these. */
+  properties?: Record<string, unknown>[];
 }
 
 // ─── Variant picker shown before Generate ────────────────────────────────────
@@ -105,6 +109,7 @@ export function HypothesisPanel({
   onCalculationSave,
   onCalculationMethodDirty,
   onCancelCalculationMethod,
+  properties,
 }: HypothesisPanelProps) {
   const { t } = useTranslation('pricingAnalysis');
   const { pricingAnalysisId, methodId, approachType, methodType } = activeMethod ?? {};
@@ -182,22 +187,21 @@ export function HypothesisPanel({
 
   return (
     <div className="flex flex-col flex-1 min-h-0 gap-4">
-      {/* Header */}
-      <div className="shrink-0 flex items-center gap-2.5">
-        <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
-          <Icon name="calculator" style="solid" className="size-4" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">{t('hypothesis.title')}</h2>
-          {variant && (
-            <p className="text-xs text-gray-500">
-              {variant === 'LandBuilding'
-                ? t('hypothesis.variants.landBuilding')
-                : t('hypothesis.variants.condominium')}
-            </p>
-          )}
-        </div>
-      </div>
+      {/* The variant badge — beside the method-name badge in the shared top bar, same
+          slot other converted panels use for their template chip (e.g.
+          DirectComparisonPanel.tsx). Nothing to show before Generate, since the variant
+          isn't chosen yet; nothing to show once LandBuildingTabs/CondominiumTabs own the
+          rest of the top bar (their own MethodTopBarPortal covers the value figure and
+          cancel/reset/save — a save action makes no sense before an analysis exists). */}
+      {variant && (
+        <MethodTopBarPortal slot="chip">
+          <Badge tone="gray" size="sm" dot={false}>
+            {variant === 'LandBuilding'
+              ? t('hypothesis.variants.landBuilding')
+              : t('hypothesis.variants.condominium')}
+          </Badge>
+        </MethodTopBarPortal>
+      )}
 
       {!hasAnalysis ? (
         <VariantPicker onGenerate={handleGenerate} isGenerating={generateMutation.isPending} />
@@ -213,6 +217,7 @@ export function HypothesisPanel({
             onSaveSuccess={handleSave}
             onReset={() => setIsResetDialogOpen(true)}
             onCancel={onCancelCalculationMethod}
+            properties={properties}
           />
         </div>
       ) : variant === 'Condominium' ? (

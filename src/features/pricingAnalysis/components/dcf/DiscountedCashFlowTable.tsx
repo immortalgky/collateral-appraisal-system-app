@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { RHFInputCell } from '../table/RHFInputCell';
+import { DenseProvider } from '../table/RHFInputCell';
 import { DiscountedCashFlowSectionRenderer } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowSectionRenderer';
 import type { DCFSection } from '../../types/dcf';
 import { StickyLabelTable } from '../layout/StickyLabelTable';
@@ -11,6 +11,14 @@ import {
   getMethodPerYearFieldPaths,
 } from '../../domain/dcf/useCalculations';
 import { useTranslation } from 'react-i18next';
+import { STK_CLASS, STK2_CLASS, YEAR_CELL_CLASS } from './dcfTableCellStyles';
+
+// mock:2106 — `<table class="g dcf" data-sticky="490">`. Widened from the mock's 230
+// (item) + 260 (assumption) to 300+350 — see dcfTableCellStyles.ts for why.
+// Measured, not guessed: the longest label rendered here is the locale string "Net Operating
+// Income (EBIT…)" at 304px — wider than the longest name in dcfParameters.ts, which is what the
+// 300px pass was sized against. STKW below stays STK + STK2 (320 + 350).
+const DCF_STK_WIDTH = 230;
 
 export interface SectionColor {
   bg: string;
@@ -85,6 +93,8 @@ interface DiscountedCashFlowTableProps {
   totalNumberOfYears: number;
   properties: Record<string, unknown>[];
   isReadOnly?: boolean;
+  /** Buddhist year of projection year 1 — the year after the appraisal date. */
+  firstYearBE?: number | null;
   onStructuralChange?: () => void;
   incomeAnalysisId?: string;
   hostMethodId?: string;
@@ -96,6 +106,7 @@ export function DiscountedCashFlowTable({
   totalNumberOfYears,
   properties,
   isReadOnly,
+  firstYearBE,
   onStructuralChange,
   incomeAnalysisId,
   hostMethodId,
@@ -197,54 +208,49 @@ export function DiscountedCashFlowTable({
   });
 
   return (
-    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
-      <StickyLabelTable className="flex-1 min-h-0">
-        <table className="table table-xs min-w-max border-separate border-spacing-0">
+    // DenseProvider — every RHFInputCell inside the DCF table (projection-period header
+    // inputs, per-method rate inputs/selects in DiscountedCashFlowMethodRenderer's
+    // Method* components) was rendering at the default (non-dense) size, whose ~32-38px
+    // controls (see NumberInput/TDropdown non-dense branches) forced rows well past the
+    // 26px BASE_CELL height — the root cause of the DCF table's uneven row heights. The
+    // rest of this feature's tables (WQS/SAG/Cost/etc.) already wrap their scoring grids
+    // the same way; the DCF table was the one left out.
+    <DenseProvider value={true}>
+      <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-200">
+        <StickyLabelTable
+          className="flex-1 min-h-0"
+          secondStickyColumnLeft={DCF_STK_WIDTH}
+          // Year pager (mock:2708 `nav: true`) — same opt-in LeaseholdTable uses. The
+          // sticky block is STK + STK2 = 230 + 260 (mock:669-670).
+          columnNavSelector="thead th[data-nav-col]"
+          stickyWidth={490}
+          navGroupSize={5}
+        >
+        <table className="table min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums rounded-none">
           <thead className="bg-neutral-50">
             <tr className="bg-white">
-              <td className="flex-1 text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300">
-                <div className="flex flex-row justify-end items-center gap-1.5">
-                  <span>{t('dcf.common.projectionPeriod')}</span>
-                  <div className="w-16">
-                    <RHFInputCell
-                      fieldName="totalNumberOfYears"
-                      inputType="number"
-                      disabled={isReadOnly}
-                      number={{
-                        decimalPlaces: 0,
-                        maxIntegerDigits: 2,
-                        maxValue: 99,
-                        allowNegative: false,
-                      }}
-                    />
-                  </div>
-                  <span>{t('dcf.common.years')}</span>
-                  <span>/</span>
-                  <span>{t('dcf.common.daysPerYear')}</span>
-                  <div className="w-16">
-                    <RHFInputCell
-                      fieldName="totalNumberOfDayInYear"
-                      inputType="number"
-                      disabled={isReadOnly}
-                      number={{
-                        decimalPlaces: 0,
-                        maxIntegerDigits: 3,
-                        maxValue: 370,
-                        allowNegative: false,
-                      }}
-                    />
-                  </div>
-                  <span>{t('dcf.common.days')}</span>
-                </div>
-              </td>
+              {/* mock:2172 — static "รายการ | สมมติฐาน". The projection-period/days
+                  editors that used to live here moved to the assumptions rail
+                  (DiscountedCashFlowPanel), which binds the same RHF fields. */}
+              <th className={clsx(STK_CLASS, 'font-medium text-left')}>
+                {t('methodTabs.dcf.table.item')}
+              </th>
+              <th className={clsx(STK2_CLASS, 'font-medium text-left')}>
+                {t('methodTabs.dcf.table.assumption')}
+              </th>
               {Array.from({ length: totalNumberOfYears }, (_, i) => (
                 <th
                   key={i}
-                  className={clsx(
-                    'text-right text-xs px-1 py-1 font-medium whitespace-nowrap border-b border-gray-300 min-w-[120px]',
-                  )}
+                  data-nav-col
+                  // mock `.g th.yr` — two lines (ปีที่ N / BE year), line-height 14 + 4px pad.
+                  className={clsx(YEAR_CELL_CLASS, 'font-medium leading-[14px]! py-[4px]!')}
                 >
                   {t('dcf.common.yearColumn', { year: i + 1 })}
+                  {firstYearBE != null && (
+                    <span className="block text-[10px] text-[#8a96a0] font-normal leading-[12px]">
+                      {firstYearBE + i}
+                    </span>
+                  )}
                 </th>
               ))}
             </tr>
@@ -272,6 +278,7 @@ export function DiscountedCashFlowTable({
           </tbody>
         </table>
       </StickyLabelTable>
-    </div>
+      </div>
+    </DenseProvider>
   );
 }

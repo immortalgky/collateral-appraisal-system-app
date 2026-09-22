@@ -4,15 +4,19 @@ export function round2(n: unknown): number {
   return Math.round(x * 100) / 100;
 }
 
-export function floorToTenThousands(num) {
+// Pre-existing implicit-`any` on these three (predates this session's work — not
+// touched otherwise). Typed as `number` rather than `unknown` since every current
+// caller already passes a coerced number (e.g. `Number(finalValue) || 0` above);
+// this is a type annotation only, no behaviour change.
+export function floorToTenThousands(num: number) {
   return Math.floor(num / 10000) * 10000;
 }
 
-export function floorToThousands(num) {
+export function floorToThousands(num: number) {
   return Math.floor(num / 1000) * 1000;
 }
 
-export function roundToThousand(num) {
+export function roundToThousand(num: number) {
   return Math.round(num / 1000) * 1000;
 }
 
@@ -149,6 +153,9 @@ export function detectPriceUnit(calculations: unknown): string | null {
   for (const u of units) freq.set(u, (freq.get(u) ?? 0) + 1);
   return [...freq.entries()].sort((a, b) => b[1] - a[1])[0][0];
 }
+
+// detectPriceUnitMixed moved to domain/detectPriceUnitMixed.ts (shared with
+// WQS/DC — it was a byte-identical copy in all three domain files).
 
 /**
  * Final-value rounding rule (mirrors BE PricingCalculationHelper.RoundFinalValue):

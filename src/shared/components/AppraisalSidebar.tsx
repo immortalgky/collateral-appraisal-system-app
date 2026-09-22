@@ -3,6 +3,7 @@ import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessu
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
+import BrandLogo from './BrandLogo';
 import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import type { NavItem } from '@shared/config/navigationTypes';
@@ -262,27 +263,8 @@ export function MobileAppraisalSidebar({
 
           <div className="flex grow flex-col overflow-y-auto bg-white">
             {/* Logo Area */}
-            <div className="px-5 py-5">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm">
-                  <img alt="LHBank" src={logo} className="h-7 w-auto" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
-                    CAS
-                  </span>
-                  <div
-                    className="w-12 h-1 rounded-full my-0.5"
-                    style={{
-                      background:
-                        'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
-                    }}
-                  />
-                  <span className="text-[10px] font-medium text-gray-400">
-                    Collateral Appraisal System
-                  </span>
-                </div>
-              </div>
+            <div className="px-3 py-4">
+              <BrandLogo logo={logo} onClick={() => setSidebarOpen(false)} />
             </div>
 
             {/* Navigation */}
@@ -401,33 +383,9 @@ export default function AppraisalSidebar({
       <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
         {/* Logo Area */}
         <div
-          className={clsx(
-            'transition-all duration-300',
-            sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4',
-          )}
+          className={clsx('py-4 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-3')}
         >
-          <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center shadow-sm shrink-0">
-              <img alt="LHBank" src={logo} className="h-6 w-auto" />
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex flex-col">
-                <span className="text-sm font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
-                  CAS
-                </span>
-                <div
-                  className="w-12 h-1 rounded-full my-0.5"
-                  style={{
-                    background:
-                      'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
-                  }}
-                />
-                <span className="text-[10px] font-medium text-gray-400">
-                  Collateral Appraisal System
-                </span>
-              </div>
-            )}
-          </div>
+          <BrandLogo logo={logo} collapsed={sidebarCollapsed} />
         </div>
 
         {/* Navigation */}

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { MethodRoomCostBasedOnExpensesPerRoomPerDayWrapper } from '../../../types/dcf';
 
 interface MethodRoomCostBasedOnExpensesPerRoomPerDayProps {
@@ -14,12 +15,13 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
   method,
   baseStyles,
 }: MethodRoomCostBasedOnExpensesPerRoomPerDayProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -29,9 +31,13 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDay({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Room Income</span>
-              <span>({method.detail?.sumSaleableArea ?? 0} rooms)</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.common.roomIncome')}</span>
+              <span>
+                {t('dcf.common.roomsCount', {
+                  count: method.detail?.sumSaleableArea ?? 0,
+                })}
+              </span>
             </td>
             {(method.detail?.roomExpense ?? []).map((val, idx) => {
               return (

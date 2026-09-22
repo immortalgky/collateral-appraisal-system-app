@@ -10,6 +10,8 @@ interface SlideOverPanelProps {
   subtitle?: string;
   width?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
   children: ReactNode;
+  /** Pinned under the scrolling content — for actions that must stay reachable on long forms. */
+  footer?: ReactNode;
 }
 
 const widthClasses = {
@@ -28,6 +30,7 @@ const SlideOverPanel = ({
   subtitle,
   width = 'lg' as const,
   children,
+  footer,
 }: SlideOverPanelProps) => {
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -65,7 +68,13 @@ const SlideOverPanel = ({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  {children}
+                </div>
+
+                {footer && (
+                  <div className="border-t border-gray-200 bg-white px-6 py-3">{footer}</div>
+                )}
               </div>
             </DialogPanel>
           </div>

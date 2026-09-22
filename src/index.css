@@ -15,34 +15,96 @@
  * Thai in practice, and Sarabun has no italic here either — a real Roboto italic
  * would cost 46 kB to change almost nothing. The browser obliques instead.
  */
-@import "@fontsource-variable/roboto/wght.css";
-@import "@fontsource/sarabun/thai-400.css";
-@import "@fontsource/sarabun/thai-500.css";
-@import "@fontsource/sarabun/thai-600.css";
-@import "@fontsource/sarabun/thai-700.css";
+@import '@fontsource-variable/roboto/wght.css';
+@import '@fontsource/sarabun/thai-400.css';
+@import '@fontsource/sarabun/thai-500.css';
+@import '@fontsource/sarabun/thai-600.css';
+@import '@fontsource/sarabun/thai-700.css';
 
-@import "tailwindcss";
-@import "./styles/theme.css" layer(theme);
+@import 'tailwindcss';
+@import './styles/theme.css' layer(theme);
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 @plugin "daisyui" {
-    themes: main --default, dark;
+  themes:
+    main --default,
+    dark;
 }
 @plugin "daisyui/theme" {
-    name: "main";
-    default: true;
-    prefersdark: false;
-    color-scheme: light;
+  name: 'main';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
 }
 @plugin "daisyui/theme" {
-    name: "dark";
-    prefersdark: false;
-    color-scheme: dark;
+  name: 'dark';
+  prefersdark: false;
+  color-scheme: dark;
 }
 
 /* Workflow edge dash animation */
 @keyframes dashdraw {
-    from { stroke-dashoffset: 10; }
-    to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 10;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Moving stripes for a progress bar. A flat fill looks identical whether bytes are still
+   arriving or not, which is exactly what someone watching an upload wants to know. */
+@keyframes progress-stripes {
+  from {
+    background-position: 20px 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.progress-stripes {
+  background-image: linear-gradient(
+    45deg,
+    rgb(255 255 255 / 0.25) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgb(255 255 255 / 0.25) 50%,
+    rgb(255 255 255 / 0.25) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 20px 20px;
+  animation: progress-stripes 0.7s linear infinite;
+}
+
+/* A transfer whose size the browser cannot know: a short fill sliding back and forth, rather than
+   a full bar that reads as "done" and then jumps backwards when a real percentage arrives. */
+@keyframes progress-slide {
+  0% {
+    transform: translateX(-110%);
+  }
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+.progress-indeterminate {
+  width: 40%;
+  animation:
+    progress-stripes 0.7s linear infinite,
+    progress-slide 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-stripes,
+  .progress-indeterminate {
+    animation: none;
+  }
+  /* Still 40%, not full: a filled bar reads as finished, and that is as wrong for someone who
+       asked for less motion as for anyone else. It simply stops moving. */
+  .progress-indeterminate {
+    width: 40%;
+  }
 }
 
 /* Moving stripes for a progress bar. A flat fill looks identical whether bytes are still
@@ -103,19 +165,23 @@
 
 /* Skeleton shimmer for loading placeholders */
 @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .shimmer {
-    background: linear-gradient(
-        90deg,
-        var(--color-base-200, rgb(243 244 246)) 0%,
-        var(--color-base-300, rgb(229 231 235)) 50%,
-        var(--color-base-200, rgb(243 244 246)) 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.6s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--color-base-200, rgb(243 244 246)) 0%,
+    var(--color-base-300, rgb(229 231 235)) 50%,
+    var(--color-base-200, rgb(243 244 246)) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
 /* Additional global styles */
@@ -131,44 +197,52 @@
  * initial 16px font, not this one, so px keeps the steps honest and loop-free.
  */
 :root {
-    --cas-root-step: 13px;
-    --cas-density: 1;
+  --cas-root-step: 13px;
+  --cas-density: 1;
 }
 
 @media (min-width: 1600px) {
-    :root {
-        --cas-root-step: 14px;
-    }
+  :root {
+    --cas-root-step: 14px;
+  }
 }
 
 @media (min-width: 1920px) {
-    :root {
-        --cas-root-step: 16px;
-    }
+  :root {
+    --cas-root-step: 16px;
+  }
 }
 
 html {
-    scroll-behavior: smooth;
-    font-size: calc(var(--cas-root-step) * var(--cas-density));
+  scroll-behavior: smooth;
+  font-size: calc(var(--cas-root-step) * var(--cas-density));
 }
 
 body {
-    margin: 0;
+  margin: 0;
 }
 
 /* Focus styles for better accessibility */
 :focus-visible {
-    outline: 2px solid #3b82f6;
-    outline-offset: 2px;
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+/* Text-entry controls draw their own focus state — the shared inputs a primary ring and border, and
+   a text box always shows its caret — so the blue outline above only doubled up around them as a
+   second, off-brand ring. Buttons, links, checkboxes and radios keep it: nothing else marks them. */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 
 a:hover {
-    color: #535bf2;
+  color: #535bf2;
 }
 
 h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
+  font-size: 3.2em;
+  line-height: 1.1;
 }
 
 /*
@@ -195,17 +269,19 @@ button:focus-visible {
 */
 
 .icon {
-    width: 1em; /* Makes the icon scale with font size */
-    height: 1em;
-    fill: currentColor; /* Makes the icon take the text color */
-    vertical-align: middle;
-    display: inline-block;
+  width: 1em; /* Makes the icon scale with font size */
+  height: 1em;
+  fill: currentColor; /* Makes the icon take the text color */
+  vertical-align: middle;
+  display: inline-block;
 }
 
 /* Smooth transition for menu items */
 .menu li > a,
 .menu li > button {
-    transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* Color driven by data-theme, not OS preference — OS media query removed */

@@ -126,7 +126,7 @@ export function mapIncomeAnalysisToDCFForm(dto: IncomeAnalysisDto): DCFFormType 
       areaWa: dto.highestBestUsed?.areaWa ?? null,
       pricePerSqWa: dto.highestBestUsed?.pricePerSqWa ?? null,
     },
-    appraisalPriceRounded: dto.appraisalPriceRounded ?? null,
+    appraisalPriceRounded: dto.indicatedValue ?? null,
     sections: [...regularSections, summarySection],
   } as DCFFormType;
 }

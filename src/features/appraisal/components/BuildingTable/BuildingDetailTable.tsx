@@ -34,6 +34,16 @@ interface BuildingDetailProps {
   onRowClick?: (index: number) => void;
   striped?: boolean;
   tableClassName?: string;
+  /**
+   * 'residual' matches the Cost of Building table in the Hypothesis approach: grey head, click a row
+   * to edit it, no action column (Delete lives in the modal). 'default' keeps the teal head and the
+   * pencil/trash column — the depreciation-period sub-table inside the modal still uses it.
+   */
+  appearance?: 'default' | 'residual';
+  /** Extra rows rendered inside tfoot, after the totals row. */
+  footerRows?: React.ReactNode;
+  /** Card header rendered inside the table's own border (title on the left, actions on the right). */
+  headerSlot?: React.ReactNode;
   rowGrouping?: {
     field: string;
     groups: {
@@ -85,7 +95,8 @@ interface FormTableDerivedHeader extends BaseHeader {
   normalize?: (v: number) => number;
   modifier?: (v: string) => string;
 
-  footer?: (ctx: { rows: any[]; groupLabel?: string }) => React.ReactNode; // footer aggregation / rendering
+  // groupLabel is set on a group's subtotal row, absent on the grand total.
+  footer?: (ctx: { rows: any[]; groupLabel?: string }) => React.ReactNode;
 }
 
 interface FormTableDisplayHeader extends BaseHeader {
@@ -150,8 +161,12 @@ const BuildingDetailTable = ({
   onRowClick,
   striped = false,
   tableClassName,
+  appearance = 'default',
+  footerRows,
+  headerSlot,
   rowGrouping,
 }: BuildingDetailProps) => {
+  const isResidual = appearance === 'residual';
   const formReadOnly = useFormReadOnly();
   const { getValues, control } = useFormContext();
   const { append, remove } = useFieldArray({
@@ -236,7 +251,7 @@ const BuildingDetailTable = ({
   const canAddRow = !disableAddRowBtn && !formReadOnly;
   const canDelete = !formReadOnly;
 
-  const visibleColCount = headers.filter(h => h.type !== 'group').length + 1;
+  const visibleColCount = headers.filter(h => h.type !== 'group').length + (isResidual ? 0 : 1);
 
   const renderDataRow = (
     originalIndex: number,
@@ -276,6 +291,7 @@ const BuildingDetailTable = ({
           decimalPlaces: h.decimalPlaces,
         });
       })}
+      {!isResidual && (
       <td className="py-1 px-1.5 sticky right-0 z-21 bg-white border-neutral-3 border-l border-b">
         <div className="flex gap-0.5 justify-center">
           {editIndex === originalIndex ? (
@@ -320,6 +336,7 @@ const BuildingDetailTable = ({
           )}
         </div>
       </td>
+      )}
     </tr>
   );
 
@@ -367,7 +384,7 @@ const BuildingDetailTable = ({
             </td>
           );
         })}
-      <td className="py-1.5 px-2 sticky right-0 border-b border-neutral-3" />
+      {!isResidual && <td className="py-1.5 px-2 sticky right-0 border-b border-neutral-3" />}
     </tr>
   );
 
@@ -376,26 +393,40 @@ const BuildingDetailTable = ({
       {/* data-field: scroll target for array-level errors on this table (see form/utils.ts). */}
       <div
         data-field={name}
-        className="w-full max-h-full flex flex-col rounded-lg border border-neutral-3 overflow-clip"
+        className={clsx(
+          'w-full max-h-full flex flex-col border overflow-clip',
+          !isResidual && 'rounded-lg',
+          // cas-cost-table is the hook formLayout.css uses to exempt this table from the
+          // grid layout's repeater-table treatment (teal head, transparent fills, borderless
+          // inputs). Without it the page's own CSS repaints everything below.
+          isResidual ? 'cas-cost-table border-gray-200' : 'border-neutral-3',
+        )}
       >
+        {headerSlot}
         <div className="w-full h-full overflow-auto">
           <table
             className={clsx(
               'table-fixed w-full h-full border-separate border-spacing-0',
+              // Residual rows breathe: the Cost of Building table is read, not scanned for density.
+              // Important because each cell carries its own py-1.5/text-xs from the renderers below.
+              isResidual &&
+                '[&_tbody_td]:!py-1.5 [&_tbody_td]:!text-[13px] [&_thead_th]:!py-2 [&_td]:!border-gray-100 [&_th]:!border-gray-100',
               tableClassName,
             )}
           >
             <thead>
               <tr className="bg-primary-700">
                 {headers.map((header, index) => {
-                  return TableHeader({ type: header.type, headers, header, index });
+                  return TableHeader({ type: header.type, headers, header, index, isResidual });
                 })}
-                <th
-                  className={clsx(
-                    'text-white text-xs font-medium py-2 px-2 text-center w-16 bg-primary sticky top-0 right-0 z-21 border-l border-neutral-3',
-                  )}
-                  rowSpan={headers.some((h: FormTableHeader) => h.type === 'group') ? 2 : 1}
-                ></th>
+                {!isResidual && (
+                  <th
+                    className={clsx(
+                      'text-white text-xs font-medium py-2 px-2 text-center w-16 bg-primary sticky top-0 right-0 z-21 border-l border-neutral-3',
+                    )}
+                    rowSpan={headers.some((h: FormTableHeader) => h.type === 'group') ? 2 : 1}
+                  ></th>
+                )}
               </tr>
               {headers.find(h => 'groupName' in h && h.type === 'group') ? (
                 <tr className="bg-primary-700">
@@ -405,7 +436,9 @@ const BuildingDetailTable = ({
                       <th
                         key={index}
                         className={clsx(
-                          'text-white text-xs font-medium py-1.5 px-2 text-left truncate bg-primary sticky top-0 z-20',
+                          // No hardcoded text-left here: it outranks the column's own alignClass
+                          // below, which left the Method sub-header out of line with its pills.
+                          'text-xs font-medium py-1.5 px-2 truncate sticky top-0 z-20 text-white bg-primary',
                           header.className,
                           alignClass(header.align),
                         )}
@@ -435,9 +468,14 @@ const BuildingDetailTable = ({
                           <tr className={clsx(group.className)}>
                             <td
                               colSpan={visibleColCount}
-                              className="py-1.5 px-3 text-xs font-semibold border-b border-neutral-3"
+                              className={clsx(
+                                'py-1.5 px-3 text-xs font-semibold border-b border-neutral-3',
+                                isResidual && 'tracking-wide text-[12px] text-gray-600',
+                              )}
                             >
-                              {group.label} ({groupIndices.length})
+                              {isResidual
+                                ? `${group.label} · ${groupIndices.length}`
+                                : `${group.label} (${groupIndices.length})`}
                             </td>
                           </tr>
                           {groupIndices.map((idx, i) => renderDataRow(idx, undefined, i + 1))}
@@ -469,10 +507,13 @@ const BuildingDetailTable = ({
                         footer: h.footer,
                       });
                     })}
-                  <td className={clsx('py-1.5 px-2 sticky right-0 bottom-0 bg-gray-50')}>
-                    <span></span>
-                  </td>
+                  {!isResidual && (
+                    <td className={clsx('py-1.5 px-2 sticky right-0 bottom-0 bg-gray-50')}>
+                      <span></span>
+                    </td>
+                  )}
                 </tr>
+                {footerRows}
               </tfoot>
             )}
           </table>
@@ -499,7 +540,7 @@ const BuildingDetailTable = ({
               </button>
             )}
           </div>
-        ) : canAddRow ? (
+        ) : canAddRow && !isResidual ? (
           <div className="p-2 flex items-center justify-center border-t border-neutral-3 bg-gray-50">
             <button
               type="button"
@@ -538,15 +579,19 @@ interface TableHeaderProps {
   fieldName?: string;
   editIndex?: number | undefined;
   control?: any;
+  isResidual?: boolean;
 }
-const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
+const TableHeader = ({ type, headers, header, index, isResidual }: TableHeaderProps) => {
+  // One teal header for both looks; labels keep the capitalisation the column config gives them.
+  const headClass = clsx('text-white bg-primary', isResidual && 'tracking-wide');
   switch (type) {
     case 'group': {
       return (
         <th
           key={index}
           className={clsx(
-            'text-white text-xs font-medium py-1.5 px-2 truncate sticky top-0 z-20 bg-primary',
+            'text-xs font-medium py-1.5 px-2 truncate sticky top-0 z-20',
+            headClass,
             header.className,
             alignClass(header.align),
           )}
@@ -570,7 +615,8 @@ const TableHeader = ({ type, headers, header, index }: TableHeaderProps) => {
         <th
           key={index}
           className={clsx(
-            'text-white text-xs font-medium py-1.5 px-2 truncate sticky top-0 z-20 bg-primary',
+            'text-xs font-medium py-1.5 px-2 truncate sticky top-0 z-20',
+            headClass,
             header.className,
             alignClass(header.align),
           )}

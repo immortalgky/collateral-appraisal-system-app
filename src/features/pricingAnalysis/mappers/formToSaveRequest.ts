@@ -57,7 +57,7 @@ function mapAssumptions(assumptions: RuntimeAssumption[]): IncomeAssumptionInput
     assumptions
       // Drop incomplete rows (newly-added but never edited via modal): no methodType set.
       .filter(a => typeof a.method?.methodType === 'string' && a.method.methodType !== '')
-      .map(assumption => {
+      .map((assumption, idx) => {
         const method = assumption.method;
         let detail: unknown = method.detail ?? {};
 
@@ -82,7 +82,10 @@ function mapAssumptions(assumptions: RuntimeAssumption[]): IncomeAssumptionInput
           assumptionName: toStringField(assumption.assumptionName),
           identifier:
             typeof assumption.identifier === 'string' ? assumption.identifier : 'positive',
-          displaySeq: assumption.displaySeq,
+          // Position, not the stored field: displaySeq must be unique per parent (the server
+          // orders its calculation by it), and a new row is numbered `rows.length`, which
+          // collides after a delete. The array order is what the table shows.
+          displaySeq: idx,
           methodTypeCode: method.methodType as string,
           detail,
           clientId: assumption.clientId ?? undefined,
@@ -93,12 +96,12 @@ function mapAssumptions(assumptions: RuntimeAssumption[]): IncomeAssumptionInput
 
 function mapCategories(categories: RuntimeCategory[]): IncomeCategoryInput[] {
   return categories.map(
-    category =>
+    (category, idx) =>
       ({
         categoryType: category.categoryType,
         categoryName: category.categoryName,
         identifier: category.identifier,
-        displaySeq: category.displaySeq,
+        displaySeq: idx, // position — see mapAssumptions
         assumptions: mapAssumptions(category.assumptions),
         clientId: category.clientId ?? undefined,
       }) satisfies IncomeCategoryInput,
@@ -113,12 +116,12 @@ export function mapDCFFormToSaveRequest(form: DCFFormType): SaveIncomeAnalysisRe
       section => section.sectionType !== 'summaryDCF' && section.sectionType !== 'summaryDirect',
     )
     .map(
-      section =>
+      (section, idx) =>
         ({
           sectionType: section.sectionType,
           sectionName: section.sectionName,
           identifier: section.identifier,
-          displaySeq: section.displaySeq,
+          displaySeq: idx, // position — see mapAssumptions
           categories: mapCategories(section.categories ?? []),
           clientId: section.clientId ?? undefined,
         }) satisfies IncomeSectionInput,
@@ -151,7 +154,7 @@ export function mapDCFFormToSaveRequest(form: DCFFormType): SaveIncomeAnalysisRe
       areaWa: hbuForm.highestBestUsed?.areaWa ?? null,
       pricePerSqWa: hbuForm.highestBestUsed?.pricePerSqWa ?? null,
     },
-    appraisalPriceRounded: hbuForm.appraisalPriceRounded ?? null,
+    indicatedValue: hbuForm.appraisalPriceRounded ?? null,
     sections: inputSections,
   };
 }

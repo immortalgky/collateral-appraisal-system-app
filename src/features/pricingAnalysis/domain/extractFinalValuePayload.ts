@@ -22,9 +22,11 @@ export function extractFinalValuePayload(
   if (appraisalPriceRounded == null && appraisalPrice == null) return null;
 
   return {
-    finalValue: appraisalPrice,
-    finalValueRounded: appraisalPriceRounded,
-    appraisalPrice: appraisalPrice,
+    // The API keeps one figure now, and it is the committed one — the appraiser's rounded total
+    // when they gave it, otherwise what they typed. Sending the un-rounded number here would
+    // store a different value from the one the screen shows.
+    finalValue: appraisalPriceRounded ?? appraisalPrice,
+    indicatedValue: appraisalPrice,
     appraisalPriceRounded: appraisalPriceRounded,
     priceDifferentiate: finalValueSection.priceDifferentiate ?? null,
     includeLandArea: finalValueSection.includeLandArea ?? null,

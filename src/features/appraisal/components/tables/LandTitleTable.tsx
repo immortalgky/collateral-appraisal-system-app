@@ -3,94 +3,59 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { type FormField } from '@/shared/components/form';
 import { formatNumber } from '@/shared/utils/formatUtils';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  type Control,
-  type FieldValues,
-  useController,
-  useFieldArray,
-  useFormContext,
-} from 'react-hook-form';
+import clsx from 'clsx';
+import { useState } from 'react';
+import { get, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import LandTitleInputModal from '../LandTitleInputModal';
+import { toRaiNganWa } from '../TitleFormView';
 
 interface LandTitleTableProps {
   name: string;
   fields: FormField[];
-  showRowNumber?: boolean;
-  stickyColumns?: number;
 }
 
-interface TableCellProps {
-  name: string;
-  index: number;
-  value: string;
-  field: FormField;
-  row: Record<string, any>;
-  control: Control<FieldValues, any, FieldValues>;
-}
+type TitleRow = Record<string, unknown>;
 
-const LandTitleTable = ({
-  name,
-  fields,
-  showRowNumber,
-  stickyColumns = 0,
-}: LandTitleTableProps) => {
+/** The dot beside the type: the same colours as the emblem on the document view. */
+const TYPE_DOT: Record<string, string> = {
+  DEED: 'bg-[#D69BA1]',
+  NS3K: 'bg-[#7FBF95]',
+  NS3: 'bg-[#AEB5BA]',
+  NS3KO: 'bg-[#AEB5BA]',
+};
+
+/**
+ * Where the parcel sits, in the order the dialog asks for it. Each title type fills only some of
+ * these, so a row shows just the ones it has rather than a column per field left mostly empty.
+ */
+const POSITION_KEYS = {
+  rawang: 'titleEntry.fields.rawang',
+  aerialMapName: 'titleEntry.fields.aerialMapName',
+  aerialMapNumber: 'titleEntry.fields.aerialMapNumber',
+  mapSheetNumber: 'titleEntry.fields.mapSheetNumber',
+  landParcelNumber: 'titleEntry.fields.landParcelNumber',
+  surveyNumber: 'titleEntry.fields.surveyNumber',
+} as const;
+
+const hasValue = (value: unknown) => value != null && String(value).trim() !== '';
+
+/** Always from rai/ngan/wa, never the stored total, which can be stale on older rows. */
+const totalWaOf = (row: TitleRow) =>
+  (Number(row.rai) || 0) * 400 + (Number(row.ngan) || 0) * 100 + (Number(row.squareWa) || 0);
+
+const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
+  const { t } = useTranslation('appraisal');
   const readOnly = useFormReadOnly();
-  // Every field gets its own column. This used to drop conditional fields and squeeze their
-  // value onto the end of whatever field their `showWhen` points at — the source of the
-  // "Title deed - -" in the Title Type column. That merge only ever surfaced the first
-  // dependant, so Rawang, Land Number, Survey Number, Sheet Number and both Aerial Photo
-  // fields had nowhere to appear at all.
-  const tableFields = fields;
-  const { control, getValues } = useFormContext();
+  const { control, formState } = useFormContext();
   const { append, remove, update } = useFieldArray({ control, name });
-  const values = getValues(name) || [];
-
-  const tableRef = useRef<HTMLTableElement>(null);
-  const [stickyOffsets, setStickyOffsets] = useState<number[]>([]);
-  const totalSticky = (showRowNumber ? 1 : 0) + stickyColumns;
-
-  const computeOffsets = useCallback(() => {
-    if (!tableRef.current || stickyColumns <= 0) return;
-    const headerCells = tableRef.current.querySelectorAll('thead th');
-    const offsets: number[] = [];
-    // Each offset is the *previous pinned offset* plus that column's width, then floored — not a
-    // floored running total of true widths. The difference is the white seam that shows through
-    // between pinned columns after scrolling: with columns of 30.4 and 71.6, flooring the true
-    // total pins the third at 102 while the second ends at 101.6, leaving 0.4px of table visible.
-    // Chaining the floor makes pinned cells overlap by a fraction instead of parting.
-    // getBoundingClientRect because offsetWidth is already rounded.
-    let left = 0;
-    for (let i = 0; i < totalSticky && i < headerCells.length; i++) {
-      offsets.push(left);
-      left = Math.floor(left + (headerCells[i] as HTMLElement).getBoundingClientRect().width);
-    }
-    setStickyOffsets(offsets);
-  }, [stickyColumns, totalSticky]);
-
-  useEffect(() => {
-    computeOffsets();
-  }, [computeOffsets, values.length]);
-
-  // Column widths also change with the container, the density setting and font loading, none of
-  // which the row-count dependency above covers — and a stale offset is what produces the seam.
-  useEffect(() => {
-    const el = tableRef.current;
-    if (!el || typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(computeOffsets);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [computeOffsets]);
+  const values = (useWatch({ control, name }) as TitleRow[] | undefined) ?? [];
 
   const [modalState, setModalState] = useState<
     { type: 'add' } | { type: 'edit'; index: number } | null
   >(null);
   const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
-
-  const handleDeleteRow = (index: number) => {
-    setDeleteConfirmIndex(index);
-  };
 
   const confirmDelete = () => {
     if (deleteConfirmIndex !== null) {
@@ -99,257 +64,223 @@ const LandTitleTable = ({
     }
   };
 
-  const cancelDelete = () => {
-    setDeleteConfirmIndex(null);
-  };
-
-  const isEmpty = values.length === 0;
+  const grandTotalWa = values.reduce((sum, row) => sum + totalWaOf(row), 0);
+  // Read-only viewers can still open a title; the dialog shows it without a Save button.
+  const open = (index: number) => setModalState({ type: 'edit', index });
 
   return (
-    // data-field: scroll target for array-level errors on this table (see form/utils.ts).
-    // cas-repeater: tells the grid layout this data-field is a table, not a labelled field. It
-    // cannot be detected with `:has(table)` because that is false while the table is empty, and
-    // the empty state would then be turned into a two-column row.
-    // `flex flex-col`, not `grid`: as a grid the scroll box and the "Add item" row are grid items
-    // sized against the table's `min-w-max` content, which puts the button beside the table.
-    <div data-field={name} className="cas-repeater flex w-full min-w-0 flex-col">
-      {isEmpty ? (
-        <div className="flex flex-col items-center justify-center py-10 border border-dashed border-gray-200 rounded-lg bg-gray-50">
-          <Icon name="file-lines" style="regular" className="text-3xl text-gray-300 mb-2" />
-          <p className="text-sm font-medium text-gray-500">No land title data</p>
-          {!readOnly && (
-            <>
-              <p className="text-xs text-gray-400 mt-0.5 mb-3">
-                Click the button below to add a title
-              </p>
+    <>
+      {/* The section header lives here so its add button can open this table's dialog. It sits in
+          the header rather than under the table, so adding stays in reach however long the list. */}
+      <div className="cas-section-head mb-2 flex items-center gap-2">
+        <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+          <Icon style="solid" name="file-contract" className="size-3.5 text-primary-600" />
+        </div>
+        <span className="shrink-0 text-sm font-medium leading-tight text-gray-700">
+          Title Detail
+        </span>
+        {/* The totals used to be a pinned footer row; up here they stay in view with the header
+            and cost the table no height. A div, not a span: the grid layout restyles header spans
+            as the section title. */}
+        {values.length > 0 && (
+          <div className="min-w-0 truncate text-xs tabular-nums text-gray-500">
+            {t('titleEntry.list.total', { count: values.length })} ·{' '}
+            {t('titleEntry.list.rai', { rnw: toRaiNganWa(grandTotalWa) })} (
+            {t('titleEntry.list.wa', { wa: formatNumber(grandTotalWa, 2) })})
+          </div>
+        )}
+        {!readOnly && values.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setModalState({ type: 'add' })}
+            className="ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <Icon style="solid" name="plus" className="size-2.5" />
+            {t('titleEntry.list.add')}
+          </button>
+        )}
+      </div>
+      {/* data-field: scroll target for array-level errors on this table (see form/utils.ts).
+          cas-repeater: tells the grid layout this data-field is a table, not a labelled field. It
+          cannot be detected with `:has(table)` because that is false while the table is empty. */}
+      <div data-field={name} className="cas-repeater flex w-full min-w-0 flex-col">
+        {values.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 py-10">
+            <Icon name="file-lines" style="regular" className="mb-2 text-3xl text-gray-300" />
+            <p className="text-sm font-medium text-gray-500">{t('titleEntry.list.empty')}</p>
+            {!readOnly && (
               <button
                 type="button"
                 onClick={() => setModalState({ type: 'add' })}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-primary-500 hover:bg-primary-600 rounded-lg transition-colors"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-600"
               >
                 <Icon style="solid" name="plus" className="size-2.5" />
-                Add item
+                {t('titleEntry.list.add')}
               </button>
-            </>
-          )}
-        </div>
-      ) : (
-        <>
-          <div className="max-h-60 overflow-auto border border-gray-200 rounded-lg min-w-0">
-            <table
-              ref={tableRef}
-              className="cas-sticky-table table table-zebra table-xs min-w-max"
-            >
-              <thead>
-                <tr>
-                  {showRowNumber && (
-                    <th
-                      className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-left first:rounded-tl-lg sticky z-10"
-                      style={{ left: stickyOffsets[0] ?? 0 }}
-                    >
-                      #
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Many parcels scroll inside the box; the header stays pinned. The cells are
+              sticky, not thead/tfoot, and paint their own ground: a pinned row's background does not
+              cover what scrolls beneath it. The grid layout clears cell fills, so formLayout.css gives
+              a `.sticky` cell its ground back. `[flex-wrap:wrap]` below rather than `flex-wrap`: the
+              grid layout treats any `.flex-wrap` in a field as a chip group, which shrank this box. */}
+            <div className="max-h-[28rem] min-w-0 self-stretch overflow-auto rounded-lg border border-gray-200">
+              <table className="w-full min-w-[720px] border-collapse text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-left text-xs font-medium text-gray-500">
+                    <th className="sticky top-0 z-10 bg-gray-50 w-10 px-3 py-2">#</th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2">
+                      {t('titleEntry.list.type')}
                     </th>
-                  )}
-                  {tableFields.map((field, index) => {
-                    const stickyIndex = (showRowNumber ? 1 : 0) + index;
-                    const isSticky = stickyIndex < totalSticky;
-                    return (
-                      <th
-                        key={index}
-                        className={`bg-primary-700 text-white text-xs font-medium py-2 px-3 text-left ${
-                          isSticky ? 'sticky z-10' : ''
-                        } ${!showRowNumber && index === 0 ? 'first:rounded-tl-lg' : ''}`}
-                        style={isSticky ? { left: stickyOffsets[stickyIndex] ?? 0 } : undefined}
-                      >
-                        {'label' in field ? field.label : field.name}
-                      </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2">
+                      {t('titleEntry.list.document')}
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2">
+                      {t('titleEntry.list.position')}
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-right">
+                      {t('titleEntry.list.area')}
+                    </th>
+                    {!readOnly && <th className="sticky top-0 z-10 bg-gray-50 w-20 px-3 py-2" />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {values.map((row, index) => {
+                    const totalWa = totalWaOf(row);
+                    const invalid = !!get(formState.errors, `${name}.${index}`);
+                    const positions = Object.entries(POSITION_KEYS).filter(([field]) =>
+                      hasValue(row[field]),
                     );
-                  })}
-                  {!readOnly && (
-                    <th className="bg-primary-700 text-white text-xs font-medium py-2 px-3 text-right sticky right-0 w-20">
-                      Actions
-                    </th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {values.map((row: Record<string, any>, index: number) => {
-                  const rowBg = index % 2 === 1 ? 'bg-base-200' : 'bg-base-100';
-                  return (
-                    <tr key={index}>
-                      {showRowNumber && (
-                        <td
-                          className={`py-1.5 px-3 sticky z-10 ${rowBg}`}
-                          style={{ left: stickyOffsets[0] ?? 0 }}
-                        >
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
-                            {index + 1}
-                          </span>
+                    return (
+                      <tr
+                        key={index}
+                        tabIndex={0}
+                        onClick={() => open(index)}
+                        onKeyDown={event => {
+                          if (event.target === event.currentTarget && event.key === 'Enter')
+                            open(index);
+                        }}
+                        className="cursor-pointer border-t border-gray-100 align-middle outline-none hover:bg-gray-50 focus-visible:bg-primary-50/50"
+                      >
+                        <td className="px-3 py-2.5 tabular-nums text-gray-400">{index + 1}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5">
+                          {/* <i>, not <span>: the grid layout restyles a cell's direct `span.rounded-full`. */}
+                          <i
+                            aria-hidden
+                            className={clsx(
+                              'mr-2 inline-block size-2 rounded-full align-middle',
+                              TYPE_DOT[String(row.titleType)] ?? 'bg-gray-300',
+                            )}
+                          />
+                          <ParameterDisplay group="DeedType" code={row.titleType as string} />
+                          {invalid && (
+                            <div className="mt-0.5 text-xs text-danger">
+                              {t('titleEntry.list.incomplete')}
+                            </div>
+                          )}
                         </td>
-                      )}
-                      {tableFields.map((field, innerIndex) => {
-                        const stickyIndex = (showRowNumber ? 1 : 0) + innerIndex;
-                        const isSticky = stickyIndex < totalSticky;
-                        return (
-                          <td
-                            key={innerIndex}
-                            className={`py-1.5 px-3 text-xs ${isSticky ? `sticky z-10 ${rowBg}` : ''}`}
-                            style={isSticky ? { left: stickyOffsets[stickyIndex] ?? 0 } : undefined}
-                          >
-                            <TableCell
-                              name={name}
-                              index={index}
-                              value={row[field.name]}
-                              field={field}
-                              row={row}
-                              control={control}
-                            />
-                          </td>
-                        );
-                      })}
-                      {!readOnly && (
-                        <td className={`py-1.5 px-3 sticky right-0 z-10 ${rowBg}`}>
-                          <div className="flex gap-1 justify-end">
-                            <button
-                              type="button"
-                              onClick={() => setModalState({ type: 'edit', index })}
-                              className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                              title="Edit"
-                            >
-                              <Icon style="solid" name="pen" className="size-3" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteRow(index)}
-                              className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                              title="Delete"
-                            >
-                              <Icon style="solid" name="trash" className="size-3" />
-                            </button>
+                        <td className="px-3 py-2.5">
+                          <div className="break-all font-semibold tabular-nums text-gray-900">
+                            {hasValue(row.titleNumber) ? String(row.titleNumber) : '—'}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {t('titleEntry.list.bookPage', {
+                              book: hasValue(row.bookNumber) ? row.bookNumber : '—',
+                              page: hasValue(row.pageNumber) ? row.pageNumber : '—',
+                            })}
                           </div>
                         </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {!readOnly && (
-            <div className="border-t border-gray-100">
-              <button
-                type="button"
-                onClick={() => setModalState({ type: 'add' })}
-                className="w-full flex items-center justify-center gap-2 py-2 text-xs font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
-              >
-                <div className="w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center">
-                  <Icon style="solid" name="plus" className="size-2.5 text-white" />
-                </div>
-                Add item
-              </button>
+                        <td className="px-3 py-2.5">
+                          {positions.length === 0 ? (
+                            <span className="text-gray-300">—</span>
+                          ) : (
+                            <div className="flex gap-x-3 gap-y-0.5 text-xs text-gray-500 [flex-wrap:wrap]">
+                              {positions.map(([field, key]) => (
+                                <span key={field} className="whitespace-nowrap">
+                                  {t(key)}{' '}
+                                  <b className="font-medium text-gray-800">{String(row[field])}</b>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
+                          <div className="font-semibold text-gray-900">
+                            {t('titleEntry.list.rai', { rnw: toRaiNganWa(totalWa) })}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {t('titleEntry.list.wa', { wa: formatNumber(totalWa, 2) })}
+                          </div>
+                        </td>
+                        {!readOnly && (
+                          <td className="px-3 py-2">
+                            <div className="flex justify-end gap-1">
+                              <button
+                                type="button"
+                                onClick={event => {
+                                  event.stopPropagation();
+                                  open(index);
+                                }}
+                                className="flex size-7 items-center justify-center rounded text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600"
+                                aria-label={t('titleEntry.list.edit')}
+                                title={t('titleEntry.list.edit')}
+                              >
+                                <Icon style="solid" name="pen" className="size-3" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={event => {
+                                  event.stopPropagation();
+                                  setDeleteConfirmIndex(index);
+                                }}
+                                className="flex size-7 items-center justify-center rounded text-gray-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
+                                aria-label={t('titleEntry.list.delete')}
+                                title={t('titleEntry.list.delete')}
+                              >
+                                <Icon style="solid" name="trash" className="size-3" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          )}
-        </>
-      )}
-      {modalState && (
-        <LandTitleInputModal
-          readOnly={readOnly}
-          fields={fields}
-          defaultValues={modalState.type === 'edit' ? values[modalState.index] : undefined}
-          onCancel={() => setModalState(null)}
-          onSave={data => {
-            if (modalState.type === 'add') {
-              append(data);
-            } else {
-              update(modalState.index, data);
-            }
-            setModalState(null);
-          }}
+          </>
+        )}
+        {modalState && (
+          <LandTitleInputModal
+            readOnly={readOnly}
+            fields={fields}
+            defaultValues={modalState.type === 'edit' ? values[modalState.index] : undefined}
+            onCancel={() => setModalState(null)}
+            onSave={data => {
+              if (modalState.type === 'add') {
+                append(data);
+              } else {
+                update(modalState.index, data);
+              }
+              setModalState(null);
+            }}
+          />
+        )}
+
+        <ConfirmDialog
+          isOpen={deleteConfirmIndex !== null}
+          title={t('titleEntry.list.deleteTitle')}
+          message={t('titleEntry.list.deleteMessage')}
+          confirmText={t('titleEntry.list.delete')}
+          cancelText={t('titleEntry.list.cancel')}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleteConfirmIndex(null)}
+          variant="danger"
         />
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      <ConfirmDialog
-        isOpen={deleteConfirmIndex !== null}
-        title="Delete Row"
-        message="Are you sure you want to delete this row? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={confirmDelete}
-        onClose={cancelDelete}
-        variant="danger"
-      />
-    </div>
-  );
-};
-
-const TableCell = ({ name, index, value, field, row, control }: TableCellProps) => {
-  const cellName = `${name}.${index}.${field.name}`;
-  const {
-    fieldState: { error },
-  } = useController({ name: cellName, control });
-
-  // Derive totalSquareWa from rai/ngan/squareWa instead of reading stored value
-  const resolvedValue =
-    field.name === 'totalSquareWa'
-      ? (Number(row.rai) || 0) * 400 + (Number(row.ngan) || 0) * 100 + (Number(row.squareWa) || 0)
-      : value;
-
-  // Format number values
-  if (field.type === 'number-input' && resolvedValue != null && resolvedValue !== '') {
-    const numValue = typeof resolvedValue === 'number' ? resolvedValue : Number(resolvedValue);
-    if (!isNaN(numValue)) {
-      const formatted = formatNumber(numValue, field.decimalPlaces ?? 0);
-      return (
-        <div>
-          <div>{formatted}</div>
-          {error && <div className="mt-1 text-xs text-danger">{error?.message}</div>}
-        </div>
-      );
-    }
-  }
-
-  // Check if field uses parameterGroup (no inline options)
-  const hasGroup = 'group' in field && field.group;
-  const hasOptions = 'options' in field && field.options;
-  const groupFieldTypes = [
-    'dropdown',
-    'radio-group',
-    'checkbox-group',
-    'boolean-toggle',
-    'string-toggle',
-  ];
-
-  if (hasGroup && !hasOptions && groupFieldTypes.includes(field.type)) {
-    return (
-      <div>
-        <div>
-          <ParameterDisplay group={field.group!} code={value} />
-        </div>
-        {error && <div className="mt-1 text-xs text-danger">{error?.message}</div>}
       </div>
-    );
-  }
-
-  // Lookup option label for dropdown/radio-group (use loose equality for boolean values)
-  let displayValue = value;
-  if (field.type === 'boolean-toggle' && 'options' in field && field.options) {
-    displayValue = value ? field.options[1] : field.options[0];
-  } else if (
-    (field.type === 'dropdown' || field.type === 'radio-group') &&
-    'options' in field &&
-    field.options
-  ) {
-    const matched = field.options.find(opt => opt.value == value);
-    if (matched) displayValue = matched.label;
-  }
-
-  return (
-    <div>
-      <div>{displayValue}</div>
-      {error && <div className="mt-1 text-xs text-danger">{error?.message}</div>}
-    </div>
+    </>
   );
 };
 

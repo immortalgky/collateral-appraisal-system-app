@@ -20,8 +20,7 @@ import { useGetRequestById } from '@features/request/api/requests';
 import { DetailPageSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
-import AppraisalRightMenu from '@features/appraisal/components/AppraisalRightMenu';
-import { useDisclosure } from '@shared/hooks/useDisclosure';
+import { AppraisalRightPanel } from '@features/appraisal/components/AppraisalRightMenu';
 import { useMenuStore } from '@features/menuManagement/store';
 import { PageReadOnlyContext } from '@shared/contexts/PageReadOnlyContext';
 import { userNavigation } from '@shared/config/userNavigation';
@@ -81,9 +80,6 @@ function AppraisalLayout() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { isOpen: isRightMenuOpen, onToggle: toggleRightMenu } = useDisclosure({
-    defaultIsOpen: true,
-  });
   useSidebarCssVar();
 
   // /appraisals/:appraisalId/* is always read-only — editable work happens under /tasks/:taskId/*.
@@ -242,26 +238,7 @@ function AppraisalLayout() {
               </div>
             </main>
 
-            {/* Right Menu */}
-            {isRightMenuOpen ? (
-              <aside
-                className="hidden lg:flex w-72 shrink-0 border-l border-gray-100 bg-white flex-col overflow-hidden"
-                style={{ height: '100%' }}
-              >
-                <AppraisalRightMenu onClose={toggleRightMenu} />
-              </aside>
-            ) : (
-              <div className="hidden lg:flex shrink-0 border-l border-gray-100 bg-white">
-                <button
-                  type="button"
-                  onClick={toggleRightMenu}
-                  className="w-10 h-full flex items-start justify-center pt-4 text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-                  title="Show application details"
-                >
-                  <Icon style="solid" name="chevron-left" className="size-4" />
-                </button>
-              </div>
-            )}
+            <AppraisalRightPanel />
           </div>
           </PageReadOnlyContext.Provider>
         </div>
