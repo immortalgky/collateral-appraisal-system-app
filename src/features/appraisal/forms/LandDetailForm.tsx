@@ -199,9 +199,6 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
 
           <SectionRow title={t('forms.land.groups.physical')} icon="mountain">
             <FormFields fields={physicalFields} />
-          </SectionRow>
-
-          <SectionRow title={t('forms.land.sectionTitleBoundary')} icon="ruler-combined">
             <BoundaryFields readOnly={readOnly} />
           </SectionRow>
 
