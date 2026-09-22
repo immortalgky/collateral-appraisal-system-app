@@ -14,11 +14,17 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   rightIcon?: React.ReactNode;
   /** Show character count when maxLength is set */
   showCharCount?: boolean;
+  /**
+   * Opt-in compact sizing (smaller padding, `text-xs`) for dense table cells — e.g. the
+   * pricing-analysis scoring grids. Defaults to false so every existing caller renders
+   * byte-identically; only pass `dense` from a context that actually needs a short row.
+   */
+  dense?: boolean;
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  (
-    {
+  (allProps, ref) => {
+    const {
       className,
       label,
       labelAddon,
@@ -33,10 +39,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       showCharCount,
       maxLength,
       value,
+      dense = false,
       ...props
-    },
-    ref,
-  ) => {
+    } = allProps;
     // Generate a unique ID if not provided
     const uuid = useId();
     const inputId = id || uuid;
@@ -90,14 +95,23 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={clsx(
-              'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
+              // Dense follows the mock's `.in` exactly (pricing-analysis-compact-mock.html:192-198):
+              // 21px tall, 4px radius, 12px text, right-aligned, quiet #f6f9f9 fill with a
+              // transparent border at rest — border only on hover/focus, no focus ring.
+              dense
+                ? 'block h-[21px] px-[5px] py-0 border rounded-[4px] text-[12px] text-right transition-colors duration-200'
+                : 'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+                : dense
+                  ? 'border-transparent focus:outline-none focus:border-[#0d9488]'
+                  : 'border-gray-200 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
               isDisabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : 'bg-white hover:border-gray-300',
+                : dense
+                  ? 'bg-[#f6f9f9] hover:border-[#cbd5d3] focus:bg-white'
+                  : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-9',
               fullWidth && 'w-full',
@@ -112,8 +126,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             // `null` is a legitimate form value — "not applicable", or a field the API must leave
             // alone — but React reads it as "uncontrolled" and stops managing the box, leaving
             // whatever text was last in the DOM on screen. An empty string is the controlled way
-            // to say the same thing.
-            value={value ?? ''}
+            // to say the same thing. Only coerce when the caller passed `value` at all:
+            // `{...register('x')}` passes none and keeps its text in the DOM, so forcing '' on it
+            // would freeze the box.
+            value={'value' in allProps ? (value ?? '') : undefined}
             {...props}
           />
 

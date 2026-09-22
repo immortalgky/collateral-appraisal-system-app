@@ -5,7 +5,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -25,7 +25,7 @@ import FormSwitch from '../inputs/FormSwitch';
 import AppraisalSelector from '../inputs/AppraisalSelector';
 import LocationSelector from '../inputs/LocationSelector';
 
-import { useFormSchema } from './context';
+import { FieldLabelContext, useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
 import FieldHelp from './FieldHelp';
@@ -154,6 +154,45 @@ interface FieldRendererProps {
   schema?: z.ZodObject<any>;
   globalShowCharCount?: boolean;
   globalDisabled?: boolean;
+  /** First field of a row it shares with others, and wide enough to carry a full-row label. */
+  rowLead?: boolean;
+}
+
+/**
+ * Which fields open a row they share with other fields and are wide enough to carry a full-row
+ * label, walking the 12-column spans in order. The grid layout gives those fields the same label
+ * column as a full-row field, so the left edge lines up down the form (formLayout.css,
+ * `data-row-lead`).
+ *
+ * Wide enough means half the row or more, or a third of it when it has the row to share with just
+ * one other field (Check Owner | Owner at 4 + 8). A 4/4/4 or 3/3/6 row is left alone: a 16rem label
+ * out of a third of a three-field row leaves almost nothing for the control.
+ *
+ * Worked out from the configured spans, not from what is currently shown: a field hidden by its
+ * condition still counts. In practice the conditional fields are full-row remarks, which start and
+ * end on a row boundary either way. A field with no col-span resets the count.
+ */
+function findRowLeads(fields: FormField[]): Set<FormField> {
+  const spanOf = (field: FormField | undefined) => {
+    const match = /(?:^|\s)col-span-(\d+)(?=\s|$)/.exec(field?.wrapperClassName ?? '');
+    return match ? Number(match[1]) : null;
+  };
+  const leads = new Set<FormField>();
+  let used = 0;
+  fields.forEach((field, i) => {
+    const span = spanOf(field);
+    if (span === null) {
+      used = 0;
+      return;
+    }
+    if (used + span > 12) used = 0;
+    if (used === 0 && span < 12) {
+      const pairedWithOne = span + (spanOf(fields[i + 1]) ?? 0) === 12;
+      if (span >= 6 || (pairedWithOne && span >= 4)) leads.add(field);
+    }
+    used = (used + span) % 12;
+  });
+  return leads;
 }
 
 /**
@@ -188,23 +227,26 @@ export function FormFields({
   // Use schema from props, or fall back to context from FormProvider
   const contextSchema = useFormSchema();
   const schema = schemaProp ?? contextSchema;
+  const relabel = useContext(FieldLabelContext);
+  const visible = fields.filter(f => !f.hide);
+  const shown = relabel ? visible.map(relabel) : visible;
+  const rowLeads = findRowLeads(shown);
 
   return (
     <>
-      {fields
-        .filter(f => !f.hide)
-        .map(field => (
-          <FieldRenderer
-            key={field.key ?? field.name}
-            control={control}
-            field={field}
-            namePrefix={namePrefix}
-            index={index}
-            schema={schema as z.ZodObject<any> | undefined}
-            globalShowCharCount={showCharCount}
-            globalDisabled={disabled}
-          />
-        ))}
+      {shown.map(field => (
+        <FieldRenderer
+          key={field.key ?? field.name}
+          control={control}
+          field={field}
+          namePrefix={namePrefix}
+          index={index}
+          schema={schema as z.ZodObject<any> | undefined}
+          globalShowCharCount={showCharCount}
+          globalDisabled={disabled}
+          rowLead={rowLeads.has(field)}
+        />
+      ))}
     </>
   );
 }
@@ -220,6 +262,7 @@ function FieldRenderer({
   schema,
   globalShowCharCount,
   globalDisabled,
+  rowLead,
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
   const {
@@ -726,6 +769,7 @@ function FieldRenderer({
       // layout can show it as inactive. Deliberately not set for `globalDisabled`: a read-only page
       // disables every field, and tinting all of them would just look like a broken form.
       data-field-disabled={fieldDisabled || undefined}
+      data-row-lead={rowLead || undefined}
       className={clsx(field.wrapperClassName)}
     >
       {renderFieldComponent()}

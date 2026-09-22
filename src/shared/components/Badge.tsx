@@ -11,7 +11,17 @@ type BadgeType =
   | 'vote'
   | 'supportingDataStatus'
   | 'externalSyncStatus';
-type BadgeStyle = 'soft' | 'solid' | 'outline' | 'minimal' | 'ghost';
+/** 'tag' = no background, no border, neutral label text, coloured dot — the compact
+ * redesign's dot chip. Deliberately not a `colorTokens[color]` entry (see Badge's
+ * `styleClasses` branch): it always uses a fixed neutral text class, never the tone
+ * colour, so the label stays neutral even when passed a `tone` other callers use. */
+type BadgeStyle = 'soft' | 'solid' | 'outline' | 'minimal' | 'ghost' | 'tag';
+/** Colour chosen by meaning rather than by domain type+value — for chips/tags where
+ * the caller knows the semantic colour directly (e.g. the pricing-analysis compact
+ * redesign's dot chips: teal = method/link/reference/building, green =
+ * calculated/land, yellow = pending/manual-edit/warning/machinery, gray = method
+ * code/count/info). Takes precedence over `type`+`value` when supplied. */
+export type BadgeTone = 'teal' | 'green' | 'yellow' | 'gray';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children?: ReactNode;
@@ -25,6 +35,8 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   type?: BadgeType;
   /** Value used with type to auto-select colors */
   value?: string | null;
+  /** Colour by meaning — see BadgeTone. Overrides type+value when set. */
+  tone?: BadgeTone;
   /** Visual style of the badge */
   badgeStyle?: BadgeStyle;
 }
@@ -95,6 +107,23 @@ const colorTokens = {
     ghost: 'bg-purple-500/10 text-purple-600',
     dot: 'bg-purple-500',
   },
+  teal: {
+    solid: 'bg-teal-500 text-white',
+    soft: 'bg-teal-50 text-teal-700',
+    outline: 'border border-teal-500 text-teal-600 bg-transparent',
+    minimal: 'text-teal-600',
+    ghost: 'bg-teal-500/10 text-teal-600',
+    dot: 'bg-teal-500',
+  },
+};
+
+/** BadgeTone -> colorTokens key. `yellow` maps to the existing `amber` token —
+ * there is no separate "yellow" entry in colorTokens, amber is the closest match. */
+const toneColorMap: Record<BadgeTone, keyof typeof colorTokens> = {
+  teal: 'teal',
+  green: 'green',
+  yellow: 'amber',
+  gray: 'gray',
 };
 
 type ColorKey = keyof typeof colorTokens;
@@ -197,19 +226,27 @@ const Badge = ({
   onRemove,
   type,
   value,
+  tone,
   badgeStyle = 'soft',
   className,
   ...props
 }: BadgeProps) => {
   void _variant; // Keep for backward compatibility
-  // Determine color key based on type+value or variant
+  // Determine color key: an explicit `tone` (colour by meaning) wins; otherwise fall
+  // back to the existing type+value lookup, unchanged.
   const normalizedValue = value?.toLowerCase() ?? '';
-  const colorKey: ColorKey =
-    type && value ? (typeColorMap[type]?.[normalizedValue] ?? 'gray') : 'gray';
+  const colorKey: ColorKey = tone
+    ? toneColorMap[tone]
+    : type && value
+      ? (typeColorMap[type]?.[normalizedValue] ?? 'gray')
+      : 'gray';
   const displayLabel = type === 'status' ? statusLabelMap[normalizedValue] : undefined;
 
   const colors = colorTokens[colorKey];
-  const styleClasses = colors[badgeStyle];
+  // 'tag' has no entry in colorTokens by design (see the BadgeStyle doc comment): the
+  // label always gets a fixed neutral colour, never the tone's, only the dot below
+  // (colors.dot, independent of badgeStyle) carries the tone colour.
+  const styleClasses = badgeStyle === 'tag' ? 'text-gray-600' : colors[badgeStyle];
   const dotColor = colors.dot;
 
   // For minimal style, don't show background

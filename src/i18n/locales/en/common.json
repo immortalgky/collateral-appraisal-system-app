@@ -51,6 +51,32 @@
     "completed": "Completed",
     "draft": "Draft"
   },
+  "dino": {
+    "hint": "Press Space to jump",
+    "hintTouch": "Tap to jump",
+    "gameOver": "Game over",
+    "restart": "Press Space to restart",
+    "restartTouch": "Tap to restart"
+  },
+  "documentViewer": {
+    "downloaded": "The file has been downloaded. You can close this tab.",
+    "title": "Opening file",
+    "opening": "Opening the file…",
+    "errorTitle": "Could not open the file",
+    "failed": "The file could not be opened. Close this tab and try again.",
+    "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site and try again.",
+    "close": "Close this tab",
+    "cancel": "Cancel"
+  },
+  "transfer": {
+    "serverTooSlow": "The server took too long to prepare the file. Please try again.",
+    "downloading": "Downloading…",
+    "exportFailed": "The report could not be downloaded. Please try again.",
+    "uploading": "Uploading…",
+    "processing": "Processing on the server…",
+    "uploadStalled": "The connection stopped during the upload. Please try again.",
+    "downloadStalled": "The connection stopped during the download. Please try again."
+  },
   "confirm": {
     "deleteTitle": "Confirm Delete",
     "deleteMessage": "Are you sure you want to delete this item? This action cannot be undone.",
@@ -63,6 +89,9 @@
   },
   "hint": {
     "scrollWithArrowKeys": "Scroll table with arrow keys"
+  },
+  "nav": {
+    "visibleRange": "Showing {{from}}–{{to}} of {{total}}"
   },
   "language": {
     "en": "EN",
