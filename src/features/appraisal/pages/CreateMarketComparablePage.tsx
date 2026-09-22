@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,6 +16,7 @@ import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 import type {
   CreateMarketComparableRequestType,
@@ -42,13 +43,14 @@ import {
 } from '../schemas/form';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
+import { DuplicateButton } from '@/shared/components';
 
 // Container segments that host market-comparable detail pages — drives the
 // after-save redirect so the URL prefix (block-condo / property / etc.) is preserved.
 const PARENT_SEGMENTS = ['block-condo', 'block-village', 'property-pma', 'property'] as const;
 
 const CreateMarketComparablePage = () => {
-  const { t } = useTranslation('appraisal');
+  const { t } = useTranslation(['appraisal', 'common']);
   const isReadOnly = usePageReadOnly();
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -219,6 +221,22 @@ const CreateMarketComparablePage = () => {
     }
   }, [mapComparableToForm]);
 
+  useEffect(() => {
+    if (!sourceId && location.state?.duplicateData) {
+      methods.reset(location.state.duplicateData);
+    }
+  }, [sourceId, location.state]);
+
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const handleDuplicate = () => {
+    setIsDuplicateDialogOpen(true);
+  };
+  const handleConfirmDuplicate = () => {
+    const duplicateData = methods.getValues();
+    navigate(`${basePath}/${parentSegment}/market-comparable/new`, { state: { duplicateData } });
+    setIsDuplicateDialogOpen(false);
+  };
+
   const onSubmit: SubmitHandler<createMarketComparableFormType> = data => {
     // Convert factorData values to string
     const factorData = (data.factorData ?? []).map(factor => ({
@@ -375,13 +393,14 @@ const CreateMarketComparablePage = () => {
           {/* Sticky Action Bar */}
           <ActionBar>
             <ActionBar.Left>
-              <CancelButton />
+              <CancelButton fallbackPath={`${basePath}/property?tab=markets`} />
               {!isReadOnly && (
                 <>
                   <ActionBar.Divider />
                   <ActionBar.UnsavedIndicator show={isDirty} />
                 </>
               )}
+              <DuplicateButton onClick={handleDuplicate} disabled={!isEditMode || isPending} />
             </ActionBar.Left>
             {!isReadOnly && (
               <ActionBar.Right>
@@ -396,6 +415,17 @@ const CreateMarketComparablePage = () => {
           <UnsavedChangesDialog blocker={blocker} />
         </form>
       </FormProvider>
+
+      <ConfirmDialog
+        isOpen={isDuplicateDialogOpen}
+        onClose={() => setIsDuplicateDialogOpen(false)}
+        onConfirm={handleConfirmDuplicate}
+        title={t('forms.marketComparable.duplicateDialog.title')}
+        message={t('forms.marketComparable.duplicateDialog.message')}
+        confirmText={t('forms.marketComparable.duplicateDialog.confirm')}
+        cancelText={t('common:actions.cancel')}
+        variant="info"
+      />
     </div>
   );
 };
