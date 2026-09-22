@@ -5,7 +5,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useContext, useEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -760,6 +760,11 @@ function FieldRenderer({
     }
   };
 
+  // How wide the control may grow, from what the field already declares: a house number capped to
+  // its own few characters instead of a grey bar half the page wide. Published as a custom property
+  // and applied by the grid layout only (formLayout.css); every other layout ignores it.
+  const controlWidth = controlMaxWidth(passedField, schemaProps.maxLength);
+
   // Wrap the field component with the wrapper div.
   // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
   // because Dropdown never forwards `name` to the DOM.
@@ -772,10 +777,39 @@ function FieldRenderer({
       data-field-disabled={fieldDisabled || undefined}
       data-row-lead={rowLead || undefined}
       className={clsx(field.wrapperClassName)}
+      style={controlWidth ? ({ '--cas-ctrl-w': controlWidth } as CSSProperties) : undefined}
     >
       {renderFieldComponent()}
     </div>
   );
+}
+
+/**
+ * The cap for a field's control, in rem, or undefined to leave it filling its cell.
+ *
+ * Read off what the field already declares — a text field's `maxLength` (its own or the schema's),
+ * a number's digits — so a new field gets a sensible width without anyone setting one. Long text,
+ * textareas, dropdowns, choice controls and anything with its own search/pick UI keep the full
+ * cell: they hold sentences, or a control whose width is its own business.
+ */
+function controlMaxWidth(field: FormField, schemaMaxLength?: number): string | undefined {
+  switch (field.type) {
+    case 'number-input': {
+      const digits = (field.maxIntegerDigits ?? 12) + (field.decimalPlaces ?? 0);
+      // ~0.6rem a digit at the form's size, plus room for separators and the unit icon.
+      return `${Math.min(Math.max(digits * 0.6 + 2.5, 6), 16)}rem`;
+    }
+    case 'date-input':
+    case 'datetime-input':
+      return '13rem';
+    case 'text-input': {
+      const max = field.maxLength ?? schemaMaxLength;
+      if (max == null || max > 60) return undefined;
+      return `${Math.min(Math.max(max * 0.55 + 2, 7), 26)}rem`;
+    }
+    default:
+      return undefined;
+  }
 }
 
 // Re-export types for convenience
