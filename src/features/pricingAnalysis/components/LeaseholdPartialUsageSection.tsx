@@ -1,7 +1,10 @@
 import { useFormContext, useWatch, useController } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import type { LeaseholdFormType } from '../schemas/leaseholdForm';
 import { calculateRemainingLandArea } from '../domain/calculateLeasehold';
 import { useEffect, useMemo } from 'react';
+import { KvRow } from './KvRow';
+import { DisplayValueRow } from './SummaryValueCard';
 
 interface LeaseholdPartialUsageSectionProps {
   finalValueRounded: number;
@@ -21,6 +24,7 @@ export function LeaseholdPartialUsageSection({
   totalLandArea,
   onEstimateChange,
 }: LeaseholdPartialUsageSectionProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { control, setValue } = useFormContext<LeaseholdFormType>();
   const isPartialUsage = useWatch({ control, name: 'isPartialUsage' });
 
@@ -49,40 +53,45 @@ export function LeaseholdPartialUsageSection({
     );
   }, [remaining, onEstimateChange, isPartialUsage]);
 
-  const hasArea = totalLandArea - totalLeaseLandArea > 0;
+  if (!isPartialUsage || !remaining) return null;
 
+  // mock:2838-2840 — three rows inside the value card that show how the PV becomes the
+  // indicated value, replacing the strip that used to sit above the cards. The calculation
+  // above (calculateRemainingLandArea → onEstimateChange) is unchanged; only the rendering moved.
+  const price = pricePerSqWaCtrl.field.value ?? landValuePerSqWa;
   return (
-    <div className="border-t border-gray-200 pt-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-600">Area not covered by the lease agreement</span>
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <div className="text-[10px] text-gray-400">Land Area</div>
-            {isPartialUsage ? (
-              <div className="flex items-center gap-1 justify-end">
-                <div className="text-xs font-medium text-gray-700">
-                  {hasArea ? <>{fmt(remaining?.remainingLandArea ?? 0)}</> : totalLandArea}
-                  <span className="text-[10px] text-gray-400 ml-0.5">Sq.Wa</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-xs text-gray-400">-</div>
-            )}
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-gray-400">Price per Sq.Wa</div>
-            <div className="text-xs font-medium text-gray-700">
-              {isPartialUsage ? fmt(pricePerSqWaCtrl.field.value ?? landValuePerSqWa) : '-'}
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-[10px] text-gray-400">Land Price</div>
-            <div className="text-sm font-bold text-gray-900">
-              {isPartialUsage && remaining ? fmt(remaining.remainingLandPrice) : '-'}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <>
+      <DisplayValueRow
+        label={
+          <>
+            {t('methodTabs.partialUsage.estimateFromPv')}{' '}
+            <span className="text-[10.5px] text-gray-400">
+              {t('methodTabs.partialUsage.roundedThousand')}
+            </span>
+          </>
+        }
+        value={finalValueRounded}
+      />
+      <KvRow
+        label={<span className="pl-3">{t('methodTabs.partialUsage.plusUncovered')}</span>}
+        value={
+          <span className="tabular-nums">
+            <span className="text-[11px] text-gray-400">
+              {t('methodTabs.partialUsage.uncoveredWorking', {
+                area: fmt(remaining.remainingLandArea),
+                price: fmt(price),
+              })}{' '}
+              ={' '}
+            </span>
+            <span className="font-semibold text-gray-800">{fmt(remaining.remainingLandPrice)}</span>
+          </span>
+        }
+        unit={t('finalValue.baht')}
+      />
+      <DisplayValueRow
+        label={<span className="font-semibold">{t('methodTabs.partialUsage.total')}</span>}
+        value={remaining.estimateNetPrice}
+      />
+    </>
   );
 }

@@ -1,20 +1,16 @@
-import { Icon } from '@/shared/components';
-import Badge from '@/shared/components/Badge';
 import clsx from 'clsx';
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PricingAnalysisApproachMethodSelector } from './PricingAnalysisApproachMethodSelector';
-import { PropertyCardContent } from '@features/appraisal/components/PropertyCardContent';
-import { ModelCardContent } from './ModelCardContent';
+import { PricingAnalysisPropertyRail } from './PricingAnalysisPropertyRail';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { SelectionState } from '@features/pricingAnalysis/store/selectionReducer';
 import type { PropertyGroupItemDto } from '@features/appraisal/api';
 import type { PricingAnalysisConfigType } from '../../schemas';
-import type { ManualCostBreakdownContext } from '../../types/selection';
-import { mapGroupItemToPropertyItem } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
+import type { ManualCostBreakdownContext, MethodRole } from '../../types/selection';
+import type { MethodKey } from '../../hooks/useSelectionActions';
 import type { FlatContext, ProjectModelPricingContextDto } from '../../utils/flattenPricingContext';
 import { ServerDataCtx } from '../../store/selectionContext';
-import { GroupReferencesSection } from '../GroupReferencesSection';
 
 interface PricingAnalysisAccordionProps {
   state: SelectionState;
@@ -53,6 +49,8 @@ interface PricingAnalysisAccordionProps {
   onSelectCandidateApproach: (approachType: string) => void;
 
   onAddMethod?: (arg: { approachType: string; methodType: string }) => void;
+  /** See PricingAnalysisApproachMethodSelector — threaded to the board's per-approach popover. */
+  onAddMethods?: (picks: MethodKey[]) => Promise<{ succeeded: MethodKey[]; failed: MethodKey[] }>;
   onDeleteMethod?: (arg: { approachType: string; methodType: string }) => void;
   pricingConfiguration?: PricingAnalysisConfigType[];
   /** When true the left panel renders a single Model card instead of property list. */
@@ -76,6 +74,13 @@ interface PricingAnalysisAccordionProps {
   }) => void;
   /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
+  onSelectMethodRole?: (arg: { approachType: string; methodType: string; role: MethodRole }) => void;
+  onManualNoteSync?: (arg: {
+    approachType: string;
+    methodType: string;
+    remark: string;
+    methodId?: string;
+  }) => void;
   onRequestRemoveDocument?: (documentEntryId: string, fileName?: string | null) => void;
   removeDocumentConfirm?: {
     isOpen: boolean;
@@ -89,7 +94,10 @@ interface PricingAnalysisAccordionProps {
 export const PricingAnalysisAccordion = ({
   state,
   group,
-  onPricingAnalysisAccordionChange,
+  // No longer called from here — its button was removed (see the comment above the detail
+  // panel). Still part of the contract with PricingAnalysisPage; flagged to the team lead
+  // rather than deleted. Underscore-prefixed only to satisfy noUnusedParameters.
+  onPricingAnalysisAccordionChange: _onPricingAnalysisAccordionChange,
   isPricingAnalysisAccordionOpen,
   onSelectCalculationMethod,
   onCancelEditMode,
@@ -110,30 +118,20 @@ export const PricingAnalysisAccordion = ({
   onSelectCandidateApproach,
 
   onAddMethod,
+  onAddMethods,
   onDeleteMethod,
   pricingConfiguration,
   isModelSubject = false,
-  flatContext,
-  pricingContext,
-  modelThumbnailSrc,
   deleteConfirm,
   onManualValueSync,
+  onSelectMethodRole,
+  onManualNoteSync,
   manualCostBreakdown,
   onRequestRemoveDocument,
   removeDocumentConfirm,
 }: PricingAnalysisAccordionProps) => {
   const { t } = useTranslation('pricingAnalysis');
   const serverData = useContext(ServerDataCtx);
-
-  /** Map group properties to PropertyItem for rendering */
-  const propertyItems = useMemo(
-    () =>
-      (group.properties ?? [])
-        .slice()
-        .sort((a, b) => (a.sequenceInGroup ?? 0) - (b.sequenceInGroup ?? 0))
-        .map(mapGroupItemToPropertyItem),
-    [group.properties],
-  );
 
   /** Flatten all methods across all summary approaches for the references section label lookup */
   const groupMethods = useMemo(
@@ -147,9 +145,6 @@ export const PricingAnalysisAccordion = ({
       ),
     [state.summarySelected],
   );
-
-  /** Find selected approach name for header badge */
-  const selectedApproach = state.summarySelected?.find(appr => appr.isSelected);
 
   /** accordion effect */
   const detailInnerRef = useRef<HTMLDivElement>(null);
@@ -171,154 +166,104 @@ export const PricingAnalysisAccordion = ({
     };
   }, []);
 
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white px-4 py-2">
-      {/* header */}
-      <div className="grid grid-cols-12 justify-between items-center h-12">
-        <div className="col-span-8 flex items-center gap-2">
-          {isModelSubject ? (
-            <span className="font-semibold flex items-center gap-1.5 min-w-0">
-              <span className="text-gray-500 truncate">
-                {flatContext?.projectName ? String(flatContext.projectName) : 'Project'}
-              </span>
-              <Icon name="chevron-right" style="solid" className="text-gray-300 size-3 shrink-0" />
-              <span className="text-gray-900 truncate">
-                {flatContext?.modelName ? String(flatContext.modelName) : 'Model'}
-              </span>
-            </span>
-          ) : (
-            <>
-              <span className="font-semibold">{`${t('accordion.group')} ${group?.number ?? ''} ${group?.name ?? ''}`}</span>
-              <span className="text-sm text-gray-400">
-                {t('accordion.items', { count: group?.properties?.length ?? 0 })}
-              </span>
-            </>
-          )}
-          {selectedApproach && (
-            <Badge size="xs" badgeStyle="soft" type="status" value="inprogress" dot={false}>
-              {selectedApproach.label}
-            </Badge>
-          )}
-        </div>
-        <div className="col-span-4 flex items-center justify-end gap-1">
-          <div className="flex flex-row gap-1 items-center justify-end">
-            <span>
-              {state.summarySelected?.find(appr => appr.isSelected)
-                ? (Number(
-                    state.summarySelected?.find(appr => appr.isSelected)?.appraisalValue,
-                  ).toLocaleString() ?? 0)
-                : 0}
-            </span>
-            <Icon name="baht-sign" style="light" className="size-4" />
-          </div>
-          <button
-            type="button"
-            onClick={onPricingAnalysisAccordionChange}
-            className="btn btn-ghost btn-sm"
-            aria-expanded={isPricingAnalysisAccordionOpen}
-          >
-            <Icon
-              name="chevron-down"
-              style="solid"
-              className={clsx(
-                'size-4 text-gray-400 transition-transform duration-300 ease-in-out',
-                isPricingAnalysisAccordionOpen ? 'rotate-180' : 'rotate-0',
-              )}
-            />
-          </button>
-        </div>
-      </div>
+  /**
+   * maxHeight can only drive the open animation — it must be released once that finishes.
+   * Holding it pinned to the content's own height gave every descendant exactly as much room
+   * as it needed, so the rail's and the board's `overflow-y-auto` never had anything to
+   * scroll and the board's sticky header had nothing to stick to. Worse, pairing it with
+   * `h-full` on the child created a measurement feedback loop — child fills the box, its
+   * scrollHeight drops, the ResizeObserver shrinks maxHeight, repeat — which collapsed both
+   * columns to 3px. Releasing it breaks that loop and lets flex hand down a real height.
+   * The cost is that collapsing no longer animates (`none` → `0` has nothing to tween);
+   * expanding still does, and the collapse only happens on CALCULATION_ENTER, where the
+   * content is being swapped out anyway.
+   */
+  const [isExpanded, setIsExpanded] = useState(isPricingAnalysisAccordionOpen);
+  useLayoutEffect(() => {
+    if (!isPricingAnalysisAccordionOpen) {
+      setIsExpanded(false);
+      return;
+    }
+    const id = setTimeout(() => setIsExpanded(true), 300);
+    return () => clearTimeout(id);
+  }, [isPricingAnalysisAccordionOpen]);
 
-      {/* detail */}
+  return (
+    <div className="flex flex-col min-h-0">
+      {/* No manual collapse toggle — the mock has no equivalent of this in-place collapse
+          (mock's .work, mock:259, is always expanded), so the visible control was removed.
+          The collapse mechanism itself stays: PricingAnalysisPage still drives
+          isPricingAnalysisAccordionOpen programmatically, closing this
+          (isPricingAnalysisAccordionOpen=false) on CALCULATION_ENTER to make room for a
+          BC/MC/LH method's inline calculation board below, and reopening it on cancel. */}
+
+      {/* detail — rail + board, siblings owning the screen per the mock's .work (mock:259):
+          no card, no border box around either. */}
       <div
-        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-        style={{ maxHeight: isPricingAnalysisAccordionOpen ? detailMaxHeight : 0 }}
+        className={clsx(
+          'overflow-hidden transition-[max-height] duration-300 ease-in-out',
+          // Once expanded, take the space that is left instead of the content's own height —
+          // that is what gives the rail and the board a bounded height to scroll inside.
+          isExpanded && 'flex-1 min-h-0',
+        )}
+        style={{
+          maxHeight: isExpanded ? undefined : isPricingAnalysisAccordionOpen ? detailMaxHeight : 0,
+        }}
       >
         <div
           ref={detailInnerRef}
           className={clsx(
-            'pb-4 text-gray-700 transition-opacity duration-200',
+            'flex pb-4 text-gray-700 transition-opacity duration-200',
+            // Fill the box rather than growing past it, so each column scrolls its own
+            // section — the rail stays pinned while its list scrolls, and the board keeps
+            // its header in place (mock:259's `.work`, two siblings owning the screen).
+            isExpanded && 'h-full min-h-0',
             isPricingAnalysisAccordionOpen
               ? 'opacity-100 pointer-events-auto'
               : 'opacity-0 pointer-events-none',
           )}
         >
-          <div className="flex w-full gap-0">
-            {/* Left: Model card (projectModel) or Property list (propertyGroup) */}
-            <div className="w-1/2 shrink-0 overflow-y-auto space-y-2 pr-3 border-r border-gray-200">
-              {isModelSubject ? (
-                flatContext ? (
-                  <ModelCardContent
-                    flat={flatContext}
-                    context={pricingContext}
-                    projectType={
-                      pricingContext != null
-                        ? pricingContext.tower != null
-                          ? 'Condo'
-                          : 'LandAndBuilding'
-                        : undefined
+          <PricingAnalysisPropertyRail />
+          <div className="flex-1 min-w-0 pl-3">
+            <PricingAnalysisApproachMethodSelector
+              state={state}
+              isSystemCalculation={systemCalculationMode}
+              onSystemCalculationChange={onSystemCalculationChange}
+              onEnterEdit={onEnterEdit}
+              onEditModeSave={onEditModeSave}
+              onSummaryModeSave={onSummaryModeSave}
+              isSummarySaving={isSummarySaving}
+              onToggleMethod={onToggleMethod}
+              onSelectCalculationMethod={onSelectCalculationMethod}
+              onCancelEditMode={onCancelEditMode}
+              onSelectCandidateMethod={onSelectCandidateMethod}
+              onSelectCandidateApproach={onSelectCandidateApproach}
+              onAddMethod={onAddMethod}
+              onAddMethods={onAddMethods}
+              onDeleteMethod={onDeleteMethod}
+              pricingConfiguration={pricingConfiguration}
+              deleteConfirm={deleteConfirm}
+              onManualValueSync={onManualValueSync}
+              onSelectMethodRole={onSelectMethodRole}
+              onManualNoteSync={onManualNoteSync}
+              manualCostBreakdown={manualCostBreakdown}
+              onRequestRemoveDocument={onRequestRemoveDocument}
+              removeDocumentConfirm={removeDocumentConfirm}
+              // References band — folded into the board's own <table> as its last group of
+              // rows (see PricingAnalysisMethodBoard), not a separate section below it.
+              // propertyGroup subjects only, same gate the old standalone section used.
+              references={
+                !isModelSubject && state.pricingAnalysisId
+                  ? {
+                      pricingAnalysisId: state.pricingAnalysisId,
+                      groupMethods,
+                      groupProperties: group.properties ?? [],
+                      marketSurveys: serverData?.marketSurveyDetails ?? [],
                     }
-                    thumbnailSrc={modelThumbnailSrc}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                    <Icon name="layer-group" className="text-2xl mb-2" />
-                    <p className="text-xs">{t('accordion.loadingModel')}</p>
-                  </div>
-                )
-              ) : propertyItems.length > 0 ? (
-                propertyItems.map(property => (
-                  <div
-                    key={property.id}
-                    className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-sm transition-shadow flex"
-                  >
-                    <PropertyCardContent property={property} showArrow={false} size="sm" />
-                  </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-                  <Icon name="folder-open" className="text-2xl mb-2" />
-                  <p className="text-xs">{t('accordion.noProperties')}</p>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Approach & Method Selector (50%) */}
-            <div className="w-1/2 min-w-0 pl-3">
-              <PricingAnalysisApproachMethodSelector
-                state={state}
-                isSystemCalculation={systemCalculationMode}
-                onSystemCalculationChange={onSystemCalculationChange}
-                onEnterEdit={onEnterEdit}
-                onEditModeSave={onEditModeSave}
-                onSummaryModeSave={onSummaryModeSave}
-                isSummarySaving={isSummarySaving}
-                onToggleMethod={onToggleMethod}
-                onSelectCalculationMethod={onSelectCalculationMethod}
-                onCancelEditMode={onCancelEditMode}
-                onSelectCandidateMethod={onSelectCandidateMethod}
-                onSelectCandidateApproach={onSelectCandidateApproach}
-                onAddMethod={onAddMethod}
-                onDeleteMethod={onDeleteMethod}
-                pricingConfiguration={pricingConfiguration}
-                deleteConfirm={deleteConfirm}
-                onManualValueSync={onManualValueSync}
-                manualCostBreakdown={manualCostBreakdown}
-                onRequestRemoveDocument={onRequestRemoveDocument}
-                removeDocumentConfirm={removeDocumentConfirm}
-              />
-            </div>
-          </div>
-
-          {/* References section — shown only for propertyGroup subjects (not model) */}
-          {!isModelSubject && state.pricingAnalysisId && (
-            <GroupReferencesSection
-              pricingAnalysisId={state.pricingAnalysisId}
-              groupMethods={groupMethods}
-              groupProperties={group.properties ?? []}
-              marketSurveys={serverData?.marketSurveyDetails ?? []}
+                  : undefined
+              }
             />
-          )}
+          </div>
         </div>
       </div>
       <ConfirmDialog

@@ -59,6 +59,80 @@ export function roundToThousand(value: Numberish): number {
   return Math.round(toNumber(value) / 1000) * 1000;
 }
 
+// ─── Building Cost Value ─────────────────────────────────────────────
+
+/**
+ * One building's after-depreciation total: the STORED `priceAfterDepreciation` of each
+ * schedule row. That column is the figure of record — the backend sums it
+ * (`PricingPropertyDataService.BuildingCostSql`) and both report providers close their
+ * tables on it — so re-deriving the row from `area × rate − Σ periods` is only a backstop
+ * for a row that has no stored figure yet, not a second opinion on one that does.
+ */
+function sumAfterDepreciation(rows: Record<string, unknown>[]): number {
+  return rows.reduce<number>((sum, row) => {
+    const stored = row?.['priceAfterDepreciation'] as Numberish;
+    if (stored !== null && stored !== undefined) return sum + toNumber(stored);
+
+    const before =
+      toNumber(row?.['area'] as Numberish) *
+      toNumber(row?.['pricePerSqMBeforeDepreciation'] as Numberish);
+    const periods = (row?.['depreciationPeriods'] as Record<string, unknown>[] | null) ?? [];
+    const depreciation = sumArray(periods, p => p?.['priceDepreciation'] as Numberish);
+
+    return sum + (before - depreciation);
+  }, 0);
+}
+
+/**
+ * ONE building's Building Cost Value — the figure that is actually stored, priced against,
+ * and printed beside its schedule.
+ *
+ * The appraiser's keyed Final Cost Value wins, otherwise that building's schedule total
+ * rounded to the nearest 1,000.
+ *
+ * KEEP IN SYNC with `PricingPropertyDataService.BuildingCostSql`:
+ *   `COALESCE(bad.FinalCostValueOverride, ROUND(SUM(bdd.PriceAfterDepreciation), -3))`
+ *
+ * @param building - A building property as the pricing screen holds it (the raw
+ *                   `…/building-detail` response).
+ *
+ * @example
+ * // no override: 1,234,567.89 → rounded to 1,235,000
+ * buildingFinalCostValue({ depreciationDetails: [{ priceAfterDepreciation: 1234567.89 }] })
+ */
+export function buildingFinalCostValue(building: Record<string, unknown> | undefined): number {
+  // An explicit null/undefined check and not a truthiness one: a keyed override of 0 is a
+  // decision the appraiser made, the same way COALESCE treats it on the SQL side.
+  const override = building?.['finalCostValueOverride'] as Numberish;
+  if (override !== null && override !== undefined) return toNumber(override);
+
+  const rows = (building?.['depreciationDetails'] as Record<string, unknown>[] | null) ?? [];
+  return roundToThousand(sumAfterDepreciation(rows));
+}
+
+/**
+ * The Building Cost Value of a SET of building properties.
+ *
+ * The rounding above is applied per building and never to the group total — rounding once
+ * at the end gives a different number. Summing the raw schedule totals instead (which is
+ * what every caller of this used to do inline) drops the appraiser's override entirely and
+ * lands a few hundred baht away from the figure shown next to it, so an untouched group
+ * already looked edited.
+ *
+ * Callers wanting a single building's figure want {@link buildingFinalCostValue} — reaching
+ * for this one with a one-element array fixes the shape and not the number.
+ *
+ * @param buildings - Building properties, already filtered to the caller's own set of
+ *                    building collateral types.
+ */
+export function sumBuildingFinalCostValue(
+  buildings: Record<string, unknown>[] | undefined,
+): number {
+  if (!buildings?.length) return 0;
+
+  return buildings.reduce<number>((total, building) => total + buildingFinalCostValue(building), 0);
+}
+
 /**
  * Rounds a number down (floor) to the nearest thousand.
  *

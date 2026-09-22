@@ -2,15 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch, useController, useFieldArray } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { MethodFooterActions } from './MethodFooterActions';
 import {
   useLeaseholdFormSchema,
   leaseholdFormDefaults,
   type LeaseholdFormType,
 } from '../schemas/leaseholdForm';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Icon } from '@/shared/components';
-import { NumberInput, Toggle } from '@/shared/components/inputs';
+import { Button, Checkbox, Icon } from '@/shared/components';
+import { NumberInput } from '@/shared/components/inputs';
 import { initializeLeaseholdForm } from '../adapters/initializeLeaseholdForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -19,13 +18,29 @@ import { useResetMethod } from '../api';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 import { LeaseholdTable } from './LeaseholdTable';
 import { LeaseholdRentalInfoModal } from './LeaseholdRentalInfoModal';
-import { LeaseTimelineBar } from './LeaseTimelineBar';
 import { LeaseholdChart } from './LeaseholdChart';
-import { SensitivityStrip } from './SensitivityStrip';
-import { RemarkSection } from './RemarkSection';
 import { LeaseholdPartialUsageSection } from './LeaseholdPartialUsageSection';
+import {
+  SummaryGrid,
+  SummaryCard,
+  DisplayValueRow,
+  IndicatedValueRow,
+  SummaryNotesCard,
+} from './SummaryValueCard';
 import { KpiSummaryStrip, type KpiCard } from './KpiSummaryStrip';
-import { RHFInputCell } from './table/RHFInputCell';
+import { DenseProvider, RHFInputCell } from './table/RHFInputCell';
+import { MethodTopBarPortal } from './MethodTopBarPortal';
+import { MethodTabs } from './MethodTabs';
+import {
+  MethodWorkArea,
+  MethodToolbarToggle,
+  MethodRailSectionTitle,
+  MethodRailField,
+  MethodRailLeaseHeader,
+  MethodRailPeriodHeader,
+  MethodRailAddRow,
+  MethodRailSeg,
+} from './MethodWorkArea';
 import {
   generateLeaseholdTable,
   computeAppraisalSchedule,
@@ -34,7 +49,6 @@ import {
   calculateLeaseLandAreaUsage,
 } from '../domain/calculateLeasehold';
 import type { SaveLeaseholdAnalysisRequest } from '../types/leasehold';
-import { roundToThousand } from '../domain/calculation';
 import { useGetRentalSchedule, useGetLeaseAgreement } from '@/features/appraisal/api/property';
 import { typeToDetailEndpoint } from '@/features/appraisal/utils/propertyTypeConfig';
 import axios from '@shared/api/axiosInstance';
@@ -42,8 +56,7 @@ import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useGetAppointment } from '@/features/appraisal/api/appointment';
 import toast from 'react-hot-toast';
-import { formatDateOnly } from '../domain/formatters';
-import clsx from 'clsx';
+import { fmt } from '../domain/formatters';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { MarketReferenceButton } from './MarketReferenceButton';
 import { PricingAnalysisSubjectType } from '../api/references';
@@ -86,6 +99,9 @@ export function LeaseholdPanel({
 }: LeaseholdPanelProps) {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
+  // Stable id so the top-bar Save button (portaled outside this <form> via
+  // MethodTopBarPortal) still submits it natively — see WQSPanel.tsx for why.
+  const formId = 'leasehold-panel-form';
   const appraisalId = useAppraisalId();
   const { data: appointment } = useGetAppointment(appraisalId ?? '');
   const { pricingAnalysisId, methodId } = activeMethod ?? {};
@@ -95,6 +111,10 @@ export function LeaseholdPanel({
   const [tableResult, setTableResult] = useState<LeaseholdTableResult | null>(null);
   const tableResultRef = useRef<LeaseholdTableResult | null>(null);
   const [estimateNetPrice, setEstimateNetPrice] = useState<number | null>(null);
+  // mock:1284 `sideL: true, chart: false` — the input rail defaults open, the chart
+  // defaults closed; both toggled from the tab toolbar (mock:3504-3505).
+  const [showRail, setShowRail] = useState(true);
+  const [showChart, setShowChart] = useState(false);
 
   const resetMutation = useResetMethod();
   const saveMutation = useSaveLeaseholdAnalysis();
@@ -159,7 +179,16 @@ export function LeaseholdPanel({
     );
 
     return {
-      totalLandAreaInSqWa: Number((propertyDetail as any).totalLandAreaInSqWa) || 0,
+      // Net area — title area less the deductions the appraiser listed (encroachment, land used
+      // by others, public waterway). Pricing values the appraisable area, not the registered one;
+      // the deed's own figure stays on the property form and in the book's per-title rows.
+      // `!= null` rather than a truthiness check: a fully deducted plot is a real 0, not a blank.
+      // The key keeps its "total" name because every consumer below reads it by that name — the
+      // server's PropertyGroupData.TotalLandAreaInSqWa is likewise the net figure under a gross name.
+      totalLandAreaInSqWa:
+        ((propertyDetail as any).netLandAreaInSqWa != null
+          ? Number((propertyDetail as any).netLandAreaInSqWa)
+          : Number((propertyDetail as any).totalLandAreaInSqWa)) || 0,
       totalBuildingPriceBeforeDepreciation,
     };
   }, [propertyDetail, propertiesMap, firstPropertyId]);
@@ -234,7 +263,8 @@ export function LeaseholdPanel({
           totalIncomeOverLeaseTerm: savedData.analysis.totalIncomeOverLeaseTerm,
           valueAtLeaseExpiry: savedData.analysis.valueAtLeaseExpiry,
           finalValue: savedData.analysis.finalValue,
-          finalValueRounded: savedData.analysis.finalValueRounded,
+          // The API keeps one figure now; the local calc type still names it "rounded".
+          finalValueRounded: savedData.analysis.finalValue,
         };
         tableResultRef.current = result;
         setTableResult(result);
@@ -365,46 +395,6 @@ export function LeaseholdPanel({
     [appointment, rentalScheduleData, propertyData, setValue, totalLeaseLandArea, isPartialUsage],
   );
 
-  // Sensitivity: recalculate final value with a different discount rate (C3 fix: no getValues in deps)
-  const calcSensitivity = useCallback(
-    (rate: number): number | null => {
-      const data = getValuesRef.current();
-      const appraisalDateStr = appointment?.appointmentDateTime;
-      const contractRows = rentalScheduleData?.rows ?? [];
-      const { rows: appraisalRows } = appraisalDateStr
-        ? computeAppraisalSchedule(contractRows, appraisalDateStr)
-        : { rows: [] };
-      if (appraisalRows.length === 0) return null;
-
-      const years = appraisalRows.map(r => r.year);
-      const rentalIncomePerPeriod = appraisalRows.map(r => r.totalAmount);
-      const baseLandValue =
-        (data.landValuePerSqWa ?? 0) *
-        (isPartialUsage ? (totalLeaseLandArea ?? 0) : (propertyData?.totalLandAreaInSqWa ?? 0));
-
-      const result = generateLeaseholdTable({
-        years,
-        landValueConfig: {
-          baseValue: baseLandValue,
-          growthType: data.landGrowthRateType ?? 'Frequency',
-          growthRatePercent: data.landGrowthRatePercent ?? 0,
-          intervalYears: data.landGrowthIntervalYears ?? 1,
-          periods: data.landGrowthPeriods ?? [],
-        },
-        initialBuildingValue:
-          propertyData?.totalBuildingPriceBeforeDepreciation ?? data.initialBuildingValue ?? 0,
-        constructionCostIndex: data.constructionCostIndex ?? 0,
-        depreciationRate: data.depreciationRate ?? 0,
-        depreciationIntervalYears: data.depreciationIntervalYears ?? 1,
-        buildingCalcStartYear: data.buildingCalcStartYear ?? 0,
-        discountRate: rate,
-        rentalIncomePerPeriod,
-      });
-      return result.finalValueRounded;
-    },
-    [appointment, rentalScheduleData, propertyData, isPartialUsage],
-  );
-
   // Local state: caches the analysis id obtained by an auto-save on button open,
   // so the WQS button is available even before the user has saved the form.
   const [ensuredId, setEnsuredId] = useState<string | undefined>(undefined);
@@ -439,6 +429,7 @@ export function LeaseholdPanel({
       partialWa: data.partialWa,
       pricePerSqWa: data.pricePerSqWa,
       estimatePriceRounded: data.estimatePriceRounded,
+      indicatedValue: data.indicatedValue,
       remark: data.remark,
     };
 
@@ -453,7 +444,7 @@ export function LeaseholdPanel({
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
-          appraisalValue: data.estimatePriceRounded ?? result.finalValueRounded,
+          appraisalValue: data.indicatedValue ?? data.estimatePriceRounded ?? result.finalValueRounded,
         });
       }
       if (!silent) toast.success(t('toasts.saved'));
@@ -566,8 +557,11 @@ export function LeaseholdPanel({
 
   const finalValueRounded = tableResult?.finalValueRounded ?? 0;
 
-  // Estimate Price (Rounded) — auto-fills from computed, user can override
-  const { field: estimateField } = useController({ control, name: 'estimatePriceRounded' });
+  // Appraisal Price — the appraiser's override. `estimatePriceRounded` (watched below)
+  // is the system-computed figure only; it's freely overwritten by handleGenerate and
+  // no longer the override channel, so editing other fields can't clobber this one.
+  const { field: indicatedValueField } = useController({ control, name: 'indicatedValue' });
+  const estimatePriceRoundedWatched = useWatch({ control, name: 'estimatePriceRounded' });
 
   if (isLoading) {
     return <PanelSkeleton />;
@@ -585,639 +579,501 @@ export function LeaseholdPanel({
 
   return (
     <FormProvider methods={methods} schema={leaseholdSchema}>
+      <MethodTopBarPortal>
+        <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
+          <span className="text-sm font-semibold text-primary tabular-nums">
+            {fmt(indicatedValueField.value ?? estimatePriceRoundedWatched ?? finalValueRounded ?? 0)}
+          </span>
+        </div>
+        {!readOnly && (
+          <>
+            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onCancelCalculationMethod}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {t('footer.cancel')}
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={handleOnReset}
+              disabled={saveMutation.isPending}
+              title={t('footer.reset')}
+              aria-label={t('footer.reset')}
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+            >
+              <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={saveMutation.isPending}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {!saveMutation.isPending && (
+                <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+              )}
+              {t('footer.save')}
+            </Button>
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
-        className="flex flex-col gap-4"
+        className="flex flex-col h-full min-h-0 gap-4"
       >
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
-            <Icon name="file-contract" className="size-4" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900">{t('leasehold.title')}</h2>
-        </div>
-
-        {/* Lease Info */}
-        <div className="rounded-lg border border-gray-200 p-5 space-y-4">
-          <div className={'grid grid-cols-4 gap-4'}>
-            <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
-              <Icon name="calendar" className="size-4 text-gray-400 shrink-0" />
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  {t('leasehold.appraisalDate')}
-                </div>
-                <div className="text-sm font-medium text-gray-900">
-                  {appointment?.appointmentDateTime
-                    ? formatDateOnly(appointment.appointmentDateTime)
-                    : '-'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
-              <Icon name="calendar" className="size-4 text-green-500 shrink-0" />
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  {t('leasehold.leaseStart')}
-                </div>
-                <div className="text-sm font-medium text-gray-900">
-                  {leaseAgreement?.leaseStartDate
-                    ? formatDateOnly(leaseAgreement.leaseStartDate)
-                    : '-'}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 rounded-md bg-gray-50 px-3 py-2.5">
-              <Icon name="calendar" className="size-4 text-red-400 shrink-0" />
-              <div>
-                <div className="text-[11px] text-gray-400 uppercase tracking-wide">
-                  {t('leasehold.leaseEnd')}
-                </div>
-                <div className="text-sm font-medium text-gray-900">
-                  {leaseAgreement?.leaseEndDate ? formatDateOnly(leaseAgreement.leaseEndDate) : '-'}
-                </div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsRentalInfoModalOpen(true)}
-              className="flex items-center gap-3 rounded-md bg-primary/5 border border-primary/20 px-3 py-2.5 hover:bg-primary/10 transition-colors"
-            >
-              <Icon name="receipt" className="size-4 text-primary shrink-0" />
-              <div className="text-left">
-                <div className="text-[11px] text-primary/60 uppercase tracking-wide">
-                  {t('leasehold.viewRental')}
-                </div>
-                <div className="text-sm font-medium text-primary">
-                  {t('leasehold.rentalInformation')}
-                </div>
-              </div>
-            </button>
-          </div>
-          <LeaseTimelineBar
-            leaseStartDate={leaseAgreement?.leaseStartDate}
-            leaseEndDate={leaseAgreement?.leaseEndDate}
-            appraisalDate={appointment?.appointmentDateTime}
-          />
-        </div>
-
-        {/* Land Value & Growth Config — inline (replaces modal) */}
-        <div className="rounded-lg border border-gray-200 p-5 space-y-5">
-          <div
-            className={clsx(isPartialUsage ? 'grid grid-cols-4 gap-4' : 'grid grid-cols-4 gap-4')}
-          >
-            <div className="rounded-md bg-gray-50 px-4 py-3">
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                {t('leasehold.landArea')}
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <div className="flex items-baseline gap-1.5">
-                  <Icon
-                    name="ruler-combined"
-                    className="size-3.5 text-gray-400 shrink-0 relative top-0.5"
-                  />
-                  <span className="text-lg font-semibold text-gray-900">
-                    {(propertyData?.totalLandAreaInSqWa ?? 0).toLocaleString('en-US', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </span>
-                  <span className="text-xs text-gray-500">{t('leasehold.units.sqWa')}</span>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-md bg-gray-50 px-4 py-3">
-              <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                {t('leasehold.partialUsage')}
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <Toggle
-                  options={[t('leasehold.toggle.no'), t('leasehold.toggle.yes')]}
-                  size="sm"
-                  checked={isPartialUsage}
-                  onChange={checked => {
-                    if (readOnly) return;
-                    setValue('isPartialUsage', checked, { shouldDirty: true });
-                    if (!checked) {
-                      setValue('partialRai', null, { shouldDirty: true });
-                      setValue('partialNgan', null, { shouldDirty: true });
-                      setValue('partialWa', null, { shouldDirty: true });
-                    }
-                  }}
-                  disabled={readOnly}
+        <MethodTabs
+          tabs={[
+            {
+              id: 'table',
+              label: t('leasehold.tabs.table'),
+              // mock:3502 — the KPI figures live in the tab strip's toolbar, not above
+              // the table. See CostBuildingPanel.tsx's identical `tools` usage.
+              tools: tableResult ? (
+                <KpiSummaryStrip
+                  variant="flat"
+                  cards={
+                    [
+                      {
+                        label: t('leasehold.totalIncome'),
+                        value: tableResult.totalIncomeOverLeaseTerm,
+                        secondary: true,
+                      },
+                      {
+                        label: t('leasehold.valueAtExpiry'),
+                        value: tableResult.valueAtLeaseExpiry,
+                        secondary: true,
+                      },
+                      {
+                        label: t('leasehold.finalValue'),
+                        value: tableResult.finalValueRounded,
+                        primary: true,
+                      },
+                    ] satisfies KpiCard[]
+                  }
                 />
-              </div>
-            </div>
-            {isPartialUsage && (
-              <>
-                <div
-                  className={clsx(
-                    isPartialUsage ? 'col-span-2' : 'col-span-1',
-                    'rounded-md bg-gray-50 px-4 py-3',
-                  )}
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t('leasehold.leaseLandArea')}
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <div className="w-28">
-                      <NumberInput
-                        name="partialRai"
-                        value={raiCtrl.field.value}
-                        onChange={e => raiCtrl.field.onChange(e.target.value ?? 0)}
-                        decimalPlaces={0}
-                        disabled={readOnly}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500">{t('leasehold.units.rai')}</span>
-                    <div className="w-28">
-                      <NumberInput
-                        name="partialNgan"
-                        value={nganCtrl.field.value}
-                        onChange={e => nganCtrl.field.onChange(e.target.value ?? 0)}
-                        decimalPlaces={0}
-                        disabled={readOnly}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500">{t('leasehold.units.ngan')}</span>
-                    <div className="w-28">
-                      <NumberInput
-                        name="partialWa"
-                        value={waCtrl.field.value}
-                        onChange={e => waCtrl.field.onChange(e.target.value ?? 0)}
-                        decimalPlaces={2}
-                        disabled={readOnly}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-500">{t('leasehold.units.sqWaShort')}</span>
-                  </div>
-                </div>
-                <div
-                  className={clsx(
-                    isPartialUsage ? 'col-span-1' : 'col-span-2',
-                    'rounded-md bg-gray-50 px-4 py-3',
-                  )}
-                >
-                  <div className="text-[11px] text-gray-400 uppercase tracking-wide mb-1">
-                    {t('leasehold.totalLeaseLandArea')}
-                  </div>
-                  <div className="flex items-baseline gap-1.5">
-                    <div className="flex items-baseline gap-1.5">
-                      <Icon
-                        name="ruler-combined"
-                        className="size-3.5 text-gray-400 shrink-0 relative top-0.5"
-                      />
-                      <span className="text-lg font-semibold text-gray-900">
-                        {(isPartialUsage
-                          ? (totalLeaseLandArea ?? 0)
-                          : (propertyData?.totalLandAreaInSqWa ?? 0)
-                        ).toLocaleString('en-US', {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </span>
-                      <span className="text-xs text-gray-500">{t('leasehold.units.sqWa')}</span>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-            <div
-              className={clsx(
-                isPartialUsage ? 'col-span-2' : 'col-span-1',
-                'rounded-md bg-gray-50 px-4 py-3',
-              )}
-            >
-              <div className="mb-1">
-                <label className="text-[11px] text-gray-400 uppercase tracking-wide block">
-                  {t('leasehold.landValue')} <span className="text-red-400">*</span>
-                </label>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <div className="w-44">
-                  <NumberInput
-                    name={landValueField.name}
-                    ref={landValueField.ref}
-                    value={landValueField.value}
-                    onChange={e => landValueField.onChange(e.target.value)}
-                    onBlur={landValueField.onBlur}
-                    decimalPlaces={2}
-                    disabled={readOnly}
-                    className={!readOnly ? '!pr-14' : undefined}
-                    rightIcon={(() => {
-                      if (readOnly) return undefined;
-                      const effectiveId = savedData?.analysis?.id ?? ensuredId;
-                      return (
-                        <MarketReferenceButton
-                          compact
-                          label="WQS"
-                          subjectType={PricingAnalysisSubjectType.LeaseholdLandRef}
-                          anchorId={effectiveId ?? ''}
-                          hostMethodId={methodId}
-                          marketSurveys={marketSurveys ?? []}
-                          templateList={templateList}
-                          subjectProperty={propertyDetail as Record<string, unknown> | undefined}
-                          onApplyValue={v => landValueField.onChange(v)}
-                          onBeforeOpen={
-                            effectiveId
-                              ? undefined
-                              : async () => {
-                                  const id = await ensureAnalysisId();
-                                  if (id) setEnsuredId(id);
-                                  if (!id) throw new Error('no-id');
-                                }
-                          }
-                          className="pointer-events-auto shrink-0"
+              ) : undefined,
+              // mock:3504-3505 — the rail/chart toggles sit after the (absent, for this
+              // method) column-nav chips, at the end of the toolbar.
+              toolsAfterNav: (
+                <>
+                  <MethodToolbarToggle
+                    label={t('methodTabs.toggleContractInfo')}
+                    pressed={showRail}
+                    onClick={() => setShowRail(v => !v)}
+                  />
+                  <MethodToolbarToggle
+                    label={t('methodTabs.toggleChart')}
+                    pressed={showChart}
+                    onClick={() => setShowChart(v => !v)}
+                  />
+                </>
+              ),
+              content: (
+                <DenseProvider value={true}>
+                  <MethodWorkArea
+                    showRail={showRail}
+                    rail={
+                      <>
+                        <MethodRailLeaseHeader
+                          appraisalDate={appointment?.appointmentDateTime}
+                          leaseStartDate={leaseAgreement?.leaseStartDate}
+                          leaseEndDate={leaseAgreement?.leaseEndDate}
+                          onViewRentalInfo={() => setIsRentalInfoModalOpen(true)}
                         />
-                      );
-                    })()}
-                  />
-                </div>
-                <span className="text-xs text-gray-500">{t('leasehold.units.bahtPerSqWa')}</span>
-              </div>
-            </div>
-            <div
-              className={clsx(
-                isPartialUsage ? 'col-span-1' : 'col-span-1',
-                'rounded-md bg-primary/5 border border-primary/10 px-4 py-3',
-              )}
-            >
-              <div className="text-[11px] text-primary/60 uppercase tracking-wide mb-1">
-                {t('leasehold.totalLandValue')}
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-lg font-semibold text-primary">
-                  {(
-                    (landValueField.value ?? 0) *
-                    (isPartialUsage
-                      ? (totalLeaseLandArea ?? 0)
-                      : (propertyData?.totalLandAreaInSqWa ?? 0))
-                  ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-                <span className="text-xs text-primary/60">{t('leasehold.units.baht')}</span>
-              </div>
-            </div>
-          </div>
+                        <MethodRailSectionTitle>{t('leasehold.landSectionTitle')}</MethodRailSectionTitle>
+                        <MethodRailField label={t('leasehold.landArea')} unit={t('leasehold.units.sqWa')}>
+                          <span className="text-xs font-medium text-gray-700 tabular-nums">
+                            {(propertyData?.totalLandAreaInSqWa ?? 0).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </span>
+                        </MethodRailField>
+                        <MethodRailField label={t('leasehold.partialUsage')}>
+                          {/* mock sideL('LH') — a checkbox "ใช่", not a ไม่/ใช่ segmented toggle. */}
+                          <Checkbox
+                            size="sm"
+                            className="[&>span>span]:h-[14px] [&>span>span]:w-[14px] [&>span>span]:border"
+                            checked={!!isPartialUsage}
+                            onChange={checked => {
+                              if (readOnly) return;
+                              setValue('isPartialUsage', checked, { shouldDirty: true });
+                              if (!checked) {
+                                setValue('partialRai', null, { shouldDirty: true });
+                                setValue('partialNgan', null, { shouldDirty: true });
+                                setValue('partialWa', null, { shouldDirty: true });
+                              }
+                            }}
+                            disabled={readOnly}
+                          >
+                            {t('methodTabs.partialUsage.yes')}
+                          </Checkbox>
+                        </MethodRailField>
+                        {isPartialUsage && (
+                          <>
+                            <MethodRailField label={t('leasehold.units.rai')}>
+                              <NumberInput
+                                dense
+                                name="partialRai"
+                                value={raiCtrl.field.value}
+                                onChange={e => raiCtrl.field.onChange(e.target.value ?? 0)}
+                                decimalPlaces={0}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                            <MethodRailField label={t('leasehold.units.ngan')}>
+                              <NumberInput
+                                dense
+                                name="partialNgan"
+                                value={nganCtrl.field.value}
+                                onChange={e => nganCtrl.field.onChange(e.target.value ?? 0)}
+                                decimalPlaces={0}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                            <MethodRailField label={t('leasehold.units.sqWaShort')}>
+                              <NumberInput
+                                dense
+                                name="partialWa"
+                                value={waCtrl.field.value}
+                                onChange={e => waCtrl.field.onChange(e.target.value ?? 0)}
+                                decimalPlaces={2}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                            <MethodRailField label={t('leasehold.totalLeaseLandArea')}>
+                              <span className="text-xs font-medium text-gray-700 tabular-nums">
+                                {(totalLeaseLandArea ?? 0).toLocaleString('en-US', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2,
+                                })}
+                              </span>
+                            </MethodRailField>
+                          </>
+                        )}
+                        {/* Back on the standard 128px control column: the WQS chip is now
+                            an icon-only 17px button (MarketReferenceButton `compact`), not
+                            the 48.8px text pill that needed `stacked` + pr-[60px]! to fit.
+                            Reservation = NumberInput's rightIcon wrapper pr-3 (9.75px at
+                            this repo's 13px root) + button width (17px) = 26.75px, rounded
+                            up to pr-[28px]!. Usable digit width: 128 (column) − 5 (dense
+                            px-[5px] left) − 28 (right) − 2 (border) = 93px, vs. 61px under
+                            the old reservation that already fit "30,000.00". Same numbers
+                            as ProfitRentPanel's market-rent field — keep them in sync. */}
+                        <MethodRailField
+                          label={t('leasehold.landValue')}
+                          required
+                          unit={t('methodTabs.units.bahtPerSqWa')}
+                        >
+                          <NumberInput
+                            dense
+                            name={landValueField.name}
+                            ref={landValueField.ref}
+                            value={landValueField.value}
+                            onChange={e => landValueField.onChange(e.target.value)}
+                            onBlur={landValueField.onBlur}
+                            decimalPlaces={2}
+                            disabled={readOnly}
+                            className={!readOnly ? 'pr-[28px]!' : undefined}
+                            rightIcon={(() => {
+                              if (readOnly) return undefined;
+                              const effectiveId = savedData?.analysis?.id ?? ensuredId;
+                              return (
+                                <MarketReferenceButton
+                                  compact
+                                  subjectType={PricingAnalysisSubjectType.LeaseholdLandRef}
+                                  anchorId={effectiveId ?? ''}
+                                  hostMethodId={methodId}
+                                  marketSurveys={marketSurveys ?? []}
+                                  templateList={templateList}
+                                  subjectProperty={propertyDetail as Record<string, unknown> | undefined}
+                                  onApplyValue={v => landValueField.onChange(v)}
+                                  onBeforeOpen={
+                                    effectiveId
+                                      ? undefined
+                                      : async () => {
+                                          const id = await ensureAnalysisId();
+                                          if (id) setEnsuredId(id);
+                                          if (!id) throw new Error('no-id');
+                                        }
+                                  }
+                                  className="pointer-events-auto shrink-0"
+                                />
+                              );
+                            })()}
+                          />
+                        </MethodRailField>
+                        <MethodRailField label={t('leasehold.totalLandValue')} unit={t('methodTabs.units.baht')}>
+                          <span className="text-gray-800 tabular-nums">
+                            {(
+                              (landValueField.value ?? 0) *
+                              (isPartialUsage
+                                ? (totalLeaseLandArea ?? 0)
+                                : (propertyData?.totalLandAreaInSqWa ?? 0))
+                            ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                        </MethodRailField>
 
-          <div className="border-t border-gray-200" />
+                        <MethodRailSectionTitle>{t('leasehold.landValueGrowthRate')}</MethodRailSectionTitle>
+                        <MethodRailSeg
+                          options={[
+                            { value: 'Frequency', label: t('leasehold.growthTypes.frequency') },
+                            { value: 'Period', label: t('leasehold.growthTypes.period') },
+                          ]}
+                          value={landGrowthRateType === 'Period' ? 'Period' : 'Frequency'}
+                          onChange={v => {
+                            if (readOnly) return;
+                            setValue('landGrowthRateType', v, { shouldDirty: true });
+                          }}
+                          disabled={readOnly}
+                        />
+                        {landGrowthRateType === 'Frequency' ? (
+                          <>
+                            <MethodRailField label={t('leasehold.rate')} unit={t('leasehold.units.percent')}>
+                              <NumberInput
+                                dense
+                                name={landGrowthPercentField.name}
+                                ref={landGrowthPercentField.ref}
+                                value={landGrowthPercentField.value}
+                                onChange={e => landGrowthPercentField.onChange(e.target.value)}
+                                onBlur={landGrowthPercentField.onBlur}
+                                decimalPlaces={2}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                            <MethodRailField label={t('leasehold.every')} unit={t('leasehold.units.yr')}>
+                              <NumberInput
+                                dense
+                                name={landIntervalField.name}
+                                ref={landIntervalField.ref}
+                                value={landIntervalField.value}
+                                onChange={e => landIntervalField.onChange(e.target.value)}
+                                onBlur={landIntervalField.onBlur}
+                                decimalPlaces={0}
+                                disabled={readOnly}
+                              />
+                            </MethodRailField>
+                          </>
+                        ) : (
+                          <div className="space-y-1.5 py-1">
+                            <MethodRailPeriodHeader />
+                            {landPeriodFields.map((field, index) => (
+                              <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 items-center">
+                                <NumberInput
+                                  dense
+                                  value={watch(`landGrowthPeriods.${index}.fromYear` as any) as number}
+                                  onChange={e =>
+                                    setValue(
+                                      `landGrowthPeriods.${index}.fromYear` as any,
+                                      e.target.value ?? 0,
+                                      { shouldDirty: true },
+                                    )
+                                  }
+                                  decimalPlaces={0}
+                                  disabled={readOnly}
+                                />
+                                <NumberInput
+                                  dense
+                                  value={watch(`landGrowthPeriods.${index}.toYear` as any) as number}
+                                  onChange={e =>
+                                    setValue(`landGrowthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
+                                      shouldDirty: true,
+                                    })
+                                  }
+                                  decimalPlaces={0}
+                                  disabled={readOnly}
+                                />
+                                <NumberInput
+                                  dense
+                                  value={watch(`landGrowthPeriods.${index}.growthRatePercent` as any) as number}
+                                  onChange={e =>
+                                    setValue(
+                                      `landGrowthPeriods.${index}.growthRatePercent` as any,
+                                      e.target.value ?? 0,
+                                      { shouldDirty: true },
+                                    )
+                                  }
+                                  decimalPlaces={2}
+                                  disabled={readOnly}
+                                />
+                                {!readOnly && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeLandPeriod(index)}
+                                    className="flex items-center justify-center text-red-400 hover:text-red-600"
+                                  >
+                                    <Icon name="xmark" className="size-3" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            {!readOnly && (
+                              <MethodRailAddRow
+                                label={t('leasehold.addPeriods')}
+                                onClick={() =>
+                                  appendLandPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })
+                                }
+                              />
+                            )}
+                          </div>
+                        )}
 
-          {/* Growth Rate Config */}
-          <div className="space-y-3">
-            <Toggle
-              label={t('leasehold.landValueGrowthRate')}
-              options={[t('leasehold.growthTypes.frequency'), t('leasehold.growthTypes.period')]}
-              checked={landGrowthRateType === 'Period'}
-              onChange={checked => {
-                if (readOnly) return;
-                setValue('landGrowthRateType', checked ? 'Period' : 'Frequency', {
-                  shouldDirty: true,
-                });
-              }}
-              size="sm"
-              disabled={readOnly}
-            />
+                        <MethodRailSectionTitle>{t('leasehold.buildingSectionTitle')}</MethodRailSectionTitle>
+                        <MethodRailField label={t('leasehold.constructionCostIndex')}>
+                          <RHFInputCell
+                            fieldName="constructionCostIndex"
+                            inputType="number"
+                            number={{ decimalPlaces: 2 }}
+                            disabled={readOnly}
+                          />
+                        </MethodRailField>
+                        <MethodRailField label={t('leasehold.buildingCalcStart')}>
+                          <RHFInputCell
+                            fieldName="buildingCalcStartYear"
+                            inputType="number"
+                            number={{ decimalPlaces: 0 }}
+                            disabled={readOnly}
+                          />
+                        </MethodRailField>
+                        <MethodRailField
+                          label={t('leasehold.depreciationRate')}
+                          unit={t('leasehold.units.percent')}
+                        >
+                          <RHFInputCell
+                            fieldName="depreciationRate"
+                            inputType="number"
+                            number={{ decimalPlaces: 2 }}
+                            disabled={readOnly}
+                          />
+                        </MethodRailField>
+                        <MethodRailField
+                          label={t('leasehold.every')}
+                          unit={t('leasehold.units.yr')}
+                        >
+                          <RHFInputCell
+                            fieldName="depreciationIntervalYears"
+                            inputType="number"
+                            number={{ decimalPlaces: 0 }}
+                            disabled={readOnly}
+                          />
+                        </MethodRailField>
 
-            {landGrowthRateType === 'Frequency' ? (
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
-                  <NumberInput
-                    label={t('leasehold.rate')}
-                    name={landGrowthPercentField.name}
-                    ref={landGrowthPercentField.ref}
-                    value={landGrowthPercentField.value}
-                    onChange={e => landGrowthPercentField.onChange(e.target.value)}
-                    onBlur={landGrowthPercentField.onBlur}
-                    decimalPlaces={2}
-                    rightIcon={
-                      <span className="text-xs text-gray-400">{t('leasehold.units.percent')}</span>
+                        <MethodRailSectionTitle>{t('leasehold.discountSectionTitle')}</MethodRailSectionTitle>
+                        <MethodRailField
+                          label={t('leasehold.discountedRate')}
+                          unit={t('leasehold.units.percent')}
+                        >
+                          <RHFInputCell
+                            fieldName="discountRate"
+                            inputType="number"
+                            number={{ decimalPlaces: 2 }}
+                            disabled={readOnly}
+                          />
+                        </MethodRailField>
+                      </>
                     }
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-sm text-gray-500 pb-2">{t('leasehold.every')}</span>
-                <div className="flex-1">
-                  <NumberInput
-                    label={t('leasehold.interval')}
-                    name={landIntervalField.name}
-                    ref={landIntervalField.ref}
-                    value={landIntervalField.value}
-                    onChange={e => landIntervalField.onChange(e.target.value)}
-                    onBlur={landIntervalField.onBlur}
-                    decimalPlaces={0}
-                    rightIcon={
-                      <span className="text-xs text-gray-400">{t('leasehold.units.yr')}</span>
-                    }
-                    disabled={readOnly}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 text-xs text-gray-500 font-medium">
-                  <span>{t('leasehold.fromYear')}</span>
-                  <span>{t('leasehold.toYear')}</span>
-                  <span>{t('leasehold.growthRatePercent')}</span>
-                  <span />
-                </div>
-                {landPeriodFields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_32px] gap-2 items-end">
-                    <NumberInput
-                      value={watch(`landGrowthPeriods.${index}.fromYear` as any) as number}
-                      onChange={e =>
-                        setValue(
-                          `landGrowthPeriods.${index}.fromYear` as any,
-                          e.target.value ?? 0,
-                          { shouldDirty: true },
-                        )
-                      }
-                      decimalPlaces={0}
-                      disabled={readOnly}
-                    />
-                    <NumberInput
-                      value={watch(`landGrowthPeriods.${index}.toYear` as any) as number}
-                      onChange={e =>
-                        setValue(`landGrowthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
-                          shouldDirty: true,
-                        })
-                      }
-                      decimalPlaces={0}
-                      disabled={readOnly}
-                    />
-                    <NumberInput
-                      value={watch(`landGrowthPeriods.${index}.growthRatePercent` as any) as number}
-                      onChange={e =>
-                        setValue(
-                          `landGrowthPeriods.${index}.growthRatePercent` as any,
-                          e.target.value ?? 0,
-                          { shouldDirty: true },
-                        )
-                      }
-                      decimalPlaces={2}
-                      rightIcon={<span className="text-xs text-gray-400">%</span>}
-                      disabled={readOnly}
-                    />
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => removeLandPeriod(index)}
-                        className="flex items-center justify-center text-red-400 hover:text-red-600 pb-1"
-                      >
-                        <Icon name="xmark" className="size-4" />
-                      </button>
+                  >
+                    {/* Chart — mock:2506-2515 nests it in the `.chart` card, toggled by the
+                        "กราฟ" button, shown above the table. Sensitivity strip removed for
+                        now (rendered wrong — see PR notes); toggle still reveals the chart. */}
+                    {showChart && tableResult && (
+                      <div className="flex flex-col gap-4 shrink-0">
+                        <LeaseholdChart result={tableResult} />
+                      </div>
                     )}
-                    {readOnly && <span />}
-                  </div>
-                ))}
-                {!readOnly && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      appendLandPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })
-                    }
-                    className="text-xs text-primary hover:underline flex items-center gap-1"
-                  >
-                    <Icon name="plus" className="size-3" />
-                    {t('leasehold.addPeriods')}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
 
-          <div className="border-t border-gray-200" />
-
-          {/* Building & Depreciation & Discount Rate */}
-          <div className="grid grid-cols-4 gap-3">
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                {t('leasehold.constructionCostIndex')}
-              </label>
-              <div className="flex items-center gap-1">
-                <div className="w-20">
-                  <RHFInputCell
-                    fieldName="constructionCostIndex"
-                    inputType="number"
-                    number={{ decimalPlaces: 2 }}
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400">%</span>
-              </div>
-            </div>
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                {t('leasehold.buildingCalcStart')}
-              </label>
-              <div className="flex items-center gap-1">
-                <div className="w-14">
-                  <RHFInputCell
-                    fieldName="buildingCalcStartYear"
-                    inputType="number"
-                    number={{ decimalPlaces: 0 }}
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400">{t('leasehold.units.years')}</span>
-              </div>
-            </div>
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                {t('leasehold.depreciationRate')}
-              </label>
-              <div className="flex items-center gap-1">
-                <div className="w-16">
-                  <RHFInputCell
-                    fieldName="depreciationRate"
-                    inputType="number"
-                    number={{ decimalPlaces: 2 }}
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400">
-                  {t('leasehold.units.percentEvery')}
-                </span>
-                <div className="w-10">
-                  <RHFInputCell
-                    fieldName="depreciationIntervalYears"
-                    inputType="number"
-                    number={{ decimalPlaces: 0 }}
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400">yr</span>
-              </div>
-            </div>
-            <div className="rounded-md bg-gray-50 px-3 py-2">
-              <label className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5 block">
-                {t('leasehold.discountedRate')}
-              </label>
-              <div className="flex items-center gap-1">
-                <div className="w-20">
-                  <RHFInputCell
-                    fieldName="discountRate"
-                    inputType="number"
-                    number={{ decimalPlaces: 2 }}
-                    disabled={readOnly}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-400">%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* KPI Summary */}
-        {tableResult && (
-          <KpiSummaryStrip
-            cards={
-              [
-                {
-                  label: t('leasehold.totalIncome'),
-                  value: tableResult.totalIncomeOverLeaseTerm,
-                  icon: 'coins',
-                  color: 'blue',
-                },
-                {
-                  label: t('leasehold.valueAtExpiry'),
-                  value: tableResult.valueAtLeaseExpiry,
-                  icon: 'building',
-                  color: 'gray',
-                },
-                {
-                  label: t('leasehold.finalValue'),
-                  value: tableResult.finalValueRounded,
-                  icon: 'circle-check',
-                  color: 'green',
-                  primary: true,
-                },
-              ] satisfies KpiCard[]
-            }
-          />
-        )}
-
-        {/* Chart */}
-        {tableResult && <LeaseholdChart result={tableResult} />}
-
-        {/* Sensitivity */}
-        {tableResult && (
-          <SensitivityStrip
-            currentRate={getValues('discountRate') ?? 0}
-            calculateFinalValue={calcSensitivity}
-          />
-        )}
-
-        {/* Table */}
-        {tableResult ? (
-          <LeaseholdTable result={tableResult} />
-        ) : isLoading ? (
-          <TableSkeleton />
-        ) : null}
-
-        {/* Partial Usage */}
-        {isPartialUsage && (
-          <LeaseholdPartialUsageSection
-            finalValueRounded={finalValueRounded}
-            landValuePerSqWa={getValues('landValuePerSqWa') ?? 0}
-            totalLeaseLandArea={totalLeaseLandArea}
-            totalLandArea={propertyData?.totalLandAreaInSqWa ?? 0}
-            onEstimateChange={(estimateRounded, estimateNet) => {
-              setValue('estimatePriceRounded', estimateRounded);
-              setEstimateNetPrice(estimateNet);
-            }}
-          />
-        )}
-
-        {/* Estimate Price */}
-        <div className="text-sm divide-y divide-gray-100 border-t border-gray-200 pt-3">
-          <div className="flex items-center justify-between py-1.5">
-            <span className="text-xs text-gray-600">{t('leasehold.estimatePriceFromPv')}</span>
-            <span className="text-xs font-medium text-gray-800 tabular-nums">
-              {finalValueRounded.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </span>
-          </div>
-          {watch('isPartialUsage') && estimateNetPrice != null && (
-            <>
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-xs text-gray-600">
-                  <span className="font-bold mr-1">+</span>
-                  {t('leasehold.landPriceNotCovered')}
-                </span>
-                <span className="text-xs font-medium text-gray-800 tabular-nums">
-                  {((estimateNetPrice ?? finalValueRounded) - finalValueRounded).toLocaleString(
-                    'en-US',
-                    { minimumFractionDigits: 2, maximumFractionDigits: 2 },
-                  )}
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-1.5">
-                <span className="text-xs text-gray-700 font-medium">
-                  <span className="font-bold mr-1">=</span>
-                  {t('leasehold.appraisalPriceWithPartialLand')}
-                </span>
-                <span className="text-xs font-semibold text-gray-900 tabular-nums">
-                  {(estimateNetPrice ?? finalValueRounded).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-              </div>
-            </>
-          )}
-          <div className="flex items-center justify-between py-2">
-            <span className="text-xs font-semibold text-gray-900 shrink-0">
-              {t('leasehold.appraisalPrice')}
-            </span>
-            <div className="flex items-center gap-2">
-              {(() => {
-                const rounded = Number(estimateField.value) || 0;
-                const computed = roundToThousand(estimateNetPrice ?? finalValueRounded);
-                const diff = rounded - computed;
-                if (diff === 0 || computed === 0) return null;
-                const pct = ((diff / computed) * 100).toFixed(1);
-                const color = diff > 0 ? 'text-green-600' : 'text-red-600';
-                const bgColor = diff > 0 ? 'bg-green-100' : 'bg-red-100';
-                const icon = diff > 0 ? 'arrow-up' : 'arrow-down';
-                return (
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} shrink-0`}
-                  >
-                    <Icon name={icon} style="solid" className="size-2.5" />
-                    {Math.abs(diff).toLocaleString()} ({diff > 0 ? '+' : ''}
-                    {pct}%)
-                  </span>
-                );
-              })()}
-              <div className="w-40">
-                <NumberInput
-                  name={estimateField.name}
-                  ref={estimateField.ref}
-                  value={estimateField.value}
-                  onChange={e => {
-                    estimateField.onChange(e.target.value);
-                  }}
-                  onBlur={estimateField.onBlur}
-                  decimalPlaces={2}
-                  disabled={readOnly}
-                  className="!font-bold !text-right !text-sm !text-green-700"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Notes & Assumptions */}
-        <RemarkSection setValue={setValue} watch={watch} readOnly={readOnly} />
-
-        {/* Footer */}
-        <MethodFooterActions
-          showReset={true}
-          isSubmitting={saveMutation.isPending}
-          onReset={handleOnReset}
-          onCancel={onCancelCalculationMethod}
+                    {/* Table */}
+                    {tableResult ? (
+                      <LeaseholdTable
+                        result={tableResult}
+                        appraisalDate={appointment?.appointmentDateTime}
+                        className="flex-1 min-h-0"
+                      />
+                    ) : isLoading ? (
+                      <TableSkeleton />
+                    ) : null}
+                  </MethodWorkArea>
+                </DenseProvider>
+              ),
+            },
+            {
+              id: 'summary',
+              label: t('leasehold.tabs.summary'),
+              content: (
+                <>
+                  {/* mock:2530 `kv()` — value card + notes card, side by side. */}
+                  <SummaryGrid>
+                    <SummaryCard title={t('costMachine.summary.title')}>
+                      <DisplayValueRow
+                        label={t('leasehold.table.totalIncomeOverLeaseTerm')}
+                        value={tableResult?.totalIncomeOverLeaseTerm ?? 0}
+                      />
+                      <DisplayValueRow
+                        label={t('leasehold.table.valueAtLeaseExpiry')}
+                        value={tableResult?.valueAtLeaseExpiry ?? 0}
+                      />
+                      <DisplayValueRow
+                        label={t('leasehold.table.finalValuePv')}
+                        value={tableResult?.finalValue ?? 0}
+                      />
+                      {/* Partial usage — its three rows (estimate → + uncovered land → = total)
+                          render inside this card (mock:2838-2840); the component still owns
+                          the calculation and feeds estimatePriceRounded via onEstimateChange. */}
+                      {isPartialUsage && (
+                        <LeaseholdPartialUsageSection
+                          finalValueRounded={finalValueRounded}
+                          landValuePerSqWa={getValues('landValuePerSqWa') ?? 0}
+                          totalLeaseLandArea={totalLeaseLandArea}
+                          totalLandArea={propertyData?.totalLandAreaInSqWa ?? 0}
+                          onEstimateChange={(estimateRounded, estimateNet) => {
+                            setValue('estimatePriceRounded', estimateRounded);
+                            setEstimateNetPrice(estimateNet);
+                          }}
+                        />
+                      )}
+                      <IndicatedValueRow
+                        label={
+                          <span className="font-semibold text-[#0f766e]">
+                            {t('costMachine.summary.indicatedValueLabel')}{' '}
+                            {/* The *SubLabel key is the English gloss, deliberately empty in
+                                en/zh so it does not repeat the label it sits next to. */}
+                            <span className="text-[10.5px] text-gray-400 font-normal">
+                              {t('finalValue.indicatedValueSubLabel')}
+                            </span>
+                          </span>
+                        }
+                        // Raw (pre-rounding) upstream — the partial-usage net price when that
+                        // section is active, else the raw PV sum. Same source the old badge
+                        // above this row read via `roundToThousand(estimateNetPrice ?? finalValueRounded)`.
+                        computedValue={estimateNetPrice ?? tableResult?.finalValue ?? 0}
+                        value={
+                          indicatedValueField.value ?? estimatePriceRoundedWatched ?? finalValueRounded ?? 0
+                        }
+                        onChange={v => indicatedValueField.onChange(v)}
+                        disabled={readOnly}
+                      />
+                    </SummaryCard>
+                    <SummaryNotesCard
+                      value={watch('remark') ?? ''}
+                      onChange={v => setValue('remark', v || null, { shouldDirty: true })}
+                      disabled={readOnly}
+                    />
+                  </SummaryGrid>
+                </>
+              ),
+            },
+          ]}
         />
 
         {/* Dialogs */}

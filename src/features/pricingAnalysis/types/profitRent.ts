@@ -33,8 +33,10 @@ export interface ProfitRentAnalysis {
   totalContractRentalFee: number;
   totalReturnsFromLease: number;
   totalPresentValue: number;
-  finalValueRounded: number;
+  finalValue: number;
   estimatePriceRounded: number | null;
+  /** Appraiser's typed-over figure for this method. Null = not overridden; the computed value applies. */
+  indicatedValue: number | null;
   totalBuildingCost: number | null;
   appraisalPriceWithBuilding: number | null;
   appraisalPriceWithBuildingRounded: number | null;
@@ -57,6 +59,8 @@ export interface SaveProfitRentAnalysisRequest {
   growthPeriods?: Omit<ProfitRentGrowthPeriod, 'id'>[];
   remark?: string | null;
   estimatePriceRounded?: number | null;
+  /** Appraiser's typed-over figure. Null = not overridden; do not coerce to 0. */
+  indicatedValue?: number | null;
   appraisalPriceWithBuildingRounded?: number | null;
 }
 

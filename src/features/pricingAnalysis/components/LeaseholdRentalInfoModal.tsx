@@ -1,7 +1,8 @@
 import { useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Icon } from '@/shared/components';
 import type { RentalScheduleRow } from '@/features/appraisal/api/property';
-import { computeAppraisalSchedule, type AppraisalScheduleRow } from '../domain/calculateLeasehold';
+import { computeAppraisalSchedule } from '../domain/calculateLeasehold';
 
 interface LeaseholdRentalInfoModalProps {
   isOpen: boolean;
@@ -22,12 +23,22 @@ function formatDate(dateStr: string) {
 const fmt = (n: number) =>
   n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Mirrors the mock's `.g` table rules (--surface/--surface-2, --line/--line-soft tokens).
+const tableCls = 'text-[12px] border-separate border-spacing-0 [font-variant-numeric:tabular-nums]';
+const cellCls =
+  'px-2 py-0 leading-[25px] whitespace-nowrap border-b border-r border-b-[#eef2f2] border-r-[#eef2f2] bg-white text-left text-gray-700';
+const headCls =
+  'px-2 border-b border-r border-b-[#e3e9e8] border-r-[#eef2f2] bg-[#f8fafa] font-medium text-[#55636f] leading-[26px] whitespace-nowrap text-left';
+const totalCls = `${cellCls} font-semibold bg-[#f8fafa]`;
+const numCls = 'text-right';
+
 export function LeaseholdRentalInfoModal({
   isOpen,
   onClose,
   contractSchedule,
   appraisalDate,
 }: LeaseholdRentalInfoModalProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { rows: appraisalRows, startIdx } = useMemo(
     () =>
       appraisalDate
@@ -66,7 +77,9 @@ export function LeaseholdRentalInfoModal({
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Rental Information</h3>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {t('leasehold.rentalModal.title')}
+          </h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <Icon name="xmark" className="size-5" />
           </button>
@@ -77,39 +90,33 @@ export function LeaseholdRentalInfoModal({
             {/* Headers */}
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Rental schedule as per contract
+                {t('leasehold.rentalModal.contractScheduleTitle')}
               </h4>
             </div>
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2 pl-6">
-                Rental schedule starting from the appraisal date
+                {t('leasehold.rentalModal.appraisalScheduleTitle')}
               </h4>
             </div>
 
             {/* Tables side-by-side with aligned rows */}
-            <table className="text-xs border border-gray-200 rounded-lg">
-              <thead className="bg-gray-50">
+            <table className={tableCls}>
+              <thead>
                 <tr>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
-                    Year
+                  <th className={headCls}>{t('leasehold.table.year')}</th>
+                  <th className={headCls}>{t('leasehold.rentalModal.contractStartDate')}</th>
+                  <th className={headCls}>{t('leasehold.rentalModal.contractEndDate')}</th>
+                  <th className={`${headCls} ${numCls}`}>
+                    {t('leasehold.rentalModal.upFrontPerYear')}
                   </th>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
-                    Contract Start Date
+                  <th className={`${headCls} ${numCls}`}>
+                    {t('leasehold.rentalModal.contractRentalFeePerYear')}
                   </th>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
-                    Contract End Date
+                  <th className={`${headCls} ${numCls}`}>
+                    {t('leasehold.rentalModal.totalAmountBaht')}
                   </th>
-                  <th className="px-3 py-2 text-right text-gray-500 font-medium whitespace-nowrap">
-                    Up Front (Baht/year)
-                  </th>
-                  <th className="px-3 py-2 text-right text-gray-500 font-medium whitespace-nowrap">
-                    Contract rental fee (Baht/year)
-                  </th>
-                  <th className="px-3 py-2 text-right text-gray-500 font-medium whitespace-nowrap">
-                    Total Amount (Baht)
-                  </th>
-                  <th className="px-3 py-2 text-right text-gray-500 font-medium whitespace-nowrap">
-                    Contract rental fee growth rate (%)
+                  <th className={`${headCls} ${numCls}`}>
+                    {t('leasehold.rentalModal.contractRentalFeeGrowthRate')}
                   </th>
                 </tr>
               </thead>
@@ -118,52 +125,46 @@ export function LeaseholdRentalInfoModal({
                   const row = contractSchedule[idx];
                   if (!row) {
                     return (
-                      <tr key={idx} className="border-t border-gray-100 h-8">
-                        <td colSpan={7} />
+                      <tr key={idx}>
+                        {/* NBSP keeps the spacer row at the same height as a data row: an
+                            empty cell creates no line box, so line-height alone collapses it. */}
+                        <td className={cellCls} colSpan={7}>
+                          &nbsp;
+                        </td>
                       </tr>
                     );
                   }
                   return (
-                    <tr key={idx} className="border-t border-gray-100 h-8">
-                      <td className="px-3 py-1.5 text-gray-700">{row.year}</td>
-                      <td className="px-3 py-1.5 text-gray-700">{formatDate(row.contractStart)}</td>
-                      <td className="px-3 py-1.5 text-gray-700">{formatDate(row.contractEnd)}</td>
-                      <td className="px-3 py-1.5 text-right text-gray-700">{fmt(row.upFront)}</td>
-                      <td className="px-3 py-1.5 text-right text-gray-700">
-                        {fmt(row.contractRentalFee)}
-                      </td>
-                      <td className="px-3 py-1.5 text-right text-gray-700">
-                        {fmt(row.totalAmount)}
-                      </td>
-                      <td className="px-3 py-1.5 text-right text-gray-700">
+                    <tr key={idx}>
+                      <td className={cellCls}>{row.year}</td>
+                      <td className={cellCls}>{formatDate(row.contractStart)}</td>
+                      <td className={cellCls}>{formatDate(row.contractEnd)}</td>
+                      <td className={`${cellCls} ${numCls}`}>{fmt(row.upFront)}</td>
+                      <td className={`${cellCls} ${numCls}`}>{fmt(row.contractRentalFee)}</td>
+                      <td className={`${cellCls} ${numCls}`}>{fmt(row.totalAmount)}</td>
+                      <td className={`${cellCls} ${numCls}`}>
                         {fmt(row.contractRentalFeeGrowthRatePercent)}
                       </td>
                     </tr>
                   );
                 })}
-                <tr className="border-t-2 border-gray-300 bg-gray-50 font-medium h-8">
-                  <td className="px-3 py-1.5 text-gray-700">Total</td>
-                  <td colSpan={4} />
-                  <td className="px-3 py-1.5 text-right text-gray-900">{fmt(contractTotal)}</td>
-                  <td />
+                <tr>
+                  <td className={totalCls}>{t('leasehold.rentalModal.total')}</td>
+                  <td className={totalCls} colSpan={4} />
+                  <td className={`${totalCls} ${numCls}`}>{fmt(contractTotal)}</td>
+                  <td className={totalCls} />
                 </tr>
               </tbody>
             </table>
 
-            <table className="text-xs border border-gray-200 rounded-lg ml-6">
-              <thead className="bg-gray-50">
+            <table className={`${tableCls} ml-6`}>
+              <thead>
                 <tr>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
-                    Year
-                  </th>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
-                    Contract Start Date
-                  </th>
-                  <th className="px-3 py-2 text-left text-gray-500 font-medium whitespace-nowrap">
-                    Contract End Date
-                  </th>
-                  <th className="px-3 py-2 text-right text-gray-500 font-medium whitespace-nowrap">
-                    Total Amount (Baht)
+                  <th className={headCls}>{t('leasehold.table.year')}</th>
+                  <th className={headCls}>{t('leasehold.rentalModal.contractStartDate')}</th>
+                  <th className={headCls}>{t('leasehold.rentalModal.contractEndDate')}</th>
+                  <th className={`${headCls} ${numCls}`}>
+                    {t('leasehold.rentalModal.totalAmountBaht')}
                   </th>
                 </tr>
               </thead>
@@ -174,26 +175,26 @@ export function LeaseholdRentalInfoModal({
                   const row = appraisalIdx >= 0 ? appraisalRows[appraisalIdx] : undefined;
                   if (!row) {
                     return (
-                      <tr key={idx} className="border-t border-gray-100 h-8">
-                        <td colSpan={4} />
+                      <tr key={idx}>
+                        <td className={cellCls} colSpan={4}>
+                          &nbsp;
+                        </td>
                       </tr>
                     );
                   }
                   return (
-                    <tr key={idx} className="border-t border-gray-100 h-8">
-                      <td className="px-3 py-1.5 text-gray-700">{row.year}</td>
-                      <td className="px-3 py-1.5 text-gray-700">{formatDate(row.contractStart)}</td>
-                      <td className="px-3 py-1.5 text-gray-700">{formatDate(row.contractEnd)}</td>
-                      <td className="px-3 py-1.5 text-right text-gray-700">
-                        {fmt(row.totalAmount)}
-                      </td>
+                    <tr key={idx}>
+                      <td className={cellCls}>{row.year}</td>
+                      <td className={cellCls}>{formatDate(row.contractStart)}</td>
+                      <td className={cellCls}>{formatDate(row.contractEnd)}</td>
+                      <td className={`${cellCls} ${numCls}`}>{fmt(row.totalAmount)}</td>
                     </tr>
                   );
                 })}
-                <tr className="border-t-2 border-gray-300 bg-gray-50 font-medium h-8">
-                  <td className="px-3 py-1.5 text-gray-700">Total</td>
-                  <td colSpan={2} />
-                  <td className="px-3 py-1.5 text-right text-gray-900">{fmt(appraisalTotal)}</td>
+                <tr>
+                  <td className={totalCls}>{t('leasehold.rentalModal.total')}</td>
+                  <td className={totalCls} colSpan={2} />
+                  <td className={`${totalCls} ${numCls}`}>{fmt(appraisalTotal)}</td>
                 </tr>
               </tbody>
             </table>
@@ -202,7 +203,7 @@ export function LeaseholdRentalInfoModal({
 
         <div className="flex justify-end pt-2 border-t border-gray-100">
           <Button variant="ghost" type="button" onClick={onClose}>
-            Close
+            {t('leasehold.rentalModal.close')}
           </Button>
         </div>
       </div>

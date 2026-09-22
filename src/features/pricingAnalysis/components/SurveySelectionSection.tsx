@@ -1,7 +1,6 @@
-import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { useState } from 'react';
+import type { FactorDataType, MarketComparableDetailType, TemplateDetailType } from '../schemas';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { useTranslation } from 'react-i18next';
 import { ComparativeFactorTable } from './ComparativeFactorTable';
 import { MarketSurveySelectionModal } from './MarketSurveySelectionModal';
 
@@ -14,6 +13,19 @@ interface SurveySelectionSectionProps {
   fieldPath: Record<string, any>;
   onSelectComparativeMarketSurvey: (surveys: MarketComparableDetailType[]) => void;
   manualSubject?: boolean;
+  /**
+   * All four optional — controlled by `WQSForm`, which lifted this state so its own
+   * tab-strip toolbar (`MethodTabs`'s `tools` slot, matching the mock's control
+   * position) and this section stay in sync. `SaleAdjustmentGridForm`/
+   * `DirectComparisonForm` don't have that toolbar yet (their turn hasn't come), so
+   * when omitted this component falls back to managing the same state itself — the
+   * table's own inline "+" header button still opens the modal, `hideEmptyRows` just
+   * has no checkbox to flip it, same as before this feature existed for them.
+   */
+  hideEmptyRows?: boolean;
+  isMarketSelectionOpen?: boolean;
+  onOpenMarketSelection?: () => void;
+  onCloseMarketSelection?: () => void;
 }
 export function SurveySelectionSection({
   template,
@@ -24,30 +36,28 @@ export function SurveySelectionSection({
   fieldPath,
   onSelectComparativeMarketSurvey,
   manualSubject,
+  hideEmptyRows = false,
+  isMarketSelectionOpen: isMarketSelectionOpenProp,
+  onOpenMarketSelection,
+  onCloseMarketSelection,
 }: SurveySelectionSectionProps) {
   const isReadOnly = usePageReadOnly();
-  const { t } = useTranslation('pricingAnalysis');
-  const [isShowMarketSurveySelection, setShowMarketSurveySelection] = useState<boolean>(false);
-  const handleOnClickAddComparativeSurvey = (check: boolean) => {
-    setShowMarketSurveySelection(check);
-  };
+  const [localMarketSelectionOpen, setLocalMarketSelectionOpen] = useState(false);
+  const isMarketSelectionOpen = isMarketSelectionOpenProp ?? localMarketSelectionOpen;
+  const openMarketSelection = onOpenMarketSelection ?? (() => setLocalMarketSelectionOpen(true));
+  const closeMarketSelection = onCloseMarketSelection ?? (() => setLocalMarketSelectionOpen(false));
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-2 mb-4 pt-2">
-        <h3 className="text-base font-semibold text-gray-800">{t('comparativeAnalysis.title')}</h3>
-      </div>
-      <div className="px-4">
+      {/* No section heading here — the "ข้อมูลเปรียบเทียบ" tab label above already is
+          the heading (compact-layout redesign); a second one just wasted a row. */}
+      <div>
         <div className="flex flex-col gap-2">
-          {!isReadOnly && (
-            <button
-              type="button"
-              onClick={() => handleOnClickAddComparativeSurvey(true)}
-              className="w-[250px] border border-dashed border-primary text-primary font-medium hover:bg-primary/5 px-4 py-2 rounded-lg cursor-pointer"
-            >
-              {t('comparativeAnalysis.addComparativeData')}
-            </button>
-          )}
+          {/* "Add Comparative Data" used to be a standalone button above the table;
+              it's now the table's own "+" column header (compact-layout redesign) —
+              see ComparativeFactorTable's onAddComparative prop. The toolbar's
+              "+ เพิ่มตลาด" button (in the tab strip, owned by WQSForm) is a second entry
+              point to the same modal, matching the mock. */}
           <ComparativeFactorTable
             comparativeMarketSurveys={comparativeMarketSurveys}
             property={property}
@@ -55,14 +65,21 @@ export function SurveySelectionSection({
             template={template}
             fieldPath={fieldPath}
             manualSubject={manualSubject}
+            hideEmptyRows={hideEmptyRows}
+            onAddComparative={openMarketSelection}
+            onRemoveComparative={survey =>
+              onSelectComparativeMarketSurvey(
+                comparativeMarketSurveys.filter(s => s.id !== survey.id),
+              )
+            }
           />
         </div>
         <MarketSurveySelectionModal
-          isOpen={isShowMarketSurveySelection}
+          isOpen={isMarketSelectionOpen}
           surveys={marketSurveys}
           comparativeSurveys={comparativeMarketSurveys}
           onSelect={onSelectComparativeMarketSurvey}
-          onCancel={() => handleOnClickAddComparativeSurvey(false)}
+          onCancel={closeMarketSelection}
           readOnly={isReadOnly}
         />
       </div>
