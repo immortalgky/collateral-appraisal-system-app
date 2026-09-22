@@ -260,7 +260,8 @@
       "all": "ทั้งหมด",
       "available": "ยังไม่ขาย",
       "sold": "ขายแล้ว",
-      "allModels": "ทุกแบบ"
+      "allModels": "ทุกแบบ",
+      "allTowers": "ทุกอาคาร"
     },
     "outcome": {
       "imported": "นำเข้า {{count}} ยูนิต",

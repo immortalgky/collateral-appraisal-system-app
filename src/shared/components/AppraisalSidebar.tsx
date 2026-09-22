@@ -54,10 +54,16 @@ function SkeletonRow({ index, collapsed = false }: { index: number; collapsed?: 
  * whole section dark there. Longest wins, so only one item ever lights.
  */
 function activeApplicationHref(items: NavItem[], pathname: string): string | null {
+  // A group's pricing analysis lives at `:basePath/groups/:id/pricing-analysis`, under no menu
+  // item, but is opened from Property Information's Properties tab — the breadcrumb files it there
+  // too — so it lights that item.
+  const property = items.find(item => item.itemKey === 'appraisal.property');
+  const path =
+    property && /\/groups\/[^/]+\/pricing-analysis(\/|$)/.test(pathname) ? property.href : pathname;
   let best: string | null = null;
   for (const { href } of items) {
     if (!href || href === '#') continue;
-    const matches = pathname === href || pathname.startsWith(`${href}/`);
+    const matches = path === href || path.startsWith(`${href}/`);
     if (matches && (!best || href.length > best.length)) best = href;
   }
   return best;

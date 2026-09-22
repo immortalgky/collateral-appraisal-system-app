@@ -144,6 +144,7 @@
     "condoName": "Condo Name",
     "usageAreaSqM": "Usage Area (Sq.M)",
     "vehicleType": "Vehicle Type",
+    "vehicleRegistrationNumber": "Vehicle Registration Number",
     "licensePlateNumber": "License Plate Number",
     "appointmentLocationVehicle": "Appointment Location",
     "chassisNumber": "Chassis Number",
@@ -239,7 +240,7 @@
     "columnFileName": "File name",
     "columnUploadedAt": "Uploaded at",
     "validationErrorsTitle": "File Validation Errors",
-    "supportedText": "PDF, PNG, JPG (Max 10MB each)",
+    "supportedText": "PDF, PNG, JPG (Max {{limit}} each)",
     "uploadingDocuments": "Uploading documents...",
     "uploadComplete": "{{done}}/{{total}} complete"
   },
@@ -297,6 +298,7 @@
     "columnFacilityLimit": "Facility Limit",
     "columnAppraisalValue": "Appraisal Value",
     "columnAppraisalDate": "Appraisal Date",
+    "columnInspectionNumber": "Inspection No.",
     "dateFilterFrom": "Appraisal date from",
     "dateFilterTo": "Appraisal date to"
   },
@@ -368,7 +370,7 @@
     "appraisalNotFound": "Appraisal not found.",
     "appraisalLoadFailed": "Failed to load appraisal data. Please try again.",
     "missingDocTypeError": "{{name}}: Unsupported file type. Use PDF, PNG, or JPG.",
-    "missingDocSizeError": "{{name}}: File size exceeds 10MB.",
+    "missingDocSizeError": "{{name}}: File size exceeds {{limit}}.",
     "missingDocAttachFailed": "File uploaded but failed to attach to request. Please try again.",
     "missingDocUploadFailed": "Failed to upload {{name}}.",
     "missingDocSessionFailed": "Failed to start upload session. Please try again."

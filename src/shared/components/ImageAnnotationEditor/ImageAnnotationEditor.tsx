@@ -239,11 +239,16 @@ export default function ImageAnnotationEditor({
   const handleSave = useCallback(async () => {
     setState(prev => ({ ...prev, isExporting: true }));
     try {
-      const blob = await exportCanvas();
+      // Keep a photograph a photograph: re-encoding a JPEG as PNG multiplies its size several
+      // times over, and the annotated copy is uploaded and kept like any other document.
+      const isJpeg = /\.jpe?g$/i.test(fileName ?? '');
+      const extension = isJpeg ? '.jpg' : '.png';
+
+      const blob = await exportCanvas(isJpeg ? 'image/jpeg' : 'image/png');
       if (!blob) throw new Error('Failed to export canvas');
 
       const json = getCanvasJson();
-      const resultFileName = fileName?.replace(/\.[^.]+$/, '.png') ?? 'annotated.png';
+      const resultFileName = fileName?.replace(/\.[^.]+$/, extension) ?? `annotated${extension}`;
 
       await onSave({
         imageBlob: blob,

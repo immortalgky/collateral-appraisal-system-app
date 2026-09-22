@@ -432,6 +432,7 @@
     "specialRequirements": "ข้อกำหนดพิเศษ",
     "closes": "ปิดรับ",
     "hoursRemaining": "เหลือ {{n}} ชั่วโมง",
+    "viewQuotationHint": "คลิกเพื่อดูรายละเอียดใบเสนอราคา",
     "stats": {
       "companiesInvited": "บริษัทที่เชิญ",
       "responses": "การตอบรับ",
@@ -633,6 +634,7 @@
       "legalSection": "สิทธิและกฎหมาย",
       "legalSubtitle": "กรรมสิทธิ์ ที่ตั้ง และภาระผูกพัน",
       "save": "บันทึก",
+      "saveDraft": "บันทึกร่าง",
       "saved": "บันทึกสรุปเครื่องจักรแล้ว",
       "saveFailed": "บันทึกสรุปเครื่องจักรไม่สำเร็จ",
       "fields": {

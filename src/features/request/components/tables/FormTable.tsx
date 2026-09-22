@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
-import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
+import {
+  Dropdown,
+  type ListBoxItem,
+  type OptionFilter,
+  NumberInput,
+} from '@/shared/components/inputs';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
   type Control,
@@ -10,6 +15,7 @@ import {
   useController,
   useFieldArray,
   useFormContext,
+  useWatch,
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
@@ -25,9 +31,9 @@ interface FormTableProps {
   sequenceField?: string;
 }
 
-type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
+export type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
 
-interface FormTableRegularColumn {
+export interface FormTableRegularColumn {
   name: string;
   label: string;
   inputType?: 'text' | 'number' | 'dropdown';
@@ -39,6 +45,7 @@ interface FormTableRegularColumn {
   maxLength?: number;
   options?: ListBoxItem[];
   group?: string;
+  filterOptions?: OptionFilter;
 }
 
 interface FormTableRowNumberColumn {
@@ -213,6 +220,13 @@ const TableCell = ({
   const isNum = column.inputType === 'number';
   const dp = column.decimalPlaces ?? 2;
 
+  const rowField = column.filterOptions?.type === 'dynamic' ? column.filterOptions.field : null;
+  const rowFieldValue = useWatch({
+    control,
+    name: `${name}.${index}.${rowField ?? column.name}`,
+  });
+  const filterWatchValues = rowField ? { [rowField]: rowFieldValue } : undefined;
+
   const input = () => {
     if (isNum)
       return (
@@ -228,7 +242,15 @@ const TableCell = ({
     // Split branches because Dropdown takes `group` or `options`, and the column type has both optional.
     if (column.inputType === 'dropdown') {
       if (column.options) return <Dropdown {...field} options={column.options} />;
-      if (column.group) return <Dropdown {...field} group={column.group} />;
+      if (column.group)
+        return (
+          <Dropdown
+            {...field}
+            group={column.group}
+            filterOptions={column.filterOptions}
+            filterWatchValues={filterWatchValues}
+          />
+        );
     }
     return <Input type={column.inputType} {...field} maxLength={column.maxLength} />;
   };

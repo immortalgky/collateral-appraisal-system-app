@@ -260,7 +260,8 @@
       "all": "全部",
       "available": "可售",
       "sold": "已售",
-      "allModels": "全部户型"
+      "allModels": "全部户型",
+      "allTowers": "全部楼栋"
     },
     "outcome": {
       "imported": "导入 {{count}} 套",

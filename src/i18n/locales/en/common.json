@@ -66,7 +66,9 @@
     "failed": "The file could not be opened. Close this tab and try again.",
     "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site and try again.",
     "close": "Close this tab",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "downloadStarted": "Downloading {{name}} — check your downloads.",
+    "downloadStartedUnnamed": "Downloading — check your downloads."
   },
   "transfer": {
     "serverTooSlow": "The server took too long to prepare the file. Please try again.",
@@ -75,7 +77,17 @@
     "uploading": "Uploading…",
     "processing": "Processing on the server…",
     "uploadStalled": "The connection stopped during the upload. Please try again.",
-    "downloadStalled": "The connection stopped during the download. Please try again."
+    "downloadStalled": "The connection stopped during the download. Please try again.",
+    "failed": "Upload failed",
+    "resume": "Carry on",
+    "cancel": "Cancel",
+    "dismiss": "Dismiss",
+    "secondsLeft": "{{count}}s left",
+    "minutesLeft": "{{count}} min left",
+    "fileTooLarge": "This file is larger than the {{limit}} limit (it is {{size}}).",
+    "uploadCancelled": "Upload cancelled",
+    "uploadAbandoned": "The upload stopped when you left the screen. Please upload the file again.",
+    "downloadCancelled": "Download cancelled"
   },
   "confirm": {
     "deleteTitle": "Confirm Delete",

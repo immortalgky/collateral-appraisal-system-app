@@ -111,14 +111,7 @@ const SurfaceInputModal = ({
   // outside click and makes inert.
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const {
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    register,
-    formState: { errors },
-  } = methods;
+  const { handleSubmit, reset, watch, setValue, register } = methods;
 
   // Reset form when modal opens with new data
   useEffect(() => {
@@ -129,12 +122,16 @@ const SurfaceInputModal = ({
   }, [isOpen, initialData, reset]);
 
   useEffect(() => {
-    register('fromFloorNumber', { required: true, validate: v => v !== null });
-    register('toFloorNumber', { required: true, validate: v => v !== null });
+    register('fromFloorNumber');
+    register('toFloorNumber');
   }, [register]);
 
   const onSubmit = (data: SurfaceData) => {
-    onSave(data);
+    onSave({
+      ...data,
+      fromFloorNumber: data.fromFloorNumber ?? 1,
+      toFloorNumber: data.toFloorNumber ?? 1,
+    });
     onClose();
   };
 
@@ -219,8 +216,6 @@ const SurfaceInputModal = ({
               onChange={e => setValue('fromFloorNumber', e.target.value)}
               decimalPlaces={0}
               maxIntegerDigits={3}
-              required={true}
-              error={errors.fromFloorNumber ? 'Required' : undefined}
             />
             <span className="pt-8 text-gray-400">–</span>
             <NumberInput
@@ -229,8 +224,6 @@ const SurfaceInputModal = ({
               onChange={e => setValue('toFloorNumber', e.target.value)}
               decimalPlaces={0}
               maxIntegerDigits={3}
-              required={true}
-              error={errors.toFloorNumber ? 'Required' : undefined}
             />
           </div>
           {reversed && (

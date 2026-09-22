@@ -103,6 +103,7 @@
     "searchPlaceholder": "按评估编号搜索...",
     "submittedFrom": "提交开始日期",
     "submittedTo": "提交结束日期",
+    "feePaymentMethod": "费用支付方式",
     "empty": "未找到符合条件的任务",
     "col": {
       "appraisalReportNo": "评估编号",
