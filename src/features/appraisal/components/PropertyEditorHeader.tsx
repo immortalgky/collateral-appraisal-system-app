@@ -134,7 +134,7 @@ export const PropertyEditorHeader = ({
 
   return (
     <>
-      <div ref={cardRef} className="px-6">
+      <div ref={cardRef} className="px-3">
         {appraisalId ? (
           <PropertyPhotoSection
             ref={photoSectionRef}
@@ -199,7 +199,9 @@ const IdentityCard = ({ view, typeCode, item, groupName, isNew }: IdentityCardPr
         <>
           <PropertyTypeChip code={typeCode} />
           {groupName && item?.sequenceNumber != null && (
-            <span className="ml-auto text-xs font-medium text-gray-600">
+            // Beside the type chip, not pushed right: the right side now carries the cover photo
+            // and thumbnails, and the position drowned against them.
+            <span className="rounded-full border border-primary-200 bg-primary-50 px-2 text-[11px] font-semibold leading-4 text-primary-700">
               {t('editorHeader.position', { group: groupName, n: item.sequenceNumber })}
             </span>
           )}
