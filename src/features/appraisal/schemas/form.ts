@@ -118,9 +118,8 @@ export const createProjectLandForm = buildFormSchema(
       type: 'boolean-toggle',
       label: 'Check Owner',
       name: 'isOwnerVerified',
-      options: ['Can not', 'Can'],
+      options: ['Cannot', 'Can'],
       wrapperClassName: 'col-span-3',
-    },
     {
       type: 'text-input',
       label: 'Owner',
