@@ -8,7 +8,7 @@ interface SlideOverPanelProps {
   onClose: () => void;
   title: string;
   subtitle?: string;
-  width?: 'md' | 'lg' | 'xl' | '2xl';
+  width?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
   children: ReactNode;
   /** Pinned under the scrolling content — for actions that must stay reachable on long forms. */
   footer?: ReactNode;
@@ -19,6 +19,8 @@ const widthClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
   '2xl': 'max-w-[70vw]',
+  // Edge to edge, for a panel that has become a screen in its own right.
+  full: 'max-w-full',
 };
 
 const SlideOverPanel = ({
@@ -54,9 +56,7 @@ const SlideOverPanel = ({
                 <div className="flex items-start justify-between px-6 py-4 border-b border-gray-200">
                   <div>
                     <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-                    {subtitle && (
-                      <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>
-                    )}
+                    {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
                   </div>
                   <button
                     onClick={onClose}

@@ -152,7 +152,7 @@
     "activeFilters": "ตัวกรอง:",
     "clearAll": "ล้างทั้งหมด",
     "removeFilter": "ลบตัวกรอง",
-    "activityTracking": "ติดตามกิจกรรม",
+    "activityTracking": "ติดตามงานประเมิน",
     "searchTips": {
       "trigger": "หาไม่เจอ?",
       "title": "ค้นหาไม่เจอ? ลองแบบนี้",
@@ -1211,7 +1211,7 @@
     }
   },
   "activityTracking": {
-    "pageTitle": "ติดตามกิจกรรม",
+    "pageTitle": "ติดตามงานประเมิน",
     "tabs": {
       "timeline": "ไทม์ไลน์",
       "log": "บันทึก"
@@ -1236,6 +1236,136 @@
       "dueAt": "ครบกำหนด",
       "slaStatus": "สถานะ SLA",
       "hoursShort": "{{hours}} ชม."
+    },
+    "sections": {
+      "progress": "ความคืบหน้างานประเมิน",
+      "request": "ข้อมูลคำขอ",
+      "collateral": "หลักประกันในคำขอ",
+      "documents": "เอกสารประเมิน",
+      "log": "ประวัติการดำเนินงาน",
+      "route": "เส้นทางงาน",
+      "noCollateral": "ไม่มีรายการหลักประกันในคำขอนี้",
+      "itemsCount": "{{count}} รายการ"
+    },
+    "brief": {
+      "customer": "ลูกค้า",
+      "coBorrowers": "และผู้กู้ร่วมอีก {{count}} ราย",
+      "appraisedValue": "ราคาประเมิน",
+      "forcedSaleValue": "ราคาบังคับขาย",
+      "insuranceValue": "ทุนประกัน",
+      "baht": "บาท",
+      "notReleased": "ยังไม่เปิดเผย",
+      "cancelledValue": "คำขอถูกยกเลิก",
+      "dueDate": "กำหนดเสร็จ",
+      "completedOn": "เสร็จเมื่อ",
+      "overdue": "(เลยกำหนด)",
+      "dueDateHint": "วันครบกำหนดตามมาตรฐานงานประเมิน = วันที่รับเรื่อง + ระยะเวลามาตรฐานของงานประเภทนี้ นับเฉพาะวัน/เวลาทำการ เป็นเป้าหมายที่กำหนดไว้ตั้งแต่ต้น ไม่เลื่อนตามความคืบหน้าจริง",
+      "fields": {
+        "prevAppraisalNumber": "เลขที่ประเมินครั้งก่อน",
+        "appointment": "วันนัดหมาย",
+        "appraiser": "ผู้ประเมิน",
+        "propertyLocation": "ที่ตั้งทรัพย์สิน",
+        "loanLimit": "วงเงินขอกู้"
+      },
+      "holder": {
+        "currentLabel": "ขณะนี้อยู่ที่",
+        "statusLabel": "สถานะงาน",
+        "unassigned": "ยังไม่ได้มอบหมาย",
+        "step": "ขั้นตอน",
+        "sinceToday": "ตั้งแต่วันนี้",
+        "heldFor": "ถืองานมา {{count}} วัน",
+        "committeeReviewers": "อยู่ระหว่างพิจารณาร่วมกัน {{count}} ท่าน",
+        "teamsChat": "แชทผ่าน Teams",
+        "coordinator": "ผู้ประสานงาน: {{name}}",
+        "contactPerson": "ติดต่อ: {{name}}",
+        "externalFirm": "บริษัทผู้ประเมินภายนอก",
+        "closedCancelled": "คำขอถูกยกเลิกแล้ว",
+        "closedCompleted": "งานประเมินเสร็จสิ้นแล้ว",
+        "appraisalDesk": "ติดต่อฝ่ายประเมิน"
+      },
+      "phases": {
+        "Initiation": "รับคำขอ",
+        "Assignment": "มอบหมายงาน",
+        "Execution": "ออกตรวจ/ประเมิน",
+        "Staff": "ตรวจรับเล่มรายงาน",
+        "Checker": "ตรวจสอบ",
+        "Verification": "สอบทาน",
+        "Approval": "อนุมัติราคา",
+        "completed": "เสร็จแล้ว",
+        "cancelled": "ยกเลิกแล้ว",
+        "inProgress": "กำลังดำเนินการ",
+        "notReached": "ยังไม่ถึง"
+      },
+      "committee": {
+        "sub": "คณะอนุกรรมการ",
+        "subFull": "คณะอนุกรรมการกำหนดราคาประเมินหลักประกันและทรัพย์สิน",
+        "full": "คณะกรรมการ",
+        "fullFull": "คณะกรรมการกำหนดราคาประเมินหลักประกันและทรัพย์สิน"
+      },
+      "collateral": {
+        "unspecifiedType": "ไม่ระบุประเภท",
+        "morePlaces": "และอีก {{count}} จังหวัด",
+        "floors": "{{count}} ชั้น",
+        "totalArea": "รวม {{area}}",
+        "rai": "ไร่",
+        "ngan": "งาน",
+        "wa": "ตร.ว.",
+        "kinds": {
+          "land": "ที่ดิน",
+          "building": "สิ่งปลูกสร้าง",
+          "condo": "คอนโด",
+          "machine": "เครื่องจักร"
+        },
+        "condoFloors": "ชั้น {{floors}} จาก {{total}}",
+        "project": "โครงการ",
+        "units": "{{count}} ยูนิต",
+        "phases": "{{count}} เฟส",
+        "developer": "ผู้พัฒนา {{name}}",
+        "towers": "{{count}} อาคาร",
+        "towerFloors": "{{towers}} อาคาร · สูง {{floors}} ชั้น",
+        "houses": "{{count}} หลัง",
+        "houseStoreys": "{{count}} หลัง · {{floors}} ชั้น",
+        "condoUnit": "ห้อง {{room}} ชั้น {{floor}}",
+        "condoUnitNoRoom": "ชั้น {{floor}}",
+        "condoUnitNoFloor": "ห้อง {{room}}",
+        "unitsOrHouses_house": "{{count}} หลัง",
+        "unitsOrHouses_unit": "{{count}} ยูนิต"
+      },
+      "documents": {
+        "lockedTitle": "เอกสารยังไม่เปิดให้ดู",
+        "lockedCancelled": "คำขอนี้ถูกยกเลิกก่อนออกราคา จึงไม่มีเอกสารให้ดู",
+        "lockedPending": "เอกสารทั้งหมดจะเปิดพร้อมกันเมื่อฝ่ายประเมินอนุมัติราคาแล้ว",
+        "empty": "ราคาอนุมัติแล้ว แต่ยังไม่มีไฟล์แนบในแฟ้มประเมินของคำขอนี้",
+        "others": "เอกสารอื่นในแฟ้มประเมิน",
+        "othersHint": "{{count}} ฉบับ · เปิดดูได้ทั้งหมด",
+        "view": "เปิดดู",
+        "download": "ดาวน์โหลด",
+        "downloadFailed": "ดาวน์โหลดเอกสารไม่สำเร็จ"
+      },
+      "lockedTitle": "ยังไม่เปิดเผยราคาประเมิน",
+      "lockedHint": "ราคาประเมิน ราคาบังคับขาย ทุนประกัน และเอกสาร จะเปิดพร้อมกันเมื่อคณะกรรมการอนุมัติราคาแล้ว",
+      "cancelledTitle": "คำขอนี้ถูกยกเลิก",
+      "cancelledHint": "คำขอถูกปิดก่อนออกราคา จึงไม่มีราคาประเมินและเอกสารให้ดู",
+      "log": {
+        "forwarded": "ส่งต่อ",
+        "returned": "ตีกลับแก้ไข",
+        "assigned": "มอบหมายภายใน",
+        "reassigned": "เปลี่ยนผู้รับผิดชอบ",
+        "cancelled": "ยกเลิก",
+        "empty": "ยังไม่มีประวัติการดำเนินงาน",
+        "showAll": "ดูประวัติทั้งหมด {{count}} รายการ",
+        "showLess": "ย่อรายการ",
+        "steps": "{{count}} ขั้นตอน",
+        "externalLeg": "งานที่ส่งให้บริษัทภายนอก",
+        "assignedInternal": "มอบหมายให้ทีมภายใน",
+        "assignedExternal": "ส่งให้บริษัทภายนอก"
+      },
+      "noAccessTitle": "ไม่มีสิทธิ์ดูรายละเอียดใบนี้",
+      "noAccessHint": "บัญชีของคุณไม่มีสิทธิ์เปิดดูข้อมูลงานประเมิน",
+      "notFoundTitle": "ไม่พบใบประเมินนี้",
+      "notFoundHint": "อาจถูกลบไปแล้ว หรือลิงก์ชี้ไปยังใบประเมินที่ไม่มีอยู่",
+      "loadFailedTitle": "โหลดรายละเอียดไม่สำเร็จ",
+      "loadFailedHint": "ลองใหม่อีกครั้ง หากยังไม่ได้กรุณาแจ้งฝ่ายเทคโนโลยีสารสนเทศ"
     }
   },
   "documentChecklist": {
@@ -1659,7 +1789,12 @@
       "sectionTitle": "ข้อมูลการเช่า"
     },
     "marketComparable": {
-      "sectionTitle": "ข้อมูลตลาดเปรียบเทียบ"
+      "sectionTitle": "ข้อมูลตลาดเปรียบเทียบ",
+      "duplicateDialog": {
+        "title": "ทำสำเนาข้อมูลตลาดเปรียบเทียบ",
+        "message": "คุณต้องการทำสำเนาข้อมูลตลาดเปรียบเทียบนี้หรือไม่? ระบบจะสร้างรายการใหม่โดยใช้ข้อมูลชุดเดียวกัน",
+        "confirm": "ทำสำเนา"
+      }
     }
   },
   "validation": {
