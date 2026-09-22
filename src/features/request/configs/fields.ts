@@ -2144,6 +2144,13 @@ export const propertiesFieldConfig: FieldArrayField = {
       required: true,
     },
     {
+      type: 'text-input',
+      name: 'buildingTypeOther',
+      label: _st('Building Type (Other)'),
+      maxLength: 100,
+      requiredWhen: { field: 'buildingType', is: '99' },
+    },
+    {
       type: 'number-input',
       name: 'sellingPrice',
       label: _st('Selling Price'),

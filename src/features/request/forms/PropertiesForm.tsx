@@ -18,6 +18,10 @@ const PropertiesForm = () => {
       label: t('fields.buildingType'),
       inputType: 'dropdown',
       group: 'BuildingType',
+      otherField: true,
+      otherFieldName: 'buildingTypeOther',
+      otherTriggerValue: '99',
+      maxLength: 100,
       filterOptions: {
         type: 'dynamic',
         field: 'propertyType',

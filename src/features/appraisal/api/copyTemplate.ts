@@ -56,6 +56,7 @@ export interface CopyTemplateCustomer {
 export interface CopyTemplateProperty {
   propertyType: string | null;
   buildingType: string | null;
+  buildingTypeOther: string | null;
   sellingPrice: number | null;
 }
 

@@ -95,6 +95,11 @@ interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
    * Set to `false` for filters where the value is an internal enum and only
    * the human label should be shown (e.g. status filters).
    */
+  otherField?: boolean;
+  otherTriggerValue?: string;
+  otherText?: string | null;
+  onOtherTextChange?: (value: string) => void;
+  otherMaxLength?: number;
 }
 
 interface ListBoxProps {
@@ -141,6 +146,11 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       filterWatchValues,
       showValuePrefix = true,
       compact = false,
+      otherField = false,
+      otherTriggerValue = '99',
+      otherText,
+      onOtherTextChange,
+      otherMaxLength,
       // Pulled out by name on purpose: `...props` feeds exactly one thing below
       // (props.className), so anything left in it never reaches the DOM. aria-label
       // type-checked — this interface extends SelectHTMLAttributes — and then vanished.
@@ -156,6 +166,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       placeholder ?? t('select.placeholder', { defaultValue: 'Please select' });
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
+    const isOtherMode = otherField && value === otherTriggerValue;
     const parameterOptions = useParameterOptions(group ?? '');
     const filters = useMemo<OptionFilter[]>(() => {
       if (!filterOptions) return [];
@@ -205,25 +216,45 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
             </div>
           )
         )}
-        <ListBox
-          ref={ref}
-          value={selectedOption}
-          onChange={selectedOnChange}
-          placeholder={resolvedPlaceholder}
-          //selectedLabel={selectedOption?.label}
-          selected={selectedOption}
-          disabled={isDisabled}
-          error={error}
-          compact={compact}
-          ariaLabel={ariaLabel}
-          showValuePrefix={showValuePrefix}
-        >
-          {dropdownOptions.map(option => (
-            <ListBoxOption key={option.id ?? option.value} value={option}>
-              {showValuePrefix && option.value ? `${option.value} - ${option.label}` : option.label}
-            </ListBoxOption>
-          ))}
-        </ListBox>
+        {isOtherMode ? (
+          <OtherInput
+            value={otherText ?? ''}
+            onChange={v => onOtherTextChange?.(v)}
+            onClear={() => {
+              onChange?.(null);
+              onOtherTextChange?.('');
+            }}
+            placeholder={t('select.otherPlaceholder', { defaultValue: 'Please specify' })}
+            otherLabel={t('select.other', { defaultValue: 'Other' })}
+            clearTitle={t('select.clearOther', { defaultValue: 'Clear and choose again' })}
+            disabled={isDisabled}
+            error={error}
+            compact={compact}
+            maxLength={otherMaxLength}
+          />
+        ) : (
+          <ListBox
+            ref={ref}
+            value={selectedOption}
+            onChange={selectedOnChange}
+            placeholder={resolvedPlaceholder}
+            //selectedLabel={selectedOption?.label}
+            selected={selectedOption}
+            disabled={isDisabled}
+            error={error}
+            compact={compact}
+            ariaLabel={ariaLabel}
+            showValuePrefix={showValuePrefix}
+          >
+            {dropdownOptions.map(option => (
+              <ListBoxOption key={option.id ?? option.value} value={option}>
+                {showValuePrefix && option.value
+                  ? `${option.value} - ${option.label}`
+                  : option.label}
+              </ListBoxOption>
+            ))}
+          </ListBox>
+        )}
         {error && <div className="mt-1 text-xs text-danger">{error}</div>}
       </div>
     );
@@ -305,6 +336,86 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
   },
 );
 ListBox.displayName = 'ListBox';
+
+interface OtherInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  onClear: () => void;
+  placeholder: string;
+  otherLabel: string;
+  clearTitle: string;
+  disabled?: boolean;
+  error?: string;
+  compact?: boolean;
+  maxLength?: number;
+}
+
+const OtherInput = ({
+  value,
+  onChange,
+  onClear,
+  placeholder,
+  otherLabel,
+  clearTitle,
+  disabled,
+  error,
+  compact = false,
+  maxLength,
+}: OtherInputProps) => {
+  return (
+    <div>
+      <div
+        className={clsx(
+          'flex items-stretch w-full rounded-lg border border-gray-200 bg-white transition-colors duration-200',
+          'focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400',
+          disabled ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-gray-300',
+          error
+            ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
+            : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
+        )}
+      >
+        <span
+          className={clsx(
+            'flex items-center shrink-0 border-r border-gray-200 bg-gray-50 text-gray-500 rounded-l-lg',
+            compact ? 'px-2 text-xs' : 'px-3 text-sm',
+          )}
+        >
+          {otherLabel}
+        </span>
+        <div className="relative flex-1 min-w-0">
+          <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            placeholder={placeholder}
+            disabled={disabled}
+            maxLength={maxLength}
+            className={clsx(
+              'block w-full h-full bg-transparent focus:outline-none placeholder:text-gray-400',
+              compact ? 'text-xs pl-2 pr-7 py-1' : 'text-sm pl-3 pr-9 py-2',
+              disabled ? 'text-gray-500 cursor-not-allowed' : 'text-gray-900',
+            )}
+          />
+          {!disabled && (
+            <button
+              type="button"
+              onClick={onClear}
+              title={clearTitle}
+              className={clsx(
+                'absolute inset-y-0 right-0 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none',
+                compact ? 'pr-2' : 'pr-3',
+              )}
+            >
+              <Icon style="solid" name="xmark" className={compact ? 'size-3' : 'size-3.5'} />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+OtherInput.displayName = 'OtherInput';
+
 Dropdown.displayName = 'Dropdown';
 
 const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {

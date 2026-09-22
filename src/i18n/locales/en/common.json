@@ -31,7 +31,10 @@
   "select": {
     "placeholder": "Please select",
     "searchPlaceholder": "Search...",
-    "typeToSearch": "Type to search..."
+    "typeToSearch": "Type to search...",
+    "other": "Other",
+    "otherPlaceholder": "Please specify",
+    "clearOther": "Clear and choose again"
   },
   "range": {
     "from": "From",

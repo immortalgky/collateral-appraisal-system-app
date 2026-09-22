@@ -31,7 +31,10 @@
   "select": {
     "placeholder": "กรุณาเลือก",
     "searchPlaceholder": "ค้นหา...",
-    "typeToSearch": "พิมพ์เพื่อค้นหา..."
+    "typeToSearch": "พิมพ์เพื่อค้นหา...",
+    "other": "อื่นๆ",
+    "otherPlaceholder": "กรุณาระบุ",
+    "clearOther": "ล้างและเลือกใหม่"
   },
   "range": {
     "from": "ตั้งแต่",
