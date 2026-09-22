@@ -5,6 +5,7 @@ import type {
   createCondoFormType,
   createLandAndBuildingFormType,
   createLandFormType,
+  createProjectLandFormType,
   createLandAndBuildingPMAFormType,
   createMachineryFormType,
   machinerySummaryFormType,
@@ -126,6 +127,14 @@ export const mapLandPropertyResponseToForm = (
     remark: response.remark ?? '',
   };
 };
+
+export const mapProjectLandPropertyResponseToForm = (
+  response: GetLandPropertyResponseType,
+): createProjectLandFormType => ({
+  ...mapLandPropertyResponseToForm(response),
+  ownerName: response.ownerName ?? '',
+  isOwnerVerified: response.isOwnerVerified ?? true,
+});
 
 export const mapConstructionInspectionResponseToForm = (ci: any) => ({
   constructionEnterDetail: ci?.isFullDetail ?? true,
