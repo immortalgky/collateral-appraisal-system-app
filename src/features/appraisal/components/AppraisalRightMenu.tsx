@@ -10,7 +10,7 @@ import { useAppraisalContext } from '../context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MapPreview } from './MapPreview';
 import { useAuthStore } from '@/features/auth/store';
-import { useAddressStore } from '@/shared/store';
+import { useAddressStore, useUIStore } from '@/shared/store';
 import {
   useAddComment,
   useUpdateComment,
@@ -28,10 +28,13 @@ import { getFeePaymentStatusDisplay } from '../utils/feePaymentStatus';
 
 interface AppraisalRightMenuProps {
   onClose?: () => void;
+  initialTab?: RightMenuTab;
 }
 
-const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'comments'>('overview');
+type RightMenuTab = 'overview' | 'comments';
+
+const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRightMenuProps) => {
+  const [activeTab, setActiveTab] = useState<RightMenuTab>(initialTab);
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
@@ -255,7 +258,7 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
           >
             Comments
             {comments.length > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-primary text-white rounded-full">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-500 text-white rounded-full">
                 {comments.length}
               </span>
             )}
@@ -675,6 +678,62 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
         cancelText="Cancel"
         variant="danger"
       />
+    </div>
+  );
+};
+
+/**
+ * The right-hand panel as the layouts place it: open, or a narrow strip that still
+ * shows the comment count. Open/closed is remembered per browser.
+ */
+export const AppraisalRightPanel = () => {
+  const isOpen = useUIStore(s => s.appraisalDetailsOpen);
+  const setOpen = useUIStore(s => s.setAppraisalDetailsOpen);
+  const [initialTab, setInitialTab] = useState<RightMenuTab>('overview');
+  const { appraisal } = useAppraisalContext();
+  const { data: commentsData } = useGetComments(appraisal?.requestId);
+  const commentCount = commentsData?.comments?.length ?? 0;
+
+  const open = (tab: RightMenuTab) => {
+    setInitialTab(tab);
+    setOpen(true);
+  };
+
+  if (isOpen) {
+    return (
+      <aside className="hidden lg:flex w-72 h-full shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden">
+        <AppraisalRightMenu initialTab={initialTab} onClose={() => setOpen(false)} />
+      </aside>
+    );
+  }
+
+  const stripButton =
+    'w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors';
+
+  return (
+    <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-2 pt-3 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
+      <button
+        type="button"
+        onClick={() => open('overview')}
+        className={stripButton}
+        title="Show application details"
+      >
+        <Icon style="solid" name="chevron-left" className="size-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => open('comments')}
+        className={clsx(stripButton, 'relative')}
+        title={commentCount > 0 ? `Comments (${commentCount})` : 'Comments'}
+        aria-label={commentCount > 0 ? `Comments, ${commentCount}` : 'Comments'}
+      >
+        <Icon style="regular" name="comments" className="size-4" />
+        {commentCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-500 text-white rounded-full">
+            {commentCount > 99 ? '99+' : commentCount}
+          </span>
+        )}
+      </button>
     </div>
   );
 };

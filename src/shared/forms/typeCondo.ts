@@ -96,6 +96,7 @@ export const CreateCondoRequest = z
     environmentType: z.array(z.string()),
 
     buildingInsurancePrice: z.coerce.number(),
+    buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
     sellingPrice: z.coerce.number(),
     forcedSalePrice: z.coerce.number(),
 
@@ -184,6 +185,7 @@ export const UpdateCondoRequest = z
     environmentType: z.array(z.string()),
 
     buildingInsurancePrice: z.coerce.number(),
+    buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
     sellingPrice: z.coerce.number(),
     forcedSalePrice: z.coerce.number(),
 
@@ -272,6 +274,7 @@ export const GetCondoPropertyByIdResult = z
     environmentType: z.array(z.string()),
 
     buildingInsurancePrice: z.coerce.number(),
+    buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
     sellingPrice: z.coerce.number(),
     forcedSalePrice: z.coerce.number(),
 

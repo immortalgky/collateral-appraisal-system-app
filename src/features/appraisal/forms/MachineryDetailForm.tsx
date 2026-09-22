@@ -26,7 +26,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
     <div className="col-span-full xl:col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5" />}
+    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5" />}
   </>
 );
 
@@ -112,13 +112,107 @@ const MachineryDetailForm = () => {
     [t],
   );
 
+  const byName = new Map(machineFields.map(field => [field.name, field]));
+  const group = (...entries: GroupEntry[]) => pick(byName, entries);
+
   return (
-    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
-      <SectionRow title={t('propertyInfo.machineryInfo.sectionTitle')} icon="building">
-        <FormFields fields={machineFields} />
-      </SectionRow>
+    <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
+      {GROUPS.map((g, i) => (
+        <SectionRow
+          key={g.titleKey}
+          title={t(g.titleKey)}
+          icon={g.icon}
+          isLast={i === GROUPS.length - 1}
+        >
+          <FormFields fields={group(...g.fields)} />
+        </SectionRow>
+      ))}
     </div>
   );
 };
+
+type GroupEntry = string | [name: string, span: string];
+
+/** Picks translated fields by name; a span given here replaces the config's own col-span. */
+function pick(byName: Map<string, FormField>, entries: GroupEntry[]): FormField[] {
+  return entries.map(entry => {
+    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const field = byName.get(name);
+    // Fail loudly: a renamed config field would otherwise just vanish from the form.
+    if (!field) throw new Error(`MachineryDetailForm: no field config named "${name}"`);
+    if (!span) return field;
+    const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+  });
+}
+
+/*
+ * The screen's field order. The config was one 36-field section; these groups follow how a machine
+ * is recorded: what it is, who owns it and how it was bought and installed, its condition, its size,
+ * then notes and the appraiser's opinion (the source of that line in the book).
+ */
+const GROUPS = [
+  {
+    titleKey: 'propertyInfo.machineryInfo.groups.identification',
+    icon: 'gears',
+    fields: [
+      'propertyName',
+      ['machineType', 'col-span-6'],
+      ['quantity', 'col-span-6'],
+      ['brand', 'col-span-4'],
+      ['model', 'col-span-4'],
+      ['series', 'col-span-4'],
+      ['manufacturer', 'col-span-6'],
+      ['yearOfManufacture', 'col-span-6'],
+    ],
+  },
+  {
+    titleKey: 'propertyInfo.machineryInfo.groups.ownership',
+    icon: 'scale-balanced',
+    // Price certification gets a row of its own: it is a decision, not a detail of the purchase.
+    fields: [
+      ['isOwnerVerified', 'col-span-4'],
+      ['ownerName', 'col-span-8'],
+      ['registrationStatus', 'col-span-4'],
+      ['registrationNumber', 'col-span-8'],
+      ['purchaseDate', 'col-span-4'],
+      ['purchasePrice', 'col-span-8'],
+      ['installationStatus', 'col-span-4'],
+      ['invoiceNumber', 'col-span-8'],
+      'location',
+      ['isPriceCertified', 'col-span-12'],
+    ],
+  },
+  {
+    titleKey: 'propertyInfo.machineryInfo.groups.condition',
+    icon: 'gauge',
+    fields: [
+      'conditionUse',
+      ['isOperational', 'col-span-4'],
+      ['machineAge', 'col-span-4'],
+      ['machineCondition', 'col-span-4'],
+      ['machineEfficiency', 'col-span-6'],
+      ['capacity', 'col-span-6'],
+      ['usagePurpose', 'col-span-6'],
+      ['energyUse', 'col-span-6'],
+      'machineTechnology',
+    ],
+  },
+  {
+    titleKey: 'propertyInfo.machineryInfo.groups.dimensions',
+    icon: 'ruler-combined',
+    fields: ['width', 'length', 'height', 'machineDimensions'],
+  },
+  {
+    titleKey: 'propertyInfo.machineryInfo.groups.notes',
+    icon: 'comment',
+    fields: ['machineParts', 'other', 'remark'],
+  },
+  {
+    titleKey: 'propertyInfo.machineryInfo.groups.opinion',
+    icon: 'user-pen',
+    fields: [['appraiserOpinion', 'col-span-12']],
+  },
+] as const satisfies readonly { titleKey: string; icon: string; fields: readonly GroupEntry[] }[];
 
 export default MachineryDetailForm;

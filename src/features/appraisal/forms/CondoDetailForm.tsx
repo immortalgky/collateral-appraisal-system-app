@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import CondoAreaDetailForm from './CondoAreaDetailForm';
+import CondoInsuranceSummary from './CondoInsuranceSummary';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import {
@@ -33,6 +34,7 @@ import {
 } from '../configs/fields';
 import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
 import FieldGroupLabel from './FieldGroupLabel';
+import { FieldLabels } from '../components/FieldLabels';
 
 // SectionRow component for consistent section styling with icons
 interface SectionRowProps {
@@ -57,14 +59,8 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
     <div className="col-span-full xl:col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5" />}
+    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5" />}
   </>
-);
-
-const Card = ({ children }: { children: ReactNode }) => (
-  <div className="col-span-12">
-    <div className="grid grid-cols-12 gap-3">{children}</div>
-  </div>
 );
 
 function CondoDetailForm() {
@@ -96,18 +92,11 @@ function CondoDetailForm() {
     setValue('governmentPrice', Math.round(price * area * 100) / 100, { shouldValidate: true });
   }, [govPricePerSqm, usableArea, setValue]);
 
-  const fields = useMemo<FormField[]>(
-    () =>
-      condoFields.map(field => {
+  // Map picker on the coordinates, the auto-fill icon on the property name.
+  const withIcons = useMemo(
+    () => (list: FormField[]) =>
+      list.map(field => {
         if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
-        return field;
-      }),
-    [fillIcon],
-  );
-
-  const tailFields = useMemo<FormField[]>(
-    () =>
-      condoFieldsTail.map(field => {
         if (
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
@@ -115,8 +104,10 @@ function CondoDetailForm() {
           return { ...field, rightIcon: pickerButton };
         return field;
       }),
-    [pickerButton],
+    [fillIcon, pickerButton],
   );
+  const identity = useMemo(() => withIcons(identityFields), [withIcons]);
+  const coordinates = useMemo(() => withIcons(coordinateFields), [withIcons]);
 
   // Building Insurance: buildingInsurancePrice is SERVER-DERIVED (rate × usableArea) —
   // unlike Government Price above, there is no client-side computation here. The field
@@ -126,135 +117,209 @@ function CondoDetailForm() {
   const fireInsuranceOptions = useFireInsuranceOptions('Condo');
   const buildingInsuranceFields = useMemo<FormField[]>(
     () =>
-      condoBuildingInsuranceFields.map(field => {
-        // Narrow on `type` as well as `name`: spreading into a bare FormField union
-        // widens `options` across every variant (boolean-toggle requires exactly
-        // [string, string]), which breaks the discriminated union.
-        if (field.type === 'dropdown' && field.name === 'fireInsuranceCondition')
-          return {
-            ...field,
-            label: t('forms.condo.fireInsuranceCondition'),
-            options: fireInsuranceOptions,
-          };
-        if (field.name === 'buildingInsurancePrice')
-          return { ...field, label: t('forms.condo.buildingInsurancePrice') };
-        return field;
-      }),
+      // buildingInsurancePrice is drawn by CondoInsuranceSummary, which shows its formula under it.
+      condoBuildingInsuranceFields
+        .filter(field => field.name !== 'buildingInsurancePrice')
+        .map(field => {
+          // Narrow on `type` as well as `name`: spreading into a bare FormField union
+          // widens `options` across every variant (boolean-toggle requires exactly
+          // [string, string]), which breaks the discriminated union.
+          if (field.type === 'dropdown' && field.name === 'fireInsuranceCode')
+            return {
+              ...field,
+              label: t('forms.condo.fireInsuranceCode'),
+              options: fireInsuranceOptions,
+            };
+          return field;
+        }),
     [fireInsuranceOptions, t],
   );
 
+  // FormFields must remain a DIRECT child of each SectionRow grid so every field's
+  // wrapperClassName (col-span-3, col-span-6, etc.) resolves against the section's 12-col grid.
   return (
-    <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-6">
-      <SectionRow title="Condominium Information" icon="building">
-        {/* FormFields must remain a DIRECT child of the SectionRow grid so each
-            field's wrapperClassName (col-span-3, col-span-6, etc.) resolves
-            against the section's 12-col grid. The Latitude field's rightIcon
-            opens the MapLocationPicker — no separate button needed. */}
-        <FormFields fields={fields} />
-        <FieldGroupLabel label="Title Address" />
-        <FormFields fields={condoAddressFields} />
-        <FieldGroupLabel label="Dopa Address" />
-        <FormFields fields={condoDopaAddressFields} />
-        <FormFields fields={tailFields} />
-      </SectionRow>
+    <FieldLabels scope="condo">
+      <div className="cas-condo-form cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
+        <SectionRow title="Identification" icon="building">
+          <FormFields fields={identity} />
+        </SectionRow>
 
-      <SectionRow title="Condominium Location" icon="map-location-dot">
-        <FormFields fields={condoLocationFields} />
-        <FormFields fields={condoLandCharacteristicsFields} />
-      </SectionRow>
+        <SectionRow title="Ownership & Legal" icon="scale-balanced">
+          <FormFields fields={legalFields} />
+        </SectionRow>
 
-      <SectionRow title="Government Price" icon="money-bill">
-        <FormFields fields={condoGovernmentPriceFields} />
-      </SectionRow>
+        <SectionRow title="Location" icon="map-location-dot">
+          <FieldGroupLabel label={t('fieldLabels.condo.titleAddressGroup')} />
+          <FormFields fields={condoAddressFields} />
+          <FieldGroupLabel label={t('fieldLabels.condo.dopaAddressGroup')} />
+          <FormFields fields={condoDopaAddressFields} />
+          <FormFields fields={landOfficeFields} />
+          {/* The Latitude field's rightIcon opens the MapLocationPicker. */}
+          <FormFields fields={coordinates} />
+          <FormFields fields={roadFields} />
+        </SectionRow>
 
-      <SectionRow title={t('forms.condo.buildingInsuranceSectionTitle')} icon="shield-halved">
-        <FormFields fields={buildingInsuranceFields} />
-      </SectionRow>
+        <MapLocationPicker
+          isOpen={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onConfirm={(newLat, newLon) => {
+            setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+            setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+          }}
+          initialLat={initialLat}
+          initialLon={initialLon}
+        />
 
-      <MapLocationPicker
-        isOpen={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onConfirm={(newLat, newLon) => {
-          setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
-          setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
-        }}
-        initialLat={initialLat}
-        initialLon={initialLon}
-      />
+        <SectionRow title="Surroundings" icon="tree-city">
+          <FormFields fields={surroundingFields} />
+        </SectionRow>
 
-      <SectionRow title="Decoration & Structure" icon="paint-roller">
-        <Card>
-          <FormFields fields={condoDecorationFields} />
-        </Card>
-        <Card>
-          <FormFields fields={ageHeightCondoFields} />
-        </Card>
-      </SectionRow>
+        <SectionRow title="Building" icon="building-columns">
+          <FormFields fields={buildingFields} />
+        </SectionRow>
 
-      <SectionRow title="Building Design" icon="building-columns">
-        <Card>
-          <FormFields fields={buildingFormFields} />
-        </Card>
-        <Card>
-          <FormFields fields={constructionMaterialsFormFields} />
-        </Card>
-        <Card>
-          <FormFields fields={condoRoomLayoutFormFields} />
-        </Card>
-        <Card>
-          <FormFields fields={locationViewFormFields} />
-        </Card>
-      </SectionRow>
+        <SectionRow title="Unit" icon="door-open">
+          <FormFields fields={unitFields} />
+          <div className="col-span-12">
+            <CondoAreaDetailForm name={'areaDetails'} />
+          </div>
+        </SectionRow>
 
-      <SectionRow title="Floor" icon="layer-group">
-        <Card>
-          <FormFields fields={groundFloorFields} />
-        </Card>
-        <Card>
-          <FormFields fields={upperFloorFields} />
-        </Card>
-        <Card>
-          <FormFields fields={bathroomFloorFields} />
-        </Card>
-      </SectionRow>
+        <SectionRow title="Reference Prices" icon="money-bill">
+          <FormFields fields={condoGovernmentPriceFields} />
+          <FormFields fields={buildingInsuranceFields} />
+          <CondoInsuranceSummary />
+        </SectionRow>
 
-      <SectionRow title="Roof" icon="tent">
-        <FormFields fields={roofFormFields} />
-      </SectionRow>
-
-      <SectionRow title="Area Details" icon="chart-area">
-        <div className="col-span-12">
-          <CondoAreaDetailForm name={'areaDetails'} />
-        </div>
-      </SectionRow>
-
-      {/* Expropriation and forest boundary are both legal limitations, and the land form
-          already groups them under one Limitation heading. Kept apart here, the condo form
-          split them with Facilities & Environment sitting between the two. */}
-      <SectionRow title={t('landCharacteristicsForm.sections.limitation')} icon="triangle-exclamation">
-        <Card>
+        <SectionRow
+          title={t('landCharacteristicsForm.sections.limitation')}
+          icon="triangle-exclamation"
+        >
           <FormFields fields={expropriationFields} />
-        </Card>
-        <Card>
           <FormFields fields={inForestBoundaryFormFields} />
-        </Card>
-      </SectionRow>
+        </SectionRow>
 
-      <SectionRow title="Facilities & Environment" icon="dumbbell">
-        <Card>
-          <FormFields fields={condoFacilityFields} />
-        </Card>
-        <Card>
-          <FormFields fields={environmentFields} />
-        </Card>
-      </SectionRow>
-
-
-      <SectionRow title="Remarks" icon="comment" isLast>
-        <FormFields fields={remarkFormFields} />
-      </SectionRow>
-    </div>
+        <SectionRow title="Remarks" icon="comment" isLast>
+          <FormFields fields={remarkFormFields} />
+        </SectionRow>
+      </div>
+    </FieldLabels>
   );
 }
+
+/*
+ * The screen's field order: identification, ownership, where it is, what surrounds it, the
+ * building, then the unit being appraised. The configs in configs/fields.ts stay as they are and
+ * are picked by name here; a span given here replaces the config's own col-span for this screen.
+ */
+const byName = new Map(
+  [
+    ...condoFields,
+    ...condoFieldsTail,
+    ...condoLocationFields,
+    ...condoLandCharacteristicsFields,
+    ...condoDecorationFields,
+    ...ageHeightCondoFields,
+    ...buildingFormFields,
+    ...constructionMaterialsFormFields,
+    ...condoRoomLayoutFormFields,
+    ...locationViewFormFields,
+    ...groundFloorFields,
+    ...upperFloorFields,
+    ...bathroomFloorFields,
+    ...roofFormFields,
+    ...condoFacilityFields,
+    ...environmentFields,
+  ].map(field => [field.name, field]),
+);
+
+const pick = (...entries: (string | [name: string, span: string])[]): FormField[] =>
+  entries.map(entry => {
+    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const field = byName.get(name);
+    // Fail loudly: a renamed config field would otherwise just vanish from the form.
+    if (!field) throw new Error(`CondoDetailForm: no field config named "${name}"`);
+    if (!span) return field;
+    const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+  });
+
+const identityFields = pick(
+  'propertyName',
+  'condoName',
+  ['roomNumber', 'col-span-4'],
+  ['floorNumber', 'col-span-4'],
+  ['modelName', 'col-span-4'],
+  ['buildingNumber', 'col-span-6'],
+  ['condoRegistrationNumber', 'col-span-6'],
+  'titleNumber',
+);
+
+const legalFields = pick(
+  ['isOwnerVerified', 'col-span-4'],
+  ['ownerName', 'col-span-8'],
+  'hasObligation',
+  'obligationDetails',
+  ['documentValidationResultType', 'col-span-12'],
+);
+
+const landOfficeFields = pick('landOffice');
+
+const coordinateFields = pick('latitude', 'longitude');
+
+const roadFields = pick(
+  'locationType',
+  'street',
+  'soi',
+  'distanceFromMainRoad',
+  'accessRoadWidth',
+  'rightOfWay',
+  'roadSurfaceType',
+  'roadSurfaceTypeOther',
+);
+
+const surroundingFields = pick(
+  'publicUtilityType',
+  'publicUtilityTypeOther',
+  'landEntranceExitType',
+  'landEntranceExitTypeOther',
+  'urbanPlanningType',
+  'landFillType',
+  'landFillTypeOther',
+  'landUseType',
+  'landUseTypeOther',
+  'environmentType',
+  'environmentTypeOther',
+);
+
+const buildingFields = pick(
+  ['buildingAge', 'col-span-3'],
+  ['numberOfFloors', 'col-span-3'],
+  ['isUnderConstruction', 'col-span-6'],
+  'buildingConditionType',
+  'buildingConditionTypeOther',
+  'buildingFormType',
+  'constructionMaterialType',
+  'roofType',
+  'roofTypeOther',
+  'facilityType',
+  'facilityTypeOther',
+);
+
+const unitFields = pick(
+  ['usableArea', 'col-span-4'],
+  'decorationType',
+  'decorationTypeOther',
+  'roomLayoutType',
+  'roomLayoutTypeOther',
+  'locationViewType',
+  'locationViewTypeOther',
+  'groundFloorMaterialType',
+  'groundFloorMaterialTypeOther',
+  'upperFloorMaterialType',
+  'upperFloorMaterialTypeOther',
+  'bathroomFloorMaterialType',
+  'bathroomFloorMaterialTypeOther',
+);
 
 export default CondoDetailForm;

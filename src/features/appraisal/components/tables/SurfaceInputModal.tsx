@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { useForm, FormProvider } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import clsx from 'clsx';
 import Button from '@/shared/components/Button';
-import Icon from '@/shared/components/Icon';
-import Dropdown from '@/shared/components/inputs/Dropdown';
+import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import { Textarea } from '@/shared/components';
+import { useFormReadOnly } from '@/shared/components/form/context';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 
 export interface SurfaceData {
   fromFloorNumber: number | null;
@@ -21,7 +22,11 @@ interface SurfaceInputModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: SurfaceData) => void;
+  onDelete?: () => void;
   initialData?: SurfaceData | null;
+  /** The table's current rows, to point out a floor range that repeats one already entered. */
+  existing?: SurfaceData[];
+  editIndex?: number | null;
   mode: 'add' | 'edit';
 }
 
@@ -35,16 +40,76 @@ const defaultSurfaceData: SurfaceData = {
   floorSurfaceTypeOther: '',
 };
 
+const FORM_ID = 'surface-input-form';
+
+const floorText = (from: number | null, to: number | null) =>
+  from === to ? `Floor ${from}` : `Floors ${from}–${to}`;
+
+/**
+ * A parameter group as one-click choices. Clicking the chosen one clears it — every field here is
+ * optional. Inactive codes stay hidden unless the row already carries one.
+ */
+function ParameterChips({
+  group,
+  label,
+  value,
+  onChange,
+  disabled,
+}: {
+  group: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+}) {
+  const params = useParametersByGroup(group);
+  return (
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
+      {params
+        .filter(p => p.isActive !== false || p.code === value)
+        .map(p => {
+          const selected = p.code === value;
+          return (
+            <button
+              key={p.code}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              disabled={disabled}
+              onClick={() => onChange(selected ? '' : p.code)}
+              className={clsx(
+                'rounded-full border px-3 py-1.5 text-[13px] transition-colors disabled:cursor-not-allowed',
+                selected
+                  ? 'border-primary-500 bg-primary-50 font-medium text-primary-700'
+                  : 'border-gray-300 bg-white text-gray-600 enabled:hover:border-primary-400',
+              )}
+            >
+              {selected && '✓ '}
+              {p.description}
+            </button>
+          );
+        })}
+    </div>
+  );
+}
+
 const SurfaceInputModal = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   initialData,
+  existing = [],
+  editIndex = null,
   mode,
 }: SurfaceInputModalProps) => {
   const methods = useForm<SurfaceData>({
     defaultValues: initialData || defaultSurfaceData,
   });
+  const formReadOnly = useFormReadOnly();
+  // Two clicks to delete. A ConfirmDialog portals outside the panel, which the panel treats as an
+  // outside click and makes inert.
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const {
     handleSubmit,
@@ -59,10 +124,10 @@ const SurfaceInputModal = ({
   useEffect(() => {
     if (isOpen) {
       reset(initialData || defaultSurfaceData);
+      setConfirmDelete(false);
     }
   }, [isOpen, initialData, reset]);
 
-  // เพิ่มหลัง useEffect ก่อน onSubmit
   useEffect(() => {
     register('fromFloorNumber', { required: true, validate: v => v !== null });
     register('toFloorNumber', { required: true, validate: v => v !== null });
@@ -73,8 +138,6 @@ const SurfaceInputModal = ({
     onClose();
   };
 
-  if (!isOpen) return null;
-
   const fromFloorNumber = watch('fromFloorNumber');
   const toFloorNumber = watch('toFloorNumber');
   const floorType = watch('floorType');
@@ -83,141 +146,165 @@ const SurfaceInputModal = ({
   const floorSurfaceType = watch('floorSurfaceType');
   const floorSurfaceTypeOther = watch('floorSurfaceTypeOther');
 
-  // Use portal to render modal outside parent form to avoid nested form issues
-  return createPortal(
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary-100 flex items-center justify-center">
-              <Icon name="layer-group" style="solid" className="size-4 text-primary-600" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {mode === 'add' ? 'Add Surface' : 'Edit Surface'}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors"
-          >
-            <Icon name="xmark" style="solid" className="size-4 text-gray-500" />
-          </button>
+  const hasRange = fromFloorNumber != null && toFloorNumber != null;
+  // Warnings, not errors: neither was ever enforced, and saved rows may already look like this.
+  const reversed = hasRange && toFloorNumber < fromFloorNumber;
+  const overlaps =
+    hasRange && !reversed
+      ? existing.filter(
+          (row, i) =>
+            i !== editIndex &&
+            row.fromFloorNumber != null &&
+            row.toFloorNumber != null &&
+            row.fromFloorNumber <= toFloorNumber &&
+            fromFloorNumber <= row.toFloorNumber,
+        )
+      : [];
+
+  const fieldLabel = 'text-sm font-semibold text-gray-800';
+
+  return (
+    <SlideOverPanel
+      isOpen={isOpen}
+      onClose={onClose}
+      width="lg"
+      title={mode === 'add' ? 'Add Surface' : 'Edit Surface'}
+      footer={
+        <div className="flex flex-wrap items-center gap-2">
+          {mode === 'edit' && onDelete && !formReadOnly && (
+            <Button
+              variant="outline"
+              type="button"
+              onClick={() => {
+                if (!confirmDelete) return setConfirmDelete(true);
+                onDelete();
+                onClose();
+              }}
+              className={
+                confirmDelete
+                  ? 'border-red-600 bg-red-600 text-white hover:bg-red-700'
+                  : 'text-red-600 border-red-200 hover:bg-red-50'
+              }
+            >
+              {confirmDelete ? 'Confirm delete' : 'Delete'}
+            </Button>
+          )}
+          <span className="flex-1" />
+          <Button variant="ghost" type="button" onClick={onClose}>
+            {formReadOnly ? 'Close' : 'Cancel'}
+          </Button>
+          {!formReadOnly && (
+            <Button type="submit" form={FORM_ID}>
+              {mode === 'add' ? 'Add' : 'Save'}
+            </Button>
+          )}
         </div>
+      }
+    >
+      <form
+        id={FORM_ID}
+        onSubmit={e => {
+          // The panel portals out of the page's form, but React still bubbles submit through it.
+          e.stopPropagation();
+          handleSubmit(onSubmit)(e);
+        }}
+        className="flex flex-col divide-y divide-gray-200"
+      >
+        <section className="flex flex-col gap-3 pb-5">
+          <h3 className={fieldLabel}>Floor Range</h3>
+          <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-3">
+            <NumberInput
+              label="From Floor"
+              value={fromFloorNumber ?? undefined}
+              onChange={e => setValue('fromFloorNumber', e.target.value)}
+              decimalPlaces={0}
+              maxIntegerDigits={3}
+              required={true}
+              error={errors.fromFloorNumber ? 'Required' : undefined}
+            />
+            <span className="pt-8 text-gray-400">–</span>
+            <NumberInput
+              label="To Floor"
+              value={toFloorNumber ?? undefined}
+              onChange={e => setValue('toFloorNumber', e.target.value)}
+              decimalPlaces={0}
+              maxIntegerDigits={3}
+              required={true}
+              error={errors.toFloorNumber ? 'Required' : undefined}
+            />
+          </div>
+          {reversed && (
+            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              To Floor is lower than From Floor.
+            </p>
+          )}
+          {overlaps.length > 0 && (
+            <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+              Overlaps{' '}
+              {overlaps.map(row => floorText(row.fromFloorNumber, row.toFloorNumber)).join(', ')},
+              already entered.
+            </p>
+          )}
+        </section>
 
-        {/* Form Content */}
-        <FormProvider {...methods}>
-          <form
-            onSubmit={e => {
-              e.stopPropagation();
-              handleSubmit(onSubmit)(e);
-            }}
-            className="flex flex-col flex-1 min-h-0"
-          >
-            <div className="px-6 py-5 space-y-5 flex-1 min-h-0 overflow-y-auto scroll-smooth">
-              {/* Floor Range */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Floor Range</label>
-                <div className="grid grid-cols-2 gap-4">
-                  <NumberInput
-                    label="From Floor"
-                    value={fromFloorNumber ?? undefined}
-                    onChange={e => setValue('fromFloorNumber', e.target.value)}
-                    decimalPlaces={0}
-                    maxIntegerDigits={3}
-                    required={true}
-                    error={errors.fromFloorNumber ? 'Required' : undefined}
-                  />
-                  <NumberInput
-                    label="To Floor"
-                    value={toFloorNumber ?? undefined}
-                    onChange={e => setValue('toFloorNumber', e.target.value)}
-                    decimalPlaces={0}
-                    maxIntegerDigits={3}
-                    required={true}
-                    error={errors.toFloorNumber ? 'Required' : undefined}
-                  />
-                </div>
-              </div>
+        <section className="flex flex-col gap-3 py-5">
+          <h3 className={fieldLabel}>
+            Floor Type <span className="font-normal text-gray-400">· optional</span>
+          </h3>
+          <ParameterChips
+            group="FloorType"
+            label="Floor Type"
+            value={floorType}
+            onChange={value => setValue('floorType', value)}
+            disabled={formReadOnly}
+          />
+        </section>
 
-              {/* Floor Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Floor Type</label>
-                <Dropdown
-                  group="FloorType"
-                  value={floorType}
-                  onChange={value => setValue('floorType', value)}
-                  placeholder="Select floor type"
-                />
-              </div>
+        <section className="flex flex-col gap-3 py-5">
+          <h3 className={fieldLabel}>
+            Floor Structure <span className="font-normal text-gray-400">· optional</span>
+          </h3>
+          <ParameterChips
+            group="FloorStructure"
+            label="Floor Structure"
+            value={floorStructureType}
+            onChange={value => setValue('floorStructureType', value)}
+            disabled={formReadOnly}
+          />
+          {floorStructureType === '99' && (
+            <Textarea
+              label="Specify structure"
+              value={floorStructureTypeOther}
+              onChange={e => setValue('floorStructureTypeOther', e.target.value)}
+              maxLength={100}
+              rows={2}
+            />
+          )}
+        </section>
 
-              {/* Floor Structure */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Structure
-                </label>
-                <Dropdown
-                  group="FloorStructure"
-                  value={floorStructureType}
-                  onChange={value => setValue('floorStructureType', value)}
-                  placeholder="Select floor structure"
-                />
-              </div>
-
-              {/* Floor Structure Other */}
-              <div className={floorStructureType === '99' ? '' : 'hidden'}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Structure Other
-                </label>
-                <Textarea
-                  value={floorStructureTypeOther}
-                  onChange={e => setValue('floorStructureTypeOther', e.target.value)}
-                  maxLength={100}
-                />
-              </div>
-
-              {/* Floor Surface */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Surface
-                </label>
-                <Dropdown
-                  group="FloorSurface"
-                  value={floorSurfaceType}
-                  onChange={value => setValue('floorSurfaceType', value)}
-                  placeholder="Select floor surface"
-                />
-              </div>
-
-              {/* Floor Surface Other */}
-              <div className={floorSurfaceType === '99' ? '' : 'hidden'}>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Floor Surface
-                </label>
-                <Textarea
-                  value={floorSurfaceTypeOther}
-                  onChange={e => setValue('floorSurfaceTypeOther', e.target.value)}
-                  maxLength={100}
-                />
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 ">
-              <Button variant="ghost" type="button" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                {mode === 'add' ? 'Add' : 'Save'}
-              </Button>
-            </div>
-          </form>
-        </FormProvider>
-      </div>
-    </div>,
-    document.body,
+        <section className="flex flex-col gap-3 pt-5">
+          <h3 className={fieldLabel}>
+            Floor Surface <span className="font-normal text-gray-400">· optional</span>
+          </h3>
+          <ParameterChips
+            group="FloorSurface"
+            label="Floor Surface"
+            value={floorSurfaceType}
+            onChange={value => setValue('floorSurfaceType', value)}
+            disabled={formReadOnly}
+          />
+          {floorSurfaceType === '99' && (
+            <Textarea
+              label="Specify surface"
+              value={floorSurfaceTypeOther}
+              onChange={e => setValue('floorSurfaceTypeOther', e.target.value)}
+              maxLength={100}
+              rows={2}
+            />
+          )}
+        </section>
+      </form>
+    </SlideOverPanel>
   );
 };
 

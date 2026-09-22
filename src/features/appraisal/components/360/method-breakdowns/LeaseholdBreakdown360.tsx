@@ -59,8 +59,11 @@ const LeaseholdBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Prop
         <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Outputs</p>
         <DlRow label="Total Income" value={a.totalIncomeOverLeaseTerm} />
         <DlRow label="Value at Lease Expiry" value={a.valueAtLeaseExpiry} />
-        <DlRow label="Final Value" value={a.finalValue} />
-        <DlRow label="Final Value Rounded" value={a.finalValueRounded} highlight />
+        <DlRow
+          label="Final Value"
+          value={a.indicatedValue ?? a.estimatePriceRounded ?? a.finalValue}
+          highlight
+        />
       </div>
 
       {/* Calculation table */}

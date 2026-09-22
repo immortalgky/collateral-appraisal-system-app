@@ -31,11 +31,7 @@ import {
   useSaveAssignmentDraft,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import {
-  assignmentFormDefaults,
-  useAssignmentFormSchema,
-  type AssignmentFormType,
-} from '../schemas/administration';
+import { assignmentFormDefaults, type AssignmentFormType, useAssignmentFormSchema, } from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
 import SearchStaffModal from '../components/SearchStaffModal';
@@ -1317,6 +1313,7 @@ const AdministrationPage = () => {
                     placeholder={t('administration.remark.placeholder')}
                     maxLength={4000}
                     showCharCount
+                    disabled={isReadOnly}
                     error={errors.remarks?.message}
                   />
                 )}

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { FormFields, type FormField } from '@/shared/components/form';
+import LandAreaDeductionTable from '@/features/appraisal/components/tables/LandAreaDeductionTable';
+import { FormReadOnlyContext } from '@/shared/components/form/context';
 import Icon from '@/shared/components/Icon';
 import BoundaryFields from '../components/BoundaryFields';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -62,7 +64,9 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
     <div className="col-span-full xl:col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5 my-2" />}
+    {!isLast && (
+      <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5 my-2" />
+    )}
   </>
 );
 
@@ -73,6 +77,8 @@ const Card = ({ children }: { children: React.ReactNode }) => (
 );
 
 const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
+  // Same gate as the real form: the table opens with the toggle above it.
+  const hasAreaDeductions = useWatch({ name: 'isEncroached' });
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const { watch, setValue } = useFormContext();
@@ -170,6 +176,14 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
           </Card>
           <Card>
             <FormFields fields={encroachedField} />
+            {/* Read-only here on purpose: LandCorrection carries no member for these rows, so an
+                edit made on this screen would be dropped by the API without an error. Shown rather
+                than hidden so the corrector can see why the appraised area was cut. */}
+            {hasAreaDeductions && (
+              <FormReadOnlyContext.Provider value={true}>
+                <LandAreaDeductionTable />
+              </FormReadOnlyContext.Provider>
+            )}
           </Card>
           <Card>
             <FormFields fields={electricityField} />

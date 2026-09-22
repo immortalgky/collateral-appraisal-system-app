@@ -105,7 +105,7 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
               {t('unitPrice.cols.coverageAmountBahtSqm')}
             </th>
             <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
-              {t('unitPrice.cols.fireInsuranceCondition')}
+              {t('unitPrice.cols.fireInsuranceCode')}
             </th>
           </tr>
         </thead>
@@ -135,9 +135,9 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
                 {m.coverageAmount?.toLocaleString() ?? '-'}
               </td>
               <td className="py-2 px-3 text-gray-600">
-                {m.fireInsuranceCondition
-                  ? (fireInsuranceLabelByCondition.get(m.fireInsuranceCondition) ??
-                    m.fireInsuranceCondition)
+                {m.fireInsuranceCode
+                  ? (fireInsuranceLabelByCondition.get(m.fireInsuranceCode) ??
+                    m.fireInsuranceCode)
                   : '-'}
               </td>
             </tr>

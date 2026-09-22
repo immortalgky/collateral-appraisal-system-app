@@ -104,7 +104,7 @@ function withFireInsuranceOptions(fields: FormField[], options: ListBoxItem[]): 
   // `options` across every variant (boolean-toggle requires exactly [string, string]),
   // which breaks the discriminated union.
   return fields.map(f =>
-    f.type === 'dropdown' && f.name === 'fireInsuranceCondition' ? { ...f, options } : f,
+    f.type === 'dropdown' && f.name === 'fireInsuranceCode' ? { ...f, options } : f,
   );
 }
 
@@ -191,7 +191,7 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
         'numberOfHouse',
         'startingPriceMin',
         'startingPriceMax',
-        'fireInsuranceCondition',
+        'fireInsuranceCode',
         'usableAreaMin',
         'usableAreaMax',
         'standardUsableArea',

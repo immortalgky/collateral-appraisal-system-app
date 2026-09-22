@@ -31,7 +31,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
     <div className="col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-5 my-2" />}
+    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-5 my-2" />}
   </>
 );
 
