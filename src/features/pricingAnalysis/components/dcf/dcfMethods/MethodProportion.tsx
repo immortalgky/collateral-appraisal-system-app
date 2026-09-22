@@ -4,6 +4,7 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '@/features/pricingAnalysis/domain/getDCFFilteredAssumptions';
 import { buildMethodProportionOptions } from '@/features/pricingAnalysis/domain/dcf/buildMethodProportionOptions';
 import { useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
 interface MethodProportionProps {
   name: string;
@@ -22,6 +23,7 @@ export function MethodProportion({
   isReadOnly,
 }: MethodProportionProps) {
   const { getValues } = useFormContext();
+  const { t } = useTranslation('pricingAnalysis');
   const sections = (getValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
   );
@@ -44,9 +46,9 @@ export function MethodProportion({
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-3 items-center justify-between">
-                <span>Total</span>
+                <span>{t('dcf.common.total')}</span>
                 <div className="flex flex-row gap-1.5 items-center">
                   <div className="w-20">
                     <RHFInputCell
@@ -56,7 +58,7 @@ export function MethodProportion({
                       number={{ decimalPlaces: 2, maxIntegerDigits: 3, allowNegative: false }}
                     />
                   </div>
-                  <span>% of</span>
+                  <span>{t('dcf.methods.proportion.percentOf')}</span>
                   <div className="w-72">
                     <RHFInputCell
                       fieldName={`${name}.detail.refTarget.clientId`}

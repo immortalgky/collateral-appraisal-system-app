@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import type { MethodSpecifiedRoomIncomeBySeasonalRatesWrapper } from '../../../types/dcf';
 
@@ -18,17 +19,20 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
   baseStyles,
   isReadOnly,
 }: MethodSpecifiedRoomIncomeBySeasonalRatesProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Saleable Area</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.common.saleableArea')}</span>
               <RHFInputCell
                 fieldName={`${name}.detail.sumSaleableArea`}
                 inputType="display"
-                accessor={({ value }) => <span>({value ?? 0} rooms)</span>}
+                accessor={({ value }) => (
+                  <span>{t('dcf.common.roomsCount', { count: value ?? 0 })}</span>
+                )}
               />
             </td>
             {(method.detail?.saleableArea ?? []).map((val, idx) => {
@@ -40,9 +44,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
-                <span>Occupancy Rate - 1st year amt</span>
+                <span>{t('dcf.common.occupancyRateFirstYearAmt')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateFirstYearPct`}
@@ -56,7 +60,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                     }}
                   />
                 </div>
-                <span>% growth</span>
+                <span>{t('dcf.common.percentGrowth')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRatePct`}
@@ -70,7 +74,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                     }}
                   />
                 </div>
-                <span>% every</span>
+                <span>{t('dcf.common.percentEvery')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.occupancyRateYrs`}
@@ -84,7 +88,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
                     }}
                   />
                 </div>
-                <span>year(s)</span>
+                <span>{t('dcf.common.year')}</span>
               </div>
             </td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
@@ -110,7 +114,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Total Number of Saleable Area</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.common.totalNumberOfSaleableArea')}
+            </td>
             {(method.detail?.totalSaleableAreaDeductByOccRate ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -120,7 +126,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -130,7 +136,9 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Average Daily Rate (ADR)</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.common.averageDailyRate')}
+            </td>
             {(method.detail?.avgDailyRate ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -140,8 +148,8 @@ export function MethodSpecifiedRoomIncomeBySeasonalRates({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Total Room Income</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.common.totalRoomIncome')}</span>
             </td>
             {(method.detail?.roomIncome ?? []).map((val, idx) => {
               return (

@@ -485,7 +485,8 @@ export interface DCFTemplateType {
   finalValue: number;
   finalValueRounded: number;
   appraisalPrice: number;
-  appraisalPriceRounded: number;
+  /** The appraiser's typed-over value only — null means "follow the computed value". */
+  appraisalPriceRounded: number | null;
   sections: {
     sectionType: SectionType; // render section e.g income, expenses
     sectionName: string;

@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayWrapper } from '../../../types/dcf';
 
 interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps {
@@ -14,12 +15,13 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
   method,
   baseStyles,
 }: MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
             {(method.detail?.increaseRate ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -29,8 +31,8 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Total Food and Beverage per Room per Day</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.methods.foodAndBeverageExpenses.totalPerRoomPerDay')}</span>
             </td>
             {(method.detail?.totalFoodAndBeveragePerRoomPerDay ?? []).map((val, idx) => {
               return (
@@ -41,8 +43,8 @@ export function MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Total</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.common.total')}</span>
             </td>
             {(method.detail?.totalFoodAndBeveragePerRoomPerYear ?? []).map((val, idx) => {
               return (
