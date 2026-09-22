@@ -57,10 +57,14 @@ export function getParameterOptions(group: string): ListBoxItem[] {
 // =============================================================================
 
 /** Reactive version of getParametersByGroup (falls back to EN) */
-export function useParametersByGroup(group: string): Parameter[] {
+export function useParametersByGroup(
+  group: string,
+  useCountry?: string,
+  useLanguage?: string,
+): Parameter[] {
   const parameters = useParameterStore(state => state.parameters);
-  const country = useLocaleStore(state => state.country);
-  const language = useLocaleStore(state => state.language);
+  const country = useCountry ? useCountry : useLocaleStore(state => state.country);
+  const language = useLanguage ? useLanguage : useLocaleStore(state => state.language);
 
   return useMemo(
     () => resolveGroup(parameters, group, country, language),

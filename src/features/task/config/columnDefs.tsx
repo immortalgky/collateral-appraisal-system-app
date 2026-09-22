@@ -177,6 +177,7 @@ function HoursCell({
 export type ColumnKey =
   | 'appraisalNumber'
   | 'requestNumber'
+  | 'channel'
   | 'customerName'
   | 'taskType'
   | 'purpose'
@@ -248,6 +249,12 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
         {task.requestNumber ?? '-'}
       </Link>
     ),
+  },
+  channel: {
+    label: 'Channel',
+    sortField: 'channel',
+    width: 120,
+    render: task => <ParameterDisplay group="Channel" code={task.channel} />,
   },
   customerName: {
     label: 'Customer Name',
@@ -415,6 +422,7 @@ export const DEFAULT_WIDTHS: Partial<Record<ColumnKey, number>> = Object.fromEnt
 const DEFAULT_COLUMNS: ColumnKey[] = [
   'appraisalNumber',
   'requestNumber',
+  'channel',
   'customerName',
   'taskType',
   'purpose',

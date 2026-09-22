@@ -438,12 +438,12 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
           )}
         >
           <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-base-200 dark:to-base-100 border border-gray-100 dark:border-base-300 flex items-center justify-center shadow-sm shrink-0">
+            <div className="w-14 h-14 rounded-3xl bg-gradient-to-br from-gray-50 to-white dark:from-base-200 dark:to-base-100 border border-gray-100 dark:border-base-300 flex items-center justify-center shadow-sm shrink-0">
               <img alt="LHBank" src={logo} className="h-6 w-auto" />
             </div>
             {!sidebarCollapsed && (
               <div className="flex flex-col">
-                <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
+                <span className="text-sm font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
                   CAS
                 </span>
                 <div

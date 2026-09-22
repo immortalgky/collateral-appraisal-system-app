@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/store';
+import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 
 interface RoleProtectedRouteProps {
   /** Roles allowed to access the wrapped routes. Match on any. */
@@ -67,11 +68,9 @@ const RoleProtectedRoute = ({
     ? (user?.permissions?.includes(deniedPermission) ?? false)
     : true;
 
+  // The allow-list itself is the shared predicate, so page-level link checks stay in step with it.
   const hasAccess =
-    !!user &&
-    (!isTargeted ||
-      (requiredPermission ? user.permissions?.includes(requiredPermission) : false) ||
-      (user.roles?.some(role => allowedRoles.includes(role)) ?? false));
+    !!user && (!isTargeted || hasRoleOrPermission(user, allowedRoles, requiredPermission));
 
   if (!hasAccess) {
     return <Navigate to={fallbackPath} replace />;

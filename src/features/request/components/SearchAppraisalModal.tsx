@@ -133,6 +133,12 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         sortable: true,
         render: (item: AppraisalDto) => formatDate(item.appointmentDateTime),
       },
+      {
+        key: 'inspectionNumber',
+        label: t('searchAppraisal.columnInspectionNumber'),
+        sortable: false,
+        render: (item: AppraisalDto) => item.inspectionNumber ?? '-',
+      },
     ],
 
     [provinceCodeToName, districtCodeToName, t],
