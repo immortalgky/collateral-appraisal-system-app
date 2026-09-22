@@ -68,7 +68,7 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     }),
     appointment: z.object({
       appointmentDateTime: z.string().datetime({ local: true, offset: true }),
-      appointmentLocation: z.string().min(1, t('validation.appointmentLocationRequired')),
+      appointmentLocation: z.string().max(4000),
     }),
     fee: z.object({
       feePaymentType: z.string().min(1, t('validation.feePaymentTypeRequired')),
@@ -81,7 +81,7 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
 function makeRequestCustomerDto(t: TFunction<'request'>) {
   return z.object({
     name: z.string().max(260).min(1, t('validation.customerNameRequired')),
-    contactNumber: z.string().max(20).min(1, t('validation.contactNumberRequired')),
+    contactNumber: z.string().max(20),
   });
 }
 

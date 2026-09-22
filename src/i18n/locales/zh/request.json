@@ -405,10 +405,8 @@
     "provinceRequired": "省份为必填项。",
     "contactPersonNameRequired": "联系人姓名为必填项。",
     "contactPersonPhoneRequired": "联系人电话为必填项。",
-    "appointmentLocationRequired": "预约地点为必填项。",
     "feePaymentTypeRequired": "费用支付方式为必填项。",
     "customerNameRequired": "客户姓名为必填项。",
-    "contactNumberRequired": "联系电话为必填项。",
     "propertyTypeRequired": "房产类型为必填项。",
     "commentRequired": "评论为必填项",
     "titleMinItems": "产权信息至少需要1项"
