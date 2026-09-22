@@ -1752,6 +1752,13 @@
       "sectionTitle": "建筑详情"
     },
     "condo": {
+        "areaDetailHint": "单元各部分及其面积",
+        "areaDetailEmpty": "暂无面积明细",
+        "addArea": "添加面积",
+        "areaItems": "{{count}} 项 · {{total}} 平方米",
+        "matchesUsable": "与使用面积一致",
+        "diffVsUsable": "{{diff}} 与使用面积相差",
+        "areaTotal": "合计",
       "sectionTitle": "公寓详情",
       "areaDetail": "面积详情",
       "pma": "PMA 信息",
@@ -2033,6 +2040,7 @@
     "save": "保存"
   },
   "landCharacteristicsForm": {
+    "deductionsLabel": "原因",
     "confirmClearDeductions": {
       "title": "确认关闭面积扣减？",
       "message": "关闭后将删除已录入的面积扣减明细（{{count}} 条），并将评估面积恢复为权证登记面积。"
@@ -2923,5 +2931,18 @@
       "forcedSalePrice": "强制出售价",
       "buildingInsurancePrice": "建筑物保险金额"
     }
+  },
+  "surfaceTable": {
+    "sectionLabel": "各层地面",
+    "addFloor": "添加楼层",
+    "empty": "暂无楼层数据",
+    "otherPlaceholder": "请注明",
+    "reversed": "结束楼层低于起始楼层",
+    "overlap": "与已填写的楼层 {{floors}} 重叠"
+  },
+  "boundaryTable": {
+    "direction": "方向",
+    "adjacent": "相邻",
+    "length": "估计长度（米）"
   }
 }

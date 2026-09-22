@@ -1763,6 +1763,13 @@
       "sectionTitle": "รายละเอียดอาคาร"
     },
     "condo": {
+        "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
+        "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
+        "addArea": "เพิ่มพื้นที่",
+        "areaItems": "{{count}} รายการ · {{total}} ตร.ม.",
+        "matchesUsable": "ตรงกับพื้นที่ใช้สอย",
+        "diffVsUsable": "{{diff}} เทียบกับพื้นที่ใช้สอย",
+        "areaTotal": "รวม",
       "sectionTitle": "รายละเอียดคอนโด",
       "areaDetail": "รายละเอียดพื้นที่",
       "pma": "ข้อมูล PMA",
@@ -2055,6 +2062,7 @@
     "save": "บันทึก"
   },
   "landCharacteristicsForm": {
+    "deductionsLabel": "สาเหตุ",
     "confirmClearDeductions": {
       "title": "ยืนยันการปิดการหักเนื้อที่",
       "message": "ระบบจะลบรายการหักเนื้อที่ที่คีย์ไว้ ({{count}} รายการ) และคืนเนื้อที่ประเมินเป็นเนื้อที่ตามโฉนด"
@@ -2944,5 +2952,18 @@
       "forcedSalePrice": "ราคาบังคับขาย",
       "buildingInsurancePrice": "ทุนประกันภัยสิ่งปลูกสร้าง"
     }
+  },
+  "surfaceTable": {
+    "sectionLabel": "พื้นแต่ละชั้น",
+    "addFloor": "เพิ่มชั้น",
+    "empty": "ยังไม่มีข้อมูลพื้น",
+    "otherPlaceholder": "ระบุ",
+    "reversed": "ถึงชั้นที่น้อยกว่าจากชั้นที่",
+    "overlap": "ซ้ำกับชั้น {{floors}} ที่กรอกไว้แล้ว"
+  },
+  "boundaryTable": {
+    "direction": "ทิศ",
+    "adjacent": "ติดต่อกับ",
+    "length": "ความยาวโดยประมาณ (ม.)"
   }
 }

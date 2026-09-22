@@ -1769,6 +1769,13 @@
       "sectionTitle": "Building Details"
     },
     "condo": {
+        "areaDetailHint": "Each part of the unit and its area",
+        "areaDetailEmpty": "No area details yet",
+        "addArea": "Add area",
+        "areaItems": "{{count}} items · {{total}} m²",
+        "matchesUsable": "Matches usable area",
+        "diffVsUsable": "{{diff}} vs usable area",
+        "areaTotal": "Total",
       "sectionTitle": "Condo Details",
       "areaDetail": "Area Detail",
       "pma": "PMA Information",
@@ -2063,6 +2070,7 @@
     "save": "Save"
   },
   "landCharacteristicsForm": {
+    "deductionsLabel": "Reason",
     "confirmClearDeductions": {
       "title": "Turn off area deductions?",
       "message": "Switching this off deletes the deduction rows you entered ({{count}}) and restores the appraised area to the registered title area."
@@ -2953,5 +2961,18 @@
       "forcedSalePrice": "Force Selling Price",
       "buildingInsurancePrice": "Building Insurance"
     }
+  },
+  "surfaceTable": {
+    "sectionLabel": "Floor surfaces",
+    "addFloor": "Add floor",
+    "empty": "No floor data yet",
+    "otherPlaceholder": "Specify",
+    "reversed": "To floor is lower than from floor",
+    "overlap": "Overlaps floors {{floors}}, already entered"
+  },
+  "boundaryTable": {
+    "direction": "Direction",
+    "adjacent": "Adjacent to",
+    "length": "Est. length (m)"
   }
 }
