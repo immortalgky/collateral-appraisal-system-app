@@ -173,16 +173,8 @@ describe('LandBuildingFormSchema', () => {
         discountRate: 8,
         remark: 'Test run',
       },
-      costOfBuildingItems: [
-        {
-          id: null,
-          category: 'CostOfBuilding',
-          kind: 'BuildingConstruction',
-          description: 'Construction',
-          displaySequence: 0,
-          amount: 1500000,
-          modelName: 'A01',
-        },
+      modelBuildingMappings: [
+        { modelName: 'A01', appraisalPropertyId: null, totalCost: 1500000 },
       ],
       otherCostItems: [],
       remark: null,
