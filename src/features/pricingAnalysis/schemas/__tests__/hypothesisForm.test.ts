@@ -103,29 +103,29 @@ describe('HypothesisCostItemSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  // One case per field rather than one row missing all three: a single row would still be
-  // rejected if only one of them were left required, and the case would pass under a name that
-  // no longer holds.
-  describe.each(['isBuilding', 'depreciationMethod', 'depreciationPeriods'] as const)(
-    'requires %s on any category',
+  // A row of a category that has nothing to do with buildings still has to carry all three.
+  const adHocRow = {
+    category: 'ProjectCost' as const,
+    kind: 'Other' as const,
+    description: 'Ad-hoc item',
+    displaySequence: 0,
+    amount: 50000,
+    ...requiredOnEveryRow,
+  };
+
+  it('accepts a non-building row carrying all three', () => {
+    expect(HypothesisCostItemSchema.safeParse(adHocRow).success).toBe(true);
+  });
+
+  // One case per field rather than one row missing all three: a row missing all three is still
+  // rejected when only one of them is required, so the case would pass under a name that no
+  // longer holds.
+  it.each(['isBuilding', 'depreciationMethod', 'depreciationPeriods'] as const)(
+    'rejects a non-building row without %s',
     field => {
-      const base = {
-        category: 'ProjectCost' as const,
-        kind: 'Other' as const,
-        description: 'Ad-hoc item',
-        displaySequence: 0,
-        amount: 50000,
-        ...requiredOnEveryRow,
-      };
-
-      it('rejects the row without it', () => {
-        const { [field]: _omitted, ...withoutField } = base;
-        expect(HypothesisCostItemSchema.safeParse(withoutField).success).toBe(false);
-      });
-
-      it('accepts the row with it', () => {
-        expect(HypothesisCostItemSchema.safeParse(base).success).toBe(true);
-      });
+      const withoutField: Record<string, unknown> = { ...adHocRow };
+      delete withoutField[field];
+      expect(HypothesisCostItemSchema.safeParse(withoutField).success).toBe(false);
     },
   );
 
