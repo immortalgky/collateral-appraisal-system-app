@@ -32,7 +32,9 @@ const ZH_ENGLISH_FALLBACK = new Set([
   // purpose and stays red until th/oauthAdmin.json exists.)
   'oauthAdmin',
   'hangfire',
-  // Registered as en-fallback in src/i18n/index.ts, same as the four above it.
+  // Registered as en-fallback in src/i18n/index.ts, as `hangfire` and `oauthAdmin` above are.
+  // (`feeAppointmentApproval`, `feeApprovalConfig` and `evaluationConfig` come from their own
+  // feature modules, like `feeStructureMaintenance` below.)
   'addressMaster',
   'companyRoundRobinConfig',
   'jobSchedules',
