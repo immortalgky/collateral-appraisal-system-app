@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Fragment, useState } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
@@ -11,7 +11,11 @@ import BuildingDetailPopUpModal from '../../appraisal/components/tables/Building
 import { useBasePath } from '../../appraisal/context/AppraisalContext';
 import { getRouteSegment, PROPERTY_TYPES } from '../../appraisal/utils/propertyTypeConfig';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { roundToThousand } from '../domain/calculation';
+import {
+  buildingFinalCostValue,
+  roundToThousand,
+  sumBuildingFinalCostValue,
+} from '../domain/calculation';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
 
 export interface BuildingCostItem {
@@ -599,7 +603,14 @@ function FinalCostRow({
     rows.reduce((acc, row) => acc + toNumber(row['priceAfterDepreciation']), 0),
   );
   const override = building.finalCostValueOverride as number | null | undefined;
-  const finalCost = override == null ? derived : toNum(override);
+  // One rule, one place: this used to restate `override ?? roundToThousand(sum)` inline and could
+  // drift from the helper the KPI cards and the footer price against. `derived` stays because the
+  // provenance line below needs the unrounded comparison, which the helper does not expose.
+  // Fed the COMPUTED rows, not `building.depreciationDetails`: the stored priceAfterDepreciation
+  // goes stale the moment the appraiser edits the schedule, and `diff` right below compares this
+  // against a computed-row total — mixing the two would print a provenance delta that is an
+  // artefact of the mismatch rather than of anything the appraiser did.
+  const finalCost = buildingFinalCostValue({ ...building, depreciationDetails: rows });
   const diff = finalCost - derived;
 
   // Both lines are now gated by the same flag — user-ruled twice on BC: first the rounding
@@ -667,10 +678,18 @@ function FooterRow({
   allRows,
   hasActionCol,
   visibleHeaders,
+  overrides,
 }: {
   allRows: any[];
   hasActionCol: boolean;
   visibleHeaders: FormTableHeader[];
+  /**
+   * Cells the GRAND total computes differently from the per-building subtotals, keyed by column
+   * name. The two share every column's `footer`, and for a subtotal ("รวมตามตาราง") the raw
+   * schedule sum is the right answer — only the grand total has to price against each building's
+   * Final Cost Value instead.
+   */
+  overrides?: Record<string, () => ReactNode>;
 }) {
   return (
     <tfoot className="bg-[#f8fafa] border-t border-t-[#cbd5d3]">
@@ -689,14 +708,16 @@ function FooterRow({
           );
 
           switch (header.type) {
-            case 'derived':
+            case 'derived': {
+              const override = overrides?.[h.name];
               return (
                 <td key={inner_index} className={tdClass}>
                   <span className="inline-flex items-center justify-center text-[12px]">
-                    {footer ? footer({ rows: allRows }) : ''}
+                    {override ? override() : footer ? footer({ rows: allRows }) : ''}
                   </span>
                 </td>
               );
+            }
             case 'input-number':
               return (
                 <td key={inner_index} className={tdClass}>
@@ -832,6 +853,36 @@ export function BuildingCostTable({
 
   const allComputedRows = buildings.flatMap(b => b.computedRows);
   const isEmpty = allComputedRows.length === 0 && !canEdit;
+
+  // The grand total is the sum of each building's Final Cost Value, not of the raw schedule rows:
+  // a building whose appraiser keyed a Final Cost Value on the property form is worth that, and
+  // summing `priceAfterDepreciation` across the flattened rows drops every such override — which
+  // is why this cell and the KPI strip above it printed different numbers under one label.
+  //
+  // Same helper as the KPI strip (CostBuildingPanel.tsx:126), but fed this table's computed rows
+  // rather than the stored `depreciationDetails`, for the reason FinalCostRow gives below. On the
+  // only live call site the schedule is read-only (no `onChange`), so the two inputs re-derive the
+  // same figures and the numbers agree; an editable one could drift for as long as an edit is
+  // unsaved.
+  // Each building's computed rows, not its stored ones, for the same reason FinalCostRow uses
+  // them: the footer sits under a table the appraiser can edit and has to show what is on screen.
+  const grandTotalFinalCost = sumBuildingFinalCostValue(
+    buildings.map(b => ({ ...b.building, depreciationDetails: b.computedRows })),
+  );
+  const grandTotalArea = allComputedRows.reduce((acc, row) => acc + toNumber(row['area']), 0);
+  const footerOverrides = {
+    priceAfterDepreciation: () => (
+      <span className="text-[12px]">{grandTotalFinalCost.toLocaleString()}</span>
+    ),
+    // Restates the cell above per square metre, so it has to divide the same number — left on the
+    // raw sum it would read 99,000 against a 14,000,000 total, which multiplies back to neither.
+    pricePerSqMAfterDepreciation: () =>
+      grandTotalArea === 0 ? null : (
+        <span className="text-[12px]">
+          {Math.round(grandTotalFinalCost / grandTotalArea).toLocaleString()}
+        </span>
+      ),
+  };
 
   const visibleColCount = visibleHeaders.length + (canEdit ? 1 : 0); // +1 actions
 
@@ -1076,6 +1127,7 @@ export function BuildingCostTable({
                 allRows={allComputedRows}
                 hasActionCol={canEdit}
                 visibleHeaders={visibleHeaders}
+                overrides={footerOverrides}
               />
             )}
           </table>
