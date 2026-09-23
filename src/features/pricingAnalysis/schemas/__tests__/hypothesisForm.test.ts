@@ -37,6 +37,9 @@ describe('HypothesisCostItemSchema', () => {
     expect(result.success).toBe(true);
   });
 
+  // Each negative case fills every other required field, so the row is rejected for the one
+  // thing under test. Without `requiredOnEveryRow` these rows fail on the missing fields instead
+  // and stay green even if the guard they name is deleted.
   it('rejects empty description', () => {
     const result = HypothesisCostItemSchema.safeParse({
       id: null,
@@ -45,6 +48,7 @@ describe('HypothesisCostItemSchema', () => {
       description: '',
       displaySequence: 0,
       amount: 0,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(false);
   });
@@ -52,9 +56,11 @@ describe('HypothesisCostItemSchema', () => {
   it('rejects invalid category', () => {
     const result = HypothesisCostItemSchema.safeParse({
       category: 'InvalidCategory',
+      kind: 'Other',
       description: 'Test',
       displaySequence: 0,
       amount: 0,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(false);
   });
@@ -97,19 +103,31 @@ describe('HypothesisCostItemSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('requires isBuilding, depreciationMethod and depreciationPeriods on any category', () => {
-    const base = {
-      category: 'ProjectCost' as const,
-      kind: 'Other' as const,
-      description: 'Ad-hoc item',
-      displaySequence: 0,
-      amount: 50000,
-    };
-    expect(HypothesisCostItemSchema.safeParse(base).success).toBe(false);
-    expect(HypothesisCostItemSchema.safeParse({ ...base, ...requiredOnEveryRow }).success).toBe(
-      true,
-    );
-  });
+  // One case per field rather than one row missing all three: a single row would still be
+  // rejected if only one of them were left required, and the case would pass under a name that
+  // no longer holds.
+  describe.each(['isBuilding', 'depreciationMethod', 'depreciationPeriods'] as const)(
+    'requires %s on any category',
+    field => {
+      const base = {
+        category: 'ProjectCost' as const,
+        kind: 'Other' as const,
+        description: 'Ad-hoc item',
+        displaySequence: 0,
+        amount: 50000,
+        ...requiredOnEveryRow,
+      };
+
+      it('rejects the row without it', () => {
+        const { [field]: _omitted, ...withoutField } = base;
+        expect(HypothesisCostItemSchema.safeParse(withoutField).success).toBe(false);
+      });
+
+      it('accepts the row with it', () => {
+        expect(HypothesisCostItemSchema.safeParse(base).success).toBe(true);
+      });
+    },
+  );
 
   it('preserves explicit kind value when provided', () => {
     const result = HypothesisCostItemSchema.safeParse({
@@ -133,6 +151,7 @@ describe('HypothesisCostItemSchema', () => {
       description: 'Test',
       displaySequence: 0,
       amount: 0,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(false);
   });
