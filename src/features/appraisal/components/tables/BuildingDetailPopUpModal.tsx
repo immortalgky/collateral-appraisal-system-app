@@ -37,7 +37,7 @@ interface DepreciationDetailData {
   [key: string]: any;
 }
 
-const defaultDepreciationDetail: DepreciationDetailData = {
+export const defaultDepreciationDetail: DepreciationDetailData = {
   areaDescription: '',
   area: 0,
   isBuilding: true,
@@ -57,26 +57,38 @@ const toNum = (v: any) => {
 const money = (n: number, digits = 2) =>
   n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
+export const periodMessages = {
+  toBeforeAt: (toYear: number, atYear: number) =>
+    `To Year (${toYear}) must be ≥ At Year (${atYear})`,
+  noAge: () => 'Building Year must be set before adding depreciation periods',
+  pastAge: (toYear: number, age: number) =>
+    `To Year (${toYear}) must not exceed building Year (${age})`,
+  overlap: (atYear: number, prevToYear: number) =>
+    `At Year (${atYear}) must be > previous row's To Year (${prevToYear})`,
+};
+
 /** The same checks the form has always run on submit, per row so they can sit beside the row. */
-function periodErrors(rows: any[], buildingYear: number): string[][] {
+export function periodErrors(
+  rows: any[],
+  buildingYear: number,
+  msg: typeof periodMessages = periodMessages,
+): string[][] {
   return rows.map((row, i) => {
     const errors: string[] = [];
     const atYear = Number(row.atYear) || 0;
     const toYear = Number(row.toYear) || 0;
 
-    if (toYear < atYear) errors.push(`To Year (${toYear}) must be ≥ At Year (${atYear})`);
+    if (toYear < atYear) errors.push(msg.toBeforeAt(toYear, atYear));
 
     if (buildingYear <= 0) {
-      errors.push('Building Year must be set before adding depreciation periods');
+      errors.push(msg.noAge());
     } else if (toYear > buildingYear) {
-      errors.push(`To Year (${toYear}) must not exceed building Year (${buildingYear})`);
+      errors.push(msg.pastAge(toYear, buildingYear));
     }
 
     if (i > 0) {
       const prevToYear = Number(rows[i - 1].toYear) || 0;
-      if (atYear <= prevToYear) {
-        errors.push(`At Year (${atYear}) must be > previous row's To Year (${prevToYear})`);
-      }
+      if (atYear <= prevToYear) errors.push(msg.overlap(atYear, prevToYear));
     }
     return errors;
   });
@@ -627,7 +639,7 @@ function YearRuler({ rows, buildingYear }: { rows: any[]; buildingYear: number }
 }
 
 /** Moved verbatim from the old period table's column headers. */
-const periodRules: DerivedRule[] = [
+export const periodRules: DerivedRule[] = [
   {
     targetKey: 'totalDepreciationPct',
     compute: ({ row }) => {

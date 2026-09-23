@@ -26,6 +26,8 @@ interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
    * byte-identically; only pass `dense` from a context that actually needs a short row.
    */
   dense?: boolean;
+  /** False drops the blank "please select" entry, for fields that must always hold a value. */
+  allowEmpty?: boolean;
 }
 
 interface ListBoxProps {
@@ -67,6 +69,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       disabled,
       showValue = true,
       dense = false,
+      allowEmpty = true,
       ...props
     },
     ref,
@@ -81,7 +84,9 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     }, [options, paramOptions]);
 
     // to allow selecting placeholder
-    dropdownOptions = [{ value: null, label: placeholder, id: '' }, ...dropdownOptions];
+    if (allowEmpty) {
+      dropdownOptions = [{ value: null, label: placeholder, id: '' }, ...dropdownOptions];
+    }
 
     const isControlled = onChange !== undefined && value !== undefined;
 

@@ -16,16 +16,12 @@ export interface EditorTab {
   errorCount?: number;
 }
 
-/** Thumbnails shown beside the cover before the rest fold into "+N". */
+/** Thumbnails shown before the rest fold into "+N". */
 const MAX_THUMBS = 6;
-
-const COVER_BOX = 'relative aspect-[4/3] w-28 shrink-0 overflow-hidden rounded-lg @2xl:w-44';
 
 interface EditorIdentityCardProps {
   /** Absent where there are no photos to show, e.g. outside an appraisal. */
   view?: PhotoSectionView;
-  /** Tag the first photo as the cover, for things that have no cover setting of their own. */
-  firstIsCover?: boolean;
   /** The line above the name: type chip, number, position. */
   top: ReactNode;
   title: ReactNode;
@@ -38,12 +34,12 @@ interface EditorIdentityCardProps {
 }
 
 /**
- * The card at the top of an editor: the cover on the left; type, name, key facts and the photo
- * row beside it. Shared by the property and market comparable forms so the two read as one family.
+ * The card at the top of an editor, one short band: type, name and key facts on the left; a row of
+ * photo thumbnails (and an optional aside) on the right, over the cover photo faded in behind it. Shared by the property and market comparable forms so the two read as one family.
+ * Mock: docs/poc/identity-card-compact-mock.html (B).
  */
 export const EditorIdentityCard = ({
   view,
-  firstIsCover = false,
   top,
   title,
   titleMuted = false,
@@ -55,74 +51,20 @@ export const EditorIdentityCard = ({
   const cover = photos[0];
   const canAdd = !!view && !view.readOnly;
   const hidden = photos.length - MAX_THUMBS;
+  // The chosen cover gets a ring; without one set, the first photo is the cover.
   const isCover = (id: string, index: number) =>
-    id === view?.thumbnailId || (firstIsCover && index === 0);
-
-  let coverSlot: ReactNode;
-  if (cover) {
-    coverSlot = (
-      <button
-        type="button"
-        onClick={() => view?.onPreview(cover)}
-        className={clsx(
-          COVER_BOX,
-          'flex items-center justify-center bg-gray-100 shadow-[0_6px_18px_rgba(13,148,136,0.16)] ring-3 ring-white',
-        )}
-      >
-        {cover.isUploading ? (
-          <Icon name="spinner" style="solid" className="size-5 animate-spin text-gray-400" />
-        ) : (
-          <img src={cover.url} alt={cover.fileName} className="size-full object-cover" />
-        )}
-        {isCover(cover.id, 0) && (
-          <span className="absolute bottom-1.5 left-1.5 rounded-full bg-gray-900/70 px-2 py-px text-[10.5px] font-semibold text-white">
-            {t('editorHeader.cover')}
-          </span>
-        )}
-      </button>
-    );
-  } else if (canAdd) {
-    coverSlot = (
-      <button
-        type="button"
-        onClick={view.onAdd}
-        className={clsx(
-          COVER_BOX,
-          'flex flex-col items-center justify-center gap-0.5 border-[1.5px] border-dashed border-gray-300 bg-white/60 px-2 text-center transition-colors hover:border-primary-300 hover:bg-primary-50',
-        )}
-      >
-        <span className="text-xs font-semibold text-primary-700">
-          + {t('editorHeader.addFirstPhoto')}
-        </span>
-        <span className="text-[11px] leading-tight text-gray-400">
-          {t('editorHeader.firstIsCover')}
-        </span>
-      </button>
-    );
-  } else {
-    coverSlot = (
-      <div
-        className={clsx(COVER_BOX, 'flex flex-col items-center justify-center gap-1 bg-white/60')}
-      >
-        <Icon name="images" style="solid" className="size-5 text-gray-300" />
-        <span className="text-[11px] text-gray-400">{t('editorHeader.noPhotos')}</span>
-      </div>
-    );
-  }
+    view?.thumbnailId ? id === view.thumbnailId : index === 0;
 
   return (
     <div
       className={clsx(
-        // White, with the loader's pixel skyline in the bottom-right corner behind the content;
-        // `isolate` keeps its -z-10 inside the card. A soft shadow lifts it off the page in place of
-        // a border.
-        '@container relative isolate grid gap-4 overflow-hidden rounded-xl bg-white p-3.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_6px_20px_rgba(13,148,136,0.08)]',
-        aside ? 'grid-cols-[auto_minmax(0,1fr)_auto]' : 'grid-cols-[auto_minmax(0,1fr)]',
+        // `isolate` keeps the backdrop's -z-10 inside the card. A soft shadow lifts it off the page
+        // in place of a border.
+        '@container relative isolate flex items-center gap-3 overflow-hidden rounded-xl bg-white px-3.5 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_6px_20px_rgba(13,148,136,0.08)]',
       )}
     >
-      <PixelSkyline />
-      {coverSlot}
-      <div className="flex min-w-0 flex-col gap-1">
+      {cover?.url && !cover.isUploading ? <CoverBackdrop url={cover.url} /> : <PixelSkyline />}
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex flex-wrap items-center gap-2">{top}</div>
         <h2
           className={clsx(
@@ -133,60 +75,56 @@ export const EditorIdentityCard = ({
           {title}
         </h2>
         {children}
-        {view && (photos.length > 0 || canAdd) && (
-          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-2">
-            {photos.slice(0, MAX_THUMBS).map((photo, i) => {
-              const folds = hidden > 0 && i === MAX_THUMBS - 1;
-              return (
-                <button
-                  key={photo.id}
-                  type="button"
-                  onClick={() => view.onPreview(photo)}
-                  title={photo.fileName}
-                  className={clsx(
-                    'relative flex h-[42px] w-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100',
-                    isCover(photo.id, i) && !folds && 'ring-2 ring-amber-400 ring-offset-1',
-                  )}
-                >
-                  {photo.isUploading ? (
-                    <Icon
-                      name="spinner"
-                      style="solid"
-                      className="size-3.5 animate-spin text-gray-400"
-                    />
-                  ) : (
-                    <img src={photo.url} alt={photo.fileName} className="size-full object-cover" />
-                  )}
-                  {folds && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-xs font-semibold text-white">
-                      +{hidden + 1}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-            {canAdd && (
-              <button
-                type="button"
-                onClick={view.onAdd}
-                className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                <Icon name="plus" style="solid" className="size-3" />
-                {t('editorHeader.addPhoto')}
-              </button>
-            )}
-            {photos.length > 0 && (
-              <button
-                type="button"
-                onClick={() => view.onPreview(photos[0])}
-                className="px-1.5 py-1 text-xs text-gray-500 transition-colors hover:text-gray-800"
-              >
-                {t('editorHeader.viewAll', { n: photos.length })}
-              </button>
-            )}
-          </div>
-        )}
       </div>
+      {view && (photos.length > 0 || canAdd) && (
+        <div className="flex shrink-0 items-center gap-1">
+          {photos.slice(0, MAX_THUMBS).map((photo, i) => {
+            const folds = hidden > 0 && i === MAX_THUMBS - 1;
+            return (
+              <button
+                key={photo.id}
+                type="button"
+                onClick={() => view.onPreview(photo)}
+                title={photo.fileName}
+                className={clsx(
+                  'relative flex h-[26px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded bg-gray-100 ring-1 ring-white',
+                  isCover(photo.id, i) && !folds && 'ring-2 ring-amber-400',
+                )}
+              >
+                {photo.isUploading ? (
+                  <Icon
+                    name="spinner"
+                    style="solid"
+                    className="size-3 animate-spin text-gray-400"
+                  />
+                ) : (
+                  <img src={photo.url} alt={photo.fileName} className="size-full object-cover" />
+                )}
+                {folds && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-semibold text-white">
+                    +{hidden + 1}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          {canAdd && (
+            <button
+              type="button"
+              onClick={view.onAdd}
+              title={photos.length > 0 ? t('editorHeader.addPhoto') : undefined}
+              aria-label={t('editorHeader.addPhoto')}
+              className={clsx(
+                'inline-flex h-[26px] items-center justify-center gap-1.5 rounded border border-dashed border-gray-300 bg-white/90 text-xs text-gray-600 transition-colors hover:border-primary-400 hover:text-primary-700',
+                photos.length > 0 ? 'w-[34px]' : 'px-2.5',
+              )}
+            >
+              <Icon name="plus" style="solid" className="size-3" />
+              {photos.length === 0 && t('editorHeader.addFirstPhoto')}
+            </button>
+          )}
+        </div>
+      )}
       {aside && (
         <div className="flex min-w-[8.5rem] flex-col items-end border-l border-gray-100 pl-4 text-right">
           {aside}
@@ -195,6 +133,19 @@ export const EditorIdentityCard = ({
     </div>
   );
 };
+
+/**
+ * The cover photo on the card's right: clear enough to recognise the property, fading out only at
+ * its left edge into the text. Decoration only — the photo itself opens from the buttons.
+ */
+const CoverBackdrop = ({ url }: { url: string }) => (
+  <img
+    src={url}
+    alt=""
+    aria-hidden="true"
+    className="pointer-events-none absolute inset-y-0 right-0 -z-10 h-full w-[28%] max-w-[22rem] object-cover opacity-90 [mask-image:linear-gradient(to_left,#000_55%,transparent)]"
+  />
+);
 
 /** Buildings from the dino loader's Bangkok skyline, left to right, as they stand in the corner. */
 const SCENE: SkylineKind[] = [
@@ -268,11 +219,13 @@ export const EditorTabBar = ({
   const isTabs = mode === 'tabs';
   const List = isTabs ? 'div' : 'nav';
   return (
-    <div ref={barRef} className="sticky top-0 z-10 bg-white px-6 pt-3">
+    <div ref={barRef} className="sticky top-0 z-10 bg-white px-3 pt-3">
       <List
         role={isTabs ? 'tablist' : undefined}
         aria-label={label}
-        className="flex gap-1 overflow-x-auto border-b border-gray-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        // The baseline is an inset shadow, not a border the tabs overlap with -mb-px: the bar scrolls
+        // sideways, and that overflow clipped the overlapping pixel, halving the active underline.
+        className="flex h-[34px] items-stretch gap-1 overflow-x-auto px-1 shadow-[inset_0_-1px_0_var(--color-gray-200)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map(tab => {
           const isActive = tab.id === activeId;
@@ -286,9 +239,10 @@ export const EditorTabBar = ({
               {...state}
               onClick={() => onSelect(tab.id)}
               className={clsx(
-                '-mb-px inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors',
+                // Same tab as the pricing screen's method tabs (MethodTabs.tsx).
+                'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-[12.5px] font-medium transition-colors',
                 isActive
-                  ? 'border-primary text-gray-900'
+                  ? 'border-primary text-primary'
                   : 'border-transparent text-gray-500 hover:text-gray-700',
               )}
             >
