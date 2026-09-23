@@ -528,6 +528,7 @@ const NavToQuotationScreen = ({
 
 interface QuotationSectionProps {
   appraisalId: string;
+  appraisalBankingSegment: string;
   onCreateNew: () => void;
   /** @deprecated The "add to existing" flow is not used in the IBG quotation model. */
   onAddToExisting?: () => void;
@@ -535,7 +536,7 @@ interface QuotationSectionProps {
 
 type SendStep = 'confirm' | 'share-docs';
 
-const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
+const QuotationSection = ({ appraisalId, appraisalBankingSegment, onCreateNew }: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
   const { t, i18n } = useTranslation('appraisal');
   const localizeCompanyName = useLocalizedCompanyName();
@@ -1332,7 +1333,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           {/* Stats — read-only or edit form */}
           {isEditing ? (
             <EditDraftForm
-              bankingSegment={draftDetail?.bankingSegment || undefined}
+              bankingSegment={draftDetail?.bankingSegment || appraisalBankingSegment || undefined}
               editDueDate={editDueDate}
               onDueDateChange={setEditDueDate}
               editCompanyIds={editCompanyIds}
