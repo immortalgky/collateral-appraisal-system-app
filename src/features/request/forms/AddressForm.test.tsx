@@ -19,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import AddressForm from './AddressForm';
 import enRequest from '@/i18n/locales/en/request.json';
+import type { TFunction } from 'i18next';
 import { makeAddressFields, makeContactFields } from '../configs/fields';
 
 // Mock the components that AddressForm uses
@@ -183,6 +184,9 @@ describe('AddressForm', () => {
   // here, naming the field, instead of every other case quietly testing a form that no longer
   // exists.
   it('mirrors the field names the config renders', () => {
+    // Key-passthrough stand-in, the same shape hypothesisForm.ts uses for its static schema:
+    // only the field names matter here, never the text.
+    const tStub = ((key: string) => key) as unknown as TFunction<'request'>;
     const names = (fields: { name?: string }[]) =>
       fields.map(f => f.name).filter((n): n is string => !!n);
     const shape = addressSchema.shape.detail.shape;
@@ -191,10 +195,10 @@ describe('AddressForm', () => {
     // carries what the location selector writes (district, province, subDistrictName), which is
     // no field of its own.
     expect(Object.keys(shape.address.shape)).toEqual(
-      expect.arrayContaining(names(makeAddressFields(key => key))),
+      expect.arrayContaining(names(makeAddressFields(tStub))),
     );
     expect(Object.keys(shape.contact.shape)).toEqual(
-      expect.arrayContaining(names(makeContactFields(key => key))),
+      expect.arrayContaining(names(makeContactFields(tStub))),
     );
   });
 
