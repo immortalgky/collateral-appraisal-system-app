@@ -329,7 +329,8 @@
     "endAfterStart": "结束时间必须在开始时间之后",
     "reasonRequired": "原因为必填项",
     "reasonMax": "原因不得超过500个字符",
-    "pickAtLeastOneDate": "请至少选择一个日期"
+    "pickAtLeastOneDate": "请至少选择一个日期",
+    "locationRequired": "请填写地点"
   },
   "aria": {
     "rowActions": "行操作",

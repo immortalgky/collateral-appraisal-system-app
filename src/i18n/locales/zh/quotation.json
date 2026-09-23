@@ -282,7 +282,8 @@
     "enterNegotiationReason": "Provide a reason for the $0 discount on: {{list}}",
     "mandaysExceeded": "Estimated Mandays exceeds the maximum duration for: {{list}}",
     "fixErrors": "Please fix the highlighted errors before submitting",
-    "noLongerCancellable": "Quotation is no longer cancellable (status: {{status}})."
+    "noLongerCancellable": "Quotation is no longer cancellable (status: {{status}}).",
+    "feeAfterDiscountZero": "Fee after discount cannot be 0 for: {{list}}"
   },
   "validation": {
     "cutOffRequired": "Cut off time is required",
@@ -511,7 +512,8 @@
     "priorCompanyExcluded": "1 prior company excluded (appeal flow — most recent appraiser of this collateral).",
     "searchCompanyName": "Search company name...",
     "notParticipatingTitle": "不参与",
-    "notParticipatingNoReason": "未提供原因。"
+    "notParticipatingNoReason": "未提供原因。",
+    "feeAfterDiscountZero": "Fee after discount cannot be 0"
   },
   "role": {
     "Maker": "Maker",

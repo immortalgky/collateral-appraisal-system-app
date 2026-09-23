@@ -31,7 +31,10 @@
   "select": {
     "placeholder": "请选择",
     "searchPlaceholder": "搜索...",
-    "typeToSearch": "输入以搜索..."
+    "typeToSearch": "输入以搜索...",
+    "other": "其他",
+    "otherPlaceholder": "请注明",
+    "clearOther": "清除并重新选择"
   },
   "range": {
     "from": "从",
