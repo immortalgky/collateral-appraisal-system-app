@@ -75,6 +75,11 @@ export type DealerStore = {
 export type LoadingStore = {
   isLoading: boolean;
   message?: string;
+  /**
+   * How many callers currently want the overlay up. Part of the state, not a module variable,
+   * so resetting the store (tests, or any future reset) clears it with everything else.
+   */
+  pending: number;
   showLoading: (message?: string) => void;
   hideLoading: () => void;
   /** Update the message text without toggling visibility. No-op when not loading. */

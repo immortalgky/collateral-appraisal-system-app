@@ -124,6 +124,10 @@ function AddressFormWrapper({
   );
 }
 
+// AddressForm labels its fields through `useTranslation('request')`, and nothing initialises
+// i18n in this suite, so `t()` hands back the key: a label reads `fields.houseNo`, the section
+// header `forms.location`. Asserting on those keys keeps the test about the form's structure
+// rather than about a translation that lives in the locale files (localeParity covers those).
 describe('AddressForm', () => {
   // ============================================
   // Rendering Tests
@@ -135,7 +139,7 @@ describe('AddressForm', () => {
     it('should render Location section header', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('Location')).toBeInTheDocument();
+      expect(screen.getByText('forms.location')).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -154,9 +158,9 @@ describe('AddressForm', () => {
     it('should render address field labels', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('House No')).toBeInTheDocument();
-      expect(screen.getByText('Sub District')).toBeInTheDocument();
-      expect(screen.getByText('Province')).toBeInTheDocument();
+      expect(screen.getByText('fields.houseNo')).toBeInTheDocument();
+      expect(screen.getByText('fields.subDistrict')).toBeInTheDocument();
+      expect(screen.getByText('fields.province')).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -165,9 +169,9 @@ describe('AddressForm', () => {
     it('should render contact field labels', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('Contact Person Name')).toBeInTheDocument();
-      expect(screen.getByText('Contact Person Phone No')).toBeInTheDocument();
-      expect(screen.getByText('Project Code')).toBeInTheDocument();
+      expect(screen.getByText('fields.contactPersonName')).toBeInTheDocument();
+      expect(screen.getByText('fields.contactPersonPhone')).toBeInTheDocument();
+      expect(screen.getByText('fields.dealerCode')).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -288,9 +292,10 @@ describe('AddressForm', () => {
         />,
       );
 
-      // Fields should exist (in real test, we'd verify input values)
-      expect(screen.getByTestId('field-address.houseNo')).toBeInTheDocument();
-      expect(screen.getByTestId('field-address.province')).toBeInTheDocument();
+      // Fields should exist (in real test, we'd verify input values). The form nests its two
+      // groups under `detail.`, and the address fields are named `houseNumber` and `provinceName`.
+      expect(screen.getByTestId('field-detail.address.houseNumber')).toBeInTheDocument();
+      expect(screen.getByTestId('field-detail.address.provinceName')).toBeInTheDocument();
     });
   });
 });

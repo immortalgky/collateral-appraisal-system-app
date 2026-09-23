@@ -22,6 +22,8 @@ vi.mock('../../utils/parameterUtils', () => ({
   },
 }));
 
+// Options render as "value - label": `showValuePrefix` defaults to true on Dropdown, and the
+// screens wanting the bare label pass it as false (covered by its own case below).
 const mockOptions: ListBoxItem[] = [
   { value: 'option1', label: 'Option 1', id: 1 },
   { value: 'option2', label: 'Option 2', id: 2 },
@@ -38,12 +40,7 @@ describe('Dropdown', () => {
     // ------------------------------------------
     it('should render with label', () => {
       render(
-        <Dropdown
-          label="Select Option"
-          options={mockOptions}
-          value={null}
-          onChange={() => {}}
-        />
+        <Dropdown label="Select Option" options={mockOptions} value={null} onChange={() => {}} />,
       );
 
       expect(screen.getByText('Select Option')).toBeInTheDocument();
@@ -59,7 +56,7 @@ describe('Dropdown', () => {
           value={null}
           onChange={() => {}}
           placeholder="Choose an option"
-        />
+        />,
       );
 
       expect(screen.getByText('Choose an option')).toBeInTheDocument();
@@ -69,9 +66,7 @@ describe('Dropdown', () => {
     // Scenario 3: Renders with default placeholder
     // ------------------------------------------
     it('should render with default placeholder', () => {
-      render(
-        <Dropdown options={mockOptions} value={null} onChange={() => {}} />
-      );
+      render(<Dropdown options={mockOptions} value={null} onChange={() => {}} />);
 
       expect(screen.getByText('Please select')).toBeInTheDocument();
     });
@@ -80,15 +75,9 @@ describe('Dropdown', () => {
     // Scenario 4: Shows selected value
     // ------------------------------------------
     it('should display selected value', () => {
-      render(
-        <Dropdown
-          options={mockOptions}
-          value="option2"
-          onChange={() => {}}
-        />
-      );
+      render(<Dropdown options={mockOptions} value="option2" onChange={() => {}} />);
 
-      expect(screen.getByText('Option 2')).toBeInTheDocument();
+      expect(screen.getByText('option2 - Option 2')).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -102,7 +91,7 @@ describe('Dropdown', () => {
           value={null}
           onChange={() => {}}
           required
-        />
+        />,
       );
 
       expect(screen.getByText('*')).toBeInTheDocument();
@@ -117,9 +106,7 @@ describe('Dropdown', () => {
     // Scenario 6: Opens on click
     // ------------------------------------------
     it('should open dropdown when button is clicked', async () => {
-      const { user } = render(
-        <Dropdown options={mockOptions} value={null} onChange={() => {}} />
-      );
+      const { user } = render(<Dropdown options={mockOptions} value={null} onChange={() => {}} />);
 
       // Click the dropdown button
       const button = screen.getByRole('button');
@@ -127,9 +114,9 @@ describe('Dropdown', () => {
 
       // Options should be visible
       await waitFor(() => {
-        expect(screen.getByText('Option 1')).toBeInTheDocument();
-        expect(screen.getByText('Option 2')).toBeInTheDocument();
-        expect(screen.getByText('Option 3')).toBeInTheDocument();
+        expect(screen.getByText('option1 - Option 1')).toBeInTheDocument();
+        expect(screen.getByText('option2 - Option 2')).toBeInTheDocument();
+        expect(screen.getByText('option3 - Option 3')).toBeInTheDocument();
       });
     });
 
@@ -137,15 +124,13 @@ describe('Dropdown', () => {
     // Scenario 7: Shows all options when open
     // ------------------------------------------
     it('should show all options when open', async () => {
-      const { user } = render(
-        <Dropdown options={mockOptions} value={null} onChange={() => {}} />
-      );
+      const { user } = render(<Dropdown options={mockOptions} value={null} onChange={() => {}} />);
 
       await user.click(screen.getByRole('button'));
 
       await waitFor(() => {
-        mockOptions.forEach((option) => {
-          expect(screen.getByText(option.label)).toBeInTheDocument();
+        mockOptions.forEach(option => {
+          expect(screen.getByText(`${option.value} - ${option.label}`)).toBeInTheDocument();
         });
       });
     });
@@ -161,11 +146,7 @@ describe('Dropdown', () => {
     it('should call onChange when an option is selected', async () => {
       const handleChange = vi.fn();
       const { user } = render(
-        <Dropdown
-          options={mockOptions}
-          value={null}
-          onChange={handleChange}
-        />
+        <Dropdown options={mockOptions} value={null} onChange={handleChange} />,
       );
 
       // Open dropdown
@@ -173,7 +154,7 @@ describe('Dropdown', () => {
 
       // Select an option
       await waitFor(async () => {
-        const option = screen.getByText('Option 2');
+        const option = screen.getByText('option2 - Option 2');
         await user.click(option);
       });
 
@@ -190,32 +171,22 @@ describe('Dropdown', () => {
       };
 
       const { user, rerender } = render(
-        <Dropdown
-          options={mockOptions}
-          value={selectedValue}
-          onChange={handleChange}
-        />
+        <Dropdown options={mockOptions} value={selectedValue} onChange={handleChange} />,
       );
 
       // Open and select
       await user.click(screen.getByRole('button'));
 
       await waitFor(async () => {
-        const option = screen.getByText('Option 3');
+        const option = screen.getByText('option3 - Option 3');
         await user.click(option);
       });
 
       // Rerender with new value
-      rerender(
-        <Dropdown
-          options={mockOptions}
-          value="option3"
-          onChange={handleChange}
-        />
-      );
+      rerender(<Dropdown options={mockOptions} value="option3" onChange={handleChange} />);
 
       // Selected value should be displayed
-      expect(screen.getByText('Option 3')).toBeInTheDocument();
+      expect(screen.getByText('option3 - Option 3')).toBeInTheDocument();
     });
   });
 
@@ -228,12 +199,7 @@ describe('Dropdown', () => {
     // ------------------------------------------
     it('should not open when disabled', async () => {
       const { user } = render(
-        <Dropdown
-          options={mockOptions}
-          value={null}
-          onChange={() => {}}
-          disabled
-        />
+        <Dropdown options={mockOptions} value={null} onChange={() => {}} disabled />,
       );
 
       const button = screen.getByRole('button');
@@ -251,14 +217,7 @@ describe('Dropdown', () => {
     // Scenario 11: Disabled styling
     // ------------------------------------------
     it('should apply disabled styles', () => {
-      render(
-        <Dropdown
-          options={mockOptions}
-          value={null}
-          onChange={() => {}}
-          disabled
-        />
-      );
+      render(<Dropdown options={mockOptions} value={null} onChange={() => {}} disabled />);
 
       const button = screen.getByRole('button');
       expect(button).toHaveClass('bg-gray-50', 'cursor-not-allowed');
@@ -280,7 +239,7 @@ describe('Dropdown', () => {
           value={null}
           onChange={() => {}}
           error="Please select a category"
-        />
+        />,
       );
 
       expect(screen.getByText('Please select a category')).toBeInTheDocument();
@@ -290,14 +249,7 @@ describe('Dropdown', () => {
     // Scenario 13: Applies error styling
     // ------------------------------------------
     it('should apply error styles to button', () => {
-      render(
-        <Dropdown
-          options={mockOptions}
-          value={null}
-          onChange={() => {}}
-          error="Required"
-        />
-      );
+      render(<Dropdown options={mockOptions} value={null} onChange={() => {}} error="Required" />);
 
       const button = screen.getByRole('button');
       expect(button).toHaveClass('border-danger');
@@ -312,13 +264,7 @@ describe('Dropdown', () => {
     // Scenario 14: Handles empty options array
     // ------------------------------------------
     it('should handle empty options array', async () => {
-      const { user } = render(
-        <Dropdown
-          options={[]}
-          value={null}
-          onChange={() => {}}
-        />
-      );
+      const { user } = render(<Dropdown options={[]} value={null} onChange={() => {}} />);
 
       await user.click(screen.getByRole('button'));
 
@@ -336,15 +282,23 @@ describe('Dropdown', () => {
     // Scenario 15: Shows initial value
     // ------------------------------------------
     it('should display initial selected value', () => {
+      render(<Dropdown options={mockOptions} value="option1" onChange={() => {}} />);
+
+      expect(screen.getByText('option1 - Option 1')).toBeInTheDocument();
+    });
+
+    it('drops the code prefix when showValuePrefix is false', () => {
       render(
         <Dropdown
           options={mockOptions}
           value="option1"
-          onChange={() => {}}
-        />
+          onChange={vi.fn()}
+          showValuePrefix={false}
+        />,
       );
 
       expect(screen.getByText('Option 1')).toBeInTheDocument();
+      expect(screen.queryByText('option1 - Option 1')).not.toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -357,7 +311,7 @@ describe('Dropdown', () => {
           value="nonexistent"
           onChange={() => {}}
           placeholder="Select..."
-        />
+        />,
       );
 
       // Should show placeholder since value doesn't match any option

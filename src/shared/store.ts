@@ -176,24 +176,32 @@ export const useDealerStore = create<DealerStore>(set => ({
   setDealers: (dealers: Dealer[]) => set({ dealers, isLoaded: true }),
 }));
 
-// Ref-count so that overlapping callers (e.g. two concurrent task completions,
-// or a completion while another loading action is active) don't prematurely
-// hide the overlay. The overlay stays visible until every caller has settled.
-let _loadingRefCount = 0;
-
+// `pending` ref-counts callers so that overlapping ones (e.g. two concurrent task
+// completions, or a completion while another loading action is active) don't
+// prematurely hide the overlay: it stays up until every caller has settled.
+//
+// It lives in the store rather than in a module variable so that resetting the state
+// resets the count with it. As a module variable the two could drift apart — a reset
+// left the count standing, and the next hideLoading() decremented to 1 instead of 0
+// and left the overlay up for good.
 export const useLoadingStore = create<LoadingStore>(set => ({
   isLoading: false,
   message: undefined,
-  showLoading: (message?: string) => {
-    _loadingRefCount += 1;
-    set({ isLoading: true, message });
-  },
-  hideLoading: () => {
-    _loadingRefCount = Math.max(0, _loadingRefCount - 1);
-    if (_loadingRefCount === 0) {
-      set({ isLoading: false, message: undefined });
-    }
-  },
+  pending: 0,
+  // Counts from 1 again whenever the overlay is down: nobody can be pending while it is
+  // hidden, so a count left over from a reset (or from any hideLoading the overlay never
+  // saw) cannot survive into the next run and pin the overlay open.
+  showLoading: (message?: string) =>
+    set(state => ({
+      isLoading: true,
+      message,
+      pending: state.isLoading ? state.pending + 1 : 1,
+    })),
+  hideLoading: () =>
+    set(state => {
+      const pending = Math.max(0, state.pending - 1);
+      return pending === 0 ? { isLoading: false, message: undefined, pending } : { pending };
+    }),
   setMessage: (message: string) => set(state => (state.isLoading ? { message } : {})),
 }));
 
