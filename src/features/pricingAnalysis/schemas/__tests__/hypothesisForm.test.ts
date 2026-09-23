@@ -33,6 +33,10 @@ describe('HypothesisCostItemSchema', () => {
       amount: 1500000,
       modelName: 'A01',
       ...requiredOnEveryRow,
+      // The default in `requiredOnEveryRow` is the non-building one; a cost-of-building row is
+      // part of the building. Nothing in the schema cross-checks the two today, but a fixture
+      // that reads as a contradiction is the wrong thing to copy.
+      isBuilding: true,
     });
     expect(result.success).toBe(true);
   });
