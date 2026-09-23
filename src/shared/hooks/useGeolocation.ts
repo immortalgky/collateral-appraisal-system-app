@@ -17,7 +17,10 @@ export function useGeolocation() {
   const [locating, setLocating] = useState(false);
 
   const locate = useCallback((): Promise<Coords | null> => {
-    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+    // Test the value, not the key: jsdom (and a browser that blocks the API) declares
+    // `geolocation` and leaves it null, so `'geolocation' in navigator` passes and the
+    // call below throws inside the promise — an unhandled rejection, not a null result.
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
       return Promise.resolve(null);
     }
     setLocating(true);
