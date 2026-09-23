@@ -18,7 +18,7 @@ export default function BrandLogo({ logo, collapsed = false, onClick }: BrandLog
       title={collapsed ? 'Home' : undefined}
       className={clsx(
         'flex items-center rounded-xl transition-colors hover:bg-gray-50 dark:hover:bg-base-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        collapsed ? 'justify-center p-1.5' : 'gap-2.5 py-1.5 pl-2 pr-1.5',
+        collapsed ? 'justify-center p-1.5' : 'min-w-0 gap-2.5 py-1.5 pl-2 pr-1.5',
       )}
     >
       {/* The wordmark is 242×59 with "LH" + bars in its left 60 units: scale to 29px tall, clip to 30px wide. */}
@@ -33,7 +33,7 @@ export default function BrandLogo({ logo, collapsed = false, onClick }: BrandLog
             <span className="text-[17px] leading-none font-black tracking-tight text-gray-900 dark:text-gray-100">
               CAS
             </span>
-            <span className="text-[10px] font-medium text-gray-400 whitespace-nowrap">
+            <span className="text-[10px] font-medium text-gray-400 truncate">
               Collateral Appraisal System
             </span>
           </span>

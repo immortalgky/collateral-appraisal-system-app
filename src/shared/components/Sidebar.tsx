@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
 import BrandLogo from './BrandLogo';
+import SidebarHeader from './SidebarHeader';
 import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -362,7 +363,6 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
   const location = useLocation();
   const isSettingsActive = location.pathname === '/settings';
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
-  const toggleSidebar = useUIStore(state => state.toggleSidebar);
   const qualifiedHrefs = useMemo(() => buildQualifiedHrefs(navigation), [navigation]);
   const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
   const [isDragging, setIsDragging] = useState(false);
@@ -411,90 +411,92 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >
-      <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 shadow-sm">
-        {/* Logo Area */}
-        <div
-          className={clsx('py-4 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-3')}
-        >
-          <BrandLogo logo={logo} collapsed={sidebarCollapsed} />
-        </div>
+      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 shadow-sm">
+        <SidebarHeader logo={logo} />
 
-        {/* Navigation */}
-        <nav
+        {/* Favorites stay pinned under the logo; capped so a long list can't crowd out the menu. */}
+        <div
           className={clsx(
-            'flex flex-1 flex-col py-3 transition-all duration-300',
+            'shrink-0 max-h-[40vh] overflow-y-auto pt-3 transition-all duration-300',
             sidebarCollapsed ? 'px-1' : 'px-3',
           )}
         >
           <SidebarFavoritesSection collapsed={sidebarCollapsed} />
+        </div>
 
-          {!sidebarCollapsed && (
-            <div className="px-3 mb-2">
-              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                {t('sidebar.general')}
-              </span>
-            </div>
-          )}
-
-          <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
-            <ul className="flex flex-col gap-1">
-              {navigation.map(item => (
-                <MenuItem
-                  key={item.itemKey || item.href}
-                  item={item}
-                  collapsed={sidebarCollapsed}
-                />
-              ))}
-            </ul>
-          </QualifiedHrefsContext.Provider>
-
-          {/* Bottom Section */}
-          <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100 dark:border-base-300')}>
+        {/* Only the menu below scrolls */}
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto">
+          <nav
+            className={clsx(
+              'flex flex-1 flex-col pb-3 transition-all duration-300',
+              sidebarCollapsed ? 'px-1' : 'px-3',
+            )}
+          >
             {!sidebarCollapsed && (
               <div className="px-3 mb-2">
                 <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                  {t('sidebar.system')}
+                  {t('sidebar.general')}
                 </span>
               </div>
             )}
-            <ul className="flex flex-col gap-1">
-              <li>
-                <Link
-                  to="/settings"
-                  title={sidebarCollapsed ? t('sidebar.settings') : undefined}
-                  className={clsx(
-                    'group flex items-center py-2 px-2.5 rounded-xl transition-all duration-200',
-                    isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-base-200',
-                    sidebarCollapsed ? 'justify-center' : 'gap-2.5',
-                  )}
-                >
-                  <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
-                    <Icon name="gear" style="solid" className="size-3.5 text-gray-500 dark:text-gray-300" />
-                  </div>
-                  {!sidebarCollapsed && (
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
-                      {t('sidebar.settings')}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            </ul>
 
-            {/* Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
+              <ul className="flex flex-col gap-1">
+                {navigation.map(item => (
+                  <MenuItem
+                    key={item.itemKey || item.href}
+                    item={item}
+                    collapsed={sidebarCollapsed}
+                  />
+                ))}
+              </ul>
+            </QualifiedHrefsContext.Provider>
+
+            {/* Bottom Section */}
+            <div
+              className={clsx(
+                'mt-auto pt-4',
+                !sidebarCollapsed && 'border-t border-gray-100 dark:border-base-300',
+              )}
             >
-              <Icon
-                style="solid"
-                name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
-                className="size-2.5"
-              />
-            </button>
-          </div>
-        </nav>
+              {!sidebarCollapsed && (
+                <div className="px-3 mb-2">
+                  <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                    {t('sidebar.system')}
+                  </span>
+                </div>
+              )}
+              <ul className="flex flex-col gap-1">
+                <li>
+                  <Link
+                    to="/settings"
+                    title={sidebarCollapsed ? t('sidebar.settings') : undefined}
+                    className={clsx(
+                      'group flex items-center py-2 px-2.5 rounded-xl transition-all duration-200',
+                      isSettingsActive
+                        ? 'bg-primary/10'
+                        : 'hover:bg-gray-50 dark:hover:bg-base-200',
+                      sidebarCollapsed ? 'justify-center' : 'gap-2.5',
+                    )}
+                  >
+                    <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
+                      <Icon
+                        name="gear"
+                        style="solid"
+                        className="size-3.5 text-gray-500 dark:text-gray-300"
+                      />
+                    </div>
+                    {!sidebarCollapsed && (
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                        {t('sidebar.settings')}
+                      </span>
+                    )}
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
       </div>
 
       {/* Resize handle — only when expanded */}

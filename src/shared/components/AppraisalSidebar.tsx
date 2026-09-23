@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
 import BrandLogo from './BrandLogo';
+import SidebarHeader from './SidebarHeader';
 import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import type { NavItem } from '@shared/config/navigationTypes';
@@ -321,7 +322,6 @@ export default function AppraisalSidebar({
   const blockProjectType = useAppraisalBlockProjectType();
   const status = useAppraisalStatus();
   const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
-  const toggleSidebar = useUIStore(state => state.toggleSidebar);
   const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
   const [isDragging, setIsDragging] = useState(false);
   const dragRef = useRef<{ move: ((e: PointerEvent) => void) | null; up: (() => void) | null }>({
@@ -380,87 +380,68 @@ export default function AppraisalSidebar({
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >
-      <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 bg-white shadow-sm">
-        {/* Logo Area */}
-        <div
-          className={clsx('py-4 transition-all duration-300', sidebarCollapsed ? 'px-2' : 'px-3')}
-        >
-          <BrandLogo logo={logo} collapsed={sidebarCollapsed} />
-        </div>
+      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-gray-100 bg-white shadow-sm">
+        <SidebarHeader logo={logo} />
 
-        {/* Navigation */}
-        <nav
-          className={clsx(
-            'flex flex-1 flex-col py-3 transition-all duration-300',
-            sidebarCollapsed ? 'px-1' : 'px-3',
-          )}
-        >
-          {/* GENERAL Section */}
-          {!hideGeneralNav &&
-            (loading ? (
-              <div className="mb-3 flex flex-col gap-0.5">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <SkeletonRow key={i} index={i} collapsed={sidebarCollapsed} />
-                ))}
-              </div>
-            ) : (
-              <ExpandableSection
-                title="General"
-                items={generalItems}
-                initialVisibleCount={3}
-                collapsed={sidebarCollapsed}
-              />
-            ))}
-
-          {/* APPLICATION Section */}
-          <div
+        {/* Only the menu below the logo scrolls */}
+        <div className="flex flex-1 min-h-0 flex-col overflow-y-auto">
+          <nav
             className={clsx(
-              'pt-3',
-              !sidebarCollapsed && !hideGeneralNav && 'border-t border-gray-100',
+              'flex flex-1 flex-col py-3 transition-all duration-300',
+              sidebarCollapsed ? 'px-1' : 'px-3',
             )}
           >
-            {!sidebarCollapsed && (
-              <div className="px-2.5 mb-1">
-                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                  Application
-                </span>
-              </div>
-            )}
-            <ul className="flex flex-col gap-0.5">
-              {loading
-                ? Array.from({ length: 6 }).map((_, i) => (
-                    <li key={i}>
-                      <SkeletonRow index={i + 3} collapsed={sidebarCollapsed} />
-                    </li>
-                  ))
-                : applicationNav.map(item => (
-                    <li key={item.href + item.itemKey}>
-                      <CompactMenuItem
-                        item={item}
-                        collapsed={sidebarCollapsed}
-                        active={item.href === activeHref}
-                      />
-                    </li>
+            {/* GENERAL Section */}
+            {!hideGeneralNav &&
+              (loading ? (
+                <div className="mb-3 flex flex-col gap-0.5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <SkeletonRow key={i} index={i} collapsed={sidebarCollapsed} />
                   ))}
-            </ul>
-          </div>
+                </div>
+              ) : (
+                <ExpandableSection
+                  title="General"
+                  items={generalItems}
+                  initialVisibleCount={3}
+                  collapsed={sidebarCollapsed}
+                />
+              ))}
 
-          {/* Toggle Button */}
-          <div className="mt-auto pt-3">
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            {/* APPLICATION Section */}
+            <div
+              className={clsx(
+                'pt-3',
+                !sidebarCollapsed && !hideGeneralNav && 'border-t border-gray-100',
+              )}
             >
-              <Icon
-                style="solid"
-                name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
-                className="size-2.5"
-              />
-            </button>
-          </div>
-        </nav>
+              {!sidebarCollapsed && (
+                <div className="px-2.5 mb-1">
+                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                    Application
+                  </span>
+                </div>
+              )}
+              <ul className="flex flex-col gap-0.5">
+                {loading
+                  ? Array.from({ length: 6 }).map((_, i) => (
+                      <li key={i}>
+                        <SkeletonRow index={i + 3} collapsed={sidebarCollapsed} />
+                      </li>
+                    ))
+                  : applicationNav.map(item => (
+                      <li key={item.href + item.itemKey}>
+                        <CompactMenuItem
+                          item={item}
+                          collapsed={sidebarCollapsed}
+                          active={item.href === activeHref}
+                        />
+                      </li>
+                    ))}
+              </ul>
+            </div>
+          </nav>
+        </div>
       </div>
 
       {/* Resize handle — only when expanded */}
