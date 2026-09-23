@@ -202,7 +202,10 @@ export const useLoadingStore = create<LoadingStore>(set => ({
   showLoading: (message?: string) =>
     set(state => ({
       isLoading: true,
-      message,
+      // A caller that brings no message of its own leaves the one already showing: the overlay
+      // used to go blank when a second, textless caller joined, and stay blank until the first
+      // settled. A caller with text still takes over — last in, most recent news.
+      message: message ?? state.message,
       pending: state.isLoading ? state.pending + 1 : 1,
     })),
   hideLoading: () =>

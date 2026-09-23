@@ -57,7 +57,8 @@ vi.mock('@shared/components', () => ({
 // `t` returns the key. Nothing initialises i18n in src/test/setup.ts today, so this only makes
 // explicit what already happens — but it keeps these assertions from breaking the day another
 // suite wants i18n initialised globally.
-vi.mock('react-i18next', () => ({
+vi.mock('react-i18next', async importOriginal => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
@@ -69,14 +70,19 @@ vi.mock('react-i18next', () => ({
 const addressSchema = z.object({
   detail: z.object({
     address: z.object({
-      houseNumber: z.string().optional(),
+      // `required: true` in makeAddressFields — house number and sub-district are the two.
+      houseNumber: z.string().min(1, 'House number is required'),
+      subDistrict: z.string().min(1, 'Sub District is required'),
       projectName: z.string().optional(),
       moo: z.string().optional(),
       soi: z.string().optional(),
       road: z.string().optional(),
-      subDistrict: z.string().min(1, 'Sub District is required'),
-      districtName: z.string().min(1, 'District is required'),
-      provinceName: z.string().min(1, 'Province is required'),
+      // Written by the location selector when a sub-district is picked, and shown read-only.
+      district: z.string().optional(),
+      districtName: z.string().optional(),
+      province: z.string().optional(),
+      provinceName: z.string().optional(),
+      subDistrictName: z.string().optional(),
       postcode: z.string().optional(),
     }),
     contact: z.object({

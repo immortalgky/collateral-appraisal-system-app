@@ -109,6 +109,9 @@ describe('useLoadingStore', () => {
       useLoadingStore.setState({
         isLoading: false,
         message: undefined,
+        // Reset the count too. showLoading restarting from 1 would hide a leak between cases,
+        // and the suite would then depend on that rule rather than test it.
+        pending: 0,
       });
     });
   });
@@ -209,7 +212,24 @@ describe('useLoadingStore', () => {
   });
 
   // ------------------------------------------
-  // Scenario 7: A count left behind by a partial reset
+  // Scenario 7: A second caller without a message of its own
+  // ------------------------------------------
+  it('keeps the message a joining caller did not replace', () => {
+    act(() => {
+      showLoading('Saving...');
+      showLoading();
+    });
+    expect(useLoadingStore.getState().message).toBe('Saving...');
+
+    // …and a caller that does bring text takes over.
+    act(() => {
+      showLoading('Uploading...');
+    });
+    expect(useLoadingStore.getState().message).toBe('Uploading...');
+  });
+
+  // ------------------------------------------
+  // Scenario 8: A count left behind by a partial reset
   // ------------------------------------------
   it('recovers from a stale count', () => {
     // `setState` merges, so this reset hides the overlay without touching `pending` — the
@@ -392,8 +412,22 @@ describe('useParameterStore', () => {
   // ------------------------------------------
   it('should group parameters by group.country.language', () => {
     const params = [
-      { id: 1, group: 'collateral', country: 'TH', language: 'en', code: '01', description: 'Land' },
-      { id: 2, group: 'collateral', country: 'TH', language: 'en', code: '02', description: 'Building' },
+      {
+        id: 1,
+        group: 'collateral',
+        country: 'TH',
+        language: 'en',
+        code: '01',
+        description: 'Land',
+      },
+      {
+        id: 2,
+        group: 'collateral',
+        country: 'TH',
+        language: 'en',
+        code: '02',
+        description: 'Building',
+      },
     ];
 
     act(() => {
@@ -411,9 +445,30 @@ describe('useParameterStore', () => {
   // ------------------------------------------
   it('should handle multiple parameter groups', () => {
     const params = [
-      { id: 1, group: 'collateral', country: 'TH', language: 'en', code: '01', description: 'Land' },
-      { id: 2, group: 'status', country: 'TH', language: 'en', code: 'active', description: 'Active' },
-      { id: 3, group: 'collateral', country: 'TH', language: 'th', code: '01', description: 'ที่ดิน' },
+      {
+        id: 1,
+        group: 'collateral',
+        country: 'TH',
+        language: 'en',
+        code: '01',
+        description: 'Land',
+      },
+      {
+        id: 2,
+        group: 'status',
+        country: 'TH',
+        language: 'en',
+        code: 'active',
+        description: 'Active',
+      },
+      {
+        id: 3,
+        group: 'collateral',
+        country: 'TH',
+        language: 'th',
+        code: '01',
+        description: 'ที่ดิน',
+      },
     ];
 
     act(() => {
