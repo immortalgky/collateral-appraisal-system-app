@@ -2220,7 +2220,6 @@
       "landPrice": "土地价格"
     },
     "condoColumns": {
-      "titleDeedNo": "地契编号",
       "room": "房间号",
       "sqm": "平方米",
       "bahtPerSqm": "泰铢/平方米",
