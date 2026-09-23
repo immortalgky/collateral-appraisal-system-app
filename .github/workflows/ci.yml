@@ -33,6 +33,11 @@ jobs:
       - name: Test
         run: pnpm test
 
+      # Never once succeeded: the action stopped taking organization/projectKey as inputs and
+      # wants -Dsonar.* args or a sonar-project.properties, and the key here is the API
+      # project's, not this repo's. It only surfaced now because Test used to fail first and
+      # skip it. Non-blocking like Lint until the project and key are settled, so a failure
+      # here stops reaching Build.
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
         with:
@@ -41,6 +46,7 @@ jobs:
           projectName: collateral-appraisal-system-api
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
 
       - name: Build
         run: pnpm run build
