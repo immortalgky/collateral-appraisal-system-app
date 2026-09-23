@@ -58,7 +58,7 @@
     "columns": {
       "systemCode": "รหัสระบบ",
       "callbackUrl": "Callback URL",
-      "active": "ใช้งาน",
+      "active": "สถานะ",
       "secret": "Secret",
       "lastDelivery": "ส่งล่าสุด",
       "actions": "จัดการ"
@@ -66,8 +66,8 @@
     "filters": {
       "systemCodePlaceholder": "กรองตามรหัสระบบ...",
       "statusAll": "ทั้งหมด",
-      "statusActive": "เฉพาะที่ใช้งาน",
-      "statusInactive": "เฉพาะที่ปิดใช้งาน",
+      "statusActive": "เฉพาะที่ใช้งานอยู่",
+      "statusInactive": "เฉพาะที่ไม่ได้ใช้งาน",
       "clear": "ล้างตัวกรอง"
     },
     "actions": {
@@ -78,8 +78,8 @@
       "delete": "ลบ"
     },
     "active": {
-      "yes": "ใช้งาน",
-      "no": "ปิดใช้งาน"
+      "yes": "ใช้งานอยู่",
+      "no": "ไม่ได้ใช้งาน"
     },
     "form": {
       "createTitle": "เพิ่มการสมัครรับ Webhook",

@@ -67,8 +67,8 @@
     "attachDocument": "แนบเอกสาร",
     "editingTitle": "แก้ไขกรรมสิทธิ์ {{n}}",
     "titleCount": "{{count}} รายการ",
-    "requestorDetail": "ข้อมูลผู้ขอ",
-    "searchRequestor": "ค้นหาผู้ขอ"
+    "requestorDetail": "ข้อมูลผู้ร้องขอ",
+    "searchRequestor": "ค้นหาผู้ร้องขอ"
   },
   "fields": {
     "appraisalPurpose": "วัตถุประสงค์การประเมิน",
@@ -286,7 +286,7 @@
     "noResults": "ไม่พบผู้ใช้ที่ตรงกับการค้นหา",
     "loading": "กำลังค้นหา...",
     "typeToSearch": "พิมพ์เพื่อค้นหาพนักงาน",
-    "selectToViewDetail": "เลือกผู้ขอเพื่อดูรายละเอียด"
+    "selectToViewDetail": "เลือกผู้ร้องขอเพื่อดูรายละเอียด"
   },
   "searchAppraisal": {
     "modalTitle": "ค้นหารายงานการประเมินก่อนหน้า",
