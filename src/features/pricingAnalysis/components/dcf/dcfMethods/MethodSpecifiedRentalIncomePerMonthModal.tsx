@@ -155,7 +155,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
               </tr>
             </thead>
             <tbody>
-              {fields.map((r, index) => {
+              {fields.map((_row, index) => {
                 const roomType = getValues(`${name}.roomDetails.${index}.roomType`);
                 return (
                   <tr key={index}>

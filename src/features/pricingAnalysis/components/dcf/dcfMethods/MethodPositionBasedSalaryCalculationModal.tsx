@@ -133,7 +133,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                 </tr>
               </thead>
               <tbody>
-                {fields.map((r, index) => {
+                {fields.map((_row, index) => {
                   const jobPosition = getValues(`${name}.jobPositionDetails.${index}.jobPosition`);
                   return (
                     <tr key={index}>

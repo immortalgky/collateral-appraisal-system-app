@@ -360,7 +360,6 @@ const ExtCompanySubmitQuotationPage = () => {
     selectedItemNegotiatedDiscount != null && Number(selectedItemNegotiatedDiscount) > 0
   );
   const selectedItemNegotiationReason = watchedItems?.[selectedIndex]?.itemNegotiationReason;
-  const showReasonReadOnly = !openNegotiation && !!selectedItemNegotiationReason;
 
   // ─── Action handlers ──────────────────────────────────────────────────────
 

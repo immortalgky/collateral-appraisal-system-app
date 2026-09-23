@@ -1,4 +1,4 @@
-import { type SubmitErrorHandler, useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -22,7 +22,6 @@ import type {
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
-import { flattenRHFErrors } from '@features/pricingAnalysis/domain/flattenRHFErrors.ts';
 import { mapSaleAdjustmentGridFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapSaleAdjustmentGridFormToSubmitSchema.ts';
 import { useSaveComparativeAnalysis, useResetMethod } from '@features/pricingAnalysis/api';
 import { initializeSaleAdjustmentGridForm } from '@features/pricingAnalysis/adapters/initializeSaleAdjustmentGridForm.ts';

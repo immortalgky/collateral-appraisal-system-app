@@ -164,7 +164,7 @@ export function DiscountedCashFlowPanel({
 
   // Triggered by the management hook on add/remove
   const firePreview = useCallback(
-    (values: DCFFormType, opts?: { force?: boolean }) => {
+    (values: DCFFormType) => {
       if (!isGenerated) return;
       if (
         !activeMethod?.pricingAnalysisId ||

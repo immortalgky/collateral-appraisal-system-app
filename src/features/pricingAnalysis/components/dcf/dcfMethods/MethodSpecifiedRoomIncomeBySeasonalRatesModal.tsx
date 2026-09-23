@@ -1,7 +1,5 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import {
-  useForm,
-  FormProvider,
   useFieldArray,
   useWatch,
   useFormContext,
@@ -128,7 +126,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
     formState: { errors },
   } = useFormContext();
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: `${name}.roomDetails`,
   });

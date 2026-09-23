@@ -1,4 +1,4 @@
-import { useForm, useWatch, type SubmitErrorHandler } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,7 +20,6 @@ import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
 import toast from 'react-hot-toast';
-import { flattenRHFErrors } from '@features/pricingAnalysis/domain/flattenRHFErrors.ts';
 import { mapDirectComparisonFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapDirectComparisonFormToSubmitSchema.ts';
 import { useSaveComparativeAnalysis, useResetMethod } from '@features/pricingAnalysis/api';
 import { initializeDirectComparisonForm } from '@features/pricingAnalysis/adapters/initializeDirectComparisonForm.ts';

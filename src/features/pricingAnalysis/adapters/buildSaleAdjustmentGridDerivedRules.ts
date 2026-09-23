@@ -26,7 +26,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
   allFactors: FactorDataType[];
 }): DerivedFieldRule[] {
   /** Calculation section */
-  const { surveys = [], property, allFactors } = args;
+  const { surveys = [] } = args;
   const {
     adjustmentFactors: adjustmentFactorsPath,
     calculation: calculationPath,
@@ -348,7 +348,7 @@ export function buildSaleGridFinalValueRules(arg: {
       ],
       compute: ({ getValues }) => {
         const totalWeightedAdjustValue = surveys.reduce(
-          (acc: number, curr, columnIndex: number) => {
+          (acc: number, _curr, columnIndex: number) => {
             const weightedAdjustValue =
               getValues(calculationWeightAdjustValuePath({ column: columnIndex })) ?? 0;
             return acc + weightedAdjustValue;

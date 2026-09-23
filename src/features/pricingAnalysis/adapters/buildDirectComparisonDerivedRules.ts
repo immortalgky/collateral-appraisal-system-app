@@ -24,7 +24,7 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
   allFactors: FactorDataType[];
 }): DerivedFieldRule[] {
   /** Calculation section */
-  const { surveys = [], property, allFactors } = args;
+  const { surveys = [] } = args;
   const {
     adjustmentFactors: adjustmentFactorsPath,
     calculation: calculationPath,

@@ -17,7 +17,7 @@ import {
   Icon,
   Section,
 } from '@/shared/components';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FormFields } from '@/shared/components/form';
 import { getDecisionFields, getSupportingDataFields } from '../configs/fields';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
@@ -136,8 +136,6 @@ export function SupportingDataMaintenanceDetailListPage() {
   const {
     data: supportingData,
     isLoading,
-    isError,
-    error,
   } = useGetSupportingDataById(supportingId);
 
   /**
