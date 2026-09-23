@@ -49,5 +49,71 @@
     "noPayload": "ไม่มี Payload"
   },
   "emptyState": "ไม่พบรายการส่ง Webhook",
-  "loadFailed": "โหลดรายการส่ง Webhook ไม่สำเร็จ"
+  "loadFailed": "โหลดรายการส่ง Webhook ไม่สำเร็จ",
+  "subscriptions": {
+    "page": {
+      "title": "การสมัครรับ Webhook",
+      "subtitle": "ตั้งค่าระบบภายนอกที่จะรับเหตุการณ์ Webhook ขาออก"
+    },
+    "columns": {
+      "systemCode": "รหัสระบบ",
+      "callbackUrl": "Callback URL",
+      "active": "ใช้งาน",
+      "secret": "Secret",
+      "lastDelivery": "ส่งล่าสุด",
+      "actions": "จัดการ"
+    },
+    "filters": {
+      "systemCodePlaceholder": "กรองตามรหัสระบบ...",
+      "statusAll": "ทั้งหมด",
+      "statusActive": "เฉพาะที่ใช้งาน",
+      "statusInactive": "เฉพาะที่ปิดใช้งาน",
+      "clear": "ล้างตัวกรอง"
+    },
+    "actions": {
+      "add": "เพิ่มการสมัครรับ",
+      "edit": "แก้ไข",
+      "activate": "เปิดใช้งาน",
+      "deactivate": "ปิดใช้งาน",
+      "delete": "ลบ"
+    },
+    "active": {
+      "yes": "ใช้งาน",
+      "no": "ปิดใช้งาน"
+    },
+    "form": {
+      "createTitle": "เพิ่มการสมัครรับ Webhook",
+      "editTitle": "แก้ไขการสมัครรับ Webhook",
+      "systemCode": "รหัสระบบ",
+      "systemCodePlaceholder": "เช่น LOS, CLS",
+      "systemCodeLocked": "รหัสระบบแก้ไขไม่ได้หลังสร้างแล้ว",
+      "callbackUrl": "Callback URL",
+      "secretKey": "Secret สำหรับลงลายเซ็น",
+      "secretKeyPlaceholder": "HMAC secret ที่ใช้ร่วมกับระบบปลายทาง",
+      "secretKeyHint": "HMAC-SHA256 secret ที่ใช้ร่วมกันเพื่อลงลายเซ็นข้อมูลขาออก ต้องตกลงค่ากับระบบปลายทาง",
+      "replaceSecret": "เปลี่ยน secret",
+      "cancel": "ยกเลิก",
+      "create": "สร้าง",
+      "save": "บันทึก"
+    },
+    "delete": {
+      "confirmTitle": "ลบการสมัครรับ",
+      "confirmMessage": "การสมัครรับนี้จะถูกลบถาวร รายการที่เคยมีประวัติการส่งจะลบไม่ได้ ให้ปิดใช้งานแทน",
+      "confirmButton": "ลบ",
+      "cancelButton": "ยกเลิก"
+    },
+    "toasts": {
+      "created": "สร้างการสมัครรับ Webhook แล้ว",
+      "updated": "แก้ไขการสมัครรับ Webhook แล้ว",
+      "activated": "เปิดใช้งานการสมัครรับแล้ว",
+      "deactivated": "ปิดใช้งานการสมัครรับแล้ว",
+      "deleted": "ลบการสมัครรับแล้ว",
+      "createFailed": "สร้างการสมัครรับไม่สำเร็จ",
+      "updateFailed": "แก้ไขการสมัครรับไม่สำเร็จ",
+      "toggleFailed": "เปลี่ยนสถานะการสมัครรับไม่สำเร็จ",
+      "deleteFailed": "ลบการสมัครรับไม่สำเร็จ"
+    },
+    "emptyState": "ยังไม่ได้ตั้งค่าการสมัครรับ Webhook",
+    "loadFailed": "โหลดการสมัครรับ Webhook ไม่สำเร็จ"
+  }
 }
