@@ -197,39 +197,24 @@ describe('useLoadingStore', () => {
       showLoading('First');
       showLoading('Second');
     });
-    expect(useLoadingStore.getState().isLoading).toBe(true);
+    // `pending` as well as `isLoading`: the overlay being up says nothing about how many
+    // callers are behind it, which is the part that decides when it comes down.
+    expect(useLoadingStore.getState()).toMatchObject({ isLoading: true, pending: 2 });
 
     // One of the two settles — the other still wants the overlay.
     act(() => {
       hideLoading();
     });
-    expect(useLoadingStore.getState().isLoading).toBe(true);
+    expect(useLoadingStore.getState()).toMatchObject({ isLoading: true, pending: 1 });
 
     act(() => {
       hideLoading();
     });
-    expect(useLoadingStore.getState().isLoading).toBe(false);
+    expect(useLoadingStore.getState()).toMatchObject({ isLoading: false, pending: 0 });
   });
 
   // ------------------------------------------
-  // Scenario 7: A second caller without a message of its own
-  // ------------------------------------------
-  it('keeps the message a joining caller did not replace', () => {
-    act(() => {
-      showLoading('Saving...');
-      showLoading();
-    });
-    expect(useLoadingStore.getState().message).toBe('Saving...');
-
-    // …and a caller that does bring text takes over.
-    act(() => {
-      showLoading('Uploading...');
-    });
-    expect(useLoadingStore.getState().message).toBe('Uploading...');
-  });
-
-  // ------------------------------------------
-  // Scenario 8: A count left behind by a partial reset
+  // Scenario 7: A count left behind by a partial reset
   // ------------------------------------------
   it('recovers from a stale count', () => {
     // `setState` merges, so this reset hides the overlay without touching `pending` — the

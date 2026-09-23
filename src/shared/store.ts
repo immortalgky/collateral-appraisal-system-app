@@ -199,13 +199,17 @@ export const useLoadingStore = create<LoadingStore>(set => ({
   // Counts from 1 again whenever the overlay is down: nobody can be pending while it is
   // hidden. Note this drops an earlier caller's claim rather than clamping it — if A is still
   // working when the overlay is hidden from outside, B's hide will take the overlay down.
+  // The message is NOT ref-counted: the newest caller's text wins, and it is cleared only when
+  // the last one settles. So a textless caller joining an active one blanks the overlay until
+  // that one finishes. Inheriting the previous text instead was tried and is worse — the text
+  // then outlives the caller that set it, describing work that has already finished, with no way
+  // for the remaining caller to clear it. Doing this properly needs to know whose message is
+  // whose, i.e. showLoading handing back a handle that hideLoading takes; worth it only once
+  // something actually calls these.
   showLoading: (message?: string) =>
     set(state => ({
       isLoading: true,
-      // A caller that brings no message of its own leaves the one already showing: the overlay
-      // used to go blank when a second, textless caller joined, and stay blank until the first
-      // settled. A caller with text still takes over — last in, most recent news.
-      message: message ?? state.message,
+      message,
       pending: state.isLoading ? state.pending + 1 : 1,
     })),
   hideLoading: () =>

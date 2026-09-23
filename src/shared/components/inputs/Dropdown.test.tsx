@@ -287,8 +287,10 @@ describe('Dropdown', () => {
       expect(screen.getByText('option1 - Option 1')).toBeInTheDocument();
     });
 
-    it('drops the code prefix when showValuePrefix is false', () => {
-      render(
+    // Dropdown branches on showValuePrefix twice — once for the button's label, once for the
+    // options — so the list has to be opened, or half the flag goes untested.
+    it('drops the code prefix when showValuePrefix is false', async () => {
+      const { user } = render(
         <Dropdown
           options={mockOptions}
           value="option1"
@@ -299,6 +301,13 @@ describe('Dropdown', () => {
 
       expect(screen.getByText('Option 1')).toBeInTheDocument();
       expect(screen.queryByText('option1 - Option 1')).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button'));
+
+      await waitFor(() => {
+        expect(screen.getByText('Option 2')).toBeInTheDocument();
+      });
+      expect(screen.queryByText('option2 - Option 2')).not.toBeInTheDocument();
     });
 
     // ------------------------------------------
