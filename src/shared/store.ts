@@ -180,10 +180,12 @@ export const useDealerStore = create<DealerStore>(set => ({
 // completions, or a completion while another loading action is active) don't
 // prematurely hide the overlay: it stays up until every caller has settled.
 //
-// It lives in the store rather than in a module variable so that resetting the state
-// resets the count with it. As a module variable the two could drift apart — a reset
-// left the count standing, and the next hideLoading() decremented to 1 instead of 0
-// and left the overlay up for good.
+// It lives in the store rather than in a module variable so a reader sees it beside the
+// state it guards — but that alone does not keep the two in step: `setState` merges, so
+// a partial reset (`{ isLoading: false }`) leaves the count standing. What actually makes
+// a stale count harmless is the restart rule on showLoading below; as a module variable
+// there was nowhere to put that rule, and a leftover count meant the next hideLoading()
+// decremented to 1 instead of 0 and left the overlay up for good.
 export const useLoadingStore = create<LoadingStore>(set => ({
   isLoading: false,
   message: undefined,

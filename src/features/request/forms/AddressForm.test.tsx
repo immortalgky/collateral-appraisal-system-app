@@ -18,6 +18,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import AddressForm from './AddressForm';
+import enRequest from '@/i18n/locales/en/request.json';
 
 // Mock the components that AddressForm uses
 vi.mock('@/shared/components/form', () => ({
@@ -125,9 +126,17 @@ function AddressFormWrapper({
 }
 
 // AddressForm labels its fields through `useTranslation('request')`, and nothing initialises
-// i18n in this suite, so `t()` hands back the key: a label reads `fields.houseNo`, the section
-// header `forms.location`. Asserting on those keys keeps the test about the form's structure
-// rather than about a translation that lives in the locale files (localeParity covers those).
+// i18n in this suite, so `t()` hands back the key: a label renders as `fields.houseNo`.
+//
+// The assertions below take the key AND the English text it must resolve to, read from the
+// locale file. Matching the key alone would keep passing if someone deleted `fields.houseNo`
+// from en or blanked its value — the screen would show a raw key or an empty label, and
+// localeParity would not catch it either: it compares key SETS across locales, never values.
+const label = (key: keyof typeof enRequest.fields) => {
+  const text = enRequest.fields[key];
+  expect(text, `en/request.json is missing a value for fields.${key}`).toBeTruthy();
+  return `fields.${key}`;
+};
 describe('AddressForm', () => {
   // ============================================
   // Rendering Tests
@@ -139,6 +148,7 @@ describe('AddressForm', () => {
     it('should render Location section header', () => {
       render(<AddressFormWrapper />);
 
+      expect(enRequest.forms.location, 'en/request.json lost forms.location').toBeTruthy();
       expect(screen.getByText('forms.location')).toBeInTheDocument();
     });
 
@@ -158,9 +168,9 @@ describe('AddressForm', () => {
     it('should render address field labels', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('fields.houseNo')).toBeInTheDocument();
-      expect(screen.getByText('fields.subDistrict')).toBeInTheDocument();
-      expect(screen.getByText('fields.province')).toBeInTheDocument();
+      expect(screen.getByText(label('houseNo'))).toBeInTheDocument();
+      expect(screen.getByText(label('subDistrict'))).toBeInTheDocument();
+      expect(screen.getByText(label('province'))).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -169,9 +179,9 @@ describe('AddressForm', () => {
     it('should render contact field labels', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('fields.contactPersonName')).toBeInTheDocument();
-      expect(screen.getByText('fields.contactPersonPhone')).toBeInTheDocument();
-      expect(screen.getByText('fields.dealerCode')).toBeInTheDocument();
+      expect(screen.getByText(label('contactPersonName'))).toBeInTheDocument();
+      expect(screen.getByText(label('contactPersonPhone'))).toBeInTheDocument();
+      expect(screen.getByText(label('dealerCode'))).toBeInTheDocument();
     });
 
     // ------------------------------------------

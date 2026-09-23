@@ -185,6 +185,48 @@ describe('useLoadingStore', () => {
     });
     expect(useLoadingStore.getState().isLoading).toBe(false);
   });
+
+  // ------------------------------------------
+  // Scenario 6: Overlapping callers
+  // ------------------------------------------
+  it('stays up until every caller has hidden it', () => {
+    act(() => {
+      showLoading('First');
+      showLoading('Second');
+    });
+    expect(useLoadingStore.getState().isLoading).toBe(true);
+
+    // One of the two settles — the other still wants the overlay.
+    act(() => {
+      hideLoading();
+    });
+    expect(useLoadingStore.getState().isLoading).toBe(true);
+
+    act(() => {
+      hideLoading();
+    });
+    expect(useLoadingStore.getState().isLoading).toBe(false);
+  });
+
+  // ------------------------------------------
+  // Scenario 7: A count left behind by a partial reset
+  // ------------------------------------------
+  it('recovers from a stale count', () => {
+    // `setState` merges, so this reset hides the overlay without touching `pending` — the
+    // shape of every reset in the app. Left to run on, the count would make the next
+    // hideLoading() decrement to 1 instead of 0 and pin the overlay open for good.
+    act(() => {
+      showLoading('Interrupted');
+      useLoadingStore.setState({ isLoading: false, message: undefined });
+    });
+
+    act(() => {
+      showLoading('Next');
+      hideLoading();
+    });
+
+    expect(useLoadingStore.getState().isLoading).toBe(false);
+  });
 });
 
 // ============================================
