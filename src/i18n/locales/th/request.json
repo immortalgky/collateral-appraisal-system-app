@@ -66,7 +66,9 @@
     "titleInformation": "ข้อมูลกรรมสิทธิ์",
     "attachDocument": "แนบเอกสาร",
     "editingTitle": "แก้ไขกรรมสิทธิ์ {{n}}",
-    "titleCount": "{{count}} รายการ"
+    "titleCount": "{{count}} รายการ",
+    "requestorDetail": "ข้อมูลผู้ร้องขอ",
+    "searchRequestor": "ค้นหาผู้ร้องขอ"
   },
   "fields": {
     "appraisalPurpose": "วัตถุประสงค์การประเมิน",
@@ -150,7 +152,16 @@
     "invoiceNo": "เลขที่ใบแจ้งหนี้",
     "noOfMachines": "จำนวนเครื่องจักร",
     "houseNumber": "บ้านเลขที่",
-    "villageBuildingNameFull": "ชื่อหมู่บ้าน/อาคาร"
+    "villageBuildingNameFull": "ชื่อหมู่บ้าน/อาคาร",
+    "requestorEmployeeId": "รหัสพนักงาน",
+    "requestorUsername": "ชื่อผู้ใช้",
+    "requestorName": "ชื่อพนักงาน",
+    "requestorEmail": "อีเมล",
+    "requestorContactNo": "เบอร์ติดต่อ",
+    "requestorAoCode": "รหัส AO",
+    "requestorCostCenterCode": "รหัสศูนย์ต้นทุน",
+    "requestorCostCenterDescription": "ชื่อศูนย์ต้นทุน",
+    "requestorDepartment": "หน่วยงาน"
   },
   "titleAddress": {
     "header": "ที่อยู่ตามเอกสารกรรมสิทธิ์",
@@ -166,7 +177,8 @@
     "duplicateMessage": "ทำสำเนาจากรายการ #{{n}} ({{type}})",
     "duplicateCount": "จำนวนสำเนา",
     "duplicateHint": "สูงสุด {{max}} รายการต่อครั้ง ถ้ามากกว่านี้แนะนำให้ใช้การนำเข้าเป็นชุด",
-    "duplicateConfirm_other": "ทำสำเนา {{count}} รายการ"
+    "duplicateConfirm_other": "ทำสำเนา {{count}} รายการ",
+    "duplicateConfirm_one": "ทำสำเนา {{count}} รายการ"
   },
   "titleDetails": {
     "title": "โฉนด",
@@ -271,7 +283,10 @@
   "searchUser": {
     "modalTitle": "เลือกผู้ใช้",
     "searchPlaceholder": "ค้นหาตามชื่อหรืออีเมล...",
-    "noResults": "ไม่พบผู้ใช้ที่ตรงกับการค้นหา"
+    "noResults": "ไม่พบผู้ใช้ที่ตรงกับการค้นหา",
+    "loading": "กำลังค้นหา...",
+    "typeToSearch": "พิมพ์เพื่อค้นหาพนักงาน",
+    "selectToViewDetail": "เลือกผู้ร้องขอเพื่อดูรายละเอียด"
   },
   "searchAppraisal": {
     "modalTitle": "ค้นหารายงานการประเมินก่อนหน้า",
@@ -452,6 +467,11 @@
     "rejectedOnAppend_other": "มี {{count}} รายการที่ฟอร์มไม่รับ ({{rows}}) กรุณาแจ้งผู้ดูแลระบบ",
     "tabValid_other": "รายการที่จะนำเข้า ({{count}})",
     "tabInvalid_other": "ปัญหาที่พบ ({{count}})",
-    "missingColumns": "ไฟล์นี้ไม่มีคอลัมน์ที่ข้อมูลบางแถวต้องใช้: {{columns}} — เพิ่มคอลัมน์ในแถวหัวตาราง หรือตรวจว่าพิมพ์ชื่อคอลัมน์ถูกต้อง"
+    "missingColumns": "ไฟล์นี้ไม่มีคอลัมน์ที่ข้อมูลบางแถวต้องใช้: {{columns}} — เพิ่มคอลัมน์ในแถวหัวตาราง หรือตรวจว่าพิมพ์ชื่อคอลัมน์ถูกต้อง",
+    "confirm_one": "นำเข้า {{count}} รายการ",
+    "imported_one": "นำเข้า {{count}} รายการเรียบร้อย",
+    "rejectedOnAppend_one": "มี {{count}} รายการที่ฟอร์มไม่รับ ({{rows}}) กรุณาแจ้งผู้ดูแลระบบ",
+    "tabValid_one": "รายการที่จะนำเข้า ({{count}})",
+    "tabInvalid_one": "ปัญหาที่พบ ({{count}})"
   }
 }
