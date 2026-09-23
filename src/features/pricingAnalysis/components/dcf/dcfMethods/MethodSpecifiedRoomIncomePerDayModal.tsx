@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toDecimal, toNumber } from '../../../domain/calculation';
+import { sumArray, toDecimal, type NumberishRow } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 import { MarketReferenceButton } from '../../MarketReferenceButton';
 import { PricingAnalysisSubjectType } from '../../../api/references';
@@ -52,7 +52,7 @@ export function MethodSpecifyRoomIncomePerDayModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...fields.flatMap((_, idx) => {
+      ...fields.flatMap((_, idx): DerivedFieldRule<unknown>[] => {
         return [
           {
             targetPath: `${name}.roomDetails.${idx}.totalRoomIncome`,
@@ -72,11 +72,8 @@ export function MethodSpecifyRoomIncomePerDayModal({
         targetPath: `${name}.sumRoomIncome`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumRoomIncome = roomDetails.reduce((prev, curr) => {
-            const currRoomIncome = curr.roomIncome ? toNumber(curr.roomIncome) : 0;
-            return prev + currRoomIncome;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumRoomIncome = sumArray(roomDetails, row => row.roomIncome);
           return toDecimal(sumRoomIncome, 2);
         },
       },
@@ -84,11 +81,8 @@ export function MethodSpecifyRoomIncomePerDayModal({
         targetPath: `${name}.sumSaleableArea`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumSaleableArea = roomDetails.reduce((prev, curr) => {
-            const currSaleableArea = curr.saleableArea ? toNumber(curr.saleableArea) : 0;
-            return prev + currSaleableArea;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumSaleableArea = sumArray(roomDetails, row => row.saleableArea);
           return toDecimal(sumSaleableArea, 0);
         },
       },
@@ -96,11 +90,8 @@ export function MethodSpecifyRoomIncomePerDayModal({
         targetPath: `${name}.sumTotalRoomIncome`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumTotalRoomIncome = roomDetails.reduce((prev, curr) => {
-            const currTotalRoomIncome = curr.totalRoomIncome ? toNumber(curr.totalRoomIncome) : 0;
-            return prev + currTotalRoomIncome;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumTotalRoomIncome = sumArray(roomDetails, row => row.totalRoomIncome);
           return toDecimal(sumTotalRoomIncome, 2);
         },
       },

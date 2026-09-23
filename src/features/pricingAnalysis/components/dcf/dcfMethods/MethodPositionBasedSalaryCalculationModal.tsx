@@ -4,7 +4,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDe
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toNumber } from '../../../domain/calculation';
+import { sumArray, toNumber, type NumberishRow } from '../../../domain/calculation';
 import { jobPositionParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 import { useTranslation } from 'react-i18next';
 
@@ -35,7 +35,7 @@ export function MethodPositionBasedSalaryCalculationModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...fields.flatMap((_, idx) => {
+      ...fields.flatMap((_, idx): DerivedFieldRule<unknown>[] => {
         return [
           {
             targetPath: `${name}.jobPositionDetails.${idx}.totalSalaryPerYear`,
@@ -57,13 +57,8 @@ export function MethodPositionBasedSalaryCalculationModal({
         targetPath: `${name}.sumNumberOfEmployees`,
         deps: [`${name}.jobPositionDetails`],
         compute: ({ getValues }) => {
-          const jobPositionDetails = getValues(`${name}.jobPositionDetails`) ?? [];
-          const sumNumberOfEmployees = jobPositionDetails.reduce((prev, curr) => {
-            const currNumberOfEmployees = curr.numberOfEmployees
-              ? toNumber(curr.numberOfEmployees)
-              : 0;
-            return prev + currNumberOfEmployees;
-          }, 0);
+          const jobPositionDetails: NumberishRow[] = getValues(`${name}.jobPositionDetails`) ?? [];
+          const sumNumberOfEmployees = sumArray(jobPositionDetails, row => row.numberOfEmployees);
           return toNumber(sumNumberOfEmployees);
         },
       },
@@ -71,13 +66,11 @@ export function MethodPositionBasedSalaryCalculationModal({
         targetPath: `${name}.sumSalaryBahtPerPersonPerMonth`,
         deps: [`${name}.jobPositionDetails`],
         compute: ({ getValues }) => {
-          const jobPositionDetails = getValues(`${name}.jobPositionDetails`) ?? [];
-          const sumSalaryBahtPerPersonPerMonth = jobPositionDetails.reduce((prev, curr) => {
-            const currSalaryBahtPerPersonPerMonth = curr.salaryBahtPerPersonPerMonth
-              ? toNumber(curr.salaryBahtPerPersonPerMonth)
-              : 0;
-            return prev + currSalaryBahtPerPersonPerMonth;
-          }, 0);
+          const jobPositionDetails: NumberishRow[] = getValues(`${name}.jobPositionDetails`) ?? [];
+          const sumSalaryBahtPerPersonPerMonth = sumArray(
+            jobPositionDetails,
+            row => row.salaryBahtPerPersonPerMonth,
+          );
           return sumSalaryBahtPerPersonPerMonth;
         },
       },
@@ -85,13 +78,8 @@ export function MethodPositionBasedSalaryCalculationModal({
         targetPath: `${name}.sumTotalSalaryPerYear`,
         deps: [`${name}.jobPositionDetails`],
         compute: ({ getValues }) => {
-          const jobPositionDetails = getValues(`${name}.jobPositionDetails`) ?? [];
-          const sumTotalSalaryPerYear = jobPositionDetails.reduce((prev, curr) => {
-            const currTotalSalaryPerYear = curr.totalSalaryPerYear
-              ? toNumber(curr.totalSalaryPerYear)
-              : 0;
-            return prev + currTotalSalaryPerYear;
-          }, 0);
+          const jobPositionDetails: NumberishRow[] = getValues(`${name}.jobPositionDetails`) ?? [];
+          const sumTotalSalaryPerYear = sumArray(jobPositionDetails, row => row.totalSalaryPerYear);
           return sumTotalSalaryPerYear;
         },
       },
@@ -112,7 +100,9 @@ export function MethodPositionBasedSalaryCalculationModal({
             <table className={'table table-sm'}>
               <thead>
                 <tr>
-                  <th className="px-1.5 py-1.5 bg-gray-100">{t('dcf.methods.positionBasedSalary.jobPosition')}</th>
+                  <th className="px-1.5 py-1.5 bg-gray-100">
+                    {t('dcf.methods.positionBasedSalary.jobPosition')}
+                  </th>
                   <th className="px-1.5 py-1.5 bg-gray-100">
                     <div className="flex flex-col gap-1.5">
                       <span>{t('dcf.methods.positionBasedSalary.salary')}</span>

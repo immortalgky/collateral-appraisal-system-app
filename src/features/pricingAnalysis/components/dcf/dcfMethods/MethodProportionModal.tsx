@@ -1,6 +1,6 @@
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { getDCFFilteredAssumptions } from '../../../domain/getDCFFilteredAssumptions';
-import type { DCFSection } from '../../../types/dcf';
+import type { DCFCategory, DCFSection } from '../../../types/dcf';
 import type { UseFormGetValues } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { dcfAssumptionLabel, dcfCategoryLabel, dcfSectionLabel } from '../../../domain/dcf/dcfNameLabel';
@@ -15,13 +15,11 @@ export function MethodProportionModal({
   isReadOnly?: boolean;
 }) {
   const { t } = useTranslation('pricingAnalysis');
-  const sections = (getOuterFormValues('sections') ?? []).filter(
+  const sections: DCFSection[] = (getOuterFormValues('sections') ?? []).filter(
     (s: DCFSection) => s.identifier !== 'empty',
   );
 
-  const categories = (sections ?? [])
-    .filter((s: DCFSection) => s.categories)
-    .flatMap((s: DCFSection) => s.categories);
+  const categories: DCFCategory[] = (sections ?? []).flatMap(s => s.categories ?? []);
 
   const currAssumptionType = getOuterFormValues(name.split('.method'))?.[0];
   const assumptions = getDCFFilteredAssumptions(

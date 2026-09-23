@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toDecimal, toNumber } from '../../../domain/calculation';
+import { sumArray, toDecimal, toNumber, type NumberishRow } from '../../../domain/calculation';
 
 interface MethodSpecifiedRentalIncomePerSquareMeterModalProps {
   name: string;
@@ -33,7 +33,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...fields.flatMap((_, idx) => {
+      ...fields.flatMap((_, idx): DerivedFieldRule<unknown>[] => {
         return [
           {
             targetPath: `${name}.areaDetail.${idx}.totalRentalIncomePerMonth`,
@@ -62,11 +62,8 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         targetPath: `${name}.sumRentalPrice`,
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumRentalPrice = (areaDetail ?? []).reduce((prev, curr) => {
-            const currRentalPrice = curr.rentalPrice ? toNumber(curr.rentalPrice) : 0;
-            return prev + currRentalPrice;
-          }, 0);
+          const areaDetail: NumberishRow[] = getValues(`${name}.areaDetail`) ?? [];
+          const sumRentalPrice = sumArray(areaDetail ?? [], row => row.rentalPrice);
           return sumRentalPrice;
         },
       },
@@ -74,11 +71,8 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         targetPath: `${name}.sumSaleableArea`,
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumSaleableArea = areaDetail.reduce((prev, curr) => {
-            const currSaleableArea = curr.saleableArea ? toNumber(curr.saleableArea) : 0;
-            return prev + currSaleableArea;
-          }, 0);
+          const areaDetail: NumberishRow[] = getValues(`${name}.areaDetail`) ?? [];
+          const sumSaleableArea = sumArray(areaDetail, row => row.saleableArea);
           return sumSaleableArea;
         },
       },
@@ -86,13 +80,11 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         targetPath: `${name}.sumTotalRentalIncomePerMonth`,
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumTotalRentalIncomePerMonth = areaDetail.reduce((prev, curr) => {
-            const currRoomIncome = curr.totalRentalIncomePerMonth
-              ? toNumber(curr.totalRentalIncomePerMonth)
-              : 0;
-            return prev + currRoomIncome;
-          }, 0);
+          const areaDetail: NumberishRow[] = getValues(`${name}.areaDetail`) ?? [];
+          const sumTotalRentalIncomePerMonth = sumArray(
+            areaDetail,
+            row => row.totalRentalIncomePerMonth,
+          );
           return sumTotalRentalIncomePerMonth;
         },
       },
@@ -100,13 +92,11 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
         targetPath: `${name}.sumTotalRentalIncomePerYear`,
         deps: [`${name}.areaDetail`],
         compute: ({ getValues }) => {
-          const areaDetail = getValues(`${name}.areaDetail`) ?? [];
-          const sumTotalRentalIncomePerYear = areaDetail.reduce((prev, curr) => {
-            const currTotalRoomIncomePerYear = curr.totalRentalIncomePerYear
-              ? toNumber(curr.totalRentalIncomePerYear)
-              : 0;
-            return prev + currTotalRoomIncomePerYear;
-          }, 0);
+          const areaDetail: NumberishRow[] = getValues(`${name}.areaDetail`) ?? [];
+          const sumTotalRentalIncomePerYear = sumArray(
+            areaDetail,
+            row => row.totalRentalIncomePerYear,
+          );
           return sumTotalRentalIncomePerYear;
         },
       },
@@ -130,7 +120,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
     <div className="flex flex-col gap-2">
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>{t('dcf.methods.rentalIncomePerSquareMeter.totalBuildingArea')}</span>
+          <span className={'w-56'}>
+            {t('dcf.methods.rentalIncomePerSquareMeter.totalBuildingArea')}
+          </span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.totalBuildingArea`}
@@ -315,7 +307,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>{t('dcf.methods.rentalIncomePerSquareMeter.averageRentalPrice')}</span>
+          <span className={'w-56'}>
+            {t('dcf.methods.rentalIncomePerSquareMeter.averageRentalPrice')}
+          </span>
           <div className={'w-44 text-right'}>
             <RHFInputCell
               fieldName={`${name}.avgRentalRatePerMonth`}
@@ -328,7 +322,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           <span>{t('dcf.methods.rentalIncomePerSquareMeter.unitBahtSqmMonth')}</span>
         </div>
         <div className="flex flex-row gap-1.5">
-          <span className={'w-56'}>{t('dcf.methods.rentalIncomePerSquareMeter.totalSaleableArea')}</span>
+          <span className={'w-56'}>
+            {t('dcf.methods.rentalIncomePerSquareMeter.totalSaleableArea')}
+          </span>
           <div className={'w-44'}>
             <RHFInputCell
               fieldName={`${name}.totalSaleableArea`}

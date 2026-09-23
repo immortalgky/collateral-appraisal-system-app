@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
+import { sumArray, type NumberishRow } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 import { PricingAnalysisSubjectType } from '@/features/pricingAnalysis/api/references';
 import { MarketReferenceButton } from '../../MarketReferenceButton';
@@ -53,7 +54,7 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...fields.flatMap((_, idx) => {
+      ...fields.flatMap((_, idx): DerivedFieldRule<unknown>[] => {
         return [
           {
             targetPath: `${name}.roomDetails.${idx}.totalRoomIncomePerMonth`,
@@ -82,11 +83,8 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
         targetPath: `${name}.sumSaleableArea`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumSaleableArea = roomDetails.reduce((prev, curr) => {
-            const currSaleableArea = curr.saleableArea ? Number(curr.saleableArea) : 0;
-            return prev + currSaleableArea;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumSaleableArea = sumArray(roomDetails, row => row.saleableArea);
           return sumSaleableArea;
         },
       },
@@ -94,13 +92,8 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
         targetPath: `${name}.sumRoomIncomePerMonth`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumRoomIncomePerMonth = roomDetails.reduce((prev, curr) => {
-            const currRoomIncome = curr.totalRoomIncomePerMonth
-              ? Number(curr.totalRoomIncomePerMonth)
-              : 0;
-            return prev + currRoomIncome;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumRoomIncomePerMonth = sumArray(roomDetails, row => row.totalRoomIncomePerMonth);
           return sumRoomIncomePerMonth;
         },
       },
@@ -108,13 +101,11 @@ export function MethodSpecifiedRentalIncomePerMonthModal({
         targetPath: `${name}.sumRoomIncomePerYear`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumTotalRoomIncomePerYear = roomDetails.reduce((prev, curr) => {
-            const currTotalRoomIncomePerYear = curr.totalRoomIncomePerYear
-              ? Number(curr.totalRoomIncomePerYear)
-              : 0;
-            return prev + currTotalRoomIncomePerYear;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumTotalRoomIncomePerYear = sumArray(
+            roomDetails,
+            row => row.totalRoomIncomePerYear,
+          );
           return sumTotalRoomIncomePerYear;
         },
       },

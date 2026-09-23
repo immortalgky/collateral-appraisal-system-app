@@ -4,7 +4,7 @@ import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDe
 import { useMemo } from 'react';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
-import { toNumber } from '../../../domain/calculation';
+import { sumArray, toNumber, type NumberishRow } from '../../../domain/calculation';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 import { useTranslation } from 'react-i18next';
 
@@ -35,7 +35,7 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...fields.flatMap((_, idx) => {
+      ...fields.flatMap((_, idx): DerivedFieldRule<unknown>[] => {
         return [
           {
             targetPath: `${name}.roomDetails.${idx}.totalRoomExpensePerDay`,
@@ -66,11 +66,8 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
         targetPath: `${name}.sumSaleableArea`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumSaleableArea = roomDetails.reduce((prev, curr) => {
-            const currSaleableArea = curr.saleableArea ? toNumber(curr.saleableArea) : 0;
-            return prev + currSaleableArea;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumSaleableArea = sumArray(roomDetails, row => row.saleableArea);
           return sumSaleableArea;
         },
       },
@@ -78,13 +75,11 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
         targetPath: `${name}.sumTotalRoomExpensePerDay`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumTotalRoomExpensePerDay = roomDetails.reduce((prev, curr) => {
-            const currRoomIncome = curr.totalRoomExpensePerDay
-              ? toNumber(curr.totalRoomExpensePerDay)
-              : 0;
-            return prev + currRoomIncome;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumTotalRoomExpensePerDay = sumArray(
+            roomDetails,
+            row => row.totalRoomExpensePerDay,
+          );
           return sumTotalRoomExpensePerDay;
         },
       },
@@ -92,13 +87,11 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
         targetPath: `${name}.sumTotalRoomExpensePerYear`,
         deps: [`${name}.roomDetails`],
         compute: ({ getValues }) => {
-          const roomDetails = getValues(`${name}.roomDetails`) ?? [];
-          const sumTotalRoomExpensePerYear = roomDetails.reduce((prev, curr) => {
-            const currTotalRoomIncomePerYear = curr.totalRoomExpensePerYear
-              ? toNumber(curr.totalRoomExpensePerYear)
-              : 0;
-            return prev + currTotalRoomIncomePerYear;
-          }, 0);
+          const roomDetails: NumberishRow[] = getValues(`${name}.roomDetails`) ?? [];
+          const sumTotalRoomExpensePerYear = sumArray(
+            roomDetails,
+            row => row.totalRoomExpensePerYear,
+          );
           return sumTotalRoomExpensePerYear;
         },
       },
@@ -284,7 +277,9 @@ export function MethodRoomCostBasedOnExpensesPerRoomPerDayModal({
       </div>
       <div className="flex flex-col gap-2 mb-4">
         <div className="flex flex-row gap-1.5 items-center">
-          <span className={'w-56'}>{t('dcf.methods.roomCostBasedOnExpenses.totalRoomExpenses')}</span>
+          <span className={'w-56'}>
+            {t('dcf.methods.roomCostBasedOnExpenses.totalRoomExpenses')}
+          </span>
           <div className={'w-56 text-right'}>
             <RHFInputCell
               fieldName={`${name}.sumTotalRoomExpensePerYear`}

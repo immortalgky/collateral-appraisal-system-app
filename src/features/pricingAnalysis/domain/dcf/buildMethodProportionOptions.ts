@@ -1,3 +1,6 @@
+import type { DCFSection } from '../../types/dcf';
+import type { getDCFFilteredAssumptions } from '../getDCFFilteredAssumptions';
+
 type SelectOption = {
   value: string;
   label: string;
@@ -7,9 +10,7 @@ export function buildMethodProportionOptions(params: {
   sections: DCFSection[];
   assumptions: ReturnType<typeof getDCFFilteredAssumptions>;
 }): SelectOption[] {
-  const categories = params.sections
-    .filter(section => section.categories)
-    .flatMap(section => section.categories);
+  const categories = (params.sections ?? []).flatMap(section => section.categories ?? []);
 
   return [
     ...(params.sections ?? []).map(section => ({

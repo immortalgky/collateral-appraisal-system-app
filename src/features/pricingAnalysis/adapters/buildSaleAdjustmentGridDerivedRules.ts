@@ -53,7 +53,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
   } = saleGridFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
-    .map((survey: MarketComparableDetailType, columnIndex: number) => {
+    .map((survey: MarketComparableDetailType, columnIndex: number): DerivedFieldRule[] => {
       return [
         {
           targetPath: calculationAdjustedValuePath({ column: columnIndex }),
@@ -254,7 +254,7 @@ export function buildSaleGridCalculationDerivedRules(args: {
         },
       ];
     })
-    .flat() as DerivedFieldRule[];
+    .flat();
   return rules;
 }
 
@@ -271,7 +271,7 @@ export function buildSaleGridAdjustmentFactorDefaultPercentRules(args: {
 
   return qualitativeRows
     .map((_, rowIndex: number) =>
-      surveys.map((_, columnIndex: number) => {
+      surveys.map((_, columnIndex: number): DerivedFieldRule => {
         const target = adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex });
         return {
           targetPath: target,
@@ -306,23 +306,26 @@ export function buildSaleGridAdjustmentFactorAmountRules(args: {
 
   return qualitativeRows
     .map((_, rowIndex) =>
-      surveys.map((_, columnIndex) => ({
-        targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
-        deps: [
-          adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
-          calculationTotalSecondRevisionPath({ column: columnIndex }),
-        ],
-        compute: ({ getValues }) => {
-          const totalSecondRevision =
-            getValues(calculationTotalSecondRevisionPath({ column: columnIndex })) ?? 0;
-          const adjustPercent =
-            getValues(adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex })) ??
-            0;
+      surveys.map(
+        (_, columnIndex): DerivedFieldRule => ({
+          targetPath: adjustmentFactorAdjustAmountPath({ row: rowIndex, column: columnIndex }),
+          deps: [
+            adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+            calculationTotalSecondRevisionPath({ column: columnIndex }),
+          ],
+          compute: ({ getValues }) => {
+            const totalSecondRevision =
+              getValues(calculationTotalSecondRevisionPath({ column: columnIndex })) ?? 0;
+            const adjustPercent =
+              getValues(
+                adjustmentFactorAdjustPercentPath({ row: rowIndex, column: columnIndex }),
+              ) ?? 0;
 
-          const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
-          return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
-        },
-      })),
+            const adjustAmount = (totalSecondRevision * adjustPercent) / 100;
+            return Number.isFinite(adjustAmount) ? parseFloat(adjustAmount.toFixed(2)) : 0;
+          },
+        }),
+      ),
     )
     .flat();
 }
@@ -374,7 +377,7 @@ export function buildSaleGridFinalValueRules(arg: {
         return finalValueRounded;
       },
     },
-  ].flat();
+  ];
 
   return rules;
 }
