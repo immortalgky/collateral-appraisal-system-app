@@ -176,24 +176,53 @@ export const useDealerStore = create<DealerStore>(set => ({
   setDealers: (dealers: Dealer[]) => set({ dealers, isLoaded: true }),
 }));
 
-// Ref-count so that overlapping callers (e.g. two concurrent task completions,
-// or a completion while another loading action is active) don't prematurely
-// hide the overlay. The overlay stays visible until every caller has settled.
-let _loadingRefCount = 0;
-
+// `pending` ref-counts callers so that overlapping ones (e.g. two concurrent task
+// completions, or a completion while another loading action is active) don't
+// prematurely hide the overlay: it stays up until every caller has settled.
+//
+// It lives in the store rather than in a module variable so a reader sees it beside the state
+// it guards, and so showLoading can restart it from what that state says.
+//
+// What that restart does and does not cover: a count that outlives a hide — an external
+// `setState({ isLoading: false })`, or a store reset in a test — cannot pin the overlay open,
+// because the next showLoading starts from 1 again. A caller that shows and never hides (an
+// early return or a throw with no `try/finally`) still leaves the overlay up: `isLoading` stays
+// true, so there is nothing to restart from. Wrap such callers, or give them a timeout.
+//
+// Nothing in src/ calls showLoading or hideLoading today — the overlay, the ConfirmDialog
+// progress line and setMessage are all reached only through them, so this is a shipped-but-
+// unused path. Kept correct for when something does.
 export const useLoadingStore = create<LoadingStore>(set => ({
   isLoading: false,
   message: undefined,
-  showLoading: (message?: string) => {
-    _loadingRefCount += 1;
-    set({ isLoading: true, message });
-  },
-  hideLoading: () => {
-    _loadingRefCount = Math.max(0, _loadingRefCount - 1);
-    if (_loadingRefCount === 0) {
-      set({ isLoading: false, message: undefined });
-    }
-  },
+  pending: 0,
+  // Counts from 1 again whenever the overlay is down: nobody can be pending while it is hidden.
+  //
+  // This is a deliberate trade, not a side effect. It drops an earlier caller's claim rather
+  // than clamping it: if A is still working when the overlay is hidden from outside, B's hide
+  // takes the overlay down early, and A's later hide finds a count of 0 and does nothing. The
+  // module-variable version kept the overlay up for A here — at the price of the opposite
+  // failure, a count that could never reach 0 again and an overlay covering the page until the
+  // user reloaded. An overlay that leaves too early is a missing spinner; one that never leaves
+  // costs the user their unsaved work.
+  // The message is NOT ref-counted: the newest caller's text wins, and it is cleared only when
+  // the last one settles. So a textless caller joining an active one blanks the overlay until
+  // that one finishes. Inheriting the previous text instead was tried and is worse — the text
+  // then outlives the caller that set it, describing work that has already finished, with no way
+  // for the remaining caller to clear it. Doing this properly needs to know whose message is
+  // whose, i.e. showLoading handing back a handle that hideLoading takes; worth it only once
+  // something actually calls these.
+  showLoading: (message?: string) =>
+    set(state => ({
+      isLoading: true,
+      message,
+      pending: state.isLoading ? state.pending + 1 : 1,
+    })),
+  hideLoading: () =>
+    set(state => {
+      const pending = Math.max(0, state.pending - 1);
+      return pending === 0 ? { isLoading: false, message: undefined, pending } : { pending };
+    }),
   setMessage: (message: string) => set(state => (state.isLoading ? { message } : {})),
 }));
 

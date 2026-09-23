@@ -109,6 +109,9 @@ describe('useLoadingStore', () => {
       useLoadingStore.setState({
         isLoading: false,
         message: undefined,
+        // Reset the count too. showLoading restarting from 1 would hide a leak between cases,
+        // and the suite would then depend on that rule rather than test it.
+        pending: 0,
       });
     });
   });
@@ -183,6 +186,50 @@ describe('useLoadingStore', () => {
     act(() => {
       hideLoading();
     });
+    expect(useLoadingStore.getState().isLoading).toBe(false);
+  });
+
+  // ------------------------------------------
+  // Scenario 6: Overlapping callers
+  // ------------------------------------------
+  it('stays up until every caller has hidden it', () => {
+    act(() => {
+      showLoading('First');
+      showLoading('Second');
+    });
+    // `pending` as well as `isLoading`: the overlay being up says nothing about how many
+    // callers are behind it, which is the part that decides when it comes down.
+    expect(useLoadingStore.getState()).toMatchObject({ isLoading: true, pending: 2 });
+
+    // One of the two settles — the other still wants the overlay.
+    act(() => {
+      hideLoading();
+    });
+    expect(useLoadingStore.getState()).toMatchObject({ isLoading: true, pending: 1 });
+
+    act(() => {
+      hideLoading();
+    });
+    expect(useLoadingStore.getState()).toMatchObject({ isLoading: false, pending: 0 });
+  });
+
+  // ------------------------------------------
+  // Scenario 7: A count left behind by a partial reset
+  // ------------------------------------------
+  it('recovers from a stale count', () => {
+    // `setState` merges, so this reset hides the overlay without touching `pending` — the
+    // shape of every reset in the app. Left to run on, the count would make the next
+    // hideLoading() decrement to 1 instead of 0 and pin the overlay open for good.
+    act(() => {
+      showLoading('Interrupted');
+      useLoadingStore.setState({ isLoading: false, message: undefined });
+    });
+
+    act(() => {
+      showLoading('Next');
+      hideLoading();
+    });
+
     expect(useLoadingStore.getState().isLoading).toBe(false);
   });
 });
@@ -350,8 +397,22 @@ describe('useParameterStore', () => {
   // ------------------------------------------
   it('should group parameters by group.country.language', () => {
     const params = [
-      { id: 1, group: 'collateral', country: 'TH', language: 'en', code: '01', description: 'Land' },
-      { id: 2, group: 'collateral', country: 'TH', language: 'en', code: '02', description: 'Building' },
+      {
+        id: 1,
+        group: 'collateral',
+        country: 'TH',
+        language: 'en',
+        code: '01',
+        description: 'Land',
+      },
+      {
+        id: 2,
+        group: 'collateral',
+        country: 'TH',
+        language: 'en',
+        code: '02',
+        description: 'Building',
+      },
     ];
 
     act(() => {
@@ -369,9 +430,30 @@ describe('useParameterStore', () => {
   // ------------------------------------------
   it('should handle multiple parameter groups', () => {
     const params = [
-      { id: 1, group: 'collateral', country: 'TH', language: 'en', code: '01', description: 'Land' },
-      { id: 2, group: 'status', country: 'TH', language: 'en', code: 'active', description: 'Active' },
-      { id: 3, group: 'collateral', country: 'TH', language: 'th', code: '01', description: 'ที่ดิน' },
+      {
+        id: 1,
+        group: 'collateral',
+        country: 'TH',
+        language: 'en',
+        code: '01',
+        description: 'Land',
+      },
+      {
+        id: 2,
+        group: 'status',
+        country: 'TH',
+        language: 'en',
+        code: 'active',
+        description: 'Active',
+      },
+      {
+        id: 3,
+        group: 'collateral',
+        country: 'TH',
+        language: 'th',
+        code: '01',
+        description: 'ที่ดิน',
+      },
     ];
 
     act(() => {
