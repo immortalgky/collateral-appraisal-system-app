@@ -78,7 +78,7 @@ export type LoadingStore = {
   /**
    * How many callers currently want the overlay up. In the state rather than in a module
    * variable, so `showLoading` can restart it from 1 whenever the overlay is down — see the
-   * note on the store, and the "recovers from a stale count" test.
+   * note on the store for what that covers and what it does not.
    */
   pending: number;
   showLoading: (message?: string) => void;

@@ -180,19 +180,25 @@ export const useDealerStore = create<DealerStore>(set => ({
 // completions, or a completion while another loading action is active) don't
 // prematurely hide the overlay: it stays up until every caller has settled.
 //
-// It lives in the store rather than in a module variable so a reader sees it beside the
-// state it guards — but that alone does not keep the two in step: `setState` merges, so
-// a partial reset (`{ isLoading: false }`) leaves the count standing. What actually makes
-// a stale count harmless is the restart rule on showLoading below; as a module variable
-// there was nowhere to put that rule, and a leftover count meant the next hideLoading()
-// decremented to 1 instead of 0 and left the overlay up for good.
+// It lives in the store rather than in a module variable so a reader sees it beside the state
+// it guards, and so showLoading can restart it from what that state says.
+//
+// What that restart does and does not cover: a count that outlives a hide — an external
+// `setState({ isLoading: false })`, or a store reset in a test — cannot pin the overlay open,
+// because the next showLoading starts from 1 again. A caller that shows and never hides (an
+// early return or a throw with no `try/finally`) still leaves the overlay up: `isLoading` stays
+// true, so there is nothing to restart from. Wrap such callers, or give them a timeout.
+//
+// Nothing in src/ calls showLoading or hideLoading today — the overlay, the ConfirmDialog
+// progress line and setMessage are all reached only through them, so this is a shipped-but-
+// unused path. Kept correct for when something does.
 export const useLoadingStore = create<LoadingStore>(set => ({
   isLoading: false,
   message: undefined,
   pending: 0,
   // Counts from 1 again whenever the overlay is down: nobody can be pending while it is
-  // hidden, so a count left over from a reset (or from any hideLoading the overlay never
-  // saw) cannot survive into the next run and pin the overlay open.
+  // hidden. Note this drops an earlier caller's claim rather than clamping it — if A is still
+  // working when the overlay is hidden from outside, B's hide will take the overlay down.
   showLoading: (message?: string) =>
     set(state => ({
       isLoading: true,

@@ -54,29 +54,49 @@ vi.mock('@shared/components', () => ({
   SectionHeader: ({ title }: { title: string }) => <h2>{title}</h2>,
 }));
 
+// `t` returns the key. Nothing initialises i18n in src/test/setup.ts today, so this only makes
+// explicit what already happens — but it keeps these assertions from breaking the day another
+// suite wants i18n initialised globally.
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 // Define schema for testing validation
+// Field names and nesting follow `makeAddressFields` / `makeContactFields` in
+// ../configs/fields.ts, under the `detail.` prefix AddressForm passes to FormFields. A local
+// shape that drifts from those would let this suite keep passing while the form renders nothing
+// it declares.
 const addressSchema = z.object({
-  address: z.object({
-    houseNo: z.string().optional(),
-    roomNo: z.string().optional(),
-    floorNo: z.string().optional(),
-    villageBuilding: z.string().optional(),
-    moo: z.string().optional(),
-    soi: z.string().optional(),
-    road: z.string().optional(),
-    subDistrict: z.string().min(1, 'Sub District is required'),
-    district: z.string().min(1, 'District is required'),
-    province: z.string().min(1, 'Province is required'),
-    postcode: z.string().optional(),
-  }),
-  contact: z.object({
-    contactPersonName: z.string().min(1, 'Contact name is required'),
-    contactPersonContactNo: z.string().min(1, 'Contact phone is required'),
-    projectCode: z.string().optional(),
+  detail: z.object({
+    address: z.object({
+      houseNumber: z.string().optional(),
+      projectName: z.string().optional(),
+      moo: z.string().optional(),
+      soi: z.string().optional(),
+      road: z.string().optional(),
+      subDistrict: z.string().min(1, 'Sub District is required'),
+      districtName: z.string().min(1, 'District is required'),
+      provinceName: z.string().min(1, 'Province is required'),
+      postcode: z.string().optional(),
+    }),
+    contact: z.object({
+      contactPersonName: z.string().min(1, 'Contact name is required'),
+      contactPersonPhone: z.string().min(1, 'Contact phone is required'),
+      dealerCode: z.string().optional(),
+    }),
   }),
 });
 
 type AddressFormData = z.infer<typeof addressSchema>;
+
+// A case fills in only the fields it cares about, at any depth — `Partial` alone stops at the
+// top level and would demand every address field the moment one is given.
+type PartialAddressFormData = {
+  detail?: {
+    address?: Partial<AddressFormData['detail']['address']>;
+    contact?: Partial<AddressFormData['detail']['contact']>;
+  };
+};
 
 // Wrapper component that provides form context
 function AddressFormWrapper({
@@ -84,30 +104,30 @@ function AddressFormWrapper({
   defaultValues = {},
 }: {
   onSubmit?: (data: AddressFormData) => void;
-  defaultValues?: Partial<AddressFormData>;
+  defaultValues?: PartialAddressFormData;
 }) {
   const methods = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      address: {
-        houseNo: '',
-        roomNo: '',
-        floorNo: '',
-        villageBuilding: '',
-        moo: '',
-        soi: '',
-        road: '',
-        subDistrict: '',
-        district: '',
-        province: '',
-        postcode: '',
-        ...defaultValues.address,
-      },
-      contact: {
-        contactPersonName: '',
-        contactPersonContactNo: '',
-        projectCode: '',
-        ...defaultValues.contact,
+      detail: {
+        address: {
+          houseNumber: '',
+          projectName: '',
+          moo: '',
+          soi: '',
+          road: '',
+          subDistrict: '',
+          districtName: '',
+          provinceName: '',
+          postcode: '',
+          ...defaultValues.detail?.address,
+        },
+        contact: {
+          contactPersonName: '',
+          contactPersonPhone: '',
+          dealerCode: '',
+          ...defaultValues.detail?.contact,
+        },
       },
     },
   });
@@ -209,15 +229,17 @@ describe('AddressForm', () => {
         <AddressFormWrapper
           onSubmit={handleSubmit}
           defaultValues={{
-            address: {
-              houseNo: '123',
-              subDistrict: 'Bang Rak',
-              district: 'Bang Rak',
-              province: 'Bangkok',
-            },
-            contact: {
-              contactPersonName: 'John Doe',
-              contactPersonContactNo: '0812345678',
+            detail: {
+              address: {
+                houseNumber: '123',
+                subDistrict: 'Bang Rak',
+                districtName: 'Bang Rak',
+                provinceName: 'Bangkok',
+              },
+              contact: {
+                contactPersonName: 'John Doe',
+                contactPersonPhone: '0812345678',
+              },
             },
           }}
         />,
@@ -261,15 +283,14 @@ describe('AddressForm', () => {
       const { user } = render(
         <AddressFormWrapper
           defaultValues={{
-            address: {
-              houseNo: '123',
-              subDistrict: 'Test',
-              district: 'Test',
-              province: 'Test',
-            },
-            contact: {
-              contactPersonName: 'Test',
-              contactPersonContactNo: '123',
+            detail: {
+              address: {
+                houseNumber: '123',
+                subDistrict: 'Test',
+                districtName: 'Test',
+                provinceName: 'Test',
+              },
+              contact: { contactPersonName: 'Test', contactPersonPhone: '123' },
             },
           }}
         />,
@@ -294,10 +315,7 @@ describe('AddressForm', () => {
       render(
         <AddressFormWrapper
           defaultValues={{
-            address: {
-              houseNo: '456',
-              province: 'Chiang Mai',
-            },
+            detail: { address: { houseNumber: '456', provinceName: 'Chiang Mai' } },
           }}
         />,
       );
