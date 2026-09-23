@@ -277,13 +277,8 @@ registerEnglishFallback('zh', 'jobSchedules', enJobSchedules);
 registerEnglishFallback('zh', 'addressMaster', enAddressMaster);
 registerEnglishFallback('zh', 'hangfire', enHangfire);
 
-// `oauthAdmin` is the only namespace missing a **th** file too, so Thai needs the
-// same treatment. A real th/oauthAdmin.json is still owed: `localeParity.test.ts`
-// asserts a th file exists for every en namespace and has no th opt-out, so it
-// stays red for this one until the translation lands — at which point the guard
-// above retires this registration on its own. (That suite is red for other,
-// pre-existing reasons as well; oauthAdmin is not the only failing case.)
-registerEnglishFallback('th', 'oauthAdmin', enOauthAdmin);
+// `oauthAdmin` has no zh file. Thai used to be registered here too; th/oauthAdmin.json
+// now exists, so that line is gone — the guard above would have made it a no-op anyway.
 registerEnglishFallback('zh', 'oauthAdmin', enOauthAdmin);
 
 /**

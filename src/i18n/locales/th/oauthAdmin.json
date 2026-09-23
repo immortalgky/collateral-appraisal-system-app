@@ -1,0 +1,192 @@
+{
+  "clients": {
+    "page": {
+      "title": "OAuth Client",
+      "subtitle": "ลงทะเบียนและตั้งค่าแอปพลิเคชันที่เชื่อมต่อผ่าน OAuth / OpenID Connect"
+    },
+    "columns": {
+      "displayName": "ชื่อ",
+      "clientId": "Client ID",
+      "type": "ประเภท",
+      "grantTypes": "Grant Type",
+      "scopes": "Scope",
+      "actions": "จัดการ"
+    },
+    "type": {
+      "public": "Public",
+      "confidential": "Confidential"
+    },
+    "badges": {
+      "system": "ระบบ"
+    },
+    "filters": {
+      "searchPlaceholder": "ค้นหาจากชื่อหรือ Client ID...",
+      "clear": "ล้าง"
+    },
+    "actions": {
+      "add": "ลงทะเบียน Client",
+      "edit": "แก้ไข",
+      "rotateSecret": "เปลี่ยน secret",
+      "delete": "ลบ"
+    },
+    "form": {
+      "createTitle": "ลงทะเบียน OAuth Client",
+      "editTitle": "แก้ไข OAuth Client",
+      "displayName": "ชื่อที่แสดง",
+      "clientId": "Client ID",
+      "clientIdHint": "เว้นว่างไว้เพื่อให้ระบบสร้างให้อัตโนมัติ",
+      "clientType": "ประเภท Client",
+      "clientTypePublicHint": "Client แบบ Public เช่น SPA ใช้ PKCE และไม่มี secret",
+      "clientTypeConfidentialHint": "Client แบบ Confidential จะได้รับ secret ที่ระบบสร้างให้",
+      "grantTypes": "Grant Type",
+      "scopes": "Scope",
+      "scopesHint": "ชื่อ scope คั่นด้วยเว้นวรรคหรือจุลภาค เช่น profile email appraisal.read",
+      "redirectUris": "Redirect URI",
+      "redirectUrisHint": "บรรทัดละหนึ่งรายการ จำเป็นสำหรับ authorization_code",
+      "postLogoutRedirectUris": "Post-Logout Redirect URI",
+      "cancel": "ยกเลิก",
+      "create": "ลงทะเบียน",
+      "save": "บันทึก",
+      "tokenLifetimes": "อายุ Token (นาที)",
+      "tokenLifetimesHint": "เว้นว่างไว้เพื่อใช้ค่าเริ่มต้นของเซิร์ฟเวอร์ (access และ identity 15 นาที, refresh 7 วัน) access และ identity ใส่ได้สูงสุด 1440 นาที (24 ชั่วโมง) ส่วน refresh สูงสุด 43200 นาที (30 วัน) refresh token เป็นแบบต่ออายุเรื่อย ๆ ค่านี้จึงเป็นเวลาที่ปล่อยทิ้งไว้ได้ก่อนต้องเข้าสู่ระบบใหม่",
+      "tokenLifetime": {
+        "access": "Access",
+        "identity": "Identity",
+        "refresh": "Refresh (เวลาที่ไม่ได้ใช้งาน)"
+      },
+      "tokenLifetimeInherit": "ค่าเริ่มต้น",
+      "tokenLifetimeInvalid": "จำนวนเต็ม 1–{{max}}"
+    },
+    "grant": {
+      "authorization_code": "Authorization Code",
+      "client_credentials": "Client Credentials",
+      "password": "Password",
+      "refresh_token": "Refresh Token"
+    },
+    "secret": {
+      "title": "Client Secret",
+      "createdIntro": "ลงทะเบียน Client เรียบร้อย กรุณาคัดลอก secret ตอนนี้ ระบบจะไม่แสดงอีก",
+      "rotatedIntro": "สร้าง secret ใหม่แล้ว กรุณาคัดลอกตอนนี้ ระบบจะไม่แสดงอีก",
+      "clientId": "Client ID",
+      "secret": "Client Secret",
+      "copy": "คัดลอก",
+      "copied": "คัดลอกแล้ว",
+      "done": "เสร็จสิ้น",
+      "rotateConfirmTitle": "เปลี่ยน Client Secret",
+      "rotateConfirmMessage": "secret ปัจจุบันจะใช้ไม่ได้ทันที ระบบที่เชื่อมต่ออยู่ต้องแก้ไขค่าใหม่ ต้องการดำเนินการต่อหรือไม่",
+      "rotateConfirmButton": "เปลี่ยน secret"
+    },
+    "delete": {
+      "confirmTitle": "ลบ OAuth Client",
+      "confirmMessage": "Client นี้และสิทธิ์ที่เคยให้ไว้จะถูกลบ แอปพลิเคชันที่ใช้อยู่จะเข้าสู่ระบบไม่ได้อีก ต้องการดำเนินการต่อหรือไม่",
+      "confirmButton": "ลบ",
+      "cancelButton": "ยกเลิก"
+    },
+    "toasts": {
+      "created": "ลงทะเบียน OAuth Client แล้ว",
+      "updated": "แก้ไข OAuth Client แล้ว",
+      "deleted": "ลบ OAuth Client แล้ว",
+      "createFailed": "ลงทะเบียน Client ไม่สำเร็จ",
+      "updateFailed": "แก้ไข Client ไม่สำเร็จ",
+      "deleteFailed": "ลบ Client ไม่สำเร็จ",
+      "rotateFailed": "เปลี่ยน secret ไม่สำเร็จ"
+    },
+    "emptyState": "ไม่พบ OAuth Client",
+    "loadFailed": "โหลด OAuth Client ไม่สำเร็จ"
+  },
+  "scopes": {
+    "page": {
+      "title": "OAuth Scope",
+      "subtitle": "กำหนดทรัพยากร API ที่ client ขอสิทธิ์ได้"
+    },
+    "columns": {
+      "name": "ชื่อ",
+      "displayName": "ชื่อที่แสดง",
+      "description": "คำอธิบาย",
+      "resources": "ทรัพยากร",
+      "actions": "จัดการ"
+    },
+    "filters": {
+      "searchPlaceholder": "ค้นหา scope...",
+      "clear": "ล้าง"
+    },
+    "actions": {
+      "add": "เพิ่ม Scope",
+      "edit": "แก้ไข",
+      "delete": "ลบ"
+    },
+    "form": {
+      "createTitle": "เพิ่ม OAuth Scope",
+      "editTitle": "แก้ไข OAuth Scope",
+      "name": "ชื่อ",
+      "nameHint": "ชื่อ scope ที่ไม่ซ้ำกัน เช่น appraisal.read แก้ไขไม่ได้หลังสร้างแล้ว",
+      "displayName": "ชื่อที่แสดง",
+      "description": "คำอธิบาย",
+      "resources": "ทรัพยากร",
+      "resourcesHint": "ชื่อทรัพยากร API คั่นด้วยเว้นวรรคหรือจุลภาค",
+      "cancel": "ยกเลิก",
+      "create": "สร้าง",
+      "save": "บันทึก"
+    },
+    "delete": {
+      "confirmTitle": "ลบ Scope",
+      "confirmMessage": "Scope นี้จะถูกลบถาวร client ที่ขอ scope นี้จะถูกปฏิเสธ ต้องการดำเนินการต่อหรือไม่",
+      "confirmButton": "ลบ",
+      "cancelButton": "ยกเลิก"
+    },
+    "toasts": {
+      "created": "สร้าง Scope แล้ว",
+      "updated": "แก้ไข Scope แล้ว",
+      "deleted": "ลบ Scope แล้ว",
+      "createFailed": "สร้าง Scope ไม่สำเร็จ",
+      "updateFailed": "แก้ไข Scope ไม่สำเร็จ",
+      "deleteFailed": "ลบ Scope ไม่สำเร็จ"
+    },
+    "emptyState": "ไม่พบ Scope",
+    "loadFailed": "โหลด Scope ไม่สำเร็จ"
+  },
+  "tokens": {
+    "page": {
+      "title": "สิทธิ์และ Token ของ OAuth",
+      "subtitle": "ดูและเพิกถอนสิทธิ์และ token ที่ใช้งานอยู่"
+    },
+    "tabs": {
+      "authorizations": "สิทธิ์ที่อนุญาต",
+      "tokens": "Token"
+    },
+    "filters": {
+      "clientId": "Client ID",
+      "clientIdPlaceholder": "กรองตาม Client ID...",
+      "subject": "ผู้ใช้",
+      "subjectPlaceholder": "กรองตามผู้ใช้...",
+      "status": "สถานะ",
+      "allStatuses": "ทุกสถานะ",
+      "clear": "ล้างตัวกรอง"
+    },
+    "columns": {
+      "subject": "ผู้ใช้",
+      "clientId": "Client",
+      "status": "สถานะ",
+      "type": "ประเภท",
+      "scopes": "Scope",
+      "created": "สร้างเมื่อ",
+      "expires": "หมดอายุ",
+      "actions": "จัดการ"
+    },
+    "actions": {
+      "revoke": "เพิกถอน"
+    },
+    "revoke": {
+      "confirmTitle": "เพิกถอน",
+      "confirmMessageAuthorization": "การเพิกถอนสิทธิ์นี้จะเพิกถอน token ที่เกี่ยวข้องด้วย ต้องการดำเนินการต่อหรือไม่",
+      "confirmMessageToken": "Token นี้จะถูกเพิกถอนทันที ต้องการดำเนินการต่อหรือไม่",
+      "confirmButton": "เพิกถอน",
+      "cancelButton": "ยกเลิก",
+      "successToast": "เพิกถอนแล้ว",
+      "errorToast": "เพิกถอนไม่สำเร็จ"
+    },
+    "emptyAuthorizations": "ไม่พบสิทธิ์ที่อนุญาต",
+    "emptyTokens": "ไม่พบ Token",
+    "loadFailed": "โหลดข้อมูลไม่สำเร็จ"
+  }
+}
