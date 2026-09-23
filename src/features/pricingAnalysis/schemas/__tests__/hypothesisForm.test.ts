@@ -10,6 +10,18 @@ import {
 
 // ─── Cost item schema ─────────────────────────────────────────────────────────
 
+/**
+ * `isBuilding`, `depreciationMethod` and `depreciationPeriods` are described as
+ * CostOfBuilding-only but the schema requires them on every row, so the row factories fill them
+ * on rows of any category (LandBuildingSummaryTab's makeBlankUserRow, and the mapper in
+ * LandBuildingTabs). A row built without them is what the tests below were missing.
+ */
+const requiredOnEveryRow = {
+  isBuilding: false,
+  depreciationMethod: 'Gross' as const,
+  depreciationPeriods: [],
+};
+
 describe('HypothesisCostItemSchema', () => {
   it('accepts a valid L&B cost-of-building row', () => {
     const result = HypothesisCostItemSchema.safeParse({
@@ -20,10 +32,18 @@ describe('HypothesisCostItemSchema', () => {
       displaySequence: 0,
       amount: 1500000,
       modelName: 'A01',
+      ...requiredOnEveryRow,
+      // The default in `requiredOnEveryRow` is the non-building one; a cost-of-building row is
+      // part of the building. Nothing in the schema cross-checks the two today, but a fixture
+      // that reads as a contradiction is the wrong thing to copy.
+      isBuilding: true,
     });
     expect(result.success).toBe(true);
   });
 
+  // Each negative case fills every other required field, so the row is rejected for the one
+  // thing under test. Without `requiredOnEveryRow` these rows fail on the missing fields instead
+  // and stay green even if the guard they name is deleted.
   it('rejects empty description', () => {
     const result = HypothesisCostItemSchema.safeParse({
       id: null,
@@ -32,6 +52,7 @@ describe('HypothesisCostItemSchema', () => {
       description: '',
       displaySequence: 0,
       amount: 0,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(false);
   });
@@ -39,9 +60,11 @@ describe('HypothesisCostItemSchema', () => {
   it('rejects invalid category', () => {
     const result = HypothesisCostItemSchema.safeParse({
       category: 'InvalidCategory',
+      kind: 'Other',
       description: 'Test',
       displaySequence: 0,
       amount: 0,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(false);
   });
@@ -60,26 +83,55 @@ describe('HypothesisCostItemSchema', () => {
     for (const category of categories) {
       const result = HypothesisCostItemSchema.safeParse({
         category,
+        kind: 'Other',
         description: 'Test item',
         displaySequence: 0,
         amount: 100,
+        ...requiredOnEveryRow,
       });
       expect(result.success, `category ${category} should be valid`).toBe(true);
     }
   });
 
-  it('defaults kind to Other when omitted', () => {
+  // Deliberately no `.default('Other')` on `kind` — a Zod default diverges the schema's input and
+  // output types and breaks zodResolver/useForm alignment, so the row factories set 'Other'
+  // themselves. Omitting it is therefore an invalid row, not a defaulted one.
+  it('rejects a row with no kind', () => {
     const result = HypothesisCostItemSchema.safeParse({
       category: 'ProjectCost',
       description: 'Ad-hoc item',
       displaySequence: 0,
       amount: 50000,
+      ...requiredOnEveryRow,
     });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.kind).toBe('Other');
-    }
+    expect(result.success).toBe(false);
   });
+
+  // A row of a category that has nothing to do with buildings still has to carry all three.
+  const adHocRow = {
+    category: 'ProjectCost' as const,
+    kind: 'Other' as const,
+    description: 'Ad-hoc item',
+    displaySequence: 0,
+    amount: 50000,
+    ...requiredOnEveryRow,
+  };
+
+  it('accepts a non-building row carrying all three', () => {
+    expect(HypothesisCostItemSchema.safeParse(adHocRow).success).toBe(true);
+  });
+
+  // One case per field rather than one row missing all three: a row missing all three is still
+  // rejected when only one of them is required, so the case would pass under a name that no
+  // longer holds.
+  it.each(['isBuilding', 'depreciationMethod', 'depreciationPeriods'] as const)(
+    'rejects a non-building row without %s',
+    field => {
+      const withoutField: Record<string, unknown> = { ...adHocRow };
+      delete withoutField[field];
+      expect(HypothesisCostItemSchema.safeParse(withoutField).success).toBe(false);
+    },
+  );
 
   it('preserves explicit kind value when provided', () => {
     const result = HypothesisCostItemSchema.safeParse({
@@ -88,6 +140,7 @@ describe('HypothesisCostItemSchema', () => {
       description: 'Allocation Permit',
       displaySequence: 0,
       amount: 50000,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(true);
     if (result.success) {
@@ -102,6 +155,7 @@ describe('HypothesisCostItemSchema', () => {
       description: 'Test',
       displaySequence: 0,
       amount: 0,
+      ...requiredOnEveryRow,
     });
     expect(result.success).toBe(false);
   });
@@ -173,9 +227,7 @@ describe('LandBuildingFormSchema', () => {
         discountRate: 8,
         remark: 'Test run',
       },
-      modelBuildingMappings: [
-        { modelName: 'A01', appraisalPropertyId: null, totalCost: 1500000 },
-      ],
+      modelBuildingMappings: [{ modelName: 'A01', appraisalPropertyId: null, totalCost: 1500000 }],
       otherCostItems: [],
       remark: null,
     });
