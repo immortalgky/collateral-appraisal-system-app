@@ -192,7 +192,11 @@
       "locationLabel": "地点",
       "locationPlaceholder": "输入预约地点详情",
       "reasonLabel": "改期原因",
-      "reasonPlaceholder": "输入改期原因（可选）"
+      "reasonPlaceholder": "输入改期原因（可选）",
+      "contactPersonLabel": "联系人姓名",
+      "contactPersonPlaceholder": "请输入联系人姓名",
+      "contactPhoneLabel": "联系电话",
+      "contactPhonePlaceholder": "请输入联系电话"
     },
     "cancelDialog": {
       "title": "取消预约？",
@@ -507,7 +511,10 @@
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
       "priceVerification": "价格核实",
-      "priceVerificationOptions": ["未核实", "已核实"],
+      "priceVerificationOptions": [
+        "未核实",
+        "已核实"
+      ],
       "reviewPrices": "审查价格",
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",
@@ -583,6 +590,10 @@
       "validationErrors": "发生验证错误",
       "forceSaleRateSaved": "强制出售价格比例已保存",
       "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。"
+    },
+    "warnings": {
+      "title": "继续前请复核",
+      "continueAnyway": "仍然继续"
     }
   },
   "decision": {
@@ -605,7 +616,9 @@
       "routeBack": "需要修改什么？",
       "proceed": "继续前的最终备注？",
       "hold": "为什么暂停？"
-    }
+    },
+    "reasonLabel": "原因",
+    "reasonPlaceholder": "请选择原因..."
   },
   "propertyInfo": {
     "tabs": {
@@ -689,7 +702,8 @@
         "appraisedOverSurveyed": "评估 {{appraised}} 超过勘查 {{surveyed}}",
         "splitOverSurveyed": "已安装 + 未安装 = {{split}}，超过勘查的 {{surveyed}}",
         "note": "仅为提示，不影响保存。"
-      }
+      },
+      "saveDraft": "保存草稿"
     },
     "machineryInfo": {
       "groups": {
@@ -1752,13 +1766,13 @@
       "sectionTitle": "建筑详情"
     },
     "condo": {
-        "areaDetailHint": "单元各部分及其面积",
-        "areaDetailEmpty": "暂无面积明细",
-        "addArea": "添加面积",
-        "areaItems": "{{count}} 项 · {{total}} 平方米",
-        "matchesUsable": "与使用面积一致",
-        "diffVsUsable": "{{diff}} 与使用面积相差",
-        "areaTotal": "合计",
+      "areaDetailHint": "单元各部分及其面积",
+      "areaDetailEmpty": "暂无面积明细",
+      "addArea": "添加面积",
+      "areaItems": "{{count}} 项 · {{total}} 平方米",
+      "matchesUsable": "与使用面积一致",
+      "diffVsUsable": "{{diff}} 与使用面积相差",
+      "areaTotal": "合计",
       "sectionTitle": "公寓详情",
       "areaDetail": "面积详情",
       "pma": "PMA 信息",
@@ -1785,7 +1799,18 @@
       "sectionTitle": "租赁信息"
     },
     "marketComparable": {
-      "sectionTitle": "市场可比案例"
+      "sectionTitle": "市场可比案例",
+      "duplicateDialog": {
+        "title": "复制市场比较资料",
+        "message": "确定要复制这条市场比较资料吗？系统将使用相同的数据创建一条新记录。",
+        "confirm": "复制"
+      }
+    },
+    "propertyName": {
+      "autoFillLabel": "自动填写资产名称"
+    },
+    "owner": {
+      "autoFillLabel": "从土地复制产权人"
     }
   },
   "validation": {
@@ -1811,7 +1836,10 @@
     "assignmentMethodRequired": "请选择分配方式",
     "remarksMaxLength": "备注不得超过 500 个字符",
     "selectAssignee": "请选择被分配人",
-    "selectFollowupStaff": "请选择内部跟进人员"
+    "selectFollowupStaff": "请选择内部跟进人员",
+    "contactPersonRequired": "请填写联系人姓名",
+    "contactPhoneRequired": "请填写联系电话",
+    "titleNumberRequired": "请填写产权编号。"
   },
   "toasts": {
     "photoUploaded": "照片上传成功",
@@ -1905,7 +1933,9 @@
     "appraisalReportNotAvailable": "此评估尚未附加完整评估报告。",
     "appraisalSummaryNotAvailable": "此评估尚未附加评估摘要报告。",
     "topicReorderFailed": "未能完整保存主题顺序，请再检查一遍。",
-    "topicUpdateFailed": "无法保存该主题，请再检查一遍。"
+    "topicUpdateFailed": "无法保存该主题，请再检查一遍。",
+    "marketComparableDeleted": "已删除市场比较资料",
+    "marketComparableDeleteFailed": "删除市场比较资料失败"
   },
   "common": {
     "unsavedChanges": "有未保存的更改",
@@ -2016,8 +2046,11 @@
     },
     "toasts": {
       "submitted": "已提交银行审批",
-      "submitFailed": "提交审批失败"
-    }
+      "submitFailed": "提交审批失败",
+      "rescheduleCancelled": "已取消改期",
+      "rescheduleCancelFailed": "取消改期失败"
+    },
+    "cancelRescheduleButton": "取消改期"
   },
   "createPage": {
     "photosSection": "照片",
@@ -2194,7 +2227,8 @@
     },
     "footer": {
       "total": "合计",
-      "avg": "平均"
+      "avg": "平均",
+      "avgBasis": "基于已勘测的 {{area}} 平方哇"
     },
     "missingFromSurvey": "勘测中缺失",
     "showLess": "收起",
