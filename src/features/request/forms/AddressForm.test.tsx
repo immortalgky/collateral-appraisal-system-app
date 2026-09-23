@@ -19,6 +19,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import AddressForm from './AddressForm';
 import enRequest from '@/i18n/locales/en/request.json';
+import { makeAddressFields, makeContactFields } from '../configs/fields';
 
 // Mock the components that AddressForm uses
 vi.mock('@/shared/components/form', () => ({
@@ -147,6 +148,15 @@ function AddressFormWrapper({
       <form onSubmit={methods.handleSubmit(onSubmit)}>
         <AddressForm />
         <button type="submit">Submit</button>
+        {/* FormFields is mocked into unregistered inputs, so typing cannot reach the form. These
+            two give the reset case something it can actually observe. */}
+        <button
+          type="button"
+          onClick={() => methods.setValue('detail.address.houseNumber', 'typed over')}
+        >
+          Set house number
+        </button>
+        <output data-testid="house-number">{methods.watch('detail.address.houseNumber')}</output>
         <button type="button" onClick={() => methods.reset()}>
           Reset
         </button>
@@ -168,6 +178,26 @@ const label = (key: keyof typeof enRequest.fields) => {
   return `fields.${key}`;
 };
 describe('AddressForm', () => {
+  // The schema below is hand-written, so it can drift from the fields the form actually renders.
+  // This case is what stops that being silent: rename a field in configs/fields.ts and it fails
+  // here, naming the field, instead of every other case quietly testing a form that no longer
+  // exists.
+  it('mirrors the field names the config renders', () => {
+    const names = (fields: { name?: string }[]) =>
+      fields.map(f => f.name).filter((n): n is string => !!n);
+    const shape = addressSchema.shape.detail.shape;
+
+    // Every field the form renders has to exist here. The reverse does not hold: the schema also
+    // carries what the location selector writes (district, province, subDistrictName), which is
+    // no field of its own.
+    expect(Object.keys(shape.address.shape)).toEqual(
+      expect.arrayContaining(names(makeAddressFields(key => key))),
+    );
+    expect(Object.keys(shape.contact.shape)).toEqual(
+      expect.arrayContaining(names(makeContactFields(key => key))),
+    );
+  });
+
   // ============================================
   // Rendering Tests
   // ============================================
@@ -306,11 +336,12 @@ describe('AddressForm', () => {
         />,
       );
 
-      // Click reset
+      await user.click(screen.getByRole('button', { name: 'Set house number' }));
+      expect(screen.getByTestId('house-number')).toHaveTextContent('typed over');
+
       await user.click(screen.getByRole('button', { name: 'Reset' }));
 
-      // Form should be reset (in a real test we'd check input values)
-      expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
+      expect(screen.getByTestId('house-number')).toHaveTextContent('123');
     });
   });
 

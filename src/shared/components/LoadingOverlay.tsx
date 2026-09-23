@@ -2,7 +2,11 @@ import { useLoadingStore } from '../store';
 import LoadingSpinner from './LoadingSpinner';
 
 const LoadingOverlay = () => {
-  const { isLoading, message } = useLoadingStore();
+  // One selector per field, not the whole store: `hideLoading` now writes `pending` on every
+  // settle, and subscribing to the object would re-render this on each of them for no change
+  // on screen.
+  const isLoading = useLoadingStore(s => s.isLoading);
+  const message = useLoadingStore(s => s.message);
 
   if (!isLoading) return null;
 
