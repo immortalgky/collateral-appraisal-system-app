@@ -32,6 +32,16 @@ const ZH_ENGLISH_FALLBACK = new Set([
   // purpose and stays red until th/oauthAdmin.json exists.)
   'oauthAdmin',
   'hangfire',
+  // Registered as en-fallback in src/i18n/index.ts, as `hangfire` and `oauthAdmin` above are.
+  // (`feeAppointmentApproval`, `feeApprovalConfig` and `evaluationConfig` come from their own
+  // feature modules, like `feeStructureMaintenance` below.)
+  'addressMaster',
+  'companyRoundRobinConfig',
+  'jobSchedules',
+  'workflowAssignmentConfig',
+  // Registered by its own feature module instead: features/feeStructureMaintenance/i18n.ts
+  // passes the en bundle for zh.
+  'feeStructureMaintenance',
 ]);
 
 function flattenKeys(obj: Record<string, unknown>, prefix = ''): string[] {
