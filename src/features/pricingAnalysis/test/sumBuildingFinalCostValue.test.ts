@@ -4,6 +4,9 @@ import {
   sumBuildingFinalCostValue,
 } from '@/features/pricingAnalysis/domain/calculation';
 
+/** A schedule row as the Building Cost table computes it: an area and its depreciated value. */
+const row = (area: number, priceAfterDepreciation: number) => ({ area, priceAfterDepreciation });
+
 /** A building carrying one schedule row with a stored after-depreciation figure. */
 const building = (priceAfterDepreciation: number, finalCostValueOverride?: number | null) => ({
   ...(finalCostValueOverride === undefined ? {} : { finalCostValueOverride }),
@@ -55,6 +58,28 @@ describe('sumBuildingFinalCostValue', () => {
     const buildings = [building(1_400), building(1_234_567.89, 900_000)];
     expect(buildings.map(buildingFinalCostValue)).toEqual([1_000, 900_000]);
     expect(sumBuildingFinalCostValue(buildings)).toBe(901_000);
+  });
+
+  it('is what the Building Cost grand-total row must show, not the raw schedule sum', () => {
+    // The reported case: two identical buildings of 80 sq.m, 7,920,000 each after depreciation,
+    // each with a keyed Final Cost Value — 8,000,000 and 6,000,000. The table footer summed the
+    // schedule rows and printed 15,840,000 while the KPI card above it printed this figure under
+    // the same label.
+    const group = [
+      { finalCostValueOverride: 8_000_000, depreciationDetails: [row(80, 7_920_000)] },
+      { finalCostValueOverride: 6_000_000, depreciationDetails: [row(80, 7_920_000)] },
+    ];
+    expect(sumBuildingFinalCostValue(group)).toBe(14_000_000);
+
+    // The footer's บาท/ตร.ม. cell restates the cell above it, so it divides the SAME total by the
+    // same area the footer sums — reproduced here rather than hard-coding 160, so that changing
+    // either side of the component's arithmetic breaks this. 14,000,000 / 160 = 87,500; the raw
+    // schedule sum gave 99,000, which multiplied back to neither figure on the row.
+    const footerArea = group
+      .flatMap(b => b.depreciationDetails)
+      .reduce((acc, r) => acc + r.area, 0);
+    expect(footerArea).toBe(160);
+    expect(Math.round(sumBuildingFinalCostValue(group) / footerArea)).toBe(87_500);
   });
 
   it('returns 0 for a group with no buildings at all', () => {
