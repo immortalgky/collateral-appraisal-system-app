@@ -14,12 +14,14 @@ const NumberField = ({
   hint,
   value,
   min,
+  max,
   onChange,
 }: {
   label: string;
   hint?: string;
   value: number;
   min: number;
+  max?: number;
   onChange: (v: number) => void;
 }) => (
   <div>
@@ -27,6 +29,7 @@ const NumberField = ({
     <input
       type="number"
       min={min}
+      max={max}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -191,6 +194,18 @@ function PasswordPolicyConfigPage() {
           <Icon name="triangle-exclamation" style="solid" className="size-3.5" />
           {t('passwordPolicyConfig.lockoutRestartNote')}
         </div>
+      </Section>
+
+      {/* Temporary Access */}
+      <Section title={t('passwordPolicyConfig.temporaryAccessSection')}>
+        <NumberField
+          label={t('passwordPolicyConfig.maxAccessWindowHours')}
+          hint={t('passwordPolicyConfig.maxAccessWindowHoursHint')}
+          value={draft.maxAccessWindowHours}
+          min={1}
+          max={720}
+          onChange={v => set('maxAccessWindowHours', v)}
+        />
       </Section>
 
       {/* Blocklist */}

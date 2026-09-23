@@ -52,7 +52,8 @@
     "account": "Account",
     "profile": "Profile",
     "access": "Access",
-    "approvalPeriod": "Approval Period"
+    "approvalPeriod": "Approval Period",
+    "temporaryAccess": "临时访问"
   },
   "fields": {
     "username": "Username",
@@ -96,7 +97,8 @@
     "addressLine1": "Address Line 1",
     "addressLine2": "Address Line 2",
     "effectiveDate": "Effective Date",
-    "expireDate": "Expire Date"
+    "expireDate": "Expire Date",
+    "isTemporaryAccess": "临时访问账户"
   },
   "placeholders": {
     "searchUsers": "Search users...",
@@ -172,7 +174,8 @@
     "loanTypesComma": "Separate multiple loan types with a comma",
     "ldapPassword": "密码由 Active Directory 管理 — 用户使用其 AD 凭据登录。",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
-    "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team."
+    "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
+    "temporaryAccessCreate": "账户创建后默认关闭——在管理员开启访问窗口之前没有密码。"
   },
   "empty": {
     "noUsersFound": "No users found",
@@ -426,7 +429,11 @@
     "userUnlockFailed": "Failed to unlock user account",
     "ldapUserNotFound": "在 LDAP/AD 中未找到用户",
     "ldapInfoLoaded": "已从 LDAP 加载信息",
-    "ldapLookupFailed": "LDAP 查询失败"
+    "ldapLookupFailed": "LDAP 查询失败",
+    "accessWindowOpened": "访问窗口已开启",
+    "accessWindowExtended": "访问窗口已延长",
+    "accessWindowClosed": "访问窗口已关闭",
+    "accessWindowFailed": "更新访问窗口失败"
   },
   "validation": {
     "nameRequired": "Name is required",
@@ -492,6 +499,9 @@
     "propagationNote": "Complexity, expiry, history, and blocklist changes apply within about a minute across all servers.",
     "blocklistLabel": "Forbidden passwords (one per line)",
     "blocklistHint": "Case-insensitive. These exact passwords are rejected.",
+    "temporaryAccessSection": "临时访问",
+    "maxAccessWindowHours": "最长访问窗口（小时）",
+    "maxAccessWindowHoursHint": "默认 8 小时，上限 720 小时（30 天）。",
     "save": "Save policy",
     "saved": "Password policy updated.",
     "saveFailed": "Failed to update password policy."
@@ -561,5 +571,39 @@
     "language": "语言",
     "languageHint": "界面使用的语言。",
     "accessHint": "这是您目前在系统中的权限。如果缺少某个菜单或操作，请联系系统管理员核对此处列出的角色与权限。"
+  },
+  "accessWindow": {
+    "openTitle": "开启访问窗口",
+    "extendTitle": "延长访问窗口",
+    "durationLabel": "时长",
+    "remaining": "剩余",
+    "endsAt": "结束于 {{time}}",
+    "extendButton": "延长",
+    "closeButton": "立即关闭",
+    "openButton": "开启访问窗口",
+    "closedMessage": "该账户在开启访问窗口之前无法登录。",
+    "capHint": "每次最多 {{hours}} 小时。",
+    "capNote": "访问窗口从现在起不能超过 {{hours}} 小时。",
+    "exceedsCap": "结束时间不能超过现在起 {{hours}} 小时。",
+    "reasonLabel": "原因",
+    "reasonPlaceholder": "说明需要开启此访问窗口的原因",
+    "reasonRequired": "必须填写原因",
+    "selectEndRequired": "请选择结束时间",
+    "customChip": "自定义",
+    "customEndLabel": "自定义结束时间",
+    "hoursChip": "{{count}} 小时",
+    "extendMinutesChip": "+{{count}} 分钟",
+    "extendHoursChip": "+{{count}} 小时",
+    "extendPasswordUnchanged": "密码不会更改——延长只会推迟到期时间。",
+    "closeConfirmTitle": "确定要立即关闭访问窗口吗？",
+    "closeConfirmMessage": "关闭后该账户将无法登录，且当前密码会被重置。",
+    "passwordModal": {
+      "title": "访问窗口密码",
+      "warning": "此密码仅显示一次，之后无法再次查看。请立即复制并通过安全渠道分享。",
+      "copy": "复制",
+      "copied": "已复制",
+      "confirmCheckbox": "我已复制此密码",
+      "done": "完成"
+    }
   }
 }

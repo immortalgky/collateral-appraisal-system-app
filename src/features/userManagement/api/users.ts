@@ -13,6 +13,8 @@ import type {
   UpdateUserGroupsRequest,
   UpdateUserTeamsRequest,
   SetUserActivationRequest,
+  SetAccessWindowRequest,
+  SetAccessWindowResponse,
   CreateUserRequest,
   CreateUserResponse,
   LdapLookupResponse,
@@ -217,6 +219,32 @@ export const useSetUserActivation = () => {
   return useMutation({
     mutationFn: async ({ id, ...body }: SetUserActivationRequest & { id: string }) => {
       const { data } = await axios.put(`/auth/users/${id}/activation`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY] });
+    },
+  });
+};
+
+/**
+ * Admin: open, extend or close a temporary account's access window.
+ *
+ * Opening returns a freshly generated password — the only time it is ever readable, so show it to
+ * the admin immediately and never persist it. Extending returns none and keeps the current one alive.
+ */
+export const useSetAccessWindow = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...body
+    }: SetAccessWindowRequest & { id: string }): Promise<SetAccessWindowResponse> => {
+      const { data } = await axios.put<SetAccessWindowResponse>(
+        `/auth/users/${id}/access-window`,
+        body
+      );
       return data;
     },
     onSuccess: (_data, variables) => {

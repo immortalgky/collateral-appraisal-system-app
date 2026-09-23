@@ -251,6 +251,8 @@ export interface PasswordPolicy {
 
 /** Full, admin-editable password policy (returned by /auth/admin/password-policy). */
 export interface PasswordPolicyConfig extends PasswordPolicy {
+  /** Longest access window an admin may open on a temporary-access account, in hours. */
+  maxAccessWindowHours: number;
   expiryDays: number;
   historyCount: number;
   blocklist: string;
@@ -285,6 +287,10 @@ export interface AdminUserListItem {
   roles: UserRole[];
   isActive: boolean;
   isLocked: boolean;
+  /** Ad-hoc account: closed by default, usable only inside an admin-opened access window. */
+  isTemporaryAccess: boolean;
+  /** End of the current access window; null on ordinary accounts. Past = closed. */
+  accessExpiresAt: string | null;
 }
 
 export interface AdminUserDetail extends AdminUserListItem {
@@ -348,6 +354,20 @@ export interface SetUserActivationRequest {
   isActive: boolean;
 }
 
+export interface SetAccessWindowRequest {
+  /** Local time, 'YYYY-MM-DDTHH:mm:ss'. In the past closes the window. */
+  expiresAt: string;
+  reason: string;
+  /** Move the expiry without issuing a new password (keeps the current holder signed in). */
+  extendOnly?: boolean;
+}
+
+export interface SetAccessWindowResponse {
+  accessExpiresAt: string;
+  /** Returned only when a password was issued — shown once, never retrievable again. */
+  password: string | null;
+}
+
 export interface CreateUserRequest {
   username: string;
   password: string;
@@ -365,6 +385,8 @@ export interface CreateUserRequest {
   aoCode?: string | null;
   // Bank staff employee id; only sent for bank users (no companyId).
   employeeId?: string | null;
+  /** Create an ad-hoc account: no password, starts closed, gets one per access window. */
+  isTemporaryAccess?: boolean;
 }
 
 export interface CreateUserResponse {
