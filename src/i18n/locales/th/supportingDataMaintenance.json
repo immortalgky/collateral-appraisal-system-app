@@ -30,7 +30,9 @@
     "importChannel": "ช่องทางนำเข้า",
     "dateType": "ประเภทวันที่",
     "dateFrom": "วันที่เริ่มต้น",
-    "dateTo": "วันที่สิ้นสุด"
+    "dateTo": "วันที่สิ้นสุด",
+    "website": "เว็บไซต์",
+    "phoneNo": "เบอร์โทรศัพท์"
   },
   "actions": {
     "create": "สร้าง",
@@ -68,7 +70,11 @@
       "Approved": "อนุมัติแล้ว",
       "Cancelled": "ยกเลิกแล้ว",
       "Reject": "ปฏิเสธ"
-    }
+    },
+    "website": "เว็บไซต์",
+    "websitePlaceholder": "ระบุเว็บไซต์",
+    "phoneNo": "เบอร์โทรศัพท์",
+    "phoneNoPlaceholder": "ระบุเบอร์โทรศัพท์"
   },
   "formSections": {
     "supportingDataTitle": "การบำรุงรักษาข้อมูลสนับสนุน",

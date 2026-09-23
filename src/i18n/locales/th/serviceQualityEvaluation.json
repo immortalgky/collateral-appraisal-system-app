@@ -45,7 +45,8 @@
       "appraisalDepartment": "ฝ่ายประเมิน",
       "propertyType": "ประเภทหลักประกัน",
       "appraisalDate": "วันที่ประเมิน",
-      "reportReceivedDate": "วันที่ได้รับรายงาน"
+      "reportReceivedDate": "วันที่ได้รับรายงาน",
+      "internalAppraiser": "ผู้ประเมินภายใน"
     },
     "comments": {
       "additionalLabel": "ความคิดเห็นเพิ่มเติมจากผู้ประเมิน",

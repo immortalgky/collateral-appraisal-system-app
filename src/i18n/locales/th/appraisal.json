@@ -511,7 +511,10 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
+      "priceVerificationOptions": [
+        "ยังไม่ตรวจสอบ",
+        "ตรวจสอบแล้ว"
+      ],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
@@ -1763,13 +1766,13 @@
       "sectionTitle": "รายละเอียดอาคาร"
     },
     "condo": {
-        "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
-        "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
-        "addArea": "เพิ่มพื้นที่",
-        "areaItems": "{{count}} รายการ · {{total}} ตร.ม.",
-        "matchesUsable": "ตรงกับพื้นที่ใช้สอย",
-        "diffVsUsable": "{{diff}} เทียบกับพื้นที่ใช้สอย",
-        "areaTotal": "รวม",
+      "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
+      "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
+      "addArea": "เพิ่มพื้นที่",
+      "areaItems": "{{count}} รายการ · {{total}} ตร.ม.",
+      "matchesUsable": "ตรงกับพื้นที่ใช้สอย",
+      "diffVsUsable": "{{diff}} เทียบกับพื้นที่ใช้สอย",
+      "areaTotal": "รวม",
       "sectionTitle": "รายละเอียดคอนโด",
       "areaDetail": "รายละเอียดพื้นที่",
       "pma": "ข้อมูล PMA",
@@ -1802,6 +1805,12 @@
         "message": "คุณต้องการทำสำเนาข้อมูลตลาดเปรียบเทียบนี้หรือไม่? ระบบจะสร้างรายการใหม่โดยใช้ข้อมูลชุดเดียวกัน",
         "confirm": "ทำสำเนา"
       }
+    },
+    "propertyName": {
+      "autoFillLabel": "เติมชื่อทรัพย์สินอัตโนมัติ"
+    },
+    "owner": {
+      "autoFillLabel": "คัดลอกผู้ถือกรรมสิทธิ์จากที่ดิน"
     }
   },
   "validation": {
@@ -1828,7 +1837,9 @@
     "assignmentMethodRequired": "กรุณาเลือกวิธีการมอบหมาย",
     "remarksMaxLength": "หมายเหตุต้องไม่เกิน 500 ตัวอักษร",
     "selectAssignee": "กรุณาเลือกผู้รับมอบหมาย",
-    "selectFollowupStaff": "กรุณาเลือกเจ้าหน้าที่ติดตามภายใน"
+    "selectFollowupStaff": "กรุณาเลือกเจ้าหน้าที่ติดตามภายใน",
+    "contactPersonRequired": "กรุณาระบุชื่อผู้ติดต่อ",
+    "contactPhoneRequired": "กรุณาระบุเบอร์ติดต่อ"
   },
   "toasts": {
     "photoUploaded": "อัปโหลดรูปภาพสำเร็จ",
@@ -2216,7 +2227,8 @@
     },
     "footer": {
       "total": "รวม",
-      "avg": "เฉลี่ย"
+      "avg": "เฉลี่ย",
+      "avgBasis": "จากพื้นที่ที่สำรวจ {{area}} ตร.ว."
     },
     "missingFromSurvey": "ไม่พบในรังวัด",
     "showLess": "แสดงน้อยลง",
