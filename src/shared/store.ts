@@ -196,9 +196,15 @@ export const useLoadingStore = create<LoadingStore>(set => ({
   isLoading: false,
   message: undefined,
   pending: 0,
-  // Counts from 1 again whenever the overlay is down: nobody can be pending while it is
-  // hidden. Note this drops an earlier caller's claim rather than clamping it — if A is still
-  // working when the overlay is hidden from outside, B's hide will take the overlay down.
+  // Counts from 1 again whenever the overlay is down: nobody can be pending while it is hidden.
+  //
+  // This is a deliberate trade, not a side effect. It drops an earlier caller's claim rather
+  // than clamping it: if A is still working when the overlay is hidden from outside, B's hide
+  // takes the overlay down early, and A's later hide finds a count of 0 and does nothing. The
+  // module-variable version kept the overlay up for A here — at the price of the opposite
+  // failure, a count that could never reach 0 again and an overlay covering the page until the
+  // user reloaded. An overlay that leaves too early is a missing spinner; one that never leaves
+  // costs the user their unsaved work.
   // The message is NOT ref-counted: the newest caller's text wins, and it is cleared only when
   // the last one settles. So a textless caller joining an active one blanks the overlay until
   // that one finishes. Inheriting the previous text instead was tried and is worse — the text

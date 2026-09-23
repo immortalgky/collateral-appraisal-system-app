@@ -126,6 +126,10 @@ function AddressFormWrapper({
           districtName: '',
           provinceName: '',
           postcode: '',
+          // Written by the location selector, so the mirror has them too.
+          district: '',
+          province: '',
+          subDistrictName: '',
           ...defaultValues.detail?.address,
         },
         contact: {
