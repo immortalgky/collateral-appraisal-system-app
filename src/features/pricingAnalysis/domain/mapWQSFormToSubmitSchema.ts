@@ -92,7 +92,13 @@ export function mapWQSFormToSubmitSchema({
         adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
         adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
         sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
-        sellingPriceUnit: null,
+        // Was hardcoded null while SAG and DC both pass this through, so a WQS priced off SALE
+        // comparables reached the server with no unit at all: DetectPriceUnit found nothing, the
+        // method defaulted to the PerUnit lumpsum, ValuePerUnit was never stored, the value got
+        // rounded to the nearest thousand as if it were a total, and ApplyLandAreaValue skipped the
+        // row. Offer-priced comparables (line above) were unaffected, which is why it survived —
+        // the failure depended on which of the two prices the surveyor happened to fill in.
+        sellingPriceUnit: calc.sellingPriceMeasurementUnit ?? null,
         buySellYear:
           !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
         buySellMonth: null,
