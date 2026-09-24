@@ -24,11 +24,9 @@ interface WQSInitialValueOnSelectSurveyProps {
   getValues: UseFormGetValues<WQSFormType>;
 }
 export function syncWQSFormSurveys({
-  collateralType,
   methodId,
   methodType,
   property: _property,
-  template,
   comparativeSurveys,
   reset,
   getValues,

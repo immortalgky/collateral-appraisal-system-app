@@ -29,7 +29,7 @@ import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarnin
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
-import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
+import { FormProvider, FormFields } from '@/shared/components/form';
 import { FormReadOnlyContext } from '@/shared/components/form/context';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 
@@ -75,119 +75,6 @@ import { AssetSummaryDrawer } from '@/features/common/assetSummary/AssetSummaryD
 import { useGetAssetSummary } from '@/features/appraisal/api/assetSummary';
 
 // ==================== Field Definitions ====================
-
-// Static fallback options (English) — replaced at render time via makeDecisionFields()
-const CONDITION_TYPE_OPTIONS = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'special', label: 'Special' },
-  { value: 'other', label: 'Other' },
-];
-
-const REMARK_TYPE_OPTIONS = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'special', label: 'Special' },
-  { value: 'other', label: 'Other' },
-];
-
-const OPINION_TYPE_OPTIONS = [
-  { value: 'agree', label: 'Agree' },
-  { value: 'disagree', label: 'Disagree' },
-  { value: 'conditional', label: 'Conditional' },
-];
-
-const priceVerificationFields: FormField[] = [
-  {
-    type: 'boolean-toggle',
-    name: 'isPriceVerified',
-    label: 'Price Verification',
-    options: ['Not Verified', 'Verified'],
-  },
-];
-
-const conditionFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'conditionType',
-    label: 'Condition Type',
-    options: CONDITION_TYPE_OPTIONS,
-    placeholder: 'Select condition type...',
-  },
-  {
-    type: 'textarea',
-    name: 'condition',
-    label: 'Condition Details',
-    placeholder: 'Enter condition details...',
-  },
-];
-
-const remarkFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'remarkType',
-    label: 'Remark Type',
-    options: REMARK_TYPE_OPTIONS,
-    placeholder: 'Select remark type...',
-  },
-  {
-    type: 'textarea',
-    name: 'remark',
-    label: 'Remark Details',
-    placeholder: 'Enter remark...',
-  },
-];
-
-const appraiserOpinionFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'appraiserOpinionType',
-    label: 'Opinion Type',
-    options: OPINION_TYPE_OPTIONS,
-    placeholder: 'Select opinion type...',
-  },
-  {
-    type: 'textarea',
-    name: 'appraiserOpinion',
-    label: 'Appraiser Opinion',
-    placeholder: 'Enter appraiser opinion...',
-  },
-];
-
-const committeeOpinionFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'committeeOpinionType',
-    label: 'Opinion Type',
-    options: OPINION_TYPE_OPTIONS,
-    required: true,
-    placeholder: 'Select opinion type...',
-  },
-  {
-    type: 'textarea',
-    name: 'committeeOpinion',
-    label: 'Committee Opinion',
-    required: true,
-    placeholder: 'Enter committee opinion...',
-  },
-];
-
-const reviewPriceFields: FormField[] = [
-  {
-    type: 'number-input',
-    name: 'totalAppraisalPriceReview',
-    label: 'Total Appraisal Price (Review)',
-    decimalPlaces: 2,
-    wrapperClassName: 'col-span-1',
-  },
-];
-
-const additionalAssumptionsFields: FormField[] = [
-  {
-    type: 'textarea',
-    name: 'additionalAssumptions',
-    label: 'Details',
-    placeholder: 'Enter additional or special assumptions...',
-  },
-];
 
 /** Build translated field definitions for DecisionSummaryPage */
 const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {

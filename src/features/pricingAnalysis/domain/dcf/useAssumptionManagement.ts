@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { useFieldArray, type Control } from 'react-hook-form';
 import { getNewId } from '../getNewId';
 import { editAssumption } from './editAssumption';
