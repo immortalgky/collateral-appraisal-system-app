@@ -18,6 +18,7 @@ import { useAuthStore } from '@features/auth/store.ts';
 import { useCreateQuotation, useGetLoanTypeMatchedCompanies } from '../api/quotation';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { isMidnightTime } from '@/shared/utils/dateUtils';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import {
   AppraisalPicker,
@@ -460,17 +461,24 @@ function NewQuotationPage() {
             name="cutOffTime"
             control={control}
             render={({ field }) => (
-              <DateTimePickerInput
-                label={t('fields.cutOffTime')}
-                required
-                helperText={t('fields.cutOffTimeHelper')}
-                placeholder="dd/mm/yyyy hh:mm"
-                disablePastDates
-                value={field.value || null}
-                onChange={v => field.onChange(v ?? '')}
-                onBlur={field.onBlur}
-                error={errors.cutOffTime?.message}
-              />
+              <>
+                <DateTimePickerInput
+                  label={t('fields.cutOffTime')}
+                  required
+                  helperText={t('fields.cutOffTimeHelper')}
+                  placeholder="dd/mm/yyyy hh:mm"
+                  disablePastDates
+                  value={field.value || null}
+                  onChange={v => field.onChange(v ?? '')}
+                  onBlur={field.onBlur}
+                  error={errors.cutOffTime?.message}
+                />
+                {isMidnightTime(field.value) && (
+                  <p className="mt-1 text-xs text-amber-600">
+                    {t('fields.cutOffTimeMidnightWarning')}
+                  </p>
+                )}
+              </>
             )}
           />
         </div>

@@ -474,6 +474,7 @@
       "cutOffTime": "Cut Off Time",
       "appraisalsLabel": "Appraisals",
       "cutOffTimeRequired": "Cut off time is required",
+      "cutOffTimeMidnightWarning": "Cut-off time is set to 00:00 — please confirm this is intended.",
       "maxAppraisalDurationHelper": "Maximum duration you allow the appraiser to complete this appraisal."
     },
     "emailModal": {

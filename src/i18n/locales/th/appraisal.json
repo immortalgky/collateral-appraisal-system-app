@@ -474,6 +474,7 @@
       "cutOffTime": "เวลาปิดรับ",
       "appraisalsLabel": "งานประเมิน",
       "cutOffTimeRequired": "กรุณาระบุเวลาปิดรับ",
+      "cutOffTimeMidnightWarning": "เวลาปิดรับตั้งไว้ที่ 00:00 — กรุณายืนยันว่าตั้งใจเลือกเวลานี้",
       "maxAppraisalDurationHelper": "ระยะเวลาสูงสุดที่คุณอนุญาตให้ผู้ประเมินดำเนินการประเมินนี้ให้เสร็จ"
     },
     "emailModal": {

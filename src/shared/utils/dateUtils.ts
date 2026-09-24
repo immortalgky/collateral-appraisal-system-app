@@ -122,6 +122,17 @@ export function formatLocaleDateTime(
 }
 
 /**
+ * True when a date's time-of-day is exactly midnight (00:00) — the value a date+time picker
+ * silently produces when a user picks a date but never explicitly sets a time.
+ */
+export function isMidnightTime(date: Date | string | number | null | undefined): boolean {
+  if (date === null || date === undefined || date === '') return false;
+  const d = typeof date === 'object' ? date : new Date(date);
+  if (isNaN(d.getTime())) return false;
+  return d.getHours() === 0 && d.getMinutes() === 0;
+}
+
+/**
  * Get relative time string (e.g., "2 days ago", "yesterday", "5 นาทีที่แล้ว")
  * Uses Intl.RelativeTimeFormat for locale-aware output.
  * @param date Date to get relative time for

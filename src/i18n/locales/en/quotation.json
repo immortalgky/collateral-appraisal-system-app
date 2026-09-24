@@ -118,6 +118,7 @@
     "totalFeeAmount": "Total Fee Amount:",
     "cutOffTime": "Cut Off Time",
     "cutOffTimeHelper": "Deadline for companies to submit their quotation responses",
+    "cutOffTimeMidnightWarning": "Cut-off time is set to 00:00 — please confirm this is intended.",
     "reason": "Reason",
     "reasonOptional": "Reason",
     "notes": "Notes",

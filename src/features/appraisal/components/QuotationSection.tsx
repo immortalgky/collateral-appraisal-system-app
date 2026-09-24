@@ -38,6 +38,7 @@ import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
 import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { isMidnightTime } from '@/shared/utils/dateUtils';
 import { useAuthStore } from '@/features/auth/store';
 import { sortCompanyResponses } from '@/features/quotation/utils/sortCompanyResponses';
 import { Link } from 'react-router-dom';
@@ -483,6 +484,11 @@ const EditDraftForm = ({
           onChange={onDueDateChange}
           disablePastDates
         />
+        {isMidnightTime(editDueDate) && (
+          <p className="mt-1 text-xs text-amber-600">
+            {t('quotation.editDraft.cutOffTimeMidnightWarning')}
+          </p>
+        )}
       </div>
 
       {/* Special Requirements — quotation-level, editable */}

@@ -21,6 +21,7 @@ import type {
 import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
 import type { SelectedAppraisal } from './AppraisalPicker';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { isMidnightTime } from '@/shared/utils/dateUtils';
 
 interface EditDraftQuotationModalProps {
   isOpen: boolean;
@@ -320,14 +321,19 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
       <Modal isOpen={isOpen} onClose={onClose} title={t('draft.editModal')} size="3xl">
         <div className="flex flex-col gap-5">
           {/* Cut Off Time */}
-          <DateTimePickerInput
-            label={t('fields.cutOffTime')}
-            required
-            helperText={t('fields.cutOffTimeHelper')}
-            disablePastDates
-            value={cutOffTime}
-            onChange={v => setCutOffTime(v)}
-          />
+          <div>
+            <DateTimePickerInput
+              label={t('fields.cutOffTime')}
+              required
+              helperText={t('fields.cutOffTimeHelper')}
+              disablePastDates
+              value={cutOffTime}
+              onChange={v => setCutOffTime(v)}
+            />
+            {isMidnightTime(cutOffTime) && (
+              <p className="mt-1 text-xs text-amber-600">{t('fields.cutOffTimeMidnightWarning')}</p>
+            )}
+          </div>
 
           {/* Compact appraisal summary + lazy picker */}
           <div>

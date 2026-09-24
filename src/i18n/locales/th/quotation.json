@@ -118,6 +118,7 @@
     "totalFeeAmount": "ค่าธรรมเนียมรวม:",
     "cutOffTime": "เวลาปิดรับ",
     "cutOffTimeHelper": "กำหนดเส้นตายสำหรับบริษัทในการส่งใบเสนอราคา",
+    "cutOffTimeMidnightWarning": "เวลาปิดรับตั้งไว้ที่ 00:00 — กรุณายืนยันว่าตั้งใจเลือกเวลานี้",
     "reason": "เหตุผล",
     "reasonOptional": "เหตุผล",
     "notes": "หมายเหตุ",

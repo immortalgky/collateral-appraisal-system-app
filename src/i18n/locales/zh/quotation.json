@@ -118,6 +118,7 @@
     "totalFeeAmount": "Total Fee Amount:",
     "cutOffTime": "Cut Off Time",
     "cutOffTimeHelper": "Deadline for companies to submit their quotation responses",
+    "cutOffTimeMidnightWarning": "截止时间设置为 00:00 — 请确认这是否符合预期。",
     "reason": "Reason",
     "reasonOptional": "Reason",
     "notes": "Notes",

@@ -474,6 +474,7 @@
       "cutOffTime": "截止时间",
       "appraisalsLabel": "估价",
       "cutOffTimeRequired": "截止时间为必填项",
+      "cutOffTimeMidnightWarning": "截止时间设置为 00:00 — 请确认这是否符合预期。",
       "maxAppraisalDurationHelper": "您允许估价师完成本次估价的最长时间。"
     },
     "emailModal": {
