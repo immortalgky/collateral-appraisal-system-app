@@ -43,6 +43,7 @@ import {
 } from '../schemas/form';
 import { isCondo } from '../types';
 import type { ProjectType } from '../types';
+import { mapSurfacesToApi } from '@/features/appraisal/utils/mappers';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -165,7 +166,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         exteriorWallTypeOther: modelData.exteriorWallTypeOther ?? null,
         fenceType: modelData.fenceType ?? [],
         fenceTypeOther: modelData.fenceTypeOther ?? null,
-        surfaces: modelData.surfaces ?? [],
+        surfaces: [...(modelData.surfaces ?? [])].sort(
+          (a, b) => (a.fromFloorNumber ?? 0) - (b.fromFloorNumber ?? 0),
+        ),
         depreciationDetails: modelData.depreciationDetails ?? [],
       } satisfies Partial<LbModelFormType>;
     }
@@ -220,16 +223,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const submitForm = (data: any, isDraft: boolean) => {
     if (!appraisalId) return;
-    const payload = data.surfaces
-      ? {
-          ...data,
-          surfaces: data.surfaces.map((item: any) => ({
-            ...item,
-            fromFloorNumber: item.fromFloorNumber ?? 0,
-            toFloorNumber: item.toFloorNumber ?? 0,
-          })),
-        }
-      : data;
+    const payload = data.surfaces ? { ...data, surfaces: mapSurfacesToApi(data.surfaces) } : data;
     if (isEditMode && modelId) {
       updateModel(
         { appraisalId, modelId, data: payload },

@@ -614,13 +614,34 @@ const mapDepreciationDetailsToApi = (depreciationDetails: any[]) => {
   }));
 };
 
-const mapSurfacesToApi = (surfaces: any[]) => {
-  return surfaces.map(({ ...item }) => ({
-    ...item,
-    id: item.id ?? null,
-    fromFloorNumber: item.fromFloorNumber ?? 0,
-    toFloorNumber: item.toFloorNumber ?? 0,
-  }));
+export const mapSurfacesToApi = (surfaces: any[]) => {
+  let nextFloorNumber = surfaces.reduce(
+    (max, item) =>
+      Math.max(max, item.fromFloorNumber ?? -Infinity, item.toFloorNumber ?? -Infinity),
+    0,
+  );
+
+  return surfaces.map(({ ...item }) => {
+    let fromFloorNumber = item.fromFloorNumber;
+    let toFloorNumber = item.toFloorNumber;
+
+    if (fromFloorNumber == null && toFloorNumber == null) {
+      nextFloorNumber += 1;
+      fromFloorNumber = nextFloorNumber;
+      toFloorNumber = nextFloorNumber;
+    } else if (fromFloorNumber == null) {
+      fromFloorNumber = toFloorNumber;
+    } else if (toFloorNumber == null) {
+      toFloorNumber = fromFloorNumber;
+    }
+
+    return {
+      ...item,
+      id: item.id ?? null,
+      fromFloorNumber,
+      toFloorNumber,
+    };
+  });
 };
 
 const mapConstructionInspectionFormToApi = (data: any) => {
