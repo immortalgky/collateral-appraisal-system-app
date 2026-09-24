@@ -30,7 +30,8 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { Button } from '@/shared/components';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
+import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
+import { useConstructionTab } from '../hooks/useConstructionTab';
 
 // ─── Inline create/update mutations ──────────────────────────────
 
@@ -146,11 +147,15 @@ const CreateLeaseAgreementCondoPage = () => {
     'condo' | 'construction' | 'lease-agreement' | 'rental-info'
   >(initialCondoTab);
 
-  useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
-      setActiveTab('condo');
-    }
-  }, [isUnderConstruction, activeTab, isCiAppraisal]);
+  const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
+    methods,
+    isUnderConstruction,
+    activeTab,
+    setActiveTab,
+    fallbackTab: 'condo',
+    isCreateMode: !isEditMode,
+    isCiAppraisal,
+  });
 
   const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -257,7 +262,7 @@ const CreateLeaseAgreementCondoPage = () => {
   // The header's tabs; construction appears only when it applies.
   const editorTabs = [
     { id: 'condo', label: t('createPage.navCondo') },
-    ...(isUnderConstruction || isCiAppraisal
+    ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
       : []),
     { id: 'lease-agreement', label: t('createPage.navLeaseAgreement') },
@@ -280,7 +285,7 @@ const CreateLeaseAgreementCondoPage = () => {
                 typeCode="LSU"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
-                activeTab={activeTab}
+                activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
               />
               <ResizableSidebar
@@ -294,7 +299,7 @@ const CreateLeaseAgreementCondoPage = () => {
                     {/* Condo Tab Content */}
                     <div
                       id="condo-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'condo' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'condo' ? 'hidden' : ''}`}
                     >
                       <Section
                         id="condo-info"
@@ -306,24 +311,19 @@ const CreateLeaseAgreementCondoPage = () => {
                     </div>
 
                     {/* Construction Inspection Tab Content */}
-                    {(isUnderConstruction || isCiAppraisal) && (
-                      <div
-                        id="construction-section"
-                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
-                      >
-                        <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <ConstructionInspectionTab
-                            readOnly={isReadOnly}
-                            ciMode={isCiAppraisal}
-                          />
-                        </Section>
-                      </div>
-                    )}
+                    <ConstructionEditorSection
+                      key={propertyId}
+                      shownTab={shownTab}
+                      underConstruction={hasConstructionTab}
+                      readOnly={isReadOnly}
+                      ciMode={isCiAppraisal}
+                      condo
+                    />
 
                     {/* Lease Agreement Tab Content */}
                     <div
                       id="lease-agreement-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'lease-agreement' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
                         <LeaseAgreementForm namePrefix="leaseAgreement" />
@@ -333,7 +333,7 @@ const CreateLeaseAgreementCondoPage = () => {
                     {/* Rental Info Tab Content */}
                     <div
                       id="rental-info-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'rental-info' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
                         <RentalInfoForm namePrefix="rentalInfo" />
