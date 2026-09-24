@@ -220,9 +220,19 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const submitForm = (data: any, isDraft: boolean) => {
     if (!appraisalId) return;
+    const payload = data.surfaces
+      ? {
+          ...data,
+          surfaces: data.surfaces.map((item: any) => ({
+            ...item,
+            fromFloorNumber: item.fromFloorNumber ?? 0,
+            toFloorNumber: item.toFloorNumber ?? 0,
+          })),
+        }
+      : data;
     if (isEditMode && modelId) {
       updateModel(
-        { appraisalId, modelId, data },
+        { appraisalId, modelId, data: payload },
         {
           onSuccess: () => {
             reset(getValues());
@@ -243,7 +253,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
       );
     } else {
       createModel(
-        { appraisalId, data },
+        { appraisalId, data: payload },
         {
           onSuccess: async response => {
             await photoSectionRef.current?.linkImagesToModel(response.id);

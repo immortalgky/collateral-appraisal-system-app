@@ -618,6 +618,8 @@ const mapSurfacesToApi = (surfaces: any[]) => {
   return surfaces.map(({ ...item }) => ({
     ...item,
     id: item.id ?? null,
+    fromFloorNumber: item.fromFloorNumber ?? 0,
+    toFloorNumber: item.toFloorNumber ?? 0,
   }));
 };
 
