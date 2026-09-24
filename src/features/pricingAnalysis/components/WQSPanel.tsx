@@ -368,7 +368,7 @@ export function WQSPanel({
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
-      .map(s => s.marketId)
+      .map((s: { marketId?: string }) => s.marketId)
       .sort()
       .join(',');
     const currentSurveyIds = comparativeSurveys

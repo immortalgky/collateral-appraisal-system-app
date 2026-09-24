@@ -7,7 +7,10 @@ import {
 } from '@features/pricingAnalysis/domain/calculation.ts';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { ScrollableTableContainer } from '@features/pricingAnalysis/components/ScrollableTableContainer.tsx';
-import { useDerivedFields } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
+import {
+  useDerivedFields,
+  type DerivedFieldRule,
+} from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
 import { useMemo } from 'react';
 import { type UseFormGetValues } from 'react-hook-form';
 import { propertyTaxRanges } from '@/features/pricingAnalysis/data/dcfParameters';
@@ -40,7 +43,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
 
   const totalNumberOfYears = toNumber(getOuterFormValues('totalNumberOfYears'));
   const rules = useMemo(() => {
-    return Array.from({ length: totalNumberOfYears }, (_, idx) => [
+    return Array.from({ length: totalNumberOfYears }, (_, idx): DerivedFieldRule[] => [
       {
         targetPath: `${name}.propertyTax.landPrices.${idx}`,
         deps: [`${name}.increaseRatePct`, `${name}.increaseRateYrs`, `${name}.startIn`],

@@ -138,7 +138,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
   const handleSeasonCountChange = (nextCount: number) => {
     setValue(`${name}.seasonCount`, nextCount);
 
-    const roomDetails = getValues(`${name}.roomDetails`);
+    const roomDetails: RoomIncomeRow[] = getValues(`${name}.roomDetails`) ?? [];
 
     roomDetails.forEach((row, rowIndex) => {
       setValue(
@@ -153,19 +153,19 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...Array.from({ length: seasonCount }, (_, seasonIndex) => {
+      ...Array.from({ length: seasonCount }, (_, seasonIndex): DerivedFieldRule<unknown> => {
         return {
           targetPath: `${name}.seasonDetails.${seasonIndex}.avgTotalRoomIncomePerDay`,
           deps: [`${name}.roomDetails`],
           compute: ({ getValues }) => {
-            const roomDetails = getValues(`${name}.roomDetails`) ?? [];
+            const roomDetails: RoomIncomeRow[] = getValues(`${name}.roomDetails`) ?? [];
             const total = calculateSeasonTotals(roomDetails, seasonIndex);
             if (total.saleableArea === 0) return 0;
             return toNumber(total.totalRoomIncomePerDay / total.saleableArea);
           },
         };
       }),
-      ...Array.from({ length: seasonCount }, (_, seasonIndex) => {
+      ...Array.from({ length: seasonCount }, (_, seasonIndex): DerivedFieldRule<unknown> => {
         return {
           targetPath: `${name}.seasonDetails.${seasonIndex}.avgTotalRoomIncomePerSeason`,
           deps: [
