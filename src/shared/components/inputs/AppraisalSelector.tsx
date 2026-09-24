@@ -67,7 +67,7 @@ const AppraisalSelector = ({
       setValue(name, prevAppraisal.appraisalNumber, { shouldDirty: true });
       setValue(idField, prevAppraisal.appraisalId, { shouldDirty: true });
       if (valueField) setValue(valueField, prevAppraisal.appraisalValue, { shouldDirty: true });
-      if (dateField) setValue(dateField, prevAppraisal.completedDate, { shouldDirty: true });
+      if (dateField) setValue(dateField, prevAppraisal.appointmentDate, { shouldDirty: true });
     }
   };
 
