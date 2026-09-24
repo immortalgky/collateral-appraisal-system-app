@@ -23,35 +23,37 @@ const WQSSurveyScore = z
   .passthrough();
 
 const WQSScore = (t: TFunction<'pricingAnalysis'>) =>
-  z.object({
-    factorCode: z.string({
-      required_error: t('validation.factorCodeRequired'),
-      invalid_type_error: t('validation.factorCodeRequired'),
-    }),
-    weight: z.number({
-      required_error: t('validation.weightRequired'),
-      invalid_type_error: t('validation.weightRequired'),
-    }),
-    intensity: z.number({
-      required_error: t('validation.intensityRequired'),
-      invalid_type_error: t('validation.intensityRequired'),
-    }),
-    surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
-      for (const [i, item] of items.entries()) {
-        if (item.surveyScore == null) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: t('validation.surveyScoreRequired', { n: i + 1 }),
-            path: [i, 'surveyScore'],
-          });
+  z
+    .object({
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+      weight: z.number({
+        required_error: t('validation.weightRequired'),
+        invalid_type_error: t('validation.weightRequired'),
+      }),
+      intensity: z.number({
+        required_error: t('validation.intensityRequired'),
+        invalid_type_error: t('validation.intensityRequired'),
+      }),
+      surveys: z.array(WQSSurveyScore).superRefine((items, ctx) => {
+        for (const [i, item] of items.entries()) {
+          if (item.surveyScore == null) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: t('validation.surveyScoreRequired', { n: i + 1 }),
+              path: [i, 'surveyScore'],
+            });
+          }
         }
-      }
-    }),
-    collateral: z.number({
-      required_error: t('validation.collateralScoreRequired'),
-      invalid_type_error: t('validation.collateralScoreRequired'),
-    }),
-  });
+      }),
+      collateral: z.number({
+        required_error: t('validation.collateralScoreRequired'),
+        invalid_type_error: t('validation.collateralScoreRequired'),
+      }),
+    })
+    .passthrough();
 
 /** Adjust final price section */
 const WQSFinalValue = (t: TFunction<'pricingAnalysis'>) =>
@@ -72,6 +74,18 @@ const WQSFinalValue = (t: TFunction<'pricingAnalysis'>) =>
     })
     .passthrough();
 
+/**
+ * Surveys chosen on the selection screen, written into the form by syncXxxFormSurveys. Kept loose
+ * on purpose: `marketId` is copied from a `.partial()` API DTO and can arrive undefined, so making
+ * it required here would block the save rather than describe the data.
+ */
+const ComparativeSurveys = z
+  .object({
+    marketId: z.string().optional(),
+    displaySeq: z.number().optional(),
+  })
+  .passthrough();
+
 export const makeWQSDto = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
@@ -83,6 +97,7 @@ export const makeWQSDto = (t: TFunction<'pricingAnalysis'>) =>
         required_error: t('validation.templateRequired'),
         invalid_type_error: t('validation.templateRequired'),
       }),
+      comparativeSurveys: z.array(ComparativeSurveys).optional(),
       comparativeFactors: z.array(ComparativeFactor(t)),
       WQSScores: z.array(WQSScore(t)),
       WQSFinalValue: WQSFinalValue(t),

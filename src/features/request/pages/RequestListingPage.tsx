@@ -85,10 +85,9 @@ function RequestListingPage() {
     error,
   } = useGetRequests(requestParams);
 
-  // Extract paginated result
-  const paginatedResult = data?.result ?? data;
-  const requests = paginatedResult?.items ?? [];
-  const totalCount = paginatedResult?.count ?? 0;
+  // useGetRequests already unwrapped the { result } envelope
+  const requests = data?.items ?? [];
+  const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // First load vs refetch

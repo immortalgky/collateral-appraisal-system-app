@@ -1,11 +1,33 @@
 import { toDecimal, toNumber } from '../domain/calculation';
 import { getDCFFilteredAssumptions } from '../domain/getDCFFilteredAssumptions';
+import type { DCFMethod } from '../types/dcf';
 import type { DerivedFieldRule } from './useDerivedFieldArray';
 
 // Returns the 0-based index at which calculations should start.
 // startIn is 1-based (startIn=3 → startIdx=2).
 function getStartIdx(startIn: number): number {
   return Math.max(0, startIn - 1);
+}
+
+// The only three methods whose detail carries a saleable area: room income per day, room income by
+// seasonal rates, and rental income per square metre. Anything priced "per unit of saleable area"
+// reads the area off whichever of them the form holds.
+const SALEABLE_AREA_METHOD_TYPES = ['01', '02', '06'] as const;
+
+type SaleableAreaMethod = Extract<
+  DCFMethod,
+  { methodType: (typeof SALEABLE_AREA_METHOD_TYPES)[number] }
+>;
+
+function isSaleableAreaMethod(method?: DCFMethod): method is SaleableAreaMethod {
+  return !!method && (SALEABLE_AREA_METHOD_TYPES as readonly string[]).includes(method.methodType);
+}
+
+// Saleable area net of occupancy rate for year `idx`, or 0 when the form holds no such assumption.
+function getSaleableAreaDeductByOccRate(method: DCFMethod | undefined, idx: number): number {
+  return isSaleableAreaMethod(method)
+    ? (method.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0)
+    : 0;
 }
 
 // Returns how many years have elapsed since the calculation started.
@@ -879,14 +901,11 @@ export function buildMethodSpecifiedFoodAndBeverageExpensesPerRoomPerDayDerivedR
 
           const totalFoodAndBeveragePerRoomPerDay =
             getValues(`${name}.detail.totalFoodAndBeveragePerRoomPerDay.${idx}`) ?? 0;
-          const totalNumberOfSaleableArea =
-            getDCFFilteredAssumptions(
-              getValues,
-              a =>
-                a.method?.methodType === '01' ||
-                a.method?.methodType === '02' ||
-                a.method?.methodType === '06',
-            )?.[0]?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
+          const totalNumberOfSaleableArea = getSaleableAreaDeductByOccRate(
+            getDCFFilteredAssumptions(getValues, a => isSaleableAreaMethod(a.method))?.[0]
+              ?.assumption.method,
+            idx,
+          );
 
           return toDecimal(
             toNumber(totalFoodAndBeveragePerRoomPerDay) * toNumber(totalNumberOfSaleableArea),
@@ -959,14 +978,11 @@ export function buildMethodSpecifiedEnergyCostIndexDerivedRules({
           if (idx < getStartIdx(startIn)) return 0;
 
           const totalEnegyCost = getValues(`${name}.detail.energyCostIndexIncrease.${idx}`) ?? 0;
-          const totalNumberOfSaleableArea =
-            getDCFFilteredAssumptions(
-              getValues,
-              a =>
-                a.method?.methodType === '01' ||
-                a.method?.methodType === '02' ||
-                a.method?.methodType === '06',
-            )?.[0]?.assumption.method?.detail?.totalSaleableAreaDeductByOccRate?.[idx] ?? 0;
+          const totalNumberOfSaleableArea = getSaleableAreaDeductByOccRate(
+            getDCFFilteredAssumptions(getValues, a => isSaleableAreaMethod(a.method))?.[0]
+              ?.assumption.method,
+            idx,
+          );
 
           return toDecimal(toNumber(totalEnegyCost) * toNumber(totalNumberOfSaleableArea) * 12, 2);
         },

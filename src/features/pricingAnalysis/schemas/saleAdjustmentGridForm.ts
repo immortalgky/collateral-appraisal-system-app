@@ -25,13 +25,15 @@ const SaleAdjustmentGridQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
     .passthrough();
 
 const SaleAdjustmentGridQualitative = (t: TFunction<'pricingAnalysis'>) =>
-  z.object({
-    factorCode: z.string({
-      required_error: t('validation.factorCodeRequired'),
-      invalid_type_error: t('validation.factorCodeRequired'),
-    }),
-    qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey(t)),
-  });
+  z
+    .object({
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+      qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey(t)),
+    })
+    .passthrough();
 
 const SaleAdjustmentGridCalculation = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -66,9 +68,11 @@ const SaleAdjustmentGridAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
     .passthrough();
 
 const SaleAdjustmentGridAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
-  z.object({
-    surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
-  });
+  z
+    .object({
+      surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
+    })
+    .passthrough();
 
 const SaleAdjustmentGridAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -79,6 +83,18 @@ const SaleAdjustmentGridAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
       }),
     })
     .passthrough();
+
+/**
+ * Surveys chosen on the selection screen, written into the form by syncXxxFormSurveys. Kept loose
+ * on purpose: `marketId` is copied from a `.partial()` API DTO and can arrive undefined, so making
+ * it required here would block the save rather than describe the data.
+ */
+const ComparativeSurveys = z
+  .object({
+    marketId: z.string().optional(),
+    displaySeq: z.number().optional(),
+  })
+  .passthrough();
 
 export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -91,6 +107,7 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
         required_error: t('validation.templateRequired'),
         invalid_type_error: t('validation.templateRequired'),
       }),
+      comparativeSurveys: z.array(ComparativeSurveys).optional(),
       comparativeFactors: z.array(ComparativeFactors(t)),
       /** Qualitative section */
       saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative(t)),
