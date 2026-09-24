@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 import { useGeolocation } from './useGeolocation';
 
@@ -21,5 +21,31 @@ describe('useGeolocation', () => {
 
     expect(coords).toBeNull();
     expect(result.current.locating).toBe(false);
+  });
+
+  it('resolves null when getCurrentPosition itself throws', async () => {
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: {
+        getCurrentPosition() {
+          throw new Error('blocked by Permissions-Policy');
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useGeolocation());
+
+    let coords: unknown = 'not called';
+    await act(async () => {
+      coords = await result.current.locate();
+    });
+
+    expect(coords).toBeNull();
+    // The spinner has to come back down, or the button stays disabled for good.
+    expect(result.current.locating).toBe(false);
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator, 'geolocation');
   });
 });
