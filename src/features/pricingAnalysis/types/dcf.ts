@@ -488,16 +488,20 @@ export interface DCFTemplateType {
   /** The appraiser's typed-over value only — null means "follow the computed value". */
   appraisalPriceRounded: number | null;
   sections: {
+    /** The template row's own id, which initializeDiscountedCashFlowForm maps to a clientId. */
+    templateId?: string | null;
     sectionType: SectionType; // render section e.g income, expenses
     sectionName: string;
     identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
     displaySeq: number;
     categories?: {
+      templateId?: string | null;
       categoryType: CategoryType;
       categoryName: string;
       identifier: Identifier;
       displaySeq: number;
       assumptions: {
+        templateId?: string | null;
         assumptionType: string;
         assumptionName: string;
         identifier: Identifier;
